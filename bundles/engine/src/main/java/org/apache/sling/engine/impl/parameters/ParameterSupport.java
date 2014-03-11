@@ -31,6 +31,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
@@ -40,6 +41,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.servlet.ServletRequestContext;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +55,13 @@ public class ParameterSupport {
      * the time.
      */
     public final static String PARAMETER_FORMENCODING = "_charset_";
+
+    /**
+     * Request attribute which is set if the current request is "started"
+     * by calling {@link org.apache.sling.engine.SlingRequestProcessor#processRequest(HttpServletRequest, HttpServletResponse, ResourceResolver)}
+     * This marker is evaluated in {@link #getRequestParameterMapInternal()}.
+     */
+    public final static String MARKER_IS_SERVICE_PROCESSING = ParameterSupport.class.getName() + "/ServiceProcessingMarker";
 
     // name of the request attribute caching the ParameterSupport instance
     // used during the request
@@ -228,7 +237,8 @@ public class ParameterSupport {
             // SLING-152 Get parameters from the servlet Container
             ParameterMap parameters = new ParameterMap();
 
-            boolean useFallback = true;
+            // fallback is only used if this request has been started by a service call
+            boolean useFallback = getServletRequest().getAttribute(MARKER_IS_SERVICE_PROCESSING) != null;
             // Query String
             final String query = getServletRequest().getQueryString();
             if (query != null) {

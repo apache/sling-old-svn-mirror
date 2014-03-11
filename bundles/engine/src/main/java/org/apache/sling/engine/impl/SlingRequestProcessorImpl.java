@@ -53,6 +53,7 @@ import org.apache.sling.engine.impl.filter.RequestSlingFilterChain;
 import org.apache.sling.engine.impl.filter.ServletFilterManager;
 import org.apache.sling.engine.impl.filter.ServletFilterManager.FilterChainType;
 import org.apache.sling.engine.impl.filter.SlingComponentFilterChain;
+import org.apache.sling.engine.impl.parameters.ParameterSupport;
 import org.apache.sling.engine.impl.request.ContentData;
 import org.apache.sling.engine.impl.request.RequestData;
 import org.apache.sling.engine.impl.request.RequestHistoryConsolePlugin;
@@ -111,9 +112,10 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
         this.mbean = mbean;
     }
 
-    // ---------- SlingRequestProcessor interface
-
-    public void processRequest(final HttpServletRequest servletRequest,
+    /**
+     * This method is directly called by the Sling main servlet.
+     */
+    public void doProcessRequest(final HttpServletRequest servletRequest,
             final HttpServletResponse servletResponse,
             final ResourceResolver resourceResolver) throws IOException {
 
@@ -228,6 +230,29 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
         } finally {
             if (mbean != null) {
                 mbean.addRequestData(requestData);
+            }
+        }
+    }
+
+    // ---------- SlingRequestProcessor interface
+
+    /**
+     * @see org.apache.sling.engine.SlingRequestProcessor#processRequest(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse, org.apache.sling.api.resource.ResourceResolver)
+     */
+    public void processRequest(final HttpServletRequest servletRequest,
+            final HttpServletResponse servletResponse,
+            final ResourceResolver resourceResolver) throws IOException {
+        // set the marker for the parameter support
+        final Object oldValue = servletRequest.getAttribute(ParameterSupport.MARKER_IS_SERVICE_PROCESSING);
+        servletRequest.setAttribute(ParameterSupport.MARKER_IS_SERVICE_PROCESSING, Boolean.TRUE);
+        try {
+            this.doProcessRequest(servletRequest, servletResponse, resourceResolver);
+        } finally {
+            // restore the old value
+            if ( oldValue != null ) {
+                servletRequest.setAttribute(ParameterSupport.MARKER_IS_SERVICE_PROCESSING, oldValue);
+            } else {
+                servletRequest.removeAttribute(ParameterSupport.MARKER_IS_SERVICE_PROCESSING);
             }
         }
     }
