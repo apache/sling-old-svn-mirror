@@ -203,7 +203,7 @@ public class SlingMainServlet extends GenericServlet {
                         : null;
 
                 // real request handling for HTTP requests
-                requestProcessor.processRequest(request, (HttpServletResponse) res,
+                requestProcessor.doProcessRequest(request, (HttpServletResponse) res,
                     resolver);
 
             } catch (IOException ioe) {
