@@ -228,7 +228,7 @@ public class ParameterSupport {
             // SLING-152 Get parameters from the servlet Container
             ParameterMap parameters = new ParameterMap();
 
-            final boolean isPost = "POST".equals(this.getServletRequest().getMethod());
+            boolean useFallback = true;
             // Query String
             final String query = getServletRequest().getQueryString();
             if (query != null) {
@@ -242,11 +242,11 @@ public class ParameterSupport {
                 } catch (IOException e) {
                     this.log.error("getRequestParameterMapInternal: Error parsing request", e);
                 }
-            } else if (!isPost) {
-                getContainerParameters(parameters, encoding);
+                useFallback = false;
             }
 
             // POST requests
+            final boolean isPost = "POST".equals(this.getServletRequest().getMethod());
             if (isPost) {
                 // WWW URL Form Encoded POST
                 if (isWWWFormEncodedContent(this.getServletRequest())) {
@@ -261,13 +261,18 @@ public class ParameterSupport {
                         this.log.error("getRequestParameterMapInternal: Error parsing request", e);
                     }
                     this.requestDataUsed = true;
+                    useFallback = false;
                 }
 
                 // Multipart POST
                 if (ServletFileUpload.isMultipartContent(new ServletRequestContext(this.getServletRequest()))) {
                     this.parseMultiPartPost(parameters);
                     this.requestDataUsed = true;
+                    useFallback = false;
                 }
+            }
+            if ( useFallback ) {
+                getContainerParameters(parameters, encoding);
             }
 
             // apply any form encoding (from '_charset_') in the parameter map
