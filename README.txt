@@ -37,6 +37,10 @@ start an instance by running
 in the launchpad/testing folder, optionally using -Dsling.run.modes=oak to
 use Oak instead of Jackrabbit.
 
+The standard -Dmaven.surefire.debug option can be used to debug the tests
+themselves. To debug the server-side Sling code, set the appropriate JVM
+options on the VM that runs it.
+
 Note that, for all tests to pass, the Sling instance under test needs the 
 org.apache.sling.launchpad.test-services bundle, and the war file of the
 launchpad/test-services-war project which should be copied to the
