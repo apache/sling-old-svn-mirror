@@ -3,7 +3,6 @@ Apache Sling Launchpad Testing module
 This module builds a Sling instance using bundles from the trunk, and
 runs integration tests against it, via HTTP.
 
-
 Getting Started
 ===============
 
@@ -35,7 +34,9 @@ integration-tests module.
 To run individual tests, see the README.txt in that module.
 
 Use mvn launchpad:run to start this test instance, allows you to run
-and debug individual tests against it.
+and debug individual tests against it. The standard MAVEN_OPTS environment
+variable can be used to activate debugging of the Sling instance that's 
+being tested.
 
 Using Reactor Builds
 ----------------
