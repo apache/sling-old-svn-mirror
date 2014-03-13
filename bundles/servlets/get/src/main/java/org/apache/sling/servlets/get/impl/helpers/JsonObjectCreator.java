@@ -18,6 +18,7 @@ package org.apache.sling.servlets.get.impl.helpers;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -176,11 +177,15 @@ public abstract class JsonObjectCreator {
     throws JSONException {
         Object[] values = null;
         if (value.getClass().isArray()) {
-            values = (Object[])value;
+            final int length = Array.getLength(value);
             // write out empty array
-            if ( values.length == 0 ) {
+            if ( length == 0 ) {
                 obj.put(key, new JSONArray());
                 return;
+            }
+            values = new Object[Array.getLength(value)];
+            for(int i=0; i<length; i++) {
+                values[i] = Array.get(value, i);
             }
         }
 
