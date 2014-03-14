@@ -22,10 +22,13 @@ package org.apache.sling.api.resource;
  * The <code>PersistableValueMap</code> is an extension
  * of the {@link ValueMap} which allows to modify and
  * persist the properties.
- *
+ * <p>
  * Note, that each time you call {@link Resource#adaptTo(Class)}
  * you get a new map instance which does not share modified
  * properties with other representations.
+ * <p>
+ * A <code>PersistableValueMap</code> might not support deep
+ * reading of values.
  *
  * @deprecated Use the {@link ModifiableValueMap} instead.
  */
