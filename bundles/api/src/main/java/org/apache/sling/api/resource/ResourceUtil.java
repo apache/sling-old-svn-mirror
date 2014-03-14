@@ -353,38 +353,21 @@ public class ResourceUtil {
 
     /**
      * Returns an <code>ValueMap</code> object for the given
-     * <code>Resource</code>. This method calls {@link Resource#adaptTo(Class)}
-     * with the {@link ValueMap} class as an argument. If the
-     * <code>adaptTo</code> method returns a map, this map is returned. If the
-     * resource is not adaptable to a value map, next an adaption to {@link Map}
-     * is tried and if this is successful the map is wrapped as a value map. If
-     * the adaptions are not successful an empty value map is returned. If
-     * <code>null</code> is provided as the resource an empty map is returned as
+     * <code>Resource</code>. This method calls {@link Resource#getValueMap()}.
+     * If <code>null</code> is provided as the resource an empty map is returned as
      * well.
      *
      * @param res The <code>Resource</code> to adapt to the value map.
      * @return A value map.
+     * @deprecated Use {@link Resource#getValueMap()}.
      */
-    @SuppressWarnings("unchecked")
+    @Deprecated
     public static ValueMap getValueMap(final Resource res) {
-        // adapt to ValueMap if resource is not null
-        ValueMap valueMap = (res != null) ? res.adaptTo(ValueMap.class) : null;
-
-        // if no resource or no ValueMap adapter, check Map
-        if (valueMap == null) {
-
-            Map map = (res != null) ? res.adaptTo(Map.class) : null;
-
-            // if not even adapting to map, assume an empty map
-            if (map == null) {
-                map = new HashMap<String, Object>();
-            }
-
-            // .. and decorate the plain map
-            valueMap = new ValueMapDecorator(map);
+        if ( res == null ) {
+            // use empty map
+            return new ValueMapDecorator(new HashMap<String, Object>());
         }
-
-        return valueMap;
+        return res.getValueMap();
     }
 
     /**
@@ -643,5 +626,19 @@ public class ResourceUtil {
             return childNodeName;
         }
         return name;
+    }
+
+    /**
+     * Unwrap the resource and return the wrapped implementation.
+     * @param rsrc The resource to unwrap
+     * @return The unwrapped resource
+     * @since 2.5
+     */
+    public static Resource unwrap(final Resource rsrc) {
+        Resource result = rsrc;
+        while ( result instanceof ResourceWrapper ) {
+            result = ((ResourceWrapper)result).getResource();
+        }
+        return result;
     }
 }
