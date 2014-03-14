@@ -16,24 +16,32 @@
  */
 package org.apache.sling.models.impl;
 
-import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
+import org.apache.sling.models.impl.injectors.ChildResourceInjector;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
 import org.apache.sling.models.testmodels.classes.ResourceModelWithRequiredField;
+import org.apache.sling.models.testmodels.interfaces.ChildModel;
+import org.apache.sling.models.testmodels.interfaces.ChildResourceModel;
+import org.apache.sling.models.testmodels.interfaces.ChildValueMapModel;
+import org.apache.sling.models.testmodels.interfaces.ParentModel;
 import org.apache.sling.models.testmodels.interfaces.SimplePropertyModel;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
@@ -55,6 +63,8 @@ public class ResourceModelInterfacesTest {
         factory = new ModelAdapterFactory();
         factory.activate(componentCtx);
         factory.bindInjector(new ValueMapInjector(),
+                Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 1L));
+        factory.bindInjector(new ChildResourceInjector(),
                 Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 0L));
     }
 
@@ -92,5 +102,61 @@ public class ResourceModelInterfacesTest {
 
         verify(vm).get("required", String.class);
     }
+    
+    @Test
+    public void testChildResource() {
+        Resource child = mock(Resource.class);
+
+        Resource res = mock(Resource.class);
+        when(res.getChild("firstChild")).thenReturn(child);
+
+        ChildResourceModel model = factory.getAdapter(res, ChildResourceModel.class);
+        assertNotNull(model);
+        assertEquals(child, model.getFirstChild());
+    }
+
+    @Test
+    public void testChildValueMap() {
+        ValueMap map = ValueMapDecorator.EMPTY;
+
+        Resource child = mock(Resource.class);
+        when(child.adaptTo(ValueMap.class)).thenReturn(map);
+
+        Resource res = mock(Resource.class);
+        when(res.getChild("firstChild")).thenReturn(child);
+
+        ChildValueMapModel model = factory.getAdapter(res, ChildValueMapModel.class);
+        assertNotNull(model);
+        assertEquals(map, model.getFirstChild());
+    }
+
+    @Test
+    public void testChildModel() {
+        Object value = RandomStringUtils.randomAlphabetic(10);
+        Map<String, Object> props = Collections.singletonMap("property", value);
+        ValueMap map = new ValueMapDecorator(props);
+
+        final Resource child = mock(Resource.class);
+        when(child.adaptTo(ValueMap.class)).thenReturn(map);
+        when(child.adaptTo(ChildModel.class)).thenAnswer(new Answer<ChildModel>() {
+
+            @Override
+            public ChildModel answer(InvocationOnMock invocation) throws Throwable {
+                return factory.getAdapter(child, ChildModel.class);
+            }
+
+        });
+
+        Resource res = mock(Resource.class);
+        when(res.getChild("firstChild")).thenReturn(child);
+
+        ParentModel model = factory.getAdapter(res, ParentModel.class);
+        assertNotNull(model);
+
+        ChildModel childModel = model.getFirstChild();
+        assertNotNull(childModel);
+        assertEquals(value, childModel.getProperty());
+    }
+
 
 }

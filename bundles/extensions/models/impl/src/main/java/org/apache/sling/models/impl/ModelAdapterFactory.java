@@ -571,8 +571,8 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
     private boolean setField(Field field, Object createdObject, Object value) {
         if (value != null) {
-            if (!isAcceptableType(field.getClass(), value) && value instanceof Adaptable) {
-                value = ((Adaptable) value).adaptTo(field.getClass());
+            if (!isAcceptableType(field.getType(), value) && value instanceof Adaptable) {
+                value = ((Adaptable) value).adaptTo(field.getType());
                 if (value == null) {
                     return false;
                 }
