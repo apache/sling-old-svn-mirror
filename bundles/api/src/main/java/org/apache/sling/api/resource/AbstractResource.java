@@ -157,14 +157,4 @@ public abstract class AbstractResource
 
         return valueMap;
     }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <AdapterType> AdapterType adaptTo(final Class<AdapterType> type) {
-        if ( type == ValueMap.class ) {
-            return (AdapterType) new DeepReadValueMapDecorator(this, ValueMap.EMPTY);
-        }
-        return super.adaptTo(type);
-    }
-
 }

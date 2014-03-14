@@ -27,9 +27,10 @@ import aQute.bnd.annotation.ProviderType;
  * <p>
  * The <code>Resource</code> is also an {@link Adaptable} to get adapters to
  * other types. A JCR based resource might support adapting to the JCR Node on
- * which the resource is based. All implementations must support adapting
- * to a {@link ValueMap}. In this case, the call is similar to call
- * {@link #getValueMap()}.
+ * which the resource is based.
+ * <p>
+ * All implementations must support returning a value map from
+ * {@link #getValueMap()}, even if the map is empty.
  * <p>
  * Implementor's Note: It is recommended to not implement this interface
  * directly. Rather consider either extending from {@link AbstractResource} or
