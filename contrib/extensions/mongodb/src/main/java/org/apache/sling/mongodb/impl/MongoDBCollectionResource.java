@@ -22,8 +22,6 @@ import java.util.Map;
 import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.api.wrappers.ValueMapDecorator;
 
 public class MongoDBCollectionResource extends AbstractResource {
 
@@ -80,9 +78,7 @@ public class MongoDBCollectionResource extends AbstractResource {
     @SuppressWarnings("unchecked")
     @Override
     public <AdapterType> AdapterType adaptTo(final Class<AdapterType> type) {
-        if ( type == ValueMap.class ) {
-            return (AdapterType) new ValueMapDecorator(Collections.EMPTY_MAP);
-        } else if ( type == Map.class ) {
+        if ( type == Map.class ) {
             return (AdapterType) Collections.EMPTY_MAP;
         }
         return super.adaptTo(type);
