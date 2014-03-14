@@ -155,7 +155,7 @@ public abstract class AbstractResource
             valueMap = new DeepReadValueMapDecorator(this, new ValueMapDecorator(map));
         }
 
-        return this.adaptTo(ValueMap.class);
+        return valueMap;
     }
 
     @SuppressWarnings("unchecked")
