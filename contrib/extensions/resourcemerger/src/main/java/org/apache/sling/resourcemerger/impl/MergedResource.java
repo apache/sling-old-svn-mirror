@@ -25,6 +25,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.DeepReadValueMapDecorator;
 
 /**
  * {@inheritDoc}
@@ -61,7 +62,7 @@ public class MergedResource extends AbstractResource {
                    final List<ValueMap> valueMaps) {
         this.resolver = resolver;
         this.path = (relativePath.length() == 0 ? mergeRootPath : mergeRootPath + "/" + relativePath);
-        this.properties = new MergedValueMap(valueMaps);
+        this.properties = new DeepReadValueMapDecorator(this, new MergedValueMap(valueMaps));
         this.resourceType = this.properties.get(ResourceResolver.PROPERTY_RESOURCE_TYPE, (relativePath.length() == 0 ? "/" : relativePath));
         metadata.put(MergedResourceConstants.METADATA_FLAG, true);
         final String[] resourcePaths = new String[mappedResources.size()];
