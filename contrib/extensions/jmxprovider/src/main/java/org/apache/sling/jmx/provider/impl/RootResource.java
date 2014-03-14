@@ -25,6 +25,7 @@ import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.DeepReadValueMapDecorator;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 
 public class RootResource extends AbstractResource {
@@ -80,7 +81,7 @@ public class RootResource extends AbstractResource {
     public <AdapterType> AdapterType adaptTo(final Class<AdapterType> type) {
         if ( type == ValueMap.class || type == Map.class ) {
             final Map<String, Object> propMap = this.getPropertiesMap();
-            return (AdapterType) new ValueMapDecorator(propMap);
+            return (AdapterType) new DeepReadValueMapDecorator(this, new ValueMapDecorator(propMap));
         }
         return super.adaptTo(type);
     }
