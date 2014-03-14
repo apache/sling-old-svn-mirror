@@ -14,16 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.models.testmodels.interfaces;
+package org.apache.sling.models.testmodels.classes;
 
 import javax.inject.Inject;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.models.annotations.Model;
 
 @Model(adaptables = Resource.class)
-public interface ParentModel {
+public class ChildValueMapModel {
 
     @Inject
-    public ChildModel getFirstChild();
+    private ValueMap firstChild;
+    
+    public ValueMap getFirstChild() {
+        return firstChild;
+    }
+
 }
