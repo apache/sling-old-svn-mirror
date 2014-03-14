@@ -224,7 +224,9 @@ public class ResourceUtilTest {
                 if (type == Map.class) {
                     return (Type) map;
                 }
-
+                if (type == ValueMap.class) {
+                    return null;
+                }
                 return super.adaptTo(type);
             }
         };
