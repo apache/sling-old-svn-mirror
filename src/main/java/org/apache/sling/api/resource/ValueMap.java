@@ -27,9 +27,18 @@ import aQute.bnd.annotation.ConsumerType;
 
 /**
  * The <code>ValueMap</code> is an easy way to access properties of a resource.
- * With most resources you can use {@link Resource#adaptTo(Class)} to adapt the
+ * With resources you can use {@link Resource#adaptTo(Class)} to adapt the
  * resource to a value map. The various getter methods can be used to get the
  * properties of the resource.
+ * In addition a value map returned by a resource supports getting of deep
+ * values, like get("content/title") which is equivalent to call
+ * getChild("content") on the resource, get the value map of that resource
+ * and call get("title") - but without requiring to do all the checks.
+ * Only the following methods support deep reads: {@link #get(Object)},
+ * {@link #get(String, Class)}, {@link #get(String, Object)} and
+ * {@link #containsKey(Object)}.
+ *
+ * A <code>ValueMap</code> should be immutable.
  */
 @ConsumerType
 public interface ValueMap extends Map<String, Object> {
