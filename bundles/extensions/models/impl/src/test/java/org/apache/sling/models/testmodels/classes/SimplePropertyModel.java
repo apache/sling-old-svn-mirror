@@ -41,6 +41,9 @@ public class SimplePropertyModel {
     @Inject
     private int intProperty;
 
+    @Inject
+    private String[] arrayProperty;
+
     private boolean postConstructCalled;
 
     public int getIntProperty() {
@@ -57,6 +60,10 @@ public class SimplePropertyModel {
 
     public String getThirdProperty() {
         return thirdProperty;
+    }
+
+    public String[] getArrayProperty() {
+        return arrayProperty;
     }
 
     @PostConstruct

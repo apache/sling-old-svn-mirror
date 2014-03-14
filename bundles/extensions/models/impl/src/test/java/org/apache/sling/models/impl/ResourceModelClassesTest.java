@@ -75,6 +75,7 @@ public class ResourceModelClassesTest {
         map.put("first", "first-value");
         map.put("third", "third-value");
         map.put("intProperty", new Integer(3));
+        map.put("arrayProperty", new String[] { "three", "four" });
         ValueMap vm = new ValueMapDecorator(map);
 
         Resource res = mock(Resource.class);
@@ -86,6 +87,11 @@ public class ResourceModelClassesTest {
         assertNull(model.getSecond());
         assertEquals("third-value", model.getThirdProperty());
         assertEquals(3, model.getIntProperty());
+
+        String[] array = model.getArrayProperty();
+        assertEquals(2, array.length);
+        assertEquals("three", array[0]);
+
         assertTrue(model.isPostConstructCalled());
     }
 
@@ -154,7 +160,7 @@ public class ResourceModelClassesTest {
 
         ParentModel model = factory.getAdapter(res, ParentModel.class);
         assertNotNull(model);
-        
+
         ChildModel childModel = model.getFirstChild();
         assertNotNull(childModel);
         assertEquals(value, childModel.getProperty());
