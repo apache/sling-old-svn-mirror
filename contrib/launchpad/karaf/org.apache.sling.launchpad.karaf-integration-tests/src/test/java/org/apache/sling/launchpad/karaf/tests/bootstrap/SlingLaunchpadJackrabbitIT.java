@@ -16,9 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.launchpad.karaf.tests;
-
-import java.io.File;
+package org.apache.sling.launchpad.karaf.tests.bootstrap;
 
 import javax.inject.Inject;
 import javax.jcr.Session;
@@ -29,23 +27,17 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.OptionUtils;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.karaf.options.LogLevelOption;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.ops4j.pax.exam.util.Filter;
 
 import static org.junit.Assert.assertNotNull;
-import static org.ops4j.pax.exam.CoreOptions.maven;
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFileExtend;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.keepRuntimeFolder;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.logLevel;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class BootstrapSlingLaunchpadJackrabbitIT extends KarafTestSupport {
+public class SlingLaunchpadJackrabbitIT extends KarafTestSupport {
 
     @Inject
     @Filter(timeout = 300000)
@@ -53,15 +45,9 @@ public class BootstrapSlingLaunchpadJackrabbitIT extends KarafTestSupport {
 
     @Configuration
     public Option[] configuration() {
-        return new Option[]{
-            karafDistributionConfiguration().frameworkUrl(maven().groupId(karafGroupId()).artifactId(karafArtifactId()).version(karafVersion()).type("tar.gz")).karafVersion(karafVersion()).useDeployFolder(false).name(karafName()).unpackDirectory(new File("target/paxexam/")),
-            keepRuntimeFolder(),
-            logLevel(LogLevelOption.LogLevel.INFO),
-            editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresRepositories", ",mvn:org.apache.sling/org.apache.sling.launchpad.karaf-features/0.1.1-SNAPSHOT/xml/features"),
-            editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresBoot", ",sling-launchpad-jackrabbit"),
-            mavenBundle().groupId("org.ops4j.pax.tinybundles").artifactId("tinybundles").version("2.0.0"),
-            karafTestSupportBundle()
-        };
+        return OptionUtils.combine(baseConfiguration(),
+            addBootFeature("sling-launchpad-jackrabbit")
+        );
     }
 
     @Test
