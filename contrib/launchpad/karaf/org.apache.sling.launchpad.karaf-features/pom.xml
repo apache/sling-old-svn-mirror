@@ -35,23 +35,6 @@
   <name>Apache Sling Launchpad Karaf - Features</name>
   <description>Apache Sling Features for provisioning with Apache Karaf</description>
 
-  <!--
-    following dependencies are inherited from parent
-    setting scope to runtime to prevent creation of a new (useless) feature for this project as workaround for KARAF-1972
-  -->
-  <dependencies>
-    <dependency>
-      <groupId>org.apache.felix</groupId>
-      <artifactId>org.apache.felix.scr.annotations</artifactId>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>biz.aQute</groupId>
-      <artifactId>bndlib</artifactId>
-      <scope>runtime</scope>
-    </dependency>
-  </dependencies>
-
   <build>
     <plugins>
       <plugin>
