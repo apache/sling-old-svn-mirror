@@ -120,7 +120,7 @@ import org.slf4j.LoggerFactory;
                      "org/apache/sling/event/notification/job/*",
                      Utility.TOPIC_STOP,
                      ResourceHelper.BUNDLE_EVENT_STARTED,
-                     ResourceHelper.BUNDLE_EVENT_UPDATED}, propertyPrivate=true),
+                     ResourceHelper.BUNDLE_EVENT_UPDATED}, propertyPrivate=true)
 })
 public class JobManagerImpl
     extends StatisticsImpl
