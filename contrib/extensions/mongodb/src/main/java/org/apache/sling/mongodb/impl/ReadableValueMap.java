@@ -38,17 +38,18 @@ public class ReadableValueMap implements ValueMap {
     }
 
     protected void createValueMap(final DBObject dbObject) {
-        final Map<String, Object> map = new HashMap<String, Object>();
         if (dbObject == null) {
             this.valueMap = Collections.<String, Object> emptyMap();
-        }
-        for(final String key : dbObject.keySet()) {
-            final String name = MongoDBResourceProvider.keyToPropName(key);
-            if ( name != null ) {
-                map.put(key, dbObject.get(name));
+        } else {
+            final Map<String, Object> map = new HashMap<String, Object>();
+            for(final String key : dbObject.keySet()) {
+                final String name = MongoDBResourceProvider.keyToPropName(key);
+                if ( name != null ) {
+                    map.put(key, dbObject.get(name));
+                }
             }
+            this.valueMap = Collections.unmodifiableMap(map);
         }
-        this.valueMap = Collections.unmodifiableMap(map);
     }
 
     /**
@@ -204,7 +205,7 @@ public class ReadableValueMap implements ValueMap {
 
     /**
      * Converts the object to an array of the given type
-     * @param obj tje object or object array
+     * @param obj the object or object array
      * @param type the component type of the array
      * @return and array of type T
      */

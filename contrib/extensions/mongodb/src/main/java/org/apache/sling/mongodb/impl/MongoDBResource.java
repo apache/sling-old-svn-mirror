@@ -23,6 +23,7 @@ import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.DeepReadModifiableValueMapDecorator;
 import org.apache.sling.api.wrappers.DeepReadValueMapDecorator;
 
 import com.mongodb.DBObject;
@@ -122,7 +123,7 @@ public class MongoDBResource extends AbstractResource {
             return (AdapterType) new DeepReadValueMapDecorator(this, new ReadableValueMap(this.dbObject));
         } else if ( type == ModifiableValueMap.class ) {
             this.dbObject = this.provider.getUpdatedDBObject(this.resourcePath, this.dbObject);
-            return (AdapterType) new DeepReadValueMapDecorator(this, new ChangeableValueMap(this));
+            return (AdapterType) new DeepReadModifiableValueMapDecorator(this, new ChangeableValueMap(this));
         }
 
         return super.adaptTo(type);
