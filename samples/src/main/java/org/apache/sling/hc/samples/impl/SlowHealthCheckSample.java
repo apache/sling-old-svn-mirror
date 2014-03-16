@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
 @Properties({
     @Property(name=HealthCheck.NAME),
     @Property(name=HealthCheck.TAGS, unbounded=PropertyUnbounded.ARRAY),
-    @Property(name=HealthCheck.MBEAN_NAME),
+    @Property(name=HealthCheck.MBEAN_NAME)
 })
 @Service(value=HealthCheck.class)
 public class SlowHealthCheckSample implements HealthCheck{
