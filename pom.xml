@@ -185,7 +185,8 @@
         <module>bundles/extensions/groovy</module>
         <module>bundles/extensions/explorer</module>
         <module>bundles/extensions/healthcheck</module>
-        <module>bundles/resourceaccesssecurity</module>
+        <module>bundles/resourceaccesssecurity/core</module>
+        <module>bundles/resourceaccesssecurity/it</module>
         <module>bundles/extensions/models/api</module>
         <module>bundles/extensions/models/impl</module>
         <module>bundles/extensions/models/integration-tests</module>
