@@ -41,7 +41,7 @@
   <feature name="sling" version="${project.version}">
     <feature version="${project.version}">infrastructure-sling</feature>
     <feature version="${project.version}">commons-sling</feature>
-    <bundle>mvn:org.apache.sling/org.apache.sling.api/2.6.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.api/2.6.1-SNAPSHOT</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.auth.core/1.1.6</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.engine/2.3.2</bundle>
     <!-- org.apache.sling.resourceresolver requires jcr -->
@@ -115,8 +115,7 @@
   </feature>
   <feature name="sling-extension-fsresource" version="${project.version}">
     <feature version="${project.version}">sling</feature>
-    <!-- TODO relax import (&(osgi.wiring.package=org.apache.sling.api.resource)(version>=2.3.0)(!(version>=2.4.0))) -->
-    <bundle>mvn:org.apache.sling/org.apache.sling.fsresource/1.1.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.fsresource/1.1.3-SNAPSHOT</bundle>
   </feature>
   <!--
   <feature name="sling-extension-groovy" version="${project.version}">
@@ -197,7 +196,7 @@
     <!-- (not using org.apache.sling.jcr.jcr-wrapper) -->
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.ocm/2.0.4-incubator</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.registration/1.0.0</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.resource/2.3.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.resource/2.3.5-SNAPSHOT</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.webconsole/1.0.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.webdav/2.2.2</bundle>
   </feature>
