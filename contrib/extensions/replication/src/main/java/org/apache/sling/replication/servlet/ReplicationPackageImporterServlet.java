@@ -25,14 +25,12 @@ import javax.servlet.ServletException;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.apache.sling.replication.agent.impl.ReplicationAgentResource;
-import org.apache.sling.replication.agent.impl.ReplicationAgentResourceProvider;
 import org.apache.sling.replication.communication.ReplicationHeader;
+import org.apache.sling.replication.resources.ReplicationConstants;
 import org.apache.sling.replication.serialization.ReplicationPackageImporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,18 +42,20 @@ import org.slf4j.LoggerFactory;
 @Component(metatype = false)
 @Service(value = Servlet.class)
 @Properties({
-        @Property(name = "sling.servlet.resourceTypes", value = ReplicationAgentResource.IMPORTER_RESOURCE_TYPE),
+        @Property(name = "sling.servlet.resourceTypes", value = ReplicationConstants.IMPORTER_RESOURCE_TYPE),
         @Property(name = "sling.servlet.methods", value = "POST")})
-public class ReplicationReceiverServlet extends SlingAllMethodsServlet {
+public class ReplicationPackageImporterServlet extends SlingAllMethodsServlet {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-
-    @Reference
-    private ReplicationPackageImporter replicationPackageImporter;
 
     @Override
     protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
             throws ServletException, IOException {
+
+        ReplicationPackageImporter replicationPackageImporter = request
+                .getResource()
+                .adaptTo(ReplicationPackageImporter.class);
+
         boolean success = false;
         final long start = System.currentTimeMillis();
         response.setContentType("text/plain");

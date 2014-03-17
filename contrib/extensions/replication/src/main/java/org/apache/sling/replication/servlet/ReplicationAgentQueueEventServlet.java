@@ -34,16 +34,14 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.agent.ReplicationAgentsManager;
-import org.apache.sling.replication.agent.impl.ReplicationAgentQueueResource;
 import org.apache.sling.replication.event.ReplicationEvent;
 import org.apache.sling.replication.event.ReplicationEventType;
+import org.apache.sling.replication.resources.ReplicationConstants;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
@@ -59,7 +57,7 @@ import org.slf4j.LoggerFactory;
 @Component(metatype = false)
 @Service(value = Servlet.class)
 @Properties({
-        @Property(name = "sling.servlet.resourceTypes", value = ReplicationAgentQueueResource.EVENT_RESOURCE_TYPE),
+        @Property(name = "sling.servlet.resourceTypes", value = ReplicationConstants.AGENT_QUEUE_EVENT_RESOURCE_TYPE),
         @Property(name = "sling.servlet.methods", value = "GET")
 })
 public class ReplicationAgentQueueEventServlet extends SlingAllMethodsServlet {
@@ -67,9 +65,6 @@ public class ReplicationAgentQueueEventServlet extends SlingAllMethodsServlet {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private static final Map<String, Collection<String>> cachedEvents = new ConcurrentHashMap<String, Collection<String>>();
-
-    @Reference
-    private ReplicationAgentsManager replicationAgentsManager;
 
     private ServiceRegistration registration;
 

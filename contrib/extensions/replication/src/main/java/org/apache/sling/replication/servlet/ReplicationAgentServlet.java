@@ -39,12 +39,12 @@ import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 
 import org.apache.sling.replication.agent.AgentReplicationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.agent.impl.ReplicationAgentResource;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationHeader;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.communication.ReplicationResponse;
 import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
+import org.apache.sling.replication.resources.ReplicationConstants;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +56,7 @@ import org.slf4j.LoggerFactory;
 @Component(metatype = false)
 @Service(value = Servlet.class)
 @Properties({
-        @Property(name = "sling.servlet.resourceTypes", value = ReplicationAgentResource.RESOURCE_TYPE),
+        @Property(name = "sling.servlet.resourceTypes", value = ReplicationConstants.AGENT_RESOURCE_TYPE),
         @Property(name = "sling.servlet.methods", value = "POST") })
 public class ReplicationAgentServlet extends SlingAllMethodsServlet {
 
