@@ -60,6 +60,8 @@ public class Init extends SlingAllMethodsServlet {
                 public String getName() {
                     return "testUser";
                 }};
+                
+            session.save();
 
         } catch (Exception e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
