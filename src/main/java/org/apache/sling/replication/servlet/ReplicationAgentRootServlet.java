@@ -19,8 +19,6 @@
 package org.apache.sling.replication.servlet;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.SortedSet;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
@@ -28,18 +26,16 @@ import javax.servlet.ServletException;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.apache.sling.replication.agent.impl.ReplicationAgentResource;
+import org.apache.sling.replication.resources.ReplicationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.sling.replication.agent.AgentReplicationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.agent.ReplicationAgentsManager;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
 
@@ -50,8 +46,8 @@ import org.apache.sling.replication.communication.ReplicationRequest;
 @Component(metatype = false)
 @Service(value = Servlet.class)
 @Properties({
-    @Property(name = "sling.servlet.resourceTypes", value = ReplicationAgentResource.RESOURCE_ROOT_TYPE),
-    @Property(name = "sling.servlet.methods", value = {"POST", "GET" })
+    @Property(name = "sling.servlet.resourceTypes", value = ReplicationConstants.AGENT_ROOT_RESOURCE_TYPE),
+    @Property(name = "sling.servlet.methods", value = {"POST" })
 })
 public class ReplicationAgentRootServlet extends SlingAllMethodsServlet {
 
@@ -61,18 +57,18 @@ public class ReplicationAgentRootServlet extends SlingAllMethodsServlet {
 
     private static final String ACTION_PARAMETER = "action";
 
-    @Reference
-    private ReplicationAgentsManager replicationAgentsManager;
 
     @Override
     protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
                     throws ServletException, IOException {
 
+        ReplicationAgent[] agents = request.getResource().adaptTo(ReplicationAgent[].class);
+
         String a = request.getParameter(ACTION_PARAMETER);
         String[] paths = request.getParameterValues(PATH_PARAMETER);
 
         ReplicationActionType action = ReplicationActionType.fromName(a);
-        SortedSet<ReplicationAgent> agents = replicationAgentsManager.getAgentsFor(action, paths);
+
 
         ReplicationRequest replicationRequest = new ReplicationRequest(System.currentTimeMillis(),
                         action, paths);
@@ -97,50 +93,5 @@ public class ReplicationAgentRootServlet extends SlingAllMethodsServlet {
         else {
             response.setStatus(200);
         }
-    }
-
-
-
-    @Override
-    protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response)
-            throws ServletException, IOException {
-
-        Collection<ReplicationAgent> agents = replicationAgentsManager.getAllAvailableAgents();
-
-        response.getWriter().append(toJson(agents));
-    }
-
-    String toJson(Collection<ReplicationAgent> agents) {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("{");
-
-        sb.append("\"items\": ");
-
-        sb.append("[");
-
-        for(ReplicationAgent agent : agents) {
-            sb.append(toJson(agent));
-            sb.append(",");
-        }
-
-        if(sb.charAt(sb.length()-1) == ',')
-            sb.deleteCharAt(sb.length()-1);
-
-        sb.append("]");
-
-        sb.append("}");
-
-        return sb.toString();
-    }
-
-
-    String toJson(ReplicationAgent agent) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{");
-        sb.append("\"name\": "+ agent.getName());
-        sb.append("}");
-
-        return sb.toString();
     }
 }

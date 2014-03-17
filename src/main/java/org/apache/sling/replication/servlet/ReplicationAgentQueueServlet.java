@@ -31,14 +31,11 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 
 import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.agent.impl.ReplicationAgentQueueResource;
 import org.apache.sling.replication.communication.ReplicationHeader;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.queue.ReplicationQueueItemState;
-import org.apache.sling.replication.serialization.ReplicationPackage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.sling.replication.resources.ReplicationConstants;
 
 /**
  * Servlet to retrieve a {@link org.apache.sling.replication.queue.ReplicationQueue} status.
@@ -47,9 +44,9 @@ import org.slf4j.LoggerFactory;
 @Component(metatype = false)
 @Service(value = Servlet.class)
 @Properties({
-        @Property(name = "sling.servlet.resourceTypes", value = ReplicationAgentQueueResource.RESOURCE_TYPE),
+        @Property(name = "sling.servlet.resourceTypes", value = ReplicationConstants.AGENT_QUEUE_RESOURCE_TYPE),
         @Property(name = "sling.servlet.methods", value = { "GET", "POST", "DELETE" } ) })
-public class ReplicationQueueServlet extends SlingAllMethodsServlet {
+public class ReplicationAgentQueueServlet extends SlingAllMethodsServlet {
 
     @Override
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response)
@@ -58,10 +55,12 @@ public class ReplicationQueueServlet extends SlingAllMethodsServlet {
 
         String queueName = request.getParameter(ReplicationHeader.QUEUE.toString());
 
-        ReplicationQueue queue = request.getResource().adaptTo(ReplicationQueue.class);
+        ReplicationAgent agent = request.getResource().adaptTo(ReplicationAgent.class);
 
-        if (queue != null) {
+        if (agent != null) {
             try {
+                ReplicationQueue queue = agent.getQueue("");
+
                 response.getWriter().write(toJSoN(queue));
             } catch (Exception e) {
                 response.getWriter().write("{\"status\" : \"error\",\"message\":\"error reading from the queue\"}");

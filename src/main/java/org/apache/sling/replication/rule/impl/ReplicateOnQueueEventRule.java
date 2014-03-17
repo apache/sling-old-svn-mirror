@@ -49,10 +49,9 @@ import org.apache.sling.replication.agent.AgentReplicationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.agent.ReplicationAgentConfiguration;
 import org.apache.sling.replication.agent.ReplicationAgentConfigurationManager;
-import org.apache.sling.replication.agent.impl.ReplicationAgentQueueResource;
-import org.apache.sling.replication.agent.impl.ReplicationAgentResource;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.resources.ReplicationConstants;
 import org.apache.sling.replication.rule.ReplicationRule;
 import org.apache.sling.replication.transport.TransportHandler;
 import org.osgi.framework.BundleContext;
@@ -206,9 +205,9 @@ public class ReplicateOnQueueEventRule implements ReplicationRule {
 
                     log.info("endpoint {} props {}", endpoints, authenticationProperties);
                     // only works with HTTP
-                    if (endpoints.length == 1 && endpoints[0].startsWith("http") && endpoints[0].contains(ReplicationAgentResource.BASE_PATH) && authenticationProperties != null) {
+                    if (endpoints.length == 1 && endpoints[0].startsWith("http") && authenticationProperties != null) {
                         log.info("getting event queue URI");
-                        URI eventEndpoint = URI.create(endpoints[0] + ReplicationAgentQueueResource.EVENT_SUFFIX_PATH);
+                        URI eventEndpoint = URI.create(endpoints[0] + ReplicationConstants.SUFFIX_AGENT_QUEUE_EVENT);
                         String userName = authenticationProperties.get("user");
                         String password = authenticationProperties.get("password");
 

@@ -1,0 +1,20 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "name" : "replicationAgentsConfig",
+    "provider.roots" : [ "/libs/sling/replication/config/agent" ],
+    "serviceType" : "org.apache.sling.replication.agent.impl.ReplicationAgentServiceFactory",
+    "providerType" : "osgiConfig",
+    "resourceProperties" : [
+        "../sling:resourceType=replication/config/agents",
+
+        "sling:resourceType=replication/config/agent",
+        "name={name}",
+        "runModes={runModes}",
+        "queueProvider={ReplicationQueueProvider.target}",
+        "packageBuilder={ReplicationPackageBuilder.target}",
+        "queueStrategy={ReplicationQueueDistributionStrategy.target}",
+        "transportHandler={TransportHandler.target}"
+    ]
+
+
+}

@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.replication.event.ReplicationEventFactory;
@@ -40,7 +41,10 @@ import org.slf4j.LoggerFactory;
  */
 @Component(label = "Default Replication Package Importer")
 @Service(value = ReplicationPackageImporter.class)
+@Property(name = "name", value = DefaultReplicationPackageImporter.NAME)
 public class DefaultReplicationPackageImporter implements ReplicationPackageImporter {
+
+    public static final String NAME = "default";
 
     private static final String QUEUE_NAME = "replication-package-import";
     private static final String QUEUE_TOPIC = "org/apache/sling/replication/import";
