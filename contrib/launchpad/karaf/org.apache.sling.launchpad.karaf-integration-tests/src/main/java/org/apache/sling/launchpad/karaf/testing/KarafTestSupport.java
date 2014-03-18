@@ -19,26 +19,45 @@
 package org.apache.sling.launchpad.karaf.testing;
 
 import java.io.File;
+import java.net.ServerSocket;
 
 import javax.inject.Inject;
 
 import org.apache.karaf.features.BootFinished;
-import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.karaf.options.LogLevelOption;
 import org.ops4j.pax.exam.util.Filter;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 
 import static org.ops4j.pax.exam.CoreOptions.maven;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.streamBundle;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFileExtend;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.keepRuntimeFolder;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.logLevel;
 import static org.ops4j.pax.tinybundles.core.TinyBundles.bundle;
 
 public abstract class KarafTestSupport {
+
+    protected int sshPort;
+
+    protected int httpPort;
+
+    protected int rmiRegistryPort;
+
+    protected int rmiServerPort;
+
+    @Inject
+    protected BundleContext bundleContext;
+
+    @Inject
+    @Filter(timeout = 300000)
+    BootFinished bootFinished;
 
     public static final String KARAF_GROUP_ID = "org.apache.karaf";
 
@@ -48,11 +67,46 @@ public abstract class KarafTestSupport {
 
     public static final String KARAF_NAME = "Apache Karaf";
 
-    @Inject
-    @Filter(timeout = 300000)
-    BootFinished bootFinished;
-
     protected KarafTestSupport() {
+    }
+
+    protected synchronized int findFreePort() {
+        try {
+            final ServerSocket serverSocket = new ServerSocket(0);
+            final int port = serverSocket.getLocalPort();
+            serverSocket.close();
+            return port;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    protected synchronized int sshPort() {
+        if (sshPort == 0) {
+            sshPort = findFreePort();
+        }
+        return sshPort;
+    }
+
+    protected synchronized int httpPort() {
+        if (httpPort == 0) {
+            httpPort = findFreePort();
+        }
+        return httpPort;
+    }
+
+    protected synchronized int rmiRegistryPort() {
+        if (rmiRegistryPort == 0) {
+            rmiRegistryPort = findFreePort();
+        }
+        return rmiRegistryPort;
+    }
+
+    protected synchronized int rmiServerPort() {
+        if (rmiServerPort == 0) {
+            rmiServerPort = findFreePort();
+        }
+        return rmiServerPort;
     }
 
     public String karafGroupId() {
@@ -75,6 +129,19 @@ public abstract class KarafTestSupport {
         return editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresBoot", "," + feature);
     }
 
+    protected Bundle findBundle(final String symbolicName) {
+        for (final Bundle bundle : bundleContext.getBundles()) {
+            if (symbolicName.equals(bundle.getSymbolicName())) {
+                return bundle;
+            }
+        }
+        return null;
+    }
+
+    protected String featureRepository() {
+        return "mvn:org.apache.sling/org.apache.sling.launchpad.karaf-features/0.1.1-SNAPSHOT/xml/features";
+    }
+
     protected Option karafTestSupportBundle() {
         return streamBundle(
             bundle()
@@ -87,7 +154,7 @@ public abstract class KarafTestSupport {
     }
 
     protected Option[] baseConfiguration() {
-        return new Option[]{
+        return options(
             karafDistributionConfiguration()
                 .frameworkUrl(maven().groupId(karafGroupId()).artifactId(karafArtifactId()).version(karafVersion()).type("tar.gz"))
                 .karafVersion(karafVersion())
@@ -96,13 +163,17 @@ public abstract class KarafTestSupport {
                 .unpackDirectory(new File("target/paxexam/")),
             keepRuntimeFolder(),
             logLevel(LogLevelOption.LogLevel.INFO),
-            editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresRepositories", ",mvn:org.apache.sling/org.apache.sling.launchpad.karaf-features/0.1.1-SNAPSHOT/xml/features"),
+            editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresRepositories", "," + featureRepository()),
+            editConfigurationFilePut("etc/org.apache.karaf.management.cfg", "rmiRegistryPort", Integer.toString(rmiRegistryPort())),
+            editConfigurationFilePut("etc/org.apache.karaf.management.cfg", "rmiServerPort", Integer.toString(rmiServerPort())),
+            editConfigurationFilePut("etc/org.apache.karaf.shell.cfg", "sshPort", Integer.toString(sshPort())),
+            editConfigurationFilePut("etc/org.ops4j.pax.web.cfg", "org.osgi.service.http.port", Integer.toString(httpPort())),
             mavenBundle()
                 .groupId("org.ops4j.pax.tinybundles")
                 .artifactId("tinybundles")
                 .version("2.0.0"),
             karafTestSupportBundle()
-        };
+        );
     }
 
 }
