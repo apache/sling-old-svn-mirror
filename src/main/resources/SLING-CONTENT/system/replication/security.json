@@ -1,5 +1,0 @@
-{
-    "jcr:primaryType" : "nt:unstructured",
-    "name" : "Replication Security",
-    "description" : "This node controls security access to replication. Whoever can access it can also access replication HTTP API. Set the appropriate ACLs to enforce access restrictions."
-}
