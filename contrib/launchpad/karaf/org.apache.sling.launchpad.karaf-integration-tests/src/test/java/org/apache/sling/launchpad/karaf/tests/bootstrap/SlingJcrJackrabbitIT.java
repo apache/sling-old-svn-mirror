@@ -27,6 +27,10 @@ import org.ops4j.pax.exam.OptionUtils;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
+import org.osgi.framework.Bundle;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
@@ -41,8 +45,24 @@ public class SlingJcrJackrabbitIT extends KarafTestSupport {
     }
 
     @Test
-    public void test() {
-        // TODO
+    public void testOrgApacheSlingJcrJackrabbitAccessmanager() {
+        final Bundle bundle = findBundle("org.apache.sling.jcr.jackrabbit.accessmanager");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    public void testOrgApacheSlingJcrJackrabbitServer() {
+        final Bundle bundle = findBundle("org.apache.sling.jcr.jackrabbit.server");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    public void testOrgApacheSlingJcrJackrabbitUsermanager() {
+        final Bundle bundle = findBundle("org.apache.sling.jcr.jackrabbit.usermanager");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
     }
 
 }

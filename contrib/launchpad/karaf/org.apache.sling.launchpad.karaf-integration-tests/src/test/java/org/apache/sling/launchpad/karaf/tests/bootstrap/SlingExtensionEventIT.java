@@ -32,7 +32,9 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.ops4j.pax.exam.util.Filter;
+import org.osgi.framework.Bundle;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(PaxExam.class)
@@ -52,6 +54,13 @@ public class SlingExtensionEventIT extends KarafTestSupport {
         return OptionUtils.combine(baseConfiguration(),
             addBootFeature("sling-extension-event")
         );
+    }
+
+    @Test
+    public void testOrgApacheSlingEvent() {
+        final Bundle bundle = findBundle("org.apache.sling.event");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
     }
 
     @Test

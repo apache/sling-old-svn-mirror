@@ -27,6 +27,10 @@ import org.ops4j.pax.exam.OptionUtils;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
+import org.osgi.framework.Bundle;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
@@ -40,8 +44,24 @@ public class SlingScriptingIT extends KarafTestSupport {
     }
 
     @Test
-    public void test() {
-        // TODO
+    public void testOrgApacheSlingScriptingApi() {
+        final Bundle bundle = findBundle("org.apache.sling.scripting.api");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    public void testOrgApacheSlingScriptingCore() {
+        final Bundle bundle = findBundle("org.apache.sling.scripting.core");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    public void testOrgApacheGeronimoSpecsGeronimoServlet_3_0_Spec() {
+        final Bundle bundle = findBundle("org.apache.geronimo.specs.geronimo-servlet_3.0_spec");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
     }
 
 }

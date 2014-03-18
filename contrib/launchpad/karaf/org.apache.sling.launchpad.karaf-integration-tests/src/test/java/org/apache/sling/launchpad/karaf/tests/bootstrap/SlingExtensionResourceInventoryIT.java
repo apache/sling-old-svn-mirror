@@ -27,6 +27,10 @@ import org.ops4j.pax.exam.OptionUtils;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
+import org.osgi.framework.Bundle;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
@@ -40,8 +44,17 @@ public class SlingExtensionResourceInventoryIT extends KarafTestSupport {
     }
 
     @Test
-    public void test() {
-        // TODO
+    public void testOrgApacheSlingResourceInventory() {
+        final Bundle bundle = findBundle("org.apache.sling.resource.inventory");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    public void testOrgApacheCommonsLang3() {
+        final Bundle bundle = findBundle("org.apache.commons.lang3");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
     }
 
 }

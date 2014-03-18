@@ -27,6 +27,10 @@ import org.ops4j.pax.exam.OptionUtils;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
+import org.osgi.framework.Bundle;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
@@ -40,8 +44,24 @@ public class SlingServletsIT extends KarafTestSupport {
     }
 
     @Test
-    public void test() {
-        // TODO
+    public void testOrgApacheSlingServletsGet() {
+        final Bundle bundle = findBundle("org.apache.sling.servlets.get");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    public void testOrgApacheSlingServletsPost() {
+        final Bundle bundle = findBundle("org.apache.sling.servlets.post");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    public void testOrgApacheSlingServletsResolver() {
+        final Bundle bundle = findBundle("org.apache.sling.servlets.resolver");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
     }
 
 }

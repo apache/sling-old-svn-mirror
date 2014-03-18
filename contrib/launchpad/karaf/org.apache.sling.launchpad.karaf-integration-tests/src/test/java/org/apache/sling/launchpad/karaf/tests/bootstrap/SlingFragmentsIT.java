@@ -27,6 +27,10 @@ import org.ops4j.pax.exam.OptionUtils;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
+import org.osgi.framework.Bundle;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
@@ -40,8 +44,31 @@ public class SlingFragmentsIT extends KarafTestSupport {
     }
 
     @Test
-    public void test() {
-        // TODO
+    public void testOrgApacheSlingFragmentActivation() {
+        final Bundle bundle = findBundle("org.apache.sling.fragment.activation");
+        assertNotNull(bundle);
+        assertEquals(Bundle.RESOLVED, bundle.getState());
+    }
+
+    @Test
+    public void testOrgApacheSlingFragmentTransaction() {
+        final Bundle bundle = findBundle("org.apache.sling.fragment.transaction");
+        assertNotNull(bundle);
+        assertEquals(Bundle.RESOLVED, bundle.getState());
+    }
+
+    @Test
+    public void testOrgApacheSlingFragmentWs() {
+        final Bundle bundle = findBundle("org.apache.sling.fragment.ws");
+        assertNotNull(bundle);
+        assertEquals(Bundle.RESOLVED, bundle.getState());
+    }
+
+    @Test
+    public void testOrgApacheSlingFragmentXml() {
+        final Bundle bundle = findBundle("org.apache.sling.fragment.xml");
+        assertNotNull(bundle);
+        assertEquals(Bundle.RESOLVED, bundle.getState());
     }
 
 }
