@@ -289,14 +289,31 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
     }
 
     private String getSource(AnnotatedElement element) {
-        Source source = element.getAnnotation(Source.class);
+        Source source = getAnnotation(element, Source.class);
         if (source != null) {
             return source.value();
         } else {
+            return null;
+        }
+    }
+
+    /**
+     * Get an annotation from either the element itself or on any of the
+     * element's annotations (meta-annotations).
+     * 
+     * @param element the element
+     * @param annotationClass the annotation class
+     * @return the found annotation or null
+     */
+    private <T extends Annotation> T getAnnotation(AnnotatedElement element, Class<T> annotationClass) {
+        T annotation = element.getAnnotation(annotationClass);
+        if (annotation != null) {
+            return annotation;
+        } else {
             for (Annotation ann : element.getAnnotations()) {
-                source = ann.annotationType().getAnnotation(Source.class);
-                if (source != null) {
-                    return source.value();
+                annotation = ann.annotationType().getAnnotation(annotationClass);
+                if (annotation != null) {
+                    return annotation;
                 }
             }
         }
