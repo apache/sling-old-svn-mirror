@@ -343,7 +343,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.api</artifactId>
-            <version>2.4.3-R1523266</version>
+            <version>2.5.0</version>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
