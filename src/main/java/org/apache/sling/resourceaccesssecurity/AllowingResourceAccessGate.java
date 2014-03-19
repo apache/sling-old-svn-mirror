@@ -32,48 +32,48 @@ public abstract class AllowingResourceAccessGate implements ResourceAccessGate {
 
     @Override
     public GateResult canRead(final Resource resource) {
-        return GateResult.DONTCARE;
+        return GateResult.CANT_DECIDE;
     }
 
     @Override
     public GateResult canCreate(final String absPathName,
             final ResourceResolver resourceResolver) {
-        return GateResult.DONTCARE;
+        return GateResult.CANT_DECIDE;
     }
 
     @Override
     public GateResult canUpdate(final Resource resource) {
-        return GateResult.DONTCARE;
+        return GateResult.CANT_DECIDE;
     }
 
     @Override
     public GateResult canDelete(final Resource resource) {
-        return GateResult.DONTCARE;
+        return GateResult.CANT_DECIDE;
     }
 
     @Override
     public GateResult canExecute(final Resource resource) {
-        return GateResult.DONTCARE;
+        return GateResult.CANT_DECIDE;
     }
 
     @Override
     public GateResult canReadValue(final Resource resource, final String valueName) {
-        return GateResult.DONTCARE;
+        return GateResult.CANT_DECIDE;
     }
 
     @Override
     public GateResult canCreateValue(final Resource resource, final String valueName) {
-        return GateResult.DONTCARE;
+        return GateResult.CANT_DECIDE;
     }
 
     @Override
     public GateResult canUpdateValue(final Resource resource, final String valueName) {
-        return GateResult.DONTCARE;
+        return GateResult.CANT_DECIDE;
     }
 
     @Override
     public GateResult canDeleteValue(final Resource resource, final String valueName) {
-        return GateResult.DONTCARE;
+        return GateResult.CANT_DECIDE;
     }
 
     @Override
