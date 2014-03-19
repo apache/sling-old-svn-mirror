@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.resourcemerger</artifactId>
     <packaging>bundle</packaging>
-    <version>1.1.1-SNAPSHOT</version>
+    <version>1.1.2</version>
 
     <name>Apache Sling Resource Merger</name>
     <description>
@@ -37,9 +37,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/resourcemerger</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/resourcemerger</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/resourcemerger</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.resourcemerger-1.1.2</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.resourcemerger-1.1.2</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.resourcemerger-1.1.2</url>
     </scm>
 
     <build>
