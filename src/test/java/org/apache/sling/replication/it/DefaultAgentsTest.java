@@ -69,6 +69,7 @@ public class DefaultAgentsTest extends SlingTestBase {
         }
     }
 
+    @Test
     public void testDefaultAuthorAgents() throws IOException {
         // these agents exist as they are bundled to author runMode
         String[] defaultAuthorAgents = new String[]{
@@ -93,6 +94,7 @@ public class DefaultAgentsTest extends SlingTestBase {
         }
     }
 
+    @Test
     public void testDefaultAuthorAgentsQueues() throws IOException {
         // these agent queues exist as they are bundled to author runMode
         String[] defaultAuthorAgents = new String[]{
