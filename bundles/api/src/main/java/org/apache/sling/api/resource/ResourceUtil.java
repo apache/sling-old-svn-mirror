@@ -380,7 +380,7 @@ public class ResourceUtil {
      * @since 2.0.6
      */
     public static String resourceTypeToPath(final String type) {
-        return type.replaceAll("\\:", "/");
+        return type.replace(':', '/');
     }
 
     /**
