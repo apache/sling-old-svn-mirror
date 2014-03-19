@@ -34,7 +34,7 @@ import java.util.Map;
 @Component
 @Service(value=ResourceAccessGate.class)
 @Properties({
-        @Property(name=ResourceAccessGate.PATH, label="Path",
+        @Property(name=ResourceAccessGate.PATH, label="Path", value="/test/(un|)secured-provider/read(-update|)/(prov|mixed)/.*", 
                 description="The path is a regular expression for which resources the service should be called"),
         @Property(name=ResourceAccessGate.FINALOPERATIONS, value="read,update", propertyPrivate=true),
         @Property(name = Constants.SERVICE_RANKING, intValue = 5, propertyPrivate = false),

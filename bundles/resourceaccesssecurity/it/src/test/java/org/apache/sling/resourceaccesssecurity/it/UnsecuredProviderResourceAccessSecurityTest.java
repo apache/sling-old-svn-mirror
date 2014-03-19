@@ -24,7 +24,7 @@ public class UnsecuredProviderResourceAccessSecurityTest extends ResourceAccessS
 
     @Test
     public void testDeniedReadAccess() throws Exception {
-        String path = "/providers/unsecured/read/providergate1-denyread/test.json";
+        String path = "/test/unsecured-provider/read/prov/providergate1-denyread/test.json";
 
         // can be read anyway
         testRead(getTestUsername(), getTestPassword(), path, 200);
@@ -33,14 +33,14 @@ public class UnsecuredProviderResourceAccessSecurityTest extends ResourceAccessS
 
     @Test
     public void testReadNonExistingResource() throws Exception {
-        String path = "/providers/unsecured/nonexisting/test.json";
+        String path = "/test/unsecured-provider/read/nonexisting/test.json";
 
         testRead(getTestUsername(), getTestPassword(), path, 404);
     }
 
     @Test
     public void testReadFromNonExistingProvider() throws Exception {
-        String path = "/providers/nonexisting/test.json";
+        String path = "/test/nonexisting/test.json";
 
         testRead(getTestUsername(), getTestPassword(), path, 404);
     }

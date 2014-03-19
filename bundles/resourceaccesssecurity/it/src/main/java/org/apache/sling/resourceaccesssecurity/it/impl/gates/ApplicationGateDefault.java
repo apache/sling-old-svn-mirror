@@ -27,24 +27,65 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.resourceaccesssecurity.AllowingResourceAccessGate;
 import org.apache.sling.resourceaccesssecurity.ResourceAccessGate;
+import org.apache.sling.resourceaccesssecurity.ResourceAccessGate.GateResult;
 
 import java.util.Map;
 
 @Component
 @Service(value=ResourceAccessGate.class)
 @Properties({
-        @Property(name=ResourceAccessGate.PATH, label="Path", value="/test/(un|)secured-provider/read(-update|)/(app|mixed)/.*", 
+        @Property(name=ResourceAccessGate.PATH, label="Path", value="^((?!(/test/secured-provider/read|/test/unsecured-provider/read)).*|/test/(un|)secured-provider/read(-update|)/prov/.*)", 
                 description="The path is a regular expression for which resources the service should be called"),
-        @Property(name=ResourceAccessGate.FINALOPERATIONS, value="read,update", propertyPrivate=true),
+        @Property(name=ResourceAccessGate.OPERATIONS, value="", propertyPrivate=true),
         @Property(name=ResourceAccessGate.CONTEXT, value=ResourceAccessGate.APPLICATION_CONTEXT, propertyPrivate=true)
 })
-public class FinalApplicationGate2 extends AResourceAccessGate implements ResourceAccessGate {
+public class ApplicationGateDefault extends AllowingResourceAccessGate implements ResourceAccessGate {
 
-    public static String GATE_ID = "finalappgate2";
-    
     @Override
-    protected String getGateId() {
-        return GATE_ID;
+    public GateResult canRead(final Resource resource) {
+        return GateResult.GRANTED;
     }
+
+    @Override
+    public GateResult canCreate(final String absPathName,
+            final ResourceResolver resourceResolver) {
+        return GateResult.GRANTED;
+    }
+
+    @Override
+    public GateResult canUpdate(final Resource resource) {
+        return GateResult.GRANTED;
+    }
+
+    @Override
+    public GateResult canDelete(final Resource resource) {
+        return GateResult.GRANTED;
+    }
+
+    @Override
+    public GateResult canExecute(final Resource resource) {
+        return GateResult.GRANTED;
+    }
+
+    @Override
+    public GateResult canReadValue(final Resource resource, final String valueName) {
+        return GateResult.GRANTED;
+    }
+
+    @Override
+    public GateResult canCreateValue(final Resource resource, final String valueName) {
+        return GateResult.GRANTED;
+    }
+
+    @Override
+    public GateResult canUpdateValue(final Resource resource, final String valueName) {
+        return GateResult.GRANTED;
+    }
+
+    @Override
+    public GateResult canDeleteValue(final Resource resource, final String valueName) {
+        return GateResult.GRANTED;
+    }
+
 
 }

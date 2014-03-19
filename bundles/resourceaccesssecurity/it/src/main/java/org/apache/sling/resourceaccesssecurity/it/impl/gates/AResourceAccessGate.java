@@ -47,7 +47,7 @@ public abstract class AResourceAccessGate extends AllowingResourceAccessGate imp
 
     @Override
     public GateResult canRead(Resource resource) {
-        GateResult returnValue = GateResult.DONTCARE;
+        GateResult returnValue = GateResult.CANT_DECIDE;
         
         if ( resource.getPath().contains( getGateId() + "-denyread") )
         {
@@ -68,7 +68,7 @@ public abstract class AResourceAccessGate extends AllowingResourceAccessGate imp
     
     @Override
     public GateResult canUpdate(Resource resource) {
-        GateResult returnValue = GateResult.DONTCARE;
+        GateResult returnValue = GateResult.CANT_DECIDE;
         
         if ( resource.getPath().contains( getGateId() + "-denyupdate") )
         {

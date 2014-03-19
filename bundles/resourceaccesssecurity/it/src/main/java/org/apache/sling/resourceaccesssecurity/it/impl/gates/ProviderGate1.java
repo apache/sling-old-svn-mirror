@@ -27,7 +27,7 @@ import org.apache.sling.resourceaccesssecurity.ResourceAccessGate;
 @Component
 @Service(value=ResourceAccessGate.class)
 @Properties({
-        @Property(name=ResourceAccessGate.PATH, label="Path",
+        @Property(name=ResourceAccessGate.PATH, label="Path", value="/test/(un|)secured-provider/read(-update|)/(prov|mixed)/.*", 
                 description="The path is a regular expression for which resources the service should be called"),
         @Property(name=ResourceAccessGate.OPERATIONS, value="read,update", propertyPrivate=true),
         @Property(name=ResourceAccessGate.CONTEXT, value=ResourceAccessGate.PROVIDER_CONTEXT, propertyPrivate=true)

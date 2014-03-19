@@ -36,10 +36,10 @@ public abstract class ResourceAccessSecurityImpl implements ResourceAccessSecuri
 
     private List<ResourceAccessGateHandler> allHandlers = Collections.emptyList();
 
-    private final boolean defaultAllow;
+    private final boolean defaultAllowIfNoGateMatches;
 
-    public ResourceAccessSecurityImpl(final boolean defaultAllow) {
-        this.defaultAllow = defaultAllow;
+    public ResourceAccessSecurityImpl(final boolean defaultAllowIfNoGateMatches) {
+        this.defaultAllowIfNoGateMatches = defaultAllowIfNoGateMatches;
     }
 
     /**
@@ -101,7 +101,7 @@ public abstract class ResourceAccessSecurityImpl implements ResourceAccessSecuri
 
     @Override
     public Resource getReadableResource(final Resource resource) {
-        Resource returnValue = (this.defaultAllow ? resource : null);
+        Resource returnValue = null;
 
         final Iterator<ResourceAccessGateHandler> accessGateHandlers = getMatchingResourceAccessGateHandlerIterator(
                 resource.getPath(), ResourceAccessGate.Operation.READ);
@@ -113,7 +113,10 @@ public abstract class ResourceAccessSecurityImpl implements ResourceAccessSecuri
 
         if ( accessGateHandlers != null ) {
 
+            boolean noGateMatched = true;
+            
             while ( accessGateHandlers.hasNext() ) {
+                noGateMatched = false;
                 final ResourceAccessGateHandler resourceAccessGateHandler  = accessGateHandlers.next();
 
                 final GateResult gateResult = resourceAccessGateHandler.getResourceAccessGate().canRead(resource);
@@ -130,22 +133,23 @@ public abstract class ResourceAccessSecurityImpl implements ResourceAccessSecuri
                 }
                 if (finalGateResult == null) {
                     finalGateResult = gateResult;
-                } else if (finalGateResult != GateResult.GRANTED && gateResult != GateResult.DONTCARE) {
+                } else if (finalGateResult != GateResult.GRANTED && gateResult != GateResult.CANT_DECIDE) {
                     finalGateResult = gateResult;
                 }
                 // stop checking if the operation is final and the result not GateResult.DONTCARE
-                if (gateResult != GateResult.DONTCARE  && resourceAccessGateHandler.isFinalOperation(ResourceAccessGate.Operation.READ)) {
+                if (gateResult != GateResult.CANT_DECIDE  && resourceAccessGateHandler.isFinalOperation(ResourceAccessGate.Operation.READ)) {
                     break;
                 }
             }
 
 
             // return null if access is denied or no ResourceAccessGate is present
-            if (finalGateResult == null || finalGateResult == GateResult.DENIED) {
+            if (finalGateResult == GateResult.DENIED) {
                 returnValue = null;
-            } else if (finalGateResult == GateResult.DONTCARE) {
-                returnValue = (this.defaultAllow ? resource : null);
             } else if (finalGateResult == GateResult.GRANTED ) {
+                returnValue = resource;
+            } else if (noGateMatched && this.defaultAllowIfNoGateMatches)
+            {
                 returnValue = resource;
             }
         }
@@ -169,20 +173,22 @@ public abstract class ResourceAccessSecurityImpl implements ResourceAccessSecuri
             final ResourceResolver resolver) {
         final Iterator<ResourceAccessGateHandler> handlers = getMatchingResourceAccessGateHandlerIterator(
                 path, ResourceAccessGate.Operation.CREATE);
-        boolean result = this.defaultAllow;
+        boolean result = false;
         if ( handlers != null ) {
             GateResult finalGateResult = null;
+            boolean noGateMatched = true;
 
             while ( handlers.hasNext() ) {
+                noGateMatched = false;
                 final ResourceAccessGateHandler resourceAccessGateHandler  = handlers.next();
 
                 final GateResult gateResult = resourceAccessGateHandler.getResourceAccessGate().canCreate(path, resolver);
                 if (finalGateResult == null) {
                     finalGateResult = gateResult;
-                } else if (finalGateResult != GateResult.GRANTED && gateResult != GateResult.DONTCARE) {
+                } else if (finalGateResult != GateResult.GRANTED && gateResult != GateResult.CANT_DECIDE) {
                     finalGateResult = gateResult;
                 }
-                if (finalGateResult == GateResult.GRANTED || gateResult != GateResult.DONTCARE && 
+                if (finalGateResult == GateResult.GRANTED || gateResult != GateResult.CANT_DECIDE && 
                         resourceAccessGateHandler.isFinalOperation(ResourceAccessGate.Operation.CREATE)) {
                     break;
                 }
@@ -192,6 +198,9 @@ public abstract class ResourceAccessSecurityImpl implements ResourceAccessSecuri
                 result = true;
             } else if ( finalGateResult == GateResult.DENIED ) {
                 result = false;
+            } else if ( noGateMatched && this.defaultAllowIfNoGateMatches )
+            {
+                result = true;
             }
         }
         return result;
@@ -201,20 +210,22 @@ public abstract class ResourceAccessSecurityImpl implements ResourceAccessSecuri
     public boolean canUpdate(final Resource resource) {
         final Iterator<ResourceAccessGateHandler> handlers = getMatchingResourceAccessGateHandlerIterator(
                 resource.getPath(), ResourceAccessGate.Operation.UPDATE);
-        boolean result = this.defaultAllow;
+        boolean result = this.defaultAllowIfNoGateMatches;
         if ( handlers != null ) {
             GateResult finalGateResult = null;
+            boolean noGateMatched = true;
 
             while ( handlers.hasNext() ) {
+                noGateMatched = false;
                 final ResourceAccessGateHandler resourceAccessGateHandler  = handlers.next();
 
                 final GateResult gateResult = resourceAccessGateHandler.getResourceAccessGate().canUpdate(resource);
                 if (finalGateResult == null) {
                     finalGateResult = gateResult;
-                } else if (finalGateResult != GateResult.GRANTED && gateResult != GateResult.DONTCARE) {
+                } else if (finalGateResult != GateResult.GRANTED && gateResult != GateResult.CANT_DECIDE) {
                     finalGateResult = gateResult;
                 }
-                if (finalGateResult == GateResult.GRANTED || gateResult != GateResult.DONTCARE && 
+                if (finalGateResult == GateResult.GRANTED || gateResult != GateResult.CANT_DECIDE && 
                         resourceAccessGateHandler.isFinalOperation(ResourceAccessGate.Operation.UPDATE)) {
                     break;
                 }
@@ -224,6 +235,9 @@ public abstract class ResourceAccessSecurityImpl implements ResourceAccessSecuri
                 result = true;
             } else if ( finalGateResult == GateResult.DENIED ) {
                 result = false;
+            } else if ( noGateMatched && this.defaultAllowIfNoGateMatches )
+            {
+                result = true;
             }
         }
         return result;
@@ -233,20 +247,22 @@ public abstract class ResourceAccessSecurityImpl implements ResourceAccessSecuri
     public boolean canDelete(final Resource resource) {
         final Iterator<ResourceAccessGateHandler> handlers = getMatchingResourceAccessGateHandlerIterator(
                 resource.getPath(), ResourceAccessGate.Operation.DELETE);
-        boolean result = this.defaultAllow;
+        boolean result = this.defaultAllowIfNoGateMatches;
         if ( handlers != null ) {
             GateResult finalGateResult = null;
+            boolean noGateMatched = true;
 
             while ( handlers.hasNext() ) {
+                noGateMatched = false;
                 final ResourceAccessGateHandler resourceAccessGateHandler  = handlers.next();
 
                 final GateResult gateResult = resourceAccessGateHandler.getResourceAccessGate().canDelete(resource);
                 if (finalGateResult == null) {
                     finalGateResult = gateResult;
-                } else if (finalGateResult != GateResult.GRANTED && gateResult != GateResult.DONTCARE) {
+                } else if (finalGateResult != GateResult.GRANTED && gateResult != GateResult.CANT_DECIDE) {
                     finalGateResult = gateResult;
                 }
-                if (finalGateResult == GateResult.GRANTED || gateResult != GateResult.DONTCARE && 
+                if (finalGateResult == GateResult.GRANTED || gateResult != GateResult.CANT_DECIDE && 
                         resourceAccessGateHandler.isFinalOperation(ResourceAccessGate.Operation.DELETE)) {
                     break;
                 }
@@ -256,6 +272,9 @@ public abstract class ResourceAccessSecurityImpl implements ResourceAccessSecuri
                 result = true;
             } else if ( finalGateResult == GateResult.DENIED ) {
                 result = false;
+            } else if ( noGateMatched && this.defaultAllowIfNoGateMatches )
+            {
+                result = true;
             }
         }
         return result;
@@ -265,20 +284,22 @@ public abstract class ResourceAccessSecurityImpl implements ResourceAccessSecuri
     public boolean canExecute(final Resource resource) {
         final Iterator<ResourceAccessGateHandler> handlers = getMatchingResourceAccessGateHandlerIterator(
                 resource.getPath(), ResourceAccessGate.Operation.EXECUTE);
-        boolean result = this.defaultAllow;
+        boolean result = this.defaultAllowIfNoGateMatches;
         if ( handlers != null ) {
             GateResult finalGateResult = null;
+            boolean noGateMatched = true;
 
             while ( handlers.hasNext() ) {
+                noGateMatched = false;
                 final ResourceAccessGateHandler resourceAccessGateHandler  = handlers.next();
 
                 final GateResult gateResult = resourceAccessGateHandler.getResourceAccessGate().canExecute(resource);
                 if (finalGateResult == null) {
                     finalGateResult = gateResult;
-                } else if (finalGateResult != GateResult.GRANTED && gateResult != GateResult.DONTCARE) {
+                } else if (finalGateResult != GateResult.GRANTED && gateResult != GateResult.CANT_DECIDE) {
                     finalGateResult = gateResult;
                 }
-                if (finalGateResult == GateResult.GRANTED || gateResult != GateResult.DONTCARE && resourceAccessGateHandler.isFinalOperation(ResourceAccessGate.Operation.EXECUTE)) {
+                if (finalGateResult == GateResult.GRANTED || gateResult != GateResult.CANT_DECIDE && resourceAccessGateHandler.isFinalOperation(ResourceAccessGate.Operation.EXECUTE)) {
                     break;
                 }
             }
@@ -287,6 +308,9 @@ public abstract class ResourceAccessSecurityImpl implements ResourceAccessSecuri
                 result = true;
             } else if ( finalGateResult == GateResult.DENIED ) {
                 result = false;
+            } else if ( noGateMatched && this.defaultAllowIfNoGateMatches )
+            {
+                result = true;
             }
         }
         return result;
@@ -295,19 +319,19 @@ public abstract class ResourceAccessSecurityImpl implements ResourceAccessSecuri
     @Override
     public boolean canReadValue(final Resource resource, final String valueName) {
         // TODO Auto-generated method stub
-        return this.defaultAllow;
+        return false;
     }
 
     @Override
     public boolean canSetValue(final Resource resource, final String valueName) {
         // TODO Auto-generated method stub
-        return this.defaultAllow;
+        return false;
     }
 
     @Override
     public boolean canDeleteValue(final Resource resource, final String valueName) {
         // TODO Auto-generated method stub
-        return this.defaultAllow;
+        return false;
     }
 
     @Override

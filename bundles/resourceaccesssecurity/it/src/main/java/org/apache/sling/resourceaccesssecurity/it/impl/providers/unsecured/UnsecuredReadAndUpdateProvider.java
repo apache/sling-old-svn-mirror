@@ -12,7 +12,7 @@ import org.apache.sling.resourceaccesssecurity.it.impl.providers.SimpleResourceP
 @Component(metatype = true, label = "Unsecured ResourceProvider")
 @Service(value = ResourceProvider.class)
 @Properties({
-        @Property(name = ResourceProvider.ROOTS, value = "/providers/unsecured/read-update" )
+        @Property(name = ResourceProvider.ROOTS, value = "/test/unsecured-provider/read-update" )
 
 })
 public class UnsecuredReadAndUpdateProvider extends SimpleModifiableResourceProvider implements ResourceProvider {

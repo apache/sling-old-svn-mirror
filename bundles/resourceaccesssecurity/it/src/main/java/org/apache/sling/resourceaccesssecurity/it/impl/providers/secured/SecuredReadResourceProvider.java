@@ -28,7 +28,7 @@ import org.apache.sling.resourceaccesssecurity.it.impl.providers.SimpleResourceP
 @Component(metatype = true, label = "Secured ResourceProvider")
 @Service(value = ResourceProvider.class)
 @Properties({
-        @Property(name = ResourceProvider.ROOTS, value = "/providers/secured/read" ),
+        @Property(name = ResourceProvider.ROOTS, value = "/test/secured-provider/read" ),
         @Property(name = ResourceProvider.USE_RESOURCE_ACCESS_SECURITY, boolValue=true, propertyPrivate=true),
         @Property(name = ResourceProvider.OWNS_ROOTS, boolValue=true, propertyPrivate=true)
 })

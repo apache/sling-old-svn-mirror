@@ -22,9 +22,8 @@ import org.junit.Test;
 
 public class SecuredProviderResourceAccessSecurityTest extends ResourceAccessSecurityTestBase {
 
-    @Test
     public void testNonExistingResource() throws Exception {
-        String path = "/providers/secured/noresource.json";
+        String path = "/test/secured-provider/noresource.json";
 
         testRead(getServerUsername(), getServerPassword(), path, 404);
         testRead(getTestUsername(), getTestPassword(), path, 404);
@@ -32,7 +31,7 @@ public class SecuredProviderResourceAccessSecurityTest extends ResourceAccessSec
 
     @Test
     public void testAllowedReadAccess() throws Exception {
-        String path = "/providers/secured/read/providergate1-allowread_providergate2-denyread/test.json";
+        String path = "/test/secured-provider/read/prov/providergate1-allowread_providergate2-denyread/test.json";
 
         testRead(getServerUsername(), getServerPassword(), path, 200);
         testRead(getTestUsername(), getTestPassword(), path, 200);
@@ -41,7 +40,7 @@ public class SecuredProviderResourceAccessSecurityTest extends ResourceAccessSec
 
     @Test
     public void testDeniedReadAccessFromNonModifiableProvider() throws Exception {
-        String path = "/providers/secured/read/providergate1-denyread/test.json";
+        String path = "/test/secured-provider/read/prov/providergate1-denyread/test.json";
 
         testRead(getServerUsername(), getServerPassword(), path, 404);
         testRead(getTestUsername(), getTestPassword(), path, 404);
@@ -50,7 +49,7 @@ public class SecuredProviderResourceAccessSecurityTest extends ResourceAccessSec
 
     @Test
     public void testDeniedReadAccessFromModifiableProvider() throws Exception {
-        String path = "/providers/secured/read-update/providergate1-denyread/test.json";
+        String path = "/test/secured-provider/read-update/prov/providergate1-denyread/test.json";
 
         testRead(getServerUsername(), getServerPassword(), path, 404);
         testRead(getTestUsername(), getTestPassword(), path, 404);
@@ -59,7 +58,7 @@ public class SecuredProviderResourceAccessSecurityTest extends ResourceAccessSec
 
     @Test
     public void testNotDefinedReadAccess() throws Exception {
-        String path = "/providers/secured/read-update/providergate2-denyupdate/test.json";
+        String path = "/test/secured-provider/read-update/prov/providergate2-denyupdate/test.json";
 
         testRead(getServerUsername(), getServerPassword(), path, 404);
         testRead(getTestUsername(), getTestPassword(), path, 404);
@@ -69,7 +68,7 @@ public class SecuredProviderResourceAccessSecurityTest extends ResourceAccessSec
 
     @Test
     public void testAllowedReadAndUpdate() throws Exception {
-        String path = "/providers/secured/read-update/providergate2-allowupdate_providergate1-allowread/test.json";
+        String path = "/test/secured-provider/read-update/prov/providergate2-allowupdate_providergate1-allowread/test.json";
 
         testRead(getTestUsername(), getTestPassword(), path, 200);
         testUpdate(getTestUsername(), getTestPassword(), path, 200);
@@ -78,14 +77,14 @@ public class SecuredProviderResourceAccessSecurityTest extends ResourceAccessSec
 
     @Test
     public void testUpdateAllowedUpdateAllowedRead() throws Exception {
-        String allowPath = "/providers/secured/read-update/providergate1-allowread_providergate1-allowupdate/test.json";
+        String allowPath = "/test/secured-provider/read-update/prov/providergate1-allowread_providergate1-allowupdate/test.json";
 
         testUpdate(getTestUsername(), getTestPassword(), allowPath, 200);
     }
 
     @Test
     public void testUpdateAllowedUpdateDeniedRead() throws Exception {
-        String path = "/providers/secured/read-update/providergate2-allowupdate_providergate1-denyread/test.json";
+        String path = "/test/secured-provider/read-update/prov/providergate2-allowupdate_providergate1-denyread/test.json";
 
         testRead(getTestUsername(), getTestPassword(), path, 404);
         testUpdate(getTestUsername(), getTestPassword(), path, 500, "UnsupportedOperationException");
@@ -93,7 +92,7 @@ public class SecuredProviderResourceAccessSecurityTest extends ResourceAccessSec
 
     @Test
     public void testUpdateDeniedUpdateDeniedRead() throws Exception {
-        String path = "/providers/secured/read-update/providergate2-denyupdate_providergate1-denyread/test.json";
+        String path = "/test/secured-provider/read-update/prov/providergate2-denyupdate_providergate1-denyread/test.json";
 
         testRead(getTestUsername(), getTestPassword(), path, 404);
         testUpdate(getTestUsername(), getTestPassword(), path, 500, "UnsupportedOperationException");
@@ -101,10 +100,42 @@ public class SecuredProviderResourceAccessSecurityTest extends ResourceAccessSec
 
     @Test
     public void testUpdateDeniedUpdateAllowedRead() throws Exception {
-        String path = "/providers/secured/read-update/providergate2-denyupdate_providergate1-allowread_appgate1-denyupdate/test.json";
+        String path = "/test/secured-provider/read-update/prov/providergate2-denyupdate_providergate1-allowread/test.json";
 
         testRead(getTestUsername(), getTestPassword(), path, 200);
         testUpdate(getTestUsername(), getTestPassword(), path, 500, "is not modifiable");
+    }
+    
+    @Test
+    public void testReadOnlyApplicationAccessGatePresent() throws Exception {
+        String path = "/test/secured-provider/read/app/appgate1_allowread/test.json";
+
+        testRead(getTestUsername(), getTestPassword(), path, 404);
+    }
+    
+    @Test
+    public void testReadMixedAccessGatesPresent() throws Exception {
+        String path1 = "/test/secured-provider/read/mixed/appgate1-allowread_providergate1-denyread/test.json";
+        String path2 = "/test/secured-provider/read/mixed/appgate1-denyread_providergate1-allowread/test.json";
+        String path3 = "/test/secured-provider/read/mixed/appgate1-allowread_providergate1-allowread/test.json";
+
+        testRead(getTestUsername(), getTestPassword(), path1, 404);
+        testRead(getTestUsername(), getTestPassword(), path2, 404);
+        testRead(getTestUsername(), getTestPassword(), path3, 200);
+    }
+    
+    @Test
+    public void testReadNoAccessGatePresent() throws Exception {
+        String path = "/test/secured-provider/read/nogate/test.json";
+
+        testRead(getTestUsername(), getTestPassword(), path, 404);
+    }
+    
+    @Test
+    public void testUpdateNoAccessGatePresent() throws Exception {
+        String path = "/test/secured-provider/read-update/nogate/test.json";
+
+        testUpdate(getTestUsername(), getTestPassword(), path, 500, "UnsupportedOperationException");
     }
     
 }

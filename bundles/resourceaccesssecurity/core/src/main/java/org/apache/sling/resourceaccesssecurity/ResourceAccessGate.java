@@ -123,7 +123,7 @@ public interface ResourceAccessGate {
      * </ul>
      */
     public enum GateResult {
-        GRANTED, DENIED, DONTCARE
+        GRANTED, DENIED, CANT_DECIDE
     };
 
     public enum Operation {

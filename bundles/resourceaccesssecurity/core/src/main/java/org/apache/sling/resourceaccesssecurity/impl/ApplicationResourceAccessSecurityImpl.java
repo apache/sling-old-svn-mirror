@@ -37,6 +37,6 @@ import org.apache.sling.resourceaccesssecurity.ResourceAccessGate;
 public class ApplicationResourceAccessSecurityImpl extends ResourceAccessSecurityImpl {
 
     public ApplicationResourceAccessSecurityImpl() {
-        super(true);
+        super(false);
     }
 }
