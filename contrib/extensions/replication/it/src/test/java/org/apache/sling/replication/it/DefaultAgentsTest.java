@@ -28,8 +28,21 @@ import org.junit.Test;
 public class DefaultAgentsTest extends SlingTestBase {
 
     @Test
-    public void testDefaultAgents() throws IOException {
-        String path = "/libs/sling/replication/config/agent/publish.json";
+    public void testDefaultAgentConfigurations() throws IOException {
+        String[] defaultAgentConfigPaths = new String[]{
+                "/libs/sling/replication/config/agent/publish.json",
+                "/libs/sling/replication/config/agent/publish-reverse.json",
+                "/libs/sling/replication/config/agent/reverserepo.json",
+                "/libs/sling/replication/config/agent/author.json",
+                "/libs/sling/replication/config/agent/cache-flush.json"
+        };
+        for (String path : defaultAgentConfigPaths) {
+            assertResourceExists(path);
+        }
+
+    }
+
+    private void assertResourceExists(String path) throws IOException {
         getRequestExecutor().execute(
                 getRequestBuilder().buildGetRequest(path)
                         .withCredentials(getServerUsername(), getServerPassword())
