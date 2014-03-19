@@ -173,7 +173,7 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
         if ( returnValue != null ) {
             final ResourceAccessSecurity resourceAccessSecurity = tracker.getApplicationResourceAccessSecurity();
             if (resourceAccessSecurity != null) {
-                returnValue = resourceAccessSecurity.getReadableResource(resource);
+                returnValue = resourceAccessSecurity.getReadableResource(returnValue);
             }
         }
 
