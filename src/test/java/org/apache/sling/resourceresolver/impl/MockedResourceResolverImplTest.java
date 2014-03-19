@@ -36,6 +36,7 @@ import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -293,7 +294,11 @@ public class MockedResourceResolverImplTest {
                 resourceMetadata.put(properties[i], properties[i+1]);
                 vm.put(properties[i], properties[i+1]);
             }
+            Mockito.when(resource.getValueMap()).thenReturn(vm);
             Mockito.when(resource.adaptTo(Mockito.eq(ValueMap.class))).thenReturn(vm);
+        } else {
+            Mockito.when(resource.getValueMap()).thenReturn(ValueMapDecorator.EMPTY);
+            Mockito.when(resource.adaptTo(Mockito.eq(ValueMap.class))).thenReturn(ValueMapDecorator.EMPTY);
         }
 
         return resource;
