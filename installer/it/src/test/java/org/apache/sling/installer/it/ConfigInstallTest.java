@@ -16,10 +16,6 @@
  */
 package org.apache.sling.installer.it;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -43,12 +39,16 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.ConfigurationListener;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 @RunWith(PaxExam.class)
 
 public class ConfigInstallTest extends OsgiInstallerTestBase implements ConfigurationListener {
 
     private final static long TIMEOUT = 5000L;
-    private List<ConfigurationEvent> events = new LinkedList<ConfigurationEvent>();
+    private final List<ConfigurationEvent> events = new LinkedList<ConfigurationEvent>();
     private List<ServiceRegistration<?>> serviceRegistrations = new ArrayList<ServiceRegistration<?>>();
     private int installationEvents = 0;
     private static final AtomicInteger counter = new AtomicInteger();
@@ -96,6 +96,30 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
             events.add(e);
         }
 	}
+
+    @Test
+    public void testInstallConfigWindowsPath() throws Exception {
+        final Dictionary<String, Object> cfgData = new Hashtable<String, Object>();
+        cfgData.put("foo", "bar");
+        final String cfgPid = getClass().getSimpleName() + "." + uniqueID();
+        assertNull("Config " + cfgPid + " must not be found before test", findConfiguration(cfgPid));
+
+        // install configs
+        //Following patterns work fine. Problem occurs one with windows seprator
+        // - "c:/foo/bar/"
+        // - "/foo/bar/"
+        final String uri = "c:\\foo\bar\\";
+        final InstallableResource result = new MockInstallableResource(uri + cfgPid, copy(cfgData), null, null, 100);
+        final InstallableResource[] rsrc = new InstallableResource[] {result};
+        installer.updateResources(URL_SCHEME, rsrc, null);
+
+        Configuration cfg = waitForConfiguration("After installing", cfgPid, TIMEOUT, true);
+        assertEquals("Config value must match", "bar", cfg.getProperties().get("foo"));
+
+        // remove again
+        installer.updateResources(URL_SCHEME, null, new String[] {rsrc[0].getId()});
+        waitForConfiguration("After removing for the second time", cfgPid, TIMEOUT, false);
+    }
 
 	@Test
     public void testInstallAndRemoveConfig() throws Exception {
