@@ -19,16 +19,15 @@
 package org.apache.sling.replication.it;
 
 import java.io.IOException;
-import org.apache.sling.testing.tools.sling.SlingTestBase;
 import org.junit.Test;
 
 /**
  * Integration test for default replication agents.
  */
-public class DefaultAgentsTest extends SlingTestBase {
+public class DefaultAgentsIntegrationTest extends ReplicationITBase {
 
     @Test
-    public void testDefaultAgentConfigurations() throws IOException {
+    public void testDefaultAgentConfigurationResources() throws IOException {
         String[] defaultAgentConfigPaths = new String[]{
                 "/libs/sling/replication/config/agent/publish.json",
                 "/libs/sling/replication/config/agent/publish-reverse.json",
@@ -42,22 +41,8 @@ public class DefaultAgentsTest extends SlingTestBase {
 
     }
 
-    private void assertResourceExists(String path) throws IOException {
-        getRequestExecutor().execute(
-                getRequestBuilder().buildGetRequest(path)
-                        .withCredentials(getServerUsername(), getServerPassword())
-        ).assertStatus(200);
-    }
-
-    private void assertResourceDoesNotExist(String path) throws IOException {
-        getRequestExecutor().execute(
-                getRequestBuilder().buildGetRequest(path)
-                        .withCredentials(getServerUsername(), getServerPassword())
-        ).assertStatus(404);
-    }
-
     @Test
-    public void testDefaultPublishAgents() throws IOException {
+    public void testDefaultPublishAgentResources() throws IOException {
         // these agents do not exist as they are bundled to publish runMode
         String[] defaultPublishAgents = new String[]{
                 "/libs/sling/replication/agent/reverserepo.json",
@@ -70,7 +55,7 @@ public class DefaultAgentsTest extends SlingTestBase {
     }
 
     @Test
-    public void testDefaultAuthorAgents() throws IOException {
+    public void testDefaultAuthorAgentResources() throws IOException {
         // these agents exist as they are bundled to author runMode
         String[] defaultAuthorAgents = new String[]{
                 "/libs/sling/replication/agent/publish.json",
@@ -82,7 +67,7 @@ public class DefaultAgentsTest extends SlingTestBase {
     }
 
     @Test
-    public void testDefaultPublishAgentsQueues() throws IOException {
+    public void testDefaultPublishAgentQueueResources() throws IOException {
         // these agent queues do not exist as they are bundled to publish runMode
         String[] defaultPublishAgents = new String[]{
                 "/libs/sling/replication/agent/reverserepo/queue.json",
@@ -95,7 +80,7 @@ public class DefaultAgentsTest extends SlingTestBase {
     }
 
     @Test
-    public void testDefaultAuthorAgentsQueues() throws IOException {
+    public void testDefaultAuthorAgentQueueResources() throws IOException {
         // these agent queues exist as they are bundled to author runMode
         String[] defaultAuthorAgents = new String[]{
                 "/libs/sling/replication/agent/publish/queue.json",
@@ -104,5 +89,10 @@ public class DefaultAgentsTest extends SlingTestBase {
         for (String path : defaultAuthorAgents) {
             assertResourceExists(path);
         }
+    }
+
+    @Test
+    public void testDefaultAgentsRootResource() throws Exception {
+        assertResourceExists("/libs/sling/replication/agent.json");
     }
 }
