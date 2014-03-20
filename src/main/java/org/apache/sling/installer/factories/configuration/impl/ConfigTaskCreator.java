@@ -160,7 +160,7 @@ public class ConfigTaskCreator
      * @param resource The resource
      */
     private TransformationResult[] checkConfiguration(final RegisteredResource resource) {
-        final String url = resource.getURL();
+        final String url = separatorsToUnix(resource.getURL());
         String lastIdPart = url;
         final int pos = lastIdPart.lastIndexOf('/');
         if ( pos != -1 ) {
@@ -236,6 +236,19 @@ public class ConfigTaskCreator
             return true;
         }
         return false;
+    }
+
+    /**
+     * Converts all separators to the Unix separator of forward slash.
+     *
+     * @param path  the path to be changed, null ignored
+     * @return the updated path
+     */
+    private static String separatorsToUnix(String path) {
+        if (path == null || path.indexOf('\\') == -1) {
+            return path;
+        }
+        return path.replace('\\', '/');
     }
 
     private static final Object LOCK = new Object();
