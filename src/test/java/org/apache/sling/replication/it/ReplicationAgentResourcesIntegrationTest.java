@@ -22,9 +22,9 @@ import java.io.IOException;
 import org.junit.Test;
 
 /**
- * Integration test for default replication agents.
+ * Integration test for {@link org.apache.sling.replication.agent.ReplicationAgent} resources
  */
-public class DefaultAgentsIntegrationTest extends ReplicationITBase {
+public class ReplicationAgentResourcesIntegrationTest extends ReplicationITBase {
 
     @Test
     public void testDefaultAgentConfigurationResources() throws IOException {
@@ -93,6 +93,17 @@ public class DefaultAgentsIntegrationTest extends ReplicationITBase {
 
     @Test
     public void testDefaultAgentsRootResource() throws Exception {
-        assertResourceExists("/libs/sling/replication/agent.json");
+        String rootResource = "/libs/sling/replication/agent.json";
+        assertResourceExists(rootResource);
+        assertJsonResponseEquals(rootResource,
+                "{\"sling:resourceType\":\"replication/agents\",\"items\":[\"publish-reverse\",\"publish\"]}");
+    }
+
+    @Test
+    public void testAgentConfigurationResourceCreation() throws Exception {
+        String newConfigResource = "/libs/sling/replication/config/agent/sample-publish";
+        assertPostResource(201, newConfigResource, "name", "sample-publish", "transportHandler", "(name=author)");
+//        assertResourceExists(newConfigResource + ".json");
+//        assertJsonResponseEquals(newConfigResource + ".json", "{\"sling:resourceType\":\"replication/agent\",\"name\":\"sample-publish\",\"transportHandler\":\"(name=author)\"}");
     }
 }

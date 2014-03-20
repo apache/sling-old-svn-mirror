@@ -23,15 +23,20 @@ import org.junit.Test;
 /**
  * Integration test for {@link org.apache.sling.replication.serialization.ReplicationPackageImporter} resources
  */
-public class ReplicationPackageImporterIntegrationTest extends ReplicationITBase {
+public class ReplicationPackageImporterResourcesIntegrationTest extends ReplicationITBase {
 
     @Test
     public void testImporterRootResource() throws Exception {
         assertResourceExists("/libs/sling/replication/importer.json");
+        assertJsonResponseEquals("/libs/sling/replication/importer.json",
+                "{\"sling:resourceType\":\"replication/importers\",\"items\":[\"default\"]}");
     }
 
     @Test
     public void testDefaultImporterResource() throws Exception {
-        assertResourceExists("/libs/sling/replication/importer/default.json");
+        String rootResource = "/libs/sling/replication/importer/default.json";
+        assertResourceExists(rootResource);
+        assertJsonResponseEquals(rootResource,
+                "{\"sling:resourceType\":\"replication/importer\",\"name\":\"default\"}");
     }
 }
