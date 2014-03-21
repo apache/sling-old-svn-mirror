@@ -114,6 +114,11 @@
                     <bundlesDirectory>install</bundlesDirectory>
                     <bootDirectory>bundles</bootDirectory>
                     <configDirectory>${empty.config.directory}</configDirectory>
+                    <jarWebSupport>
+                        <groupId>org.apache.felix</groupId>
+                        <artifactId>org.apache.felix.http.jetty</artifactId>
+                        <version>2.2.2</version>
+                    </jarWebSupport>
                 </configuration>
                 <executions>
                     <execution>
