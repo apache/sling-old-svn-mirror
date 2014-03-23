@@ -312,7 +312,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.installer.factory.configuration</artifactId>
-            <version>1.0.10</version>
+            <version>1.0.13-SNAPSHOT</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
