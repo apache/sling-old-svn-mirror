@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.extensions.threaddump.internal;
+package org.apache.sling.commons.threaddump.internal;
 
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Dictionary;
@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 
 public class Activator implements BundleActivator, UncaughtExceptionHandler {
 
-    private static final String LOG_NAME = "org.apache.sling.extensions.threaddump.internal.UncaughtExceptionHandler";
+    private static final String LOG_NAME = "org.apache.sling.commons.threaddump.internal.UncaughtExceptionHandler";
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(LOG_NAME);

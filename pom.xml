@@ -120,6 +120,7 @@
         <module>bundles/commons/osgi</module>
         <module>bundles/commons/scheduler</module>
         <module>bundles/commons/testing</module>
+        <module>bundles/commons/threaddump</module>
         <module>bundles/commons/threads</module>
 
         <!-- Authentication Support -->
@@ -179,7 +180,6 @@
         <module>bundles/extensions/javax.activation</module>
         <module>bundles/extensions/serviceusermapper</module>
         <module>bundles/extensions/settings</module>
-        <module>bundles/extensions/threaddump</module>
         <module>bundles/extensions/webconsolebranding</module>
         <module>bundles/extensions/webconsolesecurityprovider</module>
         <module>bundles/extensions/groovy</module>

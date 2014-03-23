@@ -27,7 +27,7 @@
         <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>org.apache.sling.extensions.threaddump</artifactId>
+    <artifactId>org.apache.sling.commons.threaddump</artifactId>
     <packaging>bundle</packaging>
     <version>0.2.3-SNAPSHOT</version>
 
@@ -39,13 +39,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/threaddump
+            scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/commons/threaddump
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/threaddump
+            scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/threaddump
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/threaddump
+            http://svn.apache.org/viewvc/sling/trunk/bundles/commons/threaddump
         </url>
     </scm>
 
@@ -65,10 +65,10 @@
                             org.apache.felix.shell;version="[1.0,2)"
                         </DynamicImport-Package>
                         <Private-Package>
-                            org.apache.sling.extensions.threaddump.*
+                            org.apache.sling.commons.threaddump.*
                         </Private-Package>
                         <Bundle-Activator>
-                            org.apache.sling.extensions.threaddump.internal.Activator
+                            org.apache.sling.commons.threaddump.internal.Activator
                         </Bundle-Activator>
                     </instructions>
                 </configuration>

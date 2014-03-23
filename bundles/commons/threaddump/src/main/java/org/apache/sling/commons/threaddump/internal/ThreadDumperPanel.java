@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.extensions.threaddump.internal;
+package org.apache.sling.commons.threaddump.internal;
 
 import java.io.PrintWriter;
 

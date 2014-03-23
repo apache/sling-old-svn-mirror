@@ -21,7 +21,7 @@ Subversion (http://subversion.tigris.org/) source repository of
 the Apache Software Foundation. If you have Subversion installed,
 you can checkout the latest source using the following command:
 
-    svn checkout http://svn.apache.org/repos/asf/sling/trunk/extensions/threaddump
+    svn checkout http://svn.apache.org/repos/asf/sling/trunk/bundles/commons/threaddump
 
 See the Subversion documentation for other source control features.
 
