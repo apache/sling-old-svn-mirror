@@ -36,7 +36,7 @@
         <exam.version>3.0.3</exam.version>
         <url.version>1.5.2</url.version>
         <pax.exam.log.level>INFO</pax.exam.log.level>
-        <installer.configuration.version>1.0.11-SNAPSHOT</installer.configuration.version>
+        <installer.configuration.version>1.0.13-SNAPSHOT</installer.configuration.version>
 
         <!-- BundleInstallStressTest parameters -->
         <BundleInstallStressTest.default.bundles.folder>${project.build.directory}/bundle-install-stress-test-bundles</BundleInstallStressTest.default.bundles.folder>
