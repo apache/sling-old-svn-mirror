@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.servlets.get</artifactId>
     <packaging>bundle</packaging>
-    <version>2.1.7-SNAPSHOT</version>
+    <version>2.1.8</version>
 
     <name>Apache Sling Default GET Servlets</name>
     <description>
@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/servlets/get</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/servlets/get</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/servlets/get</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.servlets.get-2.1.8</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.servlets.get-2.1.8</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.servlets.get-2.1.8</url>
     </scm>
 
     <properties>
