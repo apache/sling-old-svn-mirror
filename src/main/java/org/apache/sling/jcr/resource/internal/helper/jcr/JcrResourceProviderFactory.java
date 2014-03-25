@@ -18,11 +18,15 @@
  */
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.Executor;
 
 import javax.jcr.Credentials;
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
@@ -48,6 +52,8 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.JcrResourceListener;
+import org.apache.sling.jcr.resource.internal.OakResourceListener;
+import org.apache.sling.jcr.resource.internal.ObservationListenerSupport;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -60,19 +66,27 @@ import org.slf4j.LoggerFactory;
  * The <code>JcrResourceProviderFactory</code> creates
  * resource providers based on JCR.
  */
-@Component
+@Component(metatype = true,
+           label = "Apache Sling JCR Resource Provider Factory",
+           description = "This provider adds  JCR resources to the resource tree")
 @Service(value = ResourceProviderFactory.class )
 @Properties({
-    @Property(name=ResourceProviderFactory.PROPERTY_REQUIRED, boolValue=true),
-    @Property(name=ResourceProvider.ROOTS, value="/"),
+    @Property(name=ResourceProviderFactory.PROPERTY_REQUIRED, boolValue=true, propertyPrivate=true),
+    @Property(name=ResourceProvider.ROOTS, value="/", propertyPrivate=true),
     @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling JCR Resource Provider Factory"),
     @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
-    @Property(name = QueriableResourceProvider.LANGUAGES, value = {Query.XPATH, Query.SQL, Query.JCR_SQL2})
+    @Property(name = QueriableResourceProvider.LANGUAGES, value = {Query.XPATH, Query.SQL, Query.JCR_SQL2}, propertyPrivate=true)
 })
 public class JcrResourceProviderFactory implements ResourceProviderFactory {
 
-    /** default log */
+    /** Logger */
     private final Logger log = LoggerFactory.getLogger(getClass());
+
+    private static final boolean DEFAULT_OPTIMIZE_FOR_OAK = true;
+    @Property(boolValue=DEFAULT_OPTIMIZE_FOR_OAK,
+              label="Optimize For Oak",
+              description="If this switch is enabled, and Oak is used as the repository implementation, some optimized components are used.")
+    private static final String PROPERTY_OPTIMIZE_FOR_OAK = "optimize.oak";
 
     private static final String REPOSITORY_REFERNENCE_NAME = "repository";
 
@@ -85,8 +99,12 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
 
     private SlingRepository repository;
 
-    /** The jcr resource listner. */
-    private JcrResourceListener listener;
+    /** This service is only available on OAK, therefore optional and static) */
+    @Reference(policy=ReferencePolicy.STATIC, cardinality=ReferenceCardinality.OPTIONAL_UNARY)
+    private Executor executor;
+
+    /** The JCR observation listener. */
+    private Closeable listener;
 
     @Activate
     protected void activate(final ComponentContext context) throws RepositoryException {
@@ -101,16 +119,53 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
             return;
         }
 
-        final String root = PropertiesUtil.toString(context.getProperties().get(ResourceProvider.ROOTS), "/");
-
         this.repository = repository;
-        this.listener = new JcrResourceListener(root, null, this.repository, context.getBundleContext());
+        // check for Oak
+        final boolean optimizeForOak = PropertiesUtil.toBoolean(context.getProperties().get(PROPERTY_OPTIMIZE_FOR_OAK), DEFAULT_OPTIMIZE_FOR_OAK);
+        boolean isOak = false;
+        if ( optimizeForOak ) {
+            final String repoDesc = this.repository.getDescriptor(Repository.REP_NAME_DESC);
+            if ( repoDesc != null && repoDesc.toLowerCase().contains(" oak") ) {
+                if ( this.executor != null ) {
+                    isOak = true;
+                } else {
+                   log.error("Detected Oak based repository but no executor service available! Unable to use improved JCR Resource listener");
+                }
+            }
+        }
+        final String root = PropertiesUtil.toString(context.getProperties().get(ResourceProvider.ROOTS), "/");
+        final ObservationListenerSupport support = new ObservationListenerSupport(context.getBundleContext(), repository);
+        boolean closeSupport = true;
+        try {
+            if ( isOak ) {
+                try {
+                    this.listener = new OakResourceListener(root, support, context.getBundleContext(), executor);
+                    log.info("Detected Oak based repository. Using improved JCR Resource Listener");
+                } catch ( final RepositoryException re ) {
+                    throw re;
+                } catch ( final Throwable t ) {
+                    log.error("Unable to instantiate improved JCR Resource listener for Oak. Using fallback.", t);
+                }
+            }
+            if ( this.listener == null ) {
+                this.listener = new JcrResourceListener(root, support);
+            }
+            closeSupport = false;
+        } finally {
+            if ( closeSupport ) {
+                support.dispose();
+            }
+        }
     }
 
     @Deactivate
     protected void deactivate() {
         if ( this.listener != null ) {
-            this.listener.deactivate();
+            try {
+                this.listener.close();
+            } catch (final IOException e) {
+                // ignore this as the method above does not throw it
+            }
             this.listener = null;
         }
     }
