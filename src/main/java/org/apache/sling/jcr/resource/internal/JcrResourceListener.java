@@ -18,10 +18,10 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
-import java.util.Dictionary;
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -29,24 +29,17 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 
 import org.apache.jackrabbit.api.observation.JackrabbitEvent;
 import org.apache.sling.api.SlingConstants;
-import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.resource.JcrResourceConstants;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
-import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.service.event.EventProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,23 +48,10 @@ import org.slf4j.LoggerFactory;
  * events and creates resource events which are sent through the
  * OSGi event admin.
  */
-public class JcrResourceListener implements EventListener {
+public class JcrResourceListener implements EventListener, Closeable {
 
     /** Logger */
     private final Logger logger = LoggerFactory.getLogger(JcrResourceListener.class);
-
-    private final ServiceTracker eventAdminTracker;
-
-    private ServiceReference resourceResolverFactoryReference;
-
-    /** The admin resource resolver. */
-    private ResourceResolver resourceResolver;
-
-    /** The session for observation. */
-    private final Session session;
-
-    /** Everything below this path is observed. */
-    private final String startPath;
 
     /** The repository is mounted under this path. */
     private final String mountPrefix;
@@ -85,20 +65,20 @@ public class JcrResourceListener implements EventListener {
      * waiting for actual dispatching to the OSGi Event Admin in
      * {@link #processOsgiEventQueue()}
      */
-    private final LinkedBlockingQueue<Dictionary<String, Object>> osgiEventQueue;
+    private final LinkedBlockingQueue<Map<String, Object>> osgiEventQueue;
 
-    private final BundleContext bundleContext;
+    /** Helper object. */
+    final ObservationListenerSupport support;
 
     /**
      * Marker event for {@link #processOsgiEventQueue()} to be signaled to
      * terminate processing Events.
      */
-    private final Dictionary<String, Object> TERMINATE_PROCESSING = new Hashtable<String, Object>(1);
+    private final Map<String, Object> TERMINATE_PROCESSING = new HashMap<String, Object>(1);
 
-    public JcrResourceListener(final String startPath,
+    public JcrResourceListener(
                     final String mountPrefix,
-                    final SlingRepository repository,
-                    final BundleContext bundleContext)
+                    final ObservationListenerSupport support)
     throws RepositoryException {
         boolean foundClass = false;
         try {
@@ -108,61 +88,38 @@ public class JcrResourceListener implements EventListener {
             // we ignore this
         }
         this.hasJackrabbitEventClass = foundClass;
-        this.startPath = startPath;
-        this.mountPrefix = mountPrefix;
-        this.bundleContext = bundleContext;
+        this.mountPrefix = (mountPrefix == null || mountPrefix.length() == 0 || mountPrefix.equals("/") ? null : mountPrefix);
 
-        this.eventAdminTracker = new ServiceTracker(bundleContext, EventAdmin.class.getName(), null);
-        this.eventAdminTracker.open();
+        this.support = support;
+        this.support.getSession().getWorkspace().getObservationManager().addEventListener(this,
+                        Event.NODE_ADDED|Event.NODE_REMOVED|Event.PROPERTY_ADDED|Event.PROPERTY_CHANGED|Event.PROPERTY_REMOVED,
+                        "/", true, null, null, false);
 
-        this.session = repository.loginAdministrative(null);
-        try {
-            session.getWorkspace().getObservationManager().addEventListener(this,
-                            Event.NODE_ADDED|Event.NODE_REMOVED|Event.PROPERTY_ADDED|Event.PROPERTY_CHANGED|Event.PROPERTY_REMOVED,
-                            this.startPath, true, null, null, false);
-        } catch (final RepositoryException re) {
-            session.logout();
-            throw re;
-        }
-
-        this.osgiEventQueue = new LinkedBlockingQueue<Dictionary<String,Object>>();
+        this.osgiEventQueue = new LinkedBlockingQueue<Map<String,Object>>();
         final Thread oeqt = new Thread(new Runnable() {
             public void run() {
                 processOsgiEventQueue();
             }
-        }, "Apache Sling JCR Resource Event Queue Processor for path '" + this.startPath + "'");
+        }, "Apache Sling JCR Resource Event Queue Processor");
         oeqt.start();
     }
 
     /**
      * Dispose this listener.
      */
-    public void deactivate() {
+    public void close() throws IOException {
         // unregister from observations
-        if ( this.session != null ) {
-            try {
-                this.session.getWorkspace().getObservationManager().removeEventListener(this);
-            } catch (RepositoryException e) {
-                logger.warn("Unable to remove session listener: " + this, e);
-            }
-            this.session.logout();
-        }
-        if ( this.resourceResolver != null ) {
-            this.resourceResolver.close();
-            this.resourceResolver = null;
-        }
-
-        if ( this.resourceResolverFactoryReference != null ) {
-            this.bundleContext.ungetService(this.resourceResolverFactoryReference);
+        try {
+            this.support.getSession().getWorkspace().getObservationManager().removeEventListener(this);
+        } catch (RepositoryException e) {
+            logger.warn("Unable to remove session listener: " + this, e);
         }
 
         // drop any remaining OSGi Events not processed yet
         this.osgiEventQueue.clear();
         this.osgiEventQueue.offer(TERMINATE_PROCESSING);
 
-        if ( this.eventAdminTracker != null ) {
-            this.eventAdminTracker.close();
-        }
+        this.support.dispose();
     }
 
     /**
@@ -170,13 +127,13 @@ public class JcrResourceListener implements EventListener {
      */
     public void onEvent(final EventIterator events) {
         // if the event admin is currently not available, we just skip this
-        final EventAdmin localEA = (EventAdmin) this.eventAdminTracker.getService();
+        final EventAdmin localEA = this.support.getEventAdmin();
         if ( localEA == null ) {
             return;
         }
-        final Map<String, Dictionary<String, Object>> addedEvents = new HashMap<String, Dictionary<String, Object>>();
+        final Map<String, Map<String, Object>> addedEvents = new HashMap<String, Map<String, Object>>();
         final Map<String, ChangedAttributes> changedEvents = new HashMap<String, ChangedAttributes>();
-        final Map<String, Dictionary<String, Object>> removedEvents = new HashMap<String, Dictionary<String, Object>>();
+        final Map<String, Map<String, Object>> removedEvents = new HashMap<String, Map<String, Object>>();
         while ( events.hasNext() ) {
             final Event event = events.nextEvent();
             try {
@@ -208,13 +165,13 @@ public class JcrResourceListener implements EventListener {
             }
         }
 
-        for (final Entry<String, Dictionary<String, Object>> e : removedEvents.entrySet()) {
+        for (final Entry<String, Map<String, Object>> e : removedEvents.entrySet()) {
             // Launch an OSGi event
             sendOsgiEvent(e.getKey(), e.getValue(), SlingConstants.TOPIC_RESOURCE_REMOVED,
                 null);
         }
 
-        for (final Entry<String, Dictionary<String, Object>> e : addedEvents.entrySet()) {
+        for (final Entry<String, Map<String, Object>> e : addedEvents.entrySet()) {
             // Launch an OSGi event.
             sendOsgiEvent(e.getKey(), e.getValue(), SlingConstants.TOPIC_RESOURCE_ADDED,
                 changedEvents.remove(e.getKey()));
@@ -229,9 +186,9 @@ public class JcrResourceListener implements EventListener {
 
     private static final class ChangedAttributes {
 
-        private final Dictionary<String, Object> properties;
+        private final Map<String, Object> properties;
 
-        public ChangedAttributes(final Dictionary<String, Object> properties) {
+        public ChangedAttributes(final Map<String, Object> properties) {
             this.properties = properties;
         }
 
@@ -270,7 +227,7 @@ public class JcrResourceListener implements EventListener {
          *            to.
          * @return The {@code properties} object is returned.
          */
-        public final Dictionary<String, Object> mergeAttributesInto(final Dictionary<String, Object> properties) {
+        public final Map<String, Object> mergeAttributesInto(final Map<String, Object> properties) {
             if ( addedAttributes != null )  {
                 properties.put(SlingConstants.PROPERTY_ADDED_ATTRIBUTES, addedAttributes.toArray(new String[addedAttributes.size()]));
             }
@@ -287,7 +244,7 @@ public class JcrResourceListener implements EventListener {
          * @return a {@code Dictionary} with all changes recorded including
          *         original JCR event information.
          */
-        public final Dictionary<String, Object> toEventProperties() {
+        public final Map<String, Object> toEventProperties() {
             return mergeAttributesInto(properties);
         }
     }
@@ -305,8 +262,8 @@ public class JcrResourceListener implements EventListener {
     /**
      * Create the base OSGi event properties based on the JCR event object
      */
-    private Dictionary<String, Object> createEventProperties(final Event event) {
-        final Dictionary<String, Object> properties = new Hashtable<String, Object>();
+    private Map<String, Object> createEventProperties(final Event event) {
+        final Map<String, Object> properties = new HashMap<String, Object>();
 
         if (this.isExternal(event)) {
             properties.put("event.application", "unknown");
@@ -328,7 +285,7 @@ public class JcrResourceListener implements EventListener {
      * @param topic The topic that should be used for the OSGi event.
      */
     private void sendOsgiEvent(final String path,
-            final Dictionary<String, Object> properties,
+            final Map<String, Object> properties,
             final String topic,
             final ChangedAttributes changedAttributes) {
 
@@ -345,37 +302,13 @@ public class JcrResourceListener implements EventListener {
     }
 
     /**
-     * Get a resource resolver.
-     * We don't need any syncing as this is called from the process OSGi thread.
-     */
-    private ResourceResolver getResourceResolver() {
-        if ( this.resourceResolver == null ) {
-            final ServiceReference ref = this.bundleContext.getServiceReference(ResourceResolverFactory.class.getName());
-            if ( ref != null ) {
-                final ResourceResolverFactory factory = (ResourceResolverFactory) this.bundleContext.getService(ref);
-                if ( factory != null ) {
-                    final Map<String, Object> authInfo = new HashMap<String, Object>();
-                    authInfo.put(JcrResourceConstants.AUTHENTICATION_INFO_SESSION, this.session);
-                    try {
-                        this.resourceResolver = factory.getResourceResolver(authInfo);
-                        this.resourceResolverFactoryReference = ref;
-                    } catch (final LoginException le) {
-                        logger.error("Unable to get administrative resource resolver.", le);
-                        this.bundleContext.ungetService(ref);
-                    }
-                }
-            }
-        }
-        return this.resourceResolver;
-    }
-    /**
      * Called by the Runnable.run method of the JCR Event Queue processor to
      * process the {@link #osgiEventQueue} until the
      * {@link #TERMINATE_PROCESSING} event is received.
      */
     void processOsgiEventQueue() {
         while (true) {
-            final Dictionary<String, Object> event;
+            final Map<String, Object> event;
             try {
                 event = this.osgiEventQueue.take();
             } catch (InterruptedException e) {
@@ -388,8 +321,8 @@ public class JcrResourceListener implements EventListener {
             }
 
             try {
-                final EventAdmin localEa = (EventAdmin) this.eventAdminTracker.getService();
-                final ResourceResolver resolver = this.getResourceResolver();
+                final EventAdmin localEa = this.support.getEventAdmin();
+                final ResourceResolver resolver = this.support.getResourceResolver();
                 if (localEa != null && resolver != null ) {
                     final String topic = (String) event.remove(EventConstants.EVENT_TOPIC);
                     final String path = (String) event.get(SlingConstants.PROPERTY_PATH);
@@ -439,7 +372,7 @@ public class JcrResourceListener implements EventListener {
                     }
 
                     if ( sendEvent ) {
-                        localEa.sendEvent(new org.osgi.service.event.Event(topic, event));
+                        localEa.sendEvent(new org.osgi.service.event.Event(topic, new EventProperties(event)));
                     }
                 }
             } catch (final Exception e) {

@@ -17,12 +17,12 @@
 package org.apache.sling.jcr.resource.internal;
 
 import java.io.IOException;
+import java.util.concurrent.Executor;
 
 import javax.jcr.RepositoryException;
 
 import junitx.util.PrivateAccessor;
 
-import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -36,15 +36,16 @@ import org.osgi.util.tracker.ServiceTracker;
  * to be working 100% of the time.
  *
  */
-public class SynchronousJcrResourceListener extends JcrResourceListener implements SynchronousEventListener {
+public class SynchronousOakResourceListener extends OakResourceListener {
 
-    public SynchronousJcrResourceListener(
+    public SynchronousOakResourceListener(
             final SlingRepository repo,
             final BundleContext bundleContext,
             final ResourceResolver resolver,
-            final ServiceTracker tracker)
+            final ServiceTracker tracker,
+            final Executor executor)
             throws LoginException, RepositoryException, NoSuchFieldException {
-        super("/", new ObservationListenerSupport(bundleContext, repo));
+        super("/", new ObservationListenerSupport(bundleContext, repo), bundleContext, executor);
         PrivateAccessor.setField(this.support, "resourceResolver", resolver);
         PrivateAccessor.setField(this.support, "eventAdminTracker", tracker);
     }
