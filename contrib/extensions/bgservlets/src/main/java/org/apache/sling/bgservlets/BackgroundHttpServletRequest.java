@@ -19,8 +19,10 @@
 package org.apache.sling.bgservlets;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.security.Principal;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -44,7 +46,7 @@ public class BackgroundHttpServletRequest implements HttpServletRequest {
     private final String queryString;
     private final String requestURI;
     private final StringBuffer requestURL;
-    private final String characterEncoding;
+    private String characterEncoding;
     private final int contentLength;
     private final String contentType;
     private final Locale locale;
@@ -119,12 +121,12 @@ public class BackgroundHttpServletRequest implements HttpServletRequest {
         serverName = r.getServerName();
 
         attributes = new HashMap<String, Object>();
-        /*
-         * Don't copy attributes, we consider this to be a "fresh" request final
-         * Enumeration<?> e = r.getAttributeNames(); while(e.hasMoreElements())
-         * { final String key = (String)e.nextElement(); attributes.put(key,
-         * r.getAttribute(key)); }
-         */
+        //
+        // Don't copy attributes, we consider this to be a "fresh" request final
+        // Enumeration<?> e = r.getAttributeNames(); while(e.hasMoreElements())
+        // { final String key = (String)e.nextElement(); attributes.put(key,
+        // r.getAttribute(key)); }
+        //
 
         parameters = new HashMap<String, String>();
         parameters.putAll(r.getParameterMap());
@@ -253,8 +255,92 @@ public class BackgroundHttpServletRequest implements HttpServletRequest {
         return contentType;
     }
 
+    private static final String encode(final String value) {
+        try {
+            return URLEncoder.encode(value, "UTF-8");
+        } catch ( final UnsupportedEncodingException uee) {
+            return value;
+        }
+    }
+
+    private boolean append(final StringBuilder sb, final String key, final String val, final boolean first) {
+        if ( !first ) {
+            sb.append('&');
+        }
+        sb.append(key);
+        sb.append('=');
+        sb.append(encode(val));
+        return false;
+    }
+
     public ServletInputStream getInputStream() throws IOException {
-        throw new UnsupportedBackgroundOperationException();
+        // create byte array of all parameters
+        boolean first = true;
+        final StringBuilder sb = new StringBuilder();
+        for(final Map.Entry<String, ?> entry : this.parameters.entrySet()) {
+            if ( entry.getValue() instanceof String[] ) {
+                for(final String val : (String[])entry.getValue()) {
+                    first = append(sb, entry.getKey(), val, first);
+                }
+            } else {
+                first = append(sb, entry.getKey(), (String)entry.getValue(), first);
+            }
+        }
+        return new ByteArrayServletInputStream(new ByteArrayInputStream(sb.toString().getBytes(this.characterEncoding)));
+    }
+
+    private static final class ByteArrayServletInputStream extends ServletInputStream {
+
+        private final ByteArrayInputStream stream;
+
+        public ByteArrayServletInputStream(final ByteArrayInputStream stream) {
+            this.stream = stream;
+        }
+
+        @Override
+        public int available() throws IOException {
+            return this.stream.available();
+        }
+
+        @Override
+        public void close() throws IOException {
+            this.stream.close();
+        }
+
+        @Override
+        public synchronized void mark(final int arg0) {
+            this.stream.mark(arg0);
+        }
+
+        @Override
+        public boolean markSupported() {
+            return this.stream.markSupported();
+        }
+
+        @Override
+        public int read() throws IOException {
+            return this.stream.read();
+        }
+
+        @Override
+        public int read(final byte[] arg0, final int arg1, final int arg2) throws IOException {
+            return this.stream.read(arg0, arg1, arg2);
+        }
+
+        @Override
+        public int read(final byte[] arg0) throws IOException {
+            return this.stream.read(arg0);
+        }
+
+        @Override
+        public synchronized void reset() throws IOException {
+            this.stream.reset();
+        }
+
+        @Override
+        public long skip(final long arg0) throws IOException {
+            return this.stream.skip(arg0);
+        }
     }
 
     public String getLocalAddr() {
@@ -349,9 +435,8 @@ public class BackgroundHttpServletRequest implements HttpServletRequest {
         attributes.put(key, value);
     }
 
-    public void setCharacterEncoding(String arg0)
+    public void setCharacterEncoding(final String encoding)
             throws UnsupportedEncodingException {
-        throw new UnsupportedBackgroundOperationException();
-
+        this.characterEncoding = encoding;
     }
 }
