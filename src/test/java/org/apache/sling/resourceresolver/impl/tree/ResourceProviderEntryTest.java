@@ -37,8 +37,6 @@ import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.osgi.framework.Constants;
 
 public class ResourceProviderEntryTest {
@@ -255,11 +253,6 @@ public class ResourceProviderEntryTest {
     private ResourceResolverContext getResourceResolverContext() {
         final ResourceResolverContext ctx = Mockito.mock(ResourceResolverContext.class);
         Mockito.when(ctx.getResourceAccessSecurityTracker()).thenReturn(new ResourceAccessSecurityTracker());
-        Mockito.when(ctx.applyFeatures(Mockito.any(Resource.class))).then(new Answer<Resource>() {
-            public Resource answer(InvocationOnMock invocation) {
-                return (Resource) invocation.getArguments()[0];
-            }
-        });
         return ctx;
     }
 

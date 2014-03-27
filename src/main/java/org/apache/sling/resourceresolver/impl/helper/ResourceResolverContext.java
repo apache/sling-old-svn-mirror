@@ -33,8 +33,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.featureflags.FeatureConstants;
-import org.apache.sling.featureflags.Features;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 
 /**
@@ -79,29 +77,13 @@ public class ResourceResolverContext {
     /** Resource type resource resolver (admin resolver) */
     private ResourceResolver resourceTypeResourceResolver;
 
-    /** Features ServiceTracker */
-    private final FeaturesHolder featuresHolder;
-
     /**
      * Create a new resource resolver context.
      */
-    public ResourceResolverContext(final boolean isAdmin, final Map<String, Object> originalAuthInfo, final ResourceAccessSecurityTracker resourceAccessSecurityTracker, final FeaturesHolder featuresHolder) {
+    public ResourceResolverContext(final boolean isAdmin, final Map<String, Object> originalAuthInfo, final ResourceAccessSecurityTracker resourceAccessSecurityTracker) {
         this.isAdmin = isAdmin;
         this.originalAuthInfo = originalAuthInfo;
         this.resourceAccessSecurityTracker = resourceAccessSecurityTracker;
-        // check if features are enabled
-        boolean featuresEnabled = false;
-        if ( originalAuthInfo != null ) {
-            final Object featuresEnabledAttr = originalAuthInfo.get(FeatureConstants.RESOLVER_ATTR_FEATURES_ENABLED);
-            if ( featuresEnabledAttr != null && featuresEnabledAttr instanceof Boolean ) {
-                featuresEnabled = (Boolean)featuresEnabledAttr;
-            }
-        }
-        if ( featuresEnabled ) {
-            this.featuresHolder = featuresHolder;
-        } else {
-            this.featuresHolder = FeaturesHolder.EMPTY_HOLDER;
-        }
     }
 
     /**
@@ -109,13 +91,6 @@ public class ResourceResolverContext {
      */
     public boolean isAdmin() {
         return this.isAdmin;
-    }
-
-    /**
-     * @return the Features service tracker used by this context
-     */
-    public FeaturesHolder getFeaturesHolder() {
-        return this.featuresHolder;
     }
 
     /**
@@ -269,58 +244,6 @@ public class ResourceResolverContext {
             }
         }
         return resourceSuperType;
-    }
-
-    /**
-     * Checks whether the resource has a sling:features property. If so the
-     * Features service is consulted to indicate whether any of the named
-     * features is enabled and thus the resource is visible at all.
-     * <p>
-     * If none of the listed features is enabled, the resource is not visible
-     * and null is returned. Otherwise the list of features configured on the
-     * Resource is stored in the ResourceMetadata and the resource is returned.
-     * <p>
-     * If the Features service is not available, the features property is not
-     * consulted and not added to the ResourceMetadata. The resource is returned
-     * unmodified in this case.
-     *
-     * @param resource The resource to check for features
-     * @return The unmodified resource if the Features service is not available
-     *         or no features are set on the property. Otherwise the features
-     *         are added to the ResourceMetadata and the resource is returned if
-     *         one of the listed features is enabled. Otherwise null is
-     *         returned.
-     */
-    public Resource applyFeatures(final Resource resource) {
-        if (resource != null) {
-            Object featuresService = this.featuresHolder.getFeatures();
-            if (featuresService instanceof Features) {
-                Features features = (Features) featuresService;
-                String[] featureNames = getProperty(resource, RESOURCE_PROPERTY, String[].class);
-                if (featureNames != null && featureNames.length > 0) {
-                    for (String featureName : featureNames) {
-
-                        // check whether the feature must be disabled
-                        boolean negative = false;
-                        if (featureName.charAt(0) == '-') {
-                            featureName = featureName.substring(1);
-                            negative = true;
-                        }
-
-                        if (features.isEnabled(featureName) ^ negative) {
-                            resource.getResourceMetadata().put(RESOURCE_PROPERTY, featureNames);
-                            return resource;
-                        }
-                    }
-
-                    // invariant: none of the named features enabled
-                    return null;
-                }
-            }
-        }
-
-        // invariant: null resource or no feature check on resource
-        return resource;
     }
 
     /**

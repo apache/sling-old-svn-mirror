@@ -177,7 +177,7 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
             }
         }
 
-        return ctx.applyFeatures(returnValue);
+        return returnValue;
     }
 
     /**

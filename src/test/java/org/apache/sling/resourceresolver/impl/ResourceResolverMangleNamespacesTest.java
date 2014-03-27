@@ -24,7 +24,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.resourceresolver.impl.helper.MockFeaturesHolder;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.apache.sling.resourceresolver.impl.tree.RootResourceProviderEntry;
 import org.junit.Before;
@@ -78,7 +77,7 @@ public class ResourceResolverMangleNamespacesTest {
             }
         };
 
-        rr = new ResourceResolverImpl(fac, new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker(), MockFeaturesHolder.INSTANCE));
+        rr = new ResourceResolverImpl(fac, new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker()));
     }
 
     @Test
