@@ -86,8 +86,8 @@ public class ConnectorRegistryImpl implements ConnectorRegistry {
                     .entrySet().iterator(); it.hasNext();) {
                 Entry<String, TopologyConnectorClient> entry = it.next();
                 if (entry.getValue().getConnectorUrl().equals(connectorUrl)) {
-                    throw new IllegalStateException(
-                            "cannot register same url twice: " + connectorUrl);
+                    it.remove();
+                    logger.info("registerOutgoingConnection: re-registering connector: "+connectorUrl);
                 }
             }
             String serverInfo;

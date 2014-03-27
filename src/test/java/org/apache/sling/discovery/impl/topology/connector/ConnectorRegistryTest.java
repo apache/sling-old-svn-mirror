@@ -69,9 +69,9 @@ public class ConnectorRegistryTest {
         try {
             // should not be able to register same url twice
             client = c.registerOutgoingConnector(cvs, url);
-            fail("should have complained");
+            // ok - no longer complains - SLING-3446
         } catch (IllegalStateException e) {
-            // ok
+            fail("should no longer be thrown"); // SLING-3446
         }
 
         try {
