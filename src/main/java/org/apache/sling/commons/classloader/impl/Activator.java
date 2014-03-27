@@ -115,7 +115,7 @@ public class Activator implements SynchronousBundleListener, BundleActivator {
             if ( ( event.getType() == BundleEvent.STARTED && !lazyBundle)
                  || (event.getType() == BundleEvent.STARTING && lazyBundle) ) {
                 reload = this.service.hasUnresolvedPackages(event.getBundle());
-            } else if ( event.getType() == BundleEvent.UNRESOLVED ) {
+            } else if ( event.getType() == BundleEvent.UNRESOLVED || event.getType() == BundleEvent.RESOLVED ) {
                 reload = this.service.isBundleUsed(event.getBundle().getBundleId());
             } else {
                 reload = false;
