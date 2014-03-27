@@ -193,6 +193,13 @@ public class ResourceResolverFactoryActivator {
                       " and on the alias update time if the number of aliases is huge (over 10000).")
     private static final String PROP_ENABLE_OPTIMIZE_ALIAS_RESOLUTION = "resource.resolver.optimize.alias.resolution";
 
+    @Property(unbounded=PropertyUnbounded.ARRAY,
+            label = "Vanity Path Prefix",
+            description ="This setting can contain a list of path prefixes, e.g. /libs/, /content/. If " +
+                    "such a list is configured, only vanity paths from resources starting with this prefix " +
+                    " are considered. if the list is empty, all vanity paths are used.")
+    private static final String PROP_VANITY_PATH_PREFIX = "resource.resolver.vanitypath.whitelist";
+
     /** Tracker for the resource decorators. */
     private final ResourceDecoratorTracker resourceDecoratorTracker = new ResourceDecoratorTracker();
 
@@ -238,6 +245,9 @@ public class ResourceResolverFactoryActivator {
 
     /** alias resource resolution optimization enabled? */
     private boolean enableOptimizeAliasResolution = DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION;
+
+    /** Vanity path whitelist */
+    private String[] vanityPathWhiteList;
 
     private final FactoryPreconditions preconds = new FactoryPreconditions();
 
@@ -305,6 +315,10 @@ public class ResourceResolverFactoryActivator {
         return this.enableOptimizeAliasResolution;
     }
 
+    public String[] getVanityPathWhiteList() {
+        return this.vanityPathWhiteList;
+    }
+
     // ---------- SCR Integration ---------------------------------------------
 
     /** Activates this component, called by SCR before registering as a service */
@@ -368,6 +382,24 @@ public class ResourceResolverFactoryActivator {
         defaultVanityPathRedirectStatus = PropertiesUtil.toInteger(properties.get(PROP_DEFAULT_VANITY_PATH_REDIRECT_STATUS),
                                                                    MapEntries.DEFAULT_DEFAULT_VANITY_PATH_REDIRECT_STATUS);
         this.enableVanityPath = PropertiesUtil.toBoolean(properties.get(PROP_ENABLE_VANITY_PATH), DEFAULT_ENABLE_VANITY_PATH);
+        // vanity path white list
+        this.vanityPathWhiteList = null;
+        final String[] vanityPathPrefixes = PropertiesUtil.toStringArray(properties.get(PROP_VANITY_PATH_PREFIX));
+        if ( vanityPathPrefixes != null ) {
+            final List<String> prefixList = new ArrayList<String>();
+            for(final String value : vanityPathPrefixes) {
+                if ( value.trim().length() > 0 ) {
+                    if ( value.trim().endsWith("/") ) {
+                        prefixList.add(value.trim());
+                    } else {
+                        prefixList.add(value.trim() + "/");
+                    }
+                }
+            }
+            if ( prefixList.size() > 0 ) {
+                this.vanityPathWhiteList = prefixList.toArray(new String[prefixList.size()]);
+            }
+        }
 
         this.enableOptimizeAliasResolution = PropertiesUtil.toBoolean(properties.get(PROP_ENABLE_OPTIMIZE_ALIAS_RESOLUTION), DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION);
 

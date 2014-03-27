@@ -38,6 +38,12 @@ public interface MapConfigurationProvider extends ResourceResolverFactory {
     int getDefaultVanityPathRedirectStatus();
 
     boolean isVanityPathEnabled();
-    
-    public boolean isOptimizeAliasResolutionEnabled();
+
+    boolean isOptimizeAliasResolutionEnabled();
+
+    /**
+     * A list of white list prefixes all ending with a slash.
+     * If <code>null</code> is returned, all paths are allowed.
+     */
+    String[] getVanityPathWhiteList();
 }
