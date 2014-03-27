@@ -35,7 +35,6 @@ import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -359,12 +358,19 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
             // resource Provider: libs/sling/servlet/default/GET.servlet
             // list will match libs, sling, servlet, default
             // and there will be no resource provider at the end
-            if (entries.size() > 0 && entries.size() == elements.length) {
-                if (entries.get(entries.size() - 1).getResourceProviders().length == 0) {
-                    logger.debug("Resolved Synthetic {}", fullPath);
-                    return new SyntheticResource(resourceResolver, fullPath, ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
-                }
-            }
+            // SLING-3482 : The code below does not seem to be required anymore:
+            // if a servlet is mounted by the servlet provider at
+            // libs/sling/servlet/default/GET.servlet
+            // then the entry for libs/sling/servlet/default will have an entry anyway
+            // and if scripts are stored at that location, the entry
+            // will exist as well.
+
+//            if (entries.size() > 0 && entries.size() == elements.length) {
+//                if (entries.get(entries.size() - 1).getResourceProviders().length == 0) {
+//                    logger.debug("Resolved Synthetic {}", fullPath);
+//                    return new SyntheticResource(resourceResolver, fullPath, ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
+//                }
+//            }
 
             logger.debug("Resource null {} ", fullPath);
             return null;
