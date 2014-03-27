@@ -41,8 +41,6 @@ import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.featureflags.Features;
-import org.apache.sling.resourceresolver.impl.helper.FeaturesHolder;
 import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
@@ -52,7 +50,6 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.EventAdmin;
@@ -80,7 +77,7 @@ import org.osgi.service.event.EventAdmin;
     @Reference(name = "ResourceProviderFactory", referenceInterface = ResourceProviderFactory.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
     @Reference(name = "ResourceDecorator", referenceInterface = ResourceDecorator.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
 })
-public class ResourceResolverFactoryActivator implements FeaturesHolder {
+public class ResourceResolverFactoryActivator {
 
     private static final class FactoryRegistration {
         /** Registration .*/
@@ -196,9 +193,6 @@ public class ResourceResolverFactoryActivator implements FeaturesHolder {
                       " and on the alias update time if the number of aliases is huge (over 10000).")
     private static final String PROP_ENABLE_OPTIMIZE_ALIAS_RESOLUTION = "resource.resolver.optimize.alias.resolution";
 
-    // name of the Features service reference
-    private static final String FEATURES_NAME = "features";
-
     /** Tracker for the resource decorators. */
     private final ResourceDecoratorTracker resourceDecoratorTracker = new ResourceDecoratorTracker();
 
@@ -234,30 +228,6 @@ public class ResourceResolverFactoryActivator implements FeaturesHolder {
     @Reference
     ResourceAccessSecurityTracker resourceAccessSecurityTracker;
 
-    /**
-     * Keeps the Features service object if available. This is kind of a
-     * tri-state variable:
-     * <ul>
-     * <li>If the service has not been accessed yet, the value is
-     * {@link #FEATURES_NAME}. This field is also set to {@link #FEATURES_NAME}
-     * by the {@link #featuresServiceChanged(ServiceReference)} if the service
-     * is registered or unregistered.</li>
-     * <li>{@code null} if the Features service is not available.</li>
-     * <li>The reference to the Features service object if available</li>
-     * </ul>
-     *
-     * @see #FEATURES_NAME
-     * @see #featuresServiceChanged(ServiceReference)
-     */
-    @Reference(
-            name = FEATURES_NAME,
-            referenceInterface = Features.class,
-            cardinality = ReferenceCardinality.OPTIONAL_UNARY,
-            policy = ReferencePolicy.DYNAMIC,
-            bind = "featuresServiceChanged",
-            unbind = "featuresServiceChanged")
-    private volatile Object featuresService = FEATURES_NAME;
-
     /** ComponentContext */
     private volatile ComponentContext componentContext;
 
@@ -283,13 +253,6 @@ public class ResourceResolverFactoryActivator implements FeaturesHolder {
 
     public ResourceAccessSecurityTracker getResourceAccessSecurityTracker() {
         return this.resourceAccessSecurityTracker;
-    }
-
-    public Object getFeatures() {
-        if (this.featuresService == FEATURES_NAME) {
-            this.featuresService = this.componentContext.locateService(FEATURES_NAME);
-        }
-        return this.featuresService;
     }
 
     public EventAdmin getEventAdmin() {
@@ -578,18 +541,5 @@ public class ResourceResolverFactoryActivator implements FeaturesHolder {
      */
     protected void unbindResourceDecorator(final ResourceDecorator decorator, final Map<String, Object> props) {
         this.resourceDecoratorTracker.unbindResourceDecorator(decorator, props);
-    }
-
-    /**
-     * Signal method to be called if the Features service is bound
-     * or unbound. This method does not really care for the event, it
-     * just marks the {@link #featuresService} field to be checked
-     * again on the next access.
-     *
-     * @param ref ServiceReference is ignored but required by the DS spec
-     */
-    @SuppressWarnings("unused")
-    private void featuresServiceChanged(final ServiceReference ref) {
-        this.featuresService = FEATURES_NAME;
     }
 }

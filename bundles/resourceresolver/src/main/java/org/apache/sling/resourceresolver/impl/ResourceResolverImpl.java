@@ -121,7 +121,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
         // create new context
         final ResourceResolverContext newContext = new ResourceResolverContext(this.context.isAdmin(),
-                newAuthenticationInfo, factory.getResourceAccessSecurityTracker(), this.context.getFeaturesHolder() );
+                newAuthenticationInfo, factory.getResourceAccessSecurityTracker());
         this.factory.getRootProviderEntry().loginToRequiredFactories(newContext);
 
         // create a regular resource resolver

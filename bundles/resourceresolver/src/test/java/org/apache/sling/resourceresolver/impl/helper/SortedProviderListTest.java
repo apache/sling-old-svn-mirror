@@ -100,7 +100,7 @@ public class SortedProviderListTest {
         final AdaptableResourceProviderImpl rp3 = new AdaptableResourceProviderImpl(new String[] {"/hello"}, 3L);
         final ResourceProviderImpl rp4 = new ResourceProviderImpl(new String[] {"/you"}, 4L);
 
-        final ResourceResolverContext ctx = new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker(), MockFeaturesHolder.INSTANCE);
+        final ResourceResolverContext ctx = new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker());
 
         final SortedProviderList<Adaptable> spl = new SortedProviderList<Adaptable>(Adaptable.class);
         check(spl, ctx);
@@ -132,7 +132,7 @@ public class SortedProviderListTest {
         final AdaptableResourceProviderImpl rp4 = new AdaptableResourceProviderImpl(new String[] {"/a/a"}, 4L);
         final AdaptableResourceProviderImpl rp5 = new AdaptableResourceProviderImpl(new String[] {"/all/or/nothing"}, 5L);
 
-        final ResourceResolverContext ctx = new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker(), null);
+        final ResourceResolverContext ctx = new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker());
 
         final SortedProviderList<Adaptable> spl = new SortedProviderList<Adaptable>(Adaptable.class);
         check(spl, ctx);
