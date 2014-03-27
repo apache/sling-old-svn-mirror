@@ -912,14 +912,14 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
                             if (childName.equals(alias)) {
                                 logger.debug("getChildInternal: Found Resource {} with alias {} to use", child, childName);
                                 final Resource aliasedChild = getResourceInternal( ResourceUtil.normalize(child.getPath()) );
-                                return aliasedChild; 
+                                return aliasedChild;
                             }
                         }
                     }
                 }
             }
         }
- 
+
         // no match for the childName found
         logger.debug("getChildInternal: Resource {} has no child {}", parent, childName);
         return null;
