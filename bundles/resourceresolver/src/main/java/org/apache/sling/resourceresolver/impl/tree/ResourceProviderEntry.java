@@ -35,6 +35,7 @@ import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -129,8 +130,9 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
      */
     public Resource getResource(final ResourceResolverContext ctx,
             final ResourceResolver resourceResolver,
-            final String path) {
-        return getInternalResource(ctx, resourceResolver, path);
+            final String path,
+            final boolean isResolve) {
+        return getInternalResource(ctx, resourceResolver, path, isResolve);
     }
 
     // ------------------ Map methods, here so that we can delegate 2 maps
@@ -301,7 +303,8 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
      */
     private Resource getInternalResource(final ResourceResolverContext ctx,
             final ResourceResolver resourceResolver,
-            final String fullPath) {
+            final String fullPath,
+            final boolean isResolve) {
         try {
 
             if (fullPath == null || fullPath.length() == 0 || fullPath.charAt(0) != '/') {
@@ -358,20 +361,18 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
             // resource Provider: libs/sling/servlet/default/GET.servlet
             // list will match libs, sling, servlet, default
             // and there will be no resource provider at the end
-            // SLING-3482 : The code below does not seem to be required anymore:
-            // if a servlet is mounted by the servlet provider at
-            // libs/sling/servlet/default/GET.servlet
-            // then the entry for libs/sling/servlet/default will have an entry anyway
-            // and if scripts are stored at that location, the entry
-            // will exist as well.
-
-//            if (entries.size() > 0 && entries.size() == elements.length) {
-//                if (entries.get(entries.size() - 1).getResourceProviders().length == 0) {
-//                    logger.debug("Resolved Synthetic {}", fullPath);
-//                    return new SyntheticResource(resourceResolver, fullPath, ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
-//                }
-//            }
-
+            // SLING-3482 : this is only done for getResource but not resolve
+            //              as it is important e.g. for servlet resolution
+            //              to get the parent resource for resource traversal.
+            if ( !isResolve ) {
+                if (entries.size() > 0 && entries.size() == elements.length) {
+                    final ResourceProviderEntry lastEntry = entries.get(entries.size() - 1);
+                    if (lastEntry.getResourceProviders().length == 0) {
+                        logger.debug("Resolved Synthetic {}", fullPath);
+                        return new SyntheticResource(resourceResolver, fullPath, ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
+                    }
+                }
+            }
             logger.debug("Resource null {} ", fullPath);
             return null;
         } catch (final Exception ex) {

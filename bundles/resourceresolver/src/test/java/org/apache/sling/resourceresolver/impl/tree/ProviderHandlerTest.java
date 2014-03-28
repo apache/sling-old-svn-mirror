@@ -21,6 +21,7 @@ package org.apache.sling.resourceresolver.impl.tree;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -29,8 +30,11 @@ import java.util.Map;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.osgi.framework.Constants;
 
 public class ProviderHandlerTest {
@@ -78,6 +82,42 @@ public class ProviderHandlerTest {
         assertEquals(new String[] {"/", "/b", "/c", "/d"}, ph5.getRoots());
     }
 
+    @Test public void testServletRegistrationAndSyntheticResources() {
+        final String servletpath = "/libs/a/b/GET.servlet";
+
+        final Resource servletResource = Mockito.mock(Resource.class);
+
+        final RootResourceProviderEntry root = new RootResourceProviderEntry();
+        final Map<String, Object> leaveProperties = new HashMap<String, Object>();
+        leaveProperties.put(ResourceProvider.ROOTS, servletpath);
+
+        final ResourceProvider leaveProvider = Mockito.mock(ResourceProvider.class);
+        Mockito.when(leaveProvider.getResource(null, servletpath)).thenReturn(servletResource);
+
+        root.bindResourceProvider(leaveProvider, leaveProperties);
+
+        final Resource parent = root.getResource(getResourceResolverContext(), null, ResourceUtil.getParent(servletpath), false);
+        assertNotNull("Parent must be available", parent);
+        assertTrue("Resource should be synthetic", ResourceUtil.isSyntheticResource(parent));
+
+        final Resource servlet = root.getResource(getResourceResolverContext(), null, servletpath, false);
+        assertNotNull("Servlet resource must not be null", servlet);
+        assertEquals(servletResource, servlet);
+
+        assertNotNull(root.getResource(getResourceResolverContext(), null, "/libs", false));
+
+        // now check when doing a resolve()
+        assertNull(root.getResource(getResourceResolverContext(), null, "/libs", true));
+        assertNull(root.getResource(getResourceResolverContext(), null, ResourceUtil.getParent(servletpath), true));
+        assertNotNull(root.getResource(getResourceResolverContext(), null, servletpath, true));
+    }
+
+    private ResourceResolverContext getResourceResolverContext() {
+        final ResourceResolverContext ctx = Mockito.mock(ResourceResolverContext.class);
+        Mockito.when(ctx.getResourceAccessSecurityTracker()).thenReturn(new ResourceAccessSecurityTracker());
+        return ctx;
+    }
+
     private static final class MyProviderHandler extends ProviderHandler {
 
         public MyProviderHandler(Map<String, Object> properties) {
@@ -90,7 +130,8 @@ public class ProviderHandlerTest {
         }
 
         @Override
-        public Iterator<Resource> listChildren(ResourceResolverContext ctx, Resource parent) {            // TODO Auto-generated method stub
+        public Iterator<Resource> listChildren(ResourceResolverContext ctx, Resource parent) {
+            // TODO Auto-generated method stub
             return null;
         }
 
