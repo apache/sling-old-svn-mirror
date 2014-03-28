@@ -42,15 +42,6 @@ import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
  */
 public class ResourceResolverContext {
 
-    /**
-     * The name of the property listing feature requirements for a resource.
-     *
-     * @see <a
-     *      href="http://sling.apache.org/documentation/the-sling-engine/featureflags.html">Feature
-     *      Flags</a>
-     */
-    private static final String RESOURCE_PROPERTY = "sling:features";
-
     /** A map of all used providers created by a factory. */
     private final Map<Long, ResourceProvider> providers = new HashMap<Long, ResourceProvider>();
 

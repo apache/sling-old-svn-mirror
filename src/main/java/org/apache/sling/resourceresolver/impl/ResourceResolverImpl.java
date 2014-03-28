@@ -566,7 +566,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             // if the path is absolute, normalize . and .. segments and get res
             if (path.startsWith("/")) {
                 path = ResourceUtil.normalize(path);
-                result = (path != null) ? getResourceInternal(path) : null;
+                result = (path != null) ? getResourceInternal(path, false) : null;
                 if (result != null) {
                     result = this.factory.getResourceDecoratorTracker().decorate(result);
                 }
@@ -788,7 +788,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             final ResourcePathIterator it = new ResourcePathIterator(absPath);
             while (it.hasNext() && resource == null) {
                 curPath = it.next();
-                resource = getResourceInternal(curPath);
+                resource = getResourceInternal(curPath, true);
             }
         } catch (final Exception ex) {
             throw new SlingException("Problem trying " + curPath + " for request path " + absPath, ex);
@@ -808,7 +808,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
             // no direct resource found, so we have to drill down into the
             // resource tree to find a match
-            resource = getResourceInternal("/");
+            resource = getResourceInternal("/", true);
             final StringBuilder resolutionPath = new StringBuilder();
             final StringTokenizer tokener = new StringTokenizer(absPath, "/");
             while (resource != null && tokener.hasMoreTokens()) {
@@ -867,7 +867,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         } else {
             path = parent.getPath() + '/' + childName;
         }
-        Resource child = getResourceInternal( ResourceUtil.normalize(path) );
+        Resource child = getResourceInternal( ResourceUtil.normalize(path), true );
         if (child != null) {
             final String alias = ResourceResolverContext.getProperty(child, PROP_REDIRECT_INTERNAL);
             if (alias != null) {
@@ -895,7 +895,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
                     } else {
                         aliasPath = parent.getPath() + '/' + aliasName;
                     }
-                    final Resource aliasedChild = getResourceInternal( ResourceUtil.normalize(aliasPath) );
+                    final Resource aliasedChild = getResourceInternal( ResourceUtil.normalize(aliasPath), true );
                     logger.debug("getChildInternal: Found Resource {} with alias {} to use", aliasedChild, childName);
                     return aliasedChild;
                 }
@@ -911,7 +911,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
                         for (final String alias : aliases) {
                             if (childName.equals(alias)) {
                                 logger.debug("getChildInternal: Found Resource {} with alias {} to use", child, childName);
-                                final Resource aliasedChild = getResourceInternal( ResourceUtil.normalize(child.getPath()) );
+                                final Resource aliasedChild = getResourceInternal( ResourceUtil.normalize(child.getPath()) , true);
                                 return aliasedChild;
                             }
                         }
@@ -928,9 +928,9 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * Creates a resource with the given path if existing
      */
-    private Resource getResourceInternal(final String path) {
+    private Resource getResourceInternal(final String path, final boolean isResolve) {
 
-        final Resource resource = this.factory.getRootProviderEntry().getResource(this.context, this, path);
+        final Resource resource = this.factory.getRootProviderEntry().getResource(this.context, this, path ,isResolve);
         if (resource != null) {
             resource.getResourceMetadata().setResolutionPath(path);
             return resource;
