@@ -67,9 +67,15 @@ public class ResourceAccessGateFactory
 
     private String jcrPath;
 
+    private String prefix;
+
     @Activate
     protected void activate(final Map<String, Object> props) {
         this.jcrPath = PropertiesUtil.toString(props.get(PROP_JCR_PATH), null);
+        this.prefix = PropertiesUtil.toString(props.get(PROP_PREFIX), null);
+        if ( !this.prefix.endsWith("/") ) {
+            this.prefix = this.prefix + "/";
+        }
     }
 
     /**
@@ -81,8 +87,12 @@ public class ResourceAccessGateFactory
         boolean granted = false;
         final Session session = resolver.adaptTo(Session.class);
         if ( session != null ) {
+            String checkPath = this.jcrPath;
+            if ( this.prefix != null && path.startsWith(this.prefix) ) {
+                checkPath = this.jcrPath + path.substring(this.prefix.length() - 1);
+            }
             try {
-                granted = session.hasPermission(jcrPath, permission);
+                granted = session.hasPermission(checkPath, permission);
             } catch (final RepositoryException re) {
                 // ignore
             }
