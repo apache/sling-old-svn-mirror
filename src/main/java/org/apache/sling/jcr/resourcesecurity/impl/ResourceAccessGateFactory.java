@@ -20,7 +20,6 @@ package org.apache.sling.jcr.resourcesecurity.impl;
 
 import java.util.Map;
 
-import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
@@ -74,24 +73,13 @@ public class ResourceAccessGateFactory
     }
 
     /**
-     * Skip the check if the resource is backed by a JCR resource.
-     * This is a sanity check which should usually not be required if the system
-     * is configured correctly.
-     */
-    private boolean skipCheck(final Resource resource) {
-        // if resource is backed by a JCR node, skip check
-        return resource.adaptTo(Node.class) != null;
-    }
-
-    /**
      * Check the permission
      */
-    private GateResult checkPermission(final Resource resource, final String permission) {
-        if ( this.skipCheck(resource) ) {
-            return GateResult.GRANTED;
-        }
+    private GateResult checkPermission(final ResourceResolver resolver,
+            final String path,
+            final String permission) {
         boolean granted = false;
-        final Session session = resource.getResourceResolver().adaptTo(Session.class);
+        final Session session = resolver.adaptTo(Session.class);
         if ( session != null ) {
             try {
                 granted = session.hasPermission(jcrPath, permission);
@@ -139,7 +127,7 @@ public class ResourceAccessGateFactory
      */
     @Override
     public GateResult canRead(final Resource resource) {
-        return this.checkPermission(resource, Session.ACTION_READ);
+        return this.checkPermission(resource.getResourceResolver(), resource.getPath(), Session.ACTION_READ);
     }
 
     /**
@@ -147,7 +135,7 @@ public class ResourceAccessGateFactory
      */
     @Override
     public GateResult canDelete(Resource resource) {
-        return this.checkPermission(resource, Session.ACTION_REMOVE);
+        return this.checkPermission(resource.getResourceResolver(), resource.getPath(), Session.ACTION_REMOVE);
     }
 
     /**
@@ -155,7 +143,7 @@ public class ResourceAccessGateFactory
      */
     @Override
     public GateResult canUpdate(Resource resource) {
-        return this.checkPermission(resource, Session.ACTION_SET_PROPERTY);
+        return this.checkPermission(resource.getResourceResolver(), resource.getPath(), Session.ACTION_SET_PROPERTY);
     }
 
     /**
@@ -163,17 +151,6 @@ public class ResourceAccessGateFactory
      */
     @Override
     public GateResult canCreate(String absPathName, ResourceResolver resourceResolver) {
-        boolean canCreate = false;
-
-        final Session session = resourceResolver.adaptTo(Session.class);
-        if ( session != null ) {
-            try {
-                canCreate = session.hasPermission(jcrPath, Session.ACTION_ADD_NODE);
-            } catch (final RepositoryException re) {
-                // ignore
-            }
-        }
-
-        return canCreate ? GateResult.GRANTED : GateResult.DENIED;
+        return this.checkPermission(resourceResolver, absPathName, Session.ACTION_ADD_NODE);
     }
 }
