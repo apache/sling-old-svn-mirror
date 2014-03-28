@@ -45,6 +45,13 @@ import org.apache.sling.resourceaccesssecurity.ResourceAccessGate;
 @Properties({
     @Property(name=ResourceAccessGate.PATH, label="Path",
               description="The path is a regular expression for which resources the service should be called"),
+    @Property(name=ResourceAccessGateFactory.PROP_PREFIX,
+              label="Deep Check Prefix",
+              description="If this value is configured with a prefix and the resource path starts with this" +
+                          " prefix, the prefix is removed from the path and the remaining part is appended " +
+                          " to the JCR path to check. For example if /foo/a/b/c is required, this prefix is " +
+                          " configured with /foo and the JCR node to check is /check, the permissions at " +
+                          " /check/a/b/c are checked."),
     @Property(name=ResourceAccessGateFactory.PROP_JCR_PATH,
               label="JCR Node",
               description="This node is checked for permissions to the resources."),
@@ -56,6 +63,8 @@ public class ResourceAccessGateFactory
     implements ResourceAccessGate {
 
     static final String PROP_JCR_PATH = "jcrPath";
+
+    static final String PROP_PREFIX = "checkpath.prefix";
 
     private String jcrPath;
 
@@ -72,6 +81,25 @@ public class ResourceAccessGateFactory
     private boolean skipCheck(final Resource resource) {
         // if resource is backed by a JCR node, skip check
         return resource.adaptTo(Node.class) != null;
+    }
+
+    /**
+     * Check the permission
+     */
+    private GateResult checkPermission(final Resource resource, final String permission) {
+        if ( this.skipCheck(resource) ) {
+            return GateResult.GRANTED;
+        }
+        boolean granted = false;
+        final Session session = resource.getResourceResolver().adaptTo(Session.class);
+        if ( session != null ) {
+            try {
+                granted = session.hasPermission(jcrPath, permission);
+            } catch (final RepositoryException re) {
+                // ignore
+            }
+        }
+        return granted ? GateResult.GRANTED : GateResult.DENIED;
     }
 
     /**
@@ -111,19 +139,7 @@ public class ResourceAccessGateFactory
      */
     @Override
     public GateResult canRead(final Resource resource) {
-        if ( this.skipCheck(resource) ) {
-            return GateResult.GRANTED;
-        }
-        final Session session = resource.getResourceResolver().adaptTo(Session.class);
-        boolean canRead = false;
-        if ( session != null ) {
-            try {
-                canRead = session.nodeExists(this.jcrPath);
-            } catch (final RepositoryException re) {
-                // ignore
-            }
-        }
-        return canRead ? GateResult.GRANTED : GateResult.DENIED;
+        return this.checkPermission(resource, Session.ACTION_READ);
     }
 
     /**
@@ -131,22 +147,7 @@ public class ResourceAccessGateFactory
      */
     @Override
     public GateResult canDelete(Resource resource) {
-        if ( this.skipCheck(resource) ) {
-            return GateResult.GRANTED;
-        }
-
-        boolean canDelete = false;
-        final Session session = resource.getResourceResolver().adaptTo(Session.class);
-        if ( session != null ) {
-            try {
-                canDelete = session.hasPermission(jcrPath, Session.ACTION_REMOVE);
-            } catch (final RepositoryException re) {
-                // ignore
-            }
-        }
-
-        return canDelete ? GateResult.GRANTED : GateResult.DENIED;
-
+        return this.checkPermission(resource, Session.ACTION_REMOVE);
     }
 
     /**
@@ -154,22 +155,7 @@ public class ResourceAccessGateFactory
      */
     @Override
     public GateResult canUpdate(Resource resource) {
-        if ( this.skipCheck(resource) ) {
-            return GateResult.GRANTED;
-        }
-
-        boolean canUpdate = false;
-
-        final Session session = resource.getResourceResolver().adaptTo(Session.class);
-        if ( session != null ) {
-            try {
-                canUpdate = session.hasPermission(jcrPath, Session.ACTION_SET_PROPERTY);
-            } catch (final RepositoryException re) {
-                // ignore
-            }
-        }
-
-        return canUpdate ? GateResult.GRANTED : GateResult.DENIED;
+        return this.checkPermission(resource, Session.ACTION_SET_PROPERTY);
     }
 
     /**
