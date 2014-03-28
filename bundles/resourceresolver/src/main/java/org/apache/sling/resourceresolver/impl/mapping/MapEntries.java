@@ -50,6 +50,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryImpl;
 import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
+import org.apache.sling.resourceresolver.impl.mapping.MapConfigurationProvider.VanityPathConfig;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -112,7 +113,7 @@ public class MapEntries implements EventHandler {
 
     private final boolean enableOptimizeAliasResolution;
 
-    private final String[] vanityPathWhiteList;
+    private final List<VanityPathConfig> vanityPathConfig;
 
     @SuppressWarnings("unchecked")
     private MapEntries() {
@@ -128,7 +129,7 @@ public class MapEntries implements EventHandler {
         this.eventAdmin = null;
         this.enabledVanityPaths = true;
         this.enableOptimizeAliasResolution = true;
-        this.vanityPathWhiteList = null;
+        this.vanityPathConfig = null;
     }
 
     @SuppressWarnings("unchecked")
@@ -138,7 +139,7 @@ public class MapEntries implements EventHandler {
         this.factory = factory;
         this.mapRoot = factory.getMapRoot();
         this.enabledVanityPaths = factory.isVanityPathEnabled();
-        this.vanityPathWhiteList = factory.getVanityPathWhiteList();
+        this.vanityPathConfig = factory.getVanityPathConfig();
         this.enableOptimizeAliasResolution = factory.isOptimizeAliasResolutionEnabled();
         this.eventAdmin = eventAdmin;
 
@@ -590,11 +591,11 @@ public class MapEntries implements EventHandler {
             }
 
             // check whitelist
-            if ( this.vanityPathWhiteList != null ) {
+            if ( this.vanityPathConfig != null ) {
                 boolean allowed = false;
-                for(final String prefix : this.vanityPathWhiteList) {
-                    if ( resource.getPath().startsWith(prefix) ) {
-                        allowed = true;
+                for(final VanityPathConfig config : this.vanityPathConfig) {
+                    if ( resource.getPath().startsWith(config.prefix) ) {
+                        allowed = !config.isExclude;
                         break;
                     }
                 }
