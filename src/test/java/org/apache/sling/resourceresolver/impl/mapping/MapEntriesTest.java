@@ -29,14 +29,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
+import org.apache.sling.resourceresolver.impl.mapping.MapConfigurationProvider.VanityPathConfig;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -66,8 +70,20 @@ public class MapEntriesTest {
     public void setup() throws Exception {
         MockitoAnnotations.initMocks(this);
 
+        final List<VanityPathConfig> configs = new ArrayList<MapConfigurationProvider.VanityPathConfig>();
+        configs.add(new VanityPathConfig("/libs/", false));
+        configs.add(new VanityPathConfig("/libs/denied", true));
+        configs.add(new VanityPathConfig("/foo/", false));
+        configs.add(new VanityPathConfig("/baa/", false));
+        configs.add(new VanityPathConfig("/justVanityPath", false));
+        configs.add(new VanityPathConfig("/badVanityPath", false));
+        configs.add(new VanityPathConfig("/redirectingVanityPath", false));
+        configs.add(new VanityPathConfig("/redirectingVanityPath301", false));
+
+        Collections.sort(configs);
         when(resourceResolverFactory.getAdministrativeResourceResolver(null)).thenReturn(resourceResolver);
         when(resourceResolverFactory.isVanityPathEnabled()).thenReturn(true);
+        when(resourceResolverFactory.getVanityPathConfig()).thenReturn(configs);
         when(resourceResolverFactory.isOptimizeAliasResolutionEnabled()).thenReturn(true);
         when(resourceResolver.findResources(anyString(), eq("sql"))).thenReturn(
                 Collections.<Resource> emptySet().iterator());
@@ -213,4 +229,52 @@ public class MapEntriesTest {
         return new ValueMapDecorator(data);
     }
 
+    private Resource getVanityPathResource(final String path) {
+        Resource rsrc = mock(Resource.class);
+        when(rsrc.getPath()).thenReturn(path);
+        when(rsrc.getName()).thenReturn(ResourceUtil.getName(path));
+        when(rsrc.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/vanity" + path));
+        return rsrc;
+    }
+
+    @Test
+    public void test_vanity_path_registration_include_exclude() {
+        final String[] validPaths = {"/libs/somewhere", "/libs/a/b", "/foo/a", "/baa/a"};
+        final String[] invalidPaths = {"/libs/denied/a", "/libs/denied/b/c", "/nowhere"};
+
+        final List<Resource> resources = new ArrayList<Resource>();
+        for(final String val : validPaths) {
+            resources.add(getVanityPathResource(val));
+        }
+        for(final String val : invalidPaths) {
+            resources.add(getVanityPathResource(val));
+        }
+
+
+        when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
+
+            public Iterator<Resource> answer(InvocationOnMock invocation) throws Throwable {
+                if (invocation.getArguments()[0].toString().contains("sling:vanityPath")) {
+                    return resources.iterator();
+                } else {
+                    return Collections.<Resource> emptySet().iterator();
+                }
+            }
+        });
+
+        mapEntries.doInit();
+
+        List<MapEntry> entries = mapEntries.getResolveMaps();
+        // each valid resource results in 2 entries
+        assertEquals(validPaths.length * 2, entries.size());
+
+        final Set<String> resultSet = new HashSet<String>();
+        for(final String p : validPaths) {
+            resultSet.add(p + "$1");
+            resultSet.add(p + ".html");
+        }
+        for (final MapEntry entry : entries) {
+            assertTrue(resultSet.remove(entry.getRedirect()[0]));
+        }
+    }
 }

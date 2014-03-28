@@ -16,6 +16,7 @@
  */
 package org.apache.sling.resourceresolver.impl.mapping;
 
+import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.api.resource.ResourceResolverFactory;
@@ -41,9 +42,23 @@ public interface MapConfigurationProvider extends ResourceResolverFactory {
 
     boolean isOptimizeAliasResolutionEnabled();
 
+    public class VanityPathConfig implements Comparable<VanityPathConfig> {
+        public final boolean isExclude;
+        public final String prefix;
+
+        public VanityPathConfig(final String prefix, final boolean isExclude) {
+            this.prefix = prefix;
+            this.isExclude = isExclude;
+        }
+
+        public int compareTo(VanityPathConfig o2) {
+            return new Integer(o2.prefix.length()).compareTo(this.prefix.length());
+        }
+    }
+
     /**
-     * A list of white list prefixes all ending with a slash.
+     * A list of white and black list prefixes all ending with a slash.
      * If <code>null</code> is returned, all paths are allowed.
      */
-    String[] getVanityPathWhiteList();
+    List<VanityPathConfig> getVanityPathConfig();
 }

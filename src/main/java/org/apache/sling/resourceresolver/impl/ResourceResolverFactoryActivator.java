@@ -194,11 +194,18 @@ public class ResourceResolverFactoryActivator {
     private static final String PROP_ENABLE_OPTIMIZE_ALIAS_RESOLUTION = "resource.resolver.optimize.alias.resolution";
 
     @Property(unbounded=PropertyUnbounded.ARRAY,
-            label = "Vanity Path Prefix",
+            label = "Allowed Vanity Path Location",
             description ="This setting can contain a list of path prefixes, e.g. /libs/, /content/. If " +
                     "such a list is configured, only vanity paths from resources starting with this prefix " +
-                    " are considered. if the list is empty, all vanity paths are used.")
-    private static final String PROP_VANITY_PATH_PREFIX = "resource.resolver.vanitypath.whitelist";
+                    " are considered. If the list is empty, all vanity paths are used.")
+    private static final String PROP_ALLOWED_VANITY_PATH_PREFIX = "resource.resolver.vanitypath.whitelist";
+
+    @Property(unbounded=PropertyUnbounded.ARRAY,
+            label = "Denied Vanity Path Location",
+            description ="This setting can contain a list of path prefixes, e.g. /misc/. If " +
+                    "such a list is configured,vanity paths from resources starting with this prefix " +
+                    " are not considered. If the list is empty, all vanity paths are used.")
+    private static final String PROP_DENIED_VANITY_PATH_PREFIX = "resource.resolver.vanitypath.blacklist";
 
     /** Tracker for the resource decorators. */
     private final ResourceDecoratorTracker resourceDecoratorTracker = new ResourceDecoratorTracker();
@@ -248,6 +255,9 @@ public class ResourceResolverFactoryActivator {
 
     /** Vanity path whitelist */
     private String[] vanityPathWhiteList;
+
+    /** Vanity path blacklist */
+    private String[] vanityPathBlackList;
 
     private final FactoryPreconditions preconds = new FactoryPreconditions();
 
@@ -319,6 +329,10 @@ public class ResourceResolverFactoryActivator {
         return this.vanityPathWhiteList;
     }
 
+    public String[] getVanityPathBlackList() {
+        return this.vanityPathBlackList;
+    }
+
     // ---------- SCR Integration ---------------------------------------------
 
     /** Activates this component, called by SCR before registering as a service */
@@ -384,7 +398,7 @@ public class ResourceResolverFactoryActivator {
         this.enableVanityPath = PropertiesUtil.toBoolean(properties.get(PROP_ENABLE_VANITY_PATH), DEFAULT_ENABLE_VANITY_PATH);
         // vanity path white list
         this.vanityPathWhiteList = null;
-        final String[] vanityPathPrefixes = PropertiesUtil.toStringArray(properties.get(PROP_VANITY_PATH_PREFIX));
+        String[] vanityPathPrefixes = PropertiesUtil.toStringArray(properties.get(PROP_ALLOWED_VANITY_PATH_PREFIX));
         if ( vanityPathPrefixes != null ) {
             final List<String> prefixList = new ArrayList<String>();
             for(final String value : vanityPathPrefixes) {
@@ -398,6 +412,24 @@ public class ResourceResolverFactoryActivator {
             }
             if ( prefixList.size() > 0 ) {
                 this.vanityPathWhiteList = prefixList.toArray(new String[prefixList.size()]);
+            }
+        }
+        // vanity path black list
+        this.vanityPathBlackList = null;
+        vanityPathPrefixes = PropertiesUtil.toStringArray(properties.get(PROP_DENIED_VANITY_PATH_PREFIX));
+        if ( vanityPathPrefixes != null ) {
+            final List<String> prefixList = new ArrayList<String>();
+            for(final String value : vanityPathPrefixes) {
+                if ( value.trim().length() > 0 ) {
+                    if ( value.trim().endsWith("/") ) {
+                        prefixList.add(value.trim());
+                    } else {
+                        prefixList.add(value.trim() + "/");
+                    }
+                }
+            }
+            if ( prefixList.size() > 0 ) {
+                this.vanityPathBlackList = prefixList.toArray(new String[prefixList.size()]);
             }
         }
 
