@@ -36,7 +36,6 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.resourceaccesssecurity.AllowingResourceAccessGate;
 import org.apache.sling.resourceaccesssecurity.ResourceAccessGate;
 
-
 @Component(configurationFactory=true, policy=ConfigurationPolicy.REQUIRE, metatype=true,
            label="Apache Sling JCR Resource Access Gate",
            description="This access gate can be used to handle the access to resources" +
@@ -49,7 +48,7 @@ import org.apache.sling.resourceaccesssecurity.ResourceAccessGate;
     @Property(name=ResourceAccessGateFactory.PROP_JCR_PATH,
               label="JCR Node",
               description="This node is checked for permissions to the resources."),
-    @Property(name=ResourceAccessGate.OPERATIONS, value="read", propertyPrivate=true),
+    @Property(name=ResourceAccessGate.OPERATIONS, value= {"read", "create", "update", "delete"}, propertyPrivate=true),
     @Property(name=ResourceAccessGate.CONTEXT, value=ResourceAccessGate.PROVIDER_CONTEXT, propertyPrivate=true)
 })
 public class ResourceAccessGateFactory
@@ -65,16 +64,51 @@ public class ResourceAccessGateFactory
         this.jcrPath = PropertiesUtil.toString(props.get(PROP_JCR_PATH), null);
     }
 
-    @Override
-    public boolean hasReadRestrictions(ResourceResolver resourceResolver) {
-        return true;
-    }
-
+    /**
+     * Skip the check if the resource is backed by a JCR resource.
+     * This is a sanity check which should usually not be required if the system
+     * is configured correctly.
+     */
     private boolean skipCheck(final Resource resource) {
-        // if resource is backed by a jcr node, skip check
+        // if resource is backed by a JCR node, skip check
         return resource.adaptTo(Node.class) != null;
     }
 
+    /**
+     * @see org.apache.sling.resourceaccesssecurity.AllowingResourceAccessGate#hasReadRestrictions(org.apache.sling.api.resource.ResourceResolver)
+     */
+    @Override
+    public boolean hasReadRestrictions(final ResourceResolver resourceResolver) {
+        return true;
+    }
+
+    /**
+     * @see org.apache.sling.resourceaccesssecurity.AllowingResourceAccessGate#hasCreateRestrictions(org.apache.sling.api.resource.ResourceResolver)
+     */
+    @Override
+    public boolean hasCreateRestrictions(final ResourceResolver resourceResolver) {
+        return true;
+    }
+
+    /**
+     * @see org.apache.sling.resourceaccesssecurity.AllowingResourceAccessGate#hasUpdateRestrictions(org.apache.sling.api.resource.ResourceResolver)
+     */
+    @Override
+    public boolean hasUpdateRestrictions(final ResourceResolver resourceResolver) {
+        return true;
+    }
+
+    /**
+     * @see org.apache.sling.resourceaccesssecurity.AllowingResourceAccessGate#hasDeleteRestrictions(org.apache.sling.api.resource.ResourceResolver)
+     */
+    @Override
+    public boolean hasDeleteRestrictions(final ResourceResolver resourceResolver) {
+        return true;
+    }
+
+    /**
+     * @see org.apache.sling.resourceaccesssecurity.AllowingResourceAccessGate#canRead(org.apache.sling.api.resource.Resource)
+     */
     @Override
     public GateResult canRead(final Resource resource) {
         if ( this.skipCheck(resource) ) {
@@ -90,5 +124,70 @@ public class ResourceAccessGateFactory
             }
         }
         return canRead ? GateResult.GRANTED : GateResult.DENIED;
+    }
+
+    /**
+     * @see org.apache.sling.resourceaccesssecurity.AllowingResourceAccessGate#canDelete(org.apache.sling.api.resource.Resource)
+     */
+    @Override
+    public GateResult canDelete(Resource resource) {
+        if ( this.skipCheck(resource) ) {
+            return GateResult.GRANTED;
+        }
+
+        boolean canDelete = false;
+        final Session session = resource.getResourceResolver().adaptTo(Session.class);
+        if ( session != null ) {
+            try {
+                canDelete = session.hasPermission(jcrPath, Session.ACTION_REMOVE);
+            } catch (final RepositoryException re) {
+                // ignore
+            }
+        }
+
+        return canDelete ? GateResult.GRANTED : GateResult.DENIED;
+
+    }
+
+    /**
+     * @see org.apache.sling.resourceaccesssecurity.AllowingResourceAccessGate#canUpdate(org.apache.sling.api.resource.Resource)
+     */
+    @Override
+    public GateResult canUpdate(Resource resource) {
+        if ( this.skipCheck(resource) ) {
+            return GateResult.GRANTED;
+        }
+
+        boolean canUpdate = false;
+
+        final Session session = resource.getResourceResolver().adaptTo(Session.class);
+        if ( session != null ) {
+            try {
+                canUpdate = session.hasPermission(jcrPath, Session.ACTION_SET_PROPERTY);
+            } catch (final RepositoryException re) {
+                // ignore
+            }
+        }
+
+        return canUpdate ? GateResult.GRANTED : GateResult.DENIED;
+    }
+
+    /**
+     * @see org.apache.sling.resourceaccesssecurity.AllowingResourceAccessGate#canCreate(java.lang.String, org.apache.sling.api.resource.ResourceResolver)
+     */
+    @Override
+    public GateResult canCreate(String absPathName, ResourceResolver resourceResolver) {
+        boolean canCreate = false;
+
+        final Session session = resourceResolver.adaptTo(Session.class);
+        if ( session != null ) {
+            try {
+                canCreate = session.hasPermission(jcrPath, Session.ACTION_ADD_NODE);
+            } catch (final RepositoryException re) {
+                // ignore
+            }
+        }
+
+        return canCreate ? GateResult.GRANTED : GateResult.DENIED;
     }
 }
