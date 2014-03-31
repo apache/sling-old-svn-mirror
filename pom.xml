@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>18</version>
+        <version>19</version>
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
@@ -98,9 +98,6 @@
                             <directory>${project.build.outputDirectory}/META-INF</directory>
                             <targetPath>META-INF</targetPath>
                         </resource>
-                        <resouce>
-                            <directory>target/scr-plugin-generated</directory>
-                        </resouce>
                     </webResources>
                 </configuration>
             </plugin>
