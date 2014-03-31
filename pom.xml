@@ -9,7 +9,7 @@
     
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.featureflags</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>Apache Sling Feature Flags</name>
     
@@ -18,9 +18,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.featureflags-1.0.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.featureflags-1.0.0</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.featureflags-1.0.0</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/feature-flags</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/feature-flags</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/feature-flags</url>
     </scm>
 
     <build>
