@@ -27,7 +27,7 @@
     </parent>
 
     <artifactId>org.apache.sling.resourceresolver</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Resource Resolver</name>
@@ -37,13 +37,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.resourceresolver-1.1.0
+            scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/resourceresolver
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.resourceresolver-1.1.0
+            scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/resourceresolver
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/sling/tags/org.apache.sling.resourceresolver-1.1.0
+            http://svn.apache.org/viewvc/sling/trunk/bundles/resourceresolver
         </url>
     </scm>
 
