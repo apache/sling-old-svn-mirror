@@ -222,7 +222,7 @@ public class OakResourceListener extends NodeObserver implements Closeable {
                     // update resource type properties
                     if ( sendEvent ) {
                         if ( resourceType == null ) {
-                            changes.put(PROPERTY_RESOURCE_TYPE, nodeType.replace(':', '/'));
+                            changes.put(PROPERTY_RESOURCE_TYPE, nodeType);
                         } else {
                             changes.put(PROPERTY_RESOURCE_TYPE, resourceType);
                         }
