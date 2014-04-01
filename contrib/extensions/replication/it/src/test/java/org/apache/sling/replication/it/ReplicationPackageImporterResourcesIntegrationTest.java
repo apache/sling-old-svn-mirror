@@ -27,16 +27,19 @@ public class ReplicationPackageImporterResourcesIntegrationTest extends Replicat
 
     @Test
     public void testImporterRootResource() throws Exception {
-        assertResourceExists("/libs/sling/replication/importer.json");
-        assertJsonResponseEquals("/libs/sling/replication/importer.json",
-                "{\"sling:resourceType\":\"replication/importers\",\"items\":[\"default\"]}");
+        String rootResource = getImporterRootUrl();
+        assertResourceExists(rootResource);
+        assertJsonResponseContains(rootResource,
+                "sling:resourceType", "replication/importers",
+                "items", "[\"default\"]");
     }
 
     @Test
     public void testDefaultImporterResource() throws Exception {
-        String rootResource = "/libs/sling/replication/importer/default.json";
+        String rootResource = getImporterUrl("default");
         assertResourceExists(rootResource);
-        assertJsonResponseEquals(rootResource,
-                "{\"sling:resourceType\":\"replication/importer\",\"name\":\"default\"}");
+        assertJsonResponseContains(rootResource,
+                "sling:resourceType", "replication/importer",
+                "name", "default");
     }
 }
