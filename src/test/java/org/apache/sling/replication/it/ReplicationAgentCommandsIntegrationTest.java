@@ -29,20 +29,20 @@ public class ReplicationAgentCommandsIntegrationTest extends ReplicationITBase {
 
     @Test
     public void testAddCommand() throws Exception {
-        String agentResource = "/libs/sling/replication/agent/publish";
-        assertPostResource(202, agentResource, ReplicationHeader.ACTION.toString(), ReplicationActionType.ADD.toString(), ReplicationHeader.PATH.toString(), "/libs/sling/replication");
+        String agentResource = getAgentUrl("publish");
+        assertPostResourceWithHeaders(202, agentResource, ReplicationHeader.ACTION.toString(), ReplicationActionType.ADD.toString(), ReplicationHeader.PATH.toString(), "/libs/sling/replication");
     }
 
     @Test
     public void testPollCommand() throws Exception {
-        String agentResource = "/libs/sling/replication/agent/publish";
-        assertPostResource(200, agentResource, ReplicationHeader.ACTION.toString(), ReplicationActionType.POLL.toString());
+        String agentResource = getAgentUrl("publish");
+        assertPostResourceWithHeaders(200, agentResource, ReplicationHeader.ACTION.toString(), ReplicationActionType.POLL.toString());
     }
 
     @Test
     public void testDeleteCommand() throws Exception {
-        String agentResource = "/libs/sling/replication/agent/publish";
-        assertPostResource(202, agentResource, ReplicationHeader.ACTION.toString(), ReplicationActionType.DELETE.toString(), ReplicationHeader.PATH.toString(), "/not/existing");
+        String agentResource = getAgentUrl("publish");
+        assertPostResourceWithHeaders(202, agentResource, ReplicationHeader.ACTION.toString(), ReplicationActionType.DELETE.toString(), ReplicationHeader.PATH.toString(), "/not/existing");
     }
 
 }
