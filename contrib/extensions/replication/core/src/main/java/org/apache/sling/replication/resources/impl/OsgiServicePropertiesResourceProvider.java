@@ -103,6 +103,9 @@ public class OsgiServicePropertiesResourceProvider extends AbstractReadableResou
 
     public Object addingService(ServiceReference serviceReference) {
         String serviceName = PropertiesUtil.toString(serviceReference.getProperty(friendlyNameProperty), null);
+
+        if (serviceName == null) return null;
+
         Map<String, Object> properties = new HashMap<String, Object>();
 
         for (String key : serviceReference.getPropertyKeys()) {
@@ -124,6 +127,8 @@ public class OsgiServicePropertiesResourceProvider extends AbstractReadableResou
 
     public void removedService(ServiceReference serviceReference, Object o) {
         String serviceName = PropertiesUtil.toString(serviceReference.getProperty(friendlyNameProperty), null);
+
+        if (serviceName == null) return;
 
         services.remove(serviceName);
         serviceProperties.remove(serviceName);
