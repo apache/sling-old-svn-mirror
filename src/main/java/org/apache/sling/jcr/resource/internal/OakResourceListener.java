@@ -181,10 +181,15 @@ public class OakResourceListener extends NodeObserver implements Closeable {
                         final ResourceResolver resolver = this.support.getResourceResolver();
                         if ( resolver == null ) {
                             sendEvent = false;
+                            logger.debug("resource resolver is null");
                         } else {
-                            final Resource rsrc = resolver.getResource((String)changes.get(PROPERTY_PATH));
+                            resolver.refresh();
+                            String changesPath = (String)changes.get(PROPERTY_PATH);
+                            final Resource rsrc = resolver.getResource(changesPath);
                             if ( rsrc == null ) {
+                                resolver.refresh();
                                 sendEvent = false;
+                                logger.debug("not able to get resource for changes path {}", changesPath);
                             } else {
                                 // check if this is a JCR backed resource, otherwise it is not visible!
                                 final Node node = rsrc.adaptTo(Node.class);
@@ -201,11 +206,13 @@ public class OakResourceListener extends NodeObserver implements Closeable {
                                         }
                                     } catch (RepositoryException re) {
                                         // ignore this
+                                        logger.error(re.getMessage(), re);
                                     }
 
                                 } else {
                                     // this is not a jcr backed resource
                                     sendEvent = false;
+                                    logger.debug("not able to adapt resource {} to node", rsrc.getPath());
                                 }
 
                             }
@@ -213,7 +220,7 @@ public class OakResourceListener extends NodeObserver implements Closeable {
                         if ( !sendEvent ) {
                             // take a quite silent note of not being able to
                             // resolve the resource
-                            logger.debug(
+                            logger.warn(
                                 "processOsgiEventQueue: Resource at {} not found, which is not expected for an added or modified node",
                                     path);
                         }
