@@ -102,17 +102,19 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
         else if (pathInfo.isMain()) {
             Map<String, Object> properties = getMainResourceProperties(pathInfo.getMainResourceName());
 
-            Object adaptable = properties.remove(ADAPTABLE_PROPERTY_NAME);
+            if (properties != null) {
+                Object adaptable = properties.remove(ADAPTABLE_PROPERTY_NAME);
 
-            properties = bindMainResourceProperties(properties);
+                properties = bindMainResourceProperties(properties);
 
-            resource = buildMainResource(resourceResolver, pathInfo, properties, adaptable);
+                resource = buildMainResource(resourceResolver, pathInfo, properties, adaptable);
+            }
         }
         else if (pathInfo.isChild()) {
+            Map<String, Object> mainProperties = getMainResourceProperties(pathInfo.getMainResourceName());
             Map<String, String> childProperties = additionalResourcePropertiesMap.get(pathInfo.getChildResourceName());
 
-            if (childProperties != null) {
-                Map<String, Object> mainProperties = getMainResourceProperties(pathInfo.getMainResourceName());
+            if (mainProperties != null && childProperties != null) {
                 Object adaptable = mainProperties.remove(ADAPTABLE_PROPERTY_NAME);
 
                 Map<String, Object> properties = new HashMap<String, Object>();
@@ -131,36 +133,41 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
     protected Map<String, Object> bindMainResourceProperties(Map<String, Object> properties) {
         Map<String, Object> result = new HashMap<String, Object>();
 
-        Map<String, String > resourceProperties = additionalResourcePropertiesMap.get(MAIN_RESOURCE_PREFIX);
+        Map<String, String > resourcePropertyTemplates = additionalResourcePropertiesMap.get(MAIN_RESOURCE_PREFIX);
 
-        for (Map.Entry<String, String> entry : resourceProperties.entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
-            Object objectValue = value;
-            if (value.startsWith("{") && value.endsWith("}")) {
-                objectValue = properties.get(value.substring(1, value.length()-1));
-                if (objectValue == null) continue;
+        for (Map.Entry<String, String> propertyTemplateEntry : resourcePropertyTemplates.entrySet()) {
+            String templateName = propertyTemplateEntry.getKey();
+            String templateValue = propertyTemplateEntry.getValue();
+
+            Object propertyValue = templateValue;
+            if (templateValue.startsWith("{") && templateValue.endsWith("}")) {
+                String propertyName = templateValue.substring(1, templateValue.length()-1);
+                propertyValue = properties.get(propertyName);
             }
 
-            result.put(key, objectValue);
+            if (propertyValue != null) {
+                result.put(templateName, propertyValue);
+            }
+
+
         }
         return result;
     }
 
-    protected Map<String, Object> unbindMainResourceProperties(Map<String, Object> properties) {
+    protected Map<String, Object> unbindMainResourceProperties(Map<String, Object> requestProperties) {
         Map<String, Object> result = new HashMap<String, Object>();
 
-        Map<String, String > resourceProperties = additionalResourcePropertiesMap.get(MAIN_RESOURCE_PREFIX);
+        Map<String, String > resourcePropertyTemplates = additionalResourcePropertiesMap.get(MAIN_RESOURCE_PREFIX);
 
-        for (Map.Entry<String, String> entry : resourceProperties.entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
-            Object objectValue = value;
-            if (value.startsWith("{") && value.endsWith("}")) {
-                objectValue = properties.get(key);
+        for (Map.Entry<String, String> propertyTemplateEntry : resourcePropertyTemplates.entrySet()) {
+            String templateName = propertyTemplateEntry.getKey();
+            String templateValue = propertyTemplateEntry.getValue();
 
-                if (objectValue != null) {
-                    result.put(key, objectValue);
+            if (templateValue.startsWith("{") && templateValue.endsWith("}")) {
+                String propertyName = templateValue.substring(1, templateValue.length()-1);
+                Object propertyValue = requestProperties.get(templateName);
+                if (propertyValue != null) {
+                    result.put(propertyName, propertyValue);
                 }
             }
         }

@@ -69,6 +69,7 @@ public class OsgiConfigurationResourceProvider extends AbstractModifyingResource
             for (Map.Entry<String, Map<String, Object>> entry : changedResources.entrySet()) {
                 String configName = entry.getKey();
                 Map<String, Object> properties = entry.getValue();
+                properties.put(friendlyNameProperty, configName);
 
                 Configuration configuration = getConfiguration(configName);
 
@@ -92,12 +93,16 @@ public class OsgiConfigurationResourceProvider extends AbstractModifyingResource
     @Override
     protected Map<String, Object> getResourceRootProperties() {
         Configuration[] configurations = getConfigurations(null);
+        configurations = configurations == null ? new Configuration[0] : configurations;
 
         List<String> nameList = new ArrayList<String>();
 
         for (Configuration configuration : configurations) {
             String configName = (String) configuration.getProperties().get(friendlyNameProperty);
-            nameList.add(configName);
+
+            if (configName != null) {
+                nameList.add(configName);
+            }
         }
 
         Map<String, Object> result = new HashMap<String, Object>();
