@@ -105,18 +105,19 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationITBase 
         String agentName = "sample-create-config";
         String newConfigResource = getAgentConfigUrl(agentName);
 
-        assertPostResourceWithParameters(201, newConfigResource, "name", agentName);
+        assertPostResourceWithParameters(201, newConfigResource, "name", agentName, "transportHandler", "(name=author)");
         assertResourceExists(newConfigResource);
         assertJsonResponseContains(newConfigResource,
                 "sling:resourceType", "replication/config/agent",
-                "name", agentName);
+                "name", agentName,
+                "transportHandler", "(name=author)");
     }
 
     @Test
     public void testAgentConfigurationResourceDelete() throws Exception {
         String agentName = "sample-delete-config";
         String newConfigResource = getAgentConfigUrl(agentName);
-        assertPostResourceWithParameters(201, newConfigResource, "name", agentName);
+        assertPostResourceWithParameters(201, newConfigResource, "name", agentName, "transportHandler", "(name=author)");
         assertResourceExists(newConfigResource);
         assertPostResourceWithParameters(200, newConfigResource, ":operation", "delete");
         assertResourceDoesNotExist(newConfigResource);
@@ -127,10 +128,11 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationITBase 
     public void testAgentConfigurationResourceUpdate() throws Exception {
         String agentName = "sample-update-config";
         String newConfigResource = getAgentConfigUrl(agentName);
-        assertPostResourceWithParameters(201, newConfigResource, "name", agentName);
+        assertPostResourceWithParameters(201, newConfigResource, "name", agentName, "transportHandler", "(name=author)");
         assertResourceExists(newConfigResource);
         assertJsonResponseContains(newConfigResource,
                 "sling:resourceType", "replication/config/agent",
-                "name", agentName);
+                "name", agentName,
+                "transportHandler", "(name=author)");
     }
 }
