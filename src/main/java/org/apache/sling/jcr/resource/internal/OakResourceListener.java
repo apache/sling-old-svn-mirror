@@ -161,11 +161,13 @@ public class OakResourceListener extends NodeObserver implements Closeable {
             final Map<String, Object> changes,
             final Map<String, String> properties) {
         // set the path (will be changed for nt:file jcr:content sub resource)
+        final String changePath;
         if ( this.mountPrefix == null ) {
-            changes.put(PROPERTY_PATH, path);
+            changePath = path;
         } else {
-            changes.put(PROPERTY_PATH, this.mountPrefix + path);
+            changePath = this.mountPrefix + path;
         }
+        changes.put(PROPERTY_PATH, changePath);
 
         try {
             final EventAdmin localEa = this.support.getEventAdmin();
@@ -183,13 +185,11 @@ public class OakResourceListener extends NodeObserver implements Closeable {
                             sendEvent = false;
                             logger.debug("resource resolver is null");
                         } else {
-                            resolver.refresh();
-                            String changesPath = (String)changes.get(PROPERTY_PATH);
-                            final Resource rsrc = resolver.getResource(changesPath);
+                            final Resource rsrc = resolver.getResource(changePath);
                             if ( rsrc == null ) {
                                 resolver.refresh();
                                 sendEvent = false;
-                                logger.debug("not able to get resource for changes path {}", changesPath);
+                                logger.debug("not able to get resource for changes path {}", changePath);
                             } else {
                                 // check if this is a JCR backed resource, otherwise it is not visible!
                                 final Node node = rsrc.adaptTo(Node.class);
@@ -212,7 +212,7 @@ public class OakResourceListener extends NodeObserver implements Closeable {
                                 } else {
                                     // this is not a jcr backed resource
                                     sendEvent = false;
-                                    logger.debug("not able to adapt resource {} to node", rsrc.getPath());
+                                    logger.debug("not able to adapt resource {} to node", changePath);
                                 }
 
                             }
@@ -222,7 +222,7 @@ public class OakResourceListener extends NodeObserver implements Closeable {
                             // resolve the resource
                             logger.warn(
                                 "processOsgiEventQueue: Resource at {} not found, which is not expected for an added or modified node",
-                                    path);
+                                        changePath);
                         }
                     }
 

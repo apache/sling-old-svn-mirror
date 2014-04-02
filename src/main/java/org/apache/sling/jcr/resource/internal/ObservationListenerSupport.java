@@ -114,6 +114,9 @@ public class ObservationListenerSupport  {
                 }
             }
         }
+        if ( this.resourceResolver != null ) {
+            this.resourceResolver.refresh();
+        }
         return this.resourceResolver;
     }
 }
