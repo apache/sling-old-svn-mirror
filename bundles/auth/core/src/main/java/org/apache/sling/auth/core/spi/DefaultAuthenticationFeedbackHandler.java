@@ -115,6 +115,11 @@ public class DefaultAuthenticationFeedbackHandler implements
             redirect = ResourceUtil.normalize(redirect);
         }
 
+        // prepend context path if necessary
+        if (redirect.startsWith("/") && !redirect.startsWith(request.getContextPath())) {
+            redirect = request.getContextPath().concat(redirect);
+        }
+
         // absolute target (in the servlet context)
         if (!AuthUtil.isRedirectValid(request, redirect)) {
             LoggerFactory.getLogger(DefaultAuthenticationFeedbackHandler.class).error(
@@ -123,7 +128,7 @@ public class DefaultAuthenticationFeedbackHandler implements
             redirect = "/";
         }
 
-        return request.getContextPath().concat(redirect);
+        return redirect;
     }
 
     /**
