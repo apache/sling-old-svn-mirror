@@ -680,13 +680,11 @@ public class SlingAuthenticator implements Authenticator,
     private AuthenticationInfo getAuthenticationInfo(HttpServletRequest request, HttpServletResponse response) {
 
         // Get the path used to select the authenticator, if the SlingServlet
-        // itself has been requested without any more info, this will be null
+        // itself has been requested without any more info, this will be empty
         // and we assume the root (SLING-722)
-        final String path = getPath(request);
+        String path = getPath(request);
         if (path.length() == 0) {
-            // should not happen, be safe an return anonymous credentials
-            log.warn("get authentication info: request path is empty; assuming anonymous");
-            return getAnonymousCredentials();
+            path = "/";
         }
 
         final List<AbstractAuthenticationHandlerHolder>[] localArray = this.authHandlerCache.findApplicableHolder(request);
