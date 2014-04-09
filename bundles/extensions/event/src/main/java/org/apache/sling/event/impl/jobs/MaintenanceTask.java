@@ -169,6 +169,7 @@ public class MaintenanceTask {
             if ( potentialTargets != null && potentialTargets.size() > 0 ) {
                 final QueueInfo info = queueManager.getQueueInfo(topicName);
                 logger.debug("Found queue {} for {}", info.queueConfiguration, topicName);
+
                 // if queue is configured to drop, we drop
                 if ( info.queueConfiguration.getType() ==  QueueConfiguration.Type.DROP) {
                     final Iterator<Resource> i = topicResource.listChildren();

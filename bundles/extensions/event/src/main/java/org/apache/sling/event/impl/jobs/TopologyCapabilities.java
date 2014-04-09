@@ -240,6 +240,21 @@ public class TopologyCapabilities {
                     logger.debug("Potential targets filtered for {} : {}", jobTopic, potentialTargets);
                 }
             }
+            // check prefer run on creation instance
+            if ( queueInfo.queueConfiguration.isPreferRunOnCreationInstance() ) {
+                InstanceDescription creationDesc = null;
+                for(final InstanceDescription desc : potentialTargets) {
+                    if ( desc.getSlingId().equals(createdOn) ) {
+                        creationDesc = desc;
+                        break;
+                    }
+                }
+                if ( creationDesc != null ) {
+                    potentialTargets.clear();
+                    potentialTargets.add(creationDesc);
+                    logger.debug("Potential targets reduced to creation instance for {} : {}", jobTopic, potentialTargets);
+                }
+            }
             if ( queueInfo.queueConfiguration.getType() == QueueConfiguration.Type.ORDERED ) {
                 // for ordered queues we always pick the first as we have to pick the same target on each cluster view
                 // on all instances (TODO - we could try to do some round robin of the whole queue)
