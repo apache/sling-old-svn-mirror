@@ -115,4 +115,10 @@ public interface QueueConfiguration {
      * Get the ranking of this configuration.
      */
     int getRanking();
+
+    /**
+     * Prefer to run the job on the same instance it was created on.
+     * @since 1.4
+     */
+    boolean isPreferRunOnCreationInstance();
 }
