@@ -19,7 +19,6 @@
 package org.apache.sling.engine.impl;
 
 import java.io.IOException;
-import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
@@ -208,30 +207,11 @@ public class SlingMainServlet extends GenericServlet {
 
             } catch (IOException ioe) {
 
-                // unwrap any causes (Jetty wraps SocketException in
-                // EofException)
-                Throwable cause = ioe;
-                while (cause.getCause() != null) {
-                    cause = cause.getCause();
-                }
-
-                if (cause instanceof SocketException) {
-
-                    // if the cause is a SocketException, the client most
-                    // probably
-                    // aborted the request, we do not fill the log with errors
-                    // in this case
-                    log.debug(
-                        "service: Socketexception (Client abort or network problem",
-                        ioe);
-
-                } else {
-
-                    // otherwise we want to know why the servlet failed
-                    log.error(
-                        "service: Uncaught IO Problem while handling the request",
-                        ioe);
-                }
+                // SLING-3498: Jetty with NIO does not have a wrapped
+                // SocketException any longer but a plain IOException
+                // from the NIO Socket channel. Hence we don't care for
+                // unwrapping and just log at DEBUG level
+                log.debug("service: Probably client aborted request or any other network problem", ioe);
 
             } catch (Throwable t) {
 
