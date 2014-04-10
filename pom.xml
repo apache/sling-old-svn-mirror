@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.event</artifactId>
     <packaging>bundle</packaging>
-    <version>3.3.8</version>
+    <version>3.3.9-SNAPSHOT</version>
 
     <name>Apache Sling Event Support</name>
     <description>
@@ -37,9 +37,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.event-3.3.8</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.event-3.3.8</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.event-3.3.8</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/event</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/event</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/event</url>
     </scm>
 
     <properties>
