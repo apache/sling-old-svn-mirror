@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 import java.util.TreeSet;
 
 import org.apache.http.client.HttpClient;
@@ -37,7 +38,7 @@ import org.slf4j.LoggerFactory;
 /** Base class for running tests against a Sling instance,
  *  takes care of starting Sling and waiting for it to be ready.
  */
-public class SlingTestBase {
+public class SlingTestBase implements SlingInstance {
     public static final String TEST_SERVER_URL_PROP = "test.server.url";
     public static final String TEST_SERVER_USERNAME = "test.server.username";
     public static final String TEST_SERVER_PASSWORD = "test.server.password";
@@ -51,54 +52,58 @@ public class SlingTestBase {
     public static final String BUNDLE_INSTALL_TIMEOUT_SECONDS = "bundle.install.timeout.seconds";
     public static final String ADMIN = "admin";
 
-    private static final boolean keepJarRunning = "true".equals(System.getProperty(KEEP_JAR_RUNNING_PROP));
-    private final String serverBaseUrl;
+    private final boolean keepJarRunning;
     private final String serverUsername;
     private final String serverPassword;
+    private final SlingInstanceState slingTestState;
+    private final Properties systemProperties;
     private RequestBuilder builder;
     private DefaultHttpClient httpClient = new DefaultHttpClient();
     private RequestExecutor executor = new RequestExecutor(httpClient);
     private WebconsoleClient webconsoleClient;
     private BundlesInstaller bundlesInstaller;
-    private static boolean serverStarted;
-    private static boolean serverStartedByThisClass;
-    private static boolean serverReady;
-    private static boolean serverReadyTestFailed;
-    private static boolean installBundlesFailed;
-    private static boolean extraBundlesInstalled;
-    private static boolean startupInfoProvided;
-    private static boolean serverInfoLogged;
+    private boolean serverStartedByThisClass;
+
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private static JarExecutor jarExecutor;
+
+
+    public SlingTestBase() {
+        this(SlingInstanceState.getInstance(SlingInstanceState.DEFAULT_INSTANCE_NAME),
+                System.getProperties());
+    }
 
     /** Get configuration but do not start server yet, that's done on demand */
-    public SlingTestBase() {
+    public SlingTestBase(SlingInstanceState slingTestState, Properties systemProperties) {
+        this.slingTestState = slingTestState;
+        this.systemProperties = systemProperties;
+        this.keepJarRunning = "true".equals(systemProperties.getProperty(KEEP_JAR_RUNNING_PROP));
 
-        final String configuredUrl = System.getProperty(TEST_SERVER_URL_PROP, System.getProperty("launchpad.http.server.url"));
+
+        final String configuredUrl = systemProperties.getProperty(TEST_SERVER_URL_PROP, systemProperties.getProperty("launchpad.http.server.url"));
         if(configuredUrl != null) {
-            serverBaseUrl = configuredUrl;
-            serverStarted = true;
+            slingTestState.setServerBaseUrl(configuredUrl);
+            slingTestState.setServerStarted(true);
         } else {
-            if(jarExecutor == null) {
-                synchronized(this) {
-                    try {
-                        jarExecutor = new JarExecutor(System.getProperties());
-                    } catch(Exception e) {
-                        log.error("JarExecutor setup failed", e);
-                        fail("JarExecutor setup failed: " + e);
+            synchronized(slingTestState) {
+                try {
+                    if(slingTestState.getJarExecutor() == null) {
+                        slingTestState.setJarExecutor(new JarExecutor(systemProperties));
                     }
+                } catch(Exception e) {
+                    log.error("JarExecutor setup failed", e);
+                    fail("JarExecutor setup failed: " + e);
                 }
             }
-            String serverHost = System.getProperty(SERVER_HOSTNAME_PROP);
+            String serverHost = systemProperties.getProperty(SERVER_HOSTNAME_PROP);
             if(serverHost == null || serverHost.trim().length() == 0) {
                 serverHost = "localhost";
             }
-            serverBaseUrl = "http://" + serverHost + ":" + jarExecutor.getServerPort();
+            slingTestState.setServerBaseUrl("http://" + serverHost + ":" + slingTestState.getJarExecutor().getServerPort());
         }
 
         // Set configured username using "admin" as default credential
-        final String configuredUsername = System.getProperty(TEST_SERVER_USERNAME);
+        final String configuredUsername = systemProperties.getProperty(TEST_SERVER_USERNAME);
         if (configuredUsername != null && configuredUsername.trim().length() > 0) {
             serverUsername = configuredUsername;
         } else {
@@ -106,40 +111,42 @@ public class SlingTestBase {
         }
 
         // Set configured password using "admin" as default credential
-        final String configuredPassword = System.getProperty(TEST_SERVER_PASSWORD);
+        final String configuredPassword = systemProperties.getProperty(TEST_SERVER_PASSWORD);
         if (configuredPassword != null && configuredPassword.trim().length() > 0) {
             serverPassword = configuredPassword;
         } else {
             serverPassword = ADMIN;
         }
 
-        builder = new RequestBuilder(serverBaseUrl);
-        webconsoleClient = new WebconsoleClient(serverBaseUrl, serverUsername, serverPassword);
-        builder = new RequestBuilder(serverBaseUrl);
+        builder = new RequestBuilder(slingTestState.getServerBaseUrl());
+        webconsoleClient = new WebconsoleClient(slingTestState.getServerBaseUrl(), serverUsername, serverPassword);
+        builder = new RequestBuilder(slingTestState.getServerBaseUrl());
         bundlesInstaller = new BundlesInstaller(webconsoleClient);
 
-        if(!serverInfoLogged) {
-            log.info("Server base URL={}", serverBaseUrl);
-            serverInfoLogged = true;
+        if(!slingTestState.isServerInfoLogged()) {
+            log.info("Server base URL={}", slingTestState.getServerBaseUrl());
+            slingTestState.setServerInfoLogged(true);
         }
     }
 
     /** Start the server, if not done yet */
     private void startServerIfNeeded() {
         try {
-            if(serverStarted && !serverStartedByThisClass && !startupInfoProvided) {
-                log.info(TEST_SERVER_URL_PROP + " was set: not starting server jar (" + serverBaseUrl + ")");
+            if(slingTestState.isServerStarted() && !serverStartedByThisClass && !slingTestState.isStartupInfoProvided()) {
+                log.info(TEST_SERVER_URL_PROP + " was set: not starting server jar (" + slingTestState.getServerBaseUrl() + ")");
             }
-            if(!serverStarted) {
-                synchronized (jarExecutor) {
-                    if(!serverStarted) {
-                        jarExecutor.start();
+            if(!slingTestState.isServerStarted()) {
+                synchronized (slingTestState) {
+                    if(!slingTestState.isServerStarted()) {
+                        slingTestState.getJarExecutor().start();
                         serverStartedByThisClass = true;
-                        serverStarted = true;
+                        if(!slingTestState.setServerStarted(true)) {
+                            fail("A server is already started at " + slingTestState.getServerBaseUrl());
+                        }
                     }
                 }
             }
-            startupInfoProvided = true;
+            slingTestState.setStartupInfoProvided(true);
             waitForServerReady();
             installAdditionalBundles();
             blockIfRequested();
@@ -150,10 +157,10 @@ public class SlingTestBase {
     }
 
     protected void installAdditionalBundles() {
-        if(installBundlesFailed) {
+        if(slingTestState.isInstallBundlesFailed()) {
             fail("Bundles could not be installed, cannot run tests");
-        } else if(!extraBundlesInstalled) {
-            final String paths = System.getProperty(ADDITONAL_BUNDLES_PATH);
+        } else if(!slingTestState.isExtraBundlesInstalled()) {
+            final String paths = systemProperties.getProperty(ADDITONAL_BUNDLES_PATH);
             if(paths == null) {
                 log.info("System property {} not set, additional bundles won't be installed",
                         ADDITONAL_BUNDLES_PATH);
@@ -178,40 +185,40 @@ public class SlingTestBase {
                             TimeoutsProvider.getInstance().getTimeout(START_BUNDLES_TIMEOUT_SECONDS, 30));
                 } catch(AssertionError ae) {
                     log.info("Exception while installing additional bundles", ae);
-                    installBundlesFailed = true;
+                    slingTestState.setInstallBundlesFailed(true);
                 } catch(Exception e) {
                     log.info("Exception while installing additional bundles", e);
-                    installBundlesFailed = true;
+                    slingTestState.setInstallBundlesFailed(true);
                 }
 
-                if(installBundlesFailed) {
+                if(slingTestState.isInstallBundlesFailed()) {
                     fail("Could not start all installed bundles:" + toInstall);
                 }
             }
         }
 
-        extraBundlesInstalled = !installBundlesFailed;
+        slingTestState.setExtraBundlesInstalled(!slingTestState.isInstallBundlesFailed());
     }
 
     /** Start server if needed, and return a RequestBuilder that points to it */
-    protected RequestBuilder getRequestBuilder() {
+    public RequestBuilder getRequestBuilder() {
         startServerIfNeeded();
         return builder;
     }
 
     /** Start server if needed, and return its base URL */
-    protected String getServerBaseUrl() {
+    public String getServerBaseUrl() {
         startServerIfNeeded();
-        return serverBaseUrl;
+        return slingTestState.getServerBaseUrl();
     }
 
     /** Return username configured for execution of HTTP requests */
-    protected String getServerUsername() {
+    public String getServerUsername() {
         return serverUsername;
     }
 
     /** Return password configured for execution of HTTP requests */
-    protected String getServerPassword() {
+    public String getServerPassword() {
         return serverPassword;
     }
 
@@ -222,7 +229,7 @@ public class SlingTestBase {
         if (keepJarRunning) {
             log.info(KEEP_JAR_RUNNING_PROP + " set to true - entering infinite loop"
                      + " so that runnable jar stays up. Kill this process to exit.");
-            synchronized (this) {
+            synchronized (slingTestState) {
                 try {
                     wait();
                 } catch(InterruptedException iex) {
@@ -234,15 +241,15 @@ public class SlingTestBase {
 
     /** Check a number of server URLs for readyness */
     protected void waitForServerReady() throws Exception {
-        if(serverReady) {
+        if(slingTestState.isServerReady()) {
             return;
         }
-        if(serverReadyTestFailed) {
+        if(slingTestState.isServerReadyTestFailed()) {
             fail("Server is not ready according to previous tests");
         }
 
         // Timeout for readiness test
-        final String sec = System.getProperty(SERVER_READY_TIMEOUT_PROP);
+        final String sec = systemProperties.getProperty(SERVER_READY_TIMEOUT_PROP);
         final int timeoutSec = TimeoutsProvider.getInstance().getTimeout(sec == null ? 60 : Integer.valueOf(sec));
         log.info("Will wait up to " + timeoutSec + " seconds for server to become ready");
         final long endTime = System.currentTimeMillis() + timeoutSec * 1000L;
@@ -250,11 +257,11 @@ public class SlingTestBase {
         // Get the list of paths to test and expected content regexps
         final List<String> testPaths = new ArrayList<String>();
         final TreeSet<Object> propertyNames = new TreeSet<Object>();
-        propertyNames.addAll(System.getProperties().keySet());
+        propertyNames.addAll(systemProperties.keySet());
         for(Object o : propertyNames) {
             final String key = (String)o;
             if(key.startsWith(SERVER_READY_PROP_PREFIX)) {
-                testPaths.add(System.getProperty(key));
+                testPaths.add(systemProperties.getProperty(key));
             }
         }
 
@@ -276,24 +283,24 @@ public class SlingTestBase {
                 } catch(AssertionError ae) {
                     errors = true;
                     log.debug("Request to {}@{}{} failed, will retry ({})",
-                            new Object[] { serverUsername, serverBaseUrl, path, ae});
+                            new Object[] { serverUsername, slingTestState.getServerBaseUrl(), path, ae});
                 } catch(Exception e) {
                     errors = true;
                     log.debug("Request to {}@{}{} failed, will retry ({})",
-                            new Object[] { serverUsername, serverBaseUrl, path, pattern, e });
+                            new Object[] { serverUsername, slingTestState.getServerBaseUrl(), path, pattern, e });
                 }
             }
 
             if(!errors) {
-                serverReady = true;
+                slingTestState.setServerReady(true);
                 log.info("All {} paths return expected content, server ready", testPaths.size());
                 break;
             }
             Thread.sleep(TimeoutsProvider.getInstance().getTimeout(1000L));
         }
 
-        if(!serverReady) {
-            serverReadyTestFailed = true;
+        if(!slingTestState.isServerReady()) {
+            slingTestState.setServerReadyTestFailed(true);
             final String msg = "Server not ready after " + timeoutSec + " seconds, giving up";
             log.info(msg);
             fail(msg);
@@ -326,7 +333,7 @@ public class SlingTestBase {
 
         // We'll install those that are specified by system properties, in order
         final List<String> sortedPropertyKeys = new ArrayList<String>();
-        for(Object key : System.getProperties().keySet()) {
+        for(Object key : systemProperties.keySet()) {
             final String str = key.toString();
             if(str.startsWith(BUNDLE_TO_INSTALL_PREFIX)) {
                 sortedPropertyKeys.add(str);
@@ -334,7 +341,7 @@ public class SlingTestBase {
         }
         Collections.sort(sortedPropertyKeys);
         for(String key : sortedPropertyKeys) {
-            final String filenamePrefix = System.getProperty(key);
+            final String filenamePrefix = systemProperties.getProperty(key);
             for(String bundleFilename : bundleNames) {
                 if(bundleFilename.startsWith(filenamePrefix)) {
                     result.add(new File(dir, bundleFilename));
@@ -345,19 +352,19 @@ public class SlingTestBase {
         return result;
     }
 
-    protected boolean isServerStartedByThisClass() {
+    public boolean isServerStartedByThisClass() {
         return serverStartedByThisClass;
     }
 
-    protected HttpClient getHttpClient() {
+    public HttpClient getHttpClient() {
         return httpClient;
     }
 
-    protected RequestExecutor getRequestExecutor() {
+    public RequestExecutor getRequestExecutor() {
         return executor;
     }
 
-    protected WebconsoleClient getWebconsoleClient() {
+    public WebconsoleClient getWebconsoleClient() {
         startServerIfNeeded();
         return webconsoleClient;
     }
