@@ -59,10 +59,11 @@ public class SlingInstancesRuleTest {
     @Rule
     public final SlingInstancesRule rule = new SlingInstancesRule(instances);
     
-    private static String result = "";
+    private static String result;
     
     @BeforeClass
     public static void setup() {
+        result = "";
         addInstance("it does ");
         addInstance("work, cool!");
     }
