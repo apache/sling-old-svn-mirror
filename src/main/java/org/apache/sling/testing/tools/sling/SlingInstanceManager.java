@@ -16,7 +16,7 @@
  */
 package org.apache.sling.testing.tools.sling;
 
-import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *  Helper class for running tests against multiple Sling instances,
  *  takes care of starting the Sling instances and waiting for them to be ready.
  */
-public class SlingInstanceManager {
+public class SlingInstanceManager implements Iterable<SlingInstance > {
     private final Map<String, SlingInstance> slingTestInstances = new ConcurrentHashMap<String, SlingInstance>();
 
     public SlingInstanceManager(String... instanceNames) {
@@ -81,7 +81,7 @@ public class SlingInstanceManager {
         return slingTestInstances.get(instanceName);
     }
 
-    public Collection<SlingInstance> getInstances() {
-        return slingTestInstances.values();
+    public Iterator<SlingInstance> iterator() {
+        return slingTestInstances.values().iterator();
     }
 }
