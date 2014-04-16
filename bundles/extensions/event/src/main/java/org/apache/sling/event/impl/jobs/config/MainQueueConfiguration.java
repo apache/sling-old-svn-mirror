@@ -57,6 +57,8 @@ import org.slf4j.LoggerFactory;
 })
 public class MainQueueConfiguration {
 
+    public static final String MAIN_QUEUE_NAME = "<main queue>";
+
     /** Default logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -80,7 +82,7 @@ public class MainQueueConfiguration {
         // create a new dictionary with the missing info and do some sanity puts
         final Map<String, Object> queueProps = new HashMap<String, Object>(props);
         queueProps.put(ConfigurationConstants.PROP_TOPICS, "*");
-        queueProps.put(ConfigurationConstants.PROP_NAME, "<main queue>");
+        queueProps.put(ConfigurationConstants.PROP_NAME, MAIN_QUEUE_NAME);
         queueProps.put(ConfigurationConstants.PROP_TYPE, InternalQueueConfiguration.Type.UNORDERED);
 
         // check max parallel - this should never be lower than 2!
