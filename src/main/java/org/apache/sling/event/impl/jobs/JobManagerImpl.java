@@ -58,6 +58,7 @@ import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.impl.EnvironmentComponent;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
+import org.apache.sling.event.impl.jobs.config.MainQueueConfiguration;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
 import org.apache.sling.event.impl.jobs.jmx.QueueStatusEvent;
@@ -403,7 +404,8 @@ public class JobManagerImpl
 
     private void outdateQueue(final AbstractJobQueue queue) {
         // remove the queue with the old name
-        final String oldName = ResourceHelper.filterName(queue.getName());
+        // check for main queue
+        final String oldName = ResourceHelper.filterQueueName(queue.getName());
         this.queues.remove(oldName);
         // check if we can close or have to rename
         if ( queue.tryToClose() ) {
@@ -665,7 +667,7 @@ public class JobManagerImpl
      */
     @Override
     public Queue getQueue(final String name) {
-        return this.queues.get(ResourceHelper.filterName(name));
+        return this.queues.get(ResourceHelper.filterQueueName(name));
     }
 
     /**

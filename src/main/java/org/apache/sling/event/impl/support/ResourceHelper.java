@@ -36,6 +36,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.impl.jobs.JobImpl;
+import org.apache.sling.event.impl.jobs.config.MainQueueConfiguration;
 import org.apache.sling.event.impl.jobs.deprecated.JobStatusNotifier;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobUtil;
@@ -126,6 +127,20 @@ public abstract class ResourceHelper {
         ALLOWED_CHARS = allowedSet;
     }
 
+    /**
+     * Filter the queue name for not allowed characters and replace them
+     * - with the exception of the main queue, which will not be filtered
+     * @param queueName the suggested queue name
+     * @return the filtered queue name
+     */
+    public static String filterQueueName(final String queueName) {
+        if ( queueName.equals(MainQueueConfiguration.MAIN_QUEUE_NAME) ) {
+            return queueName;
+        } else {
+            return ResourceHelper.filterName(queueName);
+        }
+    }
+    
     /**
      * Filter the node name for not allowed characters and replace them.
      * @param nodeName The suggested node name.
