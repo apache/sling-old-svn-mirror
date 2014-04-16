@@ -37,7 +37,8 @@ public class SlingInstancesRule implements TestRule {
     }
 
     /** Evaluate our base statement once for every instance.
-     *  Tests can use our getInstance() method to access the current one.
+     *  Tests can use our getSlingInstance() method to access the current one.
+     *  See MultipleOsgiConsoleTest example in the samples integration tests module.
      */
     public Statement apply(final Statement base, Description dest) {
         return new Statement() {
