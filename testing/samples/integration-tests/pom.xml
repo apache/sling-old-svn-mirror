@@ -162,6 +162,8 @@
                         <configuration>
                             <portNames>
                                 <portName>http.port</portName>
+                                <portName>instance1.http.port</portName>
+                                <portName>instance2.http.port</portName>
                             </portNames>
                         </configuration>
                     </execution>
@@ -205,11 +207,15 @@
                         <test.server.username>${test.server.username}</test.server.username>
                         <test.server.password>${test.server.password}</test.server.password>
                         <jar.executor.server.port>${http.port}</jar.executor.server.port>
+                        <instance1.jar.executor.server.port>${instance1.http.port}</instance1.jar.executor.server.port>
+                        <instance2.jar.executor.server.port>${instance2.http.port}</instance2.jar.executor.server.port>
                         <jar.executor.vm.options>${jar.executor.vm.options}</jar.executor.vm.options>
                         <jar.executor.jar.folder>${project.basedir}/target/dependency</jar.executor.jar.folder>
                         <jar.executor.jar.name.regexp>org.apache.sling.launchpad.*jar$</jar.executor.jar.name.regexp>
                         <jar.executor.work.folder>${jar.executor.work.folder}</jar.executor.work.folder>
-                        <jar.executor.jar.options>${jar.executor.jar.options}</jar.executor.jar.options>
+                        <jar.executor.jar.options>${jar.executor.jar.options} -Dsling.home=sling/default</jar.executor.jar.options>
+                        <instance1.jar.executor.jar.options>${jar.executor.jar.options} -Dsling.home=sling/instance1</instance1.jar.executor.jar.options>
+                        <instance2.jar.executor.jar.options>${jar.executor.jar.options} -Dsling.home=sling/instance2</instance2.jar.executor.jar.options>
                         <additional.bundles.path>${project.basedir}/target/sling/additional-bundles</additional.bundles.path>
                         <keepJarRunning>${keepJarRunning}</keepJarRunning>
                         <server.ready.timeout.seconds>60</server.ready.timeout.seconds>
@@ -268,7 +274,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.junit.remote</artifactId>
-            <version>1.0.8</version>
+            <version>1.0.9-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
