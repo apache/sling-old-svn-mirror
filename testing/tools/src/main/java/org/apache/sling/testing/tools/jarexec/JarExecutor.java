@@ -56,6 +56,7 @@ public class JarExecutor {
     public static final String PROP_WORK_FOLDER = PROP_PREFIX + "work.folder";
     public static final String PROP_JAR_OPTIONS = PROP_PREFIX + "jar.options";
     public static final String PROP_EXIT_TIMEOUT_SECONDS = PROP_PREFIX + "exit.timeout.seconds";
+    public static final String PROP_WAIT_ONSHUTDOWN = PROP_PREFIX + "wait.on.shutdown";
 
     @SuppressWarnings("serial")
     public static class ExecutorException extends Exception {
@@ -166,8 +167,11 @@ public class JarExecutor {
 
         log.info("Executing " + cl);
         executor.setStreamHandler(new PumpStreamHandler());
-        executor.setProcessDestroyer(
-                new ShutdownHookSingleProcessDestroyer("java -jar " + jarToExecute.getName(), exitTimeoutSeconds));
+        final ShutdownHookSingleProcessDestroyer pd = new ShutdownHookSingleProcessDestroyer("java -jar " + jarToExecute.getName(), exitTimeoutSeconds);
+        final boolean waitOnShutdown = Boolean.valueOf(config.getProperty(PROP_WAIT_ONSHUTDOWN, "false"));
+        log.info("Setting up ProcessDestroyer with waitOnShutdown=" + waitOnShutdown);
+        pd.setWaitOnShutdown(waitOnShutdown);
+        executor.setProcessDestroyer(pd);
         executor.execute(cl, h);
     }
 

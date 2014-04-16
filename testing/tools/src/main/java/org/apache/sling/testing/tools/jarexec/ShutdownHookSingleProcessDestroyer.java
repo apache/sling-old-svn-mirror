@@ -33,12 +33,21 @@ class ShutdownHookSingleProcessDestroyer implements ProcessDestroyer, Runnable {
     private Process process;
     private final int timeoutSeconds;
     private final String processInfo;
+    private boolean waitOnShutdown = false;
     
-    ShutdownHookSingleProcessDestroyer(String processInfo, int timeoutSeconds) {
+    public ShutdownHookSingleProcessDestroyer(String processInfo, int timeoutSeconds) {
         this.processInfo = processInfo;
         this.timeoutSeconds = timeoutSeconds;
     }
     
+    public boolean getWaitOnShutdown() {
+        return waitOnShutdown;
+    }
+
+    public void setWaitOnShutdown(boolean waitOnShutdown) {
+        this.waitOnShutdown = waitOnShutdown;
+    }
+
     public synchronized boolean add(Process p) {
         if(process != null) {
             throw new IllegalStateException("Process already set: " + process);
@@ -63,9 +72,7 @@ class ShutdownHookSingleProcessDestroyer implements ProcessDestroyer, Runnable {
     }
     
     public void run() {
-        // Do not wait for our process when running as a shutdown
-        // hook - might cause trouble
-        destroyProcess(false);
+        destroyProcess(waitOnShutdown);
     }
     
    public void destroyProcess(boolean waitForIt) {
