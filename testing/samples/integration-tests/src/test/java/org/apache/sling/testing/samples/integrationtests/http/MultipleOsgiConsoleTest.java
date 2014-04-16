@@ -17,8 +17,12 @@
 
 package org.apache.sling.testing.samples.integrationtests.http;
 
+import static org.junit.Assert.assertEquals;
 import org.apache.sling.testing.tools.sling.SlingInstance;
-import org.apache.sling.testing.tools.sling.SlingInstanceManager;
+import org.apache.sling.testing.tools.sling.SlingInstancesRule;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,18 +31,34 @@ import org.slf4j.LoggerFactory;
 public class MultipleOsgiConsoleTest {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
+
+    /** Instance names must be consistent with the system properties that we get */
+    final static String [] INSTANCE_NAMES = { "instance1", "instance2" };
     
-    private static final SlingInstanceManager manager = new SlingInstanceManager("instance1", "instance2");
+    @Rule
+    /** This causes our tests to be executed once for each specified instance */
+    public final SlingInstancesRule rule = new SlingInstancesRule(INSTANCE_NAMES);
+    
+    // Verify that our SlingInstancesRule works properly
+    // (not needed for regular tests - here we also test the testing framework)
+    private static int numberOfTestsExecuted;
+    
+    @BeforeClass
+    public static void beforeClass() {
+        numberOfTestsExecuted = 0;
+    }
+    
+    @AfterClass
+    public static void afterClass() {
+        assertEquals("Expecting all instances to be tested", 
+                INSTANCE_NAMES.length * 2, numberOfTestsExecuted);
+    }
 
     @Test
     public void testSomeConsolePaths() throws Exception {
-        for (SlingInstance slingInstance : manager.getInstances()) {
-            testSomeConsolePaths(slingInstance);
-        }
-    }
-
-    public void testSomeConsolePaths(SlingInstance slingInstance) throws Exception {
-        log.info("Running {} on {}", getClass().getSimpleName(), slingInstance.getServerBaseUrl());
+        numberOfTestsExecuted++;
+        final SlingInstance instance = rule.getSlingInstance();
+        log.info("Running testSomeConsolePaths {} on {}", getClass().getSimpleName(), instance.getServerBaseUrl());
 
         final String [] subpaths = {
                 "bundles",
@@ -53,10 +73,23 @@ public class MultipleOsgiConsoleTest {
 
         for(String subpath : subpaths) {
             final String path = "/system/console/" + subpath;
-            slingInstance.getRequestExecutor().execute(
-                    slingInstance.getRequestBuilder().buildGetRequest(path)
-                            .withCredentials(slingInstance.getServerUsername(), slingInstance.getServerPassword())
+            instance.getRequestExecutor().execute(
+                    instance.getRequestBuilder().buildGetRequest(path)
+                            .withCredentials(instance.getServerUsername(), instance.getServerPassword())
             ).assertStatus(200);
         }
+    }
+    
+    @Test
+    public void checkRuleWithMoreThanOneTest() throws Exception {
+        numberOfTestsExecuted++;
+        final SlingInstance instance = rule.getSlingInstance();
+        log.info("Running checkRuleWithMoreThanOneTest {} on {}", getClass().getSimpleName(), instance.getServerBaseUrl());
+
+        final String path = "/system/console/bundles";
+        instance.getRequestExecutor().execute(
+                instance.getRequestBuilder().buildGetRequest(path)
+                        .withCredentials(instance.getServerUsername(), instance.getServerPassword())
+        ).assertStatus(200);
     }
 }
