@@ -11,3 +11,6 @@ a Maven repository.
 Note that this module is in contrib for now: it might be completely
 changed, abandoned etc. - there's no guarantes that this will ever
 become a supported Sling component.
+
+To test this, build it and run java -jar path-to-crankstart.jar, 
+optionally with the name of a .crank.txt file as an argument.
