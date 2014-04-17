@@ -1,10 +1,15 @@
-# Minimal HTTP server example for Sling crankstart
+# Minimal webconsole example for the Sling crankstart launcher
 
 # OSGi framework properties
-osgi.property org.osgi.service.http.port 1234 
+osgi.property org.osgi.service.http.port 1234
 
-# Start framework and install bundles
+# Once OSGi properties are set, start the framework
 start.framework
+
+# Install a minimal set of bundles for now, just to 
+# demonstrate that we can start the webconsole
+# Crankstart gets bundles from a Maven repository, which
+# is not configurable for now.
 bundle org.apache.felix/org.apache.felix.configadmin/1.2.8
 bundle org.apache.felix/org.apache.felix.http.jetty/2.2.0
 bundle org.apache.felix/org.apache.felix.metatype/1.0.4
@@ -12,7 +17,7 @@ bundle org.apache.felix/org.apache.felix.scr/1.6.0
 bundle org.apache.felix/org.apache.felix.webconsole/3.1.6
 bundle org.apache.sling/org.apache.sling.commons.log/2.1.2
 
-# Start all bundles now
+# Start all bundles and log a friendly message
 start.all.bundles
 log OSGi webconsole should soon be available at http://localhost:1234/system/console
  
