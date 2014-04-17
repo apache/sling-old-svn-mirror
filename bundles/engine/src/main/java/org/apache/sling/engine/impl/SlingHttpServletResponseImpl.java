@@ -58,38 +58,44 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
     // ---------- Redirection support through PathResolver --------------------
 
     @Override
-    public String encodeURL(String url) {
+    public String encodeURL(final String url) {
+        // remove context path
+        String path = removeContextPath(url);
+
         // make the path absolute
-        url = makeAbsolutePath(url);
+        path = makeAbsolutePath(path);
 
         // resolve the url to as if it would be a resource path
-        url = map(url);
+        path = map(path);
 
         // have the servlet container to further encodings
-        return super.encodeURL(url);
+        return super.encodeURL(path);
     }
 
     @Override
-    public String encodeRedirectURL(String url) {
+    public String encodeRedirectURL(final String url) {
+        // remove context path
+        String path = removeContextPath(url);
+
         // make the path absolute
-        url = makeAbsolutePath(url);
+        path = makeAbsolutePath(path);
 
         // resolve the url to as if it would be a resource path
-        url = map(url);
+        path = map(path);
 
         // have the servlet container to further encodings
-        return super.encodeRedirectURL(url);
+        return super.encodeRedirectURL(path);
     }
 
     @Override
     @Deprecated
-    public String encodeUrl(String url) {
+    public String encodeUrl(final String url) {
         return encodeURL(url);
     }
 
     @Override
     @Deprecated
-    public String encodeRedirectUrl(String url) {
+    public String encodeRedirectUrl(final String url) {
         return encodeRedirectURL(url);
     }
 
@@ -363,5 +369,13 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
 
     private String map(String url) {
         return getRequestData().getResourceResolver().map(getRequestData().getServletRequest(), url);
+    }
+
+    private String removeContextPath(final String path) {
+        final String contextPath = this.getRequestData().getSlingRequest().getContextPath().concat("/");
+        if ( contextPath.length() > 1 && path.startsWith(contextPath) ) {
+            return path.substring(contextPath.length() - 1);
+        }
+        return path;
     }
 }
