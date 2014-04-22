@@ -14,6 +14,8 @@ classpath mvn:org.apache.sling/org.apache.sling.crankstart.api/0.0.1-SNAPSHOT
 
 # Set OSGi framework properties
 osgi.property org.osgi.service.http.port 1234
+osgi.property org.osgi.framework.startlevel.beginning 32
+osgi.property felix.startlevel.bundle 22
 
 # Once OSGi properties are set, start the framework
 start.framework
