@@ -25,8 +25,14 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.scripting.SlingBindings;
+import org.apache.sling.models.annotations.injectorspecific.ChildResource;
+import org.apache.sling.models.annotations.injectorspecific.ScriptVariable;
+import org.apache.sling.models.impl.annotationprocessors.ChildResourceAnnotationProcessor;
+import org.apache.sling.models.impl.annotationprocessors.ScriptVariableAnnotationProcessor;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
+import org.apache.sling.models.spi.ModelAnnotationProcessor;
+import org.apache.sling.models.spi.ModelAnnotationProcessorFactory;
 import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +40,7 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 1000)
-public class BindingsInjector implements Injector {
+public class BindingsInjector implements Injector, ModelAnnotationProcessorFactory {
 
     private static final Logger log = LoggerFactory.getLogger(BindingsInjector.class);
 
@@ -73,6 +79,16 @@ public class BindingsInjector implements Injector {
         } else {
             return null;
         }
+    }
+
+    @Override
+    public ModelAnnotationProcessor createAnnotationProcessor(Object adaptable, AnnotatedElement element) {
+	// check if the element has the expected annotation
+	ScriptVariable annotation = element.getAnnotation(ScriptVariable.class);
+	if (annotation != null) {
+	    return new ScriptVariableAnnotationProcessor(annotation);
+	}
+	return null;
     }
 
 }

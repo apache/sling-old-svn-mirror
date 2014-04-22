@@ -27,6 +27,7 @@ import java.util.List;
 
 import javax.servlet.ServletRequest;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
@@ -34,9 +35,13 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.models.annotations.Filter;
+import org.apache.sling.models.annotations.injectorspecific.OSGiService;
+import org.apache.sling.models.impl.annotationprocessors.OSGiServiceAnnotationProcessor;
 import org.apache.sling.models.spi.DisposalCallback;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
+import org.apache.sling.models.spi.ModelAnnotationProcessor;
+import org.apache.sling.models.spi.ModelAnnotationProcessorFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
@@ -48,7 +53,7 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 5000)
-public class OSGiServiceInjector implements Injector {
+public class OSGiServiceInjector implements Injector, ModelAnnotationProcessorFactory {
 
     private static final Logger log = LoggerFactory.getLogger(OSGiServiceInjector.class);
 
@@ -65,12 +70,18 @@ public class OSGiServiceInjector implements Injector {
     }
 
     public Object getValue(Object adaptable, String name, Type type, AnnotatedElement element, DisposalCallbackRegistry callbackRegistry) {
-        Filter filter = element.getAnnotation(Filter.class);
-        String filterString = null;
-        if (filter != null) {
-            filterString = filter.value();
-        }
-
+	OSGiService annotation = element.getAnnotation(OSGiService.class);
+	String filterString = null;
+	if (annotation != null) {
+	    if (StringUtils.isNotBlank(annotation.filter())) {
+		filterString = annotation.filter();
+	    }
+	} else {
+	    Filter filter = element.getAnnotation(Filter.class);
+	    if (filter != null) {
+		filterString = filter.value();
+	    }
+	}
         return getValue(adaptable, type, filterString, callbackRegistry);
     }
 
@@ -198,6 +209,17 @@ public class OSGiServiceInjector implements Injector {
                 }
             }
         }
+    }
+
+    @Override
+    public ModelAnnotationProcessor createAnnotationProcessor(Object adaptable,
+	    AnnotatedElement element) {
+	// check if the element has the expected annotation
+	OSGiService annotation = element.getAnnotation(OSGiService.class);
+	if (annotation != null) {
+	    return new OSGiServiceAnnotationProcessor(annotation);
+	}
+	return null;
     }
 
 }

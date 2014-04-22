@@ -24,8 +24,12 @@ import javax.servlet.ServletRequest;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.models.annotations.injectorspecific.RequestAttribute;
+import org.apache.sling.models.impl.annotationprocessors.RequestAttributeAnnotationProcessor;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
+import org.apache.sling.models.spi.ModelAnnotationProcessor;
+import org.apache.sling.models.spi.ModelAnnotationProcessorFactory;
 import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +37,7 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 4000)
-public class RequestAttributeInjector implements Injector {
+public class RequestAttributeInjector implements Injector, ModelAnnotationProcessorFactory {
 
     private static final Logger log = LoggerFactory.getLogger(RequestAttributeInjector.class);
     
@@ -58,6 +62,16 @@ public class RequestAttributeInjector implements Injector {
             log.debug("BindingsInjector doesn't support non-class type {}", declaredType);
             return null;
         }
+    }
+
+    @Override
+    public ModelAnnotationProcessor createAnnotationProcessor(Object adaptable, AnnotatedElement element) {
+	// check if the element has the expected annotation
+	RequestAttribute annotation = element.getAnnotation(RequestAttribute.class);
+	if (annotation != null) {
+	    return new RequestAttributeAnnotationProcessor(annotation);
+	}
+	return null;
     }
 
 }

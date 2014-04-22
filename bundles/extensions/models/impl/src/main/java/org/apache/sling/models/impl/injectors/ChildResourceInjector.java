@@ -23,14 +23,18 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.models.annotations.injectorspecific.ChildResource;
+import org.apache.sling.models.impl.annotationprocessors.ChildResourceAnnotationProcessor;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
+import org.apache.sling.models.spi.ModelAnnotationProcessor;
+import org.apache.sling.models.spi.ModelAnnotationProcessorFactory;
 import org.osgi.framework.Constants;
 
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 3000)
-public class ChildResourceInjector implements Injector {
+public class ChildResourceInjector implements Injector, ModelAnnotationProcessorFactory {
 
     @Override
     public String getName() {
@@ -44,6 +48,17 @@ public class ChildResourceInjector implements Injector {
         } else {
             return null;
         }
+    }
+
+    @Override
+    public ModelAnnotationProcessor createAnnotationProcessor(Object adaptable,
+	    AnnotatedElement element) {
+	// check if the element has the expected annotation
+	ChildResource annotation = element.getAnnotation(ChildResource.class);
+	if (annotation != null) {
+	    return new ChildResourceAnnotationProcessor(annotation, adaptable);
+	}
+	return null;
     }
 
 }
