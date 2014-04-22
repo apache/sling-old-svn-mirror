@@ -389,7 +389,8 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
             final String remoteSlingId = topologyConnectorClient.getRemoteSlingId();
             final boolean isConnected = topologyConnectorClient.isConnected() && remoteSlingId != null;
             final boolean autoStopped = topologyConnectorClient.isAutoStopped();
-            if (isConnected || autoStopped) {
+            final boolean representsLoop = topologyConnectorClient.representsLoop();
+            if (isConnected || autoStopped || representsLoop) {
                 pw.println("<tr class=\"" + oddEven + " ui-state-default\">");
             } else {
                 pw.println("<tr class=\"" + oddEven + " ui-state-error\">");
@@ -400,10 +401,10 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
             if (autoStopped) {
             	pw.println("<td><b>auto-stopped</b></td>");
             	pw.println("<td><b>auto-stopped due to local-loop</b></td>");
-            } else if (isConnected && !topologyConnectorClient.representsLoop()) {
+            } else if (isConnected && !representsLoop) {
                 pw.println("<td>" + remoteSlingId + "</td>");
                 pw.println("<td>ok, in use</td>");
-            } else if (isConnected && topologyConnectorClient.representsLoop()) {
+            } else if (representsLoop) {
                 pw.println("<td>" + remoteSlingId + "</td>");
                 pw.println("<td>ok, unused (loop or duplicate): standby</td>");
             } else {
@@ -795,7 +796,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                     pw.print("Connected to Sling Id : ");
                     pw.println(remoteSlingId);
                     pw.println("Connector status : ok, in use");
-                } else if (isConnected && topologyConnectorClient.representsLoop()) {
+                } else if (topologyConnectorClient.representsLoop()) {
                     pw.print("Connected to Sling Id : ");
                     pw.println(remoteSlingId);
                     pw.println("Connector status : ok, unused (loop or duplicate): standby");
