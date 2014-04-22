@@ -11,7 +11,7 @@
     </parent>
 
     <groupId>org.apache.sling</groupId>
-    <artifactId>org.apache.sling.crankstart</artifactId>
+    <artifactId>org.apache.sling.crankstart.launcher</artifactId>
     <packaging>jar</packaging>
     <version>0.0.1-SNAPSHOT</version>
 
