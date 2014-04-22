@@ -33,8 +33,6 @@ import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.scripting.jsp.util.JspSlingHttpServletResponseWrapper;
 import org.apache.sling.scripting.jsp.util.TagUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The <code>CallTag</code> implements the
@@ -43,11 +41,6 @@ import org.slf4j.LoggerFactory;
 public class CallTag extends TagSupport {
 
     private static final long serialVersionUID = 5446209582533607741L;
-
-    /**
-     * default logger
-     */
-    private static final Logger log = LoggerFactory.getLogger(CallTag.class);
 
     /**
      * jsp script
@@ -136,9 +129,7 @@ public class CallTag extends TagSupport {
 
         } catch (Exception e) {
 
-            log.error("Error while executing script " + script, e);
             throw new JspException("Error while executing script " + script, e);
-
         }
     }
     
