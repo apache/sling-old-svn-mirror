@@ -19,6 +19,7 @@ package org.apache.sling.models.impl;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.lang.reflect.AnnotatedElement;
 import java.util.Collections;
 
 import javax.inject.Inject;
@@ -105,6 +106,7 @@ public class MultipleInjectorTest {
         assertEquals(obj.firstAttribute, attributeValue);
 
         verify(bindingsInjector).getName();
+        verify(bindingsInjector).createAnnotationProcessor(anyObject(), any(AnnotatedElement.class));
         verifyNoMoreInteractions(bindingsInjector);
     }
 

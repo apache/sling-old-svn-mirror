@@ -24,8 +24,12 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.models.annotations.injectorspecific.Value;
+import org.apache.sling.models.impl.annotationprocessors.ValueAnnotationProcessor;
+import org.apache.sling.models.spi.ModelAnnotationProcessor;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
+import org.apache.sling.models.spi.ModelAnnotationProcessorFactory;
 import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +37,7 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 2000)
-public class ValueMapInjector implements Injector {
+public class ValueMapInjector implements ModelAnnotationProcessorFactory, Injector {
 
     private static final Logger log = LoggerFactory.getLogger(ValueMapInjector.class);
     
@@ -64,5 +68,16 @@ public class ValueMapInjector implements Injector {
             return null;
         }
     }
+    
 
+    @Override
+    public ModelAnnotationProcessor createAnnotationProcessor(Object adaptable,
+	    AnnotatedElement element) {
+	// check if the element has the expected annotation
+	Value annotation = element.getAnnotation(Value.class);
+	if (annotation != null) {
+	    return new ValueAnnotationProcessor(annotation, adaptable);
+	}
+	return null;
+    }
 }
