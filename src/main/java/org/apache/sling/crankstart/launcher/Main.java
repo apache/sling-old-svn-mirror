@@ -16,12 +16,23 @@
  */
 package org.apache.sling.crankstart.launcher;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.Reader;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+
+import org.apache.sling.crankstart.api.CrankstartConstants;
 
 /** Execute a crankstart file */
 public class Main {
+    public static final String CLASSPATH_PREFIX = "classpath ";
+    
     public static void main(String [] args) throws Exception {
         String crankFile = "default.crank.txt";
         if(args.length < 1) {
@@ -30,11 +41,32 @@ public class Main {
         } else {
             crankFile = args[0];
         }
-        final Reader r = new FileReader(new File(crankFile));
+        System.setProperty(CrankstartConstants.CRANKSTART_INPUT_FILENAME, crankFile);
+        System.setProperty( "java.protocol.handler.pkgs", "org.ops4j.pax.url" );
+        final URL [] launcherClasspath = getClasspath(crankFile);
+        
+        final URLClassLoader launcherClassloader = new URLClassLoader(launcherClasspath, null);
+        final String callableClass = "org.apache.sling.crankstart.core.CrankstartFileProcessor";
+        
+        @SuppressWarnings("unchecked")
+        final Callable<Object> c = (Callable<Object>)launcherClassloader.loadClass(callableClass).newInstance();
+        c.call();
+    }
+    
+    private static URL[] getClasspath(String filename) throws IOException {
+        final List<URL> urls = new ArrayList<URL>();
+        final Reader input = new FileReader(new File(filename));
+        final BufferedReader r = new BufferedReader(input);
         try {
-            final CrankstartFileProcessor p = new CrankstartFileProcessor();
-            p.process(r);
-            p.waitForExit();
+            String line = null;
+            while((line = r.readLine()) != null) {
+                if(line.length() == 0 || line.startsWith("#")) {
+                    // ignore comments and blank lines
+                } else if(line.startsWith(CLASSPATH_PREFIX)){
+                    urls.add(new URL(line.substring(CLASSPATH_PREFIX.length()).trim()));
+                }
+            }
+            return urls.toArray(new URL[] {});
         } finally {
             r.close();
         }
