@@ -22,8 +22,28 @@
         A different way of starting Sling - reactor pom
     </description>
 
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>2.2</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>${basedir}</directory>
+                            <includes>
+                                <include>felix-cache</include>
+                            </includes>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+          </plugins>
+    </build>
+
     <modules>
       <module>api</module>
+      <module>core</module>
       <module>launcher</module>
     </modules>
 </project>

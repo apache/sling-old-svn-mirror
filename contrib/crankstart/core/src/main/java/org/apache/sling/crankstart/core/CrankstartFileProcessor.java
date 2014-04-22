@@ -14,39 +14,52 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.crankstart.launcher;
+package org.apache.sling.crankstart.core;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import org.apache.sling.crankstart.api.CrankstartCommand;
+import org.apache.sling.crankstart.api.CrankstartConstants;
 import org.apache.sling.crankstart.api.CrankstartContext;
-import org.apache.sling.crankstart.launcher.commands.InstallBundle;
-import org.apache.sling.crankstart.launcher.commands.Log;
-import org.apache.sling.crankstart.launcher.commands.SetOsgiFrameworkProperty;
-import org.apache.sling.crankstart.launcher.commands.StartBundles;
-import org.apache.sling.crankstart.launcher.commands.StartFramework;
+import org.apache.sling.crankstart.core.commands.InstallBundle;
+import org.apache.sling.crankstart.core.commands.Log;
+import org.apache.sling.crankstart.core.commands.SetOsgiFrameworkProperty;
+import org.apache.sling.crankstart.core.commands.StartBundles;
+import org.apache.sling.crankstart.core.commands.StartFramework;
 import org.osgi.framework.BundleException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Process a crankstart file */
-public class CrankstartFileProcessor {
+public class CrankstartFileProcessor implements Callable<Object> {
     private final CrankstartContext crankstartContext = new CrankstartContext();
     private final Logger log = LoggerFactory.getLogger(getClass());
     private List<CrankstartCommand> commands = new ArrayList<CrankstartCommand>();
     
     public CrankstartFileProcessor() {
-        System.setProperty( "java.protocol.handler.pkgs", "org.ops4j.pax.url" );
-        
         commands.add(new InstallBundle());
         commands.add(new Log());
         commands.add(new SetOsgiFrameworkProperty());
         commands.add(new StartBundles());
         commands.add(new StartFramework());
+    }
+    
+    public Object call() throws FileNotFoundException, IOException, BundleException,InterruptedException {
+        final String inputFilename = System.getProperty(CrankstartConstants.CRANKSTART_INPUT_FILENAME);
+        if(inputFilename == null) {
+            throw new IllegalStateException("Missing system property " + CrankstartConstants.CRANKSTART_INPUT_FILENAME);
+        }
+        process(new FileReader(new File(inputFilename)));
+        waitForExit();
+        return null;
     }
     
     public void process(Reader input) throws IOException, BundleException {

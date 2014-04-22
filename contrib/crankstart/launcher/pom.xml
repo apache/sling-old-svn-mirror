@@ -50,7 +50,7 @@
                             <goal>unpack-dependencies</goal>
                         </goals>
                         <configuration>
-                            <includeGroupIds>org.osgi,org.apache.felix,org.slf4j,javax.servlet,org.ops4j.pax.url,org.apache.sling</includeGroupIds>
+                            <includeGroupIds>org.slf4j,org.ops4j.pax.url</includeGroupIds>
                             <excludeTransitive>false</excludeTransitive>
                             <outputDirectory>${project.build.directory}/classes</outputDirectory>
                             <overWriteReleases>false</overWriteReleases>
@@ -85,21 +85,15 @@
     </build>   
 
     <dependencies>
-       <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-            <version>4.2.0</version>
-            <scope>provided</scope>
-        </dependency>
         <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.framework</artifactId>
-            <version>4.0.0</version>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.crankstart.api</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.crankstart.api</artifactId>
+            <artifactId>org.apache.sling.crankstart.core</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
@@ -107,12 +101,13 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>1.6.2</version>
+            <scope>provided</scope>
         </dependency>
          <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <version>1.6.2</version>
-            <scope>test</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.ops4j.pax.url</groupId>
@@ -125,12 +120,6 @@
             <artifactId>pax-url-commons</artifactId>
             <version>${pax.url.version}</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.11</version>
-            <scope>test</scope>
         </dependency>
       </dependencies>
 </project>
