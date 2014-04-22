@@ -15,7 +15,7 @@
     <packaging>jar</packaging>
     <version>0.0.1-SNAPSHOT</version>
 
-    <name>Apache Sling Crankstart Module</name>
+    <name>Apache Sling Crankstart Launcher</name>
     <inceptionYear>2014</inceptionYear>
     
     <description>
@@ -34,7 +34,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.apache.sling.crankstart.Main</mainClass>
+                            <mainClass>org.apache.sling.crankstart.launcher.Main</mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                     </archive>
@@ -50,7 +50,7 @@
                             <goal>unpack-dependencies</goal>
                         </goals>
                         <configuration>
-                            <includeGroupIds>org.osgi,org.apache.felix,org.slf4j,javax.servlet,org.ops4j.pax.url</includeGroupIds>
+                            <includeGroupIds>org.osgi,org.apache.felix,org.slf4j,javax.servlet,org.ops4j.pax.url,org.apache.sling</includeGroupIds>
                             <excludeTransitive>false</excludeTransitive>
                             <outputDirectory>${project.build.directory}/classes</outputDirectory>
                             <overWriteReleases>false</overWriteReleases>
@@ -89,11 +89,19 @@
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
             <version>4.2.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
             <version>4.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.crankstart.api</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>provided</scope>
         </dependency>
          <dependency>
             <groupId>org.slf4j</groupId>
