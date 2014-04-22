@@ -14,29 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.crankstart;
+package org.apache.sling.crankstart.launcher.commands;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.Reader;
+import org.apache.sling.crankstart.api.CrankstartCommand;
+import org.apache.sling.crankstart.api.CrankstartContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/** Execute a crankstart file */
-public class Main {
-    public static void main(String [] args) throws Exception {
-        String crankFile = "default.crank.txt";
-        if(args.length < 1) {
-            System.err.println("Using default crank file " + crankFile);
-            System.err.println("To use a different one, provide its name as a jar file argument");
-        } else {
-            crankFile = args[0];
-        }
-        final Reader r = new FileReader(new File(crankFile));
-        try {
-            final CrankstartFileProcessor p = new CrankstartFileProcessor();
-            p.process(r);
-            p.waitForExit();
-        } finally {
-            r.close();
-        }
+/** CrankstartCommand that logs a message */
+public class Log implements CrankstartCommand {
+    public static final String I_LOG = "log";
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
+    @Override
+    public boolean appliesTo(String commandLine) {
+        return commandLine.startsWith(I_LOG);
+    }
+
+    @Override
+    public void execute(CrankstartContext crankstartContext, String commandLine) throws Exception {
+        log.info(U.removePrefix(I_LOG, commandLine));
     }
 }
