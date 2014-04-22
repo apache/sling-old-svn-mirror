@@ -23,7 +23,7 @@
     </description>
 
     <properties>
-        <pax.url.version>2.0.0-SNAPSHOT</pax.url.version>
+        <pax.url.version>1.6.0</pax.url.version>
     </properties>
  
     <build>
