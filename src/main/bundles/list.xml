@@ -129,7 +129,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.classloader</artifactId>
-            <version>1.3.0</version>
+            <version>1.3.2</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
