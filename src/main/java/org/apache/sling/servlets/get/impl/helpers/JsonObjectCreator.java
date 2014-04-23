@@ -146,8 +146,10 @@ public abstract class JsonObjectCreator {
             return value;
         } else if ( value instanceof Double ) {
             return value;
-        } else {
+        } else if ( value != null ) {
             return value.toString();
+        } else {
+            return ""; // assume empty string
         }
     }
 
