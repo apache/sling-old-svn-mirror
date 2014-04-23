@@ -36,13 +36,23 @@ public class StartBundles implements CrankstartCommand {
     public void execute(CrankstartContext crankstartContext, String commandLine) throws Exception {
         int count = 0;
         for (Bundle bundle : crankstartContext.getOsgiFramework().getBundleContext().getBundles()) {
-            log.info("Starting bundle {}", bundle.getSymbolicName());
-            bundle.start();
-            count++;
+            if(isFragment(bundle)) {
+                log.debug("Ignoring fragment bundle {}", bundle.getSymbolicName());
+                continue;
+            }
+            if(bundle.getState() != Bundle.ACTIVE) {
+                log.info("Starting bundle {}", bundle.getSymbolicName());
+                bundle.start();
+                count++;
+            } else {
+                log.debug("Bundle {} is already active", bundle.getSymbolicName());
+            }
         }
         
-        // TODO check that all bundles have started? 
-        // or use a crankstart instruction for that?
-        log.info("{} bundles processed", count);
+        log.info("{} bundles started", count);
+    }
+    
+    private boolean isFragment(Bundle b) {
+        return b.getHeaders().get("Fragment-Host") != null;
     }
 }
