@@ -18,6 +18,8 @@ package org.apache.sling.scripting.jsp;
 
 import static org.apache.sling.api.scripting.SlingBindings.SLING;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Reader;
 import java.util.Dictionary;
 
@@ -25,9 +27,14 @@ import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
+import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
@@ -70,7 +77,7 @@ import org.slf4j.LoggerFactory;
 @Component(label="%jsphandler.name",
            description="%jsphandler.description",
            metatype=true)
-@Service(value={javax.script.ScriptEngineFactory.class, EventHandler.class})
+@Service(value={javax.script.ScriptEngineFactory.class, EventHandler.class, Servlet.class})
 @Properties({
    @Property(name="service.description",value="JSP Script Handler"),
    @Property(name="service.vendor",value="The Apache Software Foundation"),
@@ -82,11 +89,14 @@ import org.slf4j.LoggerFactory;
    @Property(name="jasper.mappedfile",boolValue=true),
    @Property(name="jasper.trimSpaces",boolValue=false),
    @Property(name="jasper.displaySourceFragments",boolValue=false),
-   @Property(name=EventConstants.EVENT_TOPIC, value="org/apache/sling/api/resource/*")
+   @Property(name=EventConstants.EVENT_TOPIC, value={"org/apache/sling/api/resource/*"}, propertyPrivate=true),
+   @Property(name="felix.webconsole.label", value="slingjsp"),
+   @Property(name="felix.webconsole.title", value="JSP"),
+   @Property(name="felix.webconsole.category", value="Sling"),
 })
 public class JspScriptEngineFactory
     extends AbstractScriptEngineFactory
-    implements EventHandler {
+    implements EventHandler, Servlet {
 
     @Property(boolValue = true)
     private static final String PROP_DEFAULT_IS_SESSION = "default.is.session";
@@ -333,7 +343,7 @@ public class JspScriptEngineFactory
             Thread.currentThread().setContextClassLoader(old);
         }
 
-        logger.debug("IMPORTANT: Do not modify the generated servlets");
+        logger.debug("IMPORTANT: Do not modify the generated servlet classes directly");
     }
 
     /**
@@ -563,5 +573,77 @@ public class JspScriptEngineFactory
             }
         };
         t.start();
+    }
+
+    //
+    // Web Console Plugin
+    //
+    private ServletConfig config;
+
+    /* (non-Javadoc)
+     * @see javax.servlet.Servlet#destroy()
+     */
+    public void destroy() {
+        this.config = null;
+    }
+
+    /* (non-Javadoc)
+     * @see javax.servlet.Servlet#getServletConfig()
+     */
+    public ServletConfig getServletConfig() {
+        return this.config;
+    }
+
+    /* (non-Javadoc)
+     * @see javax.servlet.Servlet#getServletInfo()
+     */
+    public String getServletInfo() {
+        return "";
+    }
+
+    /* (non-Javadoc)
+     * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
+     */
+    public void init(final ServletConfig config) throws ServletException {
+        this.config = config;
+    }
+
+    /* (non-Javadoc)
+     * @see javax.servlet.Servlet#service(javax.servlet.ServletRequest, javax.servlet.ServletResponse)
+     */
+    public void service(final ServletRequest request, final ServletResponse response)
+            throws ServletException, IOException {
+        if ( request instanceof HttpServletRequest ) {
+            final HttpServletRequest req = (HttpServletRequest) request;
+            final HttpServletResponse res = (HttpServletResponse) response;
+
+            final String path = req.getContextPath() + req.getServletPath() + req.getPathInfo();
+
+            if ( req.getMethod().equals("POST") ) {
+                final JspRuntimeContext rctxt = this.jspRuntimeContext;
+                this.classLoaderWriter.delete("/org/apache/jsp");
+                if ( rctxt != null ) {
+                    renewJspRuntimeContext();
+                }
+
+                res.sendRedirect(path + "?reset");
+                return;
+            } else if ( req.getMethod().equals("GET") ) {
+                final PrintWriter pw = res.getWriter();
+                pw.println("<h1>Apache Sling JSP Scripting</h1>");
+                pw.println("<br/>");
+                if ( req.getParameter("reset") != null ) {
+                    pw.println("<p>All compiled jsp files removed.");
+                    pw.println("<br/>");
+                }
+                pw.print("<form action='");
+                pw.print(path);
+                pw.println("' method='POST'>");
+                pw.println("<input type='submit' value='Recompile all JSPs'>");
+                pw.println("</form>");
+                return;
+            }
+        }
+        throw new ServletException("Request not supported.");
     }
 }
