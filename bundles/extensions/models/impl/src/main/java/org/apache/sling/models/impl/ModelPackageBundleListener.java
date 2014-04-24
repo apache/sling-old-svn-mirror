@@ -57,8 +57,8 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
     
     @Override
     public Object addingBundle(Bundle bundle, BundleEvent event) {
-List<ServiceRegistration> regs = new ArrayList<ServiceRegistration>();
-        
+        List<ServiceRegistration> regs = new ArrayList<ServiceRegistration>();
+
         Dictionary<?, ?> headers = bundle.getHeaders();
         String packageList = PropertiesUtil.toString(headers.get(HEADER), null);
         if (packageList != null) {
@@ -69,6 +69,12 @@ List<ServiceRegistration> regs = new ArrayList<ServiceRegistration>();
                 @SuppressWarnings("unchecked")
                 Enumeration<URL> classUrls = bundle.findEntries("/" + singlePackage.replace('.', '/'), "*.class",
                         true);
+
+                if (classUrls == null) {
+                    log.warn("No adaptable classes found in package {}, ignoring", singlePackage);
+                    continue;
+                }
+
                 while (classUrls.hasMoreElements()) {
                     URL url = classUrls.nextElement();
                     String className = toClassName(url);

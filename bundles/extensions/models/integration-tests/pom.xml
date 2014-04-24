@@ -108,6 +108,8 @@
                 <configuration>
                     <instructions>
                         <Sling-Model-Packages>
+                            org.apache.sling.models.it.nonexisting,
+                            org.apache.sling.models.it.noclasses,
                             org.apache.sling.models.it.models
                         </Sling-Model-Packages>
                         <Sling-Test-Regexp>.*Test</Sling-Test-Regexp>
@@ -255,7 +257,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.models.impl</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
+            <version>1.0.3-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         
