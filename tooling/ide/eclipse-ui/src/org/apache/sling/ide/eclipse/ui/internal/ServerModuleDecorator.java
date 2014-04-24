@@ -34,7 +34,7 @@ public class ServerModuleDecorator extends BaseLabelProvider implements ILightwe
 		if (state==null) {
 			return;
 		}
-		decoration.addSuffix(String.valueOf(state));
+		//decoration.addSuffix(String.valueOf(state));
 	}
 
 }
