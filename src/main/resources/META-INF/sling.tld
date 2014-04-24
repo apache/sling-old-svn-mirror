@@ -105,6 +105,9 @@
 		<tag-class>
 			org.apache.sling.scripting.jsp.taglib.IncludeTagHandler
 		</tag-class>
+		<tei-class>
+			org.apache.sling.scripting.jsp.taglib.tei.StringVariableTEI
+		</tei-class>
 		<body-content>empty</body-content>
 		<attribute>
 			<description>
@@ -401,6 +404,9 @@
 		<tag-class>
 			org.apache.sling.scripting.jsp.taglib.AdaptToTag
 		</tag-class>
+		<tei-class>
+			org.apache.sling.scripting.jsp.taglib.tei.AdaptToTEI
+		</tei-class>
 		<body-content>empty</body-content>
 		<attribute>
 			<description>
@@ -439,6 +445,9 @@
 		<tag-class>
 			org.apache.sling.scripting.jsp.taglib.FindResourcesTag
 		</tag-class>
+		<tei-class>
+			org.apache.sling.scripting.jsp.taglib.tei.ResourceIteratorVariableTEI
+		</tei-class>
 		<body-content>empty</body-content>
 		<attribute>
 			<description>
@@ -475,6 +484,9 @@
 		<tag-class>
 			org.apache.sling.scripting.jsp.taglib.GetPropertyTag
 		</tag-class>
+		<tei-class>
+			org.apache.sling.scripting.jsp.taglib.tei.GetPropertyTEI
+		</tei-class>
 		<body-content>empty</body-content>
 		<attribute>
 			<description>
@@ -528,6 +540,9 @@
         <tag-class>
             org.apache.sling.scripting.jsp.taglib.GetResourceTag
         </tag-class>
+        <tei-class>
+            org.apache.sling.scripting.jsp.taglib.tei.ResourceVariableTEI
+        </tei-class>
         <body-content>empty</body-content>
         <attribute>
             <description>
@@ -566,6 +581,9 @@
         <tag-class>
             org.apache.sling.scripting.jsp.taglib.ListChildrenTag
         </tag-class>
+        <tei-class>
+            org.apache.sling.scripting.jsp.taglib.tei.ResourceIteratorVariableTEI
+        </tei-class>
         <body-content>empty</body-content>
         <attribute>
             <description>
