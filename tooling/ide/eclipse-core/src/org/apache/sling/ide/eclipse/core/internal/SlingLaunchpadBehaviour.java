@@ -204,6 +204,12 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
         System.out.println(trace.toString());
 
+        if (deltaKind==ServerBehaviourDelegate.NO_CHANGE) {
+            // then there's no need to publish
+            //int modulePublishState = getServer().getModulePublishState(module);
+            return;
+        }
+        
         if (kind == IServer.PUBLISH_FULL && deltaKind == ServerBehaviourDelegate.REMOVED) {
             System.out.println("Ignoring request to unpublish all of the module resources");
             return;
