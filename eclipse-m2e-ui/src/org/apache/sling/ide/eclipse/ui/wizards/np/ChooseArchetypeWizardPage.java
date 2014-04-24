@@ -32,6 +32,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.wizard.WizardPage;
+import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.m2e.core.internal.MavenPluginActivator;
 import org.eclipse.m2e.core.internal.archetype.ArchetypeCatalogFactory;
 import org.eclipse.m2e.core.internal.archetype.ArchetypeManager;
@@ -51,9 +52,11 @@ import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
+import org.eclipse.m2e.core.internal.index.IndexListener;
+import org.eclipse.m2e.core.repository.IRepository;
 
 @SuppressWarnings("restriction")
-public class ChooseArchetypeWizardPage extends WizardPage {
+public class ChooseArchetypeWizardPage extends WizardPage implements IndexListener {
 	
 	private static final String LOADING_PLEASE_WAIT = "loading, please wait...";
 	private List knownArchetypesList;
@@ -158,8 +161,18 @@ public class ChooseArchetypeWizardPage extends WizardPage {
 		});
 		
 		setPageComplete(false);
+
+        MavenPlugin.getIndexManager().addIndexListener(this);
+
 		setControl(container);
 	}
+
+    @Override
+    public void dispose() {
+
+        MavenPlugin.getIndexManager().removeIndexListener(this);
+        super.dispose();
+    }
 
 	public Archetype getSelectedArchetype() {
 		String[] sel = knownArchetypesList.getSelection();
@@ -209,11 +222,6 @@ public class ChooseArchetypeWizardPage extends WizardPage {
                             ArchetypeCatalog catalog = catalogFactory.getArchetypeCatalog();
                             @SuppressWarnings("unchecked")
                             java.util.List<Archetype> arcs = catalog.getArchetypes();
-                            for (Archetype a : arcs) {
-                                if (a.getVersion().endsWith("SNAPSHOT")) {
-                                    System.out.println("got SNAPSHOT archetype " + a);
-                                }
-                            }
 
 				          if(arcs != null) {
 				            list.addAll(arcs);
@@ -226,7 +234,6 @@ public class ChooseArchetypeWizardPage extends WizardPage {
                     for (Archetype archetype2 : list) {
                         if (getWizard().acceptsArchetype(archetype2)) {
                             String key = keyFor(archetype2);
-                            System.out.println("Got archetype match for archetype " + archetype2 + ", key " + key);
                             archetypesMap.put(key, archetype2);
                         }
                     }
@@ -291,4 +298,31 @@ public class ChooseArchetypeWizardPage extends WizardPage {
 		}
 	}
 
+    @Override
+    public void indexAdded(IRepository repository) {
+
+    }
+
+    @Override
+    public void indexChanged(IRepository repository) {
+        Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                if (isCurrentPage()) {
+                    knownArchetypesList.removeAll();
+                    initialize();
+                }
+            }
+        });
+    }
+
+    @Override
+    public void indexRemoved(IRepository repository) {
+
+    }
+
+    @Override
+    public void indexUpdating(IRepository repository) {
+
+    }
 }
