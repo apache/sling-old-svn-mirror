@@ -73,18 +73,21 @@
             <groupId>javax.servlet</groupId>
             <artifactId>jsp-api</artifactId>
             <version>2.0</version>
+            <!-- using compile scope to help IDEs -->
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.api</artifactId>
             <version>2.1.0</version>
+            <!-- using compile scope to help IDEs -->
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.jsp</artifactId>
             <version>2.0.8</version>
+            <!-- using compile scope to help IDEs -->
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -98,6 +101,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+            <!-- using compile scope to help IDEs -->
             <scope>compile</scope>
         </dependency>
 	
