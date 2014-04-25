@@ -23,9 +23,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -53,7 +59,6 @@ import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.m2e.core.embedder.IMaven;
 import org.eclipse.m2e.core.internal.MavenPluginActivator;
 import org.eclipse.m2e.core.internal.embedder.MavenImpl;
-import org.sonatype.aether.RepositorySystemSession;
 
 @SuppressWarnings("restriction")
 public class EmbeddedArchetypeInstaller {
@@ -105,11 +110,11 @@ public class EmbeddedArchetypeInstaller {
             // now create a RepositorySystemSession
             MavenExecutionRequest request = new DefaultMavenExecutionRequest();
             request.setLocalRepository(maven.getLocalRepository());
-            RepositorySystemSession repositorySession = mvn.newRepositorySession(request);
 
-            // set the MavenSession on the LegacySupport
-            MavenExecutionResult result = new DefaultMavenExecutionResult();
-            MavenSession session = new MavenSession(container, repositorySession, request, result);
+            // We need to support Maven 3.0.x as well, so we use reflection to
+            // access Aether APIs in a manner which is compatible with all Maven 3.x versions
+            // See https://maven.apache.org/docs/3.1.0/release-notes.html
+            MavenSession session = reflectiveCreateMavenSession(container, mvn, request);
             LegacySupport legacy = container.lookup(LegacySupport.class);
             legacy.setSession(session);
 
@@ -178,6 +183,68 @@ public class EmbeddedArchetypeInstaller {
 //	    });
 
 	}
+
+    private MavenSession reflectiveCreateMavenSession(PlexusContainer container, DefaultMaven mvn, MavenExecutionRequest request)
+            throws IllegalAccessException, InvocationTargetException, InstantiationException {
+
+        Method newRepoSessionMethod = null;
+        for (Method m : mvn.getClass().getMethods()) {
+            if ("newRepositorySession".equals(m.getName())) {
+                newRepoSessionMethod = m;
+                break;
+            }
+        }
+
+        if (newRepoSessionMethod == null) {
+            throw new IllegalArgumentException("No 'newRepositorySession' method found on object " + mvn + " of type "
+                    + mvn.getClass().getName());
+        }
+
+        Object repositorySession = newRepoSessionMethod.invoke(mvn, request);
+
+        MavenExecutionResult result = new DefaultMavenExecutionResult();
+
+        Constructor<?> constructor = null;
+
+        outer: for (Constructor<?> c : MavenSession.class.getConstructors()) {
+
+            for (Class<?> klazz : getClasses(repositorySession)) {
+                Class<?>[] check = new Class<?>[] { PlexusContainer.class, klazz, MavenExecutionRequest.class,
+                        MavenExecutionResult.class };
+
+                if (Arrays.equals(c.getParameterTypes(), check)) {
+                    constructor = c;
+                    break outer;
+                }
+            }
+        }
+
+        if (constructor == null) {
+            throw new IllegalArgumentException("Unable to found matching MavenSession constructor");
+        }
+
+        return (MavenSession) constructor.newInstance(container, repositorySession, request, result);
+    }
+
+    private Class<?>[] getClasses(Object repositorySession) {
+
+        List<Class<?>> accu = new ArrayList<Class<?>>();
+        Class<? extends Object> klazz = repositorySession.getClass();
+
+        getClasses(klazz, accu);
+        if (klazz.getSuperclass() != null) {
+            getClasses(klazz.getSuperclass(), accu);
+        }
+
+        return accu.toArray(new Class<?>[accu.size()]);
+    }
+
+    private void getClasses(Class<? extends Object> klazz, List<Class<?>> accu) {
+        accu.add(klazz);
+        for (Class<?> iface : klazz.getInterfaces()) {
+            accu.add(iface);
+        }
+    }
 
     // TODO - replace with commons-io
 	private void copyStream(InputStream in, OutputStream os) throws IOException {

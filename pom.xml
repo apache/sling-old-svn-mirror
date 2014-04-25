@@ -22,6 +22,7 @@
 		<module>eclipse-ui</module>
 		<module>feature</module>
 		<module>eclipse-m2e-ui</module>
+		<module>eclipse-m2e-test</module>
 		<module>m2e-feature</module>
 		<module>p2update</module>
 	</modules>
