@@ -22,7 +22,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -36,6 +35,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.maven.DefaultMaven;
 import org.apache.maven.Maven;
 import org.apache.maven.archetype.catalog.Archetype;
@@ -128,14 +129,17 @@ public class EmbeddedArchetypeInstaller {
                 final InputStream in = entry.getValue();
                 File tmpFile = File.createTempFile("slingClipseTmp", fileExtension);
                 FileOutputStream fos = new FileOutputStream(tmpFile);
-                copyStream(in, fos);
-                // TODO - close in case of exceptions
-                fos.close();
-                in.close();
-                Artifact jarArtifact = new DefaultArtifact(groupId, artifactId, version, "", fileExtension, "",
-                        new DefaultArtifactHandler());
-                dai.install(tmpFile, jarArtifact, maven.getLocalRepository());
-                tmpFile.delete();
+
+                try {
+                    IOUtils.copy(in, fos);
+                    Artifact jarArtifact = new DefaultArtifact(groupId, artifactId, version, "", fileExtension, "",
+                            new DefaultArtifactHandler());
+                    dai.install(tmpFile, jarArtifact, maven.getLocalRepository());
+                } finally {
+                    IOUtils.closeQuietly(in);
+                    IOUtils.closeQuietly(fos);
+                    FileUtils.deleteQuietly(tmpFile);
+                }
             }
 
             Archetype archetype = new Archetype();
@@ -151,37 +155,6 @@ public class EmbeddedArchetypeInstaller {
         } catch (Exception e) {
             throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
         }
-
-//			ArchetypeCatalog defaultLocalCatalog = archetyper.getDefaultLocalCatalog();
-//			defaultLocalCatalog.addArchetype(archetype);
-//			manager.readCatalogs();
-
-//		try {
-//			ArtifactRepository localRepo = maven.getLocalRepository();
-//			dai.install(file, artifact, localRepo);
-//		} catch (ArtifactInstallationException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} catch (CoreException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		RepositorySystem ni = MavenPluginActivator.getDefault().getRepositorySystem();
-//		ni.install(arg0, arg1);
-//		manager.addArchetypeCatalogFactory(new ArchetypeCatalogFactory(id, description, editable) {
-//
-//			@Override
-//			public ArchetypeCatalog getArchetypeCatalog()
-//					throws CoreException {
-//				ArchetypeCatalog cat = new ArchetypeCatalog();
-//				Archetype myArchetype = new Archetype();
-//				myArchetype.
-//				cat.addArchetype(myArchetype);
-//				return cat;
-//			}
-//	    	
-//	    });
-
 	}
 
     private MavenSession reflectiveCreateMavenSession(PlexusContainer container, DefaultMaven mvn, MavenExecutionRequest request)
@@ -245,16 +218,4 @@ public class EmbeddedArchetypeInstaller {
             accu.add(iface);
         }
     }
-
-    // TODO - replace with commons-io
-	private void copyStream(InputStream in, OutputStream os) throws IOException {
-		final byte[] bytes = new byte[4*1024];
-		while (true) {
-			final int numRead = in.read(bytes);
-			if (numRead < 0) {
-				break;
-			}
-			os.write(bytes, 0, numRead);
-		}
-	}
 }
