@@ -83,10 +83,6 @@
                             org.apache.sling.commons.osgi;version="$(@)",
                             *
                         </Import-Package>
-                        <Private-Package>
-                            org.apache.sling.resourceresolver.impl.*,
-                            org.apache.sling.resourceresolver.accessgate.impl.*
-                        </Private-Package>
                     </instructions>
                 </configuration>
             </plugin>
