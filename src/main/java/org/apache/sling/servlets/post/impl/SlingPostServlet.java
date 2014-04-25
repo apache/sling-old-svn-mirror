@@ -42,7 +42,6 @@ import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
@@ -201,11 +200,11 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
             } catch (ResourceNotFoundException rnfe) {
                 htmlResponse.setStatus(HttpServletResponse.SC_NOT_FOUND,
                     rnfe.getMessage());
-            } catch (Throwable throwable) {
-                log.debug("Exception while handling POST "
+            } catch (final Exception exception) {
+                log.warn("Exception while handling POST "
                     + request.getResource().getPath() + " with "
-                    + operation.getClass().getName(), throwable);
-                htmlResponse.setError(throwable);
+                    + operation.getClass().getName(), exception);
+                htmlResponse.setError(exception);
             }
 
         }
