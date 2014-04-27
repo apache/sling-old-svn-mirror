@@ -19,6 +19,7 @@
 package org.apache.sling.launchpad.karaf.testing;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.ServerSocket;
 
 import javax.inject.Inject;
@@ -30,6 +31,8 @@ import org.ops4j.pax.exam.util.Filter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 
 import static org.ops4j.pax.exam.CoreOptions.maven;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
@@ -44,16 +47,11 @@ import static org.ops4j.pax.tinybundles.core.TinyBundles.bundle;
 
 public abstract class KarafTestSupport {
 
-    protected int sshPort;
-
-    protected int httpPort;
-
-    protected int rmiRegistryPort;
-
-    protected int rmiServerPort;
-
     @Inject
     protected BundleContext bundleContext;
+
+    @Inject
+    protected ConfigurationAdmin configurationAdmin;
 
     @Inject
     @Filter(timeout = 300000)
@@ -63,11 +61,11 @@ public abstract class KarafTestSupport {
 
     public static final String KARAF_ARTIFACT_ID = "apache-karaf";
 
-    public static final String KARAF_VERSION = "3.0.0";
+    public static final String KARAF_VERSION = "3.0.1";
 
     public static final String KARAF_NAME = "Apache Karaf";
 
-    protected KarafTestSupport() {
+    public KarafTestSupport() {
     }
 
     protected synchronized int findFreePort() {
@@ -81,52 +79,11 @@ public abstract class KarafTestSupport {
         }
     }
 
-    protected synchronized int sshPort() {
-        if (sshPort == 0) {
-            sshPort = findFreePort();
-        }
-        return sshPort;
-    }
+    // test support
 
-    protected synchronized int httpPort() {
-        if (httpPort == 0) {
-            httpPort = findFreePort();
-        }
-        return httpPort;
-    }
-
-    protected synchronized int rmiRegistryPort() {
-        if (rmiRegistryPort == 0) {
-            rmiRegistryPort = findFreePort();
-        }
-        return rmiRegistryPort;
-    }
-
-    protected synchronized int rmiServerPort() {
-        if (rmiServerPort == 0) {
-            rmiServerPort = findFreePort();
-        }
-        return rmiServerPort;
-    }
-
-    public String karafGroupId() {
-        return KARAF_GROUP_ID;
-    }
-
-    public String karafArtifactId() {
-        return KARAF_ARTIFACT_ID;
-    }
-
-    public String karafVersion() {
-        return KARAF_VERSION;
-    }
-
-    public String karafName() {
-        return KARAF_NAME;
-    }
-
-    protected Option addBootFeature(final String feature) {
-        return editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresBoot", "," + feature);
+    protected int httpPort() throws IOException {
+        final Configuration configuration = configurationAdmin.getConfiguration("org.ops4j.pax.web");
+        return Integer.parseInt(configuration.getProperties().get("org.osgi.service.http.port").toString());
     }
 
     protected Bundle findBundle(final String symbolicName) {
@@ -136,6 +93,28 @@ public abstract class KarafTestSupport {
             }
         }
         return null;
+    }
+
+    // configuration support
+
+    protected String karafGroupId() {
+        return KARAF_GROUP_ID;
+    }
+
+    protected String karafArtifactId() {
+        return KARAF_ARTIFACT_ID;
+    }
+
+    protected String karafVersion() {
+        return KARAF_VERSION;
+    }
+
+    protected String karafName() {
+        return KARAF_NAME;
+    }
+
+    protected Option addBootFeature(final String feature) {
+        return editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresBoot", "," + feature);
     }
 
     protected String featureRepository() {
@@ -148,26 +127,30 @@ public abstract class KarafTestSupport {
                 .add(KarafTestSupport.class)
                 .set(Constants.BUNDLE_SYMBOLICNAME, "org.apache.sling.launchpad.karaf-integration-tests")
                 .set(Constants.EXPORT_PACKAGE, "org.apache.sling.launchpad.karaf.testing")
-                .set(Constants.IMPORT_PACKAGE, "javax.inject, org.apache.karaf.features, org.ops4j.pax.exam, org.ops4j.pax.exam.options, org.ops4j.pax.exam.util, org.ops4j.pax.tinybundles.core, org.osgi.framework")
+                .set(Constants.IMPORT_PACKAGE, "javax.inject, org.apache.karaf.features, org.ops4j.pax.exam, org.ops4j.pax.exam.options, org.ops4j.pax.exam.util, org.ops4j.pax.tinybundles.core, org.osgi.framework, org.osgi.service.cm")
                 .build()
         ).start();
     }
 
     protected Option[] baseConfiguration() {
+        final int rmiRegistryPort = findFreePort();
+        final int rmiServerPort = findFreePort();
+        final int sshPort = findFreePort();
+        final int httpPort = findFreePort();
         return options(
             karafDistributionConfiguration()
                 .frameworkUrl(maven().groupId(karafGroupId()).artifactId(karafArtifactId()).version(karafVersion()).type("tar.gz"))
                 .karafVersion(karafVersion())
                 .useDeployFolder(false)
                 .name(karafName())
-                .unpackDirectory(new File("target/paxexam/")),
+                .unpackDirectory(new File("target/paxexam/" + getClass().getSimpleName())),
             keepRuntimeFolder(),
             logLevel(LogLevelOption.LogLevel.INFO),
             editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresRepositories", "," + featureRepository()),
-            editConfigurationFilePut("etc/org.apache.karaf.management.cfg", "rmiRegistryPort", Integer.toString(rmiRegistryPort())),
-            editConfigurationFilePut("etc/org.apache.karaf.management.cfg", "rmiServerPort", Integer.toString(rmiServerPort())),
-            editConfigurationFilePut("etc/org.apache.karaf.shell.cfg", "sshPort", Integer.toString(sshPort())),
-            editConfigurationFilePut("etc/org.ops4j.pax.web.cfg", "org.osgi.service.http.port", Integer.toString(httpPort())),
+            editConfigurationFilePut("etc/org.apache.karaf.management.cfg", "rmiRegistryPort", Integer.toString(rmiRegistryPort)),
+            editConfigurationFilePut("etc/org.apache.karaf.management.cfg", "rmiServerPort", Integer.toString(rmiServerPort)),
+            editConfigurationFilePut("etc/org.apache.karaf.shell.cfg", "sshPort", Integer.toString(sshPort)),
+            editConfigurationFilePut("etc/org.ops4j.pax.web.cfg", "org.osgi.service.http.port", Integer.toString(httpPort)),
             mavenBundle()
                 .groupId("org.ops4j.pax.tinybundles")
                 .artifactId("tinybundles")
