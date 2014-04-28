@@ -1020,7 +1020,6 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                 }
                 if ( updated || created ) {
                     this.persistentList.save();
-                    this.scheduleRetry();
                 }
 
             }
@@ -1059,7 +1058,6 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                         // if it has been ignored before, we activate it now again!
                         ((RegisteredResourceImpl)tr).setState(ResourceState.INSTALL);
                         this.persistentList.save();
-                        this.scheduleRetry();
                     } else if ( tr.getState() == ResourceState.UNINSTALLED ) {
                         // it has already been removed - nothing do to
                     } else {
@@ -1082,7 +1080,6 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                             }
                         }
                         this.persistentList.save();
-                        this.scheduleRetry();
                     }
                 }
             }
