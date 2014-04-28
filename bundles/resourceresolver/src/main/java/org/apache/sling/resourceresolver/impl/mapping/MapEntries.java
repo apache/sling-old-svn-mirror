@@ -112,6 +112,8 @@ public class MapEntries implements EventHandler {
     private final boolean enabledVanityPaths;
 
     private final boolean enableOptimizeAliasResolution;
+    
+    private final boolean vanityPathPrecedence;
 
     private final List<VanityPathConfig> vanityPathConfig;
 
@@ -130,6 +132,7 @@ public class MapEntries implements EventHandler {
         this.enabledVanityPaths = true;
         this.enableOptimizeAliasResolution = true;
         this.vanityPathConfig = null;
+        this.vanityPathPrecedence = false;
     }
 
     @SuppressWarnings("unchecked")
@@ -141,6 +144,7 @@ public class MapEntries implements EventHandler {
         this.enabledVanityPaths = factory.isVanityPathEnabled();
         this.vanityPathConfig = factory.getVanityPathConfig();
         this.enableOptimizeAliasResolution = factory.isOptimizeAliasResolutionEnabled();
+        this.vanityPathPrecedence = factory.hasVanityPathPrecedence();
         this.eventAdmin = eventAdmin;
 
         this.resolveMapsMap = Collections.singletonMap(GLOBAL_LIST_KEY, (List<MapEntry>)Collections.EMPTY_LIST);
@@ -342,7 +346,7 @@ public class MapEntries implements EventHandler {
             key = requestPath.substring(secondIndex);
         }
 
-        return new MapEntryIterator(key, resolveMapsMap);
+        return new MapEntryIterator(key, resolveMapsMap, vanityPathPrecedence);
     }
 
     public Collection<MapEntry> getMapMaps() {
@@ -851,11 +855,14 @@ public class MapEntries implements EventHandler {
 
         private Iterator<MapEntry> specialIterator;
         private MapEntry nextSpecial;
+        
+        private boolean vanityPathPrecedence;
 
-        public MapEntryIterator(final String startKey, final Map<String, List<MapEntry>> resolveMapsMap) {
+        public MapEntryIterator(final String startKey, final Map<String, List<MapEntry>> resolveMapsMap, final boolean vanityPathPrecedence) {
             this.key = startKey;
             this.resolveMapsMap = resolveMapsMap;
             this.globalListIterator = this.resolveMapsMap.get(GLOBAL_LIST_KEY).iterator();
+            this.vanityPathPrecedence = vanityPathPrecedence;
             this.seek();
         }
 
@@ -923,12 +930,18 @@ public class MapEntries implements EventHandler {
             if (this.nextSpecial == null) {
                 this.next = this.nextGlobal;
                 this.nextGlobal = null;
-            } else if (this.nextGlobal == null) {
-                this.next = this.nextSpecial;
-                this.nextSpecial = null;
-            } else if (this.nextGlobal.getPattern().length() >= this.nextSpecial.getPattern().length()) {
-                this.next = this.nextGlobal;
-                this.nextGlobal = null;
+            } else if (!this.vanityPathPrecedence){
+                if (this.nextGlobal == null) {
+                    this.next = this.nextSpecial;
+                    this.nextSpecial = null;
+                } else if (this.nextGlobal.getPattern().length() >= this.nextSpecial.getPattern().length()) {
+                    this.next = this.nextGlobal;
+                    this.nextGlobal = null;
+
+                }else {
+                    this.next = this.nextSpecial;
+                    this.nextSpecial = null;
+                }                
             } else {
                 this.next = this.nextSpecial;
                 this.nextSpecial = null;

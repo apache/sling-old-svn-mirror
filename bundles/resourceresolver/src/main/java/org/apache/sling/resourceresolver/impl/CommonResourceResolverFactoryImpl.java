@@ -199,6 +199,10 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     public boolean isOptimizeAliasResolutionEnabled() {
         return this.activator.isOptimizeAliasResolutionEnabled();
     }
+    
+    public boolean hasVanityPathPrecedence() {
+        return this.activator.hasVanityPathPrecedence();
+    }
 
     public List<VanityPathConfig> getVanityPathConfig() {
         final String[] includes = this.activator.getVanityPathWhiteList();
