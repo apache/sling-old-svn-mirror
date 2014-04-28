@@ -232,6 +232,8 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                 this.logger.debug("Starting new installer cycle");
                 this.listener.start();
 
+                processUpdateInfos();
+
                 // merge potential new resources
                 this.mergeNewlyRegisteredResources();
 
@@ -821,6 +823,16 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
         this.wakeUp();
     }
 
+    private static final class UpdateInfo {
+        public ResourceData data;
+        public Dictionary<String, Object> dict;
+        public String resourceType;
+        public String entityId;
+        public Map<String, Object> attributes;
+    }
+
+    private final List<UpdateInfo> updateInfos = new ArrayList<OsgiInstallerImpl.UpdateInfo>();
+
     /**
      * @see org.apache.sling.installer.api.ResourceChangeListener#resourceAddedOrUpdated(java.lang.String, java.lang.String, java.io.InputStream, java.util.Dictionary, Map)
      */
@@ -829,9 +841,54 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
             final InputStream is,
             final Dictionary<String, Object> dict,
             final Map<String, Object> attributes) {
+        try {
+            final UpdateInfo ui = new UpdateInfo();
+            ui.data = ResourceData.create(is, dict);
+            ui.resourceType = resourceType;
+            ui.dict = dict;
+            ui.entityId = entityId;
+            ui.attributes = attributes;
+
+            synchronized ( this.resourcesLock ) {
+                updateInfos.add(ui);
+                this.wakeUp();
+            }
+        } catch (final IOException ioe) {
+            logger.error("Unable to handle resource add or update of " + resourceType + ':' + entityId, ioe);
+        } finally {
+            // always close the input stream!
+            if ( is != null ) {
+                try {
+                    is.close();
+                } catch (final IOException ignore) {
+                    // ignore
+                }
+            }
+        }
+    }
+
+
+    private void processUpdateInfos() {
+        final List<UpdateInfo> infos = new ArrayList<OsgiInstallerImpl.UpdateInfo>();
+        synchronized ( this.resourcesLock ) {
+            infos.addAll(this.updateInfos);
+            this.updateInfos.clear();
+        }
+        for(final UpdateInfo info : infos) {
+            if ( info.data != null ) {
+                this.internalResourceAddedOrUpdated(info.resourceType, info.entityId, info.data, info.dict, info.attributes);
+            } else {
+                this.internalResourceRemoved(info.resourceType, info.entityId);
+            }
+        }
+    }
+    private void internalResourceAddedOrUpdated(final String resourceType,
+            final String entityId,
+            final ResourceData data,
+            final Dictionary<String, Object> dict,
+            final Map<String, Object> attributes) {
         final String key = resourceType + ':' + entityId;
         try {
-            final ResourceData data = ResourceData.create(is, dict);
             synchronized ( this.resourcesLock ) {
                 final EntityResourceList erl = this.persistentList.getEntityResourceList(key);
                 logger.debug("Added or updated {} : {}", key, erl);
@@ -969,15 +1026,6 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
             }
         } catch (final IOException ioe) {
             logger.error("Unable to handle resource add or update of " + key, ioe);
-        } finally {
-            // always close the input stream!
-            if ( is != null ) {
-                try {
-                    is.close();
-                } catch (final IOException ignore) {
-                    // ignore
-                }
-            }
         }
     }
 
@@ -985,6 +1033,18 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
      * @see org.apache.sling.installer.api.ResourceChangeListener#resourceRemoved(java.lang.String, java.lang.String)
      */
     public void resourceRemoved(final String resourceType, String resourceId) {
+        final UpdateInfo ui = new UpdateInfo();
+        ui.resourceType = resourceType;
+        ui.entityId = resourceId;
+
+        synchronized ( this.resourcesLock ) {
+            updateInfos.add(ui);
+            this.wakeUp();
+        }
+    }
+
+    private void internalResourceRemoved(final String resourceType, String resourceId) {
+
         String key = resourceType + ':' + resourceId;
         synchronized ( this.resourcesLock ) {
             final EntityResourceList erl = this.persistentList.getEntityResourceList(key);
