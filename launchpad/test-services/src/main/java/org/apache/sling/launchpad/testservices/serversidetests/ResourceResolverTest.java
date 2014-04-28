@@ -64,7 +64,7 @@ public class ResourceResolverTest {
     private String rootPath;
     private Node rootNode;
     private Node mapRoot;
-    private String vanity;
+    private String [] vanity;
     private static List<String> toDelete = new ArrayList<String>();
     private static ResourceResolverFactory cleanupResolverFactory;
     
@@ -138,7 +138,7 @@ public class ResourceResolverTest {
         mapRoot = session.getNode("/etc");
         
         // define a vanity path for the rootPath
-        vanity = "testVanity";
+        vanity = new String[] {"testVanity","testV"};
         rootNode.setProperty("sling:vanityPath", vanity);
         rootNode.addMixin("sling:VanityPath");
         session.save();
@@ -496,6 +496,31 @@ public class ResourceResolverTest {
             session.save();
         }
     }
+    
+    @Test public void testResolveResourceInternalRedirectPathAndVanityPath() throws Exception {
+        HttpServletRequest request = new FakeSlingHttpServletRequest("https",
+                null, -1, rootPath);
+        Node localhost443 = mapRoot.getNode("map/https/localhost.443");
+
+        localhost443.setProperty(PROP_REDIRECT_INTERNAL,
+                "/example");
+        try {
+            saveMappings(session);
+            Resource res = resResolver.resolve(request, vanity[0]);
+            assertNotNull(res);
+            assertEquals(rootPath, res.getPath());
+            
+            //see SLING-3428
+            res = resResolver.resolve(request, vanity[1]);
+            assertNotNull(res);
+            assertEquals("/example/"+vanity[1], res.getPath());
+        } finally {
+            localhost443.getProperty(PROP_REDIRECT_INTERNAL).remove();
+            session.save();
+        }     
+    }
+
+        
 
     @Test public void testResolveResourceInternalRedirectPathUpdate() throws Exception {
         HttpServletRequest request = new FakeSlingHttpServletRequest("https", null, -1, rootPath);
@@ -1157,7 +1182,7 @@ public class ResourceResolverTest {
 
     @Test public void testResolveVanityPath() throws Exception {
         String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
-                + "/" + vanity + ".print.html");
+                + "/" + vanity[0] + ".print.html");
 
         HttpServletRequest request = new FakeSlingHttpServletRequest(path);
         Resource res = resResolver.resolve(request, path);
@@ -1173,7 +1198,39 @@ public class ResourceResolverTest {
         assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
 
         path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath) + "/"
-                + vanity + ".print.html/suffix.pdf");
+                + vanity[0] + ".print.html/suffix.pdf");
+
+        request = new FakeSlingHttpServletRequest(path);
+        res = resResolver.resolve(request, path);
+        assertNotNull(res);
+        assertEquals(rootPath, res.getPath());
+        assertEquals(rootNode.getPrimaryNodeType().getName(),
+                res.getResourceType());
+
+        assertEquals(".print.html/suffix.pdf",
+                res.getResourceMetadata().getResolutionPathInfo());
+
+        assertNotNull(res.adaptTo(Node.class));
+        assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
+        
+        path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
+                + "/" + vanity[1] + ".print.html");
+
+        request = new FakeSlingHttpServletRequest(path);
+        res = resResolver.resolve(request, path);
+        assertNotNull(res);
+        assertEquals(rootPath, res.getPath());
+        assertEquals(rootNode.getPrimaryNodeType().getName(),
+                res.getResourceType());
+
+        assertEquals(".print.html",
+                res.getResourceMetadata().getResolutionPathInfo());
+
+        assertNotNull(res.adaptTo(Node.class));
+        assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
+
+        path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath) + "/"
+                + vanity[1] + ".print.html/suffix.pdf");
 
         request = new FakeSlingHttpServletRequest(path);
         res = resResolver.resolve(request, path);
