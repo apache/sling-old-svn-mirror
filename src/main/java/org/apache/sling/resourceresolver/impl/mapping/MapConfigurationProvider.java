@@ -41,6 +41,8 @@ public interface MapConfigurationProvider extends ResourceResolverFactory {
     boolean isVanityPathEnabled();
 
     boolean isOptimizeAliasResolutionEnabled();
+    
+    boolean hasVanityPathPrecedence();
 
     public class VanityPathConfig implements Comparable<VanityPathConfig> {
         public final boolean isExclude;

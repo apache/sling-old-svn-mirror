@@ -206,7 +206,14 @@ public class ResourceResolverFactoryActivator {
                     "such a list is configured,vanity paths from resources starting with this prefix " +
                     " are not considered. If the list is empty, all vanity paths are used.")
     private static final String PROP_DENIED_VANITY_PATH_PREFIX = "resource.resolver.vanitypath.blacklist";
-
+    
+    private static final boolean DEFAULT_VANITY_PATH_PRECEDENCE = false;
+    @Property(boolValue = DEFAULT_VANITY_PATH_PRECEDENCE ,
+              label = "Vanity Path Precedence",
+              description ="This flag controls whether vanity paths" +
+                      " will have precedence over existing /etc/map mapping")
+    private static final String PROP_VANITY_PATH_PRECEDENCE = "resource.resolver.vanity.precedence";
+ 
     /** Tracker for the resource decorators. */
     private final ResourceDecoratorTracker resourceDecoratorTracker = new ResourceDecoratorTracker();
 
@@ -252,6 +259,10 @@ public class ResourceResolverFactoryActivator {
 
     /** alias resource resolution optimization enabled? */
     private boolean enableOptimizeAliasResolution = DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION;
+    
+    /** vanity paths will have precedence over existing /etc/map mapping? */
+    private boolean vanityPathPrecedence = DEFAULT_VANITY_PATH_PRECEDENCE;
+
 
     /** Vanity path whitelist */
     private String[] vanityPathWhiteList;
@@ -331,6 +342,10 @@ public class ResourceResolverFactoryActivator {
 
     public String[] getVanityPathBlackList() {
         return this.vanityPathBlackList;
+    }
+    
+    public boolean hasVanityPathPrecedence() {
+        return this.vanityPathPrecedence;
     }
 
     // ---------- SCR Integration ---------------------------------------------
@@ -435,6 +450,8 @@ public class ResourceResolverFactoryActivator {
 
         this.enableOptimizeAliasResolution = PropertiesUtil.toBoolean(properties.get(PROP_ENABLE_OPTIMIZE_ALIAS_RESOLUTION), DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION);
 
+        this.vanityPathPrecedence = PropertiesUtil.toBoolean(properties.get(PROP_VANITY_PATH_PRECEDENCE), DEFAULT_VANITY_PATH_PRECEDENCE);
+        
         final BundleContext bc = componentContext.getBundleContext();
 
         // check for required property
