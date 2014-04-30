@@ -28,7 +28,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>sling-archetype-parent</artifactId>
     <packaging>pom</packaging>
-    <version>2-SNAPSHOT</version>
+    <version>1-SNAPSHOT</version>
 
     <name>Apache Sling Archetype Parent</name>
     <description>The parent project for Apache Sling archetypes.</description>
