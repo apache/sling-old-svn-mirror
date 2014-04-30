@@ -45,7 +45,7 @@ public class Activator implements BundleActivator {
      * {@link Constants#FRAMEWORK_BEGINNING_STARTLEVEL}
      * and the startup manager increases the start level one by one until
      * the initial framework start level is reached.
-     * The default value is true, enabling this feature.
+     * The default value is false.
      */
     private static final String SLING_INSTALL_INCREMENTAL_START = "sling.framework.startup.incremental";
 
@@ -113,7 +113,7 @@ public class Activator implements BundleActivator {
             logger.warn("Ignoring target Sling framework start level as it is lower than the framework beginning start level: {} - {}",
                     targetSlingStartLevel, targetFrameworkStartLevel);
         }
-        final boolean incrementalStartupEnabled = Boolean.valueOf(this.getProperty(context, SLING_INSTALL_INCREMENTAL_START, "true"));
+        final boolean incrementalStartupEnabled = Boolean.valueOf(this.getProperty(context, SLING_INSTALL_INCREMENTAL_START, "false"));
 
         new DefaultStartupHandler(context, logger, mode, targetStartLevel, incrementalStartupEnabled);
 
