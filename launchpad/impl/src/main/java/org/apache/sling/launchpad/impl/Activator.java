@@ -102,8 +102,8 @@ public class Activator implements BundleActivator {
             logger.info("Detected startup mode. Starting in mode {}",  mode);
         }
 
-        final int targetSlingStartLevel = this.getIntProperty(logger, context, SLING_INSTALL_STARTLEVEL, 30);
         final int targetFrameworkStartLevel = this.getIntProperty(logger, context, Constants.FRAMEWORK_BEGINNING_STARTLEVEL, 1);
+        final int targetSlingStartLevel = this.getIntProperty(logger, context, SLING_INSTALL_STARTLEVEL, targetFrameworkStartLevel);
 
         final int targetStartLevel;
         if (targetSlingStartLevel >= targetFrameworkStartLevel ) {
