@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or
+    more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information regarding
+    copyright ownership. The ASF licenses this file to you under the
+    Apache License, Version 2.0 (the "License"); you may not use
+    this file except in compliance with the License. You may obtain
+    a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0 Unless required by
+    applicable law or agreed to in writing, software distributed
+    under the License is distributed on an "AS IS" BASIS, WITHOUT
+    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions
+    and limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling</artifactId>
+        <version>19</version>
+        <relativePath>../../../parent/pom.xml</relativePath>
+    </parent>
+
+    <groupId>org.apache.sling</groupId>
+    <artifactId>sling-archetype-parent</artifactId>
+    <packaging>pom</packaging>
+    <version>1-SNAPSHOT</version>
+
+    <name>Apache Sling Archetype Parent</name>
+    <description>The parent project for Apache Sling archetypes.</description>
+
+    <properties>
+        <!-- plugin versions to use in generated archetypes -->
+        <scrplugin.version>1.13.0</scrplugin.version>
+        <bundleplugin.version>2.0.1</bundleplugin.version>
+        <compilerplugin.version>2.3.2</compilerplugin.version>
+        <slingplugin.version>2.0.4-incubator</slingplugin.version>
+        <launchpadplugin.version>2.0.10</launchpadplugin.version>
+        <jarplugin.version>2.4</jarplugin.version>
+        <warplugin.version>2.4</warplugin.version>
+        <jettyplugin.version>6.1.23</jettyplugin.version>
+        
+        <!-- various properties which influence generated archetypes -->
+        <archetype.java.version>5</archetype.java.version>
+        
+        <!-- dependency versions to use in generated archetypes -->
+        <junit.version>3.8.1</junit.version>
+        <scrannotations.version>1.9.0</scrannotations.version>
+        <slingapi.version>2.2.0</slingapi.version>
+        <slf4japi.version>1.5.10</slf4japi.version>
+        
+        <!-- define archetype tooling version in a central place -->
+        <archetype.version>2.2</archetype.version>
+        
+    </properties>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/maven/archetypes/parent</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/maven/archetypes/parent</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/maven/archetypes/parent</url>
+    </scm>
+    
+    <build>
+        <resources>
+            <resource>
+                <!-- filter pom.xml -->
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </resource>
+        </resources>    
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <!-- 
+                        allow defining un-filtered resources in the pom.xml
+                        For example, the artifactId should not be escaped:
+                        
+                        <artifact>\${artifactId}</artifactId>
+                     -->
+                    <configuration>
+                        <escapeString>\</escapeString>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-archetype-plugin</artifactId>
+                    <version>${archetype.version}</version>
+                    <extensions>true</extensions>
+                    <!-- Verify archetype invocation was successful as part of the verify phase -->
+                    <configuration>
+                        <postBuildHookScript>verify.groovy</postBuildHookScript>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+</project>
