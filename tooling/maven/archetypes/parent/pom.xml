@@ -35,11 +35,11 @@
 
     <properties>
         <!-- plugin versions to use in generated archetypes -->
-        <scrplugin.version>1.13.0</scrplugin.version>
-        <bundleplugin.version>2.0.1</bundleplugin.version>
-        <compilerplugin.version>2.3.2</compilerplugin.version>
-        <slingplugin.version>2.0.4-incubator</slingplugin.version>
-        <launchpadplugin.version>2.0.10</launchpadplugin.version>
+        <scrplugin.version>1.16.0</scrplugin.version>
+        <bundleplugin.version>2.4.0</bundleplugin.version>
+        <compilerplugin.version>3.1</compilerplugin.version>
+        <slingplugin.version>2.1.0</slingplugin.version>
+        <launchpadplugin.version>2.3.0</launchpadplugin.version>
         <jarplugin.version>2.4</jarplugin.version>
         <warplugin.version>2.4</warplugin.version>
         <jettyplugin.version>6.1.23</jettyplugin.version>
@@ -49,7 +49,7 @@
         
         <!-- dependency versions to use in generated archetypes -->
         <junit.version>3.8.1</junit.version>
-        <scrannotations.version>1.9.0</scrannotations.version>
+        <scrannotations.version>1.9.8</scrannotations.version>
         <slingapi.version>2.2.0</slingapi.version>
         <slf4japi.version>1.5.10</slf4japi.version>
         
