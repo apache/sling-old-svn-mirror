@@ -125,7 +125,9 @@ public interface SharedConstants {
      * the initial framework start level is reached (value is "sling.framework.install.incremental").
      * The default value is false, disabling this feature.
      * @since 2.4.0
+     * @deprecated This property is not used anymore.
      */
+    @Deprecated
     public static final String SLING_INSTALL_INCREMENTAL_START = "sling.framework.install.incremental";
 
     /**
@@ -136,6 +138,8 @@ public interface SharedConstants {
      * This level is only used if {@link #SLING_INSTALL_INCREMENTAL_START} is
      * enabled. Default value is 10.
      * @since 2.4.0
+     * @deprecated This property is not used anymore.
      */
+    @Deprecated
     public static final String SLING_INSTALL_STARTLEVEL = "sling.framework.install.startlevel";
 }
