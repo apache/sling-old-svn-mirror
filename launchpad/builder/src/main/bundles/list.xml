@@ -154,12 +154,12 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.discovery.impl</artifactId>
-            <version>1.0.4</version>
+            <version>1.0.8</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.event</artifactId>
-            <version>3.3.6</version>
+            <version>3.3.10</version>
         </bundle>
 
         <bundle>
