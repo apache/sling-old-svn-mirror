@@ -29,7 +29,6 @@ import java.util.Map;
 import org.apache.felix.framework.Logger;
 import org.apache.sling.launchpad.api.LaunchpadContentProvider;
 import org.apache.sling.launchpad.api.StartupMode;
-import org.apache.sling.launchpad.base.shared.SharedConstants;
 import org.osgi.framework.Constants;
 
 /**
@@ -61,10 +60,6 @@ public class StartupManager {
 
     private final File confDir;
 
-    private final long targetStartLevel;
-
-    private final boolean incrementalStartupEnabled;
-
     StartupManager(final Map<String, String> properties,
                    final Logger logger) {
         this.logger = logger;
@@ -78,16 +73,7 @@ public class StartupManager {
         } else {
             this.mode = detectMode(properties.get(Constants.FRAMEWORK_STORAGE));
             this.logger.log(Logger.LOG_INFO, "Detected startup mode. Starting in mode " + this.mode);
-        }
-
-        this.targetStartLevel = Long.valueOf(properties.get(Constants.FRAMEWORK_BEGINNING_STARTLEVEL));
-
-        this.incrementalStartupEnabled = Boolean.valueOf(properties.get(SharedConstants.SLING_INSTALL_INCREMENTAL_START));
-
-        // if this is not a restart, reduce start level
-        if ( this.mode != StartupMode.RESTART && this.incrementalStartupEnabled ) {
-            final String startLevel = properties.get(SharedConstants.SLING_INSTALL_STARTLEVEL);
-            properties.put(Constants.FRAMEWORK_BEGINNING_STARTLEVEL, startLevel != null ? startLevel : "10");
+            properties.put(OVERRIDE_PROP, this.mode.toString());
         }
     }
 
@@ -97,21 +83,6 @@ public class StartupManager {
      */
     public StartupMode getMode() {
         return this.mode;
-    }
-
-    /**
-     * Is the incremental startup enabled?
-     */
-    public boolean isIncrementalStartupEnabled() {
-        return this.incrementalStartupEnabled;
-    }
-
-    /**
-     * Return the target start level.
-     * @return Target start level
-     */
-    public long getTargetStartLevel() {
-        return this.targetStartLevel;
     }
 
     /**
