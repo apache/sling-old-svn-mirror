@@ -21,8 +21,8 @@ package org.apache.sling.scripting.jsp;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -47,7 +47,7 @@ class JspServletConfig implements ServletConfig {
         }
 
         // copy the "jasper." properties
-        properties = new HashMap<String, String>();
+        properties = new TreeMap<String, String>();
         for (Enumeration<?> ke = config.keys(); ke.hasMoreElements();) {
             String key = (String) ke.nextElement();
             if (key.startsWith("jasper.")) {
@@ -71,5 +71,19 @@ class JspServletConfig implements ServletConfig {
 
     public String getServletName() {
         return servletName;
+    }
+
+    /**
+     * Return a unique key for the jasper configuration
+     */
+    public String getConfigKey() {
+        final StringBuilder sb = new StringBuilder();
+        for(final Map.Entry<String, String> entry : this.properties.entrySet() ) {
+            sb.append(entry.getKey());
+            sb.append('=');
+            sb.append(entry.getValue());
+            sb.append(';');
+        }
+        return sb.toString();
     }
 }

@@ -18,7 +18,10 @@ package org.apache.sling.scripting.jsp;
 
 import static org.apache.sling.api.scripting.SlingBindings.SLING;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.util.Dictionary;
@@ -90,9 +93,9 @@ import org.slf4j.LoggerFactory;
    @Property(name="jasper.trimSpaces",boolValue=false),
    @Property(name="jasper.displaySourceFragments",boolValue=false),
    @Property(name=EventConstants.EVENT_TOPIC, value={"org/apache/sling/api/resource/*"}, propertyPrivate=true),
-   @Property(name="felix.webconsole.label", value="slingjsp"),
-   @Property(name="felix.webconsole.title", value="JSP"),
-   @Property(name="felix.webconsole.category", value="Sling"),
+   @Property(name="felix.webconsole.label", value="slingjsp", propertyPrivate=true),
+   @Property(name="felix.webconsole.title", value="JSP", propertyPrivate=true),
+   @Property(name="felix.webconsole.category", value="Sling", propertyPrivate=true),
 })
 public class JspScriptEngineFactory
     extends AbstractScriptEngineFactory
@@ -126,7 +129,7 @@ public class JspScriptEngineFactory
 
     private JspServletContext jspServletContext;
 
-    private ServletConfig servletConfig;
+    private JspServletConfig servletConfig;
 
     private boolean defaultIsSession;
 
@@ -343,6 +346,9 @@ public class JspScriptEngineFactory
             Thread.currentThread().setContextClassLoader(old);
         }
 
+        // check for changes in jasper config
+        this.checkJasperConfig();
+
         logger.debug("IMPORTANT: Do not modify the generated servlet classes directly");
     }
 
@@ -364,6 +370,59 @@ public class JspScriptEngineFactory
         ioProvider = null;
         this.jspFactoryHandler.destroy();
         this.jspFactoryHandler = null;
+    }
+
+    private static final String CONFIG_PATH = "/jsp.config";
+
+    /**
+     * Check if the jasper configuration changed.
+     */
+    private void checkJasperConfig() {
+        boolean changed = false;
+        InputStream is = null;
+        try {
+            is = this.classLoaderWriter.getInputStream(CONFIG_PATH);
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024];
+            int length = 0;
+            while ( ( length = is.read(buffer)) != -1 ) {
+                baos.write(buffer, 0, length);
+            }
+            baos.close();
+            final String oldKey = new String(baos.toByteArray(), "UTF-8");
+            changed = !oldKey.equals(this.servletConfig.getConfigKey());
+            if ( changed ) {
+                logger.info("Removing all class files due to jsp configuration change");
+            }
+        } catch ( final IOException notFound ) {
+            changed = true;
+        } finally {
+            if ( is != null ) {
+                try {
+                    is.close();
+                } catch ( final IOException ignore) {
+                    // ignore
+                }
+            }
+        }
+        if ( changed ) {
+            OutputStream os = null;
+            try {
+                os = this.classLoaderWriter.getOutputStream(CONFIG_PATH);
+                os.write(this.servletConfig.getConfigKey().getBytes("UTF-8"));
+            } catch ( final IOException ignore ) {
+                // ignore
+            } finally {
+                if ( os != null ) {
+                    try {
+                        os.close();
+                    } catch ( final IOException ignore ) {
+                        // ignore
+                    }
+                }
+            }
+            this.classLoaderWriter.delete("/org/apache/jsp");
+        }
     }
 
     /**
