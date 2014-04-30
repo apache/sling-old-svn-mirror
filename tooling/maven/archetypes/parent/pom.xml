@@ -45,7 +45,7 @@
         <jettyplugin.version>6.1.23</jettyplugin.version>
         
         <!-- various properties which influence generated archetypes -->
-        <archetype.java.version>5</archetype.java.version>
+        <archetype.java.version>6</archetype.java.version>
         
         <!-- dependency versions to use in generated archetypes -->
         <junit.version>3.8.1</junit.version>
