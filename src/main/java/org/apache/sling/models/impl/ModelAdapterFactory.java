@@ -133,10 +133,11 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
     @Override
     public void run() {
         java.lang.ref.Reference<? extends Object> ref = queue.poll();
-        if (ref != null) {
-            log.debug("calling disposal for " + ref.toString());
+        while (ref != null) {
+            log.debug("calling disposal for {}.", ref.toString());
             DisposalCallbackRegistryImpl registry = disposalCallbacks.remove(ref);
             registry.onDisposed();
+            ref = queue.poll();
         }
     }
 
