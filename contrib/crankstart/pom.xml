@@ -45,5 +45,6 @@
       <module>api</module>
       <module>core</module>
       <module>launcher</module>
+      <module>test-services</module>
     </modules>
 </project>
