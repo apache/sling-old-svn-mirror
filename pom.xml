@@ -150,12 +150,12 @@
             <artifactId>jasper-el</artifactId>
             <version>6.0.14</version>
         </dependency>
- <dependency>
-      <groupId>org.eclipse.jdt.core.compiler</groupId>
-      <artifactId>ecj</artifactId>
-      <version>P20140317-1600</version>
-    </dependency>
-            <dependency>
+        <dependency>
+            <groupId>org.eclipse.jdt.core.compiler</groupId>
+            <artifactId>ecj</artifactId>
+            <version>P20140317-1600</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>el-api</artifactId>
             <version>6.0.14</version>
