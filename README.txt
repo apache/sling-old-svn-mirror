@@ -8,7 +8,7 @@ To test it:
 
 1. Install this bundle in Sling, for example with
 
-  mvn -P autoInstallBundle clean install -Dsling.url=http://localhost:8888/system/console
+  mvn -P autoInstallBundle clean install -Dsling.url=http://localhost:8080/system/console
   
 If Sling is running with the launchpad/testing setup.
 
@@ -31,7 +31,7 @@ public class foo extends SlingSafeMethodsServlet {
     }
 }   
 
-3. Request http://localhost:8888/content/foo/*.html which should display something like
+3. Request http://localhost:8080/content/foo/*.html which should display something like
 
   Response from apps.foo.foo at Tue Nov 18 14:49:14 CET 2008
   
