@@ -42,6 +42,7 @@ public class Options extends HashMap<String, Object> {
     public static final String VERSION_1_5 = "1.5";
     public static final String VERSION_1_6 = "1.6";
     public static final String VERSION_1_7 = "1.7";
+    public static final String VERSION_1_8 = "1.8";
 
     /** The key for the class loader writer.
      * By default the registered class loader writer service is used. */
