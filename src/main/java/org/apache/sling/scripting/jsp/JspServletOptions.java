@@ -40,8 +40,8 @@ public class JspServletOptions implements Options {
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(JspServletOptions.class);
 
-    /** Default source and target VM version (value is "1.5"). */
-    private static final String DEFAULT_VM_VERSION = "1.5";
+    /** Default source and target VM version (value is "1.6"). */
+    private static final String DEFAULT_VM_VERSION = "1.6";
 
     private Properties settings = new Properties();
 
@@ -307,7 +307,7 @@ public class JspServletOptions implements Options {
             IOProvider ioProvider, ComponentContext componentContext,
             TldLocationsCache tldLocationsCache) {
 
-        // JVM version numbers default to 1.5
+        // JVM version numbers default to 1.6
         this.compilerSourceVM = DEFAULT_VM_VERSION;
         this.compilerTargetVM = DEFAULT_VM_VERSION;
 
