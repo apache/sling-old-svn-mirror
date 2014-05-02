@@ -194,18 +194,18 @@ public class EclipseJavaCompiler implements JavaCompiler {
         // create properties for the settings object
         final Map<String, String> props = new HashMap<String, String>();
         if (options.isGenerateDebugInfo()) {
-            props.put("org.eclipse.jdt.core.compiler.debug.localVariable", "generate");
-            props.put("org.eclipse.jdt.core.compiler.debug.lineNumber", "generate");
-            props.put("org.eclipse.jdt.core.compiler.debug.sourceFile", "generate");
+            props.put(CompilerOptions.OPTION_LocalVariableAttribute, "generate");
+            props.put(CompilerOptions.OPTION_LineNumberAttribute, "generate");
+            props.put(CompilerOptions.OPTION_SourceFileAttribute, "generate");
         }
         if (options.getSourceVersion() != null) {
-            props.put("org.eclipse.jdt.core.compiler.source", options.getSourceVersion());
-            props.put("org.eclipse.jdt.core.compiler.compliance", options.getSourceVersion());
+            props.put(CompilerOptions.OPTION_Source, options.getSourceVersion());
+            props.put(CompilerOptions.OPTION_Compliance, options.getSourceVersion());
         }
         if (options.getTargetVersion() != null) {
-            props.put("org.eclipse.jdt.core.compiler.codegen.targetPlatform", options.getTargetVersion());
+            props.put(CompilerOptions.OPTION_TargetPlatform, options.getTargetVersion());
         }
-        props.put("org.eclipse.jdt.core.encoding", "UTF8");
+        props.put(CompilerOptions.OPTION_Encoding, "UTF8");
 
         // create the settings
         final CompilerOptions settings = new CompilerOptions(props);
