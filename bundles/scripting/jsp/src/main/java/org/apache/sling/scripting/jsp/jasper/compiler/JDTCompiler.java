@@ -305,15 +305,24 @@ public class JDTCompiler extends org.apache.sling.scripting.jsp.jasper.compiler.
             } else if(opt.equals("1.5")) {
                 settings.put(CompilerOptions.OPTION_Source,
                              CompilerOptions.VERSION_1_5);
+            } else if(opt.equals("1.6")) {
+                settings.put(CompilerOptions.OPTION_Source,
+                             CompilerOptions.VERSION_1_6);
+            } else if(opt.equals("1.7")) {
+                settings.put(CompilerOptions.OPTION_Source,
+                             CompilerOptions.VERSION_1_7);
+            } else if(opt.equals("1.8")) {
+                settings.put(CompilerOptions.OPTION_Source,
+                             CompilerOptions.VERSION_1_8);
             } else {
                 log.warn("Unknown source VM " + opt + " ignored.");
                 settings.put(CompilerOptions.OPTION_Source,
-                        CompilerOptions.VERSION_1_5);
+                        CompilerOptions.VERSION_1_6);
             }
         } else {
-            // Default to 1.5
+            // Default to 1.6
             settings.put(CompilerOptions.OPTION_Source,
-                    CompilerOptions.VERSION_1_5);
+                    CompilerOptions.VERSION_1_6);
         }
 
         // Target JVM
@@ -336,17 +345,32 @@ public class JDTCompiler extends org.apache.sling.scripting.jsp.jasper.compiler.
                              CompilerOptions.VERSION_1_5);
                 settings.put(CompilerOptions.OPTION_Compliance,
                         CompilerOptions.VERSION_1_5);
+            } else if(opt.equals("1.6")) {
+                settings.put(CompilerOptions.OPTION_TargetPlatform,
+                             CompilerOptions.VERSION_1_6);
+                settings.put(CompilerOptions.OPTION_Compliance,
+                        CompilerOptions.VERSION_1_6);
+            } else if(opt.equals("1.7")) {
+                settings.put(CompilerOptions.OPTION_TargetPlatform,
+                             CompilerOptions.VERSION_1_7);
+                settings.put(CompilerOptions.OPTION_Compliance,
+                        CompilerOptions.VERSION_1_7);
+            } else if(opt.equals("1.8")) {
+                settings.put(CompilerOptions.OPTION_TargetPlatform,
+                             CompilerOptions.VERSION_1_8);
+                settings.put(CompilerOptions.OPTION_Compliance,
+                        CompilerOptions.VERSION_1_8);
             } else {
                 log.warn("Unknown target VM " + opt + " ignored.");
                 settings.put(CompilerOptions.OPTION_TargetPlatform,
-                        CompilerOptions.VERSION_1_5);
+                        CompilerOptions.VERSION_1_6);
             }
         } else {
-            // Default to 1.5
+            // Default to 1.6
             settings.put(CompilerOptions.OPTION_TargetPlatform,
-                    CompilerOptions.VERSION_1_5);
+                    CompilerOptions.VERSION_1_6);
             settings.put(CompilerOptions.OPTION_Compliance,
-                    CompilerOptions.VERSION_1_5);
+                    CompilerOptions.VERSION_1_6);
         }
 
         final IProblemFactory problemFactory =
