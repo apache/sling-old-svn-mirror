@@ -30,6 +30,6 @@ Running the Explorer
 ====================
 Install and start this bundle and use the .explorer selector to access the UI.
 
-For example, http://localhost:8888/.explorer.html should display the explorer
+For example, http://localhost:8080/.explorer.html should display the explorer
 user interface, with the list of root child nodes on the left and a "properties"
 form on the right. 
