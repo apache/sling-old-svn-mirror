@@ -65,6 +65,7 @@ public class JDTCompiler extends org.apache.sling.scripting.jsp.jasper.compiler.
     /**
      * Compile the servlet from .java file to .class file
      */
+    @Override
     protected void generateClass(String[] smap)
         throws FileNotFoundException, JasperException, Exception {
 
@@ -146,6 +147,10 @@ public class JDTCompiler extends org.apache.sling.scripting.jsp.jasper.compiler.
                     result[i] = tok.toCharArray();
                 }
                 return result;
+            }
+
+            public boolean ignoreOptionalProblems() {
+                return false;
             }
         }
 

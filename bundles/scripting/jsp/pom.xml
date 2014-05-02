@@ -65,16 +65,16 @@
                             org.apache.juli.logging
                         </Private-Package>
 
-                        <Import-Package>
-                            !org.eclipse.*, *
-                        </Import-Package>
-                        
                         <ScriptEngine-Name>${project.name}</ScriptEngine-Name>
                         <ScriptEngine-Version>${project.version}</ScriptEngine-Version>
 
+                        <Import-Package>
+                            !org.eclipse.*,
+                            !org.apache.tools.*,*
+                        </Import-Package>
                         <!-- Embed Jasper completely -->
                         <Embed-Dependency>
-                            jasper*,
+                            jasper-el,ecj,
                             el-api,
                             jsp-api,
                             org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/PropertiesUtil.*"
@@ -147,12 +147,12 @@
             <artifactId>jasper-el</artifactId>
             <version>6.0.14</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.tomcat</groupId>
-            <artifactId>jasper-jdt</artifactId>
-            <version>6.0.14</version>
-        </dependency>
-        <dependency>
+ <dependency>
+      <groupId>org.eclipse.jdt.core.compiler</groupId>
+      <artifactId>ecj</artifactId>
+      <version>P20140317-1600</version>
+    </dependency>
+            <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>el-api</artifactId>
             <version>6.0.14</version>
