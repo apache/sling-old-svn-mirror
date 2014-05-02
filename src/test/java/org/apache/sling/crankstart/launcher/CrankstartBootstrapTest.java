@@ -6,8 +6,6 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Random;
 
 import org.apache.commons.httpclient.HttpClient;
@@ -16,6 +14,7 @@ import org.apache.sling.commons.testing.junit.Retry;
 import org.apache.sling.commons.testing.junit.RetryRule;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -27,16 +26,8 @@ public class CrankstartBootstrapTest {
     private static final int port = Integer.valueOf(System.getProperty("test.http.port", "12345"));
     private static final HttpClient client = new HttpClient();
     private static Thread crankstartThread;
-    private static URL rootUrl = null;
+    private static String baseUrl = "http://localhost:" + port;
             
-    static {
-        try {
-            rootUrl = new URL("http://localhost:" + port + "/");
-        } catch(MalformedURLException mfe) {
-            fail(mfe.toString());
-        }
-    }
-    
     @Rule
     public final RetryRule retryRule = new RetryRule();
     
@@ -58,7 +49,7 @@ public class CrankstartBootstrapTest {
     
     @BeforeClass
     public static void setup() {
-        final GetMethod get = new GetMethod(rootUrl.toExternalForm());
+        final GetMethod get = new GetMethod(baseUrl);
         
         try {
             client.executeMethod(get);
@@ -87,10 +78,19 @@ public class CrankstartBootstrapTest {
     
     @Test
     @Retry(timeoutMsec=10000, intervalMsec=250)
-    public void testHttpResponse() throws Exception {
-        final GetMethod get = new GetMethod(rootUrl.toExternalForm());
+    public void testHttpRoot() throws Exception {
+        final GetMethod get = new GetMethod(baseUrl);
         client.executeMethod(get);
-        assertEquals("Expecting 404 at " + get.getURI(), 404, get.getStatusCode());
+        assertEquals("Expecting page not found at " + get.getURI(), 404, get.getStatusCode());
+    }
+    
+    @Test
+    @Retry(timeoutMsec=10000, intervalMsec=250)
+    @Ignore("TODO: activate once config command is ready")
+    public void testSingleConfigServlet() throws Exception {
+        final GetMethod get = new GetMethod(baseUrl + "/single");
+        client.executeMethod(get);
+        assertEquals("Expecting success " + get.getURI(), 200, get.getStatusCode());
     }
     
     private static String getOsgiStoragePath() {
