@@ -31,6 +31,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
+import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.scripting.jsp.jasper.IOProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,9 +50,12 @@ class SlingIOProvider implements IOProvider {
 
     private final ClassLoaderWriter classLoaderWriter;
 
-    SlingIOProvider(final ClassLoaderWriter classLoaderWriter) {
+    private final JavaCompiler javaCompiler;
+
+    SlingIOProvider(final ClassLoaderWriter classLoaderWriter, final JavaCompiler compiler) {
         this.requestResourceResolver = new ThreadLocal<ResourceResolver>();
         this.classLoaderWriter = classLoaderWriter;
+        this.javaCompiler = compiler;
     }
 
     /**
@@ -226,5 +230,12 @@ class SlingIOProvider implements IOProvider {
         }
 
         return path;
+    }
+
+    /**
+     * @see org.apache.sling.scripting.jsp.jasper.IOProvider#getJavaCompiler()
+     */
+    public JavaCompiler getJavaCompiler() {
+        return this.javaCompiler;
     }
 }

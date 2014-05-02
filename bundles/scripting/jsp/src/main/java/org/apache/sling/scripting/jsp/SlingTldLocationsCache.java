@@ -19,11 +19,12 @@ package org.apache.sling.scripting.jsp;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Properties;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -60,11 +61,11 @@ public class SlingTldLocationsCache
                 addBundle(bundles[i]);
             }
         }
-        
-        Properties tldConfigPrinterProperties = new Properties();
-        tldConfigPrinterProperties.setProperty("felix.webconsole.label", "jsptaglibs");
-        tldConfigPrinterProperties.setProperty("felix.webconsole.title", "JSP Taglibs");
-        tldConfigPrinterProperties.setProperty("felix.webconsole.configprinter.modes", "always");
+
+        Dictionary<String, Object> tldConfigPrinterProperties = new Hashtable<String, Object>();
+        tldConfigPrinterProperties.put("felix.webconsole.label", "jsptaglibs");
+        tldConfigPrinterProperties.put("felix.webconsole.title", "JSP Taglibs");
+        tldConfigPrinterProperties.put("felix.webconsole.configprinter.modes", "always");
         this.serviceRegistration = context.registerService(Object.class.getName(),
             this, tldConfigPrinterProperties);
 
@@ -107,6 +108,7 @@ public class SlingTldLocationsCache
 
     // ---------- TldLocationsCache support ------------------------------------
 
+    @Override
     public String[] getLocation(final String uri) throws JasperException {
         synchronized (tldLocations) {
             if (tldLocations.containsKey(uri)) {
@@ -186,7 +188,7 @@ public class SlingTldLocationsCache
     public void printConfiguration(final PrintWriter pw) {
         pw.println("Currently available JSP Taglibs:");
         final SortedMap<String, String> taglibs = new TreeMap<String, String>();
-        
+
         for (final Map.Entry<String, TldLocationEntry> entry : tldLocations.entrySet()) {
             final long bundleId = entry.getValue().getBundleId();
             final Bundle bundle = bundleContext.getBundle(bundleId);
@@ -197,7 +199,7 @@ public class SlingTldLocationsCache
                 taglibs.put(entry.getKey(), String.format("INVALID BUNDLE ID: %s", bundleId));
             }
         }
-        
+
         for (final Map.Entry<String, String> entry : taglibs.entrySet()) {
             pw.printf("  %s - %s\n", entry.getKey(), entry.getValue());
         }

@@ -71,13 +71,9 @@
                         <ScriptEngine-Name>${project.name}</ScriptEngine-Name>
                         <ScriptEngine-Version>${project.version}</ScriptEngine-Version>
 
-                        <Import-Package>
-                            !org.eclipse.*,
-                            !org.apache.tools.*,*
-                        </Import-Package>
-                        <!-- Embed Jasper completely -->
+                        <!-- Embed EL and JSP API -->
                         <Embed-Dependency>
-                            jasper-el,ecj,
+                            jasper-el,
                             el-api,
                             jsp-api,
                             org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/PropertiesUtil.*"
@@ -105,8 +101,16 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr.annotations</artifactId>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -117,7 +121,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.api</artifactId>
-            <version>2.0.2-incubator</version>
+            <version>2.1.6</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -133,7 +137,6 @@
             <scope>provided</scope>
         </dependency>
         
-
         <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>servlet-api</artifactId>
@@ -151,40 +154,15 @@
             <version>6.0.14</version>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jdt.core.compiler</groupId>
-            <artifactId>ecj</artifactId>
-            <version>P20140317-1600</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>el-api</artifactId>
             <version>6.0.14</version>
         </dependency>
-
         <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>1.4</version>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.compiler</artifactId>
+            <version>2.1.0</version>
             <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-            <version>3.2.1</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
         </dependency>
     </dependencies>
 </project>
