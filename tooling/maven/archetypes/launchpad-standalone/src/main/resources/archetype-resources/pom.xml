@@ -38,6 +38,11 @@
                     <defaultBundleList>
                         <version>6</version>
                     </defaultBundleList>
+                    <jarWebSupport>
+                        <groupId>org.apache.felix</groupId>
+                        <artifactId>org.apache.felix.http.jetty</artifactId>
+                        <version>2.2.0</version>
+                    </jarWebSupport>
                 </configuration>
             </plugin>
             <plugin>
