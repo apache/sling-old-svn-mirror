@@ -224,6 +224,7 @@ public class EclipseJavaCompiler implements JavaCompiler {
                         settings,
                         context,
                         this.problemFactory,
+                        null,
                         null);
 
         // compile
