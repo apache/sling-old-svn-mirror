@@ -467,5 +467,12 @@ public class EclipseJavaCompiler implements JavaCompiler {
                 return (this.packageName.replace('.', '/') + '/' + this.mainTypeName + ".java").toCharArray();
             }
         }
+
+        /**
+         * @see org.eclipse.jdt.internal.compiler.env.ICompilationUnit#ignoreOptionalProblems()
+         */
+        public boolean ignoreOptionalProblems() {
+            return false;
+        }
     }
 }

@@ -43,6 +43,10 @@
         <url>http://svn.apache.org/viewvc/sling/trunk/contrib/commons/compiler</url>
     </scm>
 
+    <properties>
+        <sling.java.version>6</sling.java.version>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -56,7 +60,8 @@
                 <configuration>
                     <instructions>
                         <Import-Package>
-                            !org.eclipse.*,*
+                            !org.eclipse.*,
+                            !org.apache.tools.*,*
                         </Import-Package>
                         <Export-Package>
                             org.apache.sling.commons.compiler;version=2.1.0
@@ -65,7 +70,7 @@
                             org.apache.sling.commons.compiler.impl
                         </Private-Package>
                         <Embed-Dependency>
-                            core
+                            ecj
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
@@ -102,19 +107,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jdt</groupId>
-            <artifactId>core</artifactId>
-            <version>3.3.0-v_771</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.eclipse.equinox</groupId>
-                    <artifactId>app</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.eclipse.equinox</groupId>
-                    <artifactId>common</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>org.eclipse.jdt.core.compiler</groupId>
+            <artifactId>ecj</artifactId>
+            <version>P20140317-1600</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
