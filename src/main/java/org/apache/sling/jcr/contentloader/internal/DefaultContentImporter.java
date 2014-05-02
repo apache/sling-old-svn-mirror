@@ -78,13 +78,13 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
         // special treatment for system view imports
         if (name.endsWith(EXT_JCR_XML)) {
             boolean replace = (importOptions == null) ? false : importOptions.isOverwrite();
-            Node node = importSystemView(parent, name, contentStream, replace);
+            final Node node = importSystemView(parent, name, contentStream, replace);
             if (node != null) {
                 if (importListener != null) {
                     importListener.onCreate(node.getPath());
                 }
-                return;
             }
+            return;
         }
 
         DefaultContentCreator contentCreator = new DefaultContentCreator(this);
@@ -172,11 +172,11 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
             return (parent.hasNode(nodeName)) ? parent.getNode(nodeName) : null;
         } catch (InvalidSerializedDataException isde) {
             // the xml might not be System or Document View export, fall back to old-style XML reading
-            log.info("importSystemView: XML does not seem to be system view export, trying old style; cause: {}", isde.toString());
+            log.info("importSystemView: XML does not seem to be system view export; cause: {}", isde.toString());
             return null;
         } catch (RepositoryException re) {
             // any other repository related issue...
-            log.info("importSystemView: Repository issue loading XML, trying old style; cause: {}", re.toString());
+            log.info("importSystemView: Repository issue loading XML; cause: {}", re.toString());
             return null;
         } finally {
             if (ins != null) {
