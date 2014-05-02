@@ -120,10 +120,10 @@
                                     <goal>install</goal>
                                 </goals>
                                 <configuration>
-                                    <slingUrl>http://localhost:8888/libs/sling/install</slingUrl>
+                                    <slingUrl>http://localhost:8080/libs/sling/install</slingUrl>
                                     <!--
                                     Alternatively:
-                                    <slingUrl>http://localhost:8888</slingUrl>
+                                    <slingUrl>http://localhost:8080</slingUrl>
                                     <slingUrlSuffix>/libs/sling/install</slingUrlSuffix>
                                     -->
                                     <usePut>true</usePut>
