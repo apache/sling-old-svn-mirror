@@ -56,6 +56,7 @@ import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
+import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
@@ -117,6 +118,9 @@ public class JspScriptEngineFactory
     private DynamicClassLoaderManager dynamicClassLoaderManager;
 
     private ClassLoader dynamicClassLoader;
+
+    @Reference
+    private JavaCompiler javaCompiler;
 
     /** The io provider for reading and writing. */
     private SlingIOProvider ioProvider;
@@ -328,7 +332,7 @@ public class JspScriptEngineFactory
             this.tldLocationsCache = new SlingTldLocationsCache(componentContext.getBundleContext());
 
             // prepare some classes
-            ioProvider = new SlingIOProvider(classLoaderWriter);
+            ioProvider = new SlingIOProvider(this.classLoaderWriter, this.javaCompiler);
 
             // return options which use the jspClassLoader
             options = new JspServletOptions(slingServletContext, ioProvider,
