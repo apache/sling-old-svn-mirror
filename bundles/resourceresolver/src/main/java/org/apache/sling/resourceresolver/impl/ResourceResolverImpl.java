@@ -979,8 +979,31 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
             final StringBuffer buf = new StringBuffer();
             while (m.find()) {
-                final String replacement = MANGLE_NAMESPACE_IN_PREFIX + m.group(1) + MANGLE_NAMESPACE_IN_SUFFIX;
-                m.appendReplacement(buf, replacement);
+                final String namespace = m.group(1);
+                try {
+
+                    // throws if "namespace" is not a registered
+                    // namespace prefix
+                    final Session session = getSession();
+                    if ( session != null ) {
+                        session.getNamespaceURI(namespace);
+                        final String replacement = MANGLE_NAMESPACE_IN_PREFIX + namespace + MANGLE_NAMESPACE_IN_SUFFIX;
+                        m.appendReplacement(buf, replacement);
+                    } else {
+                        logger.debug("mangleNamespaces: '{}' is not a prefix, not mangling", namespace);
+                    }
+
+
+                } catch (final NamespaceException ne) {
+
+                    // not a valid prefix
+                    logger.debug("mangleNamespaces: '{}' is not a prefix, not mangling", namespace);
+
+                } catch (final RepositoryException re) {
+
+                    logger.warn("mangleNamespaces: Problem checking namespace '{}'", namespace, re);
+
+                }
             }
 
             m.appendTail(buf);
