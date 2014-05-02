@@ -53,9 +53,15 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
+            <Bundle-Category>
+              sling,
+              jcr,
+              jackrabbit
+            </Bundle-Category>
             <Private-Package>
               org.apache.sling.jcr.contentloader.internal.*,
-              org.kxml2.io, org.xmlpull.v1
+              org.kxml2.io,
+              org.xmlpull.v1
             </Private-Package>
             <Embed-Dependency>
               kxml2
