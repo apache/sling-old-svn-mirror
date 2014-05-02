@@ -28,15 +28,15 @@
 
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.tooling.support.install</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Tooling Support Install</name>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.tooling.support.install-1.0.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.tooling.support.install-1.0.0</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.tooling.support.install-1.0.0</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/support/install</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/support/install</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/support/install</url>
     </scm>
 
     <build>
