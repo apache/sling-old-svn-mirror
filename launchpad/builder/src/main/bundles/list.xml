@@ -348,6 +348,11 @@
         </bundle>
         <bundle>
             <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.prefs</artifactId>
+            <version>1.0.6</version>
+        </bundle>
+        <bundle>
+            <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.webconsole</artifactId>
             <version>4.2.2</version>
         </bundle>
