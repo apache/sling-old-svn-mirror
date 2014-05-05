@@ -258,6 +258,14 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             OsgiClient osgiClient = Activator.getDefault().getOsgiClientFactory()
                     .createOsgiClient(ServerUtil.getRepositoryInfo(getServer(), monitor));
 
+            Version supportBundleVersion = osgiClient
+                    .getBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME);
+            monitor.worked(1);
+            if (supportBundleVersion == null) {
+                throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID,
+                        "The support bundle was not found, please install it via the server properties page"));
+            }
+
             IJavaProject javaProject = ProjectHelper.asJavaProject(project);
 
             IFolder outputFolder = (IFolder) project.getWorkspace().getRoot().findMember(javaProject.getOutputLocation());
@@ -266,7 +274,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
             if ( installLocally ) {
                 osgiClient.installLocalBundle(outputLocation.toOSString());
-                monitor.worked(4);
+                monitor.worked(3);
             } else {
 
                 JarBuilder builder = new JarBuilder();
@@ -274,7 +282,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
                 monitor.worked(1);
                 
                 osgiClient.installLocalBundle(bundle, outputFolder.getLocation().toOSString());
-                monitor.worked(3);
+                monitor.worked(2);
             }
 
             setModulePublishState(module, IServer.PUBLISH_STATE_NONE);
