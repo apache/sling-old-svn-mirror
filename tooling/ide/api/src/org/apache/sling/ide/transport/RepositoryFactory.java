@@ -14,26 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.impl.resource.transport;
+package org.apache.sling.ide.transport;
 
-import org.apache.sling.ide.transport.Repository;
-import org.apache.sling.ide.transport.RepositoryInfo;
-//TODO move to api?
-public abstract class AbstractRepository implements Repository{
-	
-	protected RepositoryInfo repositoryInfo;
-	
-	public void setRepositoryInfo(RepositoryInfo repositoryInfo){
-		this.repositoryInfo=repositoryInfo;
-	}
+/**
+ * The <tt>RepositoryFactory</tt> creates new <tt>Repository</tt> instances
+ * 
+ * <p>
+ * Implementations of this interface must be thread-safe.
+ * </p>
+ *
+ */
+public interface RepositoryFactory {
 
-    @Override
-    public RepositoryInfo getRepositoryInfo() {
-        return repositoryInfo;
-    }
-
-	@Override
-	public String toString() {
-		return "AbstractRepository [repositoryInfo=" + repositoryInfo + "]";
-	}
+    /**
+     * Returns a <tt>Repository</tt> instance for the specified <tt>repositoryInfo</tt>
+     * 
+     * <p>
+     * As an optimisation, implementations may choose to return the same instance for equivalent repositoryInfo data.
+     * </p>
+     * 
+     * @param repositoryInfo
+     * @return
+     * @throws RepositoryException
+     */
+    Repository newRepository(RepositoryInfo repositoryInfo) throws RepositoryException;
 }

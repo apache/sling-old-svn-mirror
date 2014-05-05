@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" immediate="false">
-   <implementation class="org.apache.sling.ide.impl.resource.transport.RepositoryImpl"/>
+   <implementation class="org.apache.sling.ide.impl.resource.transport.RepositoryFactoryImpl"/>
    <service>
-      <provide interface="org.apache.sling.ide.transport.Repository"/>
+      <provide interface="org.apache.sling.ide.transport.RepositoryFactory"/>
    </service>
    <reference bind="bindEventAdmin" cardinality="1..1" interface="org.osgi.service.event.EventAdmin" name="EventAdmin" policy="static" unbind="unbindEventAdmin"/>
 </scr:component>

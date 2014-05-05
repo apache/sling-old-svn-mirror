@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" immediate="false">
-   <implementation class="org.apache.sling.ide.impl.vlt.VltRepository"/>
-   <service>
-      <provide interface="org.apache.sling.ide.transport.Repository"/>
-   </service>
+   <implementation class="org.apache.sling.ide.impl.vlt.VltRepositoryFactory"/>
    <reference bind="bindEventAdmin" cardinality="1..1" interface="org.osgi.service.event.EventAdmin" name="EventAdmin" policy="static" unbind="unbindEventAdmin"/>
    <property name="service.ranking" type="Integer" value="100"/>
+   <service>
+      <provide interface="org.apache.sling.ide.transport.RepositoryFactory"/>
+   </service>
 </scr:component>
