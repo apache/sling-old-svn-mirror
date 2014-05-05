@@ -463,25 +463,6 @@
          point="org.eclipse.ui.decorators">
       <decorator
             adaptable="true"
-            class="org.apache.sling.ide.eclipse.ui.internal.SlingProjectDecorator"
-            id="org.apache.sling.ide.eclipse-ui.decorator"
-            label="Sling Project Decorator"
-            lightweight="true"
-            location="BOTTOM_RIGHT"
-            state="true">
-         <enablement>
-            <and>
-               <objectClass
-                     name="org.eclipse.core.resources.IResource">
-               </objectClass>
-               <objectClass
-                     name="org.eclipse.core.resources.IProject">
-               </objectClass>
-            </and>
-         </enablement>
-      </decorator>
-      <decorator
-            adaptable="true"
             class="org.apache.sling.ide.eclipse.ui.internal.ServerModuleDecorator"
             id="org.apache.sling.ide.eclipse-ui.serverModuleDecorator"
             label="ServerModule Decorator"
