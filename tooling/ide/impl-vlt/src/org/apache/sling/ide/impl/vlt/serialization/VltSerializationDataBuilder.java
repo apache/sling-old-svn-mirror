@@ -57,7 +57,6 @@ public class VltSerializationDataBuilder implements SerializationDataBuilder {
 
     VaultFsLocator fsLocator;
     private SerializationKindManager skm;
-	private File contentSyncRoot;
 	private org.apache.sling.ide.transport.Repository repo;
 	private Session session;
 	private VaultFileSystem fs;
@@ -73,7 +72,6 @@ public class VltSerializationDataBuilder implements SerializationDataBuilder {
             if (!contentSyncRoot.exists()) {
             	throw new IllegalArgumentException("contentSyncRoot does not exist: "+contentSyncRoot);
             }
-            this.contentSyncRoot = contentSyncRoot;
 
             Repository jcrRepo = RepositoryUtils.getRepository(repo.getRepositoryInfo());
             Credentials credentials = RepositoryUtils.getCredentials(repo.getRepositoryInfo());
@@ -108,11 +106,7 @@ public class VltSerializationDataBuilder implements SerializationDataBuilder {
         // TODO - there is a small mismatch here since we're doing remote calls to the repository
         // but taking a resourceProxy - not sure if we'll run into problems down the road or not
 
-        // TODO - there might be a performance problem with getting the session on-demand each time
-        // the resolution might be to have a SerializationManager instance kept per 'transaction'
-        // which is stateful, with init(RepositoryInfo) and destroy() methods
         try {
-            
 
             VaultFile vaultFile = fs.getFile(resource.getPath());
             String platformPath = resource.getPath();
