@@ -22,6 +22,8 @@ import java.net.URISyntaxException;
 import org.apache.sling.ide.eclipse.core.internal.Activator;
 import org.apache.sling.ide.eclipse.core.internal.SlingLaunchpadServer;
 import org.apache.sling.ide.transport.Repository;
+import org.apache.sling.ide.transport.RepositoryException;
+import org.apache.sling.ide.transport.RepositoryFactory;
 import org.apache.sling.ide.transport.RepositoryInfo;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -33,16 +35,17 @@ public abstract class ServerUtil {
     public static Repository getRepository(IServer server, IProgressMonitor monitor) throws CoreException {
 
 
-        Repository repository = Activator.getDefault().getRepository();
+        RepositoryFactory repository = Activator.getDefault().getRepositoryFactory();
         try {
             RepositoryInfo repositoryInfo = getRepositoryInfo(server, monitor);
-            repository.setRepositoryInfo(repositoryInfo);
+            return repository.newRepository(repositoryInfo);
         } catch (URISyntaxException e) {
             throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
         } catch (RuntimeException e) {
             throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
+        } catch (RepositoryException e) {
+            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
         }
-        return repository;
     }
 
     public static RepositoryInfo getRepositoryInfo(IServer server, IProgressMonitor monitor) throws URISyntaxException {

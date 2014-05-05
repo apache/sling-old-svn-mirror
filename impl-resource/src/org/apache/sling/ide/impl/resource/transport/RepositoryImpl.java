@@ -19,14 +19,22 @@ package org.apache.sling.ide.impl.resource.transport;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.FileInfo;
+import org.apache.sling.ide.transport.Repository;
+import org.apache.sling.ide.transport.RepositoryInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.TracingCommand;
 import org.osgi.service.event.EventAdmin;
 
-public class RepositoryImpl extends AbstractRepository{
+public class RepositoryImpl implements Repository {
 	
     private final HttpClient httpClient = new HttpClient();
-    private EventAdmin eventAdmin;
+    private final RepositoryInfo repositoryInfo;
+    private final EventAdmin eventAdmin;
+
+    public RepositoryImpl(RepositoryInfo repositoryInfo, EventAdmin eventAdmin) {
+        this.repositoryInfo = repositoryInfo;
+        this.eventAdmin = eventAdmin;
+    }
 
     private <T> Command<T> wrap(AbstractCommand<T> command) {
         return new TracingCommand<T>(command, eventAdmin);
@@ -60,13 +68,8 @@ public class RepositoryImpl extends AbstractRepository{
                 resource.getProperties(), fileInfo));
 	}
 
-    public void bindEventAdmin(EventAdmin eventAdmin) {
-
-        this.eventAdmin = eventAdmin;
-    }
-
-    public void unbindEventAdmin(EventAdmin eventAdmin) {
-
-        this.eventAdmin = null;
+    @Override
+    public RepositoryInfo getRepositoryInfo() {
+        return repositoryInfo;
     }
 }

@@ -20,7 +20,7 @@ import org.apache.sling.ide.eclipse.core.ServiceUtil;
 import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.osgi.OsgiClientFactory;
 import org.apache.sling.ide.serialization.SerializationManager;
-import org.apache.sling.ide.transport.Repository;
+import org.apache.sling.ide.transport.RepositoryFactory;
 import org.eclipse.core.runtime.Plugin;
 import org.osgi.framework.BundleContext;
 import org.osgi.util.tracker.ServiceTracker;
@@ -41,7 +41,7 @@ public class Activator extends Plugin {
 	// The shared instance
 	private static Activator plugin;
 
-    private ServiceTracker<Repository, Repository> repository;
+    private ServiceTracker<RepositoryFactory, RepositoryFactory> repositoryFactory;
     private ServiceTracker<SerializationManager, SerializationManager> serializationManager;
     private ServiceTracker<FilterLocator, FilterLocator> filterLocator;
     private ServiceTracker<OsgiClientFactory, OsgiClientFactory> osgiClientFactory;
@@ -50,8 +50,9 @@ public class Activator extends Plugin {
 		super.start(context);
 		plugin = this;
 
-        repository = new ServiceTracker<Repository, Repository>(context, Repository.class, null);
-        repository.open();
+        repositoryFactory = new ServiceTracker<RepositoryFactory, RepositoryFactory>(context, RepositoryFactory.class,
+                null);
+        repositoryFactory.open();
 
         serializationManager = new ServiceTracker<SerializationManager, SerializationManager>(context,
                 SerializationManager.class, null);
@@ -70,7 +71,7 @@ public class Activator extends Plugin {
 	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
 	 */
 	public void stop(BundleContext context) throws Exception {
-        repository.close();
+        repositoryFactory.close();
         serializationManager.close();
         filterLocator.close();
         osgiClientFactory.close();
@@ -88,9 +89,9 @@ public class Activator extends Plugin {
 		return plugin;
 	}
 
-	public Repository getRepository() {
+    public RepositoryFactory getRepositoryFactory() {
 
-        return ServiceUtil.getNotNull(repository);
+        return ServiceUtil.getNotNull(repositoryFactory);
 	}
 
     public SerializationManager getSerializationManager() {

@@ -17,25 +17,22 @@ import org.osgi.service.event.EventAdmin;
  */
 public class VltRepository implements Repository {
 
-    private RepositoryInfo repositoryInfo;
-    private javax.jcr.Repository jcrRepo;
+    private final RepositoryInfo repositoryInfo;
+    private final EventAdmin eventAdmin;
 
-    private EventAdmin eventAdmin;
+    private javax.jcr.Repository jcrRepo;
     private Credentials credentials;
 
-    @Override
-    public void setRepositoryInfo(RepositoryInfo repositoryInfo) {
-
+    public VltRepository(RepositoryInfo repositoryInfo, EventAdmin eventAdmin) {
         this.repositoryInfo = repositoryInfo;
-
-        initJcrRepo();
+        this.eventAdmin = eventAdmin;
     }
 
     public RepositoryInfo getRepositoryInfo() {
         return repositoryInfo;
     }
 
-    private void initJcrRepo() {
+    public void init() {
         try {
             jcrRepo = RepositoryUtils.getRepository(repositoryInfo);
             credentials = RepositoryUtils.getCredentials(repositoryInfo);
@@ -46,7 +43,6 @@ public class VltRepository implements Repository {
 
     @Override
     public Command<Void> newAddOrUpdateNodeCommand(FileInfo fileInfo, ResourceProxy resource) {
-        // TODO implement
         return TracingCommand.wrap(new AddOrUpdateNodeCommand(jcrRepo, credentials, fileInfo, resource),
                 eventAdmin);
     }
@@ -72,16 +68,6 @@ public class VltRepository implements Repository {
     public Command<byte[]> newGetNodeCommand(String path) {
 
         return TracingCommand.wrap(new GetNodeCommand(jcrRepo, credentials, path), eventAdmin);
-    }
-
-    protected void bindEventAdmin(EventAdmin eventAdmin) {
-
-        this.eventAdmin = eventAdmin;
-    }
-
-    protected void unbindEventAdmin(EventAdmin eventAdmin) {
-
-        this.eventAdmin = null;
     }
 
 }

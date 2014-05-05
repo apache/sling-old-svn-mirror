@@ -25,9 +25,6 @@ import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.Result;
 
 public class StubRepository implements Repository {
-    @Override
-    public void setRepositoryInfo(RepositoryInfo repositoryInfo) {
-    }
 
     @Override
     public Command<ResourceProxy> newListChildrenNodeCommand(final String path) {
