@@ -17,6 +17,6 @@
 package org.apache.sling.crankstart.api;
 
 public interface CrankstartCommand {
-    public boolean appliesTo(String commandLine);
-    public void execute(CrankstartContext crankstartContext, String commandLine) throws Exception;
+    public boolean appliesTo(CrankstartCommandLine commandLine);
+    public void execute(CrankstartContext crankstartContext, CrankstartCommandLine commandLine) throws Exception;
 }
