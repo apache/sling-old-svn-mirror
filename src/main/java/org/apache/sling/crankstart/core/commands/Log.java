@@ -17,6 +17,7 @@
 package org.apache.sling.crankstart.core.commands;
 
 import org.apache.sling.crankstart.api.CrankstartCommand;
+import org.apache.sling.crankstart.api.CrankstartCommandLine;
 import org.apache.sling.crankstart.api.CrankstartContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,12 +28,12 @@ public class Log implements CrankstartCommand {
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     @Override
-    public boolean appliesTo(String commandLine) {
-        return commandLine.startsWith(I_LOG);
+    public boolean appliesTo(CrankstartCommandLine commandLine) {
+        return I_LOG.equals(commandLine.getVerb());
     }
 
     @Override
-    public void execute(CrankstartContext crankstartContext, String commandLine) throws Exception {
-        log.info(U.removePrefix(I_LOG, commandLine));
+    public void execute(CrankstartContext crankstartContext, CrankstartCommandLine commandLine) throws Exception {
+        log.info(commandLine.getQualifier());
     }
 }

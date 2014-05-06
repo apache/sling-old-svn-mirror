@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.apache.sling.crankstart.api.CrankstartCommand;
+import org.apache.sling.crankstart.api.CrankstartCommandLine;
 import org.apache.sling.crankstart.api.CrankstartConstants;
 import org.apache.sling.crankstart.api.CrankstartContext;
 import org.apache.sling.crankstart.core.commands.InstallBundle;
@@ -70,9 +71,20 @@ public class CrankstartFileProcessor implements Callable<Object> {
                 // ignore comments and blank lines
             } else {
                 for(CrankstartCommand c : commands) {
-                    if(c.appliesTo(line)) {
+                    final String [] parts = line.split(" ");
+                    final String verb = parts[0];
+                    final StringBuilder qualifier = new StringBuilder();
+                    for(int i=1; i < parts.length; i++) {
+                        if(qualifier.length() > 0) {
+                            qualifier.append(' ');
+                        }
+                        qualifier.append(parts[i]);
+                    }
+                            
+                    final CrankstartCommandLine cc = new CrankstartCommandLine(verb, qualifier.toString(), null);
+                    if(c.appliesTo(cc)) {
                         try {
-                            c.execute(crankstartContext, line);
+                            c.execute(crankstartContext, cc);
                         } catch(Exception e) {
                             log.warn("Command execution failed", e);
                         }

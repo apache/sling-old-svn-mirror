@@ -17,6 +17,7 @@
 package org.apache.sling.crankstart.core.commands;
 
 import org.apache.sling.crankstart.api.CrankstartCommand;
+import org.apache.sling.crankstart.api.CrankstartCommandLine;
 import org.apache.sling.crankstart.api.CrankstartContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,16 +28,16 @@ public class SetOsgiFrameworkProperty implements CrankstartCommand {
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     @Override
-    public boolean appliesTo(String commandLine) {
-        return commandLine.startsWith(I_OSGI_PROPERTY);
+    public boolean appliesTo(CrankstartCommandLine commandLine) {
+        return I_OSGI_PROPERTY.equals(commandLine.getVerb());
     }
 
     @Override
-    public void execute(CrankstartContext crankstartContext, String commandLine) throws Exception {
-        final String args = U.removePrefix(I_OSGI_PROPERTY, commandLine);
+    public void execute(CrankstartContext crankstartContext, CrankstartCommandLine cmd) throws Exception {
+        final String args = cmd.getQualifier();
         final String [] parts = args.split(" ");
         if(parts.length != 2) {
-            log.warn("Invalid OSGi property statement, ignored: [{}]", commandLine);
+            log.warn("Invalid OSGi property statement, ignored: [{}]", cmd);
             return;
         }
         final String key = parts[0].trim();
