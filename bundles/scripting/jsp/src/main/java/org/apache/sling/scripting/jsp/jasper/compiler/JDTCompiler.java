@@ -92,6 +92,7 @@ public class JDTCompiler extends org.apache.sling.scripting.jsp.jasper.compiler.
         };
 
         final Options options = new Options();
+        options.put(Options.KEY_CLASS_LOADER_WRITER, ctxt.getRuntimeContext().getIOProvider().getClassLoaderWriter());
         options.put(Options.KEY_GENERATE_DEBUG_INFO, ctxt.getOptions().getClassDebugInfo());
 
         // Source JVM

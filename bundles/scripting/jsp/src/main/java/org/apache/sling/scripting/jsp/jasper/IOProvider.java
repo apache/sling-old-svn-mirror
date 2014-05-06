@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.compiler.JavaCompiler;
 
 /**
@@ -113,4 +114,9 @@ public interface IOProvider {
      * Return the Java Compiler
      */
     JavaCompiler getJavaCompiler();
+
+    /**
+     * Return the class loader writer
+     */
+    ClassLoaderWriter getClassLoaderWriter();
 }
