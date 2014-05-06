@@ -23,14 +23,13 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 
 public class SLING2617Test extends HttpTestBase {
-    
+
     private final String TEST_PATH = "/" + getClass().getSimpleName();
 
     public void testDateBeanProperties() throws Exception {
-        final String [] mustContain = { 
+        final String [] mustContain = {
                 "New time (123456)",
-                "JSP should have access to org.apache.sling.scripting.jsp.jasper.JasperException: YES",
-                "All good!" 
+                "All good!"
         };
 
         final TestNode tn = new TestNode(HTTP_BASE_URL + TEST_PATH, null);
