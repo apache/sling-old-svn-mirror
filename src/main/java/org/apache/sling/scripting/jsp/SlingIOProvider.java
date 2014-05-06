@@ -238,4 +238,11 @@ class SlingIOProvider implements IOProvider {
     public JavaCompiler getJavaCompiler() {
         return this.javaCompiler;
     }
+
+    /**
+     * @see org.apache.sling.scripting.jsp.jasper.IOProvider#getClassLoaderWriter()
+     */
+    public ClassLoaderWriter getClassLoaderWriter() {
+        return this.classLoaderWriter;
+    }
 }
