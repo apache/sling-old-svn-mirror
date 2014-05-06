@@ -21,6 +21,5 @@
 <jsp:useBean id="date" scope="page" class="java.util.Date" /> 
 Old time (<jsp:getProperty name="date" property="time"/>) 
 <jsp:setProperty name="date" property="time" value="123456"/> 
-New time (<jsp:getProperty name="date" property="time"/>)
-JSP should have access to <%= new org.apache.sling.scripting.jsp.jasper.JasperException("YES") %> 
+New time (<jsp:getProperty name="date" property="time"/>) 
 All good!
