@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.net.URL;
 
 import org.apache.sling.crankstart.api.CrankstartCommand;
+import org.apache.sling.crankstart.api.CrankstartCommandLine;
 import org.apache.sling.crankstart.api.CrankstartContext;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -27,17 +28,17 @@ import org.slf4j.LoggerFactory;
 
 /** CrankstartCommand that installs a bundle */
 public class InstallBundle implements CrankstartCommand {
-    public static final String I_BUNDLE = "bundle ";
+    public static final String I_BUNDLE = "bundle";
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     @Override
-    public boolean appliesTo(String commandLine) {
-        return commandLine.startsWith(I_BUNDLE);
+    public boolean appliesTo(CrankstartCommandLine commandLine) {
+        return I_BUNDLE.equals(commandLine.getVerb());
     }
 
     @Override
-    public void execute(CrankstartContext crankstartContext, String commandLine) throws Exception {
-        final String bundleRef = U.removePrefix(I_BUNDLE, commandLine);
+    public void execute(CrankstartContext crankstartContext, CrankstartCommandLine commandLine) throws Exception {
+        final String bundleRef = commandLine.getQualifier();
         final URL url = new URL(bundleRef);
         final BundleContext ctx = crankstartContext.getOsgiFramework().getBundleContext();
         final InputStream bundleStream = url.openStream();

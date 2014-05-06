@@ -17,6 +17,7 @@
 package org.apache.sling.crankstart.core.commands;
 
 import org.apache.sling.crankstart.api.CrankstartCommand;
+import org.apache.sling.crankstart.api.CrankstartCommandLine;
 import org.apache.sling.crankstart.api.CrankstartContext;
 import org.osgi.framework.launch.FrameworkFactory;
 import org.slf4j.Logger;
@@ -28,12 +29,12 @@ public class StartFramework implements CrankstartCommand {
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     @Override
-    public boolean appliesTo(String commandLine) {
-        return commandLine.startsWith(I_START_FRAMEWORK);
+    public boolean appliesTo(CrankstartCommandLine commandLine) {
+        return I_START_FRAMEWORK.equals(commandLine.getVerb());
     }
 
     @Override
-    public void execute(CrankstartContext crankstartContext, String commandLine) throws Exception {
+    public void execute(CrankstartContext crankstartContext, CrankstartCommandLine commandLine) throws Exception {
         // TODO this should work
         // FrameworkFactory frameworkFactory = java.util.ServiceLoader.load(FrameworkFactory.class).iterator().next();
         final FrameworkFactory frameworkFactory = (FrameworkFactory)getClass().getClassLoader().loadClass("org.apache.felix.framework.FrameworkFactory").newInstance();
