@@ -14,14 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.test.impl;
+package org.apache.sling.ide.test.impl.helpers;
 
-public class LaunchpadUtils {
+import org.eclipse.core.runtime.IStatus;
+import org.hamcrest.Description;
+import org.hamcrest.Factory;
+import org.hamcrest.Matcher;
+import org.junit.internal.matchers.TypeSafeMatcher;
 
-    /**
-     * @return the configured launchpad port
-     */
-    public static int getLaunchpadPort() {
-        return Integer.getInteger("launchpad.http.port", 8080);
+public class IStatusIsOk extends TypeSafeMatcher<IStatus> {
+
+    @Factory
+    public static <T> Matcher<IStatus> isOk() {
+        return new IStatusIsOk();
     }
+
+    @Override
+    public void describeTo(Description description) {
+        description.appendText("is OK");
+    }
+
+    @Override
+    public boolean matchesSafely(IStatus item) {
+        return item.isOK();
+    }
+
 }
