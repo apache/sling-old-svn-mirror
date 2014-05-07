@@ -81,6 +81,7 @@ public class CrankstartFileProcessor implements Callable<Object> {
                         qualifier.append(parts[i]);
                     }
                             
+                    // TODO use CrankstartParserImpl
                     final CrankstartCommandLine cc = new CrankstartCommandLine(verb, qualifier.toString(), null);
                     if(c.appliesTo(cc)) {
                         try {
