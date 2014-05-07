@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?pde version="3.8"?><target name="Sling IDE Tools" sequenceNumber="38">
+<?pde version="3.8"?><target name="Sling IDE Tools" sequenceNumber="39">
 <locations>
 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
 <unit id="org.eclipse.m2e.feature.feature.group" version="1.2.0.20120903-1050"/>
@@ -38,8 +38,9 @@
 <unit id="org.json" version="1.0.0.v201011060100"/>
 <unit id="org.apache.commons.io" version="2.0.1.v201105210651"/>
 <unit id="org.slf4j.api" version="1.6.4.v20120130-2120"/>
-<unit id="org.apache.commons.collections" version="3.2.0.v201005080500"/>
 <unit id="org.apache.commons.httpclient" version="3.1.0.v201012070820"/>
+<unit id="org.apache.commons.collections" version="3.2.0.v201005080500"/>
+<unit id="org.junit" version="4.10.0.v4_10_0_v20120426-0900"/>
 <repository location="http://download.eclipse.org/tools/orbit/downloads/drops/R20120526062928/repository"/>
 </location>
 </locations>
