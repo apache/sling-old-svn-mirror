@@ -33,8 +33,6 @@ public class ConnectionTest {
     @Test
     public void deployBundleOnServer() throws CoreException, InterruptedException, BackingStoreException {
 
-        // TODO - needs configuration of a test sling launchpad instance, probably in the pom.xml
-
         // prevent status prompts, since it can lead to the test Eclipse instance hanging
         // TODO - move to rule/utility class
         IEclipsePreferences debugPrefs = InstanceScope.INSTANCE.getNode(DebugPlugin.getUniqueIdentifier());

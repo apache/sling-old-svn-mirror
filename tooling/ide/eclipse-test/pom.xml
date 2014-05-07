@@ -39,8 +39,90 @@
                             <version>0.0.0</version>
                         </dependency>
                     </dependencies>
+                    <systemProperties>
+                        <launchpad.http.port>${http.port}</launchpad.http.port>
+                    </systemProperties>
                 </configuration>
             </plugin>
-        </plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>1.7</version>
+                <executions>
+                    <execution>
+                        <id>reserve-network-port</id>
+                        <goals>
+                            <goal>reserve-network-port</goal>
+                        </goals>
+                        <phase>pre-integration-test</phase>
+                        <configuration>
+                            <portNames>
+                                <portName>http.port</portName>
+                                <portName>jetty.stop.port</portName>
+                            </portNames>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>prepare-launchpad</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                  <artifactItems>
+                    <artifactItem>
+                      <groupId>org.apache.sling</groupId>
+                      <artifactId>org.apache.sling.launchpad</artifactId>
+                      <version>7-SNAPSHOT</version>
+                      <type>war</type>
+                      <overWrite>false</overWrite>
+                      <outputDirectory>${project.build.directory}</outputDirectory>
+                      <destFileName>sling.war</destFileName>
+                    </artifactItem>
+                  </artifactItems>
+                </configuration>                
+            </plugin>
+        <plugin>
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>maven-jetty-plugin</artifactId>
+            <version>6.1.26</version>
+            <configuration>
+                <webApp>${project.build.directory}/sling.war</webApp>
+                <connectors>
+                    <connector implementation="org.mortbay.jetty.nio.SelectChannelConnector">
+                        <port>${http.port}</port>
+                    </connector>
+                </connectors>
+                <stopKey>SLING_IT_STOP_KEY</stopKey>
+                <stopPort>${jetty.stop.port}</stopPort>
+                <contextPath>/</contextPath>
+                <daemon>true</daemon>
+            </configuration>
+            <executions>
+                <execution>
+                    <id>jetty-run</id>
+                    <phase>pre-integration-test</phase>
+                    <goals>
+                        <goal>run-war</goal>
+                    </goals>
+                </execution>
+                <execution>
+                    <id>jetty-stop</id>
+                    <phase>post-integration-test</phase>
+                    <goals>
+                        <goal>stop</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+        </plugins> 
     </build>
 </project>
