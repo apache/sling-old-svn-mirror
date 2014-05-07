@@ -16,6 +16,9 @@
  */
 package org.apache.sling.ide.test.impl;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,6 +30,8 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.junit.rules.ExternalResource;
 
 public class ExternalSlingLaunchpad extends ExternalResource {
@@ -44,29 +49,108 @@ public class ExternalSlingLaunchpad extends ExternalResource {
 
         HttpClient client = new HttpClient();
         client.getState().setCredentials(new AuthScope("localhost", launchpadPort), creds);
-        GetMethod method = new GetMethod("http://localhost:" + launchpadPort + "/system/console/vmstat");
 
         long cutoff = System.currentTimeMillis() + MAX_WAIT_TIME_MS;
 
-        while (true) {
-            int status = client.executeMethod(method);
+        List<SlingReadyRule> rules = new ArrayList<SlingReadyRule>();
+        rules.add(new StartLevelSlingReadyRule(client, launchpadPort));
+        rules.add(new ActiveBundlesSlingReadyRule(client, launchpadPort));
+
+        for (SlingReadyRule rule : rules) {
+            while (true) {
+                if (rule.evaluate()) {
+                    break;
+                }
+                assertTimeout(cutoff);
+
+                Thread.sleep(100);
+            }
+        }
+    }
+
+    private void assertTimeout(long cutoff) throws AssertionFailedError {
+        if (System.currentTimeMillis() > cutoff) {
+            throw new AssertionFailedError("Sling launchpad did not start within " + MAX_WAIT_TIME_MS + " milliseconds");
+        }
+    }
+
+    private void debug(String string) {
+        if (System.getProperty("sling.ide.it.debug") != null) {
+            System.out.println("[" + new Date() + "] " + string);
+        }
+    }
+
+    private interface SlingReadyRule {
+
+        boolean evaluate() throws Exception;
+    }
+
+    private class StartLevelSlingReadyRule implements SlingReadyRule {
+
+        private final HttpClient client;
+        private final GetMethod httpMethod;
+
+        public StartLevelSlingReadyRule(HttpClient client, int launchpadPort) {
+            this.client = client;
+            httpMethod = new GetMethod("http://localhost:" + launchpadPort + "/system/console/vmstat");
+        }
+
+        @Override
+        public boolean evaluate() throws Exception {
+
+            int status = client.executeMethod(httpMethod);
+            debug("vmstat http call got return code " + status);
+
             if (status == 200) {
-                String responseBody = method.getResponseBodyAsString();
+                String responseBody = httpMethod.getResponseBodyAsString();
                 Matcher m = STARTLEVEL_JSON_SNIPPET.matcher(responseBody);
                 if (m.find()) {
                     int startLevel = Integer.parseInt(m.group(1));
+                    debug("vmstat http call got startLevel " + startLevel);
                     if (startLevel >= EXPECTED_START_LEVEL) {
-                        break;
+                        debug("current startLevel " + startLevel + " >= " + EXPECTED_START_LEVEL + ", we are done here");
+                        return true;
                     }
                 }
 
             }
 
-            if (System.currentTimeMillis() > cutoff) {
-                throw new AssertionFailedError("Sling launchpad did not start within " + MAX_WAIT_TIME_MS
-                        + " milliseconds");
-            }
+            return false;
+        }
+    }
+
+    private class ActiveBundlesSlingReadyRule implements SlingReadyRule {
+        private final HttpClient client;
+        private final GetMethod httpMethod;
+
+        public ActiveBundlesSlingReadyRule(HttpClient client, int launchpadPort) {
+            this.client = client;
+            httpMethod = new GetMethod("http://localhost:" + launchpadPort + "/system/console/bundles.json");
         }
 
+        @Override
+        public boolean evaluate() throws Exception {
+            int status = client.executeMethod(httpMethod);
+            debug("bundles http call got return code " + status);
+
+            if (status == 200) {
+                JSONObject obj = new JSONObject(httpMethod.getResponseBodyAsString());
+
+                JSONArray bundleStatus = obj.getJSONArray("s");
+
+                int total = bundleStatus.getInt(0);
+                int active = bundleStatus.getInt(1);
+                int fragment = bundleStatus.getInt(2);
+
+                debug("bundle http call status: total = " + total + ", active = " + active + ", fragment = " + fragment);
+
+                if (total == active + fragment) {
+                    debug("All bundles are started, we are done here");
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 }
