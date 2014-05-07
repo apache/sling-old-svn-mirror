@@ -14,12 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.test.impl;
+package org.apache.sling.ide.test.impl.helpers;
 
 import org.apache.sling.ide.artifacts.EmbeddedArtifact;
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.osgi.OsgiClient;
 import org.apache.sling.ide.osgi.OsgiClientFactory;
+import org.apache.sling.ide.test.impl.Activator;
 import org.apache.sling.ide.transport.RepositoryInfo;
 import org.junit.rules.ExternalResource;
 

@@ -14,49 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.test.impl;
+package org.apache.sling.ide.test.impl.helpers;
 
-public class MavenDependency {
+public class LaunchpadUtils {
 
-    private String groupId;
-    private String artifactId;
-    private String version;
-
-    public MavenDependency() {
-
+    /**
+     * @return the configured launchpad port
+     */
+    public static int getLaunchpadPort() {
+        return Integer.getInteger("launchpad.http.port", 8080);
     }
-
-    public MavenDependency groupId(String groupId) {
-
-        this.groupId = groupId;
-
-        return this;
-    }
-
-    public MavenDependency artifactId(String artifactId) {
-
-        this.artifactId = artifactId;
-
-        return this;
-    }
-
-    public MavenDependency version(String version) {
-
-        this.version = version;
-
-        return this;
-    }
-
-    public String getGroupId() {
-        return groupId;
-    }
-
-    public String getArtifactId() {
-        return artifactId;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
 }

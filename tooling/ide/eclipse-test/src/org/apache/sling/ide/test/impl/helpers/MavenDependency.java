@@ -14,29 +14,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.test.impl;
+package org.apache.sling.ide.test.impl.helpers;
 
-import org.eclipse.core.runtime.IStatus;
-import org.hamcrest.Description;
-import org.hamcrest.Factory;
-import org.hamcrest.Matcher;
-import org.junit.internal.matchers.TypeSafeMatcher;
+public class MavenDependency {
 
-public class IStatusIsOk extends TypeSafeMatcher<IStatus> {
+    private String groupId;
+    private String artifactId;
+    private String version;
 
-    @Factory
-    public static <T> Matcher<IStatus> isOk() {
-        return new IStatusIsOk();
+    public MavenDependency() {
+
     }
 
-    @Override
-    public void describeTo(Description description) {
-        description.appendText("is OK");
+    public MavenDependency groupId(String groupId) {
+
+        this.groupId = groupId;
+
+        return this;
     }
 
-    @Override
-    public boolean matchesSafely(IStatus item) {
-        return item.isOK();
+    public MavenDependency artifactId(String artifactId) {
+
+        this.artifactId = artifactId;
+
+        return this;
+    }
+
+    public MavenDependency version(String version) {
+
+        this.version = version;
+
+        return this;
+    }
+
+    public String getGroupId() {
+        return groupId;
+    }
+
+    public String getArtifactId() {
+        return artifactId;
+    }
+
+    public String getVersion() {
+        return version;
     }
 
 }
