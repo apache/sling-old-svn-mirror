@@ -79,13 +79,7 @@ public class SlingWstServer extends ExternalResource {
         IServerWorkingCopy wc = serverType.createServer("tmp.server.id", null, new NullProgressMonitor());
         // TODO - remove hardcoding
         wc.setHost("localhost");
-        // TODO - actually wait for the process to start, instead of guessing we're running in a Maven build by the
-        // non-default port
-        Integer serverPort = Integer.getInteger("launchpad.http.port", 8080);
-        if (!serverPort.equals(8080)) {
-            Thread.sleep(15000);
-        }
-        wc.setAttribute(ISlingLaunchpadServer.PROP_PORT, serverPort);
+        wc.setAttribute(ISlingLaunchpadServer.PROP_PORT, LaunchpadUtils.getLaunchpadPort());
         wc.setAttribute(ISlingLaunchpadServer.PROP_CONTEXT_PATH, "/");
         wc.setAttribute(ISlingLaunchpadServer.PROP_USERNAME, "admin");
         wc.setAttribute(ISlingLaunchpadServer.PROP_PASSWORD, "admin");
