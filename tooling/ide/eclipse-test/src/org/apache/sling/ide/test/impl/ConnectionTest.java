@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.osgi.OsgiClientException;
@@ -83,7 +85,7 @@ public class ConnectionTest {
         // create DS component class
         InputStream simpleServlet = null;
         try {
-            simpleServlet = getClass().getResourceAsStream("SimpleServlet.java.txt");
+            simpleServlet = getClass().getResourceAsStream("SimpleServlet.java.v1.txt");
             project.createOrUpdateFile(Path.fromPortableString("src/example/SimpleServlet.java"), simpleServlet);
         } finally {
             IOUtils.closeQuietly(simpleServlet);
@@ -112,13 +114,30 @@ public class ConnectionTest {
 
         Thread.sleep(1000); // for good measure, make sure the output is there - TODO replace with polling
 
+        assertSimpleServletCallsSucceeds("Version 1");
+
+        // create DS component class
+        InputStream simpleServlet2 = null;
+        try {
+            simpleServlet2 = getClass().getResourceAsStream("SimpleServlet.java.v2.txt");
+            project.createOrUpdateFile(Path.fromPortableString("src/example/SimpleServlet.java"), simpleServlet2);
+        } finally {
+            IOUtils.closeQuietly(simpleServlet2);
+        }
+
+        Thread.sleep(1000); // for good measure, make sure the output is there - TODO replace with polling
+
+        assertSimpleServletCallsSucceeds("Version 2");
+    }
+
+    private void assertSimpleServletCallsSucceeds(String expectedOutput) throws IOException, HttpException, URIException {
         HttpClient c = new HttpClient();
         GetMethod gm = new GetMethod("http://localhost:" + LaunchpadUtils.getLaunchpadPort() + "/simple-servlet");
         try {
             int status = c.executeMethod(gm);
 
             assertThat("Unexpected status code for " + gm.getURI(), status, equalTo(200));
-            assertThat("Unexpected response for " + gm.getURI(), gm.getResponseBodyAsString(), equalTo("Version 1"));
+            assertThat("Unexpected response for " + gm.getURI(), gm.getResponseBodyAsString(), equalTo(expectedOutput));
 
         } finally {
             gm.releaseConnection();
