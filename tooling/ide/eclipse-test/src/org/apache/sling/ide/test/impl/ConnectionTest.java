@@ -25,6 +25,7 @@ import java.io.InputStream;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.io.IOUtils;
+import org.apache.sling.ide.osgi.OsgiClientException;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
@@ -48,13 +49,15 @@ public class ConnectionTest {
     private final SlingWstServer wstServer = new SlingWstServer();
 
     @Rule
-    public TestRule chain = RuleChain.outerRule(new ExternalSlingLaunchpad()).around(wstServer);
+    public TestRule chain = RuleChain.outerRule(new ExternalSlingLaunchpad()).around(new ToolingSupportBundle())
+            .around(wstServer);
 
     @Rule
     public TemporaryProject projectRule = new TemporaryProject();
 
     @Test
-    public void deployBundleOnServer() throws CoreException, InterruptedException, BackingStoreException, IOException {
+    public void deployBundleOnServer() throws CoreException, InterruptedException, BackingStoreException, IOException,
+            OsgiClientException {
 
         // prevent status prompts, since it can lead to the test Eclipse instance hanging
         // TODO - move to rule/utility class
