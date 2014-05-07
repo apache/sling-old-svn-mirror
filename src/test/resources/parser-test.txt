@@ -1,0 +1,15 @@
+# Test the CrankstartParserImpl
+verb qualifier with several words
+verb2 single_qualifier
+
+# more comments
+
+# command with properties
+# repeating the same property name creates an array
+config the.pid.goes.here
+  foo = bar
+  array = one
+  array = two
+  another=property with several words
+another command
+last.command  
