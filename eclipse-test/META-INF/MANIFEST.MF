@@ -11,6 +11,8 @@ Require-Bundle: org.junit,
  org.eclipse.jdt.launching,
  org.eclipse.wst.server.core,
  org.apache.sling.ide.eclipse-core,
+ org.apache.sling.ide.api,
+ org.apache.sling.ide.artifacts,
  org.eclipse.debug.core,
  org.apache.commons.httpclient,
  org.json,
@@ -18,3 +20,5 @@ Require-Bundle: org.junit,
  org.eclipse.m2e.core,
  org.eclipse.m2e.maven.runtime,
  org.apache.commons.io
+Bundle-Activator: org.apache.sling.ide.test.impl.Activator
+Bundle-ActivationPolicy: lazy
