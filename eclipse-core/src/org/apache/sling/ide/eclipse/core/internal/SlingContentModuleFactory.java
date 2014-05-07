@@ -49,6 +49,9 @@ public class SlingContentModuleFactory extends ProjectModuleFactoryDelegate {
 
         try {
             IFacetedProject facetedProject = ProjectFacetsManager.create(project);
+            if (facetedProject == null) {
+                return null;
+            }
             for (IProjectFacetVersion facet : facetedProject.getProjectFacets()) {
                 if (facet.getProjectFacet().getId().equals(SLING_CONTENT_FACET_ID)) {
                     return createModule(project.getName(), project.getName(), SLING_CONTENT_FACET_ID, "1.0", project);
