@@ -23,12 +23,16 @@ import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.internal.core.IInternalDebugCoreConstants;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.RuleChain;
+import org.junit.rules.TestRule;
 import org.osgi.service.prefs.BackingStoreException;
 
 public class ConnectionTest {
 
+    private final SlingWstServer server = new SlingWstServer();
+
     @Rule
-    public SlingWstServer serverRule = new SlingWstServer();
+    public TestRule chain = RuleChain.outerRule(new ExternalSlingLaunchpad()).around(server);
 
     @Test
     public void deployBundleOnServer() throws CoreException, InterruptedException, BackingStoreException {
@@ -39,6 +43,6 @@ public class ConnectionTest {
         debugPrefs.putBoolean(IInternalDebugCoreConstants.PREF_ENABLE_STATUS_HANDLERS, false);
         debugPrefs.flush();
 
-        serverRule.waitForServerToStart();
+        server.waitForServerToStart();
     }
 }
