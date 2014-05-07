@@ -46,7 +46,11 @@ import org.osgi.service.prefs.BackingStoreException;
 // https://github.com/jbosstools/jbosstools-server/blob/master/as/tests/org.jboss.ide.eclipse.as.test/src/org/jboss/ide/eclipse/as/test/util/ServerRuntimeUtils.java
 // https://github.com/jbosstools/jbosstools-server/blob/master/as/tests/org.jboss.ide.eclipse.as.archives.integration.test/src/org/jboss/ide/eclipse/as/archives/integration/test/BuildDeployTest.java
 // https://stackoverflow.com/questions/6660155/eclipse-plugin-java-based-project-how-to
-public class ConnectionTest {
+/**
+ * The <tt>BundleDeploymentTest</tt> validates the basic workflows behind working with OSGi bundles
+ *
+ */
+public class BundleDeploymentTest {
 
     private final SlingWstServer wstServer = new SlingWstServer();
 
