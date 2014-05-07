@@ -31,10 +31,6 @@ import org.apache.sling.ide.osgi.OsgiClientException;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.eclipse.core.runtime.preferences.InstanceScope;
-import org.eclipse.debug.core.DebugPlugin;
-import org.eclipse.debug.internal.core.IInternalDebugCoreConstants;
 import org.eclipse.jdt.core.JavaCore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -61,15 +57,12 @@ public class BundleDeploymentTest {
     @Rule
     public TemporaryProject projectRule = new TemporaryProject();
 
+    @Rule
+    public DisableDebugStatusHandlers disableDebugHandlers = new DisableDebugStatusHandlers();
+
     @Test
     public void deployBundleOnServer() throws CoreException, InterruptedException, BackingStoreException, IOException,
             OsgiClientException {
-
-        // prevent status prompts, since it can lead to the test Eclipse instance hanging
-        // TODO - move to rule/utility class
-        IEclipsePreferences debugPrefs = InstanceScope.INSTANCE.getNode(DebugPlugin.getUniqueIdentifier());
-        debugPrefs.putBoolean(IInternalDebugCoreConstants.PREF_ENABLE_STATUS_HANDLERS, false);
-        debugPrefs.flush();
 
         wstServer.waitForServerToStart();
 
