@@ -20,6 +20,7 @@
 		<module>impl-vlt-test</module>
 		<module>eclipse-core</module>
 		<module>eclipse-ui</module>
+		<module>eclipse-test</module>
 		<module>feature</module>
 		<module>eclipse-m2e-ui</module>
 		<module>eclipse-m2e-test</module>
