@@ -1,0 +1,18 @@
+package example;
+
+import java.io.*;
+import javax.servlet.*;
+import org.apache.sling.api.*;
+import org.apache.sling.api.servlets.*;
+
+public class SimpleServlet extends SlingSafeMethodsServlet {
+    
+    @Override
+    protected void doGet(SlingHttpServletRequest request,
+            SlingHttpServletResponse response) throws ServletException,
+            IOException {
+        
+        response.getWriter().write("Version 2");
+    }
+
+}
