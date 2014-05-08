@@ -40,21 +40,25 @@ public class ExternalSlingLaunchpad extends ExternalResource {
     private static final int EXPECTED_START_LEVEL = 30;
     private static final long MAX_WAIT_TIME_MS = TimeUnit.MINUTES.toMillis(1);
 
+    private final LaunchpadConfig config;
+
+    public ExternalSlingLaunchpad(LaunchpadConfig config) {
+        this.config = config;
+    }
+
     @Override
     protected void before() throws Throwable {
 
-        int launchpadPort = LaunchpadUtils.getLaunchpadPort();
-
-        Credentials creds = new UsernamePasswordCredentials("admin", "admin");
+        Credentials creds = new UsernamePasswordCredentials(config.getUsername(), config.getPassword());
 
         HttpClient client = new HttpClient();
-        client.getState().setCredentials(new AuthScope("localhost", launchpadPort), creds);
+        client.getState().setCredentials(new AuthScope(config.getHostname(), config.getPort()), creds);
 
         long cutoff = System.currentTimeMillis() + MAX_WAIT_TIME_MS;
 
         List<SlingReadyRule> rules = new ArrayList<SlingReadyRule>();
-        rules.add(new StartLevelSlingReadyRule(client, launchpadPort));
-        rules.add(new ActiveBundlesSlingReadyRule(client, launchpadPort));
+        rules.add(new StartLevelSlingReadyRule(client));
+        rules.add(new ActiveBundlesSlingReadyRule(client));
 
         for (SlingReadyRule rule : rules) {
             while (true) {
@@ -90,9 +94,9 @@ public class ExternalSlingLaunchpad extends ExternalResource {
         private final HttpClient client;
         private final GetMethod httpMethod;
 
-        public StartLevelSlingReadyRule(HttpClient client, int launchpadPort) {
+        public StartLevelSlingReadyRule(HttpClient client) {
             this.client = client;
-            httpMethod = new GetMethod("http://localhost:" + launchpadPort + "/system/console/vmstat");
+            httpMethod = new GetMethod(config.getUrl() + "system/console/vmstat");
         }
 
         @Override
@@ -123,9 +127,9 @@ public class ExternalSlingLaunchpad extends ExternalResource {
         private final HttpClient client;
         private final GetMethod httpMethod;
 
-        public ActiveBundlesSlingReadyRule(HttpClient client, int launchpadPort) {
+        public ActiveBundlesSlingReadyRule(HttpClient client) {
             this.client = client;
-            httpMethod = new GetMethod("http://localhost:" + launchpadPort + "/system/console/bundles.json");
+            httpMethod = new GetMethod(config.getUrl() + "system/console/bundles.json");
         }
 
         @Override

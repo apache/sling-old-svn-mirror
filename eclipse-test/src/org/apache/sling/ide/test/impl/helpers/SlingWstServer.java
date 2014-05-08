@@ -42,7 +42,12 @@ import org.junit.rules.ExternalResource;
  */
 public class SlingWstServer extends ExternalResource {
 
+    private final LaunchpadConfig config;
     private IServer server;
+
+    public SlingWstServer(LaunchpadConfig config) {
+        this.config = config;
+    }
 
     @Override
     protected void before() throws Throwable {
@@ -77,12 +82,11 @@ public class SlingWstServer extends ExternalResource {
 
         IServerWorkingCopy wc = serverType.createServer("temp.sling.launchpad.server.id", null,
                 new NullProgressMonitor());
-        // TODO - remove hardcoding
-        wc.setHost("localhost");
-        wc.setAttribute(ISlingLaunchpadServer.PROP_PORT, LaunchpadUtils.getLaunchpadPort());
-        wc.setAttribute(ISlingLaunchpadServer.PROP_CONTEXT_PATH, "/");
-        wc.setAttribute(ISlingLaunchpadServer.PROP_USERNAME, "admin");
-        wc.setAttribute(ISlingLaunchpadServer.PROP_PASSWORD, "admin");
+        wc.setHost(config.getHostname());
+        wc.setAttribute(ISlingLaunchpadServer.PROP_PORT, config.getPort());
+        wc.setAttribute(ISlingLaunchpadServer.PROP_CONTEXT_PATH, config.getContextPath());
+        wc.setAttribute(ISlingLaunchpadServer.PROP_USERNAME, config.getUsername());
+        wc.setAttribute(ISlingLaunchpadServer.PROP_PASSWORD, config.getPassword());
         wc.setAttribute("auto-publish-setting", ISlingLaunchpadServer.PUBLISH_STATE_RESOURCE_CHANGE);
         wc.setAttribute("auto-publish-time", 0);
 

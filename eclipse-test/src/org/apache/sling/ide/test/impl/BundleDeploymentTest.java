@@ -30,7 +30,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.osgi.OsgiClientException;
 import org.apache.sling.ide.test.impl.helpers.DisableDebugStatusHandlers;
 import org.apache.sling.ide.test.impl.helpers.ExternalSlingLaunchpad;
-import org.apache.sling.ide.test.impl.helpers.LaunchpadUtils;
+import org.apache.sling.ide.test.impl.helpers.LaunchpadConfig;
 import org.apache.sling.ide.test.impl.helpers.MavenDependency;
 import org.apache.sling.ide.test.impl.helpers.OsgiBundleManifest;
 import org.apache.sling.ide.test.impl.helpers.ProjectAdapter;
@@ -58,10 +58,13 @@ import org.osgi.service.prefs.BackingStoreException;
  */
 public class BundleDeploymentTest {
 
-    private final SlingWstServer wstServer = new SlingWstServer();
+    private final LaunchpadConfig config = LaunchpadConfig.getInstance();
+
+    private final SlingWstServer wstServer = new SlingWstServer(config);
 
     @Rule
-    public TestRule chain = RuleChain.outerRule(new ExternalSlingLaunchpad()).around(new ToolingSupportBundle())
+    public TestRule chain = RuleChain.outerRule(new ExternalSlingLaunchpad(config))
+            .around(new ToolingSupportBundle(config))
             .around(wstServer);
 
     @Rule
@@ -139,7 +142,7 @@ public class BundleDeploymentTest {
 
     private void assertSimpleServletCallsSucceeds(String expectedOutput) throws IOException, HttpException, URIException {
         HttpClient c = new HttpClient();
-        GetMethod gm = new GetMethod("http://localhost:" + LaunchpadUtils.getLaunchpadPort() + "/simple-servlet");
+        GetMethod gm = new GetMethod(config.getUrl() + "simple-servlet");
         try {
             int status = c.executeMethod(gm);
 
