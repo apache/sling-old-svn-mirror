@@ -32,6 +32,7 @@ import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.communication.ReplicationHeader;
+import org.apache.sling.replication.communication.ReplicationParameter;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.queue.ReplicationQueueItemState;
@@ -53,13 +54,13 @@ public class ReplicationAgentQueueServlet extends SlingAllMethodsServlet {
             throws ServletException, IOException {
         response.setContentType("application/json");
 
-        String queueName = request.getParameter(ReplicationHeader.QUEUE.toString());
+        String queueName = request.getParameter(ReplicationParameter.QUEUE.toString());
 
         ReplicationAgent agent = request.getResource().adaptTo(ReplicationAgent.class);
 
         if (agent != null) {
             try {
-                ReplicationQueue queue = agent.getQueue("");
+                ReplicationQueue queue = agent.getQueue(queueName);
 
                 response.getWriter().write(toJSoN(queue));
             } catch (Exception e) {

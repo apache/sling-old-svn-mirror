@@ -107,7 +107,7 @@ public class ReplicationQueueHealthCheck implements HealthCheck {
     public Result execute() {
         final FormattingResultLog resultLog = new FormattingResultLog();
         Map<String, Integer> failures = new HashMap<String, Integer>();
-        if (replicationQueueProviders != null && replicationQueueProviders.size() > 0) {
+        if (replicationQueueProviders.size() > 0) {
 
             for (ReplicationQueueProvider replicationQueueProvider : replicationQueueProviders) {
                 for (ReplicationQueue q : replicationQueueProvider.getAllQueues())

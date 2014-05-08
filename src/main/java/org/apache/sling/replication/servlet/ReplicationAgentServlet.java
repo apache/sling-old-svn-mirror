@@ -39,10 +39,7 @@ import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 
 import org.apache.sling.replication.agent.AgentReplicationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.communication.ReplicationActionType;
-import org.apache.sling.replication.communication.ReplicationHeader;
-import org.apache.sling.replication.communication.ReplicationRequest;
-import org.apache.sling.replication.communication.ReplicationResponse;
+import org.apache.sling.replication.communication.*;
 import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
 import org.apache.sling.replication.resources.ReplicationConstants;
 import org.apache.sling.replication.serialization.ReplicationPackage;
@@ -119,7 +116,7 @@ public class ReplicationAgentServlet extends SlingAllMethodsServlet {
 
         response.setContentType(ContentType.APPLICATION_OCTET_STREAM.toString());
 
-        String queueName = request.getParameter(ReplicationHeader.QUEUE.toString());
+        String queueName = request.getParameter(ReplicationParameter.QUEUE.toString());
 
         ReplicationAgent agent = request.getResource().adaptTo(ReplicationAgent.class);
 
