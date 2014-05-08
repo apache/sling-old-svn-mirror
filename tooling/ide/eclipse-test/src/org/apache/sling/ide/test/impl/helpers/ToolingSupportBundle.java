@@ -30,6 +30,12 @@ import org.junit.rules.ExternalResource;
  */
 public class ToolingSupportBundle extends ExternalResource {
 
+    private final LaunchpadConfig config;
+
+    public ToolingSupportBundle(LaunchpadConfig config) {
+        this.config = config;
+    }
+
     @Override
     protected void before() throws Throwable {
 
@@ -37,8 +43,8 @@ public class ToolingSupportBundle extends ExternalResource {
         EmbeddedArtifact toolingBundle = locator.loadToolingSupportBundle();
 
         OsgiClientFactory clientFactory = Activator.getDefault().getOsgiClientFactory();
-        OsgiClient osgiClient = clientFactory.createOsgiClient(new RepositoryInfo("admin", "admin", "http://localhost:"
-                + LaunchpadUtils.getLaunchpadPort() + "/"));
+        OsgiClient osgiClient = clientFactory.createOsgiClient(new RepositoryInfo(config.getUsername(), config
+                .getPassword(), config.getUrl()));
         osgiClient.installBundle(toolingBundle.openInputStream(), toolingBundle.getName());
     }
 }

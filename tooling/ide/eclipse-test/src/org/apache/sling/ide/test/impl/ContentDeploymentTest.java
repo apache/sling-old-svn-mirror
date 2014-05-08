@@ -34,7 +34,7 @@ import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.sling.ide.test.impl.helpers.DisableDebugStatusHandlers;
 import org.apache.sling.ide.test.impl.helpers.ExternalSlingLaunchpad;
-import org.apache.sling.ide.test.impl.helpers.LaunchpadUtils;
+import org.apache.sling.ide.test.impl.helpers.LaunchpadConfig;
 import org.apache.sling.ide.test.impl.helpers.ProjectAdapter;
 import org.apache.sling.ide.test.impl.helpers.ServerAdapter;
 import org.apache.sling.ide.test.impl.helpers.SlingWstServer;
@@ -56,10 +56,12 @@ import org.junit.rules.TestRule;
  */
 public class ContentDeploymentTest {
 
-    private final SlingWstServer wstServer = new SlingWstServer();
+    private final LaunchpadConfig config = LaunchpadConfig.getInstance();
+
+    private final SlingWstServer wstServer = new SlingWstServer(config);
 
     @Rule
-    public TestRule chain = RuleChain.outerRule(new ExternalSlingLaunchpad()).around(wstServer);
+    public TestRule chain = RuleChain.outerRule(new ExternalSlingLaunchpad(config)).around(wstServer);
 
     @Rule
     public TemporaryProject projectRule = new TemporaryProject();
@@ -100,7 +102,7 @@ public class ContentDeploymentTest {
         // verify that file is updated
         assertSimpleCallsSucceeds("goodbye, world");
 
-        project.deleteMember(Path.fromPortableString("/jcr_root/hello.txt"));
+        project.deleteMember(Path.fromPortableString("jcr_root/hello.txt"));
 
         Thread.sleep(2000); // for good measure, make sure the output is there - TODO replace with polling
         // verify that the file is deleted
@@ -109,7 +111,7 @@ public class ContentDeploymentTest {
 
     private void assertSimpleCallsSucceeds(String expectedOutput) throws IOException, HttpException, URIException {
         HttpClient c = new HttpClient();
-        GetMethod gm = new GetMethod("http://localhost:" + LaunchpadUtils.getLaunchpadPort() + "/hello.txt");
+        GetMethod gm = new GetMethod(config.getUrl() + "hello.txt");
         try {
             int status = c.executeMethod(gm);
 
@@ -123,7 +125,7 @@ public class ContentDeploymentTest {
 
     private void assertResourceNotFound() throws IOException, HttpException, URIException {
         HttpClient c = new HttpClient();
-        GetMethod gm = new GetMethod("http://localhost:" + LaunchpadUtils.getLaunchpadPort() + "/hello.txt");
+        GetMethod gm = new GetMethod(config.getUrl() + "hello.txt");
         try {
             int status = c.executeMethod(gm);
 
@@ -137,8 +139,9 @@ public class ContentDeploymentTest {
     public void cleanUp() throws HttpException, IOException {
         HttpClient c = new HttpClient();
         c.getParams().setAuthenticationPreemptive(true);
-        c.getState().setCredentials(AuthScope.ANY, new UsernamePasswordCredentials("admin", "admin"));
-        PostMethod pm = new PostMethod("http://localhost:" + LaunchpadUtils.getLaunchpadPort() + "/hello.txt");
+        c.getState().setCredentials(AuthScope.ANY,
+                new UsernamePasswordCredentials(config.getUsername(), config.getPassword()));
+        PostMethod pm = new PostMethod(config.getUrl() + "hello.txt");
         Part[] parts = { new StringPart(":operation", "delete") };
         pm.setRequestEntity(new MultipartRequestEntity(parts, pm.getParams()));
         try {

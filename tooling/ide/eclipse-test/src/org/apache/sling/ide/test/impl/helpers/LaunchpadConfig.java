@@ -16,12 +16,50 @@
  */
 package org.apache.sling.ide.test.impl.helpers;
 
-public class LaunchpadUtils {
+import java.net.URI;
+import java.net.URISyntaxException;
+
+public class LaunchpadConfig {
+
+    private static final LaunchpadConfig INSTANCE = new LaunchpadConfig();
+
+    public static LaunchpadConfig getInstance() {
+        return INSTANCE;
+    }
 
     /**
      * @return the configured launchpad port
      */
-    public static int getLaunchpadPort() {
+    public int getPort() {
         return Integer.getInteger("launchpad.http.port", 8080);
+    }
+
+    public String getUsername() {
+        return "admin";
+    }
+
+    public String getPassword() {
+        return "admin";
+    }
+
+    public String getHostname() {
+        return "localhost";
+    }
+
+    public String getProtocol() {
+        return "http";
+    }
+
+    public String getContextPath() {
+        return "/";
+    }
+
+    public String getUrl() {
+        try {
+            return new URI(getProtocol(), null, getHostname(), getPort(), getContextPath(), null, null)
+                    .toString();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
