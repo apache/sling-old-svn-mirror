@@ -19,17 +19,15 @@
 package org.apache.sling.replication.communication;
 
 /**
- * HTTP headers {@link Enum} for replication
+ * HTTP Parameters for replication
  */
-public enum ReplicationHeader {
+public enum ReplicationParameter {
 
-    TYPE("X-replication-type"),
-    ACTION("X-replication-action"),
-    PATH("X-replication-path");
+    QUEUE("queue");
 
     private final String name;
 
-    ReplicationHeader(String name) {
+    ReplicationParameter(String name) {
         this.name = name;
     }
 
