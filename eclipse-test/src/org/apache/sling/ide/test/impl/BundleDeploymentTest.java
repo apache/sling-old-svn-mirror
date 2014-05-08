@@ -18,7 +18,9 @@ package org.apache.sling.ide.test.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.Callable;
 
+import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.osgi.OsgiClientException;
 import org.apache.sling.ide.test.impl.helpers.DisableDebugStatusHandlers;
@@ -26,6 +28,7 @@ import org.apache.sling.ide.test.impl.helpers.ExternalSlingLaunchpad;
 import org.apache.sling.ide.test.impl.helpers.LaunchpadConfig;
 import org.apache.sling.ide.test.impl.helpers.MavenDependency;
 import org.apache.sling.ide.test.impl.helpers.OsgiBundleManifest;
+import org.apache.sling.ide.test.impl.helpers.Poller;
 import org.apache.sling.ide.test.impl.helpers.ProjectAdapter;
 import org.apache.sling.ide.test.impl.helpers.ServerAdapter;
 import org.apache.sling.ide.test.impl.helpers.RepositoryAccessor;
@@ -36,6 +39,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
+import org.hamcrest.CoreMatchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -116,12 +120,17 @@ public class BundleDeploymentTest {
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(bundleProject);
 
-        Thread.sleep(1000); // for good measure, make sure the output is there - TODO replace with polling
+        final RepositoryAccessor repo = new RepositoryAccessor(config);
+        Poller poller = new Poller();
+        poller.pollUntil(new Callable<Void>() {
+            @Override
+            public Void call() throws HttpException, IOException {
+                repo.assertGetIsSuccessful("simple-servlet", "Version 1");
+                return null;
+            }
+        }, CoreMatchers.nullValue());
 
-        RepositoryAccessor repo = new RepositoryAccessor(config);
-        repo.assertGetIsSuccessful("simple-servlet", "Version 1");
-
-        // create DS component class
+        // update DS component class
         InputStream simpleServlet2 = null;
         try {
             simpleServlet2 = getClass().getResourceAsStream("SimpleServlet.java.v2.txt");
@@ -130,8 +139,12 @@ public class BundleDeploymentTest {
             IOUtils.closeQuietly(simpleServlet2);
         }
 
-        Thread.sleep(1000); // for good measure, make sure the output is there - TODO replace with polling
-
-        repo.assertGetIsSuccessful("simple-servlet", "Version 2");
+        poller.pollUntil(new Callable<Void>() {
+            @Override
+            public Void call() throws HttpException, IOException {
+                repo.assertGetIsSuccessful("simple-servlet", "Version 2");
+                return null;
+            }
+        }, CoreMatchers.nullValue());
     }
 }

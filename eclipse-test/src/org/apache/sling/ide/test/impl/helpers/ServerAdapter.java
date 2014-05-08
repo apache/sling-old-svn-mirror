@@ -16,6 +16,10 @@
  */
 package org.apache.sling.ide.test.impl.helpers;
 
+import static org.hamcrest.CoreMatchers.notNullValue;
+
+import java.util.concurrent.Callable;
+
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -36,23 +40,15 @@ public class ServerAdapter {
         this.server = server;
     }
 
-    public void installModule(IProject project) throws CoreException, InterruptedException {
+    public void installModule(final IProject project) throws CoreException, InterruptedException {
 
-        IModule bundleModule = ServerUtil.getModule(project);
-        // TODO - why do we need to poll?
-        if (bundleModule == null) {
-            for (int i = 0; i < 50; i++) {
-                Thread.sleep(100);
-                bundleModule = ServerUtil.getModule(project);
-                if (bundleModule != null) {
-                    break;
-                }
+        // not sure why we need to poll at all here ... there is some async operation that I'm not aware of
+        IModule bundleModule = new Poller().pollUntil(new Callable<IModule>() {
+            @Override
+            public IModule call() throws Exception {
+                return ServerUtil.getModule(project);
             }
-        }
-
-        if (bundleModule == null) {
-            throw new RuntimeException("Failed getting a module for " + project);
-        }
+        }, notNullValue());
 
         IServerWorkingCopy serverWorkingCopy = server.createWorkingCopy();
         serverWorkingCopy.modifyModules(new IModule[] { bundleModule }, new IModule[0], new NullProgressMonitor());
