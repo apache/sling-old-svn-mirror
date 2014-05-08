@@ -168,4 +168,13 @@ public class ProjectAdapter {
 
     }
 
+
+    public void deleteMember(IPath path) throws CoreException {
+
+        IResource member = project.findMember(path);
+        if (member != null) {
+            member.delete(true, new NullProgressMonitor());
+        }
+    }
+
 }
