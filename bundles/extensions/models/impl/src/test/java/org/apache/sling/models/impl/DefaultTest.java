@@ -25,6 +25,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
+import org.apache.sling.models.testmodels.classes.DefaultNumericModel;
 import org.apache.sling.models.testmodels.classes.DefaultStringModel;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,5 +67,25 @@ public class DefaultTest {
         assertNotNull(model);
         assertEquals("firstDefault", model.getFirstProperty());
         assertEquals(2, model.getSecondProperty().length);
+    }
+    
+    @Test
+    public void testDefaultNumericValue() {
+        ValueMap vm = new ValueMapDecorator(Collections.<String, Object>emptyMap());
+
+        Resource res = mock(Resource.class);
+        when(res.adaptTo(ValueMap.class)).thenReturn(vm);
+
+        DefaultNumericModel model = factory.getAdapter(res, DefaultNumericModel.class);
+        assertNotNull(model);
+        assertEquals(new boolean[] { true, true }, model.getBooleanArrayProperty());
+        assertEquals(true,  model.getBooleanProperty());
+        assertArrayEquals(new Boolean[] { Boolean.TRUE, Boolean.TRUE }, model.getBooleanWrapperArrayProperty());
+        assertEquals(Boolean.TRUE,  model.getBooleanWrapperProperty());
+        
+        assertEquals(new long[] { 1L, 1L }, model.getLongArrayProperty());
+        assertEquals(1L,  model.getLongProperty());
+        assertArrayEquals(new Long[] { new Long(1L), new Long(1L) }, model.getLongWrapperArrayProperty());
+        assertEquals(Boolean.TRUE,  model.getLongWrapperProperty());
     }
 }
