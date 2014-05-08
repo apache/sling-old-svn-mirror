@@ -16,16 +16,9 @@
  */
 package org.apache.sling.ide.test.impl;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
-
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.URIException;
-import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.osgi.OsgiClientException;
 import org.apache.sling.ide.test.impl.helpers.DisableDebugStatusHandlers;
@@ -35,6 +28,7 @@ import org.apache.sling.ide.test.impl.helpers.MavenDependency;
 import org.apache.sling.ide.test.impl.helpers.OsgiBundleManifest;
 import org.apache.sling.ide.test.impl.helpers.ProjectAdapter;
 import org.apache.sling.ide.test.impl.helpers.ServerAdapter;
+import org.apache.sling.ide.test.impl.helpers.RepositoryAccessor;
 import org.apache.sling.ide.test.impl.helpers.SlingWstServer;
 import org.apache.sling.ide.test.impl.helpers.TemporaryProject;
 import org.apache.sling.ide.test.impl.helpers.ToolingSupportBundle;
@@ -124,7 +118,8 @@ public class BundleDeploymentTest {
 
         Thread.sleep(1000); // for good measure, make sure the output is there - TODO replace with polling
 
-        assertSimpleServletCallsSucceeds("Version 1");
+        RepositoryAccessor repo = new RepositoryAccessor(config);
+        repo.assertGetIsSuccessful("simple-servlet", "Version 1");
 
         // create DS component class
         InputStream simpleServlet2 = null;
@@ -137,20 +132,6 @@ public class BundleDeploymentTest {
 
         Thread.sleep(1000); // for good measure, make sure the output is there - TODO replace with polling
 
-        assertSimpleServletCallsSucceeds("Version 2");
-    }
-
-    private void assertSimpleServletCallsSucceeds(String expectedOutput) throws IOException, HttpException, URIException {
-        HttpClient c = new HttpClient();
-        GetMethod gm = new GetMethod(config.getUrl() + "simple-servlet");
-        try {
-            int status = c.executeMethod(gm);
-
-            assertThat("Unexpected status code for " + gm.getURI(), status, equalTo(200));
-            assertThat("Unexpected response for " + gm.getURI(), gm.getResponseBodyAsString(), equalTo(expectedOutput));
-
-        } finally {
-            gm.releaseConnection();
-        }
+        repo.assertGetIsSuccessful("simple-servlet", "Version 2");
     }
 }
