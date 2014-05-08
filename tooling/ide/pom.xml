@@ -67,7 +67,7 @@
 	</build>
 
 	<properties>
-		<tycho.version>0.18.1</tycho.version>
+		<tycho.version>0.20.0</tycho.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 </project>
