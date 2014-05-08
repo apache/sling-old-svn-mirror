@@ -18,12 +18,14 @@ package org.apache.sling.ide.test.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.concurrent.Callable;
 
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.URIException;
 import org.apache.sling.ide.test.impl.helpers.DisableDebugStatusHandlers;
 import org.apache.sling.ide.test.impl.helpers.ExternalSlingLaunchpad;
 import org.apache.sling.ide.test.impl.helpers.LaunchpadConfig;
+import org.apache.sling.ide.test.impl.helpers.Poller;
 import org.apache.sling.ide.test.impl.helpers.ProjectAdapter;
 import org.apache.sling.ide.test.impl.helpers.ServerAdapter;
 import org.apache.sling.ide.test.impl.helpers.RepositoryAccessor;
@@ -33,6 +35,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
+import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -79,26 +82,41 @@ public class ContentDeploymentTest {
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
 
-        Thread.sleep(1000); // for good measure, make sure the output is there - TODO replace with polling
-
         // verify that file is created
-        RepositoryAccessor repo = new RepositoryAccessor(config);
-        repo.assertGetIsSuccessful("hello.txt", "hello, world");
+        final RepositoryAccessor repo = new RepositoryAccessor(config);
+        Poller poller = new Poller();
+        poller.pollUntil(new Callable<Void>() {
+            @Override
+            public Void call() throws HttpException, IOException {
+                repo.assertGetIsSuccessful("hello.txt", "hello, world");
+                return null;
+            }
+        }, CoreMatchers.nullValue());
 
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/hello.txt"), new ByteArrayInputStream(
                 "goodbye, world".getBytes()));
 
-        Thread.sleep(2000); // for good measure, make sure the output is there - TODO replace with polling
-
         // verify that file is updated
-        repo.assertGetIsSuccessful("hello.txt", "goodbye, world");
+        poller.pollUntil(new Callable<Void>() {
+            @Override
+            public Void call() throws HttpException, IOException {
+                repo.assertGetIsSuccessful("hello.txt", "goodbye, world");
+                return null;
+            }
+        }, CoreMatchers.nullValue());
+
 
         project.deleteMember(Path.fromPortableString("jcr_root/hello.txt"));
 
-        Thread.sleep(2000); // for good measure, make sure the output is there - TODO replace with polling
+        // verify that file is deleted
+        poller.pollUntil(new Callable<Void>() {
+            @Override
+            public Void call() throws HttpException, IOException {
+                repo.assertGetReturns404("hello.txt");
+                return null;
+            }
+        }, CoreMatchers.nullValue());
 
-        // verify that the file is deleted
-        repo.assertGetReturns404("hello.txt");
     }
 
     @After
