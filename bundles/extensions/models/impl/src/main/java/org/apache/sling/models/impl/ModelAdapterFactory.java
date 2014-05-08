@@ -440,7 +440,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
             Class<?> injectedClass = (Class<?>) type;
             if (injectedClass.isArray()) {
                 Class<?> componentType = injectedClass.getComponentType();
-                // we have to deal with primitive and object wrapper array types here
+                // we have to deal with primitive and object wrapper array types here (there is not auto-boxing on arrays)
                 if (componentType == String.class) {
                     return defaultAnnotation.values();
                 }
@@ -456,10 +456,10 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
                 if (componentType == Boolean.class) {
                     return ArrayUtils.toObject(defaultAnnotation.booleanValues());
                 }
-            	if (componentType == Boolean.TYPE) {
-            	    return defaultAnnotation.booleanValues();
-            	}
-            	if (componentType == Short.class) {
+                if (componentType == Boolean.TYPE) {
+                    return defaultAnnotation.booleanValues();
+                }
+                if (componentType == Short.class) {
                     return ArrayUtils.toObject(defaultAnnotation.shortValues());
                 }
                 if (componentType == Short.TYPE) {
@@ -481,7 +481,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
                 log.warn("Default values for {} are not supported", componentType);
                 return null;
             } else {
-        	// we always deal with primitive types here (and autoboxing is supported when using reflection)
+        	// we always deal with non-primitive types here (and reflection needs object wrapper types in any case)
                 if (injectedClass == String.class) {
                     return defaultAnnotation.values()[0];
                 }
