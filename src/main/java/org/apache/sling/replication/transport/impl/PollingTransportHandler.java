@@ -24,6 +24,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
+import org.apache.http.conn.HttpHostConnectException;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.communication.ReplicationHeader;
@@ -64,8 +65,9 @@ public class PollingTransportHandler extends AbstractTransportHandler
                                          ReplicationEndpoint replicationEndpoint,
                                          ReplicationQueueProcessor responseProcessor)
             throws Exception {
-        log.info("polling from {}", replicationEndpoint.getUri());
-
+        if (log.isDebugEnabled()) {
+            log.debug("polling from {}", replicationEndpoint.getUri());
+        }
 
         Executor executor = Executor.newInstance();
         TransportAuthenticationContext context = new TransportAuthenticationContext();
@@ -75,19 +77,25 @@ public class PollingTransportHandler extends AbstractTransportHandler
         Request req = Request.Post(replicationEndpoint.getUri())
                 .addHeader(ReplicationHeader.ACTION.toString(), ReplicationActionType.POLL.getName())
                 .useExpectContinue();
-        // TODO : add queue header
+        // TODO : add queue parameter
 
         int polls = pollItems;
 
         // continuously requests package streams as long as type header is received with the response (meaning there's a package of a certain type)
         HttpResponse httpResponse;
-        while ((httpResponse = executor.execute(req).returnResponse()).containsHeader(ReplicationHeader.TYPE.toString())
-                && polls != 0) {
-            ReplicationQueueItem queueItem = readPackageHeaders(httpResponse);
+        try {
+            while ((httpResponse = executor.execute(req).returnResponse()).containsHeader(ReplicationHeader.TYPE.toString())
+                    && polls != 0) {
+                ReplicationQueueItem queueItem = readPackageHeaders(httpResponse);
 
-            if(responseProcessor != null)
-                responseProcessor.process("poll", queueItem);
-            polls--;
+                if (responseProcessor != null)
+                    responseProcessor.process("poll", queueItem);
+                polls--;
+            }
+        } catch (HttpHostConnectException e) {
+            if (log.isWarnEnabled()) {
+                log.warn("could not connect to {} - skipping", replicationEndpoint.getUri());
+            }
         }
 
     }
@@ -108,7 +116,7 @@ public class PollingTransportHandler extends AbstractTransportHandler
         byte[] bytes = IOUtils.toByteArray(entity.getContent());
 
 
-        return new ReplicationQueueItem(pathList.toArray(new String[0]),
+        return new ReplicationQueueItem(pathList.toArray(new String[pathList.size()]),
                 actionHeader.getValue(),
                 typeHeader.getValue(),
                 bytes);
