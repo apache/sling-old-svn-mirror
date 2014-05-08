@@ -23,6 +23,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.debug.core.ILaunchManager;
@@ -45,9 +46,6 @@ public class SlingWstServer extends ExternalResource {
 
     @Override
     protected void before() throws Throwable {
-        int expectedServerCount = ServerCore.getServers().length + 1;
-        int expectedRuntimeCount = ServerCore.getRuntimes().length + 1;
-
         IRuntimeType launchpadRuntime = null;
         for (IRuntimeType type : ServerCore.getRuntimeTypes()) {
             if ("org.apache.sling.ide.launchpadRuntimeType".equals(type.getId())) {
@@ -60,7 +58,8 @@ public class SlingWstServer extends ExternalResource {
             throw new IllegalArgumentException("No runtime of type 'org.apache.sling.ide.launchpadRuntimeType' found");
         }
 
-        IRuntimeWorkingCopy rtwc = launchpadRuntime.createRuntime("temp.rt.id", new NullProgressMonitor());
+        IRuntimeWorkingCopy rtwc = launchpadRuntime.createRuntime("temp.sling.launchpad.rt.id",
+                new NullProgressMonitor());
         rtwc.save(true, new NullProgressMonitor());
 
         IServerType serverType = null;
@@ -76,7 +75,8 @@ public class SlingWstServer extends ExternalResource {
             throw new IllegalArgumentException("No server type of type 'org.apache.sling.ide.launchpadServer' found");
         }
 
-        IServerWorkingCopy wc = serverType.createServer("tmp.server.id", null, new NullProgressMonitor());
+        IServerWorkingCopy wc = serverType.createServer("temp.sling.launchpad.server.id", null,
+                new NullProgressMonitor());
         // TODO - remove hardcoding
         wc.setHost("localhost");
         wc.setAttribute(ISlingLaunchpadServer.PROP_PORT, LaunchpadUtils.getLaunchpadPort());
@@ -87,17 +87,15 @@ public class SlingWstServer extends ExternalResource {
         wc.setAttribute("auto-publish-time", 0);
 
         server = wc.save(true, new NullProgressMonitor());
-
-        assertThat("server creation not registered - ServerCore.servers.length", ServerCore.getServers().length,
-                equalTo(expectedServerCount));
-        assertThat("runtime creation not registered - ServerCore.runtimes.length", ServerCore.getRuntimes().length,
-                equalTo(expectedRuntimeCount));
     }
 
     @Override
     protected void after() {
-
-        // TODO - destroy the server
+        try {
+            server.delete();
+        } catch (CoreException e) {
+            // TODO log
+        }
     }
 
     public void waitForServerToStart() throws InterruptedException {
