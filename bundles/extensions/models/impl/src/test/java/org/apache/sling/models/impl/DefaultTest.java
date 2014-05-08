@@ -19,12 +19,14 @@ package org.apache.sling.models.impl;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
+import org.apache.sling.models.testmodels.classes.DefaultNumericModel;
 import org.apache.sling.models.testmodels.classes.DefaultStringModel;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,5 +68,26 @@ public class DefaultTest {
         assertNotNull(model);
         assertEquals("firstDefault", model.getFirstProperty());
         assertEquals(2, model.getSecondProperty().length);
+    }
+    
+    @Test
+    public void testDefaultNumericValue() {
+        ValueMap vm = new ValueMapDecorator(Collections.<String, Object>emptyMap());
+
+        Resource res = mock(Resource.class);
+        when(res.adaptTo(ValueMap.class)).thenReturn(vm);
+
+        DefaultNumericModel model = factory.getAdapter(res, DefaultNumericModel.class);
+        assertNotNull(model);
+        assertEquals(true, model.getBooleanProperty());
+        // we need to wait for JUnit 4.12 for this assertArrayEquals to be working on primitive boolean arrays, https://github.com/junit-team/junit/issues/86!
+     	assertTrue(Arrays.equals(new boolean[] { true, true }, model.getBooleanArrayProperty()));
+     	assertEquals(Boolean.TRUE, model.getBooleanWrapperProperty());
+     	assertArrayEquals(new Boolean[] { Boolean.TRUE, Boolean.TRUE }, model.getBooleanWrapperArrayProperty());
+
+     	assertEquals(1L, model.getLongProperty());
+     	assertArrayEquals(new long[] { 1L, 1L }, model.getLongArrayProperty());
+     	assertEquals((Long)1L, model.getLongWrapperProperty());
+     	assertArrayEquals(new Long[] { new Long(1L), new Long(1L) }, model.getLongWrapperArrayProperty());
     }
 }
