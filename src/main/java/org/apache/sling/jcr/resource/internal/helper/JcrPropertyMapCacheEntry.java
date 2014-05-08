@@ -75,9 +75,8 @@ public class JcrPropertyMapCacheEntry {
             isMulti = false;
             values = new Value[] {prop.getValue()};
         }
-        Object tmp = JcrResourceUtil.toJavaObject(prop);
         if (isDefaultValueCacheable()) {
-            this.defaultValue = tmp;
+            this.defaultValue = JcrResourceUtil.toJavaObject(prop);
         } else {
             this.defaultValue = null;
         }
@@ -150,6 +149,4 @@ public class JcrPropertyMapCacheEntry {
     private boolean isDefaultValueCacheable() throws RepositoryException {
         return property.getType() != PropertyType.BINARY;
     }
-
-
 }
