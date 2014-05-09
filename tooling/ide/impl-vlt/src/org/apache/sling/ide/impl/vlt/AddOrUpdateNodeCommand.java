@@ -154,6 +154,11 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
             updateMixins(node, mixinTypes);
         }
 
+        String primaryType = (String) resource.getProperties().get(JcrConstants.JCR_PRIMARYTYPE);
+        if (!node.getPrimaryNodeType().getName().equals(primaryType)) {
+            node.setPrimaryType(primaryType);
+        }
+
         // TODO - review for completeness and filevault compatibility
         for (Map.Entry<String, Object> entry : resource.getProperties().entrySet()) {
 
