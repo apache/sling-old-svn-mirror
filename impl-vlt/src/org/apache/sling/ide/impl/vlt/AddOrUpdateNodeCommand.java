@@ -28,8 +28,11 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -47,6 +50,7 @@ import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.nodetype.NodeType;
 
+import org.apache.jackrabbit.vault.util.JcrConstants;
 import org.apache.jackrabbit.vault.util.Text;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
@@ -141,8 +145,14 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         
         propertiesToRemove.removeAll(resource.getProperties().keySet());
 
-
         Session session = node.getSession();
+
+        // update the mixin types ahead of type as contraints are enforced before
+        // the session is committed
+        Object mixinTypes = resource.getProperties().get(JcrConstants.JCR_MIXINTYPES);
+        if (mixinTypes != null) {
+            updateMixins(node, mixinTypes);
+        }
 
         // TODO - review for completeness and filevault compatibility
         for (Map.Entry<String, Object> entry : resource.getProperties().entrySet()) {
@@ -246,6 +256,35 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
             node.getProperty(propertyToRemove).remove();
         }
 
+    }
+
+    private void updateMixins(Node node, Object mixinValue) throws RepositoryException {
+
+        List<String> newMixins = new ArrayList<String>();
+
+        if (mixinValue instanceof String) {
+            newMixins.add((String) mixinValue);
+        } else {
+            newMixins.addAll(Arrays.asList((String[]) mixinValue));
+        }
+
+        List<String> oldMixins = new ArrayList<String>();
+        for (NodeType mixinNT : node.getMixinNodeTypes()) {
+            oldMixins.add(mixinNT.getName());
+        }
+
+        List<String> mixinsToAdd = new ArrayList<String>(newMixins);
+        mixinsToAdd.removeAll(oldMixins);
+        List<String> mixinsToRemove = new ArrayList<String>(oldMixins);
+        mixinsToRemove.removeAll(newMixins);
+
+        for (String mixinToAdd : mixinsToAdd) {
+            node.addMixin(mixinToAdd);
+        }
+
+        for (String mixinToRemove : mixinsToRemove) {
+            node.removeMixin(mixinToRemove);
+        }
     }
 
     private void updateFileLikeNodeTypes(Node node) throws RepositoryException, IOException {
