@@ -69,7 +69,6 @@ public class SlingWstServer extends ExternalResource {
 
         IServerType serverType = null;
         for (IServerType type : ServerCore.getServerTypes()) {
-            System.out.println(type.getId());
             if ("org.apache.sling.ide.launchpadServer".equals(type.getId())) {
                 serverType = type;
                 break;
