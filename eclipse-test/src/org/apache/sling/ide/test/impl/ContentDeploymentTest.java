@@ -16,19 +16,29 @@
  */
 package org.apache.sling.ide.test.impl;
 
+import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasChildrenCount;
+import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasPath;
+import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasPrimaryType;
+import static org.hamcrest.CoreMatchers.allOf;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.concurrent.Callable;
+
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.URIException;
+import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.test.impl.helpers.DisableDebugStatusHandlers;
 import org.apache.sling.ide.test.impl.helpers.ExternalSlingLaunchpad;
 import org.apache.sling.ide.test.impl.helpers.LaunchpadConfig;
 import org.apache.sling.ide.test.impl.helpers.Poller;
 import org.apache.sling.ide.test.impl.helpers.ProjectAdapter;
-import org.apache.sling.ide.test.impl.helpers.ServerAdapter;
 import org.apache.sling.ide.test.impl.helpers.RepositoryAccessor;
+import org.apache.sling.ide.test.impl.helpers.ServerAdapter;
 import org.apache.sling.ide.test.impl.helpers.SlingWstServer;
 import org.apache.sling.ide.test.impl.helpers.TemporaryProject;
 import org.eclipse.core.resources.IProject;
@@ -36,6 +46,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
 import org.hamcrest.CoreMatchers;
+import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -119,9 +130,63 @@ public class ContentDeploymentTest {
 
     }
 
+    @Test
+    public void changeNodePrimaryType() throws Exception {
+
+        wstServer.waitForServerToStart();
+
+        // create faceted project
+        IProject contentProject = projectRule.getProject();
+
+        ProjectAdapter project = new ProjectAdapter(contentProject);
+        project.addNatures("org.eclipse.wst.common.project.facet.core.nature");
+
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/hello.txt"),
+                new ByteArrayInputStream("hello, world".getBytes()));
+
+        // install bundle facet
+        project.installFacet("sling.content", "1.0");
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
+
+        // verifications
+        Matcher postConditions = allOf(hasPath("/test"), hasPrimaryType("nt:folder"), hasChildrenCount(1));
+
+        final RepositoryAccessor repo = new RepositoryAccessor(config);
+        Poller poller = new Poller();
+        poller.pollUntil(new Callable<Node>() {
+            @Override
+            public Node call() throws RepositoryException {
+                return repo.getNode("/test");
+
+            }
+        }, postConditions);
+
+        // change node type to sling:Folder
+        InputStream contentXml = getClass().getResourceAsStream("sling-folder-nodetype.xml");
+        try {
+            project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/.content.xml"), contentXml);
+        } finally {
+            IOUtils.closeQuietly(contentXml);
+        }
+
+        // verifications (2)
+        postConditions = allOf(hasPath("/test"), hasPrimaryType("sling:Folder"), hasChildrenCount(1));
+
+        poller.pollUntil(new Callable<Node>() {
+            @Override
+            public Node call() throws RepositoryException {
+                return repo.getNode("/test");
+
+            }
+        }, postConditions);
+    }
+
     @After
     public void cleanUp() throws Exception {
 
         new RepositoryAccessor(config).tryDeleteResource("/hello.txt");
+        new RepositoryAccessor(config).tryDeleteResource("/test");
     }
 }
