@@ -29,6 +29,7 @@ import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.ResourceUtil;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
+import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.filter.FilterResult;
@@ -60,6 +61,8 @@ public class ImportRepositoryContentAction {
     private final IFile filterFile;
     private final IPath projectRelativePath;
     private final IProject project;
+    private final PluginLogger logger;
+
     private SerializationManager serializationManager;
 	private SerializationDataBuilder builder;
 
@@ -72,6 +75,7 @@ public class ImportRepositoryContentAction {
      */
     public ImportRepositoryContentAction(IServer server, IFile filterFile, IPath projectRelativePath,
             IProject project, SerializationManager serializationManager) throws SerializationException {
+        this.logger = Activator.getDefault().getPluginLogger();
         this.server = server;
         this.filterFile = filterFile;
         this.projectRelativePath = projectRelativePath;
@@ -185,15 +189,13 @@ public class ImportRepositoryContentAction {
 
         File contentSyncRoot = ProjectUtil.getSyncDirectoryFullPath(project).toFile();
 
-        System.out.println("crawlChildrenAndImport(" + repository + ", " + path + ", " + project + ", "
-                + projectRelativePath + ")");
+        logger.trace("crawlChildrenAndImport({0},  {1}, {2}, {3}", repository, path, project, projectRelativePath);
 
         ResourceProxy resource = executeCommand(repository.newListChildrenNodeCommand(path));
 
         // TODO we should know all node types for which to create files and folders
         SerializationData serializationData = builder.buildSerializationData(contentSyncRoot, resource);
-        System.out.println("For resource at path " + resource.getPath() + " got serialization data "
-                + serializationData);
+        logger.trace("For resource at path {0} got serialization data {1}", resource.getPath(), serializationData);
 
         final List<ResourceProxy> resourceChildren = new LinkedList<ResourceProxy>(resource.getChildren());
 		if (serializationData != null) {
@@ -242,7 +244,7 @@ public class ImportRepositoryContentAction {
 	            }
 	        }
 	
-	        System.out.println("Children: " + resourceChildren);
+            logger.trace("Resource at {0} has children: {1}", resource.getPath(), resourceChildren);
 	
 	        if (serializationData.getSerializationKind() == SerializationKind.METADATA_FULL) {
 	            return;
@@ -290,7 +292,7 @@ public class ImportRepositoryContentAction {
 
         IFile destinationFile = project.getFile(path);
 
-        System.out.println("Writing content file at " + path);
+        logger.trace("Writing content file at {0}", path);
 
         if (destinationFile.exists()) {
             /* TODO progress monitor */

@@ -90,8 +90,7 @@ public class ImportWizard extends Wizard implements IImportWizard {
             Throwable cause = e.getCause();
             mainPage.setErrorMessage("Import error : " + cause.getMessage()
                     + " . Please see the error log for details.");
-            Activator.getDefault().getLog()
-                    .log(new Status(Status.ERROR, Constants.PLUGIN_ID, "Repository import failed", cause));
+            Activator.getDefault().getPluginLogger().error("Repository import failed", cause);
             return false;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
