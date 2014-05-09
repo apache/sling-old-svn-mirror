@@ -33,6 +33,8 @@ public class Poller {
 
         long cutoff = System.currentTimeMillis() + DEFAULT_POLL_WAIT_MILLIS;
 
+        Error lastError = null;
+
         while (true) {
 
             try {
@@ -41,12 +43,19 @@ public class Poller {
             } catch (RuntimeException e) {
                 // skip
             } catch (AssertionFailedError e) {
+                lastError = e;
                 // skip
             } catch (AssertionError e) {
+                lastError = e;
                 // skip
             }
 
             if (System.currentTimeMillis() >= cutoff) {
+
+                if (lastError != null) {
+                    throw lastError;
+                }
+
                 throw new AssertionFailedError("Runnable " + r + " did not succeed in the allocated "
                         + DEFAULT_DELAY_MILLIS + " ms");
             }
