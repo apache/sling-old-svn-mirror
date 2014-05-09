@@ -57,7 +57,7 @@ public class Poller {
                 }
 
                 throw new AssertionFailedError("Runnable " + r + " did not succeed in the allocated "
-                        + DEFAULT_DELAY_MILLIS + " ms");
+                        + DEFAULT_POLL_WAIT_MILLIS + " ms");
             }
 
             Thread.sleep(DEFAULT_DELAY_MILLIS);
