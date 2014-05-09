@@ -42,5 +42,5 @@ Import-Package: org.apache.commons.httpclient;version="3.1.0",
  org.json,
  org.osgi.service.component;version="1.1.0"
 Export-Package: org.apache.sling.ide.eclipse.core,
- org.apache.sling.ide.eclipse.core.internal
-Service-Component: OSGI-INF/Tracer.xml
+ org.apache.sling.ide.eclipse.core.internal,
+ org.apache.sling.ide.eclipse.core.debug

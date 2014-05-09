@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" immediate="false">
-   <implementation class="org.apache.sling.ide.eclipse.core.internal.Tracer"/>
-   <property name="listener.symbolic.name" type="String" value="org.apache.sling.ide.eclipse-core"/>
-   <service>
-      <provide interface="org.apache.sling.ide.eclipse.core.internal.Tracer"/>
-      <provide interface="org.eclipse.osgi.service.debug.DebugOptionsListener"/>
-   </service>
-</scr:component>

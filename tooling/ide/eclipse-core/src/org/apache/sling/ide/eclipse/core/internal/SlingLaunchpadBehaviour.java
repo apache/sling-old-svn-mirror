@@ -36,6 +36,7 @@ import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.ResourceUtil;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
+import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.filter.FilterResult;
@@ -128,11 +129,11 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
                         monitor);
                 
             } catch (URISyntaxException e) {
-                Activator.getDefault().getLog().log(new Status(IStatus.WARNING, Activator.PLUGIN_ID, 
-                        "Failed retrieving information about the installation support bundle", e));
+                Activator.getDefault().getPluginLogger()
+                        .warn("Failed retrieving information about the installation support bundle", e);
             } catch (OsgiClientException e) {
-                Activator.getDefault().getLog().log(new Status(IStatus.WARNING, Activator.PLUGIN_ID, 
-                        "Failed retrieving information about the installation support bundle", e));
+                Activator.getDefault().getPluginLogger()
+                        .warn("Failed retrieving information about the installation support bundle", e);
             }
         }
 
@@ -144,7 +145,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             if (result != null) {
                 message += " (" + result.toString() + ")";
             }
-            throw new CoreException(new Status(IStatus.ERROR, "org.apache.sling.ide.eclipse.wst", message));
+            throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, message));
         }
     }
 
@@ -162,6 +163,54 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
     protected void publishModule(int kind, int deltaKind, IModule[] module, IProgressMonitor monitor)
             throws CoreException {
 
+        PluginLogger logger = Activator.getDefault().getPluginLogger();
+        
+        logger.trace(traceOperation(kind, deltaKind, module));
+
+        if (deltaKind==ServerBehaviourDelegate.NO_CHANGE) {
+            // then there's no need to publish
+            return;
+        }
+        
+        if (kind == IServer.PUBLISH_FULL && deltaKind == ServerBehaviourDelegate.REMOVED) {
+            logger.trace("Ignoring request to unpublish all of the module resources");
+            return;
+        }
+
+        try {
+            if (ProjectHelper.isBundleProject(module[0].getProject())) {
+                String serverMode = getServer().getMode();
+                if (!serverMode.equals(ILaunchManager.DEBUG_MODE)) {
+                    // in debug mode, we rely on the hotcode replacement feature of eclipse/jvm
+                    // otherwise, for run and profile modes we explicitly publish the bundle module
+                    // TODO: make this configurable as part of the server config
+            		publishBundleModule(module, monitor);
+					BundleStateHelper.resetBundleState(getServer(), module[0].getProject());
+            	}
+            } else if (ProjectHelper.isContentProject(module[0].getProject())) {
+                if ((kind == IServer.PUBLISH_AUTO || kind == IServer.PUBLISH_INCREMENTAL) && deltaKind == ServerBehaviourDelegate.NO_CHANGE) {
+                    logger.trace("Ignoring request to publish the module when no resources have changed; most likely another module has changed");
+                    return;
+                }
+                try {
+                    publishContentModule(kind, deltaKind, module, monitor);
+					BundleStateHelper.resetBundleState(getServer(), module[0].getProject());
+                } catch (SerializationException e) {
+                    throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Serialization error for "
+                            + traceOperation(kind, deltaKind, module).toString(), e));
+                } catch (IOException e) {
+                    throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "IO error for "
+                            + traceOperation(kind, deltaKind, module).toString(), e));
+                }
+            }
+        } finally {
+            if (serializationManager != null) {
+                serializationManager.destroy();
+            }
+        }
+    }
+
+    private String traceOperation(int kind, int deltaKind, IModule[] module) {
         StringBuilder trace = new StringBuilder();
         trace.append("SlingLaunchpadBehaviour.publishModule(");
 
@@ -199,54 +248,10 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
                 trace.append("UNKONWN - ").append(deltaKind).append(", ");
                 break;
         }
-        
+
         trace.append(Arrays.toString(module)).append(")");
 
-        System.out.println(trace.toString());
-
-        if (deltaKind==ServerBehaviourDelegate.NO_CHANGE) {
-            // then there's no need to publish
-            //int modulePublishState = getServer().getModulePublishState(module);
-            return;
-        }
-        
-        if (kind == IServer.PUBLISH_FULL && deltaKind == ServerBehaviourDelegate.REMOVED) {
-            System.out.println("Ignoring request to unpublish all of the module resources");
-            return;
-        }
-
-        try {
-            if (ProjectHelper.isBundleProject(module[0].getProject())) {
-                String serverMode = getServer().getMode();
-                if (!serverMode.equals(ILaunchManager.DEBUG_MODE)) {
-                    // in debug mode, we rely on the hotcode replacement feature of eclipse/jvm
-                    // otherwise, for run and profile modes we explicitly publish the bundle module
-                    // TODO: make this configurable as part of the server config
-            		publishBundleModule(module, monitor);
-					BundleStateHelper.resetBundleState(getServer(), module[0].getProject());
-            	}
-            } else if (ProjectHelper.isContentProject(module[0].getProject())) {
-                if ((kind == IServer.PUBLISH_AUTO || kind == IServer.PUBLISH_INCREMENTAL) && deltaKind == ServerBehaviourDelegate.NO_CHANGE) {
-                    System.out
-                            .println("Ignoring request to publish the module when no resources have changed; most likely another module has changed");
-                    return;
-                }
-                try {
-                    publishContentModule(kind, deltaKind, module, monitor);
-					BundleStateHelper.resetBundleState(getServer(), module[0].getProject());
-                } catch (SerializationException e) {
-                    throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Serialization error for "
-                            + trace.toString(), e));
-                } catch (IOException e) {
-                    throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "IO error for "
-                            + trace.toString(), e));
-                }
-            }
-        } finally {
-            if (serializationManager != null) {
-                serializationManager.destroy();
-            }
-        }
+        return trace.toString();
     }
 
 	private void publishBundleModule(IModule[] module, IProgressMonitor monitor) throws CoreException {
@@ -305,6 +310,8 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 		}
 		// otherwise fallback to old behaviour
 		
+        PluginLogger logger = Activator.getDefault().getPluginLogger();
+
 		Repository repository = ServerUtil.getRepository(getServer(), monitor);
         
         // TODO it would be more efficient to have a module -> filter mapping
@@ -343,7 +350,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
                     deltaTrace.append("for resource ").append(resourceDelta.getModuleResource());
 
-                    System.out.println(deltaTrace);
+                    logger.trace(deltaTrace.toString());
 
                     switch (resourceDelta.getKind()) {
                         case IModuleResourceDelta.ADDED:
@@ -523,12 +530,11 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         }
 
         if (res.isTeamPrivateMember(IResource.CHECK_ANCESTORS)) {
-            Activator.getDefault().getLog()
-                    .log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "Skipping team-private resource " + res));
+            Activator.getDefault().getPluginLogger().trace("Skipping team-private resource {0}", res);
             return null;
         }
 
-        System.out.println("For " + resource + " build fileInfo " + info);
+        Activator.getDefault().getPluginLogger().trace("For {0} build fileInfo {1}", resource, info);
         if (info == null) {
             return null;
         }
@@ -585,7 +591,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
 		IResource changedResource = file != null ? file : folder;
 		if (changedResource == null) {
-		    System.err.println("Could not find a file or a folder for " + resource);
+            Activator.getDefault().getPluginLogger().trace("Could not find a file or a folder for " + resource);
 		    return null;
 		}
 
@@ -655,7 +661,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
         FileInfo info = new FileInfo(file.getLocation().toOSString(), relativePath.toOSString(), file.getName());
 
-        System.out.println("For " + resource + " built fileInfo " + info);
+        Activator.getDefault().getPluginLogger().trace("For {1} built fileInfo {2}", resource, info);
 
         return info;
     }
@@ -669,8 +675,9 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
         if (file == null) {
             // Usually happens on server startup, it seems to be safe to ignore for now
-            System.out.println("Got null '" + IFile.class.getSimpleName() + "' and '" + IFolder.class.getSimpleName()
-                    + "' for " + resource);
+            Activator.getDefault().getPluginLogger()
+                    .trace("Got null '{0}' and '{1}' for {2}", IFile.class.getSimpleName(),
+                            IFolder.class.getSimpleName(), resource);
             return null;
         }
 
@@ -688,7 +695,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         
         String repositoryPath = resource.getModuleRelativePath().toPortableString();
 
-        System.out.println("Filtering by " + repositoryPath + " for " + resource);
+        Activator.getDefault().getPluginLogger().trace("Filtering by {0} for {1}", repositoryPath, resource);
 
         return filter.filter(contentSyncRoot, repositoryPath, repository.getRepositoryInfo());
     }
@@ -706,11 +713,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         }
         
         if (deletedResource.isTeamPrivateMember(IResource.CHECK_ANCESTORS)) {
-            Activator
-                    .getDefault()
-                    .getLog()
-                    .log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "Skipping team-private resource "
-                            + deletedResource));
+            Activator.getDefault().getPluginLogger().trace("Skipping team-private resoruce {0}", deletedResource);
             return null;
         }
         

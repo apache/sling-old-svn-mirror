@@ -56,8 +56,6 @@ public class SlingLaunchpadServer extends ServerDelegate implements ISlingLaunch
     @Override
     public IStatus canModifyModules(IModule[] toAdd, IModule[] toRemove) {
 
-        System.out.println("SlingLaunchpadServer.canModifyModules()");
-
         if (toAdd == null) {
             return Status.OK_STATUS;
         }
@@ -110,20 +108,12 @@ public class SlingLaunchpadServer extends ServerDelegate implements ISlingLaunch
     @Override
     public void modifyModules(IModule[] toAdd, IModule[] toRemove, IProgressMonitor arg2) throws CoreException {
 
-        System.out.println("SlingLaunchpadServer.modifyModules()");
-
         IStatus status = canModifyModules(toAdd, toRemove);
         if (!status.isOK()) {
             throw new CoreException(status);
         }
 
-        for (IModule module : toAdd) {
-            System.out.println("Adding module " + module);
-        }
-
-        for (IModule module : toRemove) {
-            System.out.println("Removing module " + module);
-        }
+        // TODO - actually add/remove modules ...
     }
 
     @Override
@@ -143,8 +133,9 @@ public class SlingLaunchpadServer extends ServerDelegate implements ISlingLaunch
     
     @Override
     public void setPublishState(int publishState, IProgressMonitor monitor) {
-        System.out.println("[" + Thread.currentThread().getName() + "] Set " + PROP_AUTO_PUBLISH_SETTING + " to "
-                + publishState);
+
+        Activator.getDefault().getPluginLogger().trace("Set {0} to {1}", PROP_AUTO_PUBLISH_SETTING, publishState);
+
         IServerWorkingCopy wc = getServer().createWorkingCopy();
 		wc.setAttribute(PROP_AUTO_PUBLISH_SETTING, publishState);
 		try {
