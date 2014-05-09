@@ -120,8 +120,8 @@ public class ContentDeploymentTest {
     }
 
     @After
-    public void cleanUp() throws HttpException, IOException {
+    public void cleanUp() throws Exception {
 
-        new RepositoryAccessor(config).tryDeleteResource("hello.txt");
+        new RepositoryAccessor(config).tryDeleteResource("/hello.txt");
     }
 }
