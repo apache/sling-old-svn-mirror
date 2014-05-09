@@ -84,7 +84,7 @@ public class ContentDeploymentTest {
         ProjectAdapter project = new ProjectAdapter(contentProject);
         project.addNatures(JavaCore.NATURE_ID, "org.eclipse.wst.common.project.facet.core.nature");
 
-        project.createOrUpdateFile(Path.fromPortableString("jcr_root/hello.txt"), new ByteArrayInputStream(
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/hello.txt"), new ByteArrayInputStream(
                 "hello, world".getBytes()));
 
         // install bundle facet
@@ -99,31 +99,31 @@ public class ContentDeploymentTest {
         poller.pollUntil(new Callable<Void>() {
             @Override
             public Void call() throws HttpException, IOException {
-                repo.assertGetIsSuccessful("hello.txt", "hello, world");
+                repo.assertGetIsSuccessful("test/hello.txt", "hello, world");
                 return null;
             }
         }, CoreMatchers.nullValue());
 
-        project.createOrUpdateFile(Path.fromPortableString("jcr_root/hello.txt"), new ByteArrayInputStream(
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/hello.txt"), new ByteArrayInputStream(
                 "goodbye, world".getBytes()));
 
         // verify that file is updated
         poller.pollUntil(new Callable<Void>() {
             @Override
             public Void call() throws HttpException, IOException {
-                repo.assertGetIsSuccessful("hello.txt", "goodbye, world");
+                repo.assertGetIsSuccessful("test/hello.txt", "goodbye, world");
                 return null;
             }
         }, CoreMatchers.nullValue());
 
 
-        project.deleteMember(Path.fromPortableString("jcr_root/hello.txt"));
+        project.deleteMember(Path.fromPortableString("jcr_root/test/hello.txt"));
 
         // verify that file is deleted
         poller.pollUntil(new Callable<Void>() {
             @Override
             public Void call() throws HttpException, IOException {
-                repo.assertGetReturns404("hello.txt");
+                repo.assertGetReturns404("test/hello.txt");
                 return null;
             }
         }, CoreMatchers.nullValue());
@@ -151,17 +151,9 @@ public class ContentDeploymentTest {
         server.installModule(contentProject);
 
         // verifications
-        Matcher postConditions = allOf(hasPath("/test"), hasPrimaryType("nt:folder"), hasChildrenCount(1));
-
         final RepositoryAccessor repo = new RepositoryAccessor(config);
         Poller poller = new Poller();
-        poller.pollUntil(new Callable<Node>() {
-            @Override
-            public Node call() throws RepositoryException {
-                return repo.getNode("/test");
-
-            }
-        }, postConditions);
+        assertThatNode(repo, poller, "/test", allOf(hasPath("/test"), hasPrimaryType("nt:folder"), hasChildrenCount(1)));
 
         // change node type to sling:Folder
         InputStream contentXml = getClass().getResourceAsStream("sling-folder-nodetype.xml");
@@ -172,21 +164,25 @@ public class ContentDeploymentTest {
         }
 
         // verifications (2)
-        postConditions = allOf(hasPath("/test"), hasPrimaryType("sling:Folder"), hasChildrenCount(1));
+        assertThatNode(repo, poller, "/test",
+                allOf(hasPath("/test"), hasPrimaryType("sling:Folder"), hasChildrenCount(1)));
+    }
+
+    private void assertThatNode(final RepositoryAccessor repo, Poller poller, final String nodePath, Matcher matcher)
+            throws InterruptedException {
 
         poller.pollUntil(new Callable<Node>() {
             @Override
             public Node call() throws RepositoryException {
-                return repo.getNode("/test");
+                return repo.getNode(nodePath);
 
             }
-        }, postConditions);
+        }, matcher);
     }
 
     @After
     public void cleanUp() throws Exception {
 
-        new RepositoryAccessor(config).tryDeleteResource("/hello.txt");
         new RepositoryAccessor(config).tryDeleteResource("/test");
     }
 }
