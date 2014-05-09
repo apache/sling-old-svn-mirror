@@ -69,7 +69,7 @@ public abstract class ProjectUtil {
         try {
             value = project.getPersistentProperty(new QualifiedName(Activator.PLUGIN_ID, PROPERTY_SYNC_ROOT));
         } catch (CoreException e) {
-            Activator.getDefault().getLog().log(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
+            Activator.getDefault().getPluginLogger().error(e.getMessage(), e);
         }
 
         // TODO central place for defaults
@@ -103,7 +103,7 @@ public abstract class ProjectUtil {
         try {
             project.setPersistentProperty(new QualifiedName(Activator.PLUGIN_ID, PROPERTY_SYNC_ROOT), path);
         } catch (CoreException e) {
-            Activator.getDefault().getLog().log(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
+            Activator.getDefault().getPluginLogger().error(e.getMessage(), e);
         }
     }
 

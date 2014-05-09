@@ -17,12 +17,16 @@
 package org.apache.sling.ide.eclipse.core.internal;
 
 import org.apache.sling.ide.eclipse.core.ServiceUtil;
+import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
+import org.apache.sling.ide.eclipse.core.debug.PluginLoggerRegistrar;
 import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.osgi.OsgiClientFactory;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.RepositoryFactory;
 import org.eclipse.core.runtime.Plugin;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**
@@ -45,10 +49,15 @@ public class Activator extends Plugin {
     private ServiceTracker<SerializationManager, SerializationManager> serializationManager;
     private ServiceTracker<FilterLocator, FilterLocator> filterLocator;
     private ServiceTracker<OsgiClientFactory, OsgiClientFactory> osgiClientFactory;
+    private ServiceTracker<?, ?> tracer;
+
+    private ServiceRegistration<?> tracerRegistration;
 
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
+
+        tracerRegistration = PluginLoggerRegistrar.register(this);
 
         repositoryFactory = new ServiceTracker<RepositoryFactory, RepositoryFactory>(context, RepositoryFactory.class,
                 null);
@@ -64,6 +73,11 @@ public class Activator extends Plugin {
         osgiClientFactory = new ServiceTracker<OsgiClientFactory, OsgiClientFactory>(context, OsgiClientFactory.class,
                 null);
         osgiClientFactory.open();
+
+        // ugh
+        ServiceReference<Object> reference = (ServiceReference<Object>) tracerRegistration.getReference();
+        tracer = new ServiceTracker<Object, Object>(context, reference, null);
+        tracer.open();
 	}
 
 	/*
@@ -71,10 +85,14 @@ public class Activator extends Plugin {
 	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
 	 */
 	public void stop(BundleContext context) throws Exception {
+
+        tracerRegistration.unregister();
+
         repositoryFactory.close();
         serializationManager.close();
         filterLocator.close();
         osgiClientFactory.close();
+        tracer.close();
 
         plugin = null;
 		super.stop(context);
@@ -104,5 +122,9 @@ public class Activator extends Plugin {
 
     public OsgiClientFactory getOsgiClientFactory() {
         return ServiceUtil.getNotNull(osgiClientFactory);
+    }
+
+    public PluginLogger getPluginLogger() {
+        return (PluginLogger) ServiceUtil.getNotNull(tracer);
     }
 }

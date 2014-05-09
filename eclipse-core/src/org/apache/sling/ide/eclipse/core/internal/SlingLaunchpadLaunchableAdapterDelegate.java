@@ -27,8 +27,6 @@ public class SlingLaunchpadLaunchableAdapterDelegate extends LaunchableAdapterDe
     @Override
     public Object getLaunchable(IServer server, IModuleArtifact moduleArtifact) throws CoreException {
 
-        System.out.println("SlingLaunchpadLaunchableAdapterDelegate.getLaunchable()");
-
         if (server == null || moduleArtifact == null) {
             return null;
         }
