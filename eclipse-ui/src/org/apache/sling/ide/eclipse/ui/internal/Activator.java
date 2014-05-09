@@ -18,11 +18,15 @@ package org.apache.sling.ide.eclipse.ui.internal;
 
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.core.ServiceUtil;
+import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
+import org.apache.sling.ide.eclipse.core.debug.PluginLoggerRegistrar;
 import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.osgi.OsgiClientFactory;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -36,6 +40,9 @@ public class Activator extends AbstractUIPlugin {
     private ServiceTracker<EventAdmin, EventAdmin> eventAdmin;
     private ServiceTracker<EmbeddedArtifactLocator, EmbeddedArtifactLocator> artifactLocator;
     private ServiceTracker<OsgiClientFactory, OsgiClientFactory> osgiClientFactory;
+    private ServiceTracker<Object, Object> tracer;
+
+    private ServiceRegistration<?> tracerRegistration;
 
     public static Activator getDefault() {
 
@@ -45,6 +52,8 @@ public class Activator extends AbstractUIPlugin {
     @Override
     public void start(BundleContext context) throws Exception {
         super.start(context);
+
+        tracerRegistration = PluginLoggerRegistrar.register(this);
 
         serializationManager = new ServiceTracker<SerializationManager, SerializationManager>(context,
                 SerializationManager.class, null);
@@ -63,6 +72,11 @@ public class Activator extends AbstractUIPlugin {
         osgiClientFactory = new ServiceTracker<OsgiClientFactory, OsgiClientFactory>(context, OsgiClientFactory.class,
                 null);
         osgiClientFactory.open();
+
+        // ugh
+        ServiceReference<Object> reference = (ServiceReference<Object>) tracerRegistration.getReference();
+        tracer = new ServiceTracker<Object, Object>(context, reference, null);
+        tracer.open();
 
         INSTANCE = this;
     }
@@ -98,5 +112,9 @@ public class Activator extends AbstractUIPlugin {
 
     public OsgiClientFactory getOsgiClientFactory() {
         return ServiceUtil.getNotNull(osgiClientFactory);
+    }
+
+    public PluginLogger getPluginLogger() {
+        return (PluginLogger) ServiceUtil.getNotNull(tracer);
     }
 }

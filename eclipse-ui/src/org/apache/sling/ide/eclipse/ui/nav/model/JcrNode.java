@@ -34,6 +34,7 @@ import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.ui.WhitelabelSupport;
+import org.apache.sling.ide.eclipse.ui.internal.Activator;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -513,9 +514,9 @@ public class JcrNode implements IAdaptable {
 	@Override
 	public Object getAdapter(Class adapter) {
 		final Object result = doGetAdapter(adapter);
-		//if (result==null) {
-			//System.out.println("adapter looked for: "+adapter+", result: "+result);
-		//}
+        if (result == null) {
+            Activator.getDefault().getPluginLogger().trace("Adapter looked for {0},  result: {1}", adapter, result);
+        }
 		return result;
 	}
 	
