@@ -161,4 +161,14 @@
       runtime-component="org.apache.sling.ide.launchpadRuntimeComponentType"
       version="1.0"/>
      </extension>
+     
+    <extension
+         point="org.eclipse.ui.trace.traceComponents">
+      <component
+            id="org.eclipse.ui.trace.tracingPrefPage"
+            label="Sling IDE Tooling">
+         <bundle
+               name="org.apache.sling.ide.eclipse-core"></bundle>
+      </component>
+   </extension>
 </plugin>    
