@@ -20,15 +20,19 @@ import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
 
+import javax.jcr.Credentials;
+import javax.jcr.Node;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
-import org.apache.commons.httpclient.methods.multipart.Part;
-import org.apache.commons.httpclient.methods.multipart.StringPart;
+import org.apache.sling.ide.jcr.RepositoryUtils;
+import org.apache.sling.ide.transport.RepositoryInfo;
 import org.hamcrest.CoreMatchers;
 
 /**
@@ -40,6 +44,8 @@ public class RepositoryAccessor {
 
     private final LaunchpadConfig config;
     private final HttpClient client;
+    private Repository repository;
+    private Credentials credentials;
 
     public RepositoryAccessor(LaunchpadConfig config) {
         this.config = config;
@@ -76,17 +82,43 @@ public class RepositoryAccessor {
         }
     }
 
-    public void tryDeleteResource(String path) throws HttpException, IOException {
+    public void tryDeleteResource(String path) throws RepositoryException {
 
-        PostMethod pm = new PostMethod(config.getUrl() + "hello.txt");
-        Part[] parts = { new StringPart(":operation", "delete") };
-        pm.setRequestEntity(new MultipartRequestEntity(parts, pm.getParams()));
-        try {
-            client.executeMethod(pm);
-        } finally {
-            pm.releaseConnection();
+        // PostMethod pm = new PostMethod(config.getUrl() + "hello.txt");
+        // Part[] parts = { new StringPart(":operation", "delete") };
+        // pm.setRequestEntity(new MultipartRequestEntity(parts, pm.getParams()));
+        // try {
+        // client.executeMethod(pm);
+        // } finally {
+        // pm.releaseConnection();
+        // }
+
+        Session session = login();
+        if (session.nodeExists(path)) {
+            session.removeItem(path);
+            session.save();
+        }
+    }
+
+
+    public Node getNode(String nodePath) throws RepositoryException {
+
+        return login().getNode(nodePath);
+    }
+
+    private Session login() throws RepositoryException {
+        
+        RepositoryInfo repositoryInfo = new RepositoryInfo(config.getUsername(), config.getPassword(), config.getUrl());
+
+        if (repository == null) {
+            repository = RepositoryUtils.getRepository(repositoryInfo);
         }
 
+        if (credentials == null) {
+            credentials = RepositoryUtils.getCredentials(repositoryInfo);
+        }
+        
+        return repository.login(credentials);
     }
 
 }
