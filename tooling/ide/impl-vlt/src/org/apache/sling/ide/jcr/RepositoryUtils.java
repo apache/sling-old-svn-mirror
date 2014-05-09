@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.impl.vlt;
+package org.apache.sling.ide.jcr;
 
 import java.net.URISyntaxException;
 

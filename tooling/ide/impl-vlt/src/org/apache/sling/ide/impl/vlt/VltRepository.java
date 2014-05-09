@@ -3,6 +3,7 @@ package org.apache.sling.ide.impl.vlt;
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 
+import org.apache.sling.ide.jcr.RepositoryUtils;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.Repository;
