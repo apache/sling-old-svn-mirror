@@ -20,7 +20,8 @@ http://sling.apache.org/documentation/development/getting-and-building-sling.htm
 for how to do that.
 
 For example, if Sling is running on port 8080 (which happens if you start 
-the launchpad/testing module with "mvn jetty:run"), this will build and 
+the launchpad/testing module with 
+"java -jar org.apache.sling.launchpad-<version>-standalone.jar"), this will build and 
 install it:
 
     mvn -P autoInstallBundle clean install -Dsling.url=http://localhost:8080/system/console

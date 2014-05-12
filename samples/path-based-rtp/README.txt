@@ -3,26 +3,9 @@ Apache Sling Samples Path Based RTP
 Provides a configurable path-based sample resource type provider
 for resources which do not have an explicit one.
 
-Getting Started
-===============
+This sample component is used by the espblog sample and also required for the
+"46-line blog" which can be found here:
+  http://sling.apache.org/documentation/tutorials-how-tos/46-line-blog.html
 
-This component uses a Maven 2 (http://maven.apache.org/) build
-environment. It requires a Java 5 JDK (or higher) and Maven (http://maven.apache.org/)
-2.0.7 or later. We recommend to use the latest Maven version.
-
-If you have Maven 2 installed, you can compile and
-package the jar using the following command:
-
-    mvn package
-
-See the Maven 2 documentation for other build features.
-
-The latest source code for this component is available in the
-Subversion (http://subversion.tigris.org/) source repository of
-the Apache Software Foundation. If you have Subversion installed,
-you can checkout the latest source using the following command:
-
-    svn checkout http://svn.apache.org/repos/asf/sling/trunk/samples/path-based-rtp
-
-See the Subversion documentation for other source control features.
-
+The component can be built using Maven 3.0.5 or newer by running
+  mvn install
