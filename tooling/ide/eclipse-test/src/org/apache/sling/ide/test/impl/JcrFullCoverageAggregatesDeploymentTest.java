@@ -17,15 +17,18 @@
 package org.apache.sling.ide.test.impl;
 
 import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasChildrenCount;
+import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasChildrenNames;
 import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasMixinTypes;
 import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasPath;
 import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasPrimaryType;
 import static org.hamcrest.CoreMatchers.allOf;
+import static org.junit.Assert.assertThat;
 
 import java.io.InputStream;
 import java.util.concurrent.Callable;
 
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 
 import org.apache.commons.io.IOUtils;
@@ -164,6 +167,66 @@ public class JcrFullCoverageAggregatesDeploymentTest {
 
             }
         }, postConditions);
+    }
+
+    @Test
+    public void reorderNodesFromNestedFullCoverageAggregate() throws Exception {
+
+        wstServer.waitForServerToStart();
+
+        // create faceted project
+        IProject contentProject = projectRule.getProject();
+
+        ProjectAdapter project = new ProjectAdapter(contentProject);
+        project.addNatures("org.eclipse.wst.common.project.facet.core.nature");
+
+        // create .content.xml structure
+        InputStream contentXml = getClass().getResourceAsStream("content-nested-structure.xml");
+        try {
+            project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), contentXml);
+        } finally {
+            IOUtils.closeQuietly(contentXml);
+        }
+
+        // install content facet
+        project.installFacet("sling.content", "1.0");
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
+
+        Matcher<Node> postConditions = allOf(hasPath("/content/test-root/en"), hasPrimaryType("sling:Folder"),
+                hasMixinTypes("mix:language"), hasChildrenNames("message", "error", "warning"));
+
+        final RepositoryAccessor repo = new RepositoryAccessor(config);
+        Poller poller = new Poller();
+        poller.pollUntil(new Callable<Node>() {
+            @Override
+            public Node call() throws RepositoryException {
+                return repo.getNode("/content/test-root/en");
+
+            }
+        }, postConditions);
+
+        // update .content.xml structure
+        InputStream updatedContentXml = getClass().getResourceAsStream("content-nested-structure-reordered-nodes.xml");
+        try {
+            project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), updatedContentXml);
+        } finally {
+            IOUtils.closeQuietly(updatedContentXml);
+        }
+
+        // poll until we have the child nodes reordered
+        postConditions = allOf(hasPath("/content/test-root/en"), hasPrimaryType("sling:OrderedFolder"),
+                hasMixinTypes("mix:language"), hasChildrenNames("message", "warning", "error"));
+
+        poller.pollUntil(new Callable<Node>() {
+            @Override
+            public Node call() throws RepositoryException {
+                return repo.getNode("/content/test-root/en");
+
+            }
+        }, postConditions);
+
     }
 
     @After
