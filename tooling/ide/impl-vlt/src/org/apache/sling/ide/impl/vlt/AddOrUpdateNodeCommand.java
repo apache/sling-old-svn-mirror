@@ -97,6 +97,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
         updateNode(node, resource);
         processDeletedNodes(node, resource);
+
         for (ResourceProxy child : getCoveredChildren(resource)) {
             update(child, session);
         }
@@ -129,6 +130,9 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         for (NodeIterator it = node.getNodes(); it.hasNext();) {
 
             Node child = it.nextNode();
+            if (hasFileLikePrimaryNodeType(child)) {
+                continue;
+            }
             if (resourceChildrenPaths.containsKey(child.getPath())) {
                 processDeletedNodes(child, resourceChildrenPaths.get(child.getPath()));
                 continue;
@@ -388,7 +392,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         // TODO - avoid IO
         File file = new File(fileInfo.getLocation());
 
-        if (!storeFileInfo(node)) {
+        if (!hasFileLikePrimaryNodeType(node)) {
             return;
         }
 
@@ -420,21 +424,30 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         }
     }
 
-    private boolean storeFileInfo(Node node) throws RepositoryException {
+    private boolean hasFileLikePrimaryNodeType(Node node) throws RepositoryException {
+        return hasPrimaryNodeType(node, NT_FILE, NT_RESOURCE);
+    }
 
-        String nodeTypeName = node.getPrimaryNodeType().getName();
-        if (nodeTypeName.equals(NT_FILE) || nodeTypeName.equals(NT_RESOURCE)) {
-            return true;
+    private boolean hasPrimaryNodeType(Node node, String... nodeTypeNames) throws RepositoryException {
+
+        String primaryNodeTypeName = node.getPrimaryNodeType().getName();
+        for (String nodeTypeName : nodeTypeNames) {
+            if (primaryNodeTypeName.equals(nodeTypeName)) {
+                return true;
+            }
+
         }
-
         for (NodeType supertype : node.getPrimaryNodeType().getSupertypes()) {
             String superTypeName = supertype.getName();
-            if (superTypeName.equals(NT_FILE) || superTypeName.equals(NT_RESOURCE)) {
-                return true;
+            for (String nodeTypeName : nodeTypeNames) {
+                if (superTypeName.equals(nodeTypeName)) {
+                    return true;
+                }
             }
         }
 
         return false;
+
     }
 
     private Value[] toValueArray(String[] strings, Session session) throws RepositoryException {
