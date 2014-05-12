@@ -31,6 +31,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,7 @@ import java.util.UUID;
 import javax.jcr.Binary;
 import javax.jcr.Credentials;
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.PropertyType;
@@ -91,18 +93,58 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         }
 
         updateNode(node, resource);
-        for (ResourceProxy child : resource.getChildren()) {
-            // TODO - this is a workaround for partial coverage nodes being sent here
-            // when a .content.xml file with partial coverage is added here, the children are listed with no properties
-            // and get all their properties deleted
-            if (child.getProperties().isEmpty()) {
-                continue;
-            }
+        processDeletedNodes(node, resource);
+        for (ResourceProxy child : getCoveredChildren(resource)) {
             update(child, session);
         }
 
         // TODO - does not handle deletion of nodes which no longer have a matching resource
 	}
+
+    private void processDeletedNodes(Node node, ResourceProxy resource2) throws RepositoryException {
+
+        // TODO - we probably don't support SNS here ( and in other places as well )
+
+        // gather a list of existing paths for all covered children
+        // all nodes which are not found in these paths will be deleted
+        List<ResourceProxy> coveredResourceChildren = getCoveredChildren(resource2);
+        Map<String, ResourceProxy> resourceChildrenPaths = new HashMap<String, ResourceProxy>(
+                coveredResourceChildren.size());
+        for (ResourceProxy coveredChild : coveredResourceChildren) {
+            resourceChildrenPaths.put(coveredChild.getPath(), coveredChild);
+        }
+
+        for (NodeIterator it = node.getNodes(); it.hasNext();) {
+
+            // TODO - recurse
+            Node child = it.nextNode();
+            if (resourceChildrenPaths.containsKey(child.getPath())) {
+                System.out.println("Node at path " + child.getPath() + " lives on.");
+                processDeletedNodes(child, resourceChildrenPaths.get(child.getPath()));
+                continue;
+            }
+
+            System.out.println("Removing node at path " + child.getPath());
+            child.remove();
+        }
+    }
+
+    private List<ResourceProxy> getCoveredChildren(ResourceProxy resource) {
+        // TODO - this is a workaround for partial coverage nodes being sent here
+        // when a .content.xml file with partial coverage is added here, the children are listed with no properties
+        // and get all their properties deleted
+
+        List<ResourceProxy> coveredChildren = new ArrayList<ResourceProxy>();
+        for (ResourceProxy child : resource.getChildren()) {
+            if (child.getProperties().isEmpty()) {
+                continue;
+            }
+
+            coveredChildren.add(child);
+        }
+
+        return coveredChildren;
+    }
 
     private Node createNode(ResourceProxy resource, Session session) throws RepositoryException, FileNotFoundException {
 
