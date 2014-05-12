@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jcr:root xmlns:sling="http://sling.apache.org/jcr/sling/1.0" xmlns:vlt="http://www.day.com/jcr/vault/1.0" xmlns:jcr="http://www.jcp.org/jcr/1.0"
+    jcr:mixinTypes="[mix:language]"
+    jcr:primaryType="sling:OrderedFolder"
+    jcr:language="en">
+    <message
+        jcr:primaryType="nt:unstructured"
+        sling:key="message"
+        sling:value="Message">
+    </message>
+    <warning
+        jcr:primaryType="nt:unstructured"
+        sling:key="warning"
+        sling:value="Warning">
+    </warning>
+    <error
+        jcr:primaryType="nt:unstructured"
+        sling:key="error"
+        sling:value="Error">
+    </error>    
+</jcr:root>

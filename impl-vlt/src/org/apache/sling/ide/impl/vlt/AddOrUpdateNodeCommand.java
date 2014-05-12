@@ -33,7 +33,9 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -62,6 +64,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
     private ResourceProxy resource;
     private FileInfo fileInfo;
+    private boolean primaryTypeHasChanged;
 
 	public AddOrUpdateNodeCommand(Repository jcrRepo, Credentials credentials, FileInfo fileInfo,
             ResourceProxy resource) {
@@ -97,6 +100,17 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         for (ResourceProxy child : getCoveredChildren(resource)) {
             update(child, session);
         }
+
+        // save the changes so that the primary node type is propagated
+        // however, we can't do that too early, since required properties might not be set
+        // so we save right before checking for orderable child nodes
+        if (primaryTypeHasChanged) {
+            session.save();
+        }
+        NodeType primaryNodeType = node.getPrimaryNodeType();
+        if (primaryNodeType.hasOrderableChildNodes()) {
+            reorderChildNodes(node, resource);
+        }
 	}
 
     private void processDeletedNodes(Node node, ResourceProxy resource2) throws RepositoryException {
@@ -122,6 +136,45 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
             child.remove();
         }
+    }
+
+    private void reorderChildNodes(Node node, ResourceProxy resource2) throws RepositoryException {
+
+        ListIterator<ResourceProxy> coveredResourceChildren = getCoveredChildren(resource2).listIterator();
+        List<Node> nodeChildren = new LinkedList<Node>();
+        NodeIterator nodeChildrenIt = node.getNodes();
+        while ( nodeChildrenIt.hasNext() ) {
+            nodeChildren.add(nodeChildrenIt.nextNode());
+        }
+        ListIterator<Node> nodeChildrenListIt = nodeChildren.listIterator();
+
+        // in here we should really have equal count of elements, but allow a NSEE
+        // to be raised if one of the iterators has too many
+        boolean changed = false;
+        while (coveredResourceChildren.hasNext() || nodeChildrenListIt.hasNext()) {
+
+            ResourceProxy rp = coveredResourceChildren.next();
+            Node n = nodeChildrenListIt.next();
+
+            reorderChildNodes(n, rp);
+
+            if (Text.getName(rp.getPath()).equals(n.getName())) {
+                continue;
+            }
+            
+            String expectedParentName = coveredResourceChildren.hasPrevious() ? 
+                    Text.getName(coveredResourceChildren.previous().getPath()) : null;
+            node.orderBefore(expectedParentName, n.getName());
+            changed = true;
+            break;
+        }
+
+        // re-read the data and run the ordering again
+        // this makes sure that we don't have inconsistent data in the node list
+        if (changed) {
+            reorderChildNodes(node, resource2);
+        }
+
     }
 
     private List<ResourceProxy> getCoveredChildren(ResourceProxy resource) {
@@ -194,6 +247,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         String primaryType = (String) resource.getProperties().get(JcrConstants.JCR_PRIMARYTYPE);
         if (!node.getPrimaryNodeType().getName().equals(primaryType)) {
             node.setPrimaryType(primaryType);
+            primaryTypeHasChanged = true;
         }
 
         // TODO - review for completeness and filevault compatibility
