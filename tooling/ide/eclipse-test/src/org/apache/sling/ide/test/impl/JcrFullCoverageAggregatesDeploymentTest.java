@@ -108,6 +108,64 @@ public class JcrFullCoverageAggregatesDeploymentTest {
         }, postConditions);
     }
 
+    @Test
+    public void deleteNodeFromNestedFullCoverageAggreate() throws Exception {
+
+        wstServer.waitForServerToStart();
+
+        // create faceted project
+        IProject contentProject = projectRule.getProject();
+
+        ProjectAdapter project = new ProjectAdapter(contentProject);
+        project.addNatures("org.eclipse.wst.common.project.facet.core.nature");
+
+        // create .content.xml structure
+        InputStream contentXml = getClass().getResourceAsStream("content-nested-structure.xml");
+        try {
+            project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), contentXml);
+        } finally {
+            IOUtils.closeQuietly(contentXml);
+        }
+
+        // install content facet
+        project.installFacet("sling.content", "1.0");
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
+
+        Matcher postConditions = allOf(hasPath("/content/test-root/en"), hasPrimaryType("sling:Folder"),
+                hasMixinTypes("mix:language"), hasChildrenCount(3));
+
+        final RepositoryAccessor repo = new RepositoryAccessor(config);
+        Poller poller = new Poller();
+        poller.pollUntil(new Callable<Node>() {
+            @Override
+            public Node call() throws RepositoryException {
+                return repo.getNode("/content/test-root/en");
+
+            }
+        }, postConditions);
+
+        // update .content.xml structure
+        InputStream updatedContentXml = getClass().getResourceAsStream("content-nested-structure-deleted-node.xml");
+        try {
+            project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), updatedContentXml);
+        } finally {
+            IOUtils.closeQuietly(updatedContentXml);
+        }
+
+        // poll until we only have 2 child nodes left
+        postConditions = allOf(hasPath("/content/test-root/en"), hasPrimaryType("sling:Folder"),
+                hasMixinTypes("mix:language"), hasChildrenCount(2));
+        poller.pollUntil(new Callable<Node>() {
+            @Override
+            public Node call() throws RepositoryException {
+                return repo.getNode("/content/test-root/en");
+
+            }
+        }, postConditions);
+    }
+
     @After
     public void cleanup() throws Exception {
         new RepositoryAccessor(config).tryDeleteResource("/content/test-root");
