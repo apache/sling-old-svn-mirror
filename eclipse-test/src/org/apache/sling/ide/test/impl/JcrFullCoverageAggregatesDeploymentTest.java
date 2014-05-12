@@ -94,7 +94,7 @@ public class JcrFullCoverageAggregatesDeploymentTest {
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
 
-        Matcher postConditions = allOf(hasPath("/content/test-root/en"), hasPrimaryType("sling:Folder"),
+        Matcher<Node> postConditions = allOf(hasPath("/content/test-root/en"), hasPrimaryType("sling:Folder"),
                 hasMixinTypes("mix:language"), hasChildrenCount(3));
 
         final RepositoryAccessor repo = new RepositoryAccessor(config);
@@ -133,7 +133,7 @@ public class JcrFullCoverageAggregatesDeploymentTest {
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
 
-        Matcher postConditions = allOf(hasPath("/content/test-root/en"), hasPrimaryType("sling:Folder"),
+        Matcher<Node> postConditions = allOf(hasPath("/content/test-root/en"), hasPrimaryType("sling:Folder"),
                 hasMixinTypes("mix:language"), hasChildrenCount(3));
 
         final RepositoryAccessor repo = new RepositoryAccessor(config);

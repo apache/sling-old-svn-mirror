@@ -102,7 +102,7 @@ public class ContentDeploymentTest {
                 repo.assertGetIsSuccessful("test/hello.txt", "hello, world");
                 return null;
             }
-        }, CoreMatchers.nullValue());
+        }, CoreMatchers.<Void> nullValue());
 
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/hello.txt"), new ByteArrayInputStream(
                 "goodbye, world".getBytes()));
@@ -114,7 +114,7 @@ public class ContentDeploymentTest {
                 repo.assertGetIsSuccessful("test/hello.txt", "goodbye, world");
                 return null;
             }
-        }, CoreMatchers.nullValue());
+        }, CoreMatchers.<Void> nullValue());
 
 
         project.deleteMember(Path.fromPortableString("jcr_root/test/hello.txt"));
@@ -126,7 +126,7 @@ public class ContentDeploymentTest {
                 repo.assertGetReturns404("test/hello.txt");
                 return null;
             }
-        }, CoreMatchers.nullValue());
+        }, CoreMatchers.<Void> nullValue());
 
     }
 
@@ -168,7 +168,7 @@ public class ContentDeploymentTest {
                 allOf(hasPath("/test"), hasPrimaryType("sling:Folder"), hasChildrenCount(1)));
     }
 
-    private void assertThatNode(final RepositoryAccessor repo, Poller poller, final String nodePath, Matcher matcher)
+    private void assertThatNode(final RepositoryAccessor repo, Poller poller, final String nodePath, Matcher<Node> matcher)
             throws InterruptedException {
 
         poller.pollUntil(new Callable<Node>() {
