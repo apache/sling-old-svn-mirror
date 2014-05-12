@@ -128,7 +128,7 @@ public class BundleDeploymentTest {
                 repo.assertGetIsSuccessful("simple-servlet", "Version 1");
                 return null;
             }
-        }, CoreMatchers.nullValue());
+        }, CoreMatchers.<Void> nullValue());
 
         // update DS component class
         InputStream simpleServlet2 = null;
@@ -145,6 +145,6 @@ public class BundleDeploymentTest {
                 repo.assertGetIsSuccessful("simple-servlet", "Version 2");
                 return null;
             }
-        }, CoreMatchers.nullValue());
+        }, CoreMatchers.<Void> nullValue());
     }
 }

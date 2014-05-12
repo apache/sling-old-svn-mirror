@@ -67,7 +67,7 @@ public class Poller {
         }
     }
 
-    public <V> V pollUntil(final Callable<V> callable, final Matcher<Object> matcher) throws InterruptedException {
+    public <V> V pollUntil(final Callable<V> callable, final Matcher<V> matcher) throws InterruptedException {
 
         final Object[] holder = new Object[1];
 
