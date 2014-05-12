@@ -38,6 +38,10 @@ public final class JcrMatchers {
         return new ChildrenCountMatcher(childrenCount);
     }
 
+    public static Matcher<Node> hasChildrenNames(String... childrenNames) {
+        return new ChildrenNameMatcher(childrenNames);
+    }
+
     private JcrMatchers() {
 
     }
