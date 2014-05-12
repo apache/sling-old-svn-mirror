@@ -114,15 +114,12 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
         for (NodeIterator it = node.getNodes(); it.hasNext();) {
 
-            // TODO - recurse
             Node child = it.nextNode();
             if (resourceChildrenPaths.containsKey(child.getPath())) {
-                System.out.println("Node at path " + child.getPath() + " lives on.");
                 processDeletedNodes(child, resourceChildrenPaths.get(child.getPath()));
                 continue;
             }
 
-            System.out.println("Removing node at path " + child.getPath());
             child.remove();
         }
     }
