@@ -97,8 +97,6 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         for (ResourceProxy child : getCoveredChildren(resource)) {
             update(child, session);
         }
-
-        // TODO - does not handle deletion of nodes which no longer have a matching resource
 	}
 
     private void processDeletedNodes(Node node, ResourceProxy resource2) throws RepositoryException {
