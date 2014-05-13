@@ -20,6 +20,7 @@ import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasChildren
 import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasPath;
 import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasPrimaryType;
 import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.nullValue;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -45,7 +46,6 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
-import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Rule;
@@ -102,7 +102,7 @@ public class ContentDeploymentTest {
                 repo.assertGetIsSuccessful("test/hello.txt", "hello, world");
                 return null;
             }
-        }, CoreMatchers.<Void> nullValue());
+        }, nullValue(Void.class));
 
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/hello.txt"), new ByteArrayInputStream(
                 "goodbye, world".getBytes()));
@@ -114,7 +114,7 @@ public class ContentDeploymentTest {
                 repo.assertGetIsSuccessful("test/hello.txt", "goodbye, world");
                 return null;
             }
-        }, CoreMatchers.<Void> nullValue());
+        }, nullValue(Void.class));
 
 
         project.deleteMember(Path.fromPortableString("jcr_root/test/hello.txt"));
@@ -126,7 +126,7 @@ public class ContentDeploymentTest {
                 repo.assertGetReturns404("test/hello.txt");
                 return null;
             }
-        }, CoreMatchers.<Void> nullValue());
+        }, nullValue(Void.class));
 
     }
 

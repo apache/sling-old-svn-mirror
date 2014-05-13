@@ -22,13 +22,11 @@ import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasMixinTyp
 import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasPath;
 import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasPrimaryType;
 import static org.hamcrest.CoreMatchers.allOf;
-import static org.junit.Assert.assertThat;
 
 import java.io.InputStream;
 import java.util.concurrent.Callable;
 
 import javax.jcr.Node;
-import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 
 import org.apache.commons.io.IOUtils;
