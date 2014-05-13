@@ -82,7 +82,6 @@
 
     <!-- List modules to be included in the build here ! -->
     <modules>
-          <module>commons/compiler</module>
           <module>commons/fsclassloader</module>
           <module>commons/html</module>
           <module>extensions/apt/parser</module>
