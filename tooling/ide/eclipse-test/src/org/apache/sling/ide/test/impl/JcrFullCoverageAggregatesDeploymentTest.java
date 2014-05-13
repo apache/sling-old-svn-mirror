@@ -227,6 +227,57 @@ public class JcrFullCoverageAggregatesDeploymentTest {
 
     }
 
+    @Test
+    public void deployNestedFullCoverageAggregateAtFilterRoot() throws Exception {
+
+        wstServer.waitForServerToStart();
+
+        // create faceted project
+        IProject contentProject = projectRule.getProject();
+
+        ProjectAdapter project = new ProjectAdapter(contentProject);
+        project.addNatures("org.eclipse.wst.common.project.facet.core.nature");
+
+        // create filter.xml
+        InputStream filterXml = getClass().getResourceAsStream("filter-only-content-test-root-en.xml");
+        try {
+            project.createOrUpdateFile(Path.fromPortableString("META-INF/vault/filter.xml"), filterXml);
+        } finally {
+            IOUtils.closeQuietly(filterXml);
+        }
+
+        // create .content.xml structure
+        InputStream contentXml = getClass().getResourceAsStream("content-nested-structure.xml");
+        try {
+            project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), contentXml);
+        } finally {
+            IOUtils.closeQuietly(contentXml);
+        }
+
+        // install content facet
+        project.installFacet("sling.content", "1.0");
+
+        // create prerequisite data
+        final RepositoryAccessor repo = new RepositoryAccessor(config);
+        repo.createNode("/content", "sling:Folder");
+        repo.createNode("/content/test-root", "sling:Folder");
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
+
+        Matcher<Node> postConditions = allOf(hasPath("/content/test-root/en"), hasPrimaryType("sling:Folder"),
+                hasMixinTypes("mix:language"), hasChildrenCount(3));
+
+        Poller poller = new Poller();
+        poller.pollUntil(new Callable<Node>() {
+            @Override
+            public Node call() throws RepositoryException {
+                return repo.getNode("/content/test-root/en");
+
+            }
+        }, postConditions);
+    }
+
     @After
     public void cleanup() throws Exception {
         new RepositoryAccessor(config).tryDeleteResource("/content/test-root");

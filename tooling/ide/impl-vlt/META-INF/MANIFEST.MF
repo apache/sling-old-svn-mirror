@@ -8,6 +8,7 @@ Require-Bundle: org.eclipse.equinox.ds;bundle-version="1.2.1",
  org.eclipse.osgi.services;bundle-version="3.2.100"
 Import-Package: javax.jcr,
  javax.jcr.nodetype,
+ org.apache.commons.io;version="2.0.1",
  org.apache.jackrabbit.util,
  org.apache.jackrabbit.vault.fs,
  org.apache.jackrabbit.vault.fs.api,
