@@ -41,7 +41,7 @@ public interface ReplicationQueue {
      * <code>false</code otherwise
      * @throws ReplicationQueueException
      */
-    boolean add(ReplicationQueueItem replicationPackage) throws ReplicationQueueException;
+    boolean add(ReplicationQueueItem replicationPackage);
 
     /**
      * get the status of a certain package in the queue
@@ -64,7 +64,6 @@ public interface ReplicationQueue {
     /**
      * remove the first package into the queue from it
      *
-     * @throws ReplicationQueueException
      */
     void removeHead();
 

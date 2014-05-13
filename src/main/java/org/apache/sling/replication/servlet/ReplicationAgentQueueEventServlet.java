@@ -80,7 +80,7 @@ public class ReplicationAgentQueueEventServlet extends SlingAllMethodsServlet {
     }
 
     @Deactivate
-    protected void deactivate() throws Exception {
+    protected void deactivate() {
         log.info("deactivating SSE");
         if (registration != null) {
             registration.unregister();
@@ -129,8 +129,7 @@ public class ReplicationAgentQueueEventServlet extends SlingAllMethodsServlet {
     }
 
     /* Write a single server-sent event to the response stream for the given event and message */
-    private void writeEvent(PrintWriter writer, String event, String message)
-            throws IOException {
+    private void writeEvent(PrintWriter writer, String event, String message) {
 
         // write the event type (make sure to include the double newline)
         writer.write("id: " + System.nanoTime() + "\n");

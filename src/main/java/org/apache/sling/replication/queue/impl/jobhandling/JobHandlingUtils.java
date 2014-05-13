@@ -57,7 +57,7 @@ public class JobHandlingUtils {
     }
 
     public static Map<String, Object> createFullPropertiesFromPackage(
-            ReplicationQueueItem replicationPackage) throws IOException {
+            ReplicationQueueItem replicationPackage) {
         Map<String, Object> properties = new HashMap<String, Object>();
 
         if (replicationPackage.getId() != null)

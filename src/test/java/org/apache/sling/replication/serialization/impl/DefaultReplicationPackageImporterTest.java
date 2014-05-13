@@ -18,13 +18,9 @@
  */
 package org.apache.sling.replication.serialization.impl;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.util.Map;
-import org.apache.sling.event.jobs.Job;
-import org.apache.sling.event.jobs.JobBuilder;
-import org.apache.sling.event.jobs.JobManager;
+
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.event.ReplicationEventFactory;
@@ -35,7 +31,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;

@@ -94,7 +94,7 @@ public class JobHandlingReplicationQueueProvider extends AbstractReplicationQueu
     }
 
     @Override
-    protected void deleteQueue(ReplicationQueue queue) throws ReplicationQueueException {
+    protected void deleteQueue(ReplicationQueue queue) {
         Queue q = jobManager.getQueue(queue.getName());
         q.removeAll();
     }

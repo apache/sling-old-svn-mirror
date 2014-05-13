@@ -21,12 +21,12 @@ package org.apache.sling.replication.serialization.impl;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.vault.util.Text;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
-import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 
 /**
@@ -57,7 +57,7 @@ public class VoidReplicationPackage implements ReplicationPackage {
 
         String[] parts = streamString.split(":");
 
-        if(parts == null || parts.length < 4) return null;
+        if(parts.length < 4) return null;
 
         String actionString = parts[0];
         String pathsString = parts[1];

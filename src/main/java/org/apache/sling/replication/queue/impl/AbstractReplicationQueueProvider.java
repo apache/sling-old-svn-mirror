@@ -71,6 +71,6 @@ public abstract class AbstractReplicationQueueProvider implements ReplicationQue
 
     protected abstract ReplicationQueue getOrCreateQueue(String agentName, String queueName) throws ReplicationQueueException;
 
-    protected abstract void deleteQueue(ReplicationQueue queue) throws ReplicationQueueException;
+    protected abstract void deleteQueue(ReplicationQueue queue);
 
 }

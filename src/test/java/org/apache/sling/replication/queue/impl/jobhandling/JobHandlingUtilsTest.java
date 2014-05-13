@@ -36,7 +36,6 @@ public class JobHandlingUtilsTest {
     @Test
     public void testFullPropertiesFromPackageCreation() throws Exception {
         ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
-        InputStream stream = IOUtils.toInputStream("some text");
         when(replicationPackage.getAction()).thenReturn("ADD");
         when(replicationPackage.getId()).thenReturn("an-id");
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/content", "/apps"});

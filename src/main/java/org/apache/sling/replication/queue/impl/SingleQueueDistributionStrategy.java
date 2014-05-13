@@ -22,7 +22,6 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.replication.queue.*;
-import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

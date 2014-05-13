@@ -22,25 +22,15 @@ package org.apache.sling.replication.resources.impl;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.resources.impl.common.AbstractReadableResourceProvider;
-import org.apache.sling.replication.resources.impl.common.SimpleModifiableResource;
-import org.apache.sling.replication.resources.impl.common.SimplePathInfo;
-import org.apache.sling.replication.resources.impl.common.SimpleReadableResource;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
-import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,7 +43,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class OsgiServicePropertiesResourceProvider extends AbstractReadableResourceProvider implements ServiceTrackerCustomizer {
 
     private final BundleContext context;
-    private final String serviceInterface;
     private final String friendlyNameProperty;
 
     private final Map<String, Object> services = new ConcurrentHashMap<String, Object>();
@@ -66,7 +55,7 @@ public class OsgiServicePropertiesResourceProvider extends AbstractReadableResou
                                                  Map<String, String> additionalResourceProperties) {
         super(resourceRoot, additionalResourceProperties);
         this.context = context;
-        this.serviceInterface = serviceInterface;
+        String serviceInterface1 = serviceInterface;
         this.friendlyNameProperty = friendlyNameProperty;
     }
 

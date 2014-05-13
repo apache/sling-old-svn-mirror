@@ -31,7 +31,6 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 
 import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.communication.ReplicationHeader;
 import org.apache.sling.replication.communication.ReplicationParameter;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueItem;
@@ -80,8 +79,7 @@ public class ReplicationAgentQueueServlet extends SlingAllMethodsServlet {
 
         if("delete".equals(operation)) {
             doDelete(request, response);
-            return;
-        };
+        }
     }
 
 

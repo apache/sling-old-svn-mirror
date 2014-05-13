@@ -73,7 +73,7 @@ public class ReplicationAgentServlet extends SlingAllMethodsServlet {
     }
 
     private void doCreate(SlingHttpServletRequest request, SlingHttpServletResponse response)
-            throws ServletException, IOException {
+            throws IOException {
 
         response.setContentType("application/json");
 
@@ -111,8 +111,7 @@ public class ReplicationAgentServlet extends SlingAllMethodsServlet {
         }
     }
 
-    private void doRemove(SlingHttpServletRequest request, SlingHttpServletResponse response)
-            throws ServletException, IOException {
+    private void doRemove(SlingHttpServletRequest request, SlingHttpServletResponse response) {
 
         response.setContentType(ContentType.APPLICATION_OCTET_STREAM.toString());
 
@@ -168,7 +167,7 @@ public class ReplicationAgentServlet extends SlingAllMethodsServlet {
             l.add(e.nextElement());
         }
 
-        return l.toArray(new String[0]);
+        return l.toArray(new String[l.size()]);
 
     }
 

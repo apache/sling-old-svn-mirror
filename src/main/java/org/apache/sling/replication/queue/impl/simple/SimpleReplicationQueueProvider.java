@@ -50,7 +50,7 @@ public class SimpleReplicationQueueProvider extends AbstractReplicationQueueProv
         return new SimpleReplicationQueue(agentName, selector);
     }
 
-    protected void deleteQueue(ReplicationQueue queue) throws ReplicationQueueException {
+    protected void deleteQueue(ReplicationQueue queue) {
         // do nothing as queues just exist in the cache
     }
 

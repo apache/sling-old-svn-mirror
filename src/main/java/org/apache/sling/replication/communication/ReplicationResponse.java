@@ -36,13 +36,7 @@ public class ReplicationResponse {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{\"success\":");
-        sb.append(successful);
-        sb.append(", \"status\":\"");
-        sb.append(status);
-        sb.append("\"}");
-        return sb.toString();
+        return "{\"success\":" + successful + ", \"status\":\"" + status + "\"}";
     }
 
     public String getStatus() {

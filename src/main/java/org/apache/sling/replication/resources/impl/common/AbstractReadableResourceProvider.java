@@ -29,7 +29,6 @@ import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 public abstract class AbstractReadableResourceProvider implements ResourceProvider {
 

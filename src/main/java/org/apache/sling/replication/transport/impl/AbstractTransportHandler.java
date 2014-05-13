@@ -19,7 +19,6 @@
 package org.apache.sling.replication.transport.impl;
 
 import org.apache.sling.replication.communication.ReplicationEndpoint;
-import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.queue.ReplicationQueueProcessor;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.apache.sling.replication.transport.ReplicationTransportException;
@@ -35,7 +34,7 @@ public abstract class AbstractTransportHandler implements TransportHandler {
     private int lastSuccessfulEnpointId = 0;
 
 
-    private Map<String, ReplicationQueueProcessor> responseProcessorMap = new ConcurrentHashMap<String, ReplicationQueueProcessor>();
+    private final Map<String, ReplicationQueueProcessor> responseProcessorMap = new ConcurrentHashMap<String, ReplicationQueueProcessor>();
 
     public AbstractTransportHandler(ReplicationEndpoint[] endpoints, TransportEndpointStrategyType endpointStrategyType) {
         this.endpoints = endpoints;
