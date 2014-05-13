@@ -31,6 +31,7 @@ import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.jackrabbit.util.Text;
 import org.apache.sling.ide.jcr.RepositoryUtils;
 import org.apache.sling.ide.transport.RepositoryInfo;
 import org.hamcrest.CoreMatchers;
@@ -100,10 +101,25 @@ public class RepositoryAccessor {
         }
     }
 
-
     public Node getNode(String nodePath) throws RepositoryException {
 
         return login().getNode(nodePath);
+    }
+
+    public void createNode(String path, String primaryNodeType) throws RepositoryException {
+
+        Session session = login();
+        try {
+            if (session.nodeExists(path)) {
+                return;
+            }
+
+            Node parent = session.getNode(Text.getRelativeParent(path, 1));
+            parent.addNode(Text.getName(path), primaryNodeType);
+            session.save();
+        } finally {
+            session.logout();
+        }
     }
 
     private Session login() throws RepositoryException {
@@ -120,5 +136,6 @@ public class RepositoryAccessor {
         
         return repository.login(credentials);
     }
+
 
 }
