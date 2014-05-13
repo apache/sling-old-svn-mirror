@@ -222,6 +222,8 @@ public class Sling {
                 init(tmpFramework);
             }
 
+            new DefaultStartupHandler(tmpFramework.getBundleContext(), logger, startupManager);
+
             // finally start
             tmpFramework.start();
 
