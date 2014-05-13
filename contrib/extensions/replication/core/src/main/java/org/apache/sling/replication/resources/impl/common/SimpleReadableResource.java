@@ -21,14 +21,12 @@ package org.apache.sling.replication.resources.impl.common;
 
 
 import org.apache.sling.api.resource.AbstractResource;
-import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 
 import java.lang.reflect.Array;
-import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -102,9 +100,8 @@ public class SimpleReadableResource extends AbstractResource {
                     if (type.isArray()) {
                         if (adapter.getClass().isArray()) {
                             Object[] adapterArray = (Object[]) adapter;
-                            AdapterType result = convertArray(type, adapterArray);
 
-                            return result;
+                            return convertArray(type, adapterArray);
                         }
                     }
                     else if (type.isAssignableFrom(adapter.getClass())) {

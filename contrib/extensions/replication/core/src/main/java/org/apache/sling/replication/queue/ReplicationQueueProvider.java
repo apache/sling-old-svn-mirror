@@ -57,7 +57,6 @@ public interface ReplicationQueueProvider {
      * get all the available queues from this provider
      * 
      * @return a collection of replication queues
-     * @throws ReplicationQueueException
      */
     Collection<ReplicationQueue> getAllQueues();
 
@@ -74,7 +73,7 @@ public interface ReplicationQueueProvider {
      * enables queue driven processing for an agent.
      * @param agentName
      *          a replication agent
-     * @param queueProcessor
+     * @param queueProcessor the queue processor to be used
      */
     void enableQueueProcessing(String agentName, ReplicationQueueProcessor queueProcessor);
 

@@ -119,11 +119,13 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
             replicationPackage = VoidReplicationPackage.fromStream(new ByteArrayInputStream(id.getBytes()));
         }
         catch (IOException ex){
+            // not a void package
         }
 
-        if(replicationPackage != null) return replicationPackage;
-
-        return getPackageInternal(id);
+        if(replicationPackage == null) {
+            replicationPackage = getPackageInternal(id);
+        }
+        return replicationPackage;
     }
 
     protected abstract String getName();

@@ -44,7 +44,6 @@ public class ErrorAwareQueueDistributionStrategyTest {
     public void testPackageAdditionWithSucceedingItemDelivery() throws Exception {
         ErrorAwareQueueDistributionStrategy errorAwareDistributionStrategy = new ErrorAwareQueueDistributionStrategy();
         ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
-        ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
         when(queueProvider.getDefaultQueue("agentName")).thenReturn(queue);
@@ -61,7 +60,6 @@ public class ErrorAwareQueueDistributionStrategyTest {
     public void testPackageAdditionWithFailingItemDelivery() throws Exception {
         ErrorAwareQueueDistributionStrategy errorAwareDistributionStrategy = new ErrorAwareQueueDistributionStrategy();
         ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
-        ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
         when(queueProvider.getDefaultQueue("agentName")).thenReturn(queue);
@@ -84,7 +82,6 @@ public class ErrorAwareQueueDistributionStrategyTest {
         when(context.getProperties()).thenReturn(properties);
         errorAwareDistributionStrategy.activate(context);
         ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
-        ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
         when(queueProvider.getDefaultQueue("agentName")).thenReturn(queue);
@@ -112,7 +109,6 @@ public class ErrorAwareQueueDistributionStrategyTest {
         when(context.getProperties()).thenReturn(properties);
         errorAwareDistributionStrategy.activate(context);
         ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
-        ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
         when(queueProvider.getDefaultQueue("agentName")).thenReturn(queue);
@@ -131,7 +127,6 @@ public class ErrorAwareQueueDistributionStrategyTest {
     public void testPackageAdditionWithNullItemStateFromTheQueue() throws Exception {
         ErrorAwareQueueDistributionStrategy errorAwareDistributionStrategy = new ErrorAwareQueueDistributionStrategy();
         ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
-        ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
         when(queueProvider.getDefaultQueue("agentName")).thenReturn(queue);
@@ -144,7 +139,6 @@ public class ErrorAwareQueueDistributionStrategyTest {
     public void testPackageAdditionWithNotNullItemStateFromTheQueue() throws Exception {
         ErrorAwareQueueDistributionStrategy errorAwareDistributionStrategy = new ErrorAwareQueueDistributionStrategy();
         ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
-        ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
         when(queueProvider.getDefaultQueue("agentName")).thenReturn(queue);

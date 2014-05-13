@@ -86,7 +86,7 @@ public class ReplicationQueueHealthCheck implements HealthCheck {
     }
 
     @Deactivate
-    protected void deactivate() throws Exception {
+    protected void deactivate() {
         replicationQueueProviders.clear();
     }
 

@@ -29,12 +29,12 @@ package org.apache.sling.replication.resources.impl.common;
  */
 public class SimplePathInfo {
 
-    String resourcePathInfo;
+    final String resourcePathInfo;
 
     // resourcePath = resourceRoot + "/" + mainResourceName + "/" + childResourceName
-    private String resourceRoot;
-    private String mainResourceName;
-    private String childResourceName;
+    private final String resourceRoot;
+    private final String mainResourceName;
+    private final String childResourceName;
 
     public SimplePathInfo(String resourcePathInfo, String resourceRoot, String resourceName, String childResourceName) {
 

@@ -50,7 +50,7 @@ public interface ReplicationAgentConfigurationManager {
      * creates a configuration for a {@link ReplicationAgent}
      *
      *
-     * @param agentName
+     * @param agentName name of the agent
      * @param properties the configuration of the agent to create
      * @throws AgentConfigurationException
      */
@@ -58,9 +58,9 @@ public interface ReplicationAgentConfigurationManager {
             throws AgentConfigurationException;
 
     /**
-     * creates a configuration for a {@link ReplicationAgent}       *
+     * deletes a configuration for a {@link ReplicationAgent}       *
      *
-     * @param agentName
+     * @param agentName name of the agent
      * @throws AgentConfigurationException
      */
     void deleteAgentConfiguration(String agentName)

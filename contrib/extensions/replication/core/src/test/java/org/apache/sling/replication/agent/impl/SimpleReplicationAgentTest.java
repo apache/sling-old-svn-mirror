@@ -130,7 +130,6 @@ public class SimpleReplicationAgentTest {
     @Test
     public void testGetExistingNamedQueue() throws Exception {
         String name = "sample-agent";
-        String endpoint = "/tmp";
         TransportHandler transportHandler = mock(TransportHandler.class);
         ReplicationPackageBuilder packageBuilder = mock(ReplicationPackageBuilder.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);

@@ -107,7 +107,7 @@ public class DefaultReplicationAgentConfigurationManager implements
         return getOsgiConfiguration(filter);
     }
 
-    private Configuration getComponentConfiguration(Configuration agentConfiguration, String component) throws Exception {
+    private Configuration getComponentConfiguration(Configuration agentConfiguration, String component) {
         try {
             String filter = PropertiesUtil.toString(agentConfiguration.getProperties().get(component), "");
             return getOsgiConfiguration(filter);

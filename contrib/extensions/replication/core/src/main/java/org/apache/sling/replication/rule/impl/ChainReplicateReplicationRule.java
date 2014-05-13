@@ -42,7 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * a rule for triggering a chain replication upon replication package installation {@link ReplicationEventType.PACKAGE_INSTALLED}
+ * a rule for triggering a chain replication upon replication package installation {@link org.apache.sling.replication.event.ReplicationEventType.PACKAGE_INSTALLED}
  */
 @Component(immediate = true, label = "Rule for Chain Replication")
 @Service(value = ReplicationRule.class)

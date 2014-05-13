@@ -20,7 +20,7 @@ package org.apache.sling.replication.agent.impl;
 
 import java.lang.reflect.Field;
 import java.util.Properties;
-import org.apache.sling.replication.agent.ReplicationAgent;
+
 import org.junit.Test;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;

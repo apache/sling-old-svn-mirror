@@ -208,7 +208,7 @@ public class ReplicationAgentServiceFactory {
     }
 
     @Deactivate
-    private void deactivate(BundleContext context) throws Exception {
+    private void deactivate(BundleContext context) {
         if (agentReg != null) {
             ServiceReference reference = agentReg.getReference();
             ReplicationAgent replicationAgent = (ReplicationAgent) context.getService(reference);

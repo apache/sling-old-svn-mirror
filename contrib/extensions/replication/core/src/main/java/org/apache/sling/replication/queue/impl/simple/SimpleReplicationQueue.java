@@ -25,7 +25,7 @@ import java.util.WeakHashMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import org.apache.sling.replication.agent.ReplicationAgent;
+
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.queue.ReplicationQueueItemState;
@@ -43,8 +43,6 @@ public class SimpleReplicationQueue implements ReplicationQueue {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final String agentName;
-
     private final String name;
 
     private final BlockingQueue<ReplicationQueueItem> queue;
@@ -55,7 +53,6 @@ public class SimpleReplicationQueue implements ReplicationQueue {
         if (log.isInfoEnabled()) {
             log.info("starting a simple queue for agent {}", agentName);
         }
-        this.agentName = agentName;
         this.name = name;
         this.queue = new LinkedBlockingQueue<ReplicationQueueItem>();
         this.statusMap = new WeakHashMap<ReplicationQueueItem, ReplicationQueueItemState>(10);
