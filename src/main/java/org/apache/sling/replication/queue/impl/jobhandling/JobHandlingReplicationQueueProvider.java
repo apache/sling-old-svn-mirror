@@ -63,6 +63,7 @@ public class JobHandlingReplicationQueueProvider extends AbstractReplicationQueu
     private ConfigurationAdmin configAdmin;
 
     private final Map<String, ServiceRegistration> jobs = new ConcurrentHashMap<String, ServiceRegistration>();
+
     private BundleContext context;
 
     @Override

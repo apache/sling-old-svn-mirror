@@ -53,6 +53,8 @@ import org.slf4j.LoggerFactory;
  */
 public class SimpleReplicationAgent implements ReplicationAgent {
 
+    private final static String RESPONSE_QUEUE = "response";
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final ReplicationPackageBuilder packageBuilder;
@@ -72,8 +74,6 @@ public class SimpleReplicationAgent implements ReplicationAgent {
     private final boolean useAggregatePaths;
 
     private final ReplicationRuleEngine ruleEngine;
-
-    private final String RESPONSE_QUEUE = "response";
 
     public SimpleReplicationAgent(String name, String[] rules,
                                   boolean useAggregatePaths,

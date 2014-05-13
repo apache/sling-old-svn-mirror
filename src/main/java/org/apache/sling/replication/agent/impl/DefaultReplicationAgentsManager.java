@@ -86,7 +86,7 @@ public class DefaultReplicationAgentsManager implements ReplicationAgentsManager
         log.debug("Unregistering replication agent {} ", replicationAgent);
     }
 
-    private final class ReplicationAgentComparator implements Comparator<ReplicationAgent> {
+    private static final class ReplicationAgentComparator implements Comparator<ReplicationAgent> {
         public int compare(ReplicationAgent o1, ReplicationAgent o2) {
             return o1.getName().compareTo(o2.getName());
         }
