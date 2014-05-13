@@ -112,6 +112,10 @@ public class ProjectAdapter {
 
     public void createOrUpdateFile(IPath fromPortableString, InputStream resourceAsStream) throws CoreException {
 
+        if (resourceAsStream == null) {
+            throw new IllegalArgumentException("resourceAsStream may not be null");
+        }
+
         IContainer current = project;
 
         for (int i = 0; i < fromPortableString.segmentCount() - 1; i++) {
