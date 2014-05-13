@@ -16,6 +16,8 @@
  */
 package org.apache.sling.ide.test.impl;
 
+import static org.hamcrest.CoreMatchers.nullValue;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.Callable;
@@ -39,7 +41,6 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
-import org.hamcrest.CoreMatchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -128,7 +129,7 @@ public class BundleDeploymentTest {
                 repo.assertGetIsSuccessful("simple-servlet", "Version 1");
                 return null;
             }
-        }, CoreMatchers.<Void> nullValue());
+        }, nullValue(Void.class));
 
         // update DS component class
         InputStream simpleServlet2 = null;
@@ -145,6 +146,6 @@ public class BundleDeploymentTest {
                 repo.assertGetIsSuccessful("simple-servlet", "Version 2");
                 return null;
             }
-        }, CoreMatchers.<Void> nullValue());
+        }, nullValue(Void.class));
     }
 }

@@ -16,6 +16,8 @@
  */
 package org.apache.sling.ide.test.impl.helpers;
 
+import static org.hamcrest.CoreMatchers.notNullValue;
+
 import java.util.concurrent.Callable;
 
 import org.eclipse.core.resources.IProject;
@@ -25,7 +27,6 @@ import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.IServerWorkingCopy;
 import org.eclipse.wst.server.core.ServerUtil;
-import org.hamcrest.CoreMatchers;
 
 /**
  * The <tt>ServerAdapter</tt> adapts the Eclipse server APIs to make them simpler to use for testing purposes
@@ -47,7 +48,7 @@ public class ServerAdapter {
             public IModule call() throws Exception {
                 return ServerUtil.getModule(project);
             }
-        }, CoreMatchers.<IModule> notNullValue());
+        }, notNullValue(IModule.class));
 
         IServerWorkingCopy serverWorkingCopy = server.createWorkingCopy();
         serverWorkingCopy.modifyModules(new IModule[] { bundleModule }, new IModule[0], new NullProgressMonitor());
