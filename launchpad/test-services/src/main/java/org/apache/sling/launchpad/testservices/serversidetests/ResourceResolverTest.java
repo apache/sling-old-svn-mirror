@@ -1334,7 +1334,68 @@ public class ResourceResolverTest {
             saveMappings(session);
         }
     }
+    
+    @Test public void testResolveRemovedVanityPath() throws Exception {          
+        String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
+                + "/" + vanity[0] + ".print.html");
 
+        HttpServletRequest request = new FakeSlingHttpServletRequest(path);
+        Resource res = resResolver.resolve(request, path);
+        assertNotNull(res);
+        assertEquals(rootPath, res.getPath());
+        assertEquals(rootNode.getPrimaryNodeType().getName(),
+                res.getResourceType());
+
+        assertEquals(".print.html",
+                res.getResourceMetadata().getResolutionPathInfo());
+
+        assertNotNull(res.adaptTo(Node.class));
+        assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
+
+        //remove vanityPath property
+        rootNode.getProperty("sling:vanityPath").remove();
+        saveMappings(session);
+
+        res = resResolver.resolve(request, path);
+        assertNotNull(res);
+        assertTrue(res instanceof NonExistingResource);
+        assertEquals("/"+vanity[0]+".print.html", res.getPath());
+
+        //restore vanityPath
+        rootNode.setProperty("sling:vanityPath", vanity);
+        saveMappings(session);
+
+        //create new child with vanity path
+        Node childNode = maybeCreateNode(rootNode, "rootChild", "nt:unstructured");
+        childNode.setProperty("sling:vanityPath", "childVanity");
+        childNode.addMixin("sling:VanityPath");
+        saveMappings(session);
+
+        path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
+                + "/childVanity.print.html");
+
+        request = new FakeSlingHttpServletRequest(path);
+        res = resResolver.resolve(request, path);
+        assertNotNull(res);
+        assertEquals(childNode.getPath(), res.getPath());
+        assertEquals(childNode.getPrimaryNodeType().getName(),
+                res.getResourceType());
+
+        assertEquals(".print.html",
+                res.getResourceMetadata().getResolutionPathInfo());
+
+        assertNotNull(res.adaptTo(Node.class));
+        assertTrue(childNode.isSame(res.adaptTo(Node.class)));
+
+        //remove node with vanity path
+        childNode.remove();
+        saveMappings(session);
+
+        res = resResolver.resolve(request, path);
+        assertNotNull(res);
+        assertTrue(res instanceof NonExistingResource);
+        assertEquals("/childVanity.print.html", res.getPath());
+    }
 
     @Test public void testGetDoesNotGoUp() throws Exception {
 
