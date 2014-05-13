@@ -212,7 +212,6 @@
         
         <!-- Launchpad -->
         <module>launchpad/api</module>
-        <module>launchpad/impl</module>
         <module>launchpad/base</module>
         <module>launchpad/installer</module>
         <module>launchpad/content</module>
