@@ -38,4 +38,8 @@ public class RepositoryFactoryImpl implements RepositoryFactory {
     protected void bindEventAdmin(EventAdmin eventAdmin) {
         this.eventAdmin = eventAdmin;
     }
+
+    protected void unbindEventAdmin(EventAdmin eventAdmin) {
+        this.eventAdmin = null;
+    }
 }
