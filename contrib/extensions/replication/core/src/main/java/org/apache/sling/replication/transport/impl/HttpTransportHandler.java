@@ -159,7 +159,7 @@ public class HttpTransportHandler extends AbstractTransportHandler
         try{
             if (useCustomBody) {
                 String body = customBody == null ? "" : customBody;
-                inputStream = new ByteArrayInputStream(body.getBytes());
+                inputStream = new ByteArrayInputStream(body.getBytes("UTF-8"));
             }
             else {
                 inputStream = replicationPackage.createInputStream();

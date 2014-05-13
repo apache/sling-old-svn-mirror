@@ -18,9 +18,8 @@
  */
 package org.apache.sling.replication.agent;
 
-import java.util.Arrays;
-import java.util.Dictionary;
-import java.util.Enumeration;
+import java.util.*;
+
 import org.apache.sling.commons.osgi.PropertiesUtil;
 
 /**
@@ -51,7 +50,7 @@ public class ReplicationAgentConfiguration {
 
     public static final String USE_AGGREGATE_PATHS = "useAggregatePaths";
 
-    public static final String[] COMPONENTS = {TRANSPORT, PACKAGING};
+    public static final Collection<String> COMPONENTS = Collections.unmodifiableList(Arrays.asList(TRANSPORT, PACKAGING));
 
     public static final String RUNMODES = "runModes";
 

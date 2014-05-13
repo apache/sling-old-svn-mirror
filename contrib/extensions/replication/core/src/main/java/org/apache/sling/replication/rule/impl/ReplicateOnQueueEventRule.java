@@ -237,6 +237,8 @@ public class ReplicateOnQueueEventRule implements ReplicationRule {
                         log.info("request finished");
                     }
                 }
+            } catch (RuntimeException e) {
+                throw e;
             } catch (Exception e) {
                 log.error("cannot execute event based replication");
             }

@@ -51,7 +51,7 @@ public class VoidReplicationPackageBuilder implements ReplicationPackageBuilder 
 
     public ReplicationPackage getPackage(String id) {
         try {
-            return VoidReplicationPackage.fromStream(new ByteArrayInputStream(id.getBytes()));
+            return VoidReplicationPackage.fromStream(new ByteArrayInputStream(id.getBytes("UTF-8")));
         }
         catch (IOException ex){
             return null;
