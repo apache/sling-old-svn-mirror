@@ -21,6 +21,7 @@ package org.apache.sling.replication.serialization.impl;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import org.apache.commons.io.IOUtils;
@@ -91,12 +92,15 @@ public class VoidReplicationPackage implements ReplicationPackage {
     }
 
     public long getLength() {
-        return id.getBytes().length;
+        try {
+            return id.getBytes("UTF-8").length;
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException("Unsupported UTF-8 encoding");
+        }
     }
 
-
     public InputStream createInputStream() throws IOException {
-        return new ByteArrayInputStream(id.getBytes());
+        return new ByteArrayInputStream(id.getBytes("UTF-8"));
     }
 
     public String getId() {

@@ -22,6 +22,7 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import org.apache.sling.replication.communication.ReplicationActionType;
@@ -70,7 +71,7 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
             byte[] buffer = new byte[6];
             int bytesRead = stream.read(buffer, 0, 6);
             stream.reset();
-            String s = new String(buffer);
+            String s = new String(buffer, "UTF-8");
             if (log.isInfoEnabled()) {
                 log.info("read {} bytes as {}", bytesRead, s);
             }
@@ -116,7 +117,7 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
     public ReplicationPackage getPackage(String id) {
         ReplicationPackage replicationPackage = null;
         try {
-            replicationPackage = VoidReplicationPackage.fromStream(new ByteArrayInputStream(id.getBytes()));
+            replicationPackage = VoidReplicationPackage.fromStream(new ByteArrayInputStream(id.getBytes("UTF-8")));
         }
         catch (IOException ex){
             // not a void package
