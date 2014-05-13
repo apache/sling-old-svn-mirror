@@ -162,10 +162,10 @@ public class ReplicationAgentConfiguration {
 
     private String toComponentString() {
 
-        String result = "";
+        StringBuilder result = new StringBuilder();
 
         if (componentConfiguration == null)
-            return result;
+            return result.toString();
 
         for (String component : COMPONENTS) {
             Dictionary properties = componentConfiguration.get(component);
@@ -177,13 +177,15 @@ public class ReplicationAgentConfiguration {
                 String key = (String) keys.nextElement();
                 Object value = properties.get(key);
 
-                if (key.equals("service.pid")) continue;
+                if (key.equals("service.pid")) {
+                    continue;
+                }
 
-                result += component + "." + key + "\":\"" + PropertiesUtil.toString(value, "") + "\", \"";
+                result.append(component).append(".").append(key).append("\":\"").append(PropertiesUtil.toString(value, "")).append("\", \"");
             }
         }
 
-        return result;
+        return result.toString();
     }
 
     public String toSimpleString() {
