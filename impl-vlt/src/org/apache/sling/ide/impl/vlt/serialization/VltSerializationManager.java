@@ -31,6 +31,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.vault.fs.Mounter;
 import org.apache.jackrabbit.vault.fs.api.RepositoryAddress;
 import org.apache.jackrabbit.vault.fs.api.SerializationType;
@@ -110,25 +111,39 @@ public class VltSerializationManager implements SerializationManager {
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    // don't care
-                }
-            }
+            IOUtils.closeQuietly(in);
         }
     }
 
     @Override
     public String getBaseResourcePath(String serializationFilePath) {
-        // TODO actually calculate the resource path, this fails for full coverage aggregates
-        if (Constants.DOT_CONTENT_XML.equals(serializationFilePath)) {
-            return "";
+
+        File file = new File(serializationFilePath);
+        String fileName = file.getName();
+        if (fileName.equals(Constants.DOT_CONTENT_XML)) {
+            return file.getParent();
         }
 
-        return serializationFilePath.substring(0, serializationFilePath.length()
-                - (Constants.DOT_CONTENT_XML.length() + 1));
+        if (!fileName.endsWith(EXTENSION_XML)) {
+            return file.getAbsolutePath();
+        }
+
+        // TODO - refrain from doing I/O here
+        // TODO - copied from TransactionImpl
+        InputStream in = null;
+        try {
+            in = new BufferedInputStream(new FileInputStream(file));
+            SerializationType serType = XmlAnalyzer.analyze(new InputSource(in));
+            if (serType == SerializationType.XML_DOCVIEW) {
+                return file.getAbsolutePath().substring(0, file.getAbsolutePath().length() - EXTENSION_XML.length());
+            }
+
+            return file.getAbsolutePath();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            IOUtils.closeQuietly(in);
+        }
     }
 
     @Override

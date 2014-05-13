@@ -165,6 +165,10 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
         PluginLogger logger = Activator.getDefault().getPluginLogger();
         
+        if (serializationManager == null) {
+            serializationManager = Activator.getDefault().getSerializationManager();
+        }
+
         logger.trace(traceOperation(kind, deltaKind, module));
 
         if (deltaKind==ServerBehaviourDelegate.NO_CHANGE) {
@@ -542,14 +546,13 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         File syncDirectoryAsFile = ProjectUtil.getSyncDirectoryFullPath(res.getProject()).toFile();
         IFolder syncDirectory = ProjectUtil.getSyncDirectory(res.getProject());
 
-        if (serializationManager(repository, syncDirectoryAsFile).isSerializationFile(info.getLocation())) {
+        if (serializationManager.isSerializationFile(info.getLocation())) {
             InputStream contents = null;
             try {
                 IFile file = (IFile) resource.getAdapter(IFile.class);
                 contents = file.getContents();
                 String resourceLocation = file.getFullPath().makeRelativeTo(syncDirectory.getFullPath()).toPortableString();
-                ResourceProxy resourceProxy = serializationManager(repository, syncDirectoryAsFile)
-                        .readSerializationData(resourceLocation, contents);
+                ResourceProxy resourceProxy = serializationManager.readSerializationData(resourceLocation, contents);
                 // TODO - not sure if this 100% correct, but we definitely should not refer to the FileInfo as the
                 // .serialization file, since for nt:file/nt:resource nodes this will overwrite the file contents
                 String primaryType = (String) resourceProxy.getProperties().get(Repository.JCR_PRIMARY_TYPE);
@@ -644,14 +647,12 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
         IProject project = file.getProject();
 
-        String syncDirectory = ProjectUtil.getSyncDirectoryValue(project);
-        File syncDirectoryAsFile = ProjectUtil.getSyncDirectoryFile(project);
-
-        Filter filter = loadFilter(project.getFolder(syncDirectory));
+        IFolder syncFolder = project.getFolder(ProjectUtil.getSyncDirectoryValue(project));
+        Filter filter = loadFilter(syncFolder);
 
         if (filter != null) {
-            FilterResult filterResult = getFilterResult(resource, filter, syncDirectoryAsFile,
-                    repository);
+            FilterResult filterResult = getFilterResult(resource, filter, ProjectUtil.getSyncDirectoryFile(project),
+                    syncFolder, repository);
             if (filterResult == FilterResult.DENY || filterResult == FilterResult.PREREQUISITE) {
                 return null;
             }
@@ -685,15 +686,14 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
     }
 
     private FilterResult getFilterResult(IModuleResource resource, Filter filter, File contentSyncRoot,
+            IFolder syncFolder,
             Repository repository) throws SerializationException {
 
-        String filePath = resource.getModuleRelativePath().toOSString();
-		String absFilePath = new File(contentSyncRoot, filePath).getAbsolutePath();
-        if (serializationManager(repository, contentSyncRoot).isSerializationFile(absFilePath)) {
-            filePath = serializationManager.getBaseResourcePath(filePath);
-        }
+        String absFilePath = new File(contentSyncRoot, resource.getModuleRelativePath().toOSString()).getAbsolutePath();
+        String filePath = serializationManager.getBaseResourcePath(absFilePath);
         
-        String repositoryPath = resource.getModuleRelativePath().toPortableString();
+        IPath osPath = Path.fromOSString(filePath);
+        String repositoryPath = osPath.makeRelativeTo(syncFolder.getLocation()).toPortableString();
 
         Activator.getDefault().getPluginLogger().trace("Filtering by {0} for {1}", repositoryPath, resource);
 
@@ -723,7 +723,8 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         Filter filter = loadFilter(syncDirectory);
 
         if (filter != null) {
-            FilterResult filterResult = getFilterResult(resource, filter, syncDirectoryAsFile, repository);
+            FilterResult filterResult = getFilterResult(resource, filter, syncDirectoryAsFile, syncDirectory,
+                    repository);
             if (filterResult == FilterResult.DENY || filterResult == FilterResult.PREREQUISITE) {
                 return null;
             }
@@ -757,16 +758,5 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         }
         return filter;
     }
-
-    private SerializationManager serializationManager(Repository repository, File contentSyncRoot)
-            throws SerializationException {
-        if (serializationManager == null) {
-            serializationManager = Activator.getDefault().getSerializationManager();
-//            serializationManager.init(repository, contentSyncRoot);
-        }
-
-        return serializationManager;
-    }
-
 
 }
