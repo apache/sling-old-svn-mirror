@@ -47,6 +47,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
@@ -446,20 +447,38 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
                 if (componentType == Integer.TYPE) {
                     return defaultAnnotation.intValues();
                 }
+                if (componentType == Integer.class) {
+                    return ArrayUtils.toObject(defaultAnnotation.intValues());
+                }
                 if (componentType == Long.TYPE) {
                     return defaultAnnotation.longValues();
+                }
+                if (componentType == Long.class) {
+                    return ArrayUtils.toObject(defaultAnnotation.longValues());
                 }
                 if (componentType == Boolean.TYPE) {
                     return defaultAnnotation.booleanValues();
                 }
+                if (componentType == Boolean.class) {
+                    return ArrayUtils.toObject(defaultAnnotation.booleanValues());
+                }
                 if (componentType == Short.TYPE) {
                     return defaultAnnotation.shortValues();
+                }
+                if (componentType == Short.class) {
+                    return ArrayUtils.toObject(defaultAnnotation.shortValues());
                 }
                 if (componentType == Float.TYPE) {
                     return defaultAnnotation.floatValues();
                 }
+                if (componentType == Float.class) {
+                    return ArrayUtils.toObject(defaultAnnotation.floatValues());
+                }
                 if (componentType == Double.TYPE) {
                     return defaultAnnotation.doubleValues();
+                }
+                if (componentType == Double.class) {
+                    return ArrayUtils.toObject(defaultAnnotation.doubleValues());
                 }
 
                 log.warn("Default values for {} are not supported", componentType);
@@ -468,22 +487,22 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
                 if (injectedClass == String.class) {
                     return defaultAnnotation.values()[0];
                 }
-                if (injectedClass == Integer.TYPE) {
+                if (injectedClass == Integer.class) {
                     return defaultAnnotation.intValues()[0];
                 }
-                if (injectedClass == Long.TYPE) {
+                if (injectedClass == Long.class) {
                     return defaultAnnotation.longValues()[0];
                 }
-                if (injectedClass == Boolean.TYPE) {
+                if (injectedClass == Boolean.class) {
                     return defaultAnnotation.booleanValues()[0];
                 }
-                if (injectedClass == Short.TYPE) {
+                if (injectedClass == Short.class) {
                     return defaultAnnotation.shortValues()[0];
                 }
-                if (injectedClass == Float.TYPE) {
+                if (injectedClass == Float.class) {
                     return defaultAnnotation.floatValues()[0];
                 }
-                if (injectedClass == Double.TYPE) {
+                if (injectedClass == Double.class) {
                     return defaultAnnotation.doubleValues()[0];
                 }
 

@@ -19,13 +19,16 @@ package org.apache.sling.models.impl;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
+import org.apache.sling.models.testmodels.classes.DefaultPrimitivesModel;
 import org.apache.sling.models.testmodels.classes.DefaultStringModel;
+import org.apache.sling.models.testmodels.classes.DefaultWrappersModel;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -66,5 +69,41 @@ public class DefaultTest {
         assertNotNull(model);
         assertEquals("firstDefault", model.getFirstProperty());
         assertEquals(2, model.getSecondProperty().length);
+    }
+
+    @Test
+    public void testDefaultPrimitives() {
+        ValueMap vm = new ValueMapDecorator(Collections.<String, Object>emptyMap());
+
+        Resource res = mock(Resource.class);
+        when(res.adaptTo(ValueMap.class)).thenReturn(vm);
+
+        DefaultPrimitivesModel model = factory.getAdapter(res, DefaultPrimitivesModel.class);
+        assertNotNull(model);
+
+        assertEquals(true, model.getBooleanProperty());
+        // we need to wait for JUnit 4.12 for this assertArrayEquals to be working on primitive boolean arrays, https://github.com/junit-team/junit/issues/86!
+        assertTrue(Arrays.equals(new boolean[] { true, true }, model.getBooleanArrayProperty()));
+
+        assertEquals(1L, model.getLongProperty());
+        assertArrayEquals(new long[] { 1L, 1L }, model.getLongArrayProperty());
+    }
+
+    @Test
+    public void testDefaultWrappers() {
+        ValueMap vm = new ValueMapDecorator(Collections.<String, Object>emptyMap());
+
+        Resource res = mock(Resource.class);
+        when(res.adaptTo(ValueMap.class)).thenReturn(vm);
+
+        DefaultWrappersModel model = factory.getAdapter(res, DefaultWrappersModel.class);
+        assertNotNull(model);
+
+        assertEquals(Boolean.valueOf(true), model.getBooleanWrapperProperty());
+        // we need to wait for JUnit 4.12 for this assertArrayEquals to be working on primitive boolean arrays, https://github.com/junit-team/junit/issues/86!
+        assertTrue(Arrays.equals(new Boolean[] { Boolean.TRUE, Boolean.TRUE }, model.getBooleanWrapperArrayProperty()));
+
+        assertEquals(Long.valueOf(1L), model.getLongWrapperProperty());
+        assertArrayEquals(new Long[] { Long.valueOf(1L), Long.valueOf(1L) }, model.getLongWrapperArrayProperty());
     }
 }
