@@ -647,11 +647,14 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
         IProject project = file.getProject();
 
-        IFolder syncFolder = project.getFolder(ProjectUtil.getSyncDirectoryValue(project));
-        Filter filter = loadFilter(syncFolder);
+        String syncDirectory = ProjectUtil.getSyncDirectoryValue(project);
+        IFolder syncFolder = project.getFolder(syncDirectory);
+        File syncDirectoryAsFile = ProjectUtil.getSyncDirectoryFile(project);
+
+        Filter filter = ProjectUtil.loadFilter(project);
 
         if (filter != null) {
-            FilterResult filterResult = getFilterResult(resource, filter, ProjectUtil.getSyncDirectoryFile(project),
+            FilterResult filterResult = getFilterResult(resource, filter, syncDirectoryAsFile,
                     syncFolder, repository);
             if (filterResult == FilterResult.DENY || filterResult == FilterResult.PREREQUISITE) {
                 return null;
@@ -720,7 +723,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         IFolder syncDirectory = ProjectUtil.getSyncDirectory(deletedResource.getProject());
         File syncDirectoryAsFile = ProjectUtil.getSyncDirectoryFile(deletedResource.getProject());
         
-        Filter filter = loadFilter(syncDirectory);
+        Filter filter = ProjectUtil.loadFilter(deletedResource.getProject());
 
         if (filter != null) {
             FilterResult filterResult = getFilterResult(resource, filter, syncDirectoryAsFile, syncDirectory,
@@ -733,30 +736,6 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         ResourceProxy resourceProxy = buildResourceProxyForPlainFileOrFolder(resource, syncDirectory);
 
         return repository.newDeleteNodeCommand(resourceProxy);
-    }
-
-    private Filter loadFilter(final IFolder syncFolder) throws CoreException {
-        FilterLocator filterLocator = Activator.getDefault().getFilterLocator();
-        File filterLocation = filterLocator.findFilterLocation(syncFolder.getLocation().toFile());
-        if (filterLocation == null) {
-            return null;
-        }
-        IPath filterPath = Path.fromOSString(filterLocation.getAbsolutePath());
-        IFile filterFile = ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(filterPath);
-        Filter filter = null;
-        if (filterFile != null && filterFile.exists()) {
-            InputStream contents = filterFile.getContents();
-            try {
-                filter = filterLocator.loadFilter(contents);
-            } catch (IOException e) {
-                throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
-                        "Failed loading filter file for project " + syncFolder.getProject().getName()
-                                + " from location " + filterFile, e));
-            } finally {
-                IOUtils.closeQuietly(contents);
-            }
-        }
-        return filter;
     }
 
 }
