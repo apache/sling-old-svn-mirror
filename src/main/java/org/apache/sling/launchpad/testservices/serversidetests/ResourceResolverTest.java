@@ -47,6 +47,7 @@ import org.apache.sling.launchpad.testservices.events.EventsCounter;
 import org.apache.sling.launchpad.testservices.exported.FakeSlingHttpServletRequest;
 import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -1396,7 +1397,65 @@ public class ResourceResolverTest {
         assertTrue(res instanceof NonExistingResource);
         assertEquals("/childVanity.print.html", res.getPath());
     }
+    
+    @Ignore //see SLING-3558
+    @Test public void testResolveRemovedMixinVanityPath() throws Exception {   
+        Node childNode = null;
+        
+        try  {
+            //create new child with vanity path without mixin
+            childNode = maybeCreateNode(rootNode, "rootChild", "nt:unstructured");
+            childNode.setProperty("sling:vanityPath", "childVanity");
+            saveMappings(session);
+            
+            String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
+                    + "/childVanity.print.html");
+            HttpServletRequest request = new FakeSlingHttpServletRequest(path);
+            Resource res = resResolver.resolve(request, path);
+            assertNotNull(res);
+            assertTrue(res instanceof NonExistingResource);
+            assertEquals("/childVanity.print.html", res.getPath());
+            
+            //add mixin
+            childNode.addMixin("sling:VanityPath");
+            saveMappings(session);
+            
+            path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
+                    + "/childVanity.print.html");
 
+            request = new FakeSlingHttpServletRequest(path);
+            res = resResolver.resolve(request, path);
+            assertNotNull(res);
+            assertEquals(childNode.getPath(), res.getPath());
+            assertEquals(childNode.getPrimaryNodeType().getName(),
+                    res.getResourceType());
+
+            assertEquals(".print.html",
+                    res.getResourceMetadata().getResolutionPathInfo());
+
+            assertNotNull(res.adaptTo(Node.class));
+            assertTrue(childNode.isSame(res.adaptTo(Node.class)));
+            
+            //remove mixin  
+            childNode.removeMixin("sling:VanityPath");
+            saveMappings(session);
+
+            path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
+                    + "/childVanity.print.html");
+            request = new FakeSlingHttpServletRequest(path);
+            res = resResolver.resolve(request, path);
+            assertNotNull(res);
+            assertTrue(res instanceof NonExistingResource);
+            assertEquals("/childVanity.print.html", res.getPath());
+        } finally {
+            if (childNode != null){
+                childNode.remove();
+                saveMappings(session);
+            }
+        }
+    }
+
+    
     @Test public void testGetDoesNotGoUp() throws Exception {
 
         final String path = rootPath + "/nothing";
