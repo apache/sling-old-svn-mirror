@@ -96,7 +96,7 @@ import org.slf4j.LoggerFactory;
    @Property(name=EventConstants.EVENT_TOPIC, value={"org/apache/sling/api/resource/*"}, propertyPrivate=true),
    @Property(name="felix.webconsole.label", value="slingjsp", propertyPrivate=true),
    @Property(name="felix.webconsole.title", value="JSP", propertyPrivate=true),
-   @Property(name="felix.webconsole.category", value="Sling", propertyPrivate=true),
+   @Property(name="felix.webconsole.category", value="Sling", propertyPrivate=true)
 })
 public class JspScriptEngineFactory
     extends AbstractScriptEngineFactory
