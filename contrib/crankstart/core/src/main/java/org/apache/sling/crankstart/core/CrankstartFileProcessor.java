@@ -28,6 +28,7 @@ import org.apache.sling.crankstart.api.CrankstartCommand;
 import org.apache.sling.crankstart.api.CrankstartCommandLine;
 import org.apache.sling.crankstart.api.CrankstartConstants;
 import org.apache.sling.crankstart.api.CrankstartContext;
+import org.apache.sling.crankstart.core.commands.Configure;
 import org.apache.sling.crankstart.core.commands.InstallBundle;
 import org.apache.sling.crankstart.core.commands.Log;
 import org.apache.sling.crankstart.core.commands.SetOsgiFrameworkProperty;
@@ -48,6 +49,7 @@ public class CrankstartFileProcessor implements Callable<Object> {
         commands.add(new SetOsgiFrameworkProperty());
         commands.add(new StartBundles());
         commands.add(new StartFramework());
+        commands.add(new Configure());
     }
     
     public Object call() throws Exception {
