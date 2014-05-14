@@ -16,37 +16,24 @@
  */
 package org.apache.sling.ide.eclipse.core.internal;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
-import org.apache.sling.ide.eclipse.core.ProjectUtil;
-import org.apache.sling.ide.eclipse.core.ResourceUtil;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
 import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
-import org.apache.sling.ide.filter.Filter;
-import org.apache.sling.ide.filter.FilterLocator;
-import org.apache.sling.ide.filter.FilterResult;
 import org.apache.sling.ide.osgi.OsgiClient;
 import org.apache.sling.ide.osgi.OsgiClientException;
 import org.apache.sling.ide.serialization.SerializationException;
-import org.apache.sling.ide.serialization.SerializationKind;
-import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.Command;
-import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
@@ -55,12 +42,10 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
@@ -77,13 +62,7 @@ import org.osgi.framework.Version;
 
 public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
-    private final Set<String> ignoredFileNames = new HashSet<String>();
-    {
-        ignoredFileNames.add(".vlt");
-        ignoredFileNames.add(".vltignore");
-    }
-
-    private SerializationManager serializationManager;
+    private ResourceChangeCommandFactory commandFactory;
 	private ILaunch launch;
 	private JVMDebuggerConnection debuggerConnection;
 	
@@ -165,8 +144,8 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
         PluginLogger logger = Activator.getDefault().getPluginLogger();
         
-        if (serializationManager == null) {
-            serializationManager = Activator.getDefault().getSerializationManager();
+        if (commandFactory == null) {
+            commandFactory = new ResourceChangeCommandFactory(Activator.getDefault().getSerializationManager());
         }
 
         logger.trace(traceOperation(kind, deltaKind, module));
@@ -181,35 +160,30 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             return;
         }
 
-        try {
-            if (ProjectHelper.isBundleProject(module[0].getProject())) {
-                String serverMode = getServer().getMode();
-                if (!serverMode.equals(ILaunchManager.DEBUG_MODE)) {
-                    // in debug mode, we rely on the hotcode replacement feature of eclipse/jvm
-                    // otherwise, for run and profile modes we explicitly publish the bundle module
-                    // TODO: make this configurable as part of the server config
-            		publishBundleModule(module, monitor);
-					BundleStateHelper.resetBundleState(getServer(), module[0].getProject());
-            	}
-            } else if (ProjectHelper.isContentProject(module[0].getProject())) {
-                if ((kind == IServer.PUBLISH_AUTO || kind == IServer.PUBLISH_INCREMENTAL) && deltaKind == ServerBehaviourDelegate.NO_CHANGE) {
-                    logger.trace("Ignoring request to publish the module when no resources have changed; most likely another module has changed");
-                    return;
-                }
-                try {
-                    publishContentModule(kind, deltaKind, module, monitor);
-					BundleStateHelper.resetBundleState(getServer(), module[0].getProject());
-                } catch (SerializationException e) {
-                    throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Serialization error for "
-                            + traceOperation(kind, deltaKind, module).toString(), e));
-                } catch (IOException e) {
-                    throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "IO error for "
-                            + traceOperation(kind, deltaKind, module).toString(), e));
-                }
+        if (ProjectHelper.isBundleProject(module[0].getProject())) {
+            String serverMode = getServer().getMode();
+            if (!serverMode.equals(ILaunchManager.DEBUG_MODE)) {
+                // in debug mode, we rely on the hotcode replacement feature of eclipse/jvm
+                // otherwise, for run and profile modes we explicitly publish the bundle module
+                // TODO: make this configurable as part of the server config
+                publishBundleModule(module, monitor);
+                BundleStateHelper.resetBundleState(getServer(), module[0].getProject());
             }
-        } finally {
-            if (serializationManager != null) {
-                serializationManager.destroy();
+        } else if (ProjectHelper.isContentProject(module[0].getProject())) {
+            if ((kind == IServer.PUBLISH_AUTO || kind == IServer.PUBLISH_INCREMENTAL)
+                    && deltaKind == ServerBehaviourDelegate.NO_CHANGE) {
+                logger.trace("Ignoring request to publish the module when no resources have changed; most likely another module has changed");
+                return;
+            }
+            try {
+                publishContentModule(kind, deltaKind, module, monitor);
+                BundleStateHelper.resetBundleState(getServer(), module[0].getProject());
+            } catch (SerializationException e) {
+                throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Serialization error for "
+                        + traceOperation(kind, deltaKind, module).toString(), e));
+            } catch (IOException e) {
+                throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "IO error for "
+                        + traceOperation(kind, deltaKind, module).toString(), e));
             }
         }
     }
@@ -522,143 +496,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             return null;
         }
 
-        return addFileCommand(repository, res);
-    }
-
-    private Command<?> addFileCommand(Repository repository, IResource resource) throws SerializationException,
-            CoreException, IOException {
-
-        if (ignoredFileNames.contains(resource.getName())) {
-            return null;
-        }
-
-        Object ignoreNextUpdate = resource.getSessionProperty(ResourceUtil.QN_IGNORE_NEXT_CHANGE);
-        if (ignoreNextUpdate != null) {
-            resource.setSessionProperty(ResourceUtil.QN_IGNORE_NEXT_CHANGE, null);
-            return null;
-        }
-
-        if (resource.isTeamPrivateMember(IResource.CHECK_ANCESTORS)) {
-            Activator.getDefault().getPluginLogger().trace("Skipping team-private resource {0}", resource);
-            return null;
-        }
-
-        FileInfo info = createFileInfo(resource, repository);
-        Activator.getDefault().getPluginLogger().trace("For {0} build fileInfo {1}", resource, info);
-        if (info == null) {
-            return null;
-        }
-
-        File syncDirectoryAsFile = ProjectUtil.getSyncDirectoryFullPath(resource.getProject()).toFile();
-        IFolder syncDirectory = ProjectUtil.getSyncDirectory(resource.getProject());
-
-        if (serializationManager.isSerializationFile(info.getLocation())) {
-            InputStream contents = null;
-            try {
-                IFile file = (IFile) resource;
-                contents = file.getContents();
-                String resourceLocation = file.getFullPath().makeRelativeTo(syncDirectory.getFullPath()).toPortableString();
-                ResourceProxy resourceProxy = serializationManager.readSerializationData(resourceLocation, contents);
-                // TODO - not sure if this 100% correct, but we definitely should not refer to the FileInfo as the
-                // .serialization file, since for nt:file/nt:resource nodes this will overwrite the file contents
-                String primaryType = (String) resourceProxy.getProperties().get(Repository.JCR_PRIMARY_TYPE);
-                if (Repository.NT_FILE.equals(primaryType) || Repository.NT_RESOURCE.equals(primaryType)) {
-                    // TODO move logic to serializationManager
-                    File locationFile = new File(info.getLocation());
-                    String locationFileParent = locationFile.getParent();
-                    int endIndex = locationFileParent.length() - ".dir".length();
-                    File actualFile = new File(locationFileParent.substring(0, endIndex));
-                    String newLocation = actualFile.getAbsolutePath();
-                    String newName = actualFile.getName();
-                    String newRelativeLocation = actualFile.getAbsolutePath().substring(
-                            syncDirectoryAsFile.getAbsolutePath().length());
-                    info = new FileInfo(newLocation, newRelativeLocation, newName);
-                }
-
-                return repository.newAddOrUpdateNodeCommand(info, resourceProxy);
-            } catch (IOException e) {
-                // TODO logging
-                e.printStackTrace();
-                return null;
-            } finally {
-                IOUtils.closeQuietly(contents);
-            }
-        } else {
-
-            ResourceProxy resourceProxy = buildResourceProxyForPlainFileOrFolder(resource, syncDirectory);
-
-            return repository.newAddOrUpdateNodeCommand(info, resourceProxy);
-        }
-    }
-
-    private ResourceProxy buildResourceProxyForPlainFileOrFolder(IResource changedResource, IFolder syncDirectory)
-			throws IOException, CoreException {
-
-		SerializationKind serializationKind;
-		String fallbackNodeType;
-		if (changedResource.getType() == IResource.FILE) {
-		    serializationKind = SerializationKind.FILE;
-		    fallbackNodeType = Repository.NT_FILE;
-		} else { // i.e. IResource.FOLDER
-		    serializationKind = SerializationKind.FOLDER;
-		    fallbackNodeType = Repository.NT_FOLDER;
-		}
-
-		String resourceLocation = '/' + changedResource.getFullPath().makeRelativeTo(syncDirectory.getFullPath())
-		        .toPortableString();
-		String serializationFilePath = serializationManager.getSerializationFilePath(resourceLocation,
-		        serializationKind);
-		IResource serializationResource = syncDirectory.findMember(serializationFilePath);
-		return buildResourceProxy(resourceLocation, serializationResource, syncDirectory, fallbackNodeType);
-	}
-
-    private ResourceProxy buildResourceProxy(String resourceLocation, IResource serializationResource,
-            IFolder syncDirectory, String fallbackPrimaryType) throws IOException, CoreException {
-        if (serializationResource instanceof IFile) {
-            IFile serializationFile = (IFile) serializationResource;
-            InputStream contents = null;
-            try {
-                contents = serializationFile.getContents();
-                String serializationFilePath = serializationResource.getFullPath()
-                        .makeRelativeTo(syncDirectory.getFullPath()).toPortableString();
-                return serializationManager.readSerializationData(serializationFilePath, contents);
-            } finally {
-                if (contents != null) {
-                    contents.close();
-                }
-            }
-        }
-
-        return new ResourceProxy(resourceLocation, Collections.singletonMap(Repository.JCR_PRIMARY_TYPE,
-                    (Object) fallbackPrimaryType));
-    }
-
-    private FileInfo createFileInfo(IResource resource, Repository repository) throws SerializationException,
-            CoreException {
-
-        IProject project = resource.getProject();
-
-        String syncDirectory = ProjectUtil.getSyncDirectoryValue(project);
-        IFolder syncFolder = project.getFolder(syncDirectory);
-        File syncDirectoryAsFile = ProjectUtil.getSyncDirectoryFile(project);
-
-        Filter filter = ProjectUtil.loadFilter(project);
-
-        if (filter != null) {
-            FilterResult filterResult = getFilterResult(resource, filter, syncDirectoryAsFile,
-                    syncFolder, repository);
-            if (filterResult == FilterResult.DENY || filterResult == FilterResult.PREREQUISITE) {
-                return null;
-            }
-        }
-
-        IPath relativePath = resource.getFullPath().makeRelativeTo(syncFolder.getFullPath());
-
-        FileInfo info = new FileInfo(resource.getLocation().toOSString(), relativePath.toOSString(), resource.getName());
-
-        Activator.getDefault().getPluginLogger().trace("For {1} built fileInfo {2}", resource, info);
-
-        return info;
+        return commandFactory.newCommandForAddedOrUpdated(repository, res);
     }
 
     private IResource getResource(IModuleResource resource) {
@@ -679,23 +517,6 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         return file;
     }
 
-    private FilterResult getFilterResult(IResource resource, Filter filter, File contentSyncRoot,
-            IFolder syncFolder,
-            Repository repository) throws SerializationException {
-
-        IPath relativePath = resource.getFullPath().makeRelativeTo(syncFolder.getFullPath());
-
-        String absFilePath = new File(contentSyncRoot, relativePath.toOSString()).getAbsolutePath();
-        String filePath = serializationManager.getBaseResourcePath(absFilePath);
-        
-        IPath osPath = Path.fromOSString(filePath);
-        String repositoryPath = osPath.makeRelativeTo(syncFolder.getLocation()).toPortableString();
-
-        Activator.getDefault().getPluginLogger().trace("Filtering by {0} for {1}", repositoryPath, resource);
-
-        return filter.filter(contentSyncRoot, repositoryPath, repository.getRepositoryInfo());
-    }
-
     private Command<?> removeFileCommand(Repository repository, IModuleResource resource)
             throws SerializationException, IOException, CoreException {
     	
@@ -705,37 +526,6 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             return null;
         }
 
-        return removeFileCommand(repository, deletedResource);
+        return commandFactory.newCommandForRemovedResources(repository, deletedResource);
     }
-
-    private Command<?> removeFileCommand(Repository repository, IResource resource) throws CoreException,
-            SerializationException, IOException {
-
-        if (resource.isTeamPrivateMember(IResource.CHECK_ANCESTORS)) {
-            Activator.getDefault().getPluginLogger().trace("Skipping team-private resource {0}", resource);
-            return null;
-        }
-        
-        if (ignoredFileNames.contains(resource.getName())) {
-            return null;
-        }
-
-        IFolder syncDirectory = ProjectUtil.getSyncDirectory(resource.getProject());
-        File syncDirectoryAsFile = ProjectUtil.getSyncDirectoryFile(resource.getProject());
-        
-        Filter filter = ProjectUtil.loadFilter(deletedResource.getProject());
-
-        if (filter != null) {
-            FilterResult filterResult = getFilterResult(resource, filter, syncDirectoryAsFile, syncDirectory,
-                    repository);
-            if (filterResult == FilterResult.DENY || filterResult == FilterResult.PREREQUISITE) {
-                return null;
-            }
-        }
-
-        ResourceProxy resourceProxy = buildResourceProxyForPlainFileOrFolder(resource, syncDirectory);
-
-        return repository.newDeleteNodeCommand(resourceProxy);
-    }
-
 }
