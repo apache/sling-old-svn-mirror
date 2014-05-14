@@ -16,13 +16,11 @@
  */
 package org.apache.sling.crankstart.core;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -35,7 +33,6 @@ import org.apache.sling.crankstart.core.commands.Log;
 import org.apache.sling.crankstart.core.commands.SetOsgiFrameworkProperty;
 import org.apache.sling.crankstart.core.commands.StartBundles;
 import org.apache.sling.crankstart.core.commands.StartFramework;
-import org.osgi.framework.BundleException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +50,7 @@ public class CrankstartFileProcessor implements Callable<Object> {
         commands.add(new StartFramework());
     }
     
-    public Object call() throws FileNotFoundException, IOException, BundleException,InterruptedException {
+    public Object call() throws Exception {
         final String inputFilename = System.getProperty(CrankstartConstants.CRANKSTART_INPUT_FILENAME);
         if(inputFilename == null) {
             throw new IllegalStateException("Missing system property " + CrankstartConstants.CRANKSTART_INPUT_FILENAME);
@@ -63,34 +60,14 @@ public class CrankstartFileProcessor implements Callable<Object> {
         return null;
     }
     
-    public void process(Reader input) throws IOException, BundleException {
-        final BufferedReader r = new BufferedReader(input);
-        String line = null;
-        while((line = r.readLine()) != null) {
-            if(line.length() == 0 || line.startsWith("#")) {
-                // ignore comments and blank lines
-            } else {
-                for(CrankstartCommand c : commands) {
-                    final String [] parts = line.split(" ");
-                    final String verb = parts[0];
-                    final StringBuilder qualifier = new StringBuilder();
-                    for(int i=1; i < parts.length; i++) {
-                        if(qualifier.length() > 0) {
-                            qualifier.append(' ');
-                        }
-                        qualifier.append(parts[i]);
-                    }
-                            
-                    // TODO use CrankstartParserImpl
-                    final CrankstartCommandLine cc = new CrankstartCommandLine(verb, qualifier.toString(), null);
-                    if(c.appliesTo(cc)) {
-                        try {
-                            c.execute(crankstartContext, cc);
-                        } catch(Exception e) {
-                            log.warn("Command execution failed", e);
-                        }
-                        break;
-                    }
+    public void process(Reader input) throws Exception {
+        final CrankstartParserImpl parser = new CrankstartParserImpl();
+        final Iterator<CrankstartCommandLine> it = parser.parse(input);
+        while(it.hasNext()) {
+            final CrankstartCommandLine cmdLine = it.next();
+            for(CrankstartCommand c : commands) {
+                if(c.appliesTo(cmdLine)) {
+                    c.execute(crankstartContext, cmdLine);
                 }
             }
         }
