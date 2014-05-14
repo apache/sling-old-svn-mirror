@@ -32,7 +32,7 @@
                         <fileset>
                             <directory>${basedir}</directory>
                             <includes>
-                                <include>felix-cache</include>
+                                <include>sling-crankstart</include>
                             </includes>
                         </fileset>
                     </filesets>
