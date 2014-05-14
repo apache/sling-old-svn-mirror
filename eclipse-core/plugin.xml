@@ -171,4 +171,15 @@
                name="org.apache.sling.ide.eclipse-core"></bundle>
       </component>
    </extension>
+
+   <extension
+         point="org.eclipse.core.expressions.propertyTesters">
+         <propertyTester
+               id="org.apache.sling.ide.eclipse.internal.ExportableResourceTester"
+               type="org.eclipse.core.resources.IResource"
+               namespace="org.apache.sling.ide.eclipse"
+               properties="canBeExported"
+               class="org.apache.sling.ide.eclipse.core.internal.ContentResourceTester">
+         </propertyTester>
+   </extension>    
 </plugin>    
