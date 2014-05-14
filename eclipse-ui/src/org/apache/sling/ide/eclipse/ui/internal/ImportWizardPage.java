@@ -59,7 +59,7 @@ import org.eclipse.wst.server.core.ServerCore;
  */
 public class ImportWizardPage extends WizardDataTransferPage {
 
-    private Combo repositoryCombo;
+    private SlingLaunchpadCombo repositoryCombo;
     private Label importLabel;
 	private Button containerBrowseButton;
 	private IProject project;
@@ -132,9 +132,8 @@ public class ImportWizardPage extends WizardDataTransferPage {
 
         new Label(container, SWT.NONE).setText("Repository: ");
 
-        repositoryCombo = new Combo(container, SWT.DROP_DOWN);
-        repositoryCombo.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-        repositoryCombo.addSelectionListener(new SelectionListener() {
+        repositoryCombo = new SlingLaunchpadCombo(container, project);
+        repositoryCombo.getWidget().addSelectionListener(new SelectionListener() {
 			
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -148,7 +147,7 @@ public class ImportWizardPage extends WizardDataTransferPage {
 	            updateWidgetEnablements();
 			}
 		});
-        updateRepositoryList();
+        repositoryCombo.refreshRepositoryList(new NullProgressMonitor());
 
         Composite containerGroup = new Composite(composite, SWT.NONE);
         GridLayout layout = new GridLayout();
@@ -210,22 +209,6 @@ public class ImportWizardPage extends WizardDataTransferPage {
         updateWidgetEnablements();
 	}
 
-	private void updateRepositoryList() {
-		repositoryCombo.removeAll();
-		List<IServer> servers = SelectionUtils.getServersLinkedToProject(project, new NullProgressMonitor());
-        if (servers.size() > 1) {
-            repositoryCombo.add(""); // force selection only if there is more than one server
-        }
-        for (IServer server : servers) {
-            repositoryCombo.add(server.getId());
-        }
-
-        if (servers.size() == 1) {
-            repositoryCombo.select(0);
-        }
-	}
-
-
 	public void handleEvent(Event event) {
 		if (event.widget == containerBrowseButton) {
 			handleContainerBrowseButtonPressed();
@@ -276,16 +259,13 @@ public class ImportWizardPage extends WizardDataTransferPage {
 	                .findMember(result).getProject();
 	        
         	containerNameField.setText(project.getName());
-        	updateRepositoryList();
+            repositoryCombo.refreshRepositoryList(new NullProgressMonitor());
     	}
 	}
 
 	public IServer getServer() {
-        for (IServer server : ServerCore.getServers())
-            if (server.getId().equals(repositoryCombo.getText()))
-                return server;
 
-        return null;
+        return repositoryCombo.getServer();
     }
 
 	/*
@@ -299,8 +279,8 @@ public class ImportWizardPage extends WizardDataTransferPage {
 			// still under construction
 			return true;
 		}
-        if (this.repositoryCombo == null || this.repositoryCombo.getSelectionIndex() == -1) {
-            setErrorMessage("Please select a valid index");
+        if (this.repositoryCombo == null || this.repositoryCombo.getServer() == null) {
+            setErrorMessage("Please select a Sling launchpad instance");
 			return false;
 		}
 
@@ -386,16 +366,14 @@ public class ImportWizardPage extends WizardDataTransferPage {
             adjustJcrRootText();
             adjustJcrRootText.getParent().pack();
         }
-        if (repositoryCombo.getItemCount() == 0 && project != null) {
-        	setErrorMessage("The selected project is not configured with/added to any Sling server");
-        	return false;
+
+        String repositoryError = repositoryCombo.getErrorMessage();
+        if (repositoryError != null) {
+            setErrorMessage(repositoryError);
+            return false;
         }
-        if ((repositoryCombo.getSelectionIndex() == -1) || 
-        	(repositoryCombo.getText().length() == 0)) {
-        	setErrorMessage("Please select a repository");
-        	return false;
-        }
-		return true;
+
+        return true;
 	}
 
 	private void adjustJcrRootText() {
