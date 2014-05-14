@@ -17,14 +17,23 @@
 package org.apache.sling.ide.eclipse.core;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.eclipse.core.internal.Activator;
 import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
+import org.apache.sling.ide.filter.Filter;
+import org.apache.sling.ide.filter.FilterLocator;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.Status;
 
@@ -106,6 +115,33 @@ public abstract class ProjectUtil {
             Activator.getDefault().getPluginLogger().error(e.getMessage(), e);
         }
     }
+    
+    public static Filter loadFilter(final IProject project) throws CoreException {
+        IFolder syncFolder = ProjectUtil.getSyncDirectory(project);
+
+        FilterLocator filterLocator = Activator.getDefault().getFilterLocator();
+        File filterLocation = filterLocator.findFilterLocation(syncFolder.getLocation().toFile());
+        if (filterLocation == null) {
+            return null;
+        }
+        IPath filterPath = Path.fromOSString(filterLocation.getAbsolutePath());
+        IFile filterFile = ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(filterPath);
+        Filter filter = null;
+        if (filterFile != null && filterFile.exists()) {
+            InputStream contents = filterFile.getContents();
+            try {
+                filter = filterLocator.loadFilter(contents);
+            } catch (IOException e) {
+                throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
+                        "Failed loading filter file for project " + syncFolder.getProject().getName()
+                                + " from location " + filterFile, e));
+            } finally {
+                IOUtils.closeQuietly(contents);
+            }
+        }
+        return filter;
+    }
+
 
     private ProjectUtil() {
 
