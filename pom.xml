@@ -75,7 +75,7 @@
                         <fileset>
                             <directory>${basedir}</directory>
                             <includes>
-                                <include>felix-cache</include>
+                                <include>sling-crankstart</include>
                             </includes>
                         </fileset>
                     </filesets>
@@ -100,7 +100,7 @@
         <dependency>
 		    <groupId>org.apache.sling</groupId>
 		    <artifactId>org.apache.sling.crankstart.test.services</artifactId>
-		    <version>1.0.0-SNAPSHOT</version>
+		    <version>0.0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
          <dependency>

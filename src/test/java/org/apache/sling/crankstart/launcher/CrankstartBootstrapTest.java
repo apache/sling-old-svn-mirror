@@ -42,8 +42,16 @@ public class CrankstartBootstrapTest {
         + "osgi.property org.osgi.framework.storage " + getOsgiStoragePath() + "\n"
         + "start.framework\n"
         + "bundle mvn:org.apache.felix/org.apache.felix.http.jetty/2.2.0\n"
+        + "bundle mvn:org.apache.felix/org.apache.felix.eventadmin/1.3.2\n"
+        + "bundle mvn:org.apache.felix/org.apache.felix.scr/1.8.2\n"
+        + "bundle mvn:org.apache.sling/org.apache.sling.commons.osgi/2.2.1-SNAPSHOT\n"
         + "bundle mvn:org.apache.sling/org.apache.sling.commons.log/2.1.2\n"
+        + "bundle mvn:org.apache.sling/org.apache.sling.crankstart.test.services/0.0.1-SNAPSHOT\n"
+        + "bundle mvn:org.apache.felix/org.apache.felix.configadmin/1.6.0\n"
         + "start.all.bundles\n"
+        + "config org.apache.sling.crankstart.testservices.SingleConfigServlet\n"
+        + "  path=/single\n"
+        + "  message=doesn't matter\n"
         + "log felix http service should come up at http://localhost:" + port + "\n"
     ;
     
@@ -86,11 +94,16 @@ public class CrankstartBootstrapTest {
     
     @Test
     @Retry(timeoutMsec=10000, intervalMsec=250)
-    @Ignore("TODO: activate once config command is ready")
     public void testSingleConfigServlet() throws Exception {
         final GetMethod get = new GetMethod(baseUrl + "/single");
         client.executeMethod(get);
         assertEquals("Expecting success " + get.getURI(), 200, get.getStatusCode());
+    }
+    
+    @Test
+    @Retry(timeoutMsec=10000, intervalMsec=250)
+    @Ignore("TODO - activate once we support config factories")
+    public void testConfigFactoryServlet() throws Exception {
     }
     
     private static String getOsgiStoragePath() {
