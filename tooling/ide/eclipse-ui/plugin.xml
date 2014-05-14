@@ -68,7 +68,7 @@
          <!-- All Sling contributions -->
         <objectContribution
             id="org.apache.sling.ide.menu"
-            objectClass="org.eclipse.core.resources.IProject">
+            objectClass="org.eclipse.core.resources.IResource">
             <menu id="org.apache.sling.ide.menu"
               path="additions"
               label="Sling">
@@ -107,7 +107,7 @@
 		</objectContribution>
 		<!-- Export -->
 		<objectContribution id="org.apache.sling.ide.menu.export"
-         	objectClass="org.eclipse.core.resources.IProject">
+         	objectClass="org.eclipse.core.resources.IResource">
          	
          <action
                class="org.apache.sling.ide.eclipse.ui.internal.ExportContentAction"
@@ -117,17 +117,10 @@
                menubarPath="org.apache.sling.ide.menu/sling"
                style="push">
          </action>
-         <visibility>
-               <objectState
-                     name="open"
-                     value="true">
-               </objectState>
-         </visibility>
          <enablement>
 			<or>
 			    <test 
-		            property="org.eclipse.wst.common.project.facet.core.projectFacet" 
-		            value="sling.content"/>
+		            property="org.apache.sling.ide.eclipse.canBeExported"/>
 		    </or>         
          </enablement>
 		</objectContribution>		
