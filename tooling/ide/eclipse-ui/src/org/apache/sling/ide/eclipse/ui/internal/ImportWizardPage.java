@@ -17,7 +17,6 @@
 package org.apache.sling.ide.eclipse.ui.internal;
 
 import java.io.File;
-import java.util.List;
 
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.filter.FilterLocator;
@@ -41,7 +40,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
@@ -52,7 +50,6 @@ import org.eclipse.ui.dialogs.ISelectionValidator;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.eclipse.ui.dialogs.WizardDataTransferPage;
 import org.eclipse.wst.server.core.IServer;
-import org.eclipse.wst.server.core.ServerCore;
 
 /**
  * Wizard page for importing content from Sling Repositories.

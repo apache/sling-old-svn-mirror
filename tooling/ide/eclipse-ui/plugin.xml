@@ -105,6 +105,32 @@
 		    </or>         
          </enablement>
 		</objectContribution>
+		<!-- Export -->
+		<objectContribution id="org.apache.sling.ide.menu.export"
+         	objectClass="org.eclipse.core.resources.IProject">
+         	
+         <action
+               class="org.apache.sling.ide.eclipse.ui.internal.ExportContentAction"
+               id="org.apache.sling.ide.menu.exportContentAction"
+               definitionId="org.apache.sling.ide.commands.exportContent"
+               label="Export Content..."
+               menubarPath="org.apache.sling.ide.menu/sling"
+               style="push">
+         </action>
+         <visibility>
+               <objectState
+                     name="open"
+                     value="true">
+               </objectState>
+         </visibility>
+         <enablement>
+			<or>
+			    <test 
+		            property="org.eclipse.wst.common.project.facet.core.projectFacet" 
+		            value="sling.content"/>
+		    </or>         
+         </enablement>
+		</objectContribution>		
   </extension>
    <extension
          point="org.eclipse.ui.importWizards">
@@ -132,6 +158,12 @@
                categoryId="org.eclipse.ui.category.window"
                defaultHandler="org.apache.sling.ide.eclipse.ui.internal.ImportContentAction">
          </command>
+         <command
+               id="org.apache.sling.ide.commands.exportContent"
+               name="Export content to a Sling Repository"
+               categoryId="org.eclipse.ui.category.window"
+               defaultHandler="org.apache.sling.ide.eclipse.ui.internal.ExportContentAction">
+         </command>         
    </extension>
 
    <!-- Property page for project to select directory to sync -->
@@ -511,6 +543,12 @@
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+M2+I">
       </key>
+      <key
+            commandId="org.apache.sling.ide.commands.exportContent"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+M2+P">
+      </key>      
    </extension>
 
     <extension
