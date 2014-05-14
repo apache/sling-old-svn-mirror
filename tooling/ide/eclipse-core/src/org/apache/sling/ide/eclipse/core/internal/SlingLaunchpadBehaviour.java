@@ -516,40 +516,46 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
     private Command<?> addFileCommand(Repository repository, IModuleResource resource) throws CoreException,
             SerializationException, IOException {
 
-        if (ignoredFileNames.contains(resource.getName())) {
-            return null;
-        }
-
-        FileInfo info = createFileInfo(resource, repository);
-
         IResource res = getResource(resource);
+
         if (res == null) {
             return null;
         }
 
-        Object ignoreNextUpdate = res.getSessionProperty(ResourceUtil.QN_IGNORE_NEXT_CHANGE);
+        return addFileCommand(repository, res);
+    }
+
+    private Command<?> addFileCommand(Repository repository, IResource resource) throws SerializationException,
+            CoreException, IOException {
+
+        if (ignoredFileNames.contains(resource.getName())) {
+            return null;
+        }
+
+        Object ignoreNextUpdate = resource.getSessionProperty(ResourceUtil.QN_IGNORE_NEXT_CHANGE);
         if (ignoreNextUpdate != null) {
-            res.setSessionProperty(ResourceUtil.QN_IGNORE_NEXT_CHANGE, null);
+            resource.setSessionProperty(ResourceUtil.QN_IGNORE_NEXT_CHANGE, null);
             return null;
         }
 
-        if (res.isTeamPrivateMember(IResource.CHECK_ANCESTORS)) {
-            Activator.getDefault().getPluginLogger().trace("Skipping team-private resource {0}", res);
+        if (resource.isTeamPrivateMember(IResource.CHECK_ANCESTORS)) {
+            Activator.getDefault().getPluginLogger().trace("Skipping team-private resource {0}", resource);
             return null;
         }
 
+        FileInfo info = createFileInfo(resource, repository);
         Activator.getDefault().getPluginLogger().trace("For {0} build fileInfo {1}", resource, info);
         if (info == null) {
             return null;
         }
 
-        File syncDirectoryAsFile = ProjectUtil.getSyncDirectoryFullPath(res.getProject()).toFile();
-        IFolder syncDirectory = ProjectUtil.getSyncDirectory(res.getProject());
+        File syncDirectoryAsFile = ProjectUtil.getSyncDirectoryFullPath(resource.getProject()).toFile();
+        IFolder syncDirectory = ProjectUtil.getSyncDirectory(resource.getProject());
 
         if (serializationManager.isSerializationFile(info.getLocation())) {
             InputStream contents = null;
             try {
-                IFile file = (IFile) resource.getAdapter(IFile.class);
+                IFile file = (IFile) resource;
                 contents = file.getContents();
                 String resourceLocation = file.getFullPath().makeRelativeTo(syncDirectory.getFullPath()).toPortableString();
                 ResourceProxy resourceProxy = serializationManager.readSerializationData(resourceLocation, contents);
@@ -575,28 +581,18 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
                 e.printStackTrace();
                 return null;
             } finally {
-                if (contents != null) {
-                    contents.close();
-                }
+                IOUtils.closeQuietly(contents);
             }
         } else {
 
-            ResourceProxy resourceProxy = buildResourceProxyForPlainFileOrFolder( resource, syncDirectory);
+            ResourceProxy resourceProxy = buildResourceProxyForPlainFileOrFolder(resource, syncDirectory);
 
             return repository.newAddOrUpdateNodeCommand(info, resourceProxy);
         }
     }
 
-	private ResourceProxy buildResourceProxyForPlainFileOrFolder( IModuleResource resource, IFolder syncDirectory)
+    private ResourceProxy buildResourceProxyForPlainFileOrFolder(IResource changedResource, IFolder syncDirectory)
 			throws IOException, CoreException {
-		IFile file = (IFile) resource.getAdapter(IFile.class);
-		IFolder folder = (IFolder) resource.getAdapter(IFolder.class);
-
-		IResource changedResource = file != null ? file : folder;
-		if (changedResource == null) {
-            Activator.getDefault().getPluginLogger().trace("Could not find a file or a folder for " + resource);
-		    return null;
-		}
 
 		SerializationKind serializationKind;
 		String fallbackNodeType;
@@ -637,15 +633,10 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
                     (Object) fallbackPrimaryType));
     }
 
-    private FileInfo createFileInfo(IModuleResource resource, Repository repository) throws SerializationException,
+    private FileInfo createFileInfo(IResource resource, Repository repository) throws SerializationException,
             CoreException {
 
-        IResource file = getResource(resource);
-        if (file == null) {
-            return null;
-        }
-
-        IProject project = file.getProject();
+        IProject project = resource.getProject();
 
         String syncDirectory = ProjectUtil.getSyncDirectoryValue(project);
         IFolder syncFolder = project.getFolder(syncDirectory);
@@ -661,9 +652,9 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             }
         }
 
-        IPath relativePath = resource.getModuleRelativePath().removeLastSegments(1);
+        IPath relativePath = resource.getFullPath().makeRelativeTo(syncFolder.getFullPath());
 
-        FileInfo info = new FileInfo(file.getLocation().toOSString(), relativePath.toOSString(), file.getName());
+        FileInfo info = new FileInfo(resource.getLocation().toOSString(), relativePath.toOSString(), resource.getName());
 
         Activator.getDefault().getPluginLogger().trace("For {1} built fileInfo {2}", resource, info);
 
@@ -688,11 +679,13 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         return file;
     }
 
-    private FilterResult getFilterResult(IModuleResource resource, Filter filter, File contentSyncRoot,
+    private FilterResult getFilterResult(IResource resource, Filter filter, File contentSyncRoot,
             IFolder syncFolder,
             Repository repository) throws SerializationException {
 
-        String absFilePath = new File(contentSyncRoot, resource.getModuleRelativePath().toOSString()).getAbsolutePath();
+        IPath relativePath = resource.getFullPath().makeRelativeTo(syncFolder.getFullPath());
+
+        String absFilePath = new File(contentSyncRoot, relativePath.toOSString()).getAbsolutePath();
         String filePath = serializationManager.getBaseResourcePath(absFilePath);
         
         IPath osPath = Path.fromOSString(filePath);
@@ -703,25 +696,32 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         return filter.filter(contentSyncRoot, repositoryPath, repository.getRepositoryInfo());
     }
 
-    private Command<?> removeFileCommand(Repository repository, IModuleResource resource) throws SerializationException, IOException, CoreException {
+    private Command<?> removeFileCommand(Repository repository, IModuleResource resource)
+            throws SerializationException, IOException, CoreException {
     	
+        IResource deletedResource = getResource(resource);
+
+        if (deletedResource == null) {
+            return null;
+        }
+
+        return removeFileCommand(repository, deletedResource);
+    }
+
+    private Command<?> removeFileCommand(Repository repository, IResource resource) throws CoreException,
+            SerializationException, IOException {
+
+        if (resource.isTeamPrivateMember(IResource.CHECK_ANCESTORS)) {
+            Activator.getDefault().getPluginLogger().trace("Skipping team-private resource {0}", resource);
+            return null;
+        }
+        
         if (ignoredFileNames.contains(resource.getName())) {
             return null;
         }
 
-        IResource deletedResource = getResource(resource);
-        
-        if ( deletedResource == null ) {
-        	return null;
-        }
-        
-        if (deletedResource.isTeamPrivateMember(IResource.CHECK_ANCESTORS)) {
-            Activator.getDefault().getPluginLogger().trace("Skipping team-private resoruce {0}", deletedResource);
-            return null;
-        }
-        
-        IFolder syncDirectory = ProjectUtil.getSyncDirectory(deletedResource.getProject());
-        File syncDirectoryAsFile = ProjectUtil.getSyncDirectoryFile(deletedResource.getProject());
+        IFolder syncDirectory = ProjectUtil.getSyncDirectory(resource.getProject());
+        File syncDirectoryAsFile = ProjectUtil.getSyncDirectoryFile(resource.getProject());
         
         Filter filter = ProjectUtil.loadFilter(deletedResource.getProject());
 
