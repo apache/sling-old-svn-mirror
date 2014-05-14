@@ -9,7 +9,7 @@
     
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.crankstart.test.services</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>0.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>Apache Sling Crankstart Test Services</name>
     <description>Bundle used to test the Crankstart launcher</description>
