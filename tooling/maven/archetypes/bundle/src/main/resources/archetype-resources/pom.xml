@@ -55,6 +55,16 @@
                     <target>${archetype.java.version}</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.sling</groupId>
+                <artifactId>maven-sling-plugin</artifactId>
+                <version>${slingplugin.version}</version>
+                <configuration>
+                    <slingUrl>http://localhost:8080/system/console</slingUrl>
+                    <user>admin</user>
+                    <password>admin</password>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <dependencies>
@@ -115,18 +125,12 @@
                     <plugin>
                         <groupId>org.apache.sling</groupId>
                         <artifactId>maven-sling-plugin</artifactId>
-                        <version>${slingplugin.version}</version>
                         <executions>
                             <execution>
                                 <id>install-bundle</id>
                                 <goals>
                                     <goal>install</goal>
                                 </goals>
-                                <configuration>
-                                    <slingUrl>http://localhost:8080/system/console</slingUrl>
-                                    <user>admin</user>
-                                    <password>admin</password>
-                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
