@@ -163,7 +163,7 @@ public class ResourceChangeCommandFactory {
 
         FileInfo info = new FileInfo(resource.getLocation().toOSString(), relativePath.toOSString(), resource.getName());
 
-        Activator.getDefault().getPluginLogger().trace("For {1} built fileInfo {2}", resource, info);
+        Activator.getDefault().getPluginLogger().trace("For {0} built fileInfo {1}", resource, info);
 
         return info;
     }
