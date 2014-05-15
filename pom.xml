@@ -273,7 +273,11 @@
         <profile>
             <id>withPerformanceTest</id>
             <modules>
-                <module>performance</module>
+                <module>performance/base</module>
+                <module>performance/jcr-resource-2.0.10</module>
+                <module>performance/jcr-resource-2.1.0</module>
+                <module>performance/jcr-resource-2.2.0</module>
+                <module>performance/test</module>
             </modules>
         </profile>
     </profiles>
