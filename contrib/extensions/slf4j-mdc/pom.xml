@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.sling.extensions.slf4j.mdc</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling SLF4J MDC Filter</name>
@@ -38,10 +38,10 @@
     </description>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.extensions.slf4j.mdc-1.0.0</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.extensions.slf4j.mdc-1.0.0
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/slf4j-mdc</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/slf4j-mdc
     </developerConnection>
-    <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.extensions.slf4j.mdc-1.0.0</url>
+    <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/slf4j-mdc</url>
   </scm>
 
     <properties>
