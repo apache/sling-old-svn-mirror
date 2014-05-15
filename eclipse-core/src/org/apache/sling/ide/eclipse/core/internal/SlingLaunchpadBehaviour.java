@@ -20,11 +20,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
@@ -299,12 +297,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
         switch (deltaKind) {
             case ServerBehaviourDelegate.CHANGED:
-                List<IModuleResourceDelta> publishedResourceDelta = 
-                	Arrays.asList(getPublishedResourceDelta(module));
-                
-                List<IModuleResourceDelta> adjustedPublishedResourceDelta = filterContentXmlParents(publishedResourceDelta);
-
-                for (IModuleResourceDelta resourceDelta : adjustedPublishedResourceDelta) {
+                for (IModuleResourceDelta resourceDelta : getPublishedResourceDelta(module)) {
 
                     StringBuilder deltaTrace = new StringBuilder();
                     deltaTrace.append("- processing delta kind ");
@@ -345,9 +338,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
             case ServerBehaviourDelegate.ADDED:
             case ServerBehaviourDelegate.NO_CHANGE: // TODO is this correct ?
-                IModuleResource[] moduleResources1 = getResources(module);
-                List<IModuleResource> adjustedModuleResourcesList = filterContentXmlParents(moduleResources1);
-                for (IModuleResource resource : adjustedModuleResourcesList) {
+                for (IModuleResource resource : getResources(module)) {
                     execute(addFileCommand(repository, resource));
                 }
                 break;
@@ -364,60 +355,6 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         super.publishModule(kind, deltaKind, module, monitor);
         setModulePublishState(module, IServer.PUBLISH_STATE_NONE);
 //        setServerPublishState(IServer.PUBLISH_STATE_NONE);
-	}
-
-    // TODO - this needs to be revisited, as it potentially prevents empty folders ( nt:folder node type) from being
-    // created
-    // TODO - we shouldn't hardcode knowledge of .content.xml here
-    private List<IModuleResourceDelta> filterContentXmlParents(List<IModuleResourceDelta> publishedResourceDelta) {
-		List<IModuleResourceDelta> adjustedPublishedResourceDelta = new LinkedList<IModuleResourceDelta>();
-		Map<String,IModuleResourceDelta> map = new HashMap<String, IModuleResourceDelta>();
-		for (IModuleResourceDelta resourceDelta : publishedResourceDelta) {
-			map.put(resourceDelta.getModuleRelativePath().toString(), resourceDelta);
-		}
-		for (Iterator<IModuleResourceDelta> it = publishedResourceDelta.iterator(); it
-				.hasNext();) {
-			IModuleResourceDelta iModuleResourceDelta = it.next();
-			String resPath = iModuleResourceDelta.getModuleRelativePath().toString();
-			IModuleResourceDelta originalEntry = map.get(resPath);
-			IModuleResourceDelta detailedEntry = map.remove(
-					resPath+"/.content.xml");
-			if (detailedEntry!=null) {
-				adjustedPublishedResourceDelta.add(detailedEntry);
-			} else if (originalEntry!=null) {
-				adjustedPublishedResourceDelta.add(originalEntry);
-			}
-		}
-		return adjustedPublishedResourceDelta;
-	}
-
-    // TODO - this needs to be revisited, as it potentially prevents empty folders ( nt:folder node type) from being
-    // created
-    // TODO - we shouldn't hardcode knowledge of .content.xml here
-    private List<IModuleResource> filterContentXmlParents(IModuleResource[] moduleResources) {
-		List<IModuleResource> moduleResourcesList = Arrays.asList(moduleResources);
-        List<IModuleResource> adjustedModuleResourcesList = new LinkedList<IModuleResource>();
-        Map<String,IModuleResource> map1 = new HashMap<String, IModuleResource>();
-        for (Iterator<IModuleResource> it = moduleResourcesList.iterator(); it
-				.hasNext();) {
-        	IModuleResource r = it.next();
-        	map1.put(r.getModuleRelativePath().toString(), r);
-        }
-        for (Iterator<IModuleResource> it = moduleResourcesList.iterator(); it
-				.hasNext();) {
-			IModuleResource iModuleResource = it.next();
-			String resPath = iModuleResource.getModuleRelativePath().toString();
-			IModuleResource originalEntry = map1.get(resPath);
-			IModuleResource detailedEntry = map1.remove(resPath+"/.content.xml");
-        	if (detailedEntry!=null) {
-        		adjustedModuleResourcesList.add(detailedEntry);
-        	} else if (originalEntry!=null){
-        		adjustedModuleResourcesList.add(originalEntry);
-        	} else {
-        		// entry was already added at filter time
-        	}
-		}
-		return adjustedModuleResourcesList;
 	}
 
 	private boolean runLaunchesIfExist(int kind, int deltaKind, IModule[] module,
