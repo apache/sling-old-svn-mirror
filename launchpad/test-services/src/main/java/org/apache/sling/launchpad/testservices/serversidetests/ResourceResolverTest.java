@@ -1795,6 +1795,99 @@ public class ResourceResolverTest {
             }
         }
     }
+    
+    @Test public void testResolveVanityPathWithVanityOrder() throws Exception {    
+        Node childNode = null;
+        Node childNode2 = null;
+        
+        try  {
+            //create new child with vanity path
+            childNode = maybeCreateNode(rootNode, "rootChild", "nt:unstructured");
+            childNode.setProperty("sling:vanityPath", "childVanity");
+            childNode.addMixin("sling:VanityPath");
+            saveMappings(session);
+                       
+            String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
+                    + "/childVanity.print.html");
+            HttpServletRequest request = new FakeSlingHttpServletRequest(path);
+            Resource res = resResolver.resolve(request, path);
+            assertNotNull(res);
+            assertEquals(childNode.getPath(), res.getPath());
+            assertEquals(childNode.getPrimaryNodeType().getName(),
+                    res.getResourceType());
+
+            assertEquals(".print.html",
+                    res.getResourceMetadata().getResolutionPathInfo());
+
+            assertNotNull(res.adaptTo(Node.class));
+            assertTrue(childNode.isSame(res.adaptTo(Node.class)));
+            
+            //create another child with the same vanity path
+            childNode2 = maybeCreateNode(rootNode, "rootChild2", "nt:unstructured");
+            childNode2.setProperty("sling:vanityPath", "childVanity");
+            childNode2.addMixin("sling:VanityPath");
+            saveMappings(session);
+ 
+            assertNotNull(res);
+            assertEquals(childNode.getPath(), res.getPath());
+            assertEquals(childNode.getPrimaryNodeType().getName(),
+                    res.getResourceType());
+
+            assertEquals(".print.html",
+                    res.getResourceMetadata().getResolutionPathInfo());
+
+            assertNotNull(res.adaptTo(Node.class));
+            assertTrue(childNode.isSame(res.adaptTo(Node.class)));
+            
+            //add vanityOrder to childNode2
+            childNode2.setProperty("sling:vanityOrder", 100);
+            saveMappings(session);
+            
+            path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
+                    + "/childVanity.print.html");
+            request = new FakeSlingHttpServletRequest(path);
+            res = resResolver.resolve(request, path);
+            
+            assertNotNull(res);
+            assertEquals(childNode2.getPath(), res.getPath());
+            assertEquals(childNode2.getPrimaryNodeType().getName(),
+                    res.getResourceType());
+
+            assertEquals(".print.html",
+                    res.getResourceMetadata().getResolutionPathInfo());
+
+            assertNotNull(res.adaptTo(Node.class));
+            assertTrue(childNode2.isSame(res.adaptTo(Node.class)));
+            
+            //add vanityOrder to childNode higher than childNode2
+            childNode.setProperty("sling:vanityOrder", 1000);
+            saveMappings(session);
+            
+            path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
+                    + "/childVanity.print.html");
+            request = new FakeSlingHttpServletRequest(path);
+            res = resResolver.resolve(request, path);
+            assertNotNull(res);
+            assertEquals(childNode.getPath(), res.getPath());
+            assertEquals(childNode.getPrimaryNodeType().getName(),
+                    res.getResourceType());
+
+            assertEquals(".print.html",
+                    res.getResourceMetadata().getResolutionPathInfo());
+
+            assertNotNull(res.adaptTo(Node.class));
+            assertTrue(childNode.isSame(res.adaptTo(Node.class)));
+            
+        } finally {
+            if (childNode != null){
+                childNode.remove();                 
+            }
+            if (childNode2 != null){
+                childNode2.remove();                 
+            }
+            session.save();
+        }            
+    }
 
     
     @Test public void testGetDoesNotGoUp() throws Exception {
