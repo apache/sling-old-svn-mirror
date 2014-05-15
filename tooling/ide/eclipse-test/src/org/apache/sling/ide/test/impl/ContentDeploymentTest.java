@@ -19,6 +19,7 @@ package org.apache.sling.ide.test.impl;
 import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasChildrenCount;
 import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasPath;
 import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasPrimaryType;
+import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasPropertyValue;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.nullValue;
 
@@ -168,13 +169,49 @@ public class ContentDeploymentTest {
                 allOf(hasPath("/test"), hasPrimaryType("sling:Folder"), hasChildrenCount(1)));
     }
 
+    @Test
+    public void deployFileWithAttachedMetadata() throws Exception {
+
+        wstServer.waitForServerToStart();
+
+        // create faceted project
+        IProject contentProject = projectRule.getProject();
+
+        ProjectAdapter project = new ProjectAdapter(contentProject);
+        project.addNatures(JavaCore.NATURE_ID, "org.eclipse.wst.common.project.facet.core.nature");
+
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/hello.esp"), new ByteArrayInputStream(
+                "// not really javascript".getBytes()));
+
+        // install bundle facet
+        project.installFacet("sling.content", "1.0");
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
+
+        // verify that file is created
+        final RepositoryAccessor repo = new RepositoryAccessor(config);
+        Poller poller = new Poller();
+        assertThatNode(repo, poller, "/test/hello.esp", hasPrimaryType("nt:file"));
+
+        InputStream contentXml = getClass().getResourceAsStream("file-custom-mimetype.xml");
+        try {
+            project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/hello.esp.dir/.content.xml"), contentXml);
+        } finally {
+            IOUtils.closeQuietly(contentXml);
+        }
+
+        assertThatNode(repo, poller, "/test/hello.esp/jcr:content", hasPropertyValue("jcr:mimeType", "text/javascript"));
+    }
+
     private void assertThatNode(final RepositoryAccessor repo, Poller poller, final String nodePath, Matcher<Node> matcher)
             throws InterruptedException {
 
         poller.pollUntil(new Callable<Node>() {
             @Override
             public Node call() throws RepositoryException {
-                return repo.getNode(nodePath);
+                Node node = repo.getNode(nodePath);
+                return node;
 
             }
         }, matcher);
