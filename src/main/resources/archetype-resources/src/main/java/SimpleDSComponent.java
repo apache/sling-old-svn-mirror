@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
  *
  * @see <a href="https://sling.apache.org/documentation/bundles/scheduler-service-commons-scheduler.html">Scheduler Service</a>
  */
-@Component(metatype=true)
+@Component
 @Service
 @Property( name="scheduler.period", longValue = 10)
 public class SimpleDSComponent implements Runnable {
@@ -50,7 +50,7 @@ public class SimpleDSComponent implements Runnable {
         this.bundleContext = ctx.getBundleContext();
     }
     
-    protected void deactivate() {
+    protected void deactivate(ComponentContext ctx) {
         this.bundleContext = null;
     }
 
