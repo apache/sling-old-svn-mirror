@@ -16,6 +16,8 @@
  */
 package org.apache.sling.ide.eclipse.ui.nav.model;
 
+import java.util.StringTokenizer;
+
 import org.apache.sling.ide.eclipse.ui.internal.SharedImages;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -32,6 +34,7 @@ public class SyncDir extends JcrNode {
 		}
 		this.folder = folder;
 		setResource(folder);
+		SyncDirManager.registerNewSyncDir(this);
 	}
 	
 	@Override
@@ -75,5 +78,25 @@ public class SyncDir extends JcrNode {
 	public IFile getFileForEditor() {
 		return null;
 	}
+	
+	@Override
+	public SyncDir getSyncDir() {
+	    return this;
+	}
 
+	public JcrNode getNode(String path) {
+	    StringTokenizer st = new StringTokenizer(path, "/");
+	    JcrNode node = SyncDirManager.getSyncDirOrNull(folder);
+	    while(st.hasMoreTokens()) {
+	        String nodeName = st.nextToken();
+	        node.getChildren(true);
+	        JcrNode child = node.getChild(nodeName);
+	        if (child==null) {
+	            return null;
+	        }
+	        node = child;
+	    }
+	    return node;
+	}
+	
 }

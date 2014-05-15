@@ -552,5 +552,31 @@
          <bundle
                name="org.apache.sling.ide.eclipse-ui"></bundle>
       </component>
-   </extension>   
+   </extension>
+    <extension
+          point="org.eclipse.ui.views">
+       <category
+             id="org.apache.sling.ide.eclipse-ui"
+             name="Apache Sling">
+       </category>
+       <view
+             category="org.apache.sling.ide.eclipse-ui"
+             class="org.apache.sling.ide.eclipse.ui.views.JcrPropertiesView"
+             icon="icons/obj16/sling.gif"
+             id="org.apache.sling.ide.eclipse.ui.views.JcrPropertiesView"
+             name="JCR Properties">
+       </view>
+    </extension>
+    <extension
+          point="org.eclipse.ui.perspectiveExtensions">
+       <perspectiveExtension
+             targetID="org.eclipse.jdt.ui.JavaPerspective">
+          <view
+                id="org.apache.sling.ide.eclipse.ui.views.JcrPropertiesView"
+                ratio="0.5"
+                relationship="right"
+                relative="org.eclipse.ui.views.ProblemView">
+          </view>
+       </perspectiveExtension>
+    </extension>
 </plugin>    

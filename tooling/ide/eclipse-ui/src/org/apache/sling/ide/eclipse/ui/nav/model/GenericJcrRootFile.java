@@ -193,8 +193,8 @@ public class GenericJcrRootFile extends JcrNode {
 	}
 	
 	@Override
-	public void createChild(String nodeName) {
-		createChild(nodeName, document.getRootElement());
+	public void createChild(String nodeName, String nodeType) {
+		createChild(nodeName, nodeType, document.getRootElement(), underlying);
 	}
 	
 	public void save() {
@@ -205,7 +205,8 @@ public class GenericJcrRootFile extends JcrNode {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
- 
+		
+		SyncDirManager.syncDirChanged(getSyncDir());
 	}
 	
 }

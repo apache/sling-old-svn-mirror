@@ -33,8 +33,12 @@ import javax.xml.parsers.SAXParserFactory;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
+import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
+import org.apache.sling.ide.eclipse.core.internal.Activator;
 import org.apache.sling.ide.eclipse.ui.WhitelabelSupport;
-import org.apache.sling.ide.eclipse.ui.internal.Activator;
+import org.apache.sling.ide.filter.Filter;
+import org.apache.sling.ide.filter.FilterResult;
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -66,7 +70,6 @@ import de.pdark.decentxml.Element;
 import de.pdark.decentxml.Namespace;
 import de.pdark.decentxml.Node;
 import de.pdark.decentxml.Text;
-import de.pdark.decentxml.XMLParseException;
 import de.pdark.decentxml.XMLTokenizer.Type;
 
 /** WIP: model object for a jcr node shown in the content package view in project explorer **/
@@ -494,7 +497,7 @@ public class JcrNode implements IAdaptable {
 		return domName;
 	}
 		
-	String getJcrPath() {
+	public String getJcrPath() {
 		String prefix;
 		if (parent==null) {
 			prefix = "";
@@ -633,6 +636,10 @@ public class JcrNode implements IAdaptable {
 		return null;
 	}
 
+	public ModifiableProperties getProperties() {
+	    return properties;
+	}
+	
 	protected boolean isBrowsable() {
 		return true;
 	}
@@ -692,43 +699,67 @@ public class JcrNode implements IAdaptable {
 		return resource;
 	}
 
-	public void createChild(String nodeName) {
+	public void createChild(String nodeName, String nodeType) {
 		if (domElement==null) {
 			// then we're not in the context of a .content.xml file yet
 			// so we need to create one
-			final String minimalContentXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<jcr:root\n    xmlns:sling=\"http://sling.apache.org/jcr/sling/1.0\"\n    xmlns:jcr=\"http://www.jcp.org/jcr/1.0\"/>";
+		    
+		    //TODO then it probably never will be OK to create a child here !
+		    // as this is a plain folder/file-based entry - in which case it
+		    // is very likely not to be fine to create just a .content.xml or nodename.xml !
+		    
+			final String minimalContentXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<jcr:root \n    xmlns:sling=\"http://sling.apache.org/jcr/sling/1.0\"\n    xmlns:jcr=\"http://www.jcp.org/jcr/1.0\"\n    jcr:primaryType=\""+nodeType+"\"/>";
 			if (resource instanceof IFolder) {
 				IFolder folder = (IFolder)resource;
-				IFile file = folder.getFile(nodeName+".xml");
+				final String filename = nodeName+".xml";
+                IFile file = folder.getFile(filename);
+                if (file.exists()) {
+                    System.out.println("then what?");
+                }
 				try {
 					file.create(new ByteArrayInputStream(minimalContentXml.getBytes()), true, new NullProgressMonitor());
 				} catch (CoreException e) {
 					//TODO proper logging
 					e.printStackTrace();
+	                MessageDialog.openInformation(Display.getDefault().getActiveShell(), 
+	                        "Cannot create JCR node on a File", "Following Exception encountered: "+e);
 				}
 			} else {
 				MessageDialog.openInformation(Display.getDefault().getActiveShell(), 
 						"Cannot create JCR node on a File", "Creating a JCR node on a File is not yet supported");
 			}
 		} else {
-			try{
-				createChild(nodeName, domElement);
-			} catch(Exception e) {
-				MessageDialog.openError(Display.getDefault().getActiveShell(), "Error creating new JCR node", "The following error occurred: "+e.getMessage());
-			}
+		    boolean underlyingMatch = underlying==properties.getUnderlying();
+		    if (domElement==properties.getDomElement()) {
+		        // normal case
+		        try{
+		            createChild(nodeName, nodeType, domElement, underlying);
+		        } catch(Exception e) {
+		            MessageDialog.openError(Display.getDefault().getActiveShell(), "Error creating new JCR node", "The following error occurred: "+e.getMessage());
+		        }
+		    } else {
+		        // trickier case
+                try{
+                    createChild(nodeName, nodeType, properties.getDomElement(), properties.getUnderlying());
+                } catch(Exception e) {
+                    MessageDialog.openError(Display.getDefault().getActiveShell(), "Error creating new JCR node", "The following error occurred: "+e.getMessage());
+                }
+		        
+		    }
+		    
 		}
 	}
 
-	protected void createChild(String nodeName,
-			Element domElement) {
+	protected void createChild(String nodeName, String nodeType,
+			Element domElement, GenericJcrRootFile effectiveUnderlying) {
 		if (domElement==null) {
 			throw new IllegalArgumentException("domNode must not be null");
 		}
-		if (underlying==null) {
-			throw new IllegalArgumentException("underlying must not be null");
+		if (effectiveUnderlying==null) {
+			throw new IllegalArgumentException("effectiveUnderlying must not be null");
 		}
 		Element element = new Element(nodeName);
-		element.addAttribute("jcr:primaryType", "nt:unstructured");
+		element.addAttribute("jcr:primaryType", nodeType);
 		StringBuffer indent = new StringBuffer();
 		Element parElement = domElement.getParentElement();
 		while(parElement!=null) {
@@ -739,7 +770,7 @@ public class JcrNode implements IAdaptable {
 		element = domElement.addNode(element);
 		domElement.addNode(new Text("\n"+indent.toString()));
 		JcrNode childNode = new JcrNode(this, element, null);
-		underlying.save();
+		effectiveUnderlying.save();
 	}
 
 	public void delete() {
@@ -792,5 +823,61 @@ public class JcrNode implements IAdaptable {
         final String url = "http://"+host+":"+port+""+getJcrPath();
 		return url;
 	}
+
+    public boolean isInContentXml() {
+        return domElement!=null;
+    }
+
+    public boolean canCreateChild() {
+        try {
+            final IProject project = getProject();
+            final Filter filter = ProjectUtil.loadFilter(project);
+            final String relativeFilePath = getJcrPath();
+//            final Repository repository = Activator.getDefault().getRepositoryFactory().newRepository(null);//ServerUtil.getRepository(null, null);
+//            final RepositoryInfo repositoryInfo = repository.getRepositoryInfo();
+//            if (repositoryInfo==null) {
+//                return false;
+//            }
+            final FilterResult result = filter.filter(ProjectUtil.getSyncDirectoryFile(project), relativeFilePath, null);
+            return result==FilterResult.ALLOW;
+        } catch (CoreException e) {
+            PluginLogger logger = Activator.getDefault().getPluginLogger();
+            logger.error("Could not verify child node allowance: "+this, e);
+            return false;
+        }
+    }
+
+    public String getPrimaryType() {
+        final String pt = properties.getValue("jcr:primaryType");
+        if (pt!=null && pt.length()!=0) {
+            return pt;
+        }
+        if (domElement==null) {
+            if (resource!=null) {
+                if (resource instanceof IContainer) {
+                    return "nt:folder";
+                } else {
+                    return "nt:file";
+                }
+            }
+        }
+        return null;
+    }
+
+    public void deleteProperty(String displayName) {
+        properties.deleteProperty(displayName);
+    }
+
+    public SyncDir getSyncDir() {
+        return getParent().getSyncDir();
+    }
+
+    public void setPropertyValue(Object key, Object value) {
+        properties.setPropertyValue(key, value);
+    }
+
+    public void addProperty(String name, String value) {
+        properties.addProperty(name, value);
+    }
 
 }
