@@ -258,12 +258,16 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 		for (Iterator<IProject> it = bundleProjects.iterator(); it.hasNext();) {
 			IProject project = it.next();
 			IModule module = ServerUtil.getModule(project);
-			modules.add(module);
+            if (module != null) {
+                modules.add(module);
+            }
 		}
 		for (Iterator<IProject> it = contentProjects.iterator(); it.hasNext();) {
 			IProject project = it.next();
 			IModule module = ServerUtil.getModule(project);
-			modules.add(module);
+            if (module != null) {
+                modules.add(module);
+            }
 		}
 		wc.modifyModules(modules.toArray(new IModule[modules.size()]), new IModule[0], monitor);
 		IServer newServer = wc.save(true, monitor);
