@@ -17,36 +17,37 @@
 package org.apache.sling.ide.test.impl.helpers.jcr;
 
 import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 
-import org.hamcrest.Matcher;
+import org.hamcrest.Description;
+import org.junit.internal.matchers.TypeSafeMatcher;
 
-public final class JcrMatchers {
+/**
+ * The <tt>NodePathMatcher</tt> matches a value of a node's property
+ *
+ */
+public class PropertyMatcher extends TypeSafeMatcher<Node> {
 
-    public static Matcher<Node> hasPath(String nodePath) {
-        return new NodePathMatcher(nodePath);
+    private final String name;
+    private final String value;
+
+    public PropertyMatcher(String name, String value) {
+        this.name = name;
+        this.value = value;
     }
 
-    public static Matcher<Node> hasPrimaryType(String primaryType) {
-        return new PrimaryTypeMatcher(primaryType);
+    @Override
+    public void describeTo(Description description) {
+        description.appendText("node[" + name + "] = " + value);
     }
 
-    public static Matcher<Node> hasMixinTypes(String mixinTypes) {
-        return new MixinTypesMatcher(mixinTypes);
+    @Override
+    public boolean matchesSafely(Node item) {
+        try {
+            return item != null && item.hasProperty(name) && item.getProperty(name).getString().equals(value);
+        } catch (RepositoryException e) {
+            return false;
+        }
     }
 
-    public static Matcher<Node> hasChildrenCount(int childrenCount) {
-        return new ChildrenCountMatcher(childrenCount);
-    }
-
-    public static Matcher<Node> hasChildrenNames(String... childrenNames) {
-        return new ChildrenNameMatcher(childrenNames);
-    }
-
-    public static Matcher<Node> hasPropertyValue(String propertyName, String propertyValue) {
-        return new PropertyMatcher(propertyName, propertyValue);
-    }
-
-    private JcrMatchers() {
-
-    }
 }
