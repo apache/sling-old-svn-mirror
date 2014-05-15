@@ -20,6 +20,7 @@ package org.apache.sling.extensions.mdc.internal;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Property;
@@ -52,7 +53,9 @@ import java.util.concurrent.CopyOnWriteArraySet;
 @Service
 @Component(metatype = true,
         label="%mdc.label",
-        description = "%mdc.description")
+        description = "%mdc.description",
+        policy = ConfigurationPolicy.REQUIRE
+)
 @Property(name = "pattern",value = "/.*", propertyPrivate = true)
 /**
  * Filter is based on ch.qos.logback.classic.helpers.MDCInsertingServletFilter
