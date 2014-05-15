@@ -20,9 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
@@ -45,11 +42,8 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
-import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchManager;
-import org.eclipse.debug.ui.DebugUITools;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.IServer;
@@ -281,11 +275,6 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
     private void publishContentModule(int kind, int deltaKind, IModule[] module, IProgressMonitor monitor)
             throws CoreException, SerializationException, IOException {
 
-		if (runLaunchesIfExist(kind, deltaKind, module, monitor)) {
-			return;
-		}
-		// otherwise fallback to old behaviour
-		
         PluginLogger logger = Activator.getDefault().getPluginLogger();
 
 		Repository repository = ServerUtil.getRepository(getServer(), monitor);
@@ -355,59 +344,6 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         super.publishModule(kind, deltaKind, module, monitor);
         setModulePublishState(module, IServer.PUBLISH_STATE_NONE);
 //        setServerPublishState(IServer.PUBLISH_STATE_NONE);
-	}
-
-	private boolean runLaunchesIfExist(int kind, int deltaKind, IModule[] module,
-			IProgressMonitor monitor) throws CoreException {
-		final IProject project = module[0].getProject();
-		final IFolder dotLaunches = project.getFolder(".settings").getFolder(".launches");
-		final List<IFile> launches = new LinkedList<IFile>();
-		if (dotLaunches.exists()) {
-			final IResource[] members = dotLaunches.members();
-			if (members!=null) {
-				for (int i = 0; i < members.length; i++) {
-					final IResource aMember = members[i];
-					if (aMember instanceof IFile) {
-						launches.add((IFile)aMember);
-					}
-				}
-			}
-		}
-		if (launches.size()>0) {
-			if (kind == IServer.PUBLISH_AUTO && deltaKind == ServerBehaviourDelegate.NO_CHANGE) {
-				// then nothing is to be done, there are no changes
-				return true;
-			}
-	        for (Iterator<IFile> it = launches.iterator(); it.hasNext();) {
-				IFile aLaunchFile = it.next();
-				try{
-//					@SuppressWarnings("restriction")
-//					IWorkbench workbench = DebugUIPlugin.getDefault().getWorkbench();
-//					if (workbench==null) {
-//						// we're not in the context of a workbench?
-//						System.err.println("We're not in the context of a workbench?");
-//					}
-//					IWorkbenchWindow aw = workbench.getActiveWorkbenchWindow();
-//					if (aw==null) {
-//						// we're not in the context of a workbench window?
-//					}
-					ILaunchConfiguration launchConfig = 
-							DebugPlugin.getDefault().getLaunchManager().getLaunchConfiguration(aLaunchFile);
-					if (launchConfig!=null) {
-						DebugUITools.launch( launchConfig, ILaunchManager.RUN_MODE);
-					}
-				} catch(Exception e) {
-					// TODO logging
-					
-					e.printStackTrace();
-				}
-
-			}
-	        super.publishModule(kind, deltaKind, module, monitor);
-	        setModulePublishState(module, IServer.PUBLISH_STATE_NONE);
-	        return true;
-		}
-		return false;
 	}
 
     private void execute(Command<?> command) throws CoreException {
