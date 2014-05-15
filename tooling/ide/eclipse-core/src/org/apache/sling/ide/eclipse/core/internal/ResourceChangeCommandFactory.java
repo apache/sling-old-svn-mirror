@@ -124,17 +124,31 @@ public class ResourceChangeCommandFactory {
                     String newRelativeLocation = actualFile.getAbsolutePath().substring(
                             syncDirectoryAsFile.getAbsolutePath().length());
                     info = new FileInfo(newLocation, newRelativeLocation, newName);
+
+                    Activator.getDefault().getPluginLogger()
+                            .trace("Adjusted original location from {0} to {1}", resourceLocation, newLocation);
                 }
 
                 return repository.newAddOrUpdateNodeCommand(info, resourceProxy);
             } catch (IOException e) {
-                // TODO logging
-                e.printStackTrace();
+                Activator.getDefault().getPluginLogger().warn(e.getMessage(), e);
                 return null;
             } finally {
                 IOUtils.closeQuietly(contents);
             }
         } else {
+
+            // TODO - move logic to serializationManager
+            // possible .dir serialization holder
+            if (resource.getType() == IResource.FOLDER && resource.getName().endsWith(".dir")) {
+                IFolder folder = (IFolder) resource;
+                IResource contentXml = folder.findMember(".content.xml");
+                // .dir serialization holder ; nothing to process here, the .content.xml will trigger the actual work
+                if (contentXml != null && contentXml.exists()
+                        && serializationManager.isSerializationFile(contentXml.getLocation().toOSString())) {
+                    return null;
+                }
+            }
 
             ResourceProxy resourceProxy = buildResourceProxyForPlainFileOrFolder(resource, syncDirectory);
 
