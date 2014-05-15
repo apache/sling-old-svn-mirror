@@ -540,7 +540,7 @@
             commandId="org.apache.sling.ide.commands.exportContent"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M1+M2+P">
+            sequence="M1+M2+X">
       </key>      
    </extension>
 
