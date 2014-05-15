@@ -16,8 +16,12 @@
  */
 package org.apache.sling.ide.eclipse.ui.internal;
 
+import org.apache.sling.ide.eclipse.core.ProjectUtil;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -98,6 +102,18 @@ public class ExportWizardPage extends WizardDataTransferPage {
     @Override
     protected void createOptionsGroup(Composite parent) {
 
+        // not really options but to placement is good enough
+        Label filterLabel = new Label(parent, SWT.NONE);
+        GridDataFactory.fillDefaults().applyTo(filterLabel);
+
+        IFile filterFile = ResourcesPlugin.getWorkspace().getRoot()
+                .getFileForLocation(ProjectUtil.findFilterPath(syncStartPoint.getProject()));
+
+        if (filterFile != null && filterFile.exists()) {
+            filterLabel.setText("Will apply export filter from /" + filterFile.getProjectRelativePath() + ".");
+        } else {
+            filterLabel.setText("No filter definition found, will export all resources.");
+        }
     }
 
     @Override
