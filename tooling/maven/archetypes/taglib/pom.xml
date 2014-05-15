@@ -20,9 +20,9 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.sling</groupId>
-        <artifactId>sling</artifactId>
-        <version>19</version>
-        <relativePath>../../../parent/pom.xml</relativePath>
+        <artifactId>sling-archetype-parent</artifactId>
+        <version>1</version>
+        <relativePath>../parent/pom.xml</relativePath>
     </parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling-taglib-archetype</artifactId>
@@ -59,11 +59,6 @@
             </extension>
         </extensions>
         <plugins>
-            <plugin>
-                <artifactId>maven-archetype-plugin</artifactId>
-                <version>2.2</version>
-                <extensions>true</extensions>
-            </plugin>
             <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
