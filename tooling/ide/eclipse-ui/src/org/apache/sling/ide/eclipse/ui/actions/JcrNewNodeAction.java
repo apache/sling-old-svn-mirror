@@ -57,7 +57,7 @@ public class JcrNewNodeAction implements IObjectActionDelegate {
 					}
 				});
 		if (id.open() == IStatus.OK) {
-			node.createChild(id.getValue());
+			node.createChild(id.getValue(), "nt:unstructured");
 		}
 	}
 
