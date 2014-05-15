@@ -58,7 +58,6 @@ import org.eclipse.wst.server.core.IServer;
 public class ImportRepositoryContentAction {
 
     private final IServer server;
-    private final IFile filterFile;
     private final IPath projectRelativePath;
     private final IProject project;
     private final PluginLogger logger;
@@ -68,22 +67,21 @@ public class ImportRepositoryContentAction {
 
     /**
      * @param server
-     * @param filterFile
      * @param projectRelativePath
      * @param project
      * @throws SerializationException 
      */
-    public ImportRepositoryContentAction(IServer server, IFile filterFile, IPath projectRelativePath,
-            IProject project, SerializationManager serializationManager) throws SerializationException {
+    public ImportRepositoryContentAction(IServer server, IPath projectRelativePath, IProject project,
+            SerializationManager serializationManager) throws SerializationException {
         this.logger = Activator.getDefault().getPluginLogger();
         this.server = server;
-        this.filterFile = filterFile;
         this.projectRelativePath = projectRelativePath;
         this.project = project;
         this.serializationManager = serializationManager;
     }
 
-    public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException, SerializationException {
+    public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException,
+            SerializationException, CoreException {
         Repository repository;
         try {
             repository = ServerUtil.getRepository(server, monitor);
@@ -115,29 +113,7 @@ public class ImportRepositoryContentAction {
             throw new InvocationTargetException(e1);
         }
 
-        Filter filter = null;
-
-        FilterLocator filterLocator = Activator.getDefault().getFilterLocator();
-        InputStream contents = null;
-
-        if (filterFile != null && filterFile.exists()) {
-            try {
-                contents = filterFile.getContents();
-                filter = filterLocator.loadFilter(contents);
-            } catch (CoreException e) {
-                throw new InvocationTargetException(e);
-            } catch (IOException e) {
-                throw new InvocationTargetException(e);
-            } finally {
-                if (contents != null) {
-                    try {
-                        contents.close();
-                    } catch (IOException e) {
-                        // don't care
-                    }
-                }
-            }
-        }
+        Filter filter = ProjectUtil.loadFilter(project);
 
         monitor.worked(5);
 

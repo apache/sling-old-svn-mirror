@@ -16,10 +16,8 @@
  */
 package org.apache.sling.ide.eclipse.ui.internal;
 
-import java.io.File;
 
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
-import org.apache.sling.ide.filter.FilterLocator;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -29,7 +27,6 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
@@ -85,8 +82,7 @@ public class ImportWizardPage extends WizardDataTransferPage {
 	}
 	
     IPath getResourcePath() {
-        String resourcePath = project.getFullPath().append(ProjectUtil.getSyncDirectoryValue(project)).toOSString();
-    	return new Path(resourcePath);
+        return ProjectUtil.getSyncDirectory(project).getFullPath();
 	}
 
 	/*
@@ -327,25 +323,9 @@ public class ImportWizardPage extends WizardDataTransferPage {
         importLabel.getParent().layout();
     }
 
-	public IFile getFilterFile() {
-
-        IResource syncLocation = project.getWorkspace().getRoot().findMember(getResourcePath());
-        if (syncLocation == null) {
-            return null;
-        }
-
-        return getFilter(syncLocation);
-    }
-
     private IFile getFilter(IResource syncLocation) {
 
-        FilterLocator filterLocator = Activator.getDefault().getFilterLocator();
-        File filterLocation = filterLocator.findFilterLocation(syncLocation.getLocation().toFile());
-        if (filterLocation == null) {
-            return null;
-        }
-        IPath filterPath = Path.fromOSString(filterLocation.getAbsolutePath());
-        return ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(filterPath);
+        return ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(ProjectUtil.findFilterPath(project));
     }
 
 	/*
