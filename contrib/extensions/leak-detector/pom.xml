@@ -30,7 +30,7 @@
 
   <artifactId>org.apache.sling.extensions.classloader-leak-detector</artifactId>
   <packaging>bundle</packaging>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0.0</version>
 
   <name>Adobe Sling ClassLoader Leak Detector</name>
   <description>
@@ -38,10 +38,10 @@
   </description>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/leak-detector</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/leak-detector
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.extensions.classloader-leak-detector-1.0.0</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.extensions.classloader-leak-detector-1.0.0
     </developerConnection>
-    <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/leak-detector</url>
+    <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.extensions.classloader-leak-detector-1.0.0</url>
   </scm>
 
   <build>
