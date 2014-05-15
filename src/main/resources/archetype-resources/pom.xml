@@ -19,21 +19,23 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>${groupId}</groupId>
-    <artifactId>${artifactId}</artifactId>
+    <groupId>\${groupId}</groupId>
+    <artifactId>\${artifactId}</artifactId>
     <packaging>bundle</packaging>
-    <version>${version}</version>
-    <name>${artifactId}</name>
-    <description>${groupId} - ${artifactId}</description>
+    <version>\${version}</version>
+    <name>\${artifactId}</name>
+    <description>\${groupId} - \${artifactId}</description>
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
-                <version>2.0.1</version>
+                <version>${bundleplugin.version}</version>
                 <configuration>
                     <instructions>
+                        <!-- Stop bnd complaining about unused Private-Package instructions -->
+                        <Private-Package></Private-Package>
                         <Sling-Nodetypes>
                             SLING-INF/nodetypes/nodetypes.cnd
                         </Sling-Nodetypes>
@@ -54,7 +56,7 @@
                     <plugin>
                         <groupId>org.apache.sling</groupId>
                         <artifactId>maven-sling-plugin</artifactId>
-                        <version>2.0.4-incubator</version>
+                        <version>${slingplugin.version}</version>
                         <executions>
                             <execution>
                                 <id>install-bundle</id>
@@ -73,4 +75,7 @@
             </build>
         </profile>
     </profiles>
+    <properties>
+        <project.build.sourceEncoding>${project.build.sourceEncoding}</project.build.sourceEncoding>
+    </properties>    
 </project>
