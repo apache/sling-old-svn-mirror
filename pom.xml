@@ -27,16 +27,16 @@
     </parent>
 
     <artifactId>sling-bundle-archetype</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.2</version>
     <packaging>maven-archetype</packaging>
 
     <name>Sling Bundle Archetype</name>
     <description>Maven archetype for a generic OSGi bundle.</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/maven/archetypes/bundle</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/maven/archetypes/bundle</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/maven/archetypes/bundle</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/sling-bundle-archetype-1.0.2</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/sling-bundle-archetype-1.0.2</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/sling-bundle-archetype-1.0.2</url>
     </scm>
 
     <build>
