@@ -174,9 +174,6 @@
 	 				<test 
 			            property="org.eclipse.wst.common.project.facet.core.projectFacet" 
 			            value="sling.content"/>
-	 				<test 
-			            property="org.eclipse.wst.common.project.facet.core.projectFacet" 
-			            value="sling.bundle"/>
 			    </or>
              </and>
           </enabledWhen>
