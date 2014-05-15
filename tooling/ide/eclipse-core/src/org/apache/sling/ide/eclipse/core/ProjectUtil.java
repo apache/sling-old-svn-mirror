@@ -116,15 +116,22 @@ public abstract class ProjectUtil {
         }
     }
     
+    /**
+     * Loads a filter for the specified project
+     * 
+     * @param project the project to find a filter for
+     * @return the found filter or null
+     * @throws CoreException
+     */
     public static Filter loadFilter(final IProject project) throws CoreException {
-        IFolder syncFolder = ProjectUtil.getSyncDirectory(project);
 
         FilterLocator filterLocator = Activator.getDefault().getFilterLocator();
-        File filterLocation = filterLocator.findFilterLocation(syncFolder.getLocation().toFile());
-        if (filterLocation == null) {
+
+        IPath filterPath = findFilterPath(project);
+        if (filterPath == null) {
             return null;
         }
-        IPath filterPath = Path.fromOSString(filterLocation.getAbsolutePath());
+
         IFile filterFile = ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(filterPath);
         Filter filter = null;
         if (filterFile != null && filterFile.exists()) {
@@ -133,13 +140,31 @@ public abstract class ProjectUtil {
                 filter = filterLocator.loadFilter(contents);
             } catch (IOException e) {
                 throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
-                        "Failed loading filter file for project " + syncFolder.getProject().getName()
+                        "Failed loading filter file for project " + project.getName()
                                 + " from location " + filterFile, e));
             } finally {
                 IOUtils.closeQuietly(contents);
             }
         }
         return filter;
+    }
+
+    /**
+     * Finds the path to a filter defined for the project
+     * 
+     * @param project the project
+     * @return the path to the filter defined in the project, or null if no filter is found
+     */
+    public static IPath findFilterPath(final IProject project) {
+
+        FilterLocator filterLocator = Activator.getDefault().getFilterLocator();
+
+        IFolder syncFolder = ProjectUtil.getSyncDirectory(project);
+        File filterLocation = filterLocator.findFilterLocation(syncFolder.getLocation().toFile());
+        if (filterLocation == null) {
+            return null;
+        }
+        return Path.fromOSString(filterLocation.getAbsolutePath());
     }
 
 

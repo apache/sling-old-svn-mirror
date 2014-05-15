@@ -20,12 +20,11 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.apache.sling.ide.serialization.SerializationException;
 import org.apache.sling.ide.serialization.SerializationManager;
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
@@ -68,15 +67,15 @@ public class ImportWizard extends Wizard implements IImportWizard {
 
         final IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(destinationPath.segments()[0]);
         final IPath projectRelativePath = destinationPath.removeFirstSegments(1);
-        final IFile filterFile = mainPage.getFilterFile();
         IRunnableWithProgress runnable = new IRunnableWithProgress() {
             @Override
             public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 
                 try {
-                    new ImportRepositoryContentAction(server, filterFile, projectRelativePath, project,
-                            serializationManager).run(monitor);
+                    new ImportRepositoryContentAction(server, projectRelativePath, project, serializationManager).run(monitor);
                 } catch (SerializationException e) {
+                    throw new InvocationTargetException(e);
+                } catch (CoreException e) {
                     throw new InvocationTargetException(e);
                 } finally {
                     serializationManager.destroy();
