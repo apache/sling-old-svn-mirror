@@ -427,7 +427,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         }
 
         Activator.getDefault().getPluginLogger()
-                .trace("Updating {} property on node at {} ", JCR_DATA, contentNode.getPath());
+                .trace("Updating {0} property on node at {1} ", JCR_DATA, contentNode.getPath());
 
         FileInputStream inputStream = new FileInputStream(file);
         try {
