@@ -91,8 +91,12 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         Node node;
         if (nodeExists) {
             node = session.getNode(path);
+            Activator.getDefault().getPluginLogger()
+                    .trace("Found existing node at {0} with primaryType {1}", path, node.getPrimaryNodeType().getName());
         } else {
             node = createNode(resource, session);
+            Activator.getDefault().getPluginLogger()
+                    .trace("Created node at {0} with primaryType {1}", path, node.getPrimaryNodeType().getName());
         }
 
         updateNode(node, resource);
@@ -108,7 +112,9 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         if (primaryTypeHasChanged) {
             session.save();
         }
+
         NodeType primaryNodeType = node.getPrimaryNodeType();
+
         if (primaryNodeType.hasOrderableChildNodes()) {
             reorderChildNodes(node, resource);
         }
@@ -252,6 +258,8 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         if (!node.getPrimaryNodeType().getName().equals(primaryType)) {
             node.setPrimaryType(primaryType);
             primaryTypeHasChanged = true;
+            Activator.getDefault().getPluginLogger()
+                    .trace("Set new primary type {0} for node at {1}", primaryType, node.getPath());
         }
 
         // TODO - review for completeness and filevault compatibility
@@ -344,8 +352,12 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
             if (value != null) {
                 node.setProperty(propertyName, value);
+                Object[] arguments = { propertyName, value, propertyValue, node.getPath() };
+                Activator.getDefault().getPluginLogger().trace("Set property {0} with value {1} (raw =  {2}) on node at {3}", arguments);
             } else if (values != null) {
                 node.setProperty(propertyName, values);
+                Object[] arguments = { propertyName, values, propertyValue, node.getPath() };
+                Activator.getDefault().getPluginLogger().trace("Set property {0} with values {1} (raw =  {2}) on node at {3}", arguments);
             } else {
                 throw new IllegalArgumentException("Unable to extract a value or a value array for property '"
                         + propertyName + "' with value '" + propertyValue + "'");
@@ -354,6 +366,8 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         
         for ( String propertyToRemove : propertiesToRemove ) {
             node.getProperty(propertyToRemove).remove();
+            Activator.getDefault().getPluginLogger()
+                    .trace("Removed property {0} from node at {1}", propertyToRemove, node.getPath());
         }
 
     }
@@ -380,10 +394,14 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
         for (String mixinToAdd : mixinsToAdd) {
             node.addMixin(mixinToAdd);
+            Activator.getDefault().getPluginLogger()
+                    .trace("Added new mixin {0} to node at path {1}", mixinToAdd, node.getPath());
         }
 
         for (String mixinToRemove : mixinsToRemove) {
             node.removeMixin(mixinToRemove);
+            Activator.getDefault().getPluginLogger()
+                    .trace("Removed mixin {0} from node at path {1}", mixinToRemove, node.getPath());
         }
     }
 
@@ -408,6 +426,9 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
             }
         }
 
+        Activator.getDefault().getPluginLogger()
+                .trace("Updating {} property on node at {} ", JCR_DATA, contentNode.getPath());
+
         FileInputStream inputStream = new FileInputStream(file);
         try {
             Binary binary = node.getSession().getValueFactory().createBinary(inputStream);
@@ -415,6 +436,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
             // TODO: might have to be done differently since the client and server's clocks can differ
             // and the last_modified should maybe be taken from the server's time..
             contentNode.setProperty(JCR_LASTMODIFIED, Calendar.getInstance());
+
         } finally {
             try {
                 inputStream.close();
