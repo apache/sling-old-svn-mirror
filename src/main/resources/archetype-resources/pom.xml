@@ -19,18 +19,18 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>${groupId}</groupId>
-    <artifactId>${artifactId}</artifactId>
+    <groupId>\${groupId}</groupId>
+    <artifactId>\${artifactId}</artifactId>
     <packaging>bundle</packaging>
-    <version>${version}</version>
-    <name>${artifactId}</name>
-    <description>${groupId} - ${artifactId}</description>
+    <version>\${version}</version>
+    <name>\${artifactId}</name>
+    <description>\${groupId} - \${artifactId}</description>
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-scr-plugin</artifactId>
-                <version>1.7.2</version>
+                <version>${scrplugin.version}</version>
                 <executions>
                     <execution>
                         <id>generate-scr-descriptor</id>
@@ -44,13 +44,16 @@
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
-                <version>2.0.1</version>
+                <version>${bundleplugin.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <!-- use version 2.3.2 to have java 1.5 as the default -->
-                <version>2.3.2</version>
+                <version>${compilerplugin.version}</version>
+                <configuration>
+                    <source>${archetype.java.version}</source>
+                    <target>${archetype.java.version}</target>
+                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -82,25 +85,25 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.api</artifactId>
-            <version>2.2.0</version>
+            <version>${slingapi.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.5.10</version>
+            <version>${slf4japi.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.annotations</artifactId>
-            <version>1.6.0</version>
+            <version>${scrannotations.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>3.8.1</version>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -112,7 +115,7 @@
                     <plugin>
                         <groupId>org.apache.sling</groupId>
                         <artifactId>maven-sling-plugin</artifactId>
-                        <version>2.0.4-incubator</version>
+                        <version>${slingplugin.version}</version>
                         <executions>
                             <execution>
                                 <id>install-bundle</id>
@@ -137,4 +140,7 @@
             </build>
         </profile>
     </profiles>
+    <properties>
+        <project.build.sourceEncoding>${project.build.sourceEncoding}</project.build.sourceEncoding>
+    </properties>    
 </project>
