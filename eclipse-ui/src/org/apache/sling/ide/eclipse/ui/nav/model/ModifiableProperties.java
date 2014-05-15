@@ -51,6 +51,10 @@ public class ModifiableProperties implements IPropertySource {
 		return genericJcrRootFile;
 	}
 	
+	public Element getDomElement() {
+	    return domElement;
+	}
+	
 	@Override
 	public Object getEditableValue() {
 		return this;
@@ -89,23 +93,45 @@ public class ModifiableProperties implements IPropertySource {
 
 	@Override
 	public void setPropertyValue(Object id, Object value) {
-		Map.Entry<String, String> entry = (Map.Entry<String, String>)id;
-		entry.setValue(String.valueOf(value));
-		Attribute a = domElement.getAttribute(entry.getKey());
-		a.setValue(String.valueOf(value));
-		genericJcrRootFile.save();
+	    if (id instanceof Map.Entry<?, ?>) {
+	        Map.Entry<String, String> entry = (Map.Entry<String, String>)id;
+	        entry.setValue(String.valueOf(value));
+	        Attribute a = domElement.getAttribute(entry.getKey());
+	        a.setValue(String.valueOf(value));
+	        genericJcrRootFile.save();
+	    } else if (value instanceof String) {
+            Attribute a = domElement.getAttribute((String) id);
+            a.setValue((String) value);
+            genericJcrRootFile.save();
+	    } else {
+	        System.out.println("UNSUPPORTED VALUE TYPE: "+value.getClass());
+	    }
 	}
 
 	public void setNode(GenericJcrRootFile genericJcrRootFile, Element domNode) {
 		this.domElement = domNode;
-		List<Attribute> attributes = domNode.getAttributes();
+		final List<Attribute> attributes = domNode.getAttributes();
 		if (attributes!=null) {
 			for (Iterator<Attribute> it = attributes.iterator(); it.hasNext();) {
-				Attribute a = it.next();
-				properties.put(a.getName(), a.getValue());
+				final Attribute a = it.next();
+				final String name = a.getName();
+				if (name.startsWith("xmlns:")) {
+				    continue;
+				}
+                properties.put(name, a.getValue());
 			}
 		}
 		this.genericJcrRootFile = genericJcrRootFile;
 	}
+
+    public void deleteProperty(String displayName) {
+        domElement.removeAttribute(displayName);
+        genericJcrRootFile.save();
+    }
+
+    public void addProperty(String name, String value) {
+        domElement.addAttribute(name, value);
+        genericJcrRootFile.save();
+    }
 
 }
