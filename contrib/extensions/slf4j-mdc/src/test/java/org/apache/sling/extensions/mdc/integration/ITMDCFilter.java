@@ -67,6 +67,11 @@ public class ITMDCFilter {
                 public boolean isTrue() throws Exception {
                     RequestBuilder rb = new RequestBuilder(ServerConfiguration.getServerUrl());
                     executor.execute(rb.buildGetRequest("/mdc")).assertStatus(200);
+                    rb = new RequestBuilder(ServerConfiguration.getServerUrl());
+
+                    //Create test config via servlet
+                    executor.execute(rb.buildGetRequest("/mdc", "createTestConfig", "true"));
+                    TimeUnit.SECONDS.sleep(1);
                     return true;
                 }
             },5,100);
