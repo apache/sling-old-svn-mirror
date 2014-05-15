@@ -64,8 +64,8 @@ public class SlingLaunchpadServer extends ServerDelegate implements ISlingLaunch
 
             if (!MODULE_TYPE_SLING_CONTENT.equals(module.getModuleType().getId()) &&
             		!MODULE_TYPE_SLING_BUNDLE.equals(module.getModuleType().getId())) {
-                return new Status(IStatus.ERROR, "org.apache.sling.slingclipse", 0,
-                        "Will only handle modules of type 'sling.content' or 'sling.bundle'", null);
+                return new Status(IStatus.ERROR, Activator.PLUGIN_ID,
+                        "Will only handle modules of type 'sling.content' or 'sling.bundle'");
             }
         }
 
@@ -113,7 +113,7 @@ public class SlingLaunchpadServer extends ServerDelegate implements ISlingLaunch
             throw new CoreException(status);
         }
 
-        // TODO - actually add/remove modules ...
+        // TODO - what else do we do?
     }
 
     @Override

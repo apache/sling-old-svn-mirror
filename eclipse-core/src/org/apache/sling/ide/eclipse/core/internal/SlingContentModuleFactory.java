@@ -22,6 +22,7 @@ import org.eclipse.wst.server.core.model.IModuleResource;
 import org.eclipse.wst.server.core.model.ModuleDelegate;
 import org.eclipse.wst.server.core.util.ModuleFile;
 import org.eclipse.wst.server.core.util.ModuleFolder;
+import org.eclipse.wst.server.core.util.ProjectModule;
 import org.eclipse.wst.server.core.util.ProjectModuleFactoryDelegate;
 
 public class SlingContentModuleFactory extends ProjectModuleFactoryDelegate {
@@ -64,12 +65,11 @@ public class SlingContentModuleFactory extends ProjectModuleFactoryDelegate {
         return null;
     }
 
-    static class SlingContentModuleDelegate extends ModuleDelegate {
+    static class SlingContentModuleDelegate extends ProjectModule {
 
-        private final IModule module;
 
         public SlingContentModuleDelegate(IModule module) {
-            this.module = module;
+            super(module.getProject());
         }
 
         @Override
@@ -79,15 +79,14 @@ public class SlingContentModuleFactory extends ProjectModuleFactoryDelegate {
 
         @Override
         public IModuleResource[] members() throws CoreException {
-            IProject project = module.getProject();
             final List<IModuleResource> resources = new ArrayList<IModuleResource>();
-            final IFolder syncFolder = project.getFolder(ProjectUtil.getSyncDirectoryValue(project));
+            final IFolder syncFolder = getProject().getFolder(ProjectUtil.getSyncDirectoryValue(getProject()));
 
             if (!syncFolder.exists()) {
                 return new IModuleResource[0];
             }
 
-            project.accept(new IResourceVisitor() {
+            getProject().accept(new IResourceVisitor() {
                 @Override
                 public boolean visit(IResource resource) throws CoreException {
 

@@ -41,6 +41,7 @@ import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.model.IModuleResource;
 import org.eclipse.wst.server.core.model.ModuleDelegate;
 import org.eclipse.wst.server.core.util.ModuleFile;
+import org.eclipse.wst.server.core.util.ProjectModule;
 import org.eclipse.wst.server.core.util.ProjectModuleFactoryDelegate;
 
 public class SlingBundleModuleFactory extends ProjectModuleFactoryDelegate {
@@ -83,12 +84,10 @@ public class SlingBundleModuleFactory extends ProjectModuleFactoryDelegate {
         return null;
     }
 
-    static class SlingBundleModuleDelegate extends ModuleDelegate {
-
-        private final IModule module;
+    static class SlingBundleModuleDelegate extends ProjectModule {
 
         public SlingBundleModuleDelegate(IModule module) {
-            this.module = module;
+            super(module.getProject());
         }
 
         @Override
@@ -112,8 +111,7 @@ public class SlingBundleModuleFactory extends ProjectModuleFactoryDelegate {
          */
         @Override
         public IModuleResource[] members() throws CoreException {
-            IProject project = module.getProject();
-            final IJavaProject javaProject = ProjectHelper.asJavaProject(project);
+            final IJavaProject javaProject = ProjectHelper.asJavaProject(getProject());
             final List<IModuleResource> resources = new ArrayList<IModuleResource>();
             
             final Set<String> filteredLocations = new HashSet<String>();
@@ -124,12 +122,12 @@ public class SlingBundleModuleFactory extends ProjectModuleFactoryDelegate {
 				IClasspathEntry aCp = rawCp[i];
 				IPath outputLocation = aCp.getOutputLocation();
 				if (outputLocation!=null) {
-					outputLocation = outputLocation.makeRelativeTo(project.getFullPath());
+                    outputLocation = outputLocation.makeRelativeTo(getProject().getFullPath());
 					filteredLocations.add(outputLocation.toString());
 				}
 			}
             
-            project.accept(new IResourceVisitor() {
+            getProject().accept(new IResourceVisitor() {
                 @Override
                 public boolean visit(IResource resource) throws CoreException {
 
@@ -165,7 +163,7 @@ public class SlingBundleModuleFactory extends ProjectModuleFactoryDelegate {
 
             for (Iterator<IModuleResource> it = resources.iterator(); it.hasNext();) {
 				IModuleResource iModuleResource = it.next();
-                logger.trace("For module {0} added {1}", module.getName(), iModuleResource.getModuleRelativePath()
+                logger.trace("For module {0} added {1}", getName(), iModuleResource.getModuleRelativePath()
                         .toString());
 			}
             return resources.toArray(new IModuleResource[resources.size()]);
