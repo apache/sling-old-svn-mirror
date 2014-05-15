@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/commons/compiler</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/commons/compiler</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/commons/compiler</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/commons/compiler</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/compiler</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/commons/compiler</url>
     </scm>
 
     <properties>
