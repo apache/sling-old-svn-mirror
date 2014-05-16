@@ -29,76 +29,6 @@ public class StubRepository implements Repository {
 
     @Override
     public Command<ResourceProxy> newListChildrenNodeCommand(final String path) {
-
-        if ("/jcr:system/jcr:nodeTypes".equals(path)) {
-            return new Command<ResourceProxy>() {
-
-                @Override
-                public Result<ResourceProxy> execute() {
-
-                    final ResourceProxy root = new ResourceProxy(path);
-                    root.addProperty("jcr:primaryType", "rep:nodeTypes");
-
-                    // nt:file
-                    ResourceProxy ntFile = NodeTypeResourceBuilder.newBuilder(root, "nt:file")
-                            .setSupertypes(new String[] { "nt:hierarchyNode" }).build();
-                    
-                    // nt:folder
-                    ResourceProxy ntFolder = NodeTypeResourceBuilder.newBuilder(root, "nt:folder")
-                            .setSupertypes(new String[] { "nt:hierarchyNode" }).build();
-
-                    // nt:hierarchyNode
-                    ResourceProxy ntHierarchyNode = NodeTypeResourceBuilder.newBuilder(root, "nt:hierarchyNode")
-                            .setSupertypes(new String[] { "mix:created", "nt:base" }).build();
-
-                    // nt:unstructured
-                    ResourceProxy ntUnstructured = NodeTypeResourceBuilder.newBuilder(root, "nt:unstructured")
-                            .setSupertypes(new String[] {"nt:base" }).build();
-
-                    // nt:base
-                    ResourceProxy ntBase = NodeTypeResourceBuilder.newBuilder(root, "nt:base")
-                            .setSupertypes(new String[] { }).build();
-                    
-                    // sling:OsgiConfig
-                    ResourceProxy slingOsgiConfig = NodeTypeResourceBuilder.newBuilder(root, "sling:OsgiConfig")
-                            .setSupertypes(new String[] {"nt:hierarchyNode", "nt:unstructured" }).build();
-                    
-                    // sling:Folder
-                    ResourceProxy slingFolder = NodeTypeResourceBuilder.newBuilder(root, "sling:Folder")
-                            .setSupertypes(new String[] {"nt:folder" }).build();
-                    
-                    // vlt:FullCoverage
-                    ResourceProxy vltFullCoverage = NodeTypeResourceBuilder.newBuilder(root, "vlt:FullCoverage")
-                            .setIsMixin(true).setSupertypes(new String[] {}).build();
-
-                    root.addChild(ntFile);
-                    root.addChild(ntFolder);
-                    root.addChild(ntHierarchyNode);
-                    root.addChild(ntUnstructured);
-                    root.addChild(ntBase);
-                    root.addChild(slingOsgiConfig);
-                    root.addChild(slingFolder);
-                    root.addChild(vltFullCoverage);
-
-                    return new Result<ResourceProxy>() {
-                        public ResourceProxy get() throws RepositoryException {
-                            return root;
-                        }
-
-                        @Override
-                        public boolean isSuccess() {
-                            return true;
-                        };
-                    };
-                }
-
-                @Override
-                public String getPath() {
-                    return path;
-                }
-            };
-        }
-
         return null;
     }
 
@@ -129,6 +59,17 @@ public class StubRepository implements Repository {
     
     @Override
     public NodeTypeRegistry getNodeTypeRegistry() {
-        return null;
+        final StubNodeTypeRegistry stubNodeTypeRegistry = new StubNodeTypeRegistry();
+        
+        stubNodeTypeRegistry.addNodeType("nt:file", new String[] {"nt:hierarchyNode"});
+        stubNodeTypeRegistry.addNodeType("nt:folder", new String[] {"nt:hierarchyNode"});
+        stubNodeTypeRegistry.addNodeType("nt:hierarchyNode", new String[] {"mix:created", "nt:base"});
+        stubNodeTypeRegistry.addNodeType("nt:unstructured", new String[] {"nt:base"});
+        stubNodeTypeRegistry.addNodeType("nt:base", new String[] {});
+        stubNodeTypeRegistry.addNodeType("sling:OsgiConfig", new String[] {"nt:hierarchyNode", "nt:unstructured"});
+        stubNodeTypeRegistry.addNodeType("sling:Folder", new String[] {"nt:folder"});
+        stubNodeTypeRegistry.addNodeType("vlt:FullCoverage", new String[] {});
+
+        return stubNodeTypeRegistry;
     }
 }
