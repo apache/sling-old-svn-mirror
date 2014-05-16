@@ -43,6 +43,7 @@
 
     <modules>
       <module>api</module>
+      <module>api-fragment</module>
       <module>core</module>
       <module>launcher</module>
       <module>test-services</module>

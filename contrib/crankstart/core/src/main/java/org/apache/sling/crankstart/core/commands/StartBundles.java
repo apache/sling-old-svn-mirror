@@ -33,6 +33,10 @@ public class StartBundles implements CrankstartCommand {
         return I_START_ALL_BUNDLES.equals(commandLine.getVerb());
     }
 
+    public String getDescription() {
+        return I_START_ALL_BUNDLES + ": start all currently loaded bundles";
+    }
+    
     @Override
     public void execute(CrankstartContext crankstartContext, CrankstartCommandLine commandLine) throws Exception {
         int count = 0;

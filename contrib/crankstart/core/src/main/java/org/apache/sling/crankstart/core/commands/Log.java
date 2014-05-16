@@ -27,6 +27,10 @@ public class Log implements CrankstartCommand {
     public static final String I_LOG = "log";
     private final Logger log = LoggerFactory.getLogger(getClass());
     
+    public String getDescription() {
+        return I_LOG + ": log a message";
+    }
+    
     @Override
     public boolean appliesTo(CrankstartCommandLine commandLine) {
         return I_LOG.equals(commandLine.getVerb());

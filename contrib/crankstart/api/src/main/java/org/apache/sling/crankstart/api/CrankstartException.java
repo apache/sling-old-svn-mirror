@@ -16,8 +16,13 @@
  */
 package org.apache.sling.crankstart.api;
 
-public interface CrankstartCommand {
-    public boolean appliesTo(CrankstartCommandLine commandLine);
-    public void execute(CrankstartContext crankstartContext, CrankstartCommandLine commandLine) throws Exception;
-    public String getDescription();
+public class CrankstartException extends RuntimeException {
+    private static final long serialVersionUID = -6721822365732639490L;
+    
+    public CrankstartException(String reason) {
+        super(reason);
+    }
+    public CrankstartException(String reason, Throwable cause) {
+        super(reason, cause);
+    }
 }

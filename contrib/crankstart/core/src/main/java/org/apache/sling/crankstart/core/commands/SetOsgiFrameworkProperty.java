@@ -32,6 +32,10 @@ public class SetOsgiFrameworkProperty implements CrankstartCommand {
         return I_OSGI_PROPERTY.equals(commandLine.getVerb());
     }
 
+    public String getDescription() {
+        return I_OSGI_PROPERTY + ": set an OSGi property";
+    }
+    
     @Override
     public void execute(CrankstartContext crankstartContext, CrankstartCommandLine cmd) throws Exception {
         final String args = cmd.getQualifier();
