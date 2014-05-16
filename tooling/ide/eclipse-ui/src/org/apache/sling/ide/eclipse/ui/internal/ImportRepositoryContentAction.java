@@ -19,7 +19,6 @@ package org.apache.sling.ide.eclipse.ui.internal;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -31,7 +30,6 @@ import org.apache.sling.ide.eclipse.core.ResourceUtil;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
 import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
 import org.apache.sling.ide.filter.Filter;
-import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.filter.FilterResult;
 import org.apache.sling.ide.serialization.SerializationData;
 import org.apache.sling.ide.serialization.SerializationDataBuilder;
@@ -124,7 +122,18 @@ public class ImportRepositoryContentAction {
             monitor.setTaskName("Importing...");
             monitor.worked(10);
 
-            crawlChildrenAndImport(repository, filter, "/", project, projectRelativePath);
+            IFolder syncDir = ProjectUtil.getSyncDirectory(project);
+            IPath repositoryImportRoot = projectRelativePath.makeRelativeTo(syncDir.getProjectRelativePath())
+                    .makeAbsolute();
+
+            Activator
+                    .getDefault()
+                    .getPluginLogger()
+                    .trace("Starting import; repository start point is {0}, workspace start point is {1}",
+                            repositoryImportRoot, projectRelativePath);
+
+            crawlChildrenAndImport(repository, filter, repositoryImportRoot.toPortableString(), project,
+                    projectRelativePath);
 
             monitor.setTaskName("Import Complete");
             monitor.worked(100);
@@ -164,6 +173,7 @@ public class ImportRepositoryContentAction {
             throws RepositoryException, CoreException, IOException, SerializationException {
 
         File contentSyncRoot = ProjectUtil.getSyncDirectoryFullPath(project).toFile();
+        IFolder contentSyncRootDir = ProjectUtil.getSyncDirectory(project);
 
         logger.trace("crawlChildrenAndImport({0},  {1}, {2}, {3}", repository, path, project, projectRelativePath);
 
@@ -176,7 +186,8 @@ public class ImportRepositoryContentAction {
         final List<ResourceProxy> resourceChildren = new LinkedList<ResourceProxy>(resource.getChildren());
 		if (serializationData != null) {
 	
-	        IPath fileOrFolderPath = projectRelativePath.append(serializationData.getFileOrFolderNameHint());
+            IPath fileOrFolderPath = contentSyncRootDir.getProjectRelativePath().append(
+                    serializationData.getFileOrFolderNameHint());
 	
 	        switch (serializationData.getSerializationKind()) {
 	            case FILE: {
@@ -258,6 +269,8 @@ public class ImportRepositoryContentAction {
         IFolder destinationFolder = project.getFolder(destinationPath);
         if (destinationFolder.exists())
             return;
+
+        logger.trace("Creating folder {0}", destinationFolder.getFullPath());
 
         destinationFolder.create(true, true, null /* TODO progress monitor */);
 

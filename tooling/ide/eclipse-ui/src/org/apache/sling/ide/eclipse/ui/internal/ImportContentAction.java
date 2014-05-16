@@ -18,10 +18,12 @@ package org.apache.sling.ide.eclipse.ui.internal;
 
 import java.util.Iterator;
 
+import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExecutableExtension;
@@ -59,16 +61,16 @@ public class ImportContentAction extends AbstractHandler implements IObjectActio
 
         for (Iterator<?> it = structuredSelection.iterator(); it.hasNext();) {
             Object selected = it.next();
-            if (selected instanceof IProject) {
-                IProject project = (IProject) selected;
+            if (selected instanceof IResource) {
+                IProject project = (IProject) (((IResource) selected).getProject());
+
+                if (!ProjectHelper.isContentProject(project)) {
+                    continue;
+                }
 
                 IModule module = ServerUtil.getModule(project);
 
                 if (module == null) {
-                    continue;
-                }
-
-                if (!module.getModuleType().getId().equals("sling.content")) {
                     continue;
                 }
 
