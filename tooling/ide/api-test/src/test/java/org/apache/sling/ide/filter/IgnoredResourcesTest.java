@@ -69,4 +69,14 @@ public class IgnoredResourcesTest {
 
         assertThat(r.isIgnored("/content/zen"), equalTo(true));
     }
+
+    @Test
+    public void rulesWithRootPath() {
+
+        IgnoredResources r = new IgnoredResources();
+        r.registerRegExpIgnoreRule("/", "en");
+
+        assertThat(r.isIgnored("/en"), equalTo(true));
+
+    }
 }

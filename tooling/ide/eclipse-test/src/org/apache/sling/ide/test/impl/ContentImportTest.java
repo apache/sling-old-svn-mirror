@@ -166,6 +166,44 @@ public class ContentImportTest {
         assertThat(contentProject.findMember("jcr_root/content/test-root/en"), nullValue());
     }
 
+    @Test
+    public void importFilesAndFoldersRespectsVltIgnoreNotUnderImportRoot() throws Exception {
+
+        // create faceted project
+        IProject contentProject = projectRule.getProject();
+
+        ProjectAdapter project = new ProjectAdapter(contentProject);
+        project.addNatures(JavaCore.NATURE_ID, "org.eclipse.wst.common.project.facet.core.nature");
+
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/hello.txt"), new ByteArrayInputStream(
+                "hello, world".getBytes()));
+
+        project.createOrUpdateFile(Path.fromPortableString("META-INF/vault/filter.xml"), getClass()
+                .getResourceAsStream("filter-only-content-test-root-en.xml"));
+
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/.vltignore"), new ByteArrayInputStream(
+                "content/test-root/en\n".getBytes()));
+
+        // install bundle facet
+        project.installFacet("sling.content", "1.0");
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
+
+        // create server-side content
+        RepositoryAccessor repo = new RepositoryAccessor(config);
+        repo.createNode("/content/test-root/en", "nt:folder");
+        repo.createNode("/content/test-root/en/files", "nt:folder");
+        repo.createFile("/content/test-root/en/files/first.txt", "first file".getBytes());
+
+        ImportRepositoryContentAction action = new ImportRepositoryContentAction(wstServer.getServer(),
+                Path.fromPortableString("/content/test-root"), contentProject, Activator.getDefault()
+                        .getSerializationManager());
+        action.run(new NullProgressMonitor());
+
+        assertThat(contentProject.findMember("jcr_root/content/test-root/en"), nullValue());
+    }
+
     @Before
     public void setUp() throws Exception {
         RepositoryAccessor repo = new RepositoryAccessor(config);
