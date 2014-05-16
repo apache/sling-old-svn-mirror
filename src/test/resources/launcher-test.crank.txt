@@ -25,8 +25,15 @@ bundle mvn:org.apache.felix/org.apache.felix.scr/1.8.2
 bundle mvn:org.apache.felix/org.apache.felix.metatype/1.0.10
 bundle mvn:org.apache.sling/org.apache.sling.commons.osgi/2.2.1-SNAPSHOT
 bundle mvn:org.apache.sling/org.apache.sling.commons.log/2.1.2
-bundle mvn:org.apache.sling/org.apache.sling.crankstart.test.services/0.0.1-SNAPSHOT
 bundle mvn:org.apache.felix/org.apache.felix.configadmin/1.6.0
+
+# The crankstart.api.fragment bundle makes the crankstart.api package available
+# to bundles, required for bundles to provide crankstart extension commands like
+# the test.system.property command below
+bundle mvn:org.apache.sling/org.apache.sling.crankstart.api.fragment/0.0.1-SNAPSHOT
+bundle mvn:org.apache.sling/org.apache.sling.crankstart.test.services/0.0.1-SNAPSHOT
+
+# Now start our bundles
 start.all.bundles
 
 # OSGi configs that activate our test servlets
@@ -41,6 +48,9 @@ config.factory org.apache.sling.crankstart.testservices.ConfigFactoryServlet
 config.factory org.apache.sling.crankstart.testservices.ConfigFactoryServlet
   path=/bar/test
   message=Not used
+  
+# Test an extension command provided by our test-services bundle
+test.system.property the.test.system.property was set by test-services bundle
   
 # Informative log  
 log felix http service should come up at http://localhost:${http.port}

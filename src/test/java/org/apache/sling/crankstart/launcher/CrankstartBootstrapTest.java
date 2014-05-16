@@ -2,6 +2,7 @@ package org.apache.sling.crankstart.launcher;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -31,6 +32,7 @@ public class CrankstartBootstrapTest {
     private static Thread crankstartThread;
     private static String baseUrl = "http://localhost:" + port;
     public static final String TEST_RESOURCE = "/launcher-test.crank.txt";
+    public static final String TEST_SYSTEM_PROPERTY = "the.test.system.property";
             
     @Rule
     public final RetryRule retryRule = new RetryRule();
@@ -54,6 +56,11 @@ public class CrankstartBootstrapTest {
     }
     
     @BeforeClass
+    public static void testExtensionPropertyBeforeTests() {
+        assertNull(TEST_SYSTEM_PROPERTY + " should not be set before tests", System.getProperty(TEST_SYSTEM_PROPERTY));
+    }
+    
+    @BeforeClass
     public static void setup() {
         final GetMethod get = new GetMethod(baseUrl);
         System.setProperty("http.port", String.valueOf(port));
@@ -74,6 +81,7 @@ public class CrankstartBootstrapTest {
                 try {
                     new CrankstartBootstrap(input).start();
                 } catch(Exception e) {
+                    e.printStackTrace();
                     fail("CrankstartBootstrap exception:" + e);
                 } finally {
                     try {
@@ -118,6 +126,13 @@ public class CrankstartBootstrapTest {
             client.executeMethod(get);
             assertEquals("Expecting success for " + get.getURI(), 200, get.getStatusCode());
         }
+    }
+    
+    @Test
+    public void testExtensionCommand() {
+        // The SystemPropertyCommand, provided by our test-services bundle, should have
+        // processed the test.system.property instruction in our launcher file 
+        assertEquals("was set by test-services bundle", System.getProperty(TEST_SYSTEM_PROPERTY));
     }
     
     private static String getOsgiStoragePath() {
