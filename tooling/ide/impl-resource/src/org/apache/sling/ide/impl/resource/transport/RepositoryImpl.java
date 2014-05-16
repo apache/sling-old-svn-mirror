@@ -19,6 +19,7 @@ package org.apache.sling.ide.impl.resource.transport;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.FileInfo;
+import org.apache.sling.ide.transport.NodeTypeRegistry;
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
@@ -71,5 +72,10 @@ public class RepositoryImpl implements Repository {
     @Override
     public RepositoryInfo getRepositoryInfo() {
         return repositoryInfo;
+    }
+    
+    @Override
+    public NodeTypeRegistry getNodeTypeRegistry() {
+        throw new IllegalStateException("not yet implemented");
     }
 }

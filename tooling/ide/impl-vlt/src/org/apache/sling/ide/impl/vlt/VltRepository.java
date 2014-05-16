@@ -6,6 +6,7 @@ import javax.jcr.RepositoryException;
 import org.apache.sling.ide.jcr.RepositoryUtils;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.FileInfo;
+import org.apache.sling.ide.transport.NodeTypeRegistry;
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
@@ -19,14 +20,24 @@ import org.osgi.service.event.EventAdmin;
 public class VltRepository implements Repository {
 
     private final RepositoryInfo repositoryInfo;
-    private final EventAdmin eventAdmin;
+    private EventAdmin eventAdmin;
+    private NodeTypeRegistry ntRegistry;
 
     private javax.jcr.Repository jcrRepo;
     private Credentials credentials;
+    private boolean markedStopped = false;
 
     public VltRepository(RepositoryInfo repositoryInfo, EventAdmin eventAdmin) {
         this.repositoryInfo = repositoryInfo;
         this.eventAdmin = eventAdmin;
+    }
+
+    public synchronized void markStopped() {
+        this.markedStopped = true;
+    }
+
+    public synchronized boolean isMarkedStopped() {
+        return markedStopped;
     }
 
     public RepositoryInfo getRepositoryInfo() {
@@ -40,6 +51,8 @@ public class VltRepository implements Repository {
         } catch (RepositoryException e) {
             throw new RuntimeException(e);
         }
+        // loading nodeTypeRegistry:
+        getNodeTypeRegistry();
     }
 
     @Override
@@ -69,6 +82,37 @@ public class VltRepository implements Repository {
     public Command<byte[]> newGetNodeCommand(String path) {
 
         return TracingCommand.wrap(new GetNodeCommand(jcrRepo, credentials, path), eventAdmin);
+    }
+
+    protected void bindEventAdmin(EventAdmin eventAdmin) {
+
+        this.eventAdmin = eventAdmin;
+    }
+
+    protected void unbindEventAdmin(EventAdmin eventAdmin) {
+
+        this.eventAdmin = null;
+    }
+    
+    Command<ResourceProxy> newListTreeNodeCommand(String path, int levels) {
+
+        return TracingCommand.wrap(new ListTreeCommand(jcrRepo, credentials, path, levels, eventAdmin), eventAdmin);
+    }
+    
+    @Override
+    public synchronized NodeTypeRegistry getNodeTypeRegistry() {
+        if (repositoryInfo==null) {
+            throw new IllegalStateException("repositoryInfo must not be null");
+        }
+        if (ntRegistry!=null) {
+            return ntRegistry;
+        }
+        try {
+            ntRegistry = new VltNodeTypeRegistry(this);
+        } catch (org.apache.sling.ide.transport.RepositoryException e) {
+            throw new RuntimeException(e);
+        }
+        return ntRegistry;
     }
 
 }
