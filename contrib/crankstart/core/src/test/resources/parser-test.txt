@@ -8,12 +8,13 @@ verb2 single_qualifier
 # repeating the same property name creates an array
 config the.pid.goes.here
   foo = bar
-  array = one
+  array = one that has a ${ok.var1} variable
   array = two
   another=property with several words
+  ${ok.varA} = This is ${ok.varB} now 
 another command
 last.command  
 
 # variables
 var1 this is ${some.var} here
-var2 and now ${another.var} here
+var2 and now ${ok.var2} here
