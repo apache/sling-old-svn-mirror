@@ -16,6 +16,9 @@
  */
 package org.apache.sling.ide.impl.vlt;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryException;
 import org.apache.sling.ide.transport.RepositoryFactory;
@@ -30,14 +33,41 @@ public class VltRepositoryFactory implements RepositoryFactory {
 
     private EventAdmin eventAdmin;
 
+    private Map<String,VltRepository> repositoryMap = new HashMap<String,VltRepository>();
+    
     @Override
-    public Repository newRepository(RepositoryInfo repositoryInfo) throws RepositoryException {
+    public Repository getRepository(RepositoryInfo repositoryInfo) throws RepositoryException {
 
-        VltRepository repo = new VltRepository(repositoryInfo, eventAdmin);
+        final String key = getKey(repositoryInfo);
+        
+        synchronized(repositoryMap) {
+            VltRepository repo = repositoryMap.get(key);
+            if (repo!=null && !repo.isMarkedStopped()) {
+                return repo;
+            }
+            
+            repo = new VltRepository(repositoryInfo, eventAdmin);
+            repo.init();
+            
+            repositoryMap.put(key, repo);
+            return repo;
+        }
+    }
+    
+    @Override
+    public void stopRepository(RepositoryInfo repositoryInfo) {
+        final String key = getKey(repositoryInfo);
+        synchronized(repositoryMap) {
+            VltRepository r = repositoryMap.get(key);
+            // marking the repository as stopped allows us to keep using it
+            // (eg for node type registry lookups) although the server is stopped
+            //TODO we might come up with a proper online/offline handling here
+            r.markStopped();
+        }
+    }
 
-        repo.init();
-
-        return repo;
+    private String getKey(RepositoryInfo repositoryInfo) {
+        return repositoryInfo.getUsername()+":"+repositoryInfo.getPassword()+"@"+repositoryInfo.getUrl();
     }
 
     protected void bindEventAdmin(EventAdmin eventAdmin) {
