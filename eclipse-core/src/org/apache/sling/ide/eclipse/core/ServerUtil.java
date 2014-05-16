@@ -33,12 +33,10 @@ import org.eclipse.wst.server.core.IServer;
 public abstract class ServerUtil {
 
     public static Repository getRepository(IServer server, IProgressMonitor monitor) throws CoreException {
-
-
         RepositoryFactory repository = Activator.getDefault().getRepositoryFactory();
         try {
             RepositoryInfo repositoryInfo = getRepositoryInfo(server, monitor);
-            return repository.newRepository(repositoryInfo);
+            return repository.getRepository(repositoryInfo);
         } catch (URISyntaxException e) {
             throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
         } catch (RuntimeException e) {
@@ -48,6 +46,19 @@ public abstract class ServerUtil {
         }
     }
 
+    public static void stopRepository(IServer server, IProgressMonitor monitor) throws CoreException {
+        RepositoryFactory repository = Activator.getDefault().getRepositoryFactory();
+        try {
+            RepositoryInfo repositoryInfo = getRepositoryInfo(server, monitor);
+            repository.stopRepository(repositoryInfo);
+        } catch (URISyntaxException e) {
+            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
+        } catch (RuntimeException e) {
+            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
+        }
+    }
+    
+    
     public static RepositoryInfo getRepositoryInfo(IServer server, IProgressMonitor monitor) throws URISyntaxException {
 
         ISlingLaunchpadServer launchpadServer = (ISlingLaunchpadServer) server.loadAdapter(SlingLaunchpadServer.class,

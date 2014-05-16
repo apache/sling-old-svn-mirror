@@ -37,5 +37,7 @@ public interface RepositoryFactory {
      * @return
      * @throws RepositoryException
      */
-    Repository newRepository(RepositoryInfo repositoryInfo) throws RepositoryException;
+    Repository getRepository(RepositoryInfo repositoryInfo) throws RepositoryException;
+
+    void stopRepository(RepositoryInfo repositoryInfo);
 }

@@ -31,8 +31,14 @@ public class RepositoryFactoryImpl implements RepositoryFactory {
     private EventAdmin eventAdmin;
 
     @Override
-    public Repository newRepository(RepositoryInfo repositoryInfo) throws RepositoryException {
+    public Repository getRepository(RepositoryInfo repositoryInfo) throws RepositoryException {
+        //TODO: currently not doing repository-caching
         return new RepositoryImpl(repositoryInfo, eventAdmin);
+    }
+    
+    @Override
+    public void stopRepository(RepositoryInfo repositoryInfo) {
+        //TODO: not yet implemented
     }
 
     protected void bindEventAdmin(EventAdmin eventAdmin) {
