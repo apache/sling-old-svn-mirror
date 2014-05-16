@@ -18,7 +18,6 @@ import org.apache.sling.commons.testing.junit.Retry;
 import org.apache.sling.commons.testing.junit.RetryRule;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -31,7 +30,7 @@ public class CrankstartBootstrapTest {
     private static final HttpClient client = new HttpClient();
     private static Thread crankstartThread;
     private static String baseUrl = "http://localhost:" + port;
-    public static final String TEST_RESOURCE = "/launcher-test.txt";
+    public static final String TEST_RESOURCE = "/launcher-test.crank.txt";
             
     @Rule
     public final RetryRule retryRule = new RetryRule();
@@ -107,13 +106,18 @@ public class CrankstartBootstrapTest {
     public void testSingleConfigServlet() throws Exception {
         final GetMethod get = new GetMethod(baseUrl + "/single");
         client.executeMethod(get);
-        assertEquals("Expecting success " + get.getURI(), 200, get.getStatusCode());
+        assertEquals("Expecting success for " + get.getURI(), 200, get.getStatusCode());
     }
     
     @Test
     @Retry(timeoutMsec=10000, intervalMsec=250)
-    @Ignore("TODO - activate once we support config factories")
     public void testConfigFactoryServlet() throws Exception {
+        final String [] paths = { "/foo", "/bar/test" };
+        for(String path : paths) {
+            final GetMethod get = new GetMethod(baseUrl + path);
+            client.executeMethod(get);
+            assertEquals("Expecting success for " + get.getURI(), 200, get.getStatusCode());
+        }
     }
     
     private static String getOsgiStoragePath() {
