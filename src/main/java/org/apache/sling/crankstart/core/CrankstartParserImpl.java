@@ -23,6 +23,8 @@ import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.sling.crankstart.api.CrankstartCommandLine;
 import org.apache.sling.crankstart.api.CrankstartParser;
@@ -32,7 +34,12 @@ public class CrankstartParserImpl implements CrankstartParser {
 
     @Override
     public Iterator<CrankstartCommandLine> parse(Reader r) throws IOException {
-        return new CmdIterator(r);
+        return new CmdIterator(r, this);
+    }
+    
+    protected String getVariable(String name) {
+        final StringBuilder sb = new StringBuilder();
+        return sb.append("CRANKSTART_VAR_NOT_FOUND(").append(name).append(")").toString();
     }
 }
 
@@ -50,13 +57,14 @@ class ParserException extends RuntimeException {
 
 class CmdIterator implements Iterator<CrankstartCommandLine> {
 
-    String line;
-    BufferedReader input;
+    private String line;
+    private final BufferedReader input;
+    private final CrankstartParserImpl parser;
+    private final Pattern varPattern = Pattern.compile("\\$\\{([a-zA-Z0-9\\.]+)\\}");
     
-   
-    
-    CmdIterator(Reader r) throws IOException {
+    CmdIterator(Reader r, CrankstartParserImpl parser) throws IOException {
         input = new BufferedReader(r);
+        this.parser = parser;
         takeLine();
     }
     
@@ -67,6 +75,20 @@ class CmdIterator implements Iterator<CrankstartCommandLine> {
             line = input.readLine();
         }
         return result;
+    }
+    
+    private String injectVariables(String line) {
+        final StringBuffer b = new StringBuffer();
+        final Matcher m = varPattern.matcher(line);
+        while(m.find()) {
+            m.appendReplacement(b, getValue(m.group(1)));
+        }
+        m.appendTail(b);
+        return b.toString();
+    }
+    
+    private String getValue(String variable) {
+        return parser.getVariable(variable);
     }
     
     private boolean ignore(String line) {
@@ -118,7 +140,7 @@ class CmdIterator implements Iterator<CrankstartCommandLine> {
                 }
                 addProperty(props, takeLine());
             }
-            result = new CrankstartCommandLine(verb, qualifier.toString(), props);
+            result = new CrankstartCommandLine(verb, injectVariables(qualifier.toString()), props);
         } catch(IOException ioe) {
             line = null;
             throw new ParserException("IOException in takeLine()", ioe);

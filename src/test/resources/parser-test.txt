@@ -13,3 +13,7 @@ config the.pid.goes.here
   another=property with several words
 another command
 last.command  
+
+# variables
+var1 this is ${some.var} here
+var2 and now ${another.var} here

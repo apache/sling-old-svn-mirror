@@ -20,8 +20,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.apache.sling.crankstart.api.CrankstartCommand;
@@ -29,6 +31,7 @@ import org.apache.sling.crankstart.api.CrankstartCommandLine;
 import org.apache.sling.crankstart.api.CrankstartConstants;
 import org.apache.sling.crankstart.api.CrankstartContext;
 import org.apache.sling.crankstart.core.commands.Configure;
+import org.apache.sling.crankstart.core.commands.Defaults;
 import org.apache.sling.crankstart.core.commands.InstallBundle;
 import org.apache.sling.crankstart.core.commands.Log;
 import org.apache.sling.crankstart.core.commands.SetOsgiFrameworkProperty;
@@ -42,6 +45,7 @@ public class CrankstartFileProcessor implements Callable<Object> {
     private final CrankstartContext crankstartContext = new CrankstartContext();
     private final Logger log = LoggerFactory.getLogger(getClass());
     private List<CrankstartCommand> commands = new ArrayList<CrankstartCommand>();
+    private Map<String, String> defaults = new HashMap<String, String>();
     
     public CrankstartFileProcessor() {
         commands.add(new InstallBundle());
@@ -50,6 +54,7 @@ public class CrankstartFileProcessor implements Callable<Object> {
         commands.add(new StartBundles());
         commands.add(new StartFramework());
         commands.add(new Configure());
+        commands.add(new Defaults(defaults));
     }
     
     public Object call() throws Exception {
@@ -63,7 +68,22 @@ public class CrankstartFileProcessor implements Callable<Object> {
     }
     
     public void process(Reader input) throws Exception {
-        final CrankstartParserImpl parser = new CrankstartParserImpl();
+        final CrankstartParserImpl parser = new CrankstartParserImpl() {
+            @Override
+            protected String getVariable(String name) {
+                String result = System.getProperty(name);
+                if(result == null) {
+                    result = defaults.get(name);
+                }
+                if(result == null) {
+                    result = super.getVariable(name); 
+                }
+                if(result != null) {
+                    result = result.trim();
+                }
+                return result;
+            }
+        };
         final Iterator<CrankstartCommandLine> it = parser.parse(input);
         while(it.hasNext()) {
             final CrankstartCommandLine cmdLine = it.next();
