@@ -18,6 +18,7 @@ package org.apache.sling.ide.test.impl.helpers;
 
 import static org.junit.Assert.assertThat;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 import javax.jcr.Credentials;
@@ -122,6 +123,24 @@ public class RepositoryAccessor {
         }
     }
 
+    public void createFile(String path, byte[] bytes) throws RepositoryException {
+        Session session = login();
+        try {
+            if (session.nodeExists(path)) {
+                return;
+            }
+
+            Node parent = session.getNode(Text.getRelativeParent(path, 1));
+            Node resourceNode = parent.addNode(Text.getName(path), "nt:file");
+            Node contentNode = resourceNode.addNode("jcr:content", "nt:resource");
+            contentNode
+                    .setProperty("jcr:data", session.getValueFactory().createBinary(new ByteArrayInputStream(bytes)));
+            session.save();
+        } finally {
+            session.logout();
+        }
+    }
+    
     private Session login() throws RepositoryException {
         
         RepositoryInfo repositoryInfo = new RepositoryInfo(config.getUsername(), config.getPassword(), config.getUrl());
