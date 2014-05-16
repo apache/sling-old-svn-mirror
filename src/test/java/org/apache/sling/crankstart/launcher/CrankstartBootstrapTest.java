@@ -6,6 +6,7 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.ServerSocket;
 import java.util.Random;
 
 import org.apache.commons.httpclient.HttpClient;
@@ -23,13 +24,31 @@ import org.junit.Test;
  */
 public class CrankstartBootstrapTest {
     
-    private static final int port = Integer.valueOf(System.getProperty("test.http.port", "12345"));
+    private static final int port = getAvailablePort();
     private static final HttpClient client = new HttpClient();
     private static Thread crankstartThread;
     private static String baseUrl = "http://localhost:" + port;
             
     @Rule
     public final RetryRule retryRule = new RetryRule();
+    
+    private static int getAvailablePort() {
+        int result = -1;
+        ServerSocket s = null;
+        try {
+            try {
+                s = new ServerSocket(0);
+                result = s.getLocalPort();
+            } finally {
+                if(s != null) {
+                    s.close();
+                }
+            }
+        } catch(Exception e) {
+            throw new RuntimeException("getAvailablePort failed", e);
+        }
+        return result;
+    }
     
     private final static String CRANKSTART = 
         "classpath mvn:org.apache.felix/org.apache.felix.framework/4.4.0\n"
@@ -38,7 +57,7 @@ public class CrankstartBootstrapTest {
         + "classpath mvn:org.ops4j.pax.url/pax-url-commons/1.6.0\n"
         + "classpath mvn:org.apache.sling/org.apache.sling.crankstart.core/0.0.1-SNAPSHOT\n"
         + "classpath mvn:org.apache.sling/org.apache.sling.crankstart.api/0.0.1-SNAPSHOT\n"
-        + "osgi.property org.osgi.service.http.port " + port + "\n"
+        + "osgi.property org.osgi.service.http.port ${http.port}\n"
         + "osgi.property org.osgi.framework.storage " + getOsgiStoragePath() + "\n"
         + "start.framework\n"
         + "bundle mvn:org.apache.felix/org.apache.felix.http.jetty/2.2.0\n"
@@ -52,12 +71,13 @@ public class CrankstartBootstrapTest {
         + "config org.apache.sling.crankstart.testservices.SingleConfigServlet\n"
         + "  path=/single\n"
         + "  message=doesn't matter\n"
-        + "log felix http service should come up at http://localhost:" + port + "\n"
+        + "log felix http service should come up at http://localhost:${http.port}\n"
     ;
     
     @BeforeClass
     public static void setup() {
         final GetMethod get = new GetMethod(baseUrl);
+        System.setProperty("http.port", String.valueOf(port));
         
         try {
             client.executeMethod(get);
