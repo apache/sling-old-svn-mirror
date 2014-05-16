@@ -178,7 +178,7 @@
                id="org.apache.sling.ide.eclipse.internal.ExportableResourceTester"
                type="org.eclipse.core.resources.IResource"
                namespace="org.apache.sling.ide.eclipse"
-               properties="canBeExported"
+               properties="canBeExported,canBeImported"
                class="org.apache.sling.ide.eclipse.core.internal.ContentResourceTester">
          </propertyTester>
    </extension>    
