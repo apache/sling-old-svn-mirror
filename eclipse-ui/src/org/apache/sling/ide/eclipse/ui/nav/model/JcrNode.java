@@ -521,11 +521,7 @@ public class JcrNode implements IAdaptable {
 
 	@Override
 	public Object getAdapter(Class adapter) {
-		final Object result = doGetAdapter(adapter);
-        if (result == null) {
-            Activator.getDefault().getPluginLogger().trace("Adapter looked for {0},  result: {1}", adapter, result);
-        }
-		return result;
+        return doGetAdapter(adapter);
 	}
 	
 	private Object doGetAdapter(Class adapter) {
