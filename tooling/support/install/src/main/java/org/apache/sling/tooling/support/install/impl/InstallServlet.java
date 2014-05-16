@@ -225,7 +225,7 @@ public class InstallServlet extends HttpServlet {
                 }
             } else {
                 result = new InstallationResult(false, "Dir " + dir + " does not have a manifest");
-                logAndWriteError("Dir " + dir + " does have a manifest", resp);
+                logAndWriteError("Dir " + dir + " does not have a manifest", resp);
             }
         } else {
             result = new InstallationResult(false, "Dir " + dir + " does not exist");
