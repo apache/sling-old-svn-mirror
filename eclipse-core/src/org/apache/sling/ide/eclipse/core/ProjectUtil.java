@@ -167,6 +167,25 @@ public abstract class ProjectUtil {
         return Path.fromOSString(filterLocation.getAbsolutePath());
     }
 
+    /**
+     * Verifies if a resource is inside the content sync root for its defined project
+     * 
+     * @param resource
+     * @return true if the resource is inside the content sync root
+     */
+    public static boolean isInsideContentSyncRoot(IResource resource) {
+
+        if (resource == null) {
+            return false;
+        }
+
+        IFolder syncRoot = getSyncDirectory(resource.getProject());
+        if (syncRoot == null) {
+            return false;
+        }
+
+        return syncRoot.getFullPath().isPrefixOf(resource.getFullPath());
+    }
 
     private ProjectUtil() {
 
