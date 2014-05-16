@@ -60,7 +60,7 @@ class CmdIterator implements Iterator<CrankstartCommandLine> {
     private String line;
     private final BufferedReader input;
     private final CrankstartParserImpl parser;
-    private final Pattern varPattern = Pattern.compile("\\$\\{([a-zA-Z0-9\\.]+)\\}");
+    private final Pattern varPattern = Pattern.compile("\\$\\{([a-zA-Z0-9\\._]+)\\}");
     
     CmdIterator(Reader r, CrankstartParserImpl parser) throws IOException {
         input = new BufferedReader(r);
