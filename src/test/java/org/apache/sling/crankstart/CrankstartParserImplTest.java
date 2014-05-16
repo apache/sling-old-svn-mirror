@@ -46,8 +46,8 @@ public class CrankstartParserImplTest {
 
             @Override
             protected String getVariable(String name) {
-                if("another.var".equals(name)) {
-                    return "Another Var";
+                if(name.startsWith("ok.")) {
+                    return name.toUpperCase() + "_" + name.length();
                 }
                 
                 return super.getVariable(name);
@@ -82,21 +82,22 @@ public class CrankstartParserImplTest {
         final CrankstartCommandLine config = it.next();
         assertCommand("config", "the.pid.goes.here", config);
         final Dictionary<String, Object> props = config.getProperties();
-        assertEquals("Expecting 3 properties", 3, props.size());
+        assertEquals("Expecting 4 properties", 4, props.size());
         assertEquals("Expecting correct foo value", "bar", props.get("foo"));
         final Object o = props.get("array");
         assertTrue("Expecting array property", o instanceof String[]);
         final String [] a = (String[])o;
         assertEquals("Expecting two entries in array", 2, a.length);
-        assertEquals("Expecting one for first array value", "one", a[0]);
-        assertEquals("Expecting two for second array value", "two", a[1]);
+        assertEquals("Expecting correct first array value", "one that has a OK.VAR1_7 variable", a[0]);
+        assertEquals("Expecting correct second array value", "two", a[1]);
         assertEquals("Expecting correct another value", "property with several words", props.get("another"));
+        assertEquals("Expecting correct variable value", "This is OK.VARB_7 now", props.get("OK.VARA_7"));
         
         assertCommand("another", "command", it.next());
         assertCommand("last.command", "", it.next());
         
         assertCommand("var1", "this is CRANKSTART_VAR_NOT_FOUND(some.var) here", it.next());
-        assertCommand("var2", "and now Another Var here", it.next());
+        assertCommand("var2", "and now OK.VAR2_7 here", it.next());
         
         assertFalse("Expecting no more commands", it.hasNext());
     }

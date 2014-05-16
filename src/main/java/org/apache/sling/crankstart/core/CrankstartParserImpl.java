@@ -74,10 +74,13 @@ class CmdIterator implements Iterator<CrankstartCommandLine> {
         while(line != null && ignore(line)) {
             line = input.readLine();
         }
-        return result;
+        return injectVariables(result);
     }
     
     private String injectVariables(String line) {
+        if(line == null) {
+            return null;
+        }
         final StringBuffer b = new StringBuffer();
         final Matcher m = varPattern.matcher(line);
         while(m.find()) {
@@ -140,7 +143,7 @@ class CmdIterator implements Iterator<CrankstartCommandLine> {
                 }
                 addProperty(props, takeLine());
             }
-            result = new CrankstartCommandLine(verb, injectVariables(qualifier.toString()), props);
+            result = new CrankstartCommandLine(verb, qualifier.toString(), props);
         } catch(IOException ioe) {
             line = null;
             throw new ParserException("IOException in takeLine()", ioe);
