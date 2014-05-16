@@ -26,6 +26,7 @@ Import-Package: javax.jcr,
  javax.jcr.nodetype,
  org.apache.jackrabbit.util,
  org.apache.sling.ide.eclipse.core.internal,
+ org.apache.sling.ide.eclipse.ui.internal,
  org.apache.sling.ide.jcr
 Bundle-Activator: org.apache.sling.ide.test.impl.Activator
 Bundle-ActivationPolicy: lazy
