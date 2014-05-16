@@ -37,8 +37,8 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
-import org.hamcrest.CoreMatchers;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -83,7 +83,6 @@ public class ContentImportTest {
 
         // create server-side content
         RepositoryAccessor repo = new RepositoryAccessor(config);
-        repo.createNode("/content/test-root", "nt:folder");
         repo.createNode("/content/test-root/en", "nt:folder");
         repo.createNode("/content/test-root/en/files", "nt:folder");
         repo.createFile("/content/test-root/en/files/first.txt", "first file".getBytes());
@@ -120,7 +119,6 @@ public class ContentImportTest {
 
         // create server-side content
         RepositoryAccessor repo = new RepositoryAccessor(config);
-        repo.createNode("/content/test-root", "nt:folder");
         repo.createNode("/content/test-root/de", "nt:folder");
         repo.createNode("/content/test-root/de/files", "nt:folder");
         repo.createFile("/content/test-root/de/files/first.txt", "first file".getBytes());
@@ -131,6 +129,48 @@ public class ContentImportTest {
         action.run(new NullProgressMonitor());
 
         assertThat(contentProject.findMember("jcr_root/content/test-root/de"), nullValue());
+    }
+
+    @Test
+    public void importFilesAndFoldersRespectsVltIgnore() throws Exception {
+
+        // create faceted project
+        IProject contentProject = projectRule.getProject();
+
+        ProjectAdapter project = new ProjectAdapter(contentProject);
+        project.addNatures(JavaCore.NATURE_ID, "org.eclipse.wst.common.project.facet.core.nature");
+
+        project.createOrUpdateFile(Path.fromPortableString("META-INF/vault/filter.xml"), getClass()
+                .getResourceAsStream("filter-only-content-test-root-en.xml"));
+
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/.vltignore"),
+                new ByteArrayInputStream("en\n".getBytes()));
+
+        // install bundle facet
+        project.installFacet("sling.content", "1.0");
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
+
+        // create server-side content
+        RepositoryAccessor repo = new RepositoryAccessor(config);
+        repo.createNode("/content/test-root/en", "nt:folder");
+        repo.createNode("/content/test-root/en/files", "nt:folder");
+        repo.createFile("/content/test-root/en/files/first.txt", "first file".getBytes());
+
+        ImportRepositoryContentAction action = new ImportRepositoryContentAction(wstServer.getServer(),
+                Path.fromPortableString("/content/test-root"), contentProject, Activator.getDefault()
+                        .getSerializationManager());
+        action.run(new NullProgressMonitor());
+
+        assertThat(contentProject.findMember("jcr_root/content/test-root/en"), nullValue());
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        RepositoryAccessor repo = new RepositoryAccessor(config);
+        repo.createNode("/content", "nt:folder");
+        repo.createNode("/content/test-root", "nt:folder");
     }
 
     @After

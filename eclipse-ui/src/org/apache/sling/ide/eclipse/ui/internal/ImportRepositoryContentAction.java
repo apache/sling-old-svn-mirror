@@ -19,11 +19,13 @@ package org.apache.sling.ide.eclipse.ui.internal;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.ResourceUtil;
@@ -31,6 +33,7 @@ import org.apache.sling.ide.eclipse.core.ServerUtil;
 import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterResult;
+import org.apache.sling.ide.filter.IgnoredResources;
 import org.apache.sling.ide.serialization.SerializationData;
 import org.apache.sling.ide.serialization.SerializationDataBuilder;
 import org.apache.sling.ide.serialization.SerializationException;
@@ -62,6 +65,7 @@ public class ImportRepositoryContentAction {
 
     private SerializationManager serializationManager;
 	private SerializationDataBuilder builder;
+    private IgnoredResources ignoredResources;
 
     /**
      * @param server
@@ -76,6 +80,7 @@ public class ImportRepositoryContentAction {
         this.projectRelativePath = projectRelativePath;
         this.project = project;
         this.serializationManager = serializationManager;
+        this.ignoredResources = new IgnoredResources();
     }
 
     public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException,
@@ -215,7 +220,11 @@ public class ImportRepositoryContentAction {
 	            }
 	            case FOLDER:
 	            case METADATA_PARTIAL: {
-	                createFolder(project, fileOrFolderPath);
+
+                    IFolder folder = createFolder(project, fileOrFolderPath);
+
+                    parseIgnoreFiles(folder, path);
+
 	                if (serializationData.hasContents()) {
 	                    createFile(project, fileOrFolderPath.append(serializationData.getNameHint()),
 	                            serializationData.getContents());
@@ -240,6 +249,10 @@ public class ImportRepositoryContentAction {
 
         for (ResourceProxy child : resourceChildren) {
 
+            if (ignoredResources.isIgnored(child.getPath())) {
+                continue;
+            }
+
             if (filter != null) {
                 FilterResult filterResult = filter.filter(contentSyncRoot, child.getPath(),
                         repository.getRepositoryInfo());
@@ -249,6 +262,22 @@ public class ImportRepositoryContentAction {
             }
 
             crawlChildrenAndImport(repository, filter, child.getPath(), project, projectRelativePath);
+        }
+    }
+
+    private void parseIgnoreFiles(IFolder folder, String path) throws IOException, CoreException {
+        // TODO - the parsing should be extracted
+        IResource vltIgnore = folder.findMember(".vltignore");
+        if (vltIgnore != null && vltIgnore instanceof IFile) {
+            InputStream contents = ((IFile) vltIgnore).getContents();
+            try {
+                List<String> ignoreLines = IOUtils.readLines(contents);
+                for (String ignoreLine : ignoreLines) {
+                    ignoredResources.registerRegExpIgnoreRule(path, ignoreLine);
+                }
+            } finally {
+                IOUtils.closeQuietly(contents);
+            }
         }
     }
 
@@ -264,17 +293,17 @@ public class ImportRepositoryContentAction {
         createFile(project, destinationPath, content);
     }
 
-    private void createFolder(IProject project, IPath destinationPath) throws CoreException {
+    private IFolder createFolder(IProject project, IPath destinationPath) throws CoreException {
 
         IFolder destinationFolder = project.getFolder(destinationPath);
-        if (destinationFolder.exists())
-            return;
+        if (!destinationFolder.exists()) {
+            logger.trace("Creating folder {0}", destinationFolder.getFullPath());
 
-        logger.trace("Creating folder {0}", destinationFolder.getFullPath());
+            destinationFolder.create(true, true, null /* TODO progress monitor */);
+            destinationFolder.setSessionProperty(ResourceUtil.QN_IGNORE_NEXT_CHANGE, Boolean.TRUE.toString());
+        }
 
-        destinationFolder.create(true, true, null /* TODO progress monitor */);
-
-        destinationFolder.setSessionProperty(ResourceUtil.QN_IGNORE_NEXT_CHANGE, Boolean.TRUE.toString());
+        return destinationFolder;
     }
 
     private void createFile(IProject project, IPath path, byte[] node) throws CoreException {
