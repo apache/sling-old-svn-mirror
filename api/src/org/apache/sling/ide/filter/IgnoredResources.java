@@ -29,11 +29,14 @@ public class IgnoredResources {
 
     public void registerRegExpIgnoreRule(String root, String pattern) {
 
-        // copied from org.apache.jackrabbit.vault.vlt.meta.Ignored
+        // copied from org.apache.jackrabbit.vault.vlt.meta.Ignored and tweaked
         if (pattern.startsWith("#")) {
             return;
         }
         StringBuilder reg = new StringBuilder("^");
+        if (root.equals("/")) {
+            root = "";
+        }
         reg.append(root).append("/");
         for (int i = 0; i < pattern.length(); i++) {
             char c = pattern.charAt(i);

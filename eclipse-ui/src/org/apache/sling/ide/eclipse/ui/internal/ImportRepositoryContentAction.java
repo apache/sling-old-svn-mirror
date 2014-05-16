@@ -131,6 +131,8 @@ public class ImportRepositoryContentAction {
             IPath repositoryImportRoot = projectRelativePath.makeRelativeTo(syncDir.getProjectRelativePath())
                     .makeAbsolute();
 
+            readVltIgnoresNotUnderImportRoot(syncDir, repositoryImportRoot);
+
             Activator
                     .getDefault()
                     .getPluginLogger()
@@ -157,6 +159,19 @@ public class ImportRepositoryContentAction {
 
     }
 
+    private void readVltIgnoresNotUnderImportRoot(IFolder syncDir, IPath repositoryImportRoot) throws IOException,
+            CoreException {
+
+        IFolder current = syncDir;
+        for (int i = 0; i < repositoryImportRoot.segmentCount(); i++) {
+            IPath repoPath = current.getProjectRelativePath().makeRelativeTo(syncDir.getProjectRelativePath())
+                    .makeAbsolute();
+            parseIgnoreFiles(current, repoPath.toPortableString());
+            current = (IFolder) current.findMember(repositoryImportRoot.segment(i));
+        }
+
+    }
+
     /**
      * Crawls the repository and recursively imports founds resources
      * 
@@ -164,8 +179,7 @@ public class ImportRepositoryContentAction {
      * @param filter
      * @param path the current path to import from
      * @param project the project to create resources in
-     * @param projectRelativePath the path, relative to the project root, where the resources should be
-     *            created
+     * @param projectRelativePath the path, relative to the project root, where the resources should be created
      * @param tracer
      * @throws JSONException
      * @throws RepositoryException
@@ -269,10 +283,14 @@ public class ImportRepositoryContentAction {
         // TODO - the parsing should be extracted
         IResource vltIgnore = folder.findMember(".vltignore");
         if (vltIgnore != null && vltIgnore instanceof IFile) {
+
+            logger.trace("Found ignore file at {0}", vltIgnore.getFullPath());
+
             InputStream contents = ((IFile) vltIgnore).getContents();
             try {
                 List<String> ignoreLines = IOUtils.readLines(contents);
                 for (String ignoreLine : ignoreLines) {
+                    logger.trace("Registering ignore rule {0}:{1}", path, ignoreLine);
                     ignoredResources.registerRegExpIgnoreRule(path, ignoreLine);
                 }
             } finally {
