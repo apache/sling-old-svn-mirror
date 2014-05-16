@@ -55,8 +55,12 @@ public class MergedResourceProvider
         private final String[] childrenToHideArray;
 
         public ParentHidingHandler(final Resource parent) {
-            final ValueMap parentProps = ResourceUtil.getValueMap(parent);
-            this.childrenToHideArray = parentProps.get(MergedResourceConstants.PN_HIDE_CHILDREN, String[].class);
+            if ( parent == null ) {
+                this.childrenToHideArray = null;
+            } else {
+                final ValueMap parentProps = parent.getValueMap();
+                this.childrenToHideArray = parentProps.get(MergedResourceConstants.PN_HIDE_CHILDREN, String[].class);
+            }
         }
 
         public boolean isHidden(final String name) {
@@ -91,16 +95,15 @@ public class MergedResourceProvider
                 final String fullPath = basePath + relativePath;
 
                 // check parent for hiding
+                // SLING 3521 : if parent is not readable, nothing is hidden
                 final Resource parent = resolver.getResource(ResourceUtil.getParent(fullPath));
-                if ( parent != null ) {
-                    final boolean hidden = new ParentHidingHandler(parent).isHidden(holder.name);
-                    if ( hidden ) {
-                        holder.resources.clear();
-                    } else {
-                        final Resource baseRes = resolver.getResource(fullPath);
-                        if (baseRes != null) {
-                            holder.resources.add(baseRes);
-                        }
+                final boolean hidden = new ParentHidingHandler(parent).isHidden(holder.name);
+                if ( hidden ) {
+                    holder.resources.clear();
+                } else {
+                    final Resource baseRes = resolver.getResource(fullPath);
+                    if (baseRes != null) {
+                        holder.resources.add(baseRes);
                     }
                 }
             }
@@ -130,7 +133,7 @@ public class MergedResourceProvider
         while ( index < holder.resources.size() ) {
             final Resource baseRes = holder.resources.get(index);
             // check if resource is hidden
-            final ValueMap props = ResourceUtil.getValueMap(baseRes);
+            final ValueMap props = baseRes.getValueMap();
             holder.valueMaps.add(props);
             if ( props.get(MergedResourceConstants.PN_HIDE_RESOURCE, Boolean.FALSE) ) {
                 // clear everything up to now
@@ -186,7 +189,7 @@ public class MergedResourceProvider
 
                         // Check if children need reordering
                         int orderBeforeIndex = -1;
-                        final ValueMap vm = ResourceUtil.getValueMap(child);
+                        final ValueMap vm = child.getValueMap();
                         final String orderBefore = vm.get(MergedResourceConstants.PN_ORDER_BEFORE, String.class);
                         if (orderBefore != null && !orderBefore.equals(rsrcName)) {
                             // search entry
