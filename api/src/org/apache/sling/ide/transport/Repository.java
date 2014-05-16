@@ -98,4 +98,6 @@ public interface Repository {
     Command<ResourceProxy> newGetNodeContentCommand(String path);
 
 	Command<byte[]> newGetNodeCommand(String path);
+	
+	NodeTypeRegistry getNodeTypeRegistry();
 }

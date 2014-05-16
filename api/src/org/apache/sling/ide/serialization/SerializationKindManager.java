@@ -18,10 +18,14 @@ package org.apache.sling.ide.serialization;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.jcr.nodetype.NodeType;
+
+import org.apache.sling.ide.transport.NodeTypeRegistry;
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryException;
 import org.apache.sling.ide.transport.ResourceProxy;
@@ -42,19 +46,13 @@ public class SerializationKindManager {
     public void init(Repository repository) throws RepositoryException {
 
         // first pass, init the mappings
-        Map<String, String[]> nodeTypesToParentNodeTypes = new HashMap<String, String[]>();
-
-        Result<ResourceProxy> jcrSystem = repository.newListChildrenNodeCommand("/jcr:system/jcr:nodeTypes").execute();
-        for (ResourceProxy child : jcrSystem.get().getChildren()) {
-            String nodeType = PathUtil.getName(child.getPath());
-            String[] superTypes = (String[]) child.getProperties().get("jcr:supertypes");
-
-            nodeTypesToParentNodeTypes.put(nodeType, superTypes);
-        }
+        List<NodeType> nodeTypes = repository.getNodeTypeRegistry().getNodeTypes();
 
         // detect node types which have an nt:file or nt:folder parent in the hierarchy
-        for (String nodeType : nodeTypesToParentNodeTypes.keySet()) {
-            SerializationKind serializationKind = getSerializationKind(nodeType, nodeTypesToParentNodeTypes);
+        for (Iterator it = nodeTypes.iterator(); it.hasNext();) {
+            final NodeType nt = (NodeType) it.next();
+            final String nodeType = nt.getName();
+            SerializationKind serializationKind = getSerializationKind(nodeType, repository.getNodeTypeRegistry());
             if (serializationKind == null) {
                 // don't care
                 continue;
@@ -76,7 +74,7 @@ public class SerializationKindManager {
         }
     }
 
-    private SerializationKind getSerializationKind(String nodeType, Map<String, String[]> nodeTypesToParentNodeTypes) {
+    private SerializationKind getSerializationKind(String nodeType, NodeTypeRegistry nodeTypeRegistry) {
 
         if (Repository.NT_FILE.equals(nodeType)) {
             return SerializationKind.FILE;
@@ -96,12 +94,12 @@ public class SerializationKindManager {
                 || "sling:OsgiConfig".equals(nodeType)) {
             return SerializationKind.METADATA_FULL;
         }
-        String[] parents = nodeTypesToParentNodeTypes.get(nodeType);
+        String[] parents = nodeTypeRegistry.getNodeType(nodeType).getDeclaredSupertypeNames();
         if (parents == null)
             return null;
 
         for (String parent : parents) {
-            SerializationKind parentSerializationKind = getSerializationKind(parent, nodeTypesToParentNodeTypes);
+            SerializationKind parentSerializationKind = getSerializationKind(parent, nodeTypeRegistry);
             if (parentSerializationKind != null) {
                 return parentSerializationKind;
             }

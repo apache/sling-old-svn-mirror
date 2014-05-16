@@ -18,6 +18,7 @@ package org.apache.sling.ide.serialization;
 
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.FileInfo;
+import org.apache.sling.ide.transport.NodeTypeRegistry;
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryException;
 import org.apache.sling.ide.transport.RepositoryInfo;
@@ -123,6 +124,11 @@ public class StubRepository implements Repository {
 
     @Override
     public RepositoryInfo getRepositoryInfo() {
+        return null;
+    }
+    
+    @Override
+    public NodeTypeRegistry getNodeTypeRegistry() {
         return null;
     }
 }
