@@ -1,11 +1,14 @@
 package org.apache.sling.crankstart.launcher;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.StringReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.ServerSocket;
 import java.util.Random;
 
@@ -28,6 +31,7 @@ public class CrankstartBootstrapTest {
     private static final HttpClient client = new HttpClient();
     private static Thread crankstartThread;
     private static String baseUrl = "http://localhost:" + port;
+    public static final String TEST_RESOURCE = "/launcher-test.txt";
             
     @Rule
     public final RetryRule retryRule = new RetryRule();
@@ -50,34 +54,15 @@ public class CrankstartBootstrapTest {
         return result;
     }
     
-    private final static String CRANKSTART = 
-        "classpath mvn:org.apache.felix/org.apache.felix.framework/4.4.0\n"
-        + "classpath mvn:org.slf4j/slf4j-api/1.6.2\n"
-        + "classpath mvn:org.ops4j.pax.url/pax-url-aether/1.6.0\n"
-        + "classpath mvn:org.ops4j.pax.url/pax-url-commons/1.6.0\n"
-        + "classpath mvn:org.apache.sling/org.apache.sling.crankstart.core/0.0.1-SNAPSHOT\n"
-        + "classpath mvn:org.apache.sling/org.apache.sling.crankstart.api/0.0.1-SNAPSHOT\n"
-        + "osgi.property org.osgi.service.http.port ${http.port}\n"
-        + "osgi.property org.osgi.framework.storage " + getOsgiStoragePath() + "\n"
-        + "start.framework\n"
-        + "bundle mvn:org.apache.felix/org.apache.felix.http.jetty/2.2.0\n"
-        + "bundle mvn:org.apache.felix/org.apache.felix.eventadmin/1.3.2\n"
-        + "bundle mvn:org.apache.felix/org.apache.felix.scr/1.8.2\n"
-        + "bundle mvn:org.apache.sling/org.apache.sling.commons.osgi/2.2.1-SNAPSHOT\n"
-        + "bundle mvn:org.apache.sling/org.apache.sling.commons.log/2.1.2\n"
-        + "bundle mvn:org.apache.sling/org.apache.sling.crankstart.test.services/0.0.1-SNAPSHOT\n"
-        + "bundle mvn:org.apache.felix/org.apache.felix.configadmin/1.6.0\n"
-        + "start.all.bundles\n"
-        + "config org.apache.sling.crankstart.testservices.SingleConfigServlet\n"
-        + "  path=/single\n"
-        + "  message=doesn't matter\n"
-        + "log felix http service should come up at http://localhost:${http.port}\n"
-    ;
-    
     @BeforeClass
     public static void setup() {
         final GetMethod get = new GetMethod(baseUrl);
         System.setProperty("http.port", String.valueOf(port));
+        System.setProperty("osgi.storage.path", getOsgiStoragePath());
+        
+        final InputStream is = CrankstartBootstrapTest.class.getResourceAsStream(TEST_RESOURCE);
+        assertNotNull("Expecting test resource to be found:" + TEST_RESOURCE, is);
+        final Reader input = new InputStreamReader(is);
         
         try {
             client.executeMethod(get);
@@ -88,9 +73,14 @@ public class CrankstartBootstrapTest {
         crankstartThread = new Thread() {
             public void run() {
                 try {
-                    new CrankstartBootstrap(new StringReader(CRANKSTART)).start();
+                    new CrankstartBootstrap(input).start();
                 } catch(Exception e) {
                     fail("CrankstartBootstrap exception:" + e);
+                } finally {
+                    try {
+                        input.close();
+                    } catch(IOException ignoreTheresNotMuchWeCanDoAnyway) {
+                    }
                 }
             }
         };

@@ -17,6 +17,7 @@
 package org.apache.sling.crankstart.launcher;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -80,7 +81,9 @@ public class CrankstartBootstrap {
             final Callable<Object> c = (Callable<Object>)launcherClassloader.loadClass(callableClass).newInstance();
             c.call();
         } finally {
-            launcherClassloader.close();
+            if(launcherClassloader instanceof Closeable) {
+                ((Closeable)launcherClassloader).close();
+            }
             cleanup();
         }
     }
