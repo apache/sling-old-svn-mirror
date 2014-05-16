@@ -9,7 +9,7 @@ verb2 single_qualifier
 config the.pid.goes.here
   foo = bar
   array = one that has a ${ok.var1} variable
-  array = two
+  array = two has ${ok.one} and ${ok.other} variables
   another=property with several words
   ${ok.varA} = This is ${ok.varB} now 
 another command
