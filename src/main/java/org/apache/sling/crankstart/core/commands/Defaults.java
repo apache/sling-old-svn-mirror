@@ -34,6 +34,10 @@ public class Defaults implements CrankstartCommand {
         this.variables = variables;
     }
     
+    public String getDescription() {
+        return I_DEFAULTS + ": set the default value of a crankstart variable";
+    }
+    
     @Override
     public boolean appliesTo(CrankstartCommandLine commandLine) {
         return I_DEFAULTS.equals(commandLine.getVerb());

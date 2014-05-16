@@ -36,6 +36,10 @@ public class InstallBundle implements CrankstartCommand {
         return I_BUNDLE.equals(commandLine.getVerb());
     }
 
+    public String getDescription() {
+        return I_BUNDLE + ": install a bundle, without starting it";
+    }
+    
     @Override
     public void execute(CrankstartContext crankstartContext, CrankstartCommandLine commandLine) throws Exception {
         final String bundleRef = commandLine.getQualifier();

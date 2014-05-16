@@ -32,6 +32,10 @@ public class StartFramework implements CrankstartCommand {
     public boolean appliesTo(CrankstartCommandLine commandLine) {
         return I_START_FRAMEWORK.equals(commandLine.getVerb());
     }
+    
+    public String getDescription() {
+        return I_START_FRAMEWORK + ": start the OSGi framework";
+    }
 
     @Override
     public void execute(CrankstartContext crankstartContext, CrankstartCommandLine commandLine) throws Exception {

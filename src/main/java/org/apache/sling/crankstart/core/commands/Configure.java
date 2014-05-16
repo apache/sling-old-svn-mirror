@@ -36,6 +36,10 @@ public class Configure implements CrankstartCommand {
     public boolean appliesTo(CrankstartCommandLine commandLine) {
         return commandLine.getVerb().startsWith(I_CONFIGURE);
     }
+    
+    public String getDescription() {
+        return I_CONFIGURE + " or " + I_CONFIGURE + FACTORY_SUFFIX + ": create OSGi configurations";
+    }
 
     @Override
     public void execute(CrankstartContext crankstartContext, CrankstartCommandLine commandLine) throws Exception {
