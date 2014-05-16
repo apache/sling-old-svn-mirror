@@ -19,6 +19,9 @@ package org.apache.sling.ide.eclipse.ui.views;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.jcr.PropertyType;
+import javax.jcr.nodetype.PropertyDefinition;
+
 import org.apache.sling.ide.eclipse.ui.nav.model.JcrNode;
 import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
@@ -72,14 +75,62 @@ public class JcrCellLabelProvider extends CellLabelProvider {
             updateName(cell);
             return;
         } else if (index==1) {
-            cell.setText("String");
+            final Object element = cell.getElement();
+            if (element instanceof NewRow) {
+                NewRow newRow = (NewRow)element;
+                cell.setText("");
+            } else if (element instanceof IPropertyDescriptor) {
+                IPropertyDescriptor pd = (IPropertyDescriptor)element;
+                JcrNode jcrNode = (JcrNode)viewer.getInput();
+                Map.Entry me = (Entry) pd.getId();
+                PropertyDefinition prd = jcrNode.getPropertyDefinition(String.valueOf(me.getKey()));
+                if (prd==null) {
+                    cell.setText("");
+                } else {
+                    final int requiredType = prd.getRequiredType();
+                    if (requiredType!=-1) {
+                        cell.setText(PropertyType.nameFromValue(requiredType));
+                    } else {
+                        cell.setText("n/a");
+                    }
+                }
+            } else {
+                cell.setText("");
+            }
             return;
         } else if (index==2) {
             updateValue(cell);
             return;
         } else {
-            cell.setText("false");
-            return;
+            final Object element = cell.getElement();
+            if (element instanceof NewRow) {
+                NewRow newRow = (NewRow)element;
+                cell.setText("");
+            } else if (element instanceof IPropertyDescriptor) {
+                IPropertyDescriptor pd = (IPropertyDescriptor)element;
+                JcrNode jcrNode = (JcrNode)viewer.getInput();
+                Map.Entry me = (Entry) pd.getId();
+                PropertyDefinition prd = jcrNode.getPropertyDefinition(String.valueOf(me.getKey()));
+                if (prd==null) {
+                    cell.setText("false");
+                } else if (index==3) {
+                    // protected
+                    cell.setText(String.valueOf(prd.isProtected()));
+                } else if (index==4) {
+                    // mandatory
+                    cell.setText(String.valueOf(prd.isMandatory()));
+                } else if (index==5) {
+                    // multiple
+                    cell.setText(String.valueOf(prd.isMultiple()));
+                } else if (index==6) {
+                    // auto creatd
+                    cell.setText(String.valueOf(prd.isAutoCreated()));
+                } else {
+                    cell.setText("n/a");
+                    return;
+                }
+            }
+            
         }
     }
 

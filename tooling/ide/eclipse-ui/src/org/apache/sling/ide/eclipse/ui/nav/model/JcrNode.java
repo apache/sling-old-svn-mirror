@@ -26,6 +26,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.PropertyDefinition;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -33,11 +35,14 @@ import javax.xml.parsers.SAXParserFactory;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
+import org.apache.sling.ide.eclipse.core.ServerUtil;
 import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
 import org.apache.sling.ide.eclipse.core.internal.Activator;
 import org.apache.sling.ide.eclipse.ui.WhitelabelSupport;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterResult;
+import org.apache.sling.ide.transport.NodeTypeRegistry;
+import org.apache.sling.ide.transport.Repository;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -878,6 +883,24 @@ public class JcrNode implements IAdaptable {
 
     public void addProperty(String name, String value) {
         properties.addProperty(name, value);
+    }
+
+    public NodeType getNodeType() {
+        Repository repository = ServerUtil.getDefaultRepository(getProject());
+        NodeTypeRegistry ntManager = repository.getNodeTypeRegistry();
+        return ntManager.getNodeType(getProperty("jcr:primaryType"));
+    }
+
+    public PropertyDefinition getPropertyDefinition(String propertyName) {
+        NodeType nt = getNodeType();
+        PropertyDefinition[] pds = nt.getPropertyDefinitions();
+        for (int i = 0; i < pds.length; i++) {
+            PropertyDefinition propertyDefinition = pds[i];
+            if (propertyDefinition.getName().equals(propertyName)) {
+                return propertyDefinition;
+            }
+        }
+        return null;
     }
 
 }
