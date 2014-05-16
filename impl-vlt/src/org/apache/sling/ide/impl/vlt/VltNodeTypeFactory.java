@@ -161,28 +161,32 @@ public class VltNodeTypeFactory {
         
         // load mandatory
         String[] mandatoryProperties = (String[]) child.getProperties().get("rep:mandatoryProperties");
-        for (int i = 0; i < mandatoryProperties.length; i++) {
-            String aMandatoryProperty = mandatoryProperties[i];
-            VltPropertyDefinition vpd = pds.get(aMandatoryProperty);
-            if (vpd==null) {
-                vpd = new VltPropertyDefinition();
-                vpd.setName(aMandatoryProperty);
-                pds.put(aMandatoryProperty, vpd);
+        if (mandatoryProperties!=null) {
+            for (int i = 0; i < mandatoryProperties.length; i++) {
+                String aMandatoryProperty = mandatoryProperties[i];
+                VltPropertyDefinition vpd = pds.get(aMandatoryProperty);
+                if (vpd==null) {
+                    vpd = new VltPropertyDefinition();
+                    vpd.setName(aMandatoryProperty);
+                    pds.put(aMandatoryProperty, vpd);
+                }
+                vpd.setMandatory(true);
             }
-            vpd.setMandatory(true);
         }
         
         // load protected
         String[] protectedProperties = (String[]) child.getProperties().get("rep:protectedProperties");
-        for (int i = 0; i < protectedProperties.length; i++) {
-            String aProtectedProperties = protectedProperties[i];
-            VltPropertyDefinition vpd = pds.get(aProtectedProperties);
-            if (vpd==null) {
-                vpd = new VltPropertyDefinition();
-                vpd.setName(aProtectedProperties);
-                pds.put(aProtectedProperties, vpd);
+        if (protectedProperties!=null) {
+            for (int i = 0; i < protectedProperties.length; i++) {
+                String aProtectedProperties = protectedProperties[i];
+                VltPropertyDefinition vpd = pds.get(aProtectedProperties);
+                if (vpd==null) {
+                    vpd = new VltPropertyDefinition();
+                    vpd.setName(aProtectedProperties);
+                    pds.put(aProtectedProperties, vpd);
+                }
+                vpd.setProtected(true);
             }
-            vpd.setProtected(true);
         }
         
         nt.setDeclaredPropertyDefinitions(pds.values().toArray(new VltPropertyDefinition[pds.size()]));
