@@ -98,6 +98,7 @@ public class CrankstartParserImplTest {
         
         assertCommand("var1", "this is CRANKSTART_VAR_NOT_FOUND(some.var) here", it.next());
         assertCommand("var2", "and now OK.VAR2_7 here", it.next());
+        assertCommand("var3", "using underscores in OK.UNDER_SCORE_14 variable", it.next());
         
         assertFalse("Expecting no more commands", it.hasNext());
     }

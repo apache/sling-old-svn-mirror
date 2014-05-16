@@ -18,3 +18,4 @@ last.command
 # variables
 var1 this is ${some.var} here
 var2 and now ${ok.var2} here
+var3 using underscores in ${ok.under_score} variable
