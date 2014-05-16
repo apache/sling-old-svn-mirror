@@ -25,12 +25,53 @@ import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryException;
 import org.apache.sling.ide.transport.RepositoryFactory;
 import org.apache.sling.ide.transport.RepositoryInfo;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.IServer;
+import org.eclipse.wst.server.core.ServerCore;
 
 public abstract class ServerUtil {
+    
+    public static Repository getDefaultRepository(IProject project) {
+        IServer server = getDefaultServer(project);
+        try {
+            return getRepository(server, new NullProgressMonitor());
+        } catch (CoreException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static IServer getDefaultServer(IProject project) {
+        IModule module = org.eclipse.wst.server.core.ServerUtil.getModule(project);
+        if (module==null) {
+            // if there's no module for a project then there's no IServer for sure - which 
+            // is what we need to create a RepositoryInfo
+            return null;
+        }
+        IServer server = ServerCore.getDefaultServer(module);
+        if (server!=null) {
+            return server;
+        }
+        // then we cannot create a repository
+        IServer[] allServers = ServerCore.getServers();
+        out: for (int i = 0; i < allServers.length; i++) {
+            IServer aServer = allServers[i];
+            IModule[] allModules = aServer.getModules();
+            for (int j = 0; j < allModules.length; j++) {
+                IModule aMoudle = allModules[j];
+                if (aMoudle.equals(module)) {
+                    server = aServer;
+                    break out;
+                }
+            }
+        }
+        return server;
+    }
 
     public static Repository getRepository(IServer server, IProgressMonitor monitor) throws CoreException {
         RepositoryFactory repository = Activator.getDefault().getRepositoryFactory();
