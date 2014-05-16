@@ -26,14 +26,15 @@ import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** CrankstartCommand that logs a message */
+/** CrankstartCommand that creates OSGi configurations */
 public class Configure implements CrankstartCommand {
     public static final String I_CONFIGURE = "config";
+    public static final String FACTORY_SUFFIX = ".factory";
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     @Override
     public boolean appliesTo(CrankstartCommandLine commandLine) {
-        return I_CONFIGURE.equals(commandLine.getVerb());
+        return commandLine.getVerb().startsWith(I_CONFIGURE);
     }
 
     @Override
@@ -50,11 +51,17 @@ public class Configure implements CrankstartCommand {
         }
         final Object configAdminService = bundleContext.getService(configAdminRef);
         
-        // TODO: handle configuration factories
-        // For now, use reflection to minimize coupling with the OSGi framework that we are talking to
-        final Object config = configAdminService.getClass()
-            .getMethod("getConfiguration", String.class)
-            .invoke(configAdminService, pid);
+        // Use reflection to minimize coupling with the OSGi framework that we are talking to
+        Object config = null;
+        if(commandLine.getVerb().endsWith(FACTORY_SUFFIX)) {
+            config = configAdminService.getClass()
+                    .getMethod("createFactoryConfiguration", String.class)
+                    .invoke(configAdminService, pid);
+        } else {
+            config = configAdminService.getClass()
+                    .getMethod("getConfiguration", String.class)
+                    .invoke(configAdminService, pid);
+        }
         config.getClass()
             .getMethod("setBundleLocation", String.class)
             .invoke(config, (String)null);
