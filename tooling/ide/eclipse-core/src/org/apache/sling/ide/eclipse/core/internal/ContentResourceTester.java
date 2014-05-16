@@ -25,11 +25,12 @@ import org.eclipse.core.resources.IResource;
 public class ContentResourceTester extends PropertyTester {
 
     private static final String PN_CAN_BE_EXPORTED = "canBeExported";
+    private static final String PN_CAN_BE_IMPORTED = "canBeImported";
 
     @Override
     public boolean test(Object receiver, String property, Object[] args, Object expectedValue) {
 
-        if (!PN_CAN_BE_EXPORTED.equals(property)) {
+        if (!PN_CAN_BE_EXPORTED.equals(property) && !PN_CAN_BE_IMPORTED.equals(property)) {
             return false;
         }
 
