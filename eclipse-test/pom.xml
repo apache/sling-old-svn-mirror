@@ -20,7 +20,7 @@
                 <version>${tycho.version}</version>
                 <configuration>
                     <useUIHarness>true</useUIHarness>
-                    <argLine>${ui.test.args}</argLine>
+                    <argLine>-XX:MaxPermSize=512m ${ui.test.args}</argLine>
                     <dependencies>
                         <!-- Pull in all the artifacts we reference from 
                             the base feature, to be on the safe side -->
