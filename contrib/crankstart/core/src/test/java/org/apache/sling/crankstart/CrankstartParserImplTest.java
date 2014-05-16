@@ -42,7 +42,18 @@ public class CrankstartParserImplTest {
     
     @Before
     public void setup() throws IOException {
-        parser = new CrankstartParserImpl();
+        parser = new CrankstartParserImpl() {
+
+            @Override
+            protected String getVariable(String name) {
+                if("another.var".equals(name)) {
+                    return "Another Var";
+                }
+                
+                return super.getVariable(name);
+            }
+            
+        };
         final InputStream is = getClass().getResourceAsStream(TEST_PATH);
         assertNotNull("Expecting test resource to be found:" + TEST_PATH, is);
         input = new InputStreamReader(is);
@@ -83,6 +94,9 @@ public class CrankstartParserImplTest {
         
         assertCommand("another", "command", it.next());
         assertCommand("last.command", "", it.next());
+        
+        assertCommand("var1", "this is CRANKSTART_VAR_NOT_FOUND(some.var) here", it.next());
+        assertCommand("var2", "and now Another Var here", it.next());
         
         assertFalse("Expecting no more commands", it.hasNext());
     }

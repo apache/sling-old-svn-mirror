@@ -2,6 +2,9 @@
 # TODO: not all integration tests pass, we might be missing some
 # bundles or properties that the Sling launchpad provides
 
+# Set default values for our variables
+defaults http.port 12345
+
 # Set bootstrap classpath, mvn: protocol can be used
 classpath mvn:org.apache.felix/org.apache.felix.framework/4.4.0
 classpath mvn:org.osgi/org.osgi.compendium/4.2.0
@@ -15,7 +18,7 @@ classpath mvn:org.apache.sling/org.apache.sling.crankstart.core/0.0.1-SNAPSHOT
 classpath mvn:org.apache.sling/org.apache.sling.crankstart.api/0.0.1-SNAPSHOT
 
 # Set OSGi framework properties
-osgi.property org.osgi.service.http.port 1234
+osgi.property org.osgi.service.http.port ${http.port}
 osgi.property sling.home sling-crankstart
 osgi.property org.osgi.framework.storage sling-crankstart/osgi.framework.storage
 osgi.property org.apache.sling.commons.log.level INFO
@@ -148,4 +151,4 @@ bundle mvn:org.apache.sling/org.apache.sling.launchpad.api/1.1.0
 
 # Now start bundles
 start.all.bundles
-log Sling will be available at http://localhost:1234/system/console
+log Sling will be available at http://localhost:${http.port}/system/console
