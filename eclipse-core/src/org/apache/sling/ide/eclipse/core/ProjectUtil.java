@@ -160,6 +160,9 @@ public abstract class ProjectUtil {
         FilterLocator filterLocator = Activator.getDefault().getFilterLocator();
 
         IFolder syncFolder = ProjectUtil.getSyncDirectory(project);
+        if (syncFolder == null) {
+            return null;
+        }
         File filterLocation = filterLocator.findFilterLocation(syncFolder.getLocation().toFile());
         if (filterLocation == null) {
             return null;

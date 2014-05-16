@@ -21,7 +21,7 @@ import java.lang.reflect.InvocationTargetException;
 import org.apache.sling.ide.serialization.SerializationException;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -63,10 +63,9 @@ public class ImportWizard extends Wizard implements IImportWizard {
 
         final IServer server = mainPage.getServer();
 
-        IPath destinationPath = mainPage.getResourcePath();
-
-        final IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(destinationPath.segments()[0]);
-        final IPath projectRelativePath = destinationPath.removeFirstSegments(1);
+        IResource resource = mainPage.getResource();
+        final IProject project = resource.getProject();
+        final IPath projectRelativePath = resource.getProjectRelativePath();
         IRunnableWithProgress runnable = new IRunnableWithProgress() {
             @Override
             public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {

@@ -34,12 +34,16 @@ import org.eclipse.wst.server.core.ServerCore;
 public class SlingLaunchpadCombo {
 
     private final Combo repositoryCombo;
-    private final IProject project;
+    private IProject project;
 
     public SlingLaunchpadCombo(Composite parent, IProject project) {
         repositoryCombo = new Combo(parent, SWT.DROP_DOWN);
         repositoryCombo.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 
+        this.project = project;
+    }
+
+    public void setProject(IProject project) {
         this.project = project;
     }
 
