@@ -1,0 +1,39 @@
+# Test the crankstart launcher by setting up an HTTP
+# server with a few servlets that require specific OSGi configurations
+
+# Default values for our variables
+defaults pax.version 1.6.0
+defaults single.path /single
+
+# Bootstrap classpath
+classpath mvn:org.apache.felix/org.apache.felix.framework/4.4.0
+classpath mvn:org.slf4j/slf4j-api/1.6.2
+classpath mvn:org.ops4j.pax.url/pax-url-aether/${pax.version}
+classpath mvn:org.ops4j.pax.url/pax-url-commons/${pax.version}
+classpath mvn:org.apache.sling/org.apache.sling.crankstart.core/0.0.1-SNAPSHOT
+classpath mvn:org.apache.sling/org.apache.sling.crankstart.api/0.0.1-SNAPSHOT
+
+# OSGi properties
+osgi.property org.osgi.service.http.port ${http.port}
+osgi.property org.osgi.framework.storage ${osgi.storage.path}
+
+# Start the framework
+start.framework
+
+# Start ConfigAdmin, HTTP service and SCR
+bundle mvn:org.apache.felix/org.apache.felix.http.jetty/2.2.0
+bundle mvn:org.apache.felix/org.apache.felix.eventadmin/1.3.2
+bundle mvn:org.apache.felix/org.apache.felix.scr/1.8.2
+bundle mvn:org.apache.sling/org.apache.sling.commons.osgi/2.2.1-SNAPSHOT
+bundle mvn:org.apache.sling/org.apache.sling.commons.log/2.1.2
+bundle mvn:org.apache.sling/org.apache.sling.crankstart.test.services/0.0.1-SNAPSHOT
+bundle mvn:org.apache.felix/org.apache.felix.configadmin/1.6.0
+start.all.bundles
+
+# OSGi configs that activate our test servlets
+config org.apache.sling.crankstart.testservices.SingleConfigServlet
+  path=${single.path}
+  message=doesn't matter
+
+# Informative log  
+log felix http service should come up at http://localhost:${http.port}

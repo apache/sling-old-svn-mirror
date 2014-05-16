@@ -89,7 +89,7 @@ public class CrankstartParserImplTest {
         final String [] a = (String[])o;
         assertEquals("Expecting two entries in array", 2, a.length);
         assertEquals("Expecting correct first array value", "one that has a OK.VAR1_7 variable", a[0]);
-        assertEquals("Expecting correct second array value", "two", a[1]);
+        assertEquals("Expecting correct second array value", "two has OK.ONE_6 and OK.OTHER_8 variables", a[1]);
         assertEquals("Expecting correct another value", "property with several words", props.get("another"));
         assertEquals("Expecting correct variable value", "This is OK.VARB_7 now", props.get("OK.VARA_7"));
         
