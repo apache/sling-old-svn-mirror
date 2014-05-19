@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
     Licensed to the Apache Software Foundation (ASF) under one
     or more contributor license agreements.  See the NOTICE file
@@ -17,7 +17,7 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.sling</groupId>
@@ -41,6 +41,11 @@
         <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/jackrabbit-server</developerConnection>
         <url>http://svn.apache.org/viewvc/sling/trunk/bundles/jcr/jackrabbit-server</url>
     </scm>
+
+    <properties>
+      <org.apache.jackrabbit.version>2.6.5</org.apache.jackrabbit.version>
+      <org.apache.lucene.version>3.6.2</org.apache.lucene.version>
+    </properties>
 
     <build>
         <plugins>
@@ -94,49 +99,18 @@
                             org.apache.sling.jcr.jackrabbit.server.impl.Activator
                         </Bundle-Activator>
                         <Export-Package>
-                             org.apache.sling.jcr.jackrabbit.server;version=2.1.0,
-                             org.apache.sling.jcr.jackrabbit.server.security;version=2.0.4-incubator,
-                             org.apache.sling.jcr.jackrabbit.server.security.accessmanager;version=2.1.0,
-                             org.apache.jackrabbit.core.security.principal;version=2.2.5
+                            org.apache.sling.jcr.jackrabbit.server;version=${project.version},
+                            org.apache.sling.jcr.jackrabbit.server.security;version=2.0.6,
+                            org.apache.sling.jcr.jackrabbit.server.security.accessmanager;version=2.0.6,
+                            org.apache.jackrabbit.core.*;version=${org.apache.jackrabbit.version},
+                            org.apache.lucene.*;version=${org.apache.lucene.version}
                         </Export-Package>
                         <Private-Package>
-                            org.apache.sling.jcr.jackrabbit.server.impl.*,
-                            org.apache.commons.*
+                            org.apache.sling.jcr.jackrabbit.server.impl.*
                         </Private-Package>
                         <Import-Package>
-                            <!-- Sling and OSGi -->
-                            org.apache.sling.*, org.osgi.*,
-                            <!-- JNDI, Security, Transactions -->
-                            javax.naming.*,
-                            javax.security.*,
-                            javax.sql.*,
-                            javax.transaction.xa,
-                            <!--  Helpers -->
-                            org.apache.commons.io.*,
-                            org.apache.commons.collections.*,
-                            <!-- JCR and Jackrabbit API -->
-                            javax.jcr.*, org.apache.jackrabbit.api.*,
-                            org.apache.jackrabbit.spi.*,
-
-                            <!-- Logging -->
-                            org.slf4j,
-                            <!-- XML stuff -->
-                            javax.xml.*, org.xml.sax.*, org.w3c.dom.*,
-                            <!-- JAR Service Registry for Query -->
-                            javax.imageio.spi,
-
                             <!-- Exclude package, see JCR-2412 -->
                             !org.apache.jackrabbit.test,
-
-                            <!-- playground imports -->
-                            org.apache.tika.*,
-
-                            <!-- Jackrabbit internals -->
-                            org.apache.jackrabbit.util,
-                            org.apache.jackrabbit.value,
-                            org.apache.jackrabbit.commons.*,
-                            org.apache.jackrabbit.spi.commons.*,
-
                             <!-- optional JDBC driver import -->
                             com.microsoft.sqlserver.jdbc;
                             oracle.jdbc;
@@ -144,26 +118,15 @@
                             org.gjt.mm.mysql;
                             org.h2;
                             org.postgresql;
-                                resolution:=optional,
-
-                            <!-- Required by concurrent lib SynchronizationTimer class -->
-                            javax.swing.*;resolution:=optional
+                                resolution:=optional
                         </Import-Package>
                         <DynamicImport-Package>*</DynamicImport-Package>
-
-                        <!-- Embedd some libraries -->
-                        <Embed-Transitive>true</Embed-Transitive>
                         <Embed-Dependency>
-                            jackrabbit-core,
-                            lucene-core,
-                            concurrent,
-                            commons-dbcp,
-                            commons-pool,
+                            *;scope=compile;inline=true,
                             org.apache.sling.commons.osgi;inline=org/apache/sling/commons/osgi/PropertiesUtil*
                         </Embed-Dependency>
                         <_removeheaders>
                             Embed-Dependency,
-                            Embed-Transitive,
                             Private-Package,
                             Include-Resource
                         </_removeheaders>
@@ -192,6 +155,7 @@
             <groupId>javax.jcr</groupId>
             <artifactId>jcr</artifactId>
             <version>2.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -203,23 +167,34 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.base</artifactId>
             <version>2.2.3-SNAPSHOT</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
 
         <!-- The core repository implementation -->
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-api</artifactId>
-            <version>2.4.2</version>
+            <version>2.6.5</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-core</artifactId>
-            <version>2.4.2</version>
+            <version>${org.apache.jackrabbit.version}</version>
             <scope>compile</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-core</artifactId>
+            <version>${org.apache.lucene.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-dbcp</groupId>
+            <artifactId>commons-dbcp</artifactId>
+            <version>1.4</version>
+            <scope>compile</scope>
+        </dependency>
         <!-- for SCR plugin supporting descriptor inheritance -->
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -238,14 +213,17 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.annotations</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

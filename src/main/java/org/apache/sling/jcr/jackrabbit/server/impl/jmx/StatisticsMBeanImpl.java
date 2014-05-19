@@ -131,29 +131,29 @@ public class StatisticsMBeanImpl implements DynamicMBean {
             return new AttributeList();
         }
         AttributeList al = new AttributeList();
-        Iterator<Entry<Type, TimeSeries>> statIter = statistics.iterator();
+        Iterator<Entry<String, TimeSeries>> statIter = statistics.iterator();
         while (statIter.hasNext()) {
-            Entry<Type, TimeSeries> entry = statIter.next();
+            Entry<String, TimeSeries> entry = statIter.next();
             long[] valuePerSecond = entry.getValue().getValuePerSecond();
-            al.add(new Attribute("PerSecond_" + entry.getKey().name(),
+            al.add(new Attribute("PerSecond_" + entry.getKey(),
                     valuePerSecond[valuePerSecond.length - 1]));
             al.add(new Attribute(
-                    "LastMinutePerSecond_" + entry.getKey().name(),
+                    "LastMinutePerSecond_" + entry.getKey(),
                     valuePerSecond));
             long[] valuePerMinute = entry.getValue().getValuePerMinute();
-            al.add(new Attribute("PerMinute" + entry.getKey().name(),
+            al.add(new Attribute("PerMinute" + entry.getKey(),
                     valuePerMinute[valuePerMinute.length - 1]));
-            al.add(new Attribute("LastHourPerMinute_" + entry.getKey().name(),
+            al.add(new Attribute("LastHourPerMinute_" + entry.getKey(),
                     valuePerMinute));
             long[] valuePerHour = entry.getValue().getValuePerHour();
-            al.add(new Attribute("PerHour_" + entry.getKey().name(),
+            al.add(new Attribute("PerHour_" + entry.getKey(),
                     valuePerHour[valuePerHour.length - 1]));
-            al.add(new Attribute("LastWeekPerHour_" + entry.getKey().name(),
+            al.add(new Attribute("LastWeekPerHour_" + entry.getKey(),
                     valuePerHour));
             long[] valuePerWeek = entry.getValue().getValuePerWeek();
-            al.add(new Attribute("PerWeek_" + entry.getKey().name(),
+            al.add(new Attribute("PerWeek_" + entry.getKey(),
                     valuePerWeek[valuePerWeek.length - 1]));
-            al.add(new Attribute("LastYearPerWeek_" + entry.getKey().name(),
+            al.add(new Attribute("LastYearPerWeek_" + entry.getKey(),
                     valuePerWeek));
         }
         return al;
@@ -170,50 +170,51 @@ public class StatisticsMBeanImpl implements DynamicMBean {
                 "Repository Statistics Unavailable", null, null, null, null);
         }
         List<MBeanAttributeInfo> attributesList = new ArrayList<MBeanAttributeInfo>();
-        Set<Type> types = new HashSet<Type>();
-        Iterator<Entry<Type, TimeSeries>> statIter = statistics.iterator();
+        Set<String> typeNames = new HashSet<String>();
+        Iterator<Entry<String, TimeSeries>> statIter = statistics.iterator();
         while (statIter.hasNext()) {
-            Entry<Type, TimeSeries> entry = statIter.next();
+            Entry<String, TimeSeries> entry = statIter.next();
             attributesList.add(new MBeanAttributeInfo("PerSecond_"
-                    + entry.getKey().name(), long.class.getName(),
-                    "Current per second value of " + entry.getKey().name(),
+                    + entry.getKey(), long.class.getName(),
+                    "Current per second value of " + entry.getKey(),
                     true, false, false));
             attributesList.add(new MBeanAttributeInfo("LastMinutePerSecond_"
-                    + entry.getKey().name(), long[].class.getName(),
+                    + entry.getKey(), long[].class.getName(),
                     "Last minute of per seconds values of "
-                            + entry.getKey().name(), true, false, false));
+                            + entry.getKey(), true, false, false));
             attributesList.add(new MBeanAttributeInfo("PerMinute"
-                    + entry.getKey().name(), long.class.getName(),
-                    "Current per minute value of " + entry.getKey().name(),
+                    + entry.getKey(), long.class.getName(),
+                    "Current per minute value of " + entry.getKey(),
                     true, false, false));
             attributesList.add(new MBeanAttributeInfo("LastHourPerMinute_"
-                    + entry.getKey().name(), long[].class.getName(),
+                    + entry.getKey(), long[].class.getName(),
                     "Last hour of per minute values of "
-                            + entry.getKey().name(), true, false, false));
+                            + entry.getKey(), true, false, false));
             attributesList.add(new MBeanAttributeInfo("PerHour_"
-                    + entry.getKey().name(), long.class.getName(),
-                    "Current per hour value of " + entry.getKey().name(), true,
+                    + entry.getKey(), long.class.getName(),
+                    "Current per hour value of " + entry.getKey(), true,
                     false, false));
             attributesList.add(new MBeanAttributeInfo("LastWeekPerHour_"
-                    + entry.getKey().name(), long[].class.getName(),
-                    "Last week of per hour values of " + entry.getKey().name(),
+                    + entry.getKey(), long[].class.getName(),
+                    "Last week of per hour values of " + entry.getKey(),
                     true, false, false));
             attributesList.add(new MBeanAttributeInfo("PerWeek_"
-                    + entry.getKey().name(), long.class.getName(),
-                    "Current per week value of " + entry.getKey().name(), true,
+                    + entry.getKey(), long.class.getName(),
+                    "Current per week value of " + entry.getKey(), true,
                     false, false));
             attributesList.add(new MBeanAttributeInfo("LastYearPerWeek_"
-                    + entry.getKey().name(), long[].class.getName(),
-                    "Last year of per week values of " + entry.getKey().name(),
+                    + entry.getKey(), long[].class.getName(),
+                    "Last year of per week values of " + entry.getKey(),
                     true, false, false));
-            types.add(entry.getKey());
+            typeNames.add(entry.getKey());
         }
         for (Type t : Type.values()) {
-            if (!types.contains(t)) {
-                attributesList.add(new MBeanAttributeInfo(t.name(), long.class
-                        .getName(), "Current counter value of " + t.name(),
+            final String name = t.name();
+            if (!typeNames.contains(name)) {
+                attributesList.add(new MBeanAttributeInfo(name, long.class
+                        .getName(), "Current counter value of " + name,
                         true, false, false));
-                types.add(t);
+                typeNames.add(name);
             }
         }
         MBeanAttributeInfo[] attributes = attributesList
