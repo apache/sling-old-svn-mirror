@@ -417,6 +417,7 @@ public class JcrPropertiesView extends ViewPart {
             titleLabel.setText(jcrNode.getJcrPath());
             insertAction.setEnabled(true);
             deleteAction.setEnabled(false);
+            showInEditorAction.setEnabled(jcrNode.getFileForEditor()!=null);
         }
     }
 
