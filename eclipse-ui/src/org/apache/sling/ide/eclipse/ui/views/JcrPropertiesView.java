@@ -349,10 +349,12 @@ public class JcrPropertiesView extends ViewPart {
 		        
 		        JcrNode node = (JcrNode)viewer.getInput();
                 final IFile file = node.getFileForEditor();
-                try {
-                    IDE.openEditor(getViewSite().getPage(), file, true);
-                } catch (PartInitException e) {
-                    e.printStackTrace(System.out);
+                if (file!=null) {
+                    try {
+                        IDE.openEditor(getViewSite().getPage(), file, true);
+                    } catch (PartInitException e) {
+                        e.printStackTrace(System.out);
+                    }
                 }
 		    }
 		};
@@ -412,7 +414,7 @@ public class JcrPropertiesView extends ViewPart {
             lastInput = jcrNode;
         } else {
             viewer.setInput(jcrNode);
-            titleLabel.setText(jcrNode.getDescription());
+            titleLabel.setText(jcrNode.getJcrPath());
             insertAction.setEnabled(true);
             deleteAction.setEnabled(false);
         }
