@@ -66,6 +66,8 @@ public class SetupServerWizardPage extends WizardPage {
 	private Text newServerName;
 	private Text newServerHostnameName;
 	private Text newServerPort;
+    private Text newServerUsername;
+    private Text newServerPassword;
 	private Text newServerDebugPort;
 	private Button installToolingSupportBundle;
 	
@@ -126,6 +128,12 @@ public class SetupServerWizardPage extends WizardPage {
 	    
         newLabel(container, "Port:");
         newServerPort = newText(container);
+        
+        newLabel(container, "Username:");
+        newServerUsername = newText(container);
+
+        newLabel(container, "Password:");
+        newServerPassword = newText(container);
 	    
         newLabel(container, "Debug Port:");
         newServerDebugPort = newText(container);
@@ -147,6 +155,8 @@ public class SetupServerWizardPage extends WizardPage {
 				newServerHostnameName.setEnabled(setupNewServer.getSelection());
 				newServerPort.setEnabled(setupNewServer.getSelection());
 				newServerDebugPort.setEnabled(setupNewServer.getSelection());
+                newServerUsername.setEnabled(setupNewServer.getSelection());
+                newServerPassword.setEnabled(setupNewServer.getSelection());
 				installToolingSupportBundle.setEnabled(setupNewServer.getSelection());
 				dialogChanged();
 			}
@@ -235,7 +245,9 @@ public class SetupServerWizardPage extends WizardPage {
 			if (newServerName.getText().length()==0 ||
 					getHostname().length()==0 ||
 					newServerPort.getText().length()==0 ||
-					newServerDebugPort.getText().length()==0) {
+					newServerDebugPort.getText().length()==0 ||
+					newServerUsername.getText().length() == 0 ||
+					newServerPassword.getText().length() == 0) {
 				updateStatus("Enter values for new server");
 				return;
 			}
@@ -321,16 +333,17 @@ public class SetupServerWizardPage extends WizardPage {
 			
 			IRuntimeType serverRuntime = ServerCore.findRuntimeType("org.apache.sling.ide.launchpadRuntimeType");
 			try {
-                // TODO pass in username and password
                 // TODO there should be a nicer API for creating this, and also a central place for defaults
                 IRuntime runtime = serverRuntime.createRuntime(null, monitor);
                 runtime = runtime.createWorkingCopy().save(true, monitor);
                 IServerWorkingCopy wc = serverType.createServer(null, null, runtime, monitor);
 				wc.setHost(getHostname());
-				wc.setName(newServerName.getText() + " (external)");
+                wc.setName(newServerName.getText());
 				wc.setAttribute(ISlingLaunchpadServer.PROP_PORT, getPort());
 				wc.setAttribute(ISlingLaunchpadServer.PROP_DEBUG_PORT, Integer.parseInt(newServerDebugPort.getText()));
                 wc.setAttribute(ISlingLaunchpadServer.PROP_INSTALL_LOCALLY, installToolingSupportBundle.getSelection());
+                wc.setAttribute(ISlingLaunchpadServer.PROP_USERNAME, newServerUsername.getText());
+                wc.setAttribute(ISlingLaunchpadServer.PROP_PASSWORD, newServerPassword.getText());
                 wc.setAttribute("auto-publish-setting", ISlingLaunchpadServer.PUBLISH_STATE_RESOURCE_CHANGE);
                 wc.setAttribute("auto-publish-time", 0);
                 if (finalVersion != null) {
