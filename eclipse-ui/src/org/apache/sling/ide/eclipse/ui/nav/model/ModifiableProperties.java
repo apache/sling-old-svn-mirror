@@ -68,6 +68,12 @@ public class ModifiableProperties implements IPropertySource {
 			TextPropertyDescriptor pd = new TextPropertyDescriptor(entry, entry.getKey());
 			result.add(pd);
 		}
+		final String jcrPrimaryType = "jcr:primaryType";
+        if (!properties.containsKey(jcrPrimaryType)) {
+		    Map<String, String> pseudoMap = new HashMap<String, String>();
+		    pseudoMap.put(jcrPrimaryType, node.getPrimaryType());
+		    result.add(new TextPropertyDescriptor(pseudoMap.entrySet().iterator().next(), jcrPrimaryType));
+		}
 		return result.toArray(new IPropertyDescriptor[] {});
 	}
 
