@@ -940,8 +940,13 @@ public class JcrNode implements IAdaptable {
 //            if (repositoryInfo==null) {
 //                return false;
 //            }
-            final FilterResult result = filter.filter(ProjectUtil.getSyncDirectoryFile(project), relativeFilePath, null);
-            return result==FilterResult.ALLOW;
+            if (filter==null) {
+                Activator.getDefault().getPluginLogger().error("No filter.xml found for "+project);
+                return true;
+            } else {
+                final FilterResult result = filter.filter(ProjectUtil.getSyncDirectoryFile(project), relativeFilePath, null);
+                return result==FilterResult.ALLOW;
+            }
         } catch (CoreException e) {
             PluginLogger logger = Activator.getDefault().getPluginLogger();
             logger.error("Could not verify child node allowance: "+this, e);
