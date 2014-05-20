@@ -32,6 +32,8 @@ import org.apache.sling.ide.osgi.OsgiClientFactory;
 import org.apache.sling.ide.transport.RepositoryInfo;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
@@ -71,6 +73,8 @@ public class SetupServerWizardPage extends WizardPage {
 	private Text newServerDebugPort;
 	private Button installToolingSupportBundle;
 	
+    private IServer server;
+
 	private Map<String, IServer> serversMap = new HashMap<String, IServer>();
 
 	public SetupServerWizardPage(AbstractNewSlingApplicationWizard parent) {
@@ -278,10 +282,16 @@ public class SetupServerWizardPage extends WizardPage {
                 + "/"));
     }
 	
-    IServer getOrCreateServer(IProgressMonitor monitor) {
+    IServer getOrCreateServer(IProgressMonitor monitor) throws CoreException {
+
+        if (server != null) {
+            return server;
+        }
+
 		if (useExistingServer.getSelection()) {
 			String key = existingServerCombo.getItem(existingServerCombo.getSelectionIndex());
-			return serversMap.get(key);
+            server = serversMap.get(key);
+            return server;
 		} else {
 			IServerType serverType = ServerCore.findServerType("org.apache.sling.ide.launchpadServer");
 			@SuppressWarnings("unused")
@@ -301,8 +311,8 @@ public class SetupServerWizardPage extends WizardPage {
                 try {
                     installedVersion = getToolingSupportBundleVersion();
                 } catch (OsgiClientException e) {
-                    getWizard().reportError(e);
-                    return null;
+                    throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
+                            "Failed reading the tooling support bundle version", e));
                 }
                 finalVersion = installedVersion;
                 EmbeddedArtifactLocator artifactsLocator = Activator.getDefault().getArtifactsLocator();
@@ -322,11 +332,11 @@ public class SetupServerWizardPage extends WizardPage {
                         }
                         finalVersion = ourVersion;
 					} catch (IOException e) {
-                        getWizard().reportError(e);
-                        return null;
+                        throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
+                                "Failed installing the tooling support bundle version", e));
                     } catch (OsgiClientException e) {
-                        getWizard().reportError(e);
-                        return null;
+                        throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
+                                "Failed installing the tooling support bundle version", e));
                     }
 				}
 			}
@@ -351,11 +361,13 @@ public class SetupServerWizardPage extends WizardPage {
                         EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME), finalVersion.toString());
                 }
 				wc.setRuntime(runtime);
-                return wc.save(true, monitor);
+                server = wc.save(true, monitor);
+                return server;
 			} catch (CoreException e) {
-                getWizard().reportError(e);
+                throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
+                        "Failed creating the new server instance", e));
+
 			}
-			return null;
 		}
 	}
 

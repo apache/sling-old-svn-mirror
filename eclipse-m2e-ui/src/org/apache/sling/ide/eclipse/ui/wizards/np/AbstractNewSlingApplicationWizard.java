@@ -17,7 +17,7 @@
 package org.apache.sling.ide.eclipse.ui.wizards.np;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
@@ -28,11 +28,11 @@ import org.apache.sling.ide.eclipse.core.ConfigurationHelper;
 import org.apache.sling.ide.eclipse.m2e.internal.Activator;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.jface.dialogs.IMessageProvider;
@@ -44,10 +44,10 @@ import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.m2e.core.MavenPlugin;
-import org.eclipse.m2e.core.project.MavenUpdateRequest;
 import org.eclipse.m2e.core.project.ProjectImportConfiguration;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.actions.WorkspaceModifyOperation;
 import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.IServerWorkingCopy;
@@ -132,181 +132,193 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 	 */
 	public boolean performFinish() {
 
-        // TODO - should probably rely on exception handling here
-        final boolean[] success = new boolean[1];
         try {
-			getContainer().run(false, true, new IRunnableWithProgress() {
+            // create maven projects
+            final List<IProject> createdProjects = new ArrayList<IProject>();
+            getContainer().run(false, true, new WorkspaceModifyOperation() {
+                @Override
+                protected void execute(IProgressMonitor monitor) throws CoreException, InvocationTargetException,
+                        InterruptedException {
+                    createdProjects.addAll(createMavenProjects(monitor));
+                }
+            });
 
-				@Override
-				public void run(IProgressMonitor monitor)
-						throws InvocationTargetException, InterruptedException {
-					try {
-                        success[0] = performFinish(monitor);
-					} catch (Exception e) {
+            // configure projects
+            final Projects[] projects = new Projects[1];
+            getContainer().run(false, true, new WorkspaceModifyOperation() {
+                @Override
+                protected void execute(IProgressMonitor monitor) throws CoreException, InvocationTargetException,
+                        InterruptedException {
+                    projects[0] = configureCreatedProjects(createdProjects, monitor);
+                }
+            });
+
+            // deploy the projects on server
+            getContainer().run(false, true, new WorkspaceModifyOperation() {
+                @Override
+                protected void execute(IProgressMonitor monitor) throws CoreException, InvocationTargetException,
+                        InterruptedException {
+                    deployProjectsOnServer(projects[0], monitor);
+                }
+            });
+
+            // ensure server is started and all modules are published
+            getContainer().run(true, false, new IRunnableWithProgress() {
+
+                @Override
+                public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
+                    try {
+                        publishModules(createdProjects, monitor);
+                    } catch (CoreException e) {
                         throw new InvocationTargetException(e);
-					}
-				}
-				
-			});
-            return success[0];
+                    }
+                }
+            });
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-        	return false;
-		} catch (InvocationTargetException e) {
+            return false;
+        } catch (InvocationTargetException e) {
             reportError(e.getTargetException());
             return false;
-		}
+        }
+
+        return true;
 	}
-        
-	private boolean performFinish(IProgressMonitor monitor) throws Exception {
 
-		IPath location = chooseArchetypePage.getLocation();
-		Archetype archetype = chooseArchetypePage.getSelectedArchetype();
-		String groupId = archetypeParametersPage.getGroupId();
-		String artifactId = archetypeParametersPage.getArtifactId();
-		String version = archetypeParametersPage.getVersion();
-		String javaPackage = archetypeParametersPage.getJavaPackage();
-		Properties properties = archetypeParametersPage.getProperties();
-		ProjectImportConfiguration configuration = new ProjectImportConfiguration();
+    private List<IProject> createMavenProjects(IProgressMonitor monitor) throws CoreException {
 
-		monitor.worked(1);
-		if (monitor.isCanceled()) {
-			return false;
-		}
+        IPath location = chooseArchetypePage.getLocation();
+        Archetype archetype = chooseArchetypePage.getSelectedArchetype();
+        String groupId = archetypeParametersPage.getGroupId();
+        String artifactId = archetypeParametersPage.getArtifactId();
+        String version = archetypeParametersPage.getVersion();
+        String javaPackage = archetypeParametersPage.getJavaPackage();
+        Properties properties = archetypeParametersPage.getProperties();
+        ProjectImportConfiguration configuration = new ProjectImportConfiguration();
+
+        advance(monitor, 1);
+
+        List<IProject> projects = MavenPlugin.getProjectConfigurationManager().createArchetypeProjects(location,
+                archetype, groupId, artifactId, version, javaPackage, properties, configuration, monitor);
+
+        monitor.worked(3);
+
+        return projects;
+
+    }
+
+    private Projects configureCreatedProjects(List<IProject> createdProjects, IProgressMonitor monitor)
+            throws CoreException {
+
+        Projects projects = new Projects();
+
+        for (IProject project : createdProjects) {
+            IFile pomFile = project.getFile("pom.xml");
+            if (!pomFile.exists()) {
+                // then ignore this project - we only deal with maven projects
+                continue;
+            }
+            final Model model = MavenPlugin.getMavenModelManager().readMavenModel(pomFile);
+            final String packaging = model.getPackaging();
+
+            if ("content-package".equals(packaging)) {
+                projects.getContentProjects().add(project);
+            } else if ("bundle".equals(packaging)) {
+                projects.getBundleProjects().add(project);
+            } else if ("pom".equals(packaging)) {
+                if (projects.getReactorProject() == null) {
+                    projects.setReactorProject(project);
+                } else {
+                    IPath currLocation = project.getFullPath();
+                    IPath prevLocation = projects.getReactorProject().getFullPath();
+                    if (currLocation.isPrefixOf(prevLocation)) {
+                        // assume reactor is up in the folder structure
+                        projects.setReactorProject(project);
+                    }
+                }
+            }
+        }
+
+        advance(monitor, 1);
+
+        for (IProject contentProject : projects.getContentProjects()) {
+            configureContentProject(contentProject, createdProjects, monitor);
+        }
+        for (IProject bundleProject : projects.getBundleProjects()) {
+            configureBundleProject(bundleProject, createdProjects, monitor);
+        }
+
+        if (projects.getReactorProject() != null) {
+            configureReactorProject(projects.getReactorProject(), monitor);
+            advance(monitor, 1);
+        }
+
         IServer server = setupServerWizardPage.getOrCreateServer(monitor);
-		monitor.worked(1);
-        if (monitor.isCanceled() || server == null) {
-			return false;
-		}
-		
-		List<IProject> projects = MavenPlugin.getProjectConfigurationManager().createArchetypeProjects(
-				location, archetype, groupId, artifactId, version, javaPackage, properties, configuration, monitor);
-		
-		monitor.worked(3);
-		if (monitor.isCanceled()) {
-			return false;
-		}
-		
-		List<IProject> contentProjects = new LinkedList<IProject>();
-		List<IProject> bundleProjects = new LinkedList<IProject>();
-		IProject reactorProject = null;
-		for (Iterator<IProject> it = projects.iterator(); it.hasNext();) {
-			IProject project = it.next();
-			IFile pomFile = project.getFile("pom.xml");
-			if (!pomFile.exists()) {
-				// then ignore this project - we only deal with maven projects
-				continue;
-			}
-			final Model model = MavenPlugin.getMavenModelManager().readMavenModel(pomFile);
-			final String packaging = model.getPackaging();
+        advance(monitor, 1);
 
-			if ("content-package".equals(packaging)) {
-				contentProjects.add(project);
-			} else if ("bundle".equals(packaging)) {
-				bundleProjects.add(project);
-			} else if ("pom".equals(packaging)) {
-				if (reactorProject==null) {
-					reactorProject = project;
-				} else {
-					IPath currLocation = project.getFullPath();
-					IPath prevLocation = reactorProject.getFullPath();
-					if (currLocation.isPrefixOf(prevLocation)) {
-						// assume reactor is up in the folder structure
-						reactorProject = project;
-					}
-				}
-			}
-		}
-		
-		monitor.worked(1);
-		if (monitor.isCanceled()) {
-			return false;
-		}
-		
-		for (Iterator<IProject> it = contentProjects.iterator(); it.hasNext();) {
-			IProject aContentProject = it.next();
-			configureContentProject(aContentProject, projects, monitor);
-		}
-		for (Iterator<IProject> it = bundleProjects.iterator(); it.hasNext();) {
-			IProject aBundleProject = it.next();
-			configureBundleProject(aBundleProject, projects, monitor);
-		}
-		
-		if (reactorProject!=null) {
-			configureReactorProject(reactorProject, monitor);
-			monitor.worked(1);
-			if (monitor.isCanceled()) {
-				return false;
-			}
-		}
-		
-		finishConfiguration(projects, server, monitor);
-		monitor.worked(1);
-		if (monitor.isCanceled()) {
-			return false;
-		}
-		
-		updateProjectConfigurations(projects, true, monitor);
-		monitor.worked(1);
-		if (monitor.isCanceled()) {
-			return false;
-		}
-		
-		IServerWorkingCopy wc = server.createWorkingCopy();
-		// add the bundle and content projects, ie modules, to the server
-		List<IModule> modules = new LinkedList<IModule>();
-		for (Iterator<IProject> it = bundleProjects.iterator(); it.hasNext();) {
-			IProject project = it.next();
-			IModule module = ServerUtil.getModule(project);
+        finishConfiguration(createdProjects, server, monitor);
+        advance(monitor, 1);
+
+        return projects;
+    }
+
+    private void deployProjectsOnServer(Projects projects, IProgressMonitor monitor) throws CoreException {
+
+        IServer server = setupServerWizardPage.getOrCreateServer(monitor);
+        advance(monitor, 1);
+
+        IServerWorkingCopy wc = server.createWorkingCopy();
+        // add the bundle and content projects, ie modules, to the server
+        List<IModule> modules = new LinkedList<IModule>();
+        for (IProject project : projects.getBundleProjects()) {
+            IModule module = ServerUtil.getModule(project);
             if (module != null) {
                 modules.add(module);
             }
-		}
-		for (Iterator<IProject> it = contentProjects.iterator(); it.hasNext();) {
-			IProject project = it.next();
-			IModule module = ServerUtil.getModule(project);
+        }
+        for (IProject project : projects.getContentProjects()) {
+            IModule module = ServerUtil.getModule(project);
             if (module != null) {
                 modules.add(module);
             }
-		}
-		wc.modifyModules(modules.toArray(new IModule[modules.size()]), new IModule[0], monitor);
-		IServer newServer = wc.save(true, monitor);
-		newServer.start(ILaunchManager.RUN_MODE, monitor);
-		
-		monitor.worked(2);
-		if (monitor.isCanceled()) {
-			return false;
-		}
-		
-		wc.getOriginal().publish(IServer.PUBLISH_FULL, monitor);
-		
-		// also add 'java 1.6' and 'jst.ejb 3.1'
-//		IFacetedProject fp2 = ProjectFacetsManager.create(uiProject, true, null);
-//		IProjectFacet java = ProjectFacetsManager.getProjectFacet("java");
-//		fp2.installProjectFacet(java.getVersion("1.6"), null, null);
-//		IProjectFacet dynamicWebModule = ProjectFacetsManager.getProjectFacet("jst.web");
-//		fp2.installProjectFacet(dynamicWebModule.getLatestVersion(), null, null);
+        }
+        wc.modifyModules(modules.toArray(new IModule[modules.size()]), new IModule[0], monitor);
+        wc.save(true, monitor);
 
-		monitor.worked(2);
-		updateProjectConfigurations(projects, false, monitor);
-		monitor.worked(1);
-		monitor.done();
-		return true;
-	}
+        advance(monitor, 2);
+
+        monitor.done();
+    }
+
+    private void publishModules(final List<IProject> createdProjects, IProgressMonitor monitor) throws CoreException {
+        IServer server = setupServerWizardPage.getOrCreateServer(monitor);
+        server.start(ILaunchManager.RUN_MODE, monitor);
+        List<IModule[]> modules = new ArrayList<IModule[]>();
+        for (IProject project : createdProjects) {
+            IModule module = ServerUtil.getModule(project);
+            if (module != null) {
+                modules.add(new IModule[] { module });
+            }
+        }
+
+        if (modules.size() > 0) {
+            server.publish(IServer.PUBLISH_FULL, modules, null, null);
+        }
+    }
+
+    private void advance(IProgressMonitor monitor, int step) {
+
+        monitor.worked(step);
+        if (monitor.isCanceled()) {
+            throw new OperationCanceledException();
+        }
+    }
 	
 	protected void finishConfiguration(List<IProject> projects,
 			IServer server, IProgressMonitor monitor) throws CoreException {
 		// nothing to be done by default - hook for subclasses
 	}
 	
-	protected void updateProjectConfigurations(List<IProject> projects, boolean forceDependencyUpdate, IProgressMonitor monitor) throws CoreException {
-		for (Iterator<IProject> it = projects.iterator(); it.hasNext();) {
-			IProject project = it.next();
-			MavenPlugin.getProjectConfigurationManager().updateProjectConfiguration(new MavenUpdateRequest(project, /*mavenConfiguration.isOffline()*/false, forceDependencyUpdate), monitor);
-			project.build(IncrementalProjectBuilder.CLEAN_BUILD, monitor);
-		}
-	}
-
 	protected void configureBundleProject(IProject aBundleProject,
 			List<IProject> projects, IProgressMonitor monitor) throws CoreException {
 		ConfigurationHelper.convertToBundleProject(aBundleProject);
@@ -323,4 +335,27 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 	
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
 	}
+
+    private static class Projects {
+
+        private List<IProject> bundleProjects = new ArrayList<IProject>();
+        private List<IProject> contentProjects = new ArrayList<IProject>();
+        private IProject reactorProject;
+
+        public List<IProject> getBundleProjects() {
+            return bundleProjects;
+        }
+
+        public List<IProject> getContentProjects() {
+            return contentProjects;
+        }
+
+        public IProject getReactorProject() {
+            return reactorProject;
+        }
+
+        public void setReactorProject(IProject reactorProject) {
+            this.reactorProject = reactorProject;
+        }
+    }
 }
