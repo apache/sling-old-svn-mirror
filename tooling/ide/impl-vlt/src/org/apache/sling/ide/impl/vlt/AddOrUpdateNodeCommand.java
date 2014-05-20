@@ -66,11 +66,10 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
     private FileInfo fileInfo;
     private boolean primaryTypeHasChanged;
 
-	public AddOrUpdateNodeCommand(Repository jcrRepo, Credentials credentials, FileInfo fileInfo,
-            ResourceProxy resource) {
+    public AddOrUpdateNodeCommand(Repository jcrRepo, Credentials credentials, FileInfo fileInfo, ResourceProxy resource) {
 
         super(jcrRepo, credentials, resource.getPath());
-        
+
         this.fileInfo = fileInfo;
         this.resource = resource;
     }
@@ -81,9 +80,8 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         update(resource, session);
         return null;
     }
-    
-    private void update(ResourceProxy resource, Session session) throws RepositoryException,
-            IOException {
+
+    private void update(ResourceProxy resource, Session session) throws RepositoryException, IOException {
 
         String path = resource.getPath();
         boolean nodeExists = session.nodeExists(path);
@@ -91,7 +89,9 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         Node node;
         if (nodeExists) {
             node = session.getNode(path);
-            Activator.getDefault().getPluginLogger()
+            Activator
+                    .getDefault()
+                    .getPluginLogger()
                     .trace("Found existing node at {0} with primaryType {1}", path, node.getPrimaryNodeType().getName());
         } else {
             node = createNode(resource, session);
@@ -118,7 +118,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         if (primaryNodeType.hasOrderableChildNodes()) {
             reorderChildNodes(node, resource);
         }
-	}
+    }
 
     private void processDeletedNodes(Node node, ResourceProxy resource2) throws RepositoryException {
 
@@ -127,6 +127,12 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         // gather a list of existing paths for all covered children
         // all nodes which are not found in these paths will be deleted
         List<ResourceProxy> coveredResourceChildren = getCoveredChildren(resource2);
+        if (coveredResourceChildren.size() == 0) {
+            Activator.getDefault().getPluginLogger()
+                    .trace("Resource at {0} has no covered children, skipping deleted nodes processing",
+                            resource2.getPath());
+            return;
+        }
         Map<String, ResourceProxy> resourceChildrenPaths = new HashMap<String, ResourceProxy>(
                 coveredResourceChildren.size());
         for (ResourceProxy coveredChild : coveredResourceChildren) {
@@ -155,7 +161,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         ListIterator<ResourceProxy> coveredResourceChildren = getCoveredChildren(resource2).listIterator();
         List<Node> nodeChildren = new LinkedList<Node>();
         NodeIterator nodeChildrenIt = node.getNodes();
-        while ( nodeChildrenIt.hasNext() ) {
+        while (nodeChildrenIt.hasNext()) {
             nodeChildren.add(nodeChildrenIt.nextNode());
         }
         ListIterator<Node> nodeChildrenListIt = nodeChildren.listIterator();
@@ -173,9 +179,9 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
             if (Text.getName(rp.getPath()).equals(n.getName())) {
                 continue;
             }
-            
-            String expectedParentName = coveredResourceChildren.hasPrevious() ? 
-                    Text.getName(coveredResourceChildren.previous().getPath()) : null;
+
+            String expectedParentName = coveredResourceChildren.hasPrevious() ? Text.getName(coveredResourceChildren
+                    .previous().getPath()) : null;
             node.orderBefore(expectedParentName, n.getName());
             changed = true;
             break;
@@ -236,7 +242,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
         Set<String> propertiesToRemove = new HashSet<String>();
         PropertyIterator properties = node.getProperties();
-        while ( properties.hasNext()) {
+        while (properties.hasNext()) {
             Property property = properties.nextProperty();
             if (property.getDefinition().isProtected()
                     || property.getDefinition().getRequiredType() == PropertyType.BINARY) {
@@ -244,7 +250,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
             }
             propertiesToRemove.add(property.getName());
         }
-        
+
         propertiesToRemove.removeAll(resource.getProperties().keySet());
 
         Session session = node.getSession();
@@ -278,10 +284,10 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
             if (property != null && property.getDefinition().isProtected()) {
                 continue;
             }
-            
+
             // TODO - we don't handle the case where the input no longer matches the property definition, e.g. type
             // change or multiplicity change
-            
+
             boolean isMultiple = property != null && property.getDefinition().isMultiple();
 
             ValueFactory valueFactory = session.getValueFactory();
@@ -355,18 +361,20 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
             if (value != null) {
                 node.setProperty(propertyName, value);
                 Object[] arguments = { propertyName, value, propertyValue, node.getPath() };
-                Activator.getDefault().getPluginLogger().trace("Set property {0} with value {1} (raw =  {2}) on node at {3}", arguments);
+                Activator.getDefault().getPluginLogger()
+                        .trace("Set property {0} with value {1} (raw =  {2}) on node at {3}", arguments);
             } else if (values != null) {
                 node.setProperty(propertyName, values);
                 Object[] arguments = { propertyName, values, propertyValue, node.getPath() };
-                Activator.getDefault().getPluginLogger().trace("Set property {0} with values {1} (raw =  {2}) on node at {3}", arguments);
+                Activator.getDefault().getPluginLogger()
+                        .trace("Set property {0} with values {1} (raw =  {2}) on node at {3}", arguments);
             } else {
                 throw new IllegalArgumentException("Unable to extract a value or a value array for property '"
                         + propertyName + "' with value '" + propertyValue + "'");
             }
         }
-        
-        for ( String propertyToRemove : propertiesToRemove ) {
+
+        for (String propertyToRemove : propertiesToRemove) {
             node.getProperty(propertyToRemove).remove();
             Activator.getDefault().getPluginLogger()
                     .trace("Removed property {0} from node at {1}", propertyToRemove, node.getPath());
