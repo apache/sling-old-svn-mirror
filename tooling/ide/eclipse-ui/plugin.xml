@@ -148,6 +148,22 @@
                defaultHandler="org.apache.sling.ide.eclipse.ui.internal.ExportContentAction">
          </command>         
    </extension>
+   
+   <extension
+         point="org.eclipse.ui.newWizards">
+      <category
+            id="org.apache.sling.ide.eclipse.ui"
+            name="Sling">
+      </category>
+      <wizard
+            category="org.apache.sling.ide.eclipse.ui"
+            class="org.apache.sling.ide.eclipse.ui.wizards.NewSlingContentProjectWizard"
+            icon="icons/obj16/sling.gif"
+            id="org.apache.sling.ide.eclipse.ui.wizards.NewSlingContentProjectWizard"
+            name="New Sling Content Project"
+            project="true">
+      </wizard>
+   </extension>   
 
    <!-- Property page for project to select directory to sync -->
    <extension point="org.eclipse.ui.propertyPages"> 
@@ -269,22 +285,6 @@
          </adapter>
       </factory>
    </extension>
-   <!--extension
-         point="org.eclipse.ui.newWizards">
-      <category
-            id="org.apache.sling.ide.eclipse.ui"
-            name="Sling">
-      </category>
-      <wizard
-            category="org.apache.sling.ide.eclipse.ui"
-            class="org.apache.sling.ide.eclipse.ui.wizards.NewNodeWizard"
-            id="org.apache.sling.ide.eclipse.ui.wizards.NewNodeWizard"
-            name="New node">
-         <selection
-               class="selection.Selection1">
-         </selection>
-      </wizard>
-   </extension-->
    <extension
          point="org.eclipse.ui.views.properties.tabbed.propertyContributor">
       <propertyContributor
