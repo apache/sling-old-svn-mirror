@@ -148,8 +148,9 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
         logger.trace(traceOperation(kind, deltaKind, module));
 
-        if (deltaKind==ServerBehaviourDelegate.NO_CHANGE) {
-            // then there's no need to publish
+        if ((kind == IServer.PUBLISH_AUTO || kind == IServer.PUBLISH_INCREMENTAL)
+                && deltaKind == ServerBehaviourDelegate.NO_CHANGE) {
+            logger.trace("Ignoring request to publish the module when no resources have changed; most likely another module has changed");
             return;
         }
         
@@ -168,11 +169,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
                 BundleStateHelper.resetBundleState(getServer(), module[0].getProject());
             }
         } else if (ProjectHelper.isContentProject(module[0].getProject())) {
-            if ((kind == IServer.PUBLISH_AUTO || kind == IServer.PUBLISH_INCREMENTAL)
-                    && deltaKind == ServerBehaviourDelegate.NO_CHANGE) {
-                logger.trace("Ignoring request to publish the module when no resources have changed; most likely another module has changed");
-                return;
-            }
+
             try {
                 publishContentModule(kind, deltaKind, module, monitor);
                 BundleStateHelper.resetBundleState(getServer(), module[0].getProject());
