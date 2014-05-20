@@ -193,8 +193,8 @@ public class GenericJcrRootFile extends JcrNode {
 	}
 	
 	@Override
-	public void createChild(String nodeName, String nodeType) {
-		createChild(nodeName, nodeType, document.getRootElement(), underlying);
+	void createDomChild(String childNodeName, String childNodeType) {
+        createChild(childNodeName, childNodeType, document.getRootElement(), underlying);
 	}
 	
 	public void save() {
