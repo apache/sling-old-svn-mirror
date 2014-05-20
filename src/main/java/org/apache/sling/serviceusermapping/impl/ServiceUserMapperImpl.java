@@ -19,6 +19,9 @@
 package org.apache.sling.serviceusermapping.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -26,10 +29,14 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +45,11 @@ import org.slf4j.LoggerFactory;
         label = "Apache Sling Service User Mapper Service",
         description = "Configuration for the service mapping service names to names of users.")
 @Service(value=ServiceUserMapper.class)
+@Reference(name="amendment",
+           referenceInterface=MappingConfigAmendment.class,
+           cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
+           policy=ReferencePolicy.DYNAMIC,
+           updated="update")
 public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     @Property(
@@ -63,9 +75,13 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private Mapping[] serviceUserMappings;
+    private Mapping[] globalServiceUserMappings = new Mapping[0];
 
     private String defaultUser;
+
+    private Map<Long, MappingConfigAmendment> amendments = new HashMap<Long, MappingConfigAmendment>();
+
+    private Mapping[] activeMappings = new Mapping[0];
 
     @Activate
     @Modified
@@ -73,20 +89,23 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
         final String[] props = PropertiesUtil.toStringArray(config.get(PROP_SERVICE2USER_MAPPING),
             PROP_SERVICE2USER_MAPPING_DEFAULT);
 
-        ArrayList<Mapping> mappings = new ArrayList<Mapping>(props.length);
-        for (String prop : props) {
-            if (prop != null) {
+        final ArrayList<Mapping> mappings = new ArrayList<Mapping>(props.length);
+        for (final String prop : props) {
+            if (prop != null && prop.trim().length() > 0 ) {
                 try {
-                    Mapping mapping = new Mapping(prop);
+                    final Mapping mapping = new Mapping(prop.trim());
                     mappings.add(mapping);
-                } catch (IllegalArgumentException iae) {
+                } catch (final IllegalArgumentException iae) {
                     log.info("configure: Ignoring '{}': {}", prop, iae.getMessage());
                 }
             }
         }
 
-        this.serviceUserMappings = mappings.toArray(new Mapping[mappings.size()]);
+        this.globalServiceUserMappings = mappings.toArray(new Mapping[mappings.size()]);
         this.defaultUser = PropertiesUtil.toString(config.get(PROP_DEFAULT_USER), PROP_DEFAULT_USER_DEFAULT);
+        synchronized ( this.amendments ) {
+            this.updateMappings();
+        }
     }
 
     /**
@@ -96,7 +115,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
         final String serviceName = bundle.getSymbolicName();
 
         // try with serviceInfo first
-        for (Mapping mapping : this.serviceUserMappings) {
+        for (Mapping mapping : this.activeMappings) {
             final String user = mapping.map(serviceName, subServiceName);
             if (user != null) {
                 return user;
@@ -104,7 +123,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
         }
 
         // second round without serviceInfo
-        for (Mapping mapping : this.serviceUserMappings) {
+        for (Mapping mapping : this.activeMappings) {
             final String user = mapping.map(serviceName, null);
             if (user != null) {
                 return user;
@@ -114,4 +133,46 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
         // finally, fall back to default user
         return this.defaultUser;
     }
+
+    protected void bindAmendment(final MappingConfigAmendment amendment, final Map<String, Object> props) {
+        final Long key = (Long) props.get(Constants.SERVICE_ID);
+        synchronized ( this.amendments ) {
+            amendments.put(key, amendment);
+            this.updateMappings();
+        }
+    }
+
+    protected void unbindAmendment(final MappingConfigAmendment amendment, final Map<String, Object> props) {
+        final Long key = (Long) props.get(Constants.SERVICE_ID);
+        synchronized ( this.amendments ) {
+            if ( amendments.remove(key) != null ) {
+                this.updateMappings();
+            };
+        }
+
+    }
+
+    protected void updateAmendment(final MappingConfigAmendment amendment, final Map<String, Object> props) {
+        this.bindAmendment(amendment, props);
+    }
+
+    protected void updateMappings() {
+        final List<MappingConfigAmendment> sortedMappings = new ArrayList<MappingConfigAmendment>();
+        for(final MappingConfigAmendment amendment : this.amendments.values() ) {
+            sortedMappings.add(amendment);
+        }
+        Collections.sort(sortedMappings);
+
+        final List<Mapping> mappings = new ArrayList<Mapping>();
+        for(final Mapping m : this.globalServiceUserMappings) {
+            mappings.add(m);
+        }
+        for(final MappingConfigAmendment mca : sortedMappings) {
+            for(final Mapping m : mca.getServiceUserMappings()) {
+                mappings.add(m);
+            }
+        }
+        activeMappings = mappings.toArray(new Mapping[mappings.size()]);
+    }
 }
+
