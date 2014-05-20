@@ -17,7 +17,9 @@
 package org.apache.sling.ide.eclipse.ui.nav.model;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -38,11 +40,20 @@ import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
 import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
 import org.apache.sling.ide.eclipse.core.internal.Activator;
+import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
 import org.apache.sling.ide.eclipse.ui.WhitelabelSupport;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterResult;
+import org.apache.sling.ide.serialization.SerializationData;
+import org.apache.sling.ide.serialization.SerializationDataBuilder;
+import org.apache.sling.ide.serialization.SerializationException;
+import org.apache.sling.ide.serialization.SerializationKind;
+import org.apache.sling.ide.serialization.SerializationKindManager;
+import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.NodeTypeRegistry;
 import org.apache.sling.ide.transport.Repository;
+import org.apache.sling.ide.transport.RepositoryException;
+import org.apache.sling.ide.transport.ResourceProxy;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -366,12 +377,16 @@ public class JcrNode implements IAdaptable {
 			resourceChildrenAdded = true;
 		} catch (CoreException e) {
 			e.printStackTrace();
+			org.apache.sling.ide.eclipse.ui.internal.Activator.getDefault().getPluginLogger().error("Error initializing children: "+e, e);
 		} catch (ParserConfigurationException e) {
 			e.printStackTrace();
+            org.apache.sling.ide.eclipse.ui.internal.Activator.getDefault().getPluginLogger().error("Error initializing children: "+e, e);
 		} catch (SAXException e) {
 			e.printStackTrace();
+            org.apache.sling.ide.eclipse.ui.internal.Activator.getDefault().getPluginLogger().error("Error initializing children: "+e, e);
 		} catch (IOException e) {
 			e.printStackTrace();
+            org.apache.sling.ide.eclipse.ui.internal.Activator.getDefault().getPluginLogger().error("Error initializing children: "+e, e);
 		}
 	}
 
@@ -516,7 +531,24 @@ public class JcrNode implements IAdaptable {
 	}
 
 	String getJcrPathName() {
-		return getName();
+	    if (domElement!=null) {
+            return ISO9075.decode(getDomName());
+        } else if (resource!=null) {
+            if (underlying!=null && resource==underlying.getResource()) {
+                // nodename.xml
+                IResource res = underlying.getResource();
+                String fullname = res.getName();
+                if (fullname.endsWith(".xml")) {
+                    return fullname.substring(0, fullname.length()-4);
+                } else {
+                    return res.getName();
+                }
+            } else {
+                return resource.getName();
+            }
+        } else {
+            return "";
+	    }
 	}
 
 	@Override
@@ -699,57 +731,121 @@ public class JcrNode implements IAdaptable {
 	IResource getResource() {
 		return resource;
 	}
-
-	public void createChild(String nodeName, String nodeType) {
-		if (domElement==null) {
-			// then we're not in the context of a .content.xml file yet
-			// so we need to create one
-		    
-		    //TODO then it probably never will be OK to create a child here !
-		    // as this is a plain folder/file-based entry - in which case it
-		    // is very likely not to be fine to create just a .content.xml or nodename.xml !
-		    
-			final String minimalContentXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<jcr:root \n    xmlns:sling=\"http://sling.apache.org/jcr/sling/1.0\"\n    xmlns:jcr=\"http://www.jcp.org/jcr/1.0\"\n    jcr:primaryType=\""+nodeType+"\"/>";
-			if (resource instanceof IFolder) {
-				IFolder folder = (IFolder)resource;
-				final String filename = nodeName+".xml";
-                IFile file = folder.getFile(filename);
-                if (file.exists()) {
-                    System.out.println("then what?");
-                }
-				try {
-					file.create(new ByteArrayInputStream(minimalContentXml.getBytes()), true, new NullProgressMonitor());
-				} catch (CoreException e) {
-					//TODO proper logging
-					e.printStackTrace();
-	                MessageDialog.openInformation(Display.getDefault().getActiveShell(), 
-	                        "Cannot create JCR node on a File", "Following Exception encountered: "+e);
-				}
-			} else {
-				MessageDialog.openInformation(Display.getDefault().getActiveShell(), 
-						"Cannot create JCR node on a File", "Creating a JCR node on a File is not yet supported");
-			}
-		} else {
-		    boolean underlyingMatch = underlying==properties.getUnderlying();
-		    if (domElement==properties.getDomElement()) {
-		        // normal case
-		        try{
-		            createChild(nodeName, nodeType, domElement, underlying);
-		        } catch(Exception e) {
-		            MessageDialog.openError(Display.getDefault().getActiveShell(), "Error creating new JCR node", "The following error occurred: "+e.getMessage());
-		        }
-		    } else {
-		        // trickier case
-                try{
-                    createChild(nodeName, nodeType, properties.getDomElement(), properties.getUnderlying());
-                } catch(Exception e) {
-                    MessageDialog.openError(Display.getDefault().getActiveShell(), "Error creating new JCR node", "The following error occurred: "+e.getMessage());
-                }
-		        
-		    }
-		    
-		}
+	
+	private SerializationKind getSerializationKind(String nodeType) {
+        final SerializationKindManager skm = new SerializationKindManager();
+        final Repository repo = ServerUtil.getDefaultRepository(getProject());
+        if (repo==null) {
+            return getFallbackSerializationKind(nodeType);
+        }
+        try {
+            skm.init(repo);
+            //TODO: mixins not yet supported
+            return skm.getSerializationKind(nodeType, new ArrayList<String>());
+        } catch (RepositoryException e) {
+            e.printStackTrace();
+            return getFallbackSerializationKind(nodeType);
+        }
 	}
+	
+	public void createChild(String childNodeName, String childNodeType) {
+	    String thisNodeType = getPrimaryType();
+	    final SerializationKind parentSk = getSerializationKind(thisNodeType);
+        final SerializationKind childSk = getSerializationKind(childNodeType);
+	    
+	    if (parentSk==SerializationKind.METADATA_FULL) {
+	        createDomChild(childNodeName, childNodeType);
+	    } else if (childSk==SerializationKind.FOLDER) {
+	        IFolder f = (IFolder)resource;
+	        IFolder newFolder = null;
+	        try {
+	            newFolder = f.getFolder(childNodeName);
+	            newFolder.create(true, true, new NullProgressMonitor());
+	        } catch (CoreException e) {
+	            e.printStackTrace();
+	            MessageDialog.openError(Display.getDefault().getActiveShell(), "Error creating node", "Error creating child of "+thisNodeType+" with type "+childNodeType+": "+e);
+	            return;
+	        }
+	        
+	        if (!childNodeType.equals("nt:folder")) {
+	            createVaultFile(newFolder, ".content.xml", childNodeType);
+	        } else {
+	            // otherwise trigger a publish, as folder creation is not propagated to 
+	            // the SlingLaunchpadBehavior otherwise
+	            //TODO: make configurable? Fix in Eclipse/WST?
+	            ServerUtil.triggerIncrementalBuild(f, null);
+	        }
+	    } else if (parentSk==SerializationKind.FOLDER && childSk==SerializationKind.METADATA_FULL) {
+            createVaultFile((IFolder)resource, childNodeName+".xml", childNodeType);
+	    } else if (parentSk==SerializationKind.FOLDER && childSk==SerializationKind.METADATA_PARTIAL) {
+//	        createVaultFile((IFolder)resource, childNodeName+".xml", childNodeType);
+
+            IFolder f = (IFolder)resource;
+            IFolder newFolder = null;
+            try {
+                newFolder = f.getFolder(childNodeName);
+                newFolder.create(true, true, new NullProgressMonitor());
+            } catch (CoreException e) {
+                e.printStackTrace();
+                MessageDialog.openError(Display.getDefault().getActiveShell(), "Error creating node", "Error creating child of "+thisNodeType+" with type "+childNodeType+": "+e);
+                return;
+            }
+            
+            createVaultFile(newFolder, ".content.xml", childNodeType);
+	    } else if (parentSk!=SerializationKind.FOLDER && childSk==SerializationKind.METADATA_PARTIAL) {
+            createDomChild(childNodeName, childNodeType);
+	    } else {
+	        //TODO: FILE not yet supported
+	        MessageDialog.openWarning(Display.getDefault().getActiveShell(), "Error creating node", "Cannot create child of "+thisNodeType+" with type "+childNodeType+" (yet?)");
+	        return;
+	    }
+	}
+
+    void createDomChild(String childNodeName, String childNodeType) {
+        boolean underlyingMatch = underlying==properties.getUnderlying();
+        if (domElement==properties.getDomElement()) {
+            // normal case
+            try{
+                createChild(childNodeName, childNodeType, domElement, underlying);
+            } catch(Exception e) {
+                MessageDialog.openError(Display.getDefault().getActiveShell(), "Error creating new JCR node", "The following error occurred: "+e.getMessage());
+            }
+        } else {
+            // trickier case
+            try{
+                createChild(childNodeName, childNodeType, properties.getDomElement(), properties.getUnderlying());
+            } catch(Exception e) {
+                MessageDialog.openError(Display.getDefault().getActiveShell(), "Error creating new JCR node", "The following error occurred: "+e.getMessage());
+            }
+            
+        }
+    }
+
+	private void createVaultFile(IFolder parent, String filename, String childNodeType) {
+        final String minimalContentXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<jcr:root \n    xmlns:sling=\"http://sling.apache.org/jcr/sling/1.0\"\n    xmlns:jcr=\"http://www.jcp.org/jcr/1.0\"\n    jcr:primaryType=\""+childNodeType+"\"/>";
+        IFile file = parent.getFile(filename);
+        if (file.exists()) {
+            System.out.println("then what?");
+        }
+        try {
+            file.create(new ByteArrayInputStream(minimalContentXml.getBytes()), true, new NullProgressMonitor());
+        } catch (CoreException e) {
+            //TODO proper logging
+            e.printStackTrace();
+            MessageDialog.openInformation(Display.getDefault().getActiveShell(), 
+                    "Cannot create JCR node on a File", "Following Exception encountered: "+e);
+        }
+	}
+
+    private SerializationKind getFallbackSerializationKind(String nodeType) {
+        if (nodeType.equals("nt:file")) {
+            return SerializationKind.FILE;
+        } else if (nodeType.equals("nt:folder")) {
+            return SerializationKind.FOLDER;
+        } else {
+            return SerializationKind.METADATA_PARTIAL;
+        }
+    }
 
 	protected void createChild(String nodeName, String nodeType,
 			Element domElement, GenericJcrRootFile effectiveUnderlying) {
@@ -883,12 +979,18 @@ public class JcrNode implements IAdaptable {
 
     public NodeType getNodeType() {
         Repository repository = ServerUtil.getDefaultRepository(getProject());
+        if (repository==null) {
+            return null;
+        }
         NodeTypeRegistry ntManager = repository.getNodeTypeRegistry();
         return ntManager.getNodeType(getProperty("jcr:primaryType"));
     }
 
     public PropertyDefinition getPropertyDefinition(String propertyName) {
         NodeType nt = getNodeType();
+        if (nt==null) {
+            return null;
+        }
         PropertyDefinition[] pds = nt.getPropertyDefinitions();
         for (int i = 0; i < pds.length; i++) {
             PropertyDefinition propertyDefinition = pds[i];
