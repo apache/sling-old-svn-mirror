@@ -40,6 +40,15 @@ import org.eclipse.wst.server.core.ServerCore;
 
 public abstract class ServerUtil {
     
+    //TODO: SLING-3587 - following constants are from wst.Server - an internal class
+    // we should replace this with proper API - but afaik this information is not
+    // accessible via any API ..
+    private static final int AUTO_PUBLISH_DISABLE = 1;
+    private static final int AUTO_PUBLISH_RESOURCE = 2;
+    private static final int AUTO_PUBLISH_BUILD = 3;
+    private static final String PROP_AUTO_PUBLISH_SETTING = "auto-publish-setting";
+    private static final String PROP_AUTO_PUBLISH_TIME = "auto-publish-time";
+
     public static Repository getDefaultRepository(IProject project) {
         IServer server = getDefaultServer(project);
         try {
@@ -167,7 +176,12 @@ public abstract class ServerUtil {
             for (Iterator it = servers.iterator(); it.hasNext();) {
                 IServer aServer = (IServer) it.next();
                 if (aServer!=null) {
-                    aServer.publish(IServer.PUBLISH_INCREMENTAL, monitorOrNull);
+                    int autoPublishSetting = aServer.getAttribute(PROP_AUTO_PUBLISH_SETTING, AUTO_PUBLISH_RESOURCE);
+                    int autoPublishTime = aServer.getAttribute(PROP_AUTO_PUBLISH_TIME, 15);
+                    if (autoPublishSetting==AUTO_PUBLISH_RESOURCE) {
+                        //TODO: ignoring the autoPublishTime - SLING-3587
+                        aServer.publish(IServer.PUBLISH_INCREMENTAL, monitorOrNull);
+                    }
                 }
             }
         }
