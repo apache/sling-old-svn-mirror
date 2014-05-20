@@ -144,6 +144,8 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
                 continue;
             }
 
+            Activator.getDefault().getPluginLogger()
+                    .trace("Deleting node {0} as it is no longer present in the local checkout", child.getPath());
             child.remove();
         }
     }
