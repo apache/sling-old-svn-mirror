@@ -678,20 +678,25 @@ public class JcrNode implements IAdaptable {
 	}
 
 	public IFile getFileForEditor() {
+	    if ("nt:folder".equals(getPrimaryType())) {
+	        // nt:folder doesn't have an underlying file for editor
+	        return null;
+	    }
+	    
 		if (resource instanceof IFile) {
-//			if (!isVaultFile(resource)) {
 			return (IFile)resource;
-		} else if (underlying!=null && underlying.file!=null && domElement!=null) {
-			if (properties!=null) {
-				GenericJcrRootFile propUnderlying = properties.getUnderlying();
-				if (propUnderlying!=null) {
-					return propUnderlying.file;
-				}
-			}
-			return underlying.file;
-		} else {
-			return null;
 		}
+		
+		if (properties!=null && properties.getUnderlying()!=null && properties.getUnderlying().file!=null) {
+		    return properties.getUnderlying().file;
+		}
+		
+		if (underlying!=null && underlying.file!=null) {
+		    return underlying.file;
+		}
+		
+		org.apache.sling.ide.eclipse.ui.internal.Activator.getDefault().getPluginLogger().warn("No file found for editor for node="+this);
+		return null;
 	}
 
 	public void rename(String string) {
