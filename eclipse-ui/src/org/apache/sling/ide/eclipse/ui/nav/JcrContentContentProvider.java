@@ -24,6 +24,7 @@ import java.util.Set;
 
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
+import org.apache.sling.ide.eclipse.ui.internal.Activator;
 import org.apache.sling.ide.eclipse.ui.nav.model.JcrNode;
 import org.apache.sling.ide.eclipse.ui.nav.model.SyncDir;
 import org.eclipse.core.resources.IContainer;
@@ -54,6 +55,11 @@ public class JcrContentContentProvider implements ITreeContentProvider, IPipelin
 
 	@Override
 	public void resourceChanged(IResourceChangeEvent event) {
+	    if (viewer.getTree().isDisposed()) {
+	        // then quit here
+	        Activator.getDefault().getPluginLogger().trace("JcrContentContentProvider.resourceChanged: Tree is disposed, quitting.");
+	        return;
+	    }
 		try {
 			final List<IResource> toBeRefreshed = new LinkedList<IResource>();
 			event.getDelta().accept(new IResourceDeltaVisitor() {
