@@ -75,6 +75,11 @@ public class SyncDir extends JcrNode {
 	}
 	
 	@Override
+	String getJcrPathName() {
+	    return "/";
+	}
+	
+	@Override
 	public IFile getFileForEditor() {
 		return null;
 	}
