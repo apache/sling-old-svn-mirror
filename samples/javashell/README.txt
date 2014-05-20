@@ -24,12 +24,10 @@ so if the current version is 7, the command should be:
 
 Prerequisites
 -------------
-To run this demo the following two bundles must be installed:
-org.apache.sling.commons.compiler and org.apache.sling.scripting.java
+To run this demo the following bundle must be installed:
+  org.apache.sling.scripting.java
 
-Install them as follows:
-  contrib/commons/compiler $ mvn install -P autoInstallBundle
-and
+Install it as follows:
   contrib/scripting/java $ mvn install -P autoInstallBundle
   
 Run this sample
@@ -38,11 +36,11 @@ Build and install the sample bundle by running
   $  mvn install -P autoInstallBundle
   
 Then:
- 1. Log in by navigating to:
+1. Log in by navigating to:
      http://localhost:8080/system/sling/login.html
    using admin/admin as credentials.
    
-3. Navigate to:
+2. Navigate to:
      http://localhost:8080/content/javashell/scripts/first_example.html
      
    That page should include a "Result of execution" section which lists
