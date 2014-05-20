@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.jar.Manifest;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.maven.artifact.Artifact;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -110,40 +111,51 @@ public class ProjectAdapter {
 
     }
 
-    public void createOrUpdateFile(IPath fromPortableString, InputStream resourceAsStream) throws CoreException {
+    /**
+     * Creates or updates an existing file
+     * 
+     * @param fileLocation the path where the resource will be created or updated
+     * @param contents the contents to write to the file. This stream will be closed after being used
+     * @throws CoreException
+     */
+    public void createOrUpdateFile(IPath fileLocation, InputStream contents) throws CoreException {
 
-        if (resourceAsStream == null) {
+        if (contents == null) {
             throw new IllegalArgumentException("resourceAsStream may not be null");
         }
 
         IContainer current = project;
 
-        for (int i = 0; i < fromPortableString.segmentCount() - 1; i++) {
+        try {
+            for (int i = 0; i < fileLocation.segmentCount() - 1; i++) {
 
-            String currentSegment = fromPortableString.segment(i);
-            IResource container = current.findMember(currentSegment);
+                String currentSegment = fileLocation.segment(i);
+                IResource container = current.findMember(currentSegment);
 
-            if (container != null) {
-                if (container.getType() != IContainer.FOLDER) {
-                    throw new IllegalArgumentException("Resource " + container
-                            + " exists and is not a folder; unable to create file at path " + fromPortableString);
+                if (container != null) {
+                    if (container.getType() != IContainer.FOLDER) {
+                        throw new IllegalArgumentException("Resource " + container
+                                + " exists and is not a folder; unable to create file at path " + fileLocation);
+                    }
+
+                    current = (IContainer) container;
+                } else {
+
+                    IFolder newFolder = ((IContainer) current).getFolder(Path.fromPortableString(currentSegment));
+                    newFolder.create(true, true, new NullProgressMonitor());
+                    current = newFolder;
                 }
-
-                current = (IContainer) container;
-            } else {
-
-                IFolder newFolder = ((IContainer) current).getFolder(Path.fromPortableString(currentSegment));
-                newFolder.create(true, true, new NullProgressMonitor());
-                current = newFolder;
             }
-        }
 
-        IFile file = current.getFile(Path.fromPortableString(fromPortableString.segments()[fromPortableString
-                .segmentCount() - 1]));
-        if (file.exists()) {
-            file.setContents(resourceAsStream, true, true, new NullProgressMonitor());
-        } else {
-            file.create(resourceAsStream, true, new NullProgressMonitor());
+            IFile file = current.getFile(Path.fromPortableString(fileLocation.segments()[fileLocation
+                    .segmentCount() - 1]));
+            if (file.exists()) {
+                file.setContents(contents, true, true, new NullProgressMonitor());
+            } else {
+                file.create(contents, true, new NullProgressMonitor());
+            }
+        } finally {
+            IOUtils.closeQuietly(contents);
         }
 
     }

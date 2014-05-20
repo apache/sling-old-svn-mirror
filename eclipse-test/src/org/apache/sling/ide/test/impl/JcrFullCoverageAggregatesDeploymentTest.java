@@ -82,12 +82,7 @@ public class JcrFullCoverageAggregatesDeploymentTest {
 
         // create .content.xml structure
         InputStream contentXml = getClass().getResourceAsStream("content-nested-structure.xml");
-        try {
-            project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"),
-                    contentXml);
-        } finally {
-            IOUtils.closeQuietly(contentXml);
-        }
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), contentXml);
 
         // install content facet
         project.installFacet("sling.content", "1.0");
@@ -122,11 +117,7 @@ public class JcrFullCoverageAggregatesDeploymentTest {
 
         // create .content.xml structure
         InputStream contentXml = getClass().getResourceAsStream("content-nested-structure.xml");
-        try {
-            project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), contentXml);
-        } finally {
-            IOUtils.closeQuietly(contentXml);
-        }
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), contentXml);
 
         // install content facet
         project.installFacet("sling.content", "1.0");
@@ -149,11 +140,7 @@ public class JcrFullCoverageAggregatesDeploymentTest {
 
         // update .content.xml structure
         InputStream updatedContentXml = getClass().getResourceAsStream("content-nested-structure-deleted-node.xml");
-        try {
-            project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), updatedContentXml);
-        } finally {
-            IOUtils.closeQuietly(updatedContentXml);
-        }
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), updatedContentXml);
 
         // poll until we only have 2 child nodes left
         postConditions = allOf(hasPath("/content/test-root/en"), hasPrimaryType("sling:Folder"),
@@ -180,11 +167,7 @@ public class JcrFullCoverageAggregatesDeploymentTest {
 
         // create .content.xml structure
         InputStream contentXml = getClass().getResourceAsStream("content-nested-structure.xml");
-        try {
-            project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), contentXml);
-        } finally {
-            IOUtils.closeQuietly(contentXml);
-        }
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), contentXml);
 
         // install content facet
         project.installFacet("sling.content", "1.0");
@@ -207,11 +190,7 @@ public class JcrFullCoverageAggregatesDeploymentTest {
 
         // update .content.xml structure
         InputStream updatedContentXml = getClass().getResourceAsStream("content-nested-structure-reordered-nodes.xml");
-        try {
-            project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), updatedContentXml);
-        } finally {
-            IOUtils.closeQuietly(updatedContentXml);
-        }
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), updatedContentXml);
 
         // poll until we have the child nodes reordered
         postConditions = allOf(hasPath("/content/test-root/en"), hasPrimaryType("sling:OrderedFolder"),
@@ -240,19 +219,11 @@ public class JcrFullCoverageAggregatesDeploymentTest {
 
         // create filter.xml
         InputStream filterXml = getClass().getResourceAsStream("filter-only-content-test-root-en.xml");
-        try {
-            project.createOrUpdateFile(Path.fromPortableString("META-INF/vault/filter.xml"), filterXml);
-        } finally {
-            IOUtils.closeQuietly(filterXml);
-        }
+        project.createOrUpdateFile(Path.fromPortableString("META-INF/vault/filter.xml"), filterXml);
 
         // create .content.xml structure
         InputStream contentXml = getClass().getResourceAsStream("content-nested-structure.xml");
-        try {
-            project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), contentXml);
-        } finally {
-            IOUtils.closeQuietly(contentXml);
-        }
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), contentXml);
 
         // install content facet
         project.installFacet("sling.content", "1.0");

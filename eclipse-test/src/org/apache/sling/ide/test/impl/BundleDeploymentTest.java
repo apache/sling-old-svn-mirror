@@ -92,22 +92,12 @@ public class BundleDeploymentTest {
         project.configureAsJavaProject(slingApiDep, servletApiDep);
 
         // create DS component class
-        InputStream simpleServlet = null;
-        try {
-            simpleServlet = getClass().getResourceAsStream("SimpleServlet.java.v1.txt");
-            project.createOrUpdateFile(Path.fromPortableString("src/example/SimpleServlet.java"), simpleServlet);
-        } finally {
-            IOUtils.closeQuietly(simpleServlet);
-        }
+        InputStream simpleServlet = getClass().getResourceAsStream("SimpleServlet.java.v1.txt");
+        project.createOrUpdateFile(Path.fromPortableString("src/example/SimpleServlet.java"), simpleServlet);
         
         // create DS component descriptor
-        InputStream servletDescriptor = null;
-        try {
-            servletDescriptor = getClass().getResourceAsStream("SimpleServlet.xml");
-            project.createOrUpdateFile(Path.fromPortableString("src/OSGI-INF/SimpleServlet.xml"), servletDescriptor);
-        } finally {
-            IOUtils.closeQuietly(servletDescriptor);
-        }
+        InputStream servletDescriptor = getClass().getResourceAsStream("SimpleServlet.xml");
+        project.createOrUpdateFile(Path.fromPortableString("src/OSGI-INF/SimpleServlet.xml"), servletDescriptor);
 
         // create manifest
         OsgiBundleManifest manifest = OsgiBundleManifest.symbolicName("test.bundle001").version("1.0.0.SNAPSHOT")
@@ -132,13 +122,8 @@ public class BundleDeploymentTest {
         }, nullValue(Void.class));
 
         // update DS component class
-        InputStream simpleServlet2 = null;
-        try {
-            simpleServlet2 = getClass().getResourceAsStream("SimpleServlet.java.v2.txt");
-            project.createOrUpdateFile(Path.fromPortableString("src/example/SimpleServlet.java"), simpleServlet2);
-        } finally {
-            IOUtils.closeQuietly(simpleServlet2);
-        }
+        InputStream simpleServlet2 = getClass().getResourceAsStream("SimpleServlet.java.v2.txt");
+        project.createOrUpdateFile(Path.fromPortableString("src/example/SimpleServlet.java"), simpleServlet2);
 
         poller.pollUntil(new Callable<Void>() {
             @Override

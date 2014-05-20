@@ -158,11 +158,7 @@ public class ContentDeploymentTest {
 
         // change node type to sling:Folder
         InputStream contentXml = getClass().getResourceAsStream("sling-folder-nodetype.xml");
-        try {
-            project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/.content.xml"), contentXml);
-        } finally {
-            IOUtils.closeQuietly(contentXml);
-        }
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/.content.xml"), contentXml);
 
         // verifications (2)
         assertThatNode(repo, poller, "/test",
@@ -195,11 +191,7 @@ public class ContentDeploymentTest {
         assertThatNode(repo, poller, "/test/hello.esp", hasPrimaryType("nt:file"));
 
         InputStream contentXml = getClass().getResourceAsStream("file-custom-mimetype.xml");
-        try {
-            project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/hello.esp.dir/.content.xml"), contentXml);
-        } finally {
-            IOUtils.closeQuietly(contentXml);
-        }
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/hello.esp.dir/.content.xml"), contentXml);
 
         assertThatNode(repo, poller, "/test/hello.esp/jcr:content", hasPropertyValue("jcr:mimeType", "text/javascript"));
     }
