@@ -56,6 +56,10 @@ public class DataSourceIT extends DataSourceTestBase{
         Dictionary<String, Object> p = new Hashtable<String, Object>();
         p.put("url","jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE");
         p.put("datasource.name","test");
+        p.put("datasource.svc.properties",new String[]{
+                "initialSize=5",
+                "testOnBorrow=true",
+        });
         p.put("maxActive",70);
         config.update(p);
 
@@ -72,6 +76,8 @@ public class DataSourceIT extends DataSourceTestBase{
 
         //Cannot access directly so access via reflection
         assertEquals("70", getProperty(ds, "poolProperties.maxActive"));
+        assertEquals("5", getProperty(ds, "poolProperties.initialSize"));
+        assertEquals("true", getProperty(ds, "poolProperties.testOnBorrow"));
     }
 
 }
