@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.eclipse.ui.wizards.np;
+package org.apache.sling.ide.eclipse.ui.wizards;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,7 +25,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.artifacts.EmbeddedArtifact;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
-import org.apache.sling.ide.eclipse.m2e.internal.Activator;
+import org.apache.sling.ide.eclipse.ui.internal.Activator;
 import org.apache.sling.ide.osgi.OsgiClient;
 import org.apache.sling.ide.osgi.OsgiClientException;
 import org.apache.sling.ide.osgi.OsgiClientFactory;
@@ -77,7 +77,7 @@ public class SetupServerWizardPage extends WizardPage {
 
 	private Map<String, IServer> serversMap = new HashMap<String, IServer>();
 
-	public SetupServerWizardPage(AbstractNewSlingApplicationWizard parent) {
+    public SetupServerWizardPage(AbstractNewSlingApplicationWizard parent) {
 		super("chooseArchetypePage");
 		setTitle("Select or Setup Launchpad Server");
 		setDescription("This step defines which server to use with the new Sling application.");
@@ -282,7 +282,7 @@ public class SetupServerWizardPage extends WizardPage {
                 + "/"));
     }
 	
-    IServer getOrCreateServer(IProgressMonitor monitor) throws CoreException {
+    public IServer getOrCreateServer(IProgressMonitor monitor) throws CoreException {
 
         if (server != null) {
             return server;
@@ -315,7 +315,7 @@ public class SetupServerWizardPage extends WizardPage {
                             "Failed reading the tooling support bundle version", e));
                 }
                 finalVersion = installedVersion;
-                EmbeddedArtifactLocator artifactsLocator = Activator.getDefault().getArtifactsLocator();
+                EmbeddedArtifactLocator artifactsLocator = Activator.getDefault().getArtifactLocator();
                 EmbeddedArtifact toolingSupportBundle = artifactsLocator.loadToolingSupportBundle();
                 Version ourVersion = new Version(toolingSupportBundle.getVersion());
 

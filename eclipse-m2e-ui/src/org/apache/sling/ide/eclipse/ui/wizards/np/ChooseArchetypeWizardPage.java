@@ -65,7 +65,7 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
 	private Label locationLabel;
 	private Combo locationCombo;
 
-	public ChooseArchetypeWizardPage(AbstractNewSlingApplicationWizard parent) {
+	public ChooseArchetypeWizardPage(AbstractNewMavenBasedSlingApplicationWizard parent) {
 		super("chooseArchetypePage");
 		setTitle("Choose Project Location and Archetype");
 		setDescription("This step defines the project location and archetype");
@@ -73,8 +73,8 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
 	}
 
     @Override
-    public AbstractNewSlingApplicationWizard getWizard() {
-        return (AbstractNewSlingApplicationWizard) super.getWizard();
+    public AbstractNewMavenBasedSlingApplicationWizard getWizard() {
+        return (AbstractNewMavenBasedSlingApplicationWizard) super.getWizard();
     }
 
 	public void createControl(Composite parent) {
