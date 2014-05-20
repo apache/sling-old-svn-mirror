@@ -64,7 +64,7 @@ public class ArchetypeParametersWizardPage extends WizardPage {
 	
 	private boolean javaPackageModified;
 
-	private final AbstractNewSlingApplicationWizard parent;
+	private final AbstractNewMavenBasedSlingApplicationWizard parent;
 
 	private TableViewer propertiesViewer;
 
@@ -74,7 +74,7 @@ public class ArchetypeParametersWizardPage extends WizardPage {
 
 	private Text version;
 	
-	public ArchetypeParametersWizardPage(AbstractNewSlingApplicationWizard parent) {
+	public ArchetypeParametersWizardPage(AbstractNewMavenBasedSlingApplicationWizard parent) {
 		super("archetypeParametersPage");
 		this.parent = parent;
 		setTitle("Configure Archetype Properties");

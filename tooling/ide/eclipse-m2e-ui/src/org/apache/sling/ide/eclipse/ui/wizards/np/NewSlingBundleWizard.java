@@ -23,16 +23,9 @@ import org.apache.sling.ide.artifacts.EmbeddedArtifact;
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.m2e.EmbeddedArchetypeInstaller;
 import org.apache.sling.ide.eclipse.m2e.internal.Activator;
-import org.apache.sling.ide.eclipse.m2e.internal.SharedImages;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jface.resource.ImageDescriptor;
 
-public class NewSlingBundleWizard extends AbstractNewSlingApplicationWizard {
-
-	@Override
-	public ImageDescriptor getLogo() {
-		return SharedImages.SLING_LOG;
-	}
+public class NewSlingBundleWizard extends AbstractNewMavenBasedSlingApplicationWizard {
 
 	@Override
 	public String doGetWindowTitle() {
