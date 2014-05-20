@@ -32,6 +32,7 @@ import org.apache.sling.ide.osgi.OsgiClientFactory;
 import org.apache.sling.ide.transport.RepositoryInfo;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
@@ -57,6 +58,8 @@ import org.osgi.framework.Version;
 
 public class SetupServerWizardPage extends WizardPage {
 	
+    private static final int HORIZONTAL_INDENT = 10;
+
     private Button useExistingServer;
 	private Combo existingServerCombo;
 	private Button setupNewServer;
@@ -81,20 +84,22 @@ public class SetupServerWizardPage extends WizardPage {
     }
 
 	public void createControl(Composite parent) {
-		Composite container = new Composite(parent, SWT.NULL);
+        Composite container = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		container.setLayout(layout);
 		layout.numColumns = 3;
 		layout.verticalSpacing = 9;
 
+        GridDataFactory singleRowGridDataFactory = GridDataFactory.swtDefaults().align(SWT.LEFT, SWT.CENTER)
+                .span(layout.numColumns, 1);
+
 		useExistingServer = new Button(container, SWT.RADIO);
-	    GridData useExistingServerButtonData = new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1);
-	    useExistingServer.setLayoutData(useExistingServerButtonData);
 	    useExistingServer.setText("Add to existing server");
+        singleRowGridDataFactory.applyTo(useExistingServer);
 
 	    Label existingServerLabel = new Label(container, SWT.NONE);
 	    GridData locationLabelData = new GridData();
-	    locationLabelData.horizontalIndent = 10;
+        locationLabelData.horizontalIndent = HORIZONTAL_INDENT;
 	    existingServerLabel.setLayoutData(locationLabelData);
 	    existingServerLabel.setText("Location:");
 	    existingServerLabel.setEnabled(true);
@@ -109,81 +114,26 @@ public class SetupServerWizardPage extends WizardPage {
 	    });
 	    existingServerCombo.setEnabled(true);
 
-	    {
-		    setupNewServer = new Button(container, SWT.RADIO);
-		    GridData setupNewServerButtonData = new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1);
-		    setupNewServer.setLayoutData(setupNewServerButtonData);
-		    setupNewServer.setText("Setup new server");
-	    }
+        setupNewServer = new Button(container, SWT.RADIO);
+        setupNewServer.setText("Setup new server");
+        singleRowGridDataFactory.applyTo(setupNewServer);
 	    
-		{
-			Label newServerLabel;
-		    newServerLabel = new Label(container, SWT.NONE);
-		    GridData newServerLabelData = new GridData();
-		    newServerLabelData.horizontalIndent = 10;
-		    newServerLabel.setLayoutData(newServerLabelData);
-		    newServerLabel.setText("Server name:");
-		    newServerLabel.setEnabled(true);
-	    }
-
-	    {
-		    newServerName = new Text(container, SWT.BORDER);
-		    GridData newServerNameData = new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1);
-		    newServerName.setLayoutData(newServerNameData);
-	    }
+        newLabel(container, "Server name:");
+        newServerName = newText(container);
 	    
-		{
-			Label newServerHostnameLabel;
-		    newServerHostnameLabel = new Label(container, SWT.NONE);
-		    GridData newServerHostnameLabelData = new GridData();
-		    newServerHostnameLabelData.horizontalIndent = 10;
-		    newServerHostnameLabel.setLayoutData(newServerHostnameLabelData);
-		    newServerHostnameLabel.setText("Host name:");
-		    newServerHostnameLabel.setEnabled(true);
-	    }
-
-	    {
-		    newServerHostnameName = new Text(container, SWT.BORDER);
-		    GridData newServerHostnameNameData = new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1);
-		    newServerHostnameName.setLayoutData(newServerHostnameNameData);
-	    }
+        newLabel(container, "Host name:");
+        newServerHostnameName = newText(container);
 	    
-		{
-			Label newServerPortLabel;
-			newServerPortLabel = new Label(container, SWT.NONE);
-		    GridData newServerPortLabelData = new GridData();
-		    newServerPortLabelData.horizontalIndent = 10;
-		    newServerPortLabel.setLayoutData(newServerPortLabelData);
-		    newServerPortLabel.setText("Port:");
-		    newServerPortLabel.setEnabled(true);
-	    }
-
-	    {
-		    newServerPort = new Text(container, SWT.BORDER);
-		    GridData newServerPortData = new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1);
-		    newServerPort.setLayoutData(newServerPortData);
-	    }
+        newLabel(container, "Port:");
+        newServerPort = newText(container);
 	    
-		{
-			Label newServerDebugPortLabel;
-			newServerDebugPortLabel = new Label(container, SWT.NONE);
-		    GridData newServerDebugPortLabelData = new GridData();
-		    newServerDebugPortLabelData.horizontalIndent = 10;
-		    newServerDebugPortLabel.setLayoutData(newServerDebugPortLabelData);
-		    newServerDebugPortLabel.setText("Debug Port:");
-		    newServerDebugPortLabel.setEnabled(true);
-	    }
-
-	    {
-		    newServerDebugPort = new Text(container, SWT.BORDER);
-		    GridData newServerDebugPortData = new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1);
-		    newServerDebugPort.setLayoutData(newServerDebugPortData);
-	    }
+        newLabel(container, "Debug Port:");
+        newServerDebugPort = newText(container);
 	    
 	    {
 	    	installToolingSupportBundle = new Button(container, SWT.CHECK);
 		    GridData installToolingSupportBundleData = new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1);
-		    installToolingSupportBundleData.horizontalIndent = 10;
+            installToolingSupportBundleData.horizontalIndent = HORIZONTAL_INDENT;
 		    installToolingSupportBundle.setLayoutData(installToolingSupportBundleData);
 		    installToolingSupportBundle.setText("Check/Install org.apache.sling.tooling.support.install bundle");
 		    installToolingSupportBundle.setSelection(true);
@@ -240,6 +190,26 @@ public class SetupServerWizardPage extends WizardPage {
 		setPageComplete(false);
 		setControl(container);
 	}
+
+    private Label newLabel(Composite container, String text) {
+
+        Label label = new Label(container, SWT.NONE);
+        GridData newServerPortLabelData = new GridData();
+        newServerPortLabelData.horizontalIndent = HORIZONTAL_INDENT;
+        label.setLayoutData(newServerPortLabelData);
+        label.setEnabled(true);
+        label.setText(text);
+
+        return label;
+    }
+
+    private Text newText(Composite container) {
+
+        Text text = new Text(container, SWT.BORDER);
+        text.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
+
+        return text;
+    }
 
 	private void initialize() {
 		IServer[] servers = ServerCore.getServers();
