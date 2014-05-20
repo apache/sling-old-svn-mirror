@@ -64,7 +64,7 @@
             </Export-Package>
             <Embed-Dependency>
               org.apache.sling.commons.osgi;inline=org/apache/sling/commons/osgi/PropertiesUtil.class,
-              tomcat-jdbc,
+              tomcat-jdbc;inline=true,
             </Embed-Dependency>
           </instructions>
         </configuration>
