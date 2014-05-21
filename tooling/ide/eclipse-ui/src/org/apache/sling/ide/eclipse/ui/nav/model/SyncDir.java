@@ -50,11 +50,6 @@ public class SyncDir extends JcrNode {
 		}
 		return false;
 	}
-	
-	@Override
-	public Image getImage() {
-		return SharedImages.SLING_ICON.createImage();
-	}
 
 	public String getLabel() {
         return folder.getProjectRelativePath().toString();

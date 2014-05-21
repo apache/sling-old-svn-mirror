@@ -16,6 +16,8 @@
  */
 package org.apache.sling.ide.eclipse.ui.internal;
 
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.debug.internal.ui.DebugPluginImages;
 import org.eclipse.debug.ui.IDebugUIConstants;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -32,6 +34,8 @@ public final class SharedImages {
     public static final ImageDescriptor SLING_LOG = ImageDescriptor.createFromFile(SharedImages.class, "sling-logo.png");
     public static final ImageDescriptor SLING_ICON = ImageDescriptor.createFromFile(SharedImages.class, "sling.gif");
     public static final ImageDescriptor NT_UNSTRUCTURED_ICON = ImageDescriptor.createFromFile(SharedImages.class, "unstructured.png");
+    public static final ImageDescriptor CONTENT_OVERLAY = ImageDescriptor.createFromURL(FileLocator.find(Activator
+            .getDefault().getBundle(), Path.fromPortableString("icons/ovr16/content_ovr.gif"), null));
     
     public static final ImageDescriptor DISCONNECT = DebugPluginImages.getImageDescriptor(IDebugUIConstants.IMG_LCL_DISCONNECT);
     public static final ImageDescriptor RUN_CONNECT = new DecorationOverlayIcon(DebugPluginImages.getImageDescriptor(IDebugUIConstants.IMG_ACT_RUN).createImage(), ImageDescriptor.createFromFile(SharedImages.class, "connectOverlay.png"), IDecoration.BOTTOM_RIGHT);
