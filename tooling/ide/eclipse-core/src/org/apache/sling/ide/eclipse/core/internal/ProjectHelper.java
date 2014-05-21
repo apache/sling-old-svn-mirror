@@ -22,10 +22,13 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IJavaModel;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -41,15 +44,42 @@ import org.xml.sax.SAXException;
 
 public class ProjectHelper {
 
+    private static final String[] CONTENT_PACKAGE_STRUCTURE_BASE = new String[] { "/", "/content", "/src/main/content" };
+
 	public static boolean isPotentialBundleProject(IProject project) {
 		String packaging = getMavenProperty(project, "packaging");
 		return (packaging!=null && "bundle".equals(packaging));
 	}
 	
 	public static boolean isPotentialContentProject(IProject project) {
-		String packaging = getMavenProperty(project, "packaging");
-		return (packaging!=null && "content-package".equals(packaging));
+
+        return !isContentProject(project) && getInferredContentProjectContentRoot(project) != null;
 	}
+
+    public static IContainer getInferredContentProjectContentRoot(IProject project) {
+
+        for (String base : CONTENT_PACKAGE_STRUCTURE_BASE) {
+            IContainer container;
+            if ("/".equals(base)) {
+                container = project;
+            } else {
+                container = project.getFolder(base);
+            }
+            if (container.exists() && hasContentPackageStructure(container)) {
+                return container;
+            }
+        }
+
+        return null;
+    }
+
+    private static boolean hasContentPackageStructure(IContainer base) {
+
+        IFile filterXml = base.getFile(Path.fromPortableString("META-INF/vault/filter.xml"));
+        IFolder jcrRoot = base.getFolder(Path.fromPortableString("jcr_root"));
+
+        return filterXml.exists() && jcrRoot.exists();
+    }
 	
 	public static String getMavenProperty(IProject project, String name) {
 		try{
