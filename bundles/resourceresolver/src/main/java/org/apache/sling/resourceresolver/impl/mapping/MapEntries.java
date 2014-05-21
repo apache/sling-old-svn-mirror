@@ -571,7 +571,7 @@ public class MapEntries implements EventHandler {
         return map;
 
     }
-
+    
     /**
      * Load vanity paths Search for all nodes inheriting the sling:VanityPath
      * mixin
@@ -587,91 +587,98 @@ public class MapEntries implements EventHandler {
 
         while (i.hasNext()) {
             final Resource resource = i.next();
-
-            // ignore system tree
-            if (resource.getPath().startsWith(JCR_SYSTEM_PREFIX)) {
-                log.debug("loadVanityPaths: Ignoring {}", resource);
-                continue;
-            }
-
-            // check whitelist
-            if ( this.vanityPathConfig != null ) {
-                boolean allowed = false;
-                for(final VanityPathConfig config : this.vanityPathConfig) {
-                    if ( resource.getPath().startsWith(config.prefix) ) {
-                        allowed = !config.isExclude;
-                        break;
-                    }
-                }
-                if ( !allowed ) {
-                    log.debug("loadVanityPaths: Ignoring as not in white list {}", resource);
-                    continue;
-                }
-            }
-            // require properties
-            final ValueMap props = resource.adaptTo(ValueMap.class);
-            if (props == null) {
-                log.debug("loadVanityPaths: Ignoring {} without properties", resource);
-                continue;
-            }
-
-            // url is ignoring scheme and host.port and the path is
-            // what is stored in the sling:vanityPath property
-            final String[] pVanityPaths = props.get("sling:vanityPath", new String[0]);
-            for (final String pVanityPath : pVanityPaths) {
-                final String[] result = this.getVanityPathDefinition(pVanityPath);
-                if (result != null) {
-                    final String url = result[0] + result[1];
-
-                    if ( !processedVanityPaths.contains(url) ) {
-                        processedVanityPaths.add(url);
-                        // redirect target is the node providing the
-                        // sling:vanityPath
-                        // property (or its parent if the node is called
-                        // jcr:content)
-                        final Resource redirectTarget;
-                        if (resource.getName().equals("jcr:content")) {
-                            redirectTarget = resource.getParent();
-                        } else {
-                            redirectTarget = resource;
-                        }
-                        final String redirect = redirectTarget.getPath();
-                        final String redirectName = redirectTarget.getName();
-
-                        // whether the target is attained by a external redirect or
-                        // by an internal redirect is defined by the sling:redirect
-                        // property
-                        final int status = props.get("sling:redirect", false) ? props.get(
-                                        PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS, factory.getDefaultVanityPathRedirectStatus())
-                                        : -1;
-
-                        final String checkPath = result[1];
-
-                        if (redirectName.indexOf('.') > -1) {
-                            // 1. entry with exact match
-                            this.addEntry(entryMap, checkPath, getMapEntry(url + "$", status, false, redirect));
-
-                            final int idx = redirectName.lastIndexOf('.');
-                            final String extension = redirectName.substring(idx + 1);
-
-                            // 2. entry with extension
-                            this.addEntry(entryMap, checkPath, getMapEntry(url + "\\." + extension, status, false, redirect));
-                        } else {
-                            // 1. entry with exact match
-                            this.addEntry(entryMap, checkPath, getMapEntry(url + "$", status, false, redirect + ".html"));
-
-                            // 2. entry with match supporting selectors and extension
-                            this.addEntry(entryMap, checkPath, getMapEntry(url + "(\\..*)", status, false, redirect + "$1"));
-                        }
-                        // 3. keep the path to return
-                        targetPaths.add(redirect);
-                    }
-                }
-            }
+            loadVanityPath(resource, entryMap, processedVanityPaths, targetPaths);
         }
+
         return targetPaths;
     }
 
+    /**
+     * Load vanity path given a resource
+     */
+    private void loadVanityPath(final Resource resource, final Map<String, List<MapEntry>> entryMap, final Set<String> processedVanityPaths, final Set<String> targetPaths) {
+        // ignore system tree
+        if (resource.getPath().startsWith(JCR_SYSTEM_PREFIX)) {
+            log.debug("loadVanityPaths: Ignoring {}", resource);
+            return;
+        }
+
+        // check whitelist
+        if ( this.vanityPathConfig != null ) {
+            boolean allowed = false;
+            for(final VanityPathConfig config : this.vanityPathConfig) {
+                if ( resource.getPath().startsWith(config.prefix) ) {
+                    allowed = !config.isExclude;
+                    break;
+                }
+            }
+            if ( !allowed ) {
+                log.debug("loadVanityPaths: Ignoring as not in white list {}", resource);
+                return;
+            }
+        }
+        // require properties
+        final ValueMap props = resource.adaptTo(ValueMap.class);
+        if (props == null) {
+            log.debug("loadVanityPaths: Ignoring {} without properties", resource);
+            return;
+        }
+
+        // url is ignoring scheme and host.port and the path is
+        // what is stored in the sling:vanityPath property
+        final String[] pVanityPaths = props.get("sling:vanityPath", new String[0]);
+        for (final String pVanityPath : pVanityPaths) {
+            final String[] result = this.getVanityPathDefinition(pVanityPath);
+            if (result != null) {
+                final String url = result[0] + result[1];
+
+                if ( !processedVanityPaths.contains(url) ) {
+                    processedVanityPaths.add(url);
+                    // redirect target is the node providing the
+                    // sling:vanityPath
+                    // property (or its parent if the node is called
+                    // jcr:content)
+                    final Resource redirectTarget;
+                    if (resource.getName().equals("jcr:content")) {
+                        redirectTarget = resource.getParent();
+                    } else {
+                        redirectTarget = resource;
+                    }
+                    final String redirect = redirectTarget.getPath();
+                    final String redirectName = redirectTarget.getName();
+
+                    // whether the target is attained by a external redirect or
+                    // by an internal redirect is defined by the sling:redirect
+                    // property
+                    final int status = props.get("sling:redirect", false) ? props.get(
+                            PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS, factory.getDefaultVanityPathRedirectStatus())
+                            : -1;
+
+                            final String checkPath = result[1];
+
+                            if (redirectName.indexOf('.') > -1) {
+                                // 1. entry with exact match
+                                this.addEntry(entryMap, checkPath, getMapEntry(url + "$", status, false, redirect));
+
+                                final int idx = redirectName.lastIndexOf('.');
+                                final String extension = redirectName.substring(idx + 1);
+
+                                // 2. entry with extension
+                                this.addEntry(entryMap, checkPath, getMapEntry(url + "\\." + extension, status, false, redirect));
+                            } else {
+                                // 1. entry with exact match
+                                this.addEntry(entryMap, checkPath, getMapEntry(url + "$", status, false, redirect + ".html"));
+
+                                // 2. entry with match supporting selectors and extension
+                                this.addEntry(entryMap, checkPath, getMapEntry(url + "(\\..*)", status, false, redirect + "$1"));
+                            }
+                            // 3. keep the path to return
+                            targetPaths.add(redirect);
+                }
+            }
+        }
+    }
+    
     /**
      * Create the vanity path definition. String array containing:
      * {protocol}/{host}[.port] {absolute path}
