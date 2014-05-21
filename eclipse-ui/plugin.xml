@@ -14,17 +14,16 @@
 
 	<!-- Define images -->
 	<extension point="org.eclipse.wst.server.ui.serverImages">
-	<!-- TODO : merge into a single image? -->
 	      <image
-             icon="icons/obj16/sling.gif"
+             icon="icons/obj16/sling_server.gif"
              id="slinggif"
              typeIds="org.apache.sling.ide.launchpadServer"/>
 	      <image
-             icon="icons/obj16/sling.gif"
+             icon="icons/obj16/sling_content.gif"
              id="slingcontentgif"
              typeIds="sling.content"/>
 	      <image
-             icon="icons/obj16/sling.gif"
+             icon="icons/obj16/sling_bundle.gif"
              id="slingbundle"
              typeIds="sling.bundle"/>
 	</extension>  
@@ -53,11 +52,11 @@
     <extension point="org.eclipse.wst.common.project.facet.ui.images">
     <image
           facet="sling.bundle"
-          path="icons/obj16/sling.gif"
+          path="icons/obj16/sling_bundle.gif"
           runtime-component-type="org.apache.sling.ide.launchpadRuntimeComponentType"/>
     <image
           facet="sling.content"
-          path="icons/obj16/sling.gif"
+          path="icons/obj16/sling_content.gif"
           runtime-component-type="org.apache.sling.ide.launchpadRuntimeComponentType">
     </image>
   </extension>
@@ -124,7 +123,7 @@
       <wizard
             category="org.apache.sling.ide.eclipse.ui.internal.sampleCategory"
             class="org.apache.sling.ide.eclipse.ui.internal.ImportWizard"
-            icon="icons/obj16/sling.gif"
+            icon="icons/obj16/sling_misc.gif"
             id="org.apache.sling.ide.eclipse.ui.internal.ImportWizard"
             name="Import from Sling Repository">
          <description>
@@ -158,7 +157,7 @@
       <wizard
             category="org.apache.sling.ide.eclipse.ui"
             class="org.apache.sling.ide.eclipse.ui.wizards.NewSlingContentProjectWizard"
-            icon="icons/obj16/sling.gif"
+            icon="icons/obj16/sling_misc.gif"
             id="org.apache.sling.ide.eclipse.ui.wizards.NewSlingContentProjectWizard"
             name="Sling Content Project"
             project="true">
@@ -199,7 +198,7 @@
       <navigatorContent
             appearsBefore="org.eclipse.jst.jee.ui.ejb"
             contentProvider="org.apache.sling.ide.eclipse.ui.nav.JcrContentContentProvider"
-            icon="icons/obj16/sling.gif"
+            icon="icons/obj16/sling_misc.gif"
             id="org.apache.sling.ide.eclipse-ui.navigatorJcrContent"
             labelProvider="org.apache.sling.ide.eclipse.ui.nav.JcrContentLabelProvider"
             name="Sling (JCR) Content"
@@ -377,21 +376,21 @@
             objectClass="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNewNodeAction"
-               icon="icons/obj16/sling.gif"
+               icon="icons/obj16/sling_misc.gif"
                id="org.apache.sling.ide.eclipse.ui.nav.NewJcrNodeAction"
                label="&amp;New JCR Node"
                menubarPath="jcr">
          </action>
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameAction"
-               icon="icons/obj16/sling.gif"
+               icon="icons/obj16/sling_misc.gif"
                id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameAction"
                label="&amp;Rename JCR Node"
                menubarPath="jcr">
          </action>
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteAction"
-               icon="icons/obj16/sling.gif"
+               icon="icons/obj16/sling_misc.gif"
                id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteAction"
                label="&amp;Delete JCR Node"
                menubarPath="jcr">
@@ -413,7 +412,7 @@
             objectClass="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.OpenHtmlInBrowserAction"
-               icon="icons/obj16/sling.gif"
+               icon="icons/obj16/sling_misc.gif"
                id="org.apache.sling.ide.eclipse.ui.actionsOpenHtmlInBrowserAction"
                label="&amp;Open .html (on server) in browser"
                menubarPath="jcr">
@@ -436,28 +435,28 @@
             objectClass="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNewNodeAction"
-               icon="icons/obj16/sling.gif"
+               icon="icons/obj16/sling_misc.gif"
                id="org.apache.sling.ide.eclipse.ui.nav.NewNonJcrNodeAction"
                label="New JCR Node"
                menubarPath="common.new.menu/jcr">
          </action>
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameAction"
-               icon="icons/obj16/sling.gif"
+               icon="icons/obj16/sling_misc.gif"
                id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameAction"
                label="&amp;Rename JCR Node"
                toolbarPath="common.new.menu/jcr">
          </action>
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteAction"
-               icon="icons/obj16/sling.gif"
+               icon="icons/obj16/sling_misc.gif"
                id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteAction"
                label="&amp;Delete JCR Node"
                toolbarPath="common.new.menu/jcr">
          </action>
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.OpenHtmlInBrowserAction"
-               icon="icons/obj16/sling.gif"
+               icon="icons/obj16/sling_misc.gif"
                id="org.apache.sling.ide.eclipse.ui.actionsOpenHtmlInBrowserAction"
                label="&amp;Open .html (on server) in browser"
                menubarPath="common.open.menu/jcr">
@@ -562,7 +561,7 @@
        <view
              category="org.apache.sling.ide.eclipse-ui"
              class="org.apache.sling.ide.eclipse.ui.views.JcrPropertiesView"
-             icon="icons/obj16/sling.gif"
+             icon="icons/obj16/sling_misc.gif"
              id="org.apache.sling.ide.eclipse.ui.views.JcrPropertiesView"
              name="JCR Properties">
        </view>
