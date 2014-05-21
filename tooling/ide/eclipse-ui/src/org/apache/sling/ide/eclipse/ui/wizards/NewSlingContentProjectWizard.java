@@ -16,9 +16,12 @@
  */
 package org.apache.sling.ide.eclipse.ui.wizards;
 
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.eclipse.core.ConfigurationHelper;
 import org.apache.sling.ide.eclipse.ui.internal.SharedImages;
 import org.eclipse.core.resources.IProject;
@@ -43,21 +46,44 @@ public class NewSlingContentProjectWizard extends AbstractNewSlingApplicationWiz
 
     @Override
     protected List<IProject> createProjects(IProgressMonitor monitor) throws CoreException {
+
         IProject project = page.getProjectHandle();
-        project.create(monitor);
-        project.open(monitor);
-        project.getFolder("jcr_root").create(true, true, monitor);
-        project.getFolder("jcr_root/content").create(true, true, monitor);
-        project.getFolder("jcr_root/content/example").create(true, true, monitor);
-        project.getFolder("jcr_root/apps").create(true, true, monitor);
-        project.getFolder("jcr_root/apps/example").create(true, true, monitor);
-        project.getFolder("jcr_root/apps/example/item").create(true, true, monitor);
-        project.getFolder("META-INF").create(true, true, monitor);
-        project.getFolder("META-INF/vault").create(true, true, monitor);
-        // TODO - we need to add more content here
-        // - a default html.jsp script
-        // - the default files from under META-INF/vault
-        // - a little content (nt:unstructured nodes of resource type example/item) under /content/example
+
+        List<Operation> ops = new ArrayList<Operation>();
+
+        ops.add(new CreateProject(project));
+        ops.add(new OpenProject(project));
+
+        ops.add(new CreateFolder(project, "jcr_root"));
+
+        ops.add(new CreateFolder(project, "jcr_root/content"));
+        ops.add(new CreateFolder(project, "jcr_root/content/example"));
+        ops.add(new CreateFile(project, "jcr_root/content/example/.content.xml", getClass().getResourceAsStream(
+                "res/.content.xml")));
+
+        ops.add(new CreateFolder(project, "jcr_root/apps"));
+        ops.add(new CreateFolder(project, "jcr_root/apps/example"));
+        ops.add(new CreateFolder(project, "jcr_root/apps/example/item"));
+        ops.add(new CreateFile(project, "jcr_root/apps/example/item/html.jsp", getClass().getResourceAsStream(
+                "res/html.jsp")));
+
+        ops.add(new CreateFolder(project, "META-INF"));
+        ops.add(new CreateFolder(project, "META-INF/vault"));
+        ops.add(new CreateFile(project, "META-INF/vault/filter.xml", getClass().getResourceAsStream("res/filter.xml")));
+        ops.add(new CreateFile(project, "META-INF/vault/config.xml", getClass().getResourceAsStream("res/config.xml")));
+        ops.add(new CreateFile(project, "META-INF/vault/settings.xml", getClass().getResourceAsStream(
+                "res/settings.xml")));
+
+        monitor.beginTask("Creating project", ops.size());
+        try {
+            for (Operation op : ops) {
+                op.execute(monitor);
+                advance(monitor, 1);
+            }
+        } finally {
+            monitor.done();
+        }
+
         return Collections.singletonList(project);
     }
 
@@ -82,6 +108,75 @@ public class NewSlingContentProjectWizard extends AbstractNewSlingApplicationWiz
     @Override
     public String doGetWindowTitle() {
         return "New Sling Content Project";
+    }
+
+    private static interface Operation {
+        void execute(IProgressMonitor monitor) throws CoreException;
+    }
+
+    public static class CreateProject implements Operation {
+        private final IProject project;
+
+        public CreateProject(IProject project) {
+            this.project = project;
+        }
+
+        @Override
+        public void execute(IProgressMonitor monitor) throws CoreException {
+            project.create(monitor);
+        }
+    }
+
+    public static class OpenProject implements Operation {
+
+        private final IProject project;
+
+        public OpenProject(IProject project) {
+            this.project = project;
+        }
+
+        @Override
+        public void execute(IProgressMonitor monitor) throws CoreException {
+            this.project.open(monitor);
+        }
+    }
+
+    public static class CreateFolder implements Operation {
+        private final IProject project;
+        private final String folderName;
+
+        public CreateFolder(IProject project, String folderName) {
+            this.project = project;
+            this.folderName = folderName;
+        }
+
+        @Override
+        public void execute(IProgressMonitor monitor) throws CoreException {
+            this.project.getFolder(folderName).create(true, true, monitor);
+        }
+
+    }
+
+    public static class CreateFile implements Operation {
+        private final IProject project;
+        private final String fileName;
+        private final InputStream input;
+
+        public CreateFile(IProject project, String fileName, InputStream input) {
+            this.project = project;
+            this.fileName = fileName;
+            this.input = input;
+        }
+
+        @Override
+        public void execute(IProgressMonitor monitor) throws CoreException {
+            try {
+                this.project.getFile(fileName).create(input, true, monitor);
+            } finally {
+                IOUtils.closeQuietly(input);
+            }
+        }
+
     }
 
 }
