@@ -25,8 +25,10 @@ import static org.apache.jackrabbit.oak.plugins.index.IndexUtils.createIndexDefi
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.Executor;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
@@ -44,22 +46,19 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.jackrabbit.commons.jackrabbit.authorization.AccessControlUtils;
 import org.apache.jackrabbit.oak.Oak;
 import org.apache.jackrabbit.oak.api.ContentRepository;
+import org.apache.jackrabbit.oak.osgi.OsgiWhiteboard;
 import org.apache.jackrabbit.oak.plugins.commit.ConflictValidatorProvider;
 import org.apache.jackrabbit.oak.plugins.commit.JcrConflictHandler;
 import org.apache.jackrabbit.oak.plugins.index.aggregate.AggregateIndexProvider;
 import org.apache.jackrabbit.oak.plugins.index.aggregate.NodeAggregator;
 import org.apache.jackrabbit.oak.plugins.index.aggregate.SimpleNodeAggregator;
-import org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexEditorProvider;
 import org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProvider;
 import org.apache.jackrabbit.oak.plugins.index.lucene.util.LuceneIndexHelper;
-import org.apache.jackrabbit.oak.plugins.index.nodetype.NodeTypeIndexProvider;
-import org.apache.jackrabbit.oak.plugins.index.property.PropertyIndexEditorProvider;
-import org.apache.jackrabbit.oak.plugins.index.property.PropertyIndexProvider;
 import org.apache.jackrabbit.oak.plugins.name.NameValidatorProvider;
-import org.apache.jackrabbit.oak.plugins.name.NamespaceValidatorProvider;
-import org.apache.jackrabbit.oak.plugins.nodetype.RegistrationEditorProvider;
+import org.apache.jackrabbit.oak.plugins.name.NamespaceEditorProvider;
 import org.apache.jackrabbit.oak.plugins.nodetype.TypeEditorProvider;
 import org.apache.jackrabbit.oak.plugins.nodetype.write.InitialContent;
+import org.apache.jackrabbit.oak.plugins.observation.CommitRateLimiter;
 import org.apache.jackrabbit.oak.plugins.version.VersionEditorProvider;
 import org.apache.jackrabbit.oak.security.SecurityProviderImpl;
 import org.apache.jackrabbit.oak.spi.commit.EditorHook;
@@ -74,11 +73,14 @@ import org.apache.jackrabbit.oak.spi.security.user.UserConstants;
 import org.apache.jackrabbit.oak.spi.security.user.action.AccessControlAction;
 import org.apache.jackrabbit.oak.spi.state.NodeBuilder;
 import org.apache.jackrabbit.oak.spi.state.NodeStore;
-import org.apache.jackrabbit.oak.spi.whiteboard.OsgiWhiteboard;
 import org.apache.jackrabbit.oak.spi.whiteboard.Whiteboard;
+import org.apache.jackrabbit.oak.spi.whiteboard.WhiteboardIndexEditorProvider;
+import org.apache.jackrabbit.oak.spi.whiteboard.WhiteboardIndexProvider;
 import org.apache.jackrabbit.oak.spi.xml.ImportBehavior;
 import org.apache.jackrabbit.oak.spi.xml.ProtectedItemImporter;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.commons.threads.ThreadPool;
+import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.jcr.api.NamespaceMapper;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.AbstractSlingRepository2;
@@ -87,7 +89,7 @@ import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,6 +116,9 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    private static final int DEFAULT_OBSERVATION_QUEUE_LENGTH = 1000;
+    private static final boolean DEFAULT_COMMIT_RATE_LIMIT = false;
+
     // For backwards compatibility loginAdministrative is still enabled
     // In future releases, this default may change to false.
     public static final boolean DEFAULT_LOGIN_ADMIN_ENABLED = true;
@@ -134,6 +139,19 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
                 + "http://sling.apache.org/documentation/the-sling-engine/service-authentication.html "
                 + "for information on deprecating and disabling the loginAdministrative method.")
     public static final String PROPERTY_LOGIN_ADMIN_ENABLED = "admin.login.enabled";
+
+    @Property(
+            intValue = DEFAULT_OBSERVATION_QUEUE_LENGTH,
+            label = "Observation queue length",
+            description = "Maximum number of pending revisions in a observation listener queue")
+    private static final String OBSERVATION_QUEUE_LENGTH = "oak.observation.queue-length";
+
+    @Property(
+            boolValue = DEFAULT_COMMIT_RATE_LIMIT,
+            label = "Commit rate limiter",
+            description = "Limit the commit rate once the number of pending revisions in the observation " +
+                    "queue exceed 90% of its capacity.")
+    private static final String COMMIT_RATE_LIMIT = "oak.observation.limit-commit-rate";
 
     public static final String DEFAULT_ADMIN_USER = "admin";
 
@@ -159,6 +177,21 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
     private String adminUserName;
 
+    @Reference
+    private ThreadPoolManager threadPoolManager = null;
+
+    private ThreadPool threadPool;
+
+    private ServiceRegistration oakExecutorServiceReference;
+
+    private final WhiteboardIndexProvider indexProvider = new WhiteboardIndexProvider();
+
+    private final WhiteboardIndexEditorProvider indexEditorProvider = new WhiteboardIndexEditorProvider();
+
+    private int observationQueueLength;
+
+    private CommitRateLimiter commitRateLimiter;
+
     @Property(
             boolValue=true,
             label="Allow anonymous reads",
@@ -182,6 +215,16 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
             UserConstants.PARAM_ADMIN_ID, UserConstants.DEFAULT_ADMIN_ID);
 
         final Whiteboard whiteboard = new OsgiWhiteboard(this.getComponentContext().getBundleContext());
+        this.indexProvider.start(whiteboard);
+        this.indexEditorProvider.start(whiteboard);
+        this.oakExecutorServiceReference = this.componentContext.getBundleContext().registerService(
+                Executor.class.getName(), new Executor() {
+            @Override
+            public void execute(Runnable command) {
+                threadPool.execute(command);
+            }
+        }, new Hashtable<String, Object>());
+
         final Oak oak = new Oak(nodeStore)
         .with(new InitialContent())
         .with(new ExtraSlingContent())
@@ -192,18 +235,20 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         .with(securityProvider)
 
         .with(new NameValidatorProvider())
-        .with(new NamespaceValidatorProvider())
+        .with(new NamespaceEditorProvider())
         .with(new TypeEditorProvider())
-        .with(new RegistrationEditorProvider())
+//        .with(new RegistrationEditorProvider())
         .with(new ConflictValidatorProvider())
 
         // index stuff
-        .with(new PropertyIndexEditorProvider())
+        .with(indexProvider)
+        .with(indexEditorProvider)
+//        .with(new PropertyIndexEditorProvider())
 
-        .with(new PropertyIndexProvider())
-        .with(new NodeTypeIndexProvider())
+//        .with(new PropertyIndexProvider())
+//        .with(new NodeTypeIndexProvider())
 
-        .with(new LuceneIndexEditorProvider())
+//        .with(new LuceneIndexEditorProvider())
         .with(AggregateIndexProvider.wrap(new LuceneIndexProvider()
                 .with(getNodeAggregator())))
 
@@ -211,9 +256,13 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         .withAsyncIndexing()
         .with(whiteboard)
         ;
+        
+        if (commitRateLimiter != null) {
+            oak.with(commitRateLimiter);
+        }
 
         final ContentRepository contentRepository = oak.createContentRepository();
-        return new JcrRepositoryHacks(contentRepository, whiteboard, securityProvider);
+        return new JcrRepositoryHacks(contentRepository, whiteboard, securityProvider, observationQueueLength, commitRateLimiter);
     }
 
     @Override
@@ -267,6 +316,10 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
     @Override
     protected void disposeRepository(Repository repository) {
+        this.indexProvider.stop();
+        this.indexEditorProvider.stop();
+        this.oakExecutorServiceReference.unregister();
+        this.oakExecutorServiceReference = null;
         ((JcrRepositoryHacks) repository).shutdown();
         this.adminUserName = null;
     }
@@ -288,6 +341,9 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
             properties.get(PROPERTY_LOGIN_ADMIN_ENABLED), DEFAULT_LOGIN_ADMIN_ENABLED);
 
         this.adminUserName = PropertiesUtil.toString(properties.get(PROPERTY_ADMIN_USER), DEFAULT_ADMIN_USER);
+        this.observationQueueLength = getObservationQueueLength(componentContext);
+        this.commitRateLimiter = getCommitRateLimiter(componentContext);
+        this.threadPool = threadPoolManager.get("oak-observation");
         super.start(componentContext.getBundleContext(), defaultWorkspace, disableLoginAdministrative);
     }
 
@@ -297,6 +353,9 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         this.componentContext = null;
         this.namespaceMapperRefs.clear();
         this.namespaceMappers = null;
+        this.threadPoolManager.release(this.threadPool);
+        this.threadPool = null;
+        this.tearDown();
     }
 
     @SuppressWarnings("unused")
@@ -389,8 +448,35 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         Map<String, Object> config = new HashMap<String, Object>();
         config.put(
                 UserConfiguration.NAME,
-                new ConfigurationParameters(userConfig));
-        return new ConfigurationParameters(config);
+                ConfigurationParameters.of(userConfig));
+        return ConfigurationParameters.of(config);
     }
 
+    private static int getObservationQueueLength(ComponentContext context) {
+        Dictionary<?, ?> properties = context.getProperties();
+        Object value = properties.get(OBSERVATION_QUEUE_LENGTH);
+        if (isNullOrEmpty(value)) {
+            value = context.getBundleContext().getProperty(OBSERVATION_QUEUE_LENGTH);
+        }
+        try {
+            return Integer.parseInt(String.valueOf(value));
+        } catch (NumberFormatException e) {
+            return DEFAULT_OBSERVATION_QUEUE_LENGTH;
+        }
+    }
+
+    private static CommitRateLimiter getCommitRateLimiter(ComponentContext context) {
+        Dictionary<?, ?> properties = context.getProperties();
+        Object value = properties.get(COMMIT_RATE_LIMIT);
+        if (isNullOrEmpty(value)) {
+            value = context.getBundleContext().getProperty(COMMIT_RATE_LIMIT);
+        }
+        return Boolean.parseBoolean(String.valueOf(value))
+            ? new CommitRateLimiter()
+            : null;
+    }
+
+    private static boolean isNullOrEmpty(Object value) {
+        return (value == null || value.toString().trim().length() == 0);
+    }
 }
