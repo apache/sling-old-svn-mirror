@@ -352,14 +352,14 @@
             id="org.apache.sling.ide.eclipse.ui.pluginProjectToolSet">
 
          <action
-            label="Convert to Sling Content-Package Project"
+            label="Convert to Sling Content Project..."
             class="org.apache.sling.ide.eclipse.ui.wizards.ConvertToContentPackageAction"
             menubarPath="org.eclipse.ui.projectConfigure/additions"
             enablesFor="+"
             id="org.apache.sling.ide.eclipse.ui.wizards.ConvertToContentPackageAction">
       	</action>
          <action
-            label="Convert to Sling/OSGi Bundle Project"
+            label="Convert to Sling Bundle Project..."
             class="org.apache.sling.ide.eclipse.ui.wizards.ConvertToBundleAction"
             menubarPath="org.eclipse.ui.projectConfigure/additions"
             enablesFor="+"
