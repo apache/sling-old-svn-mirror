@@ -29,7 +29,6 @@ import java.util.concurrent.Callable;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.test.impl.helpers.DisableDebugStatusHandlers;
 import org.apache.sling.ide.test.impl.helpers.ExternalSlingLaunchpad;
 import org.apache.sling.ide.test.impl.helpers.LaunchpadConfig;
@@ -43,6 +42,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.Path;
 import org.hamcrest.Matcher;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -145,6 +145,58 @@ public class JcrFullCoverageAggregatesDeploymentTest {
         // poll until we only have 2 child nodes left
         postConditions = allOf(hasPath("/content/test-root/en"), hasPrimaryType("sling:Folder"),
                 hasMixinTypes("mix:language"), hasChildrenCount(2));
+        poller.pollUntil(new Callable<Node>() {
+            @Override
+            public Node call() throws RepositoryException {
+                return repo.getNode("/content/test-root/en");
+
+            }
+        }, postConditions);
+    }
+
+    @Test
+    @Ignore(value = "SLING-3591")
+    public void deleteAllNodesFromNestedFullCoverageAggreate() throws Exception {
+
+        wstServer.waitForServerToStart();
+
+        // create faceted project
+        IProject contentProject = projectRule.getProject();
+
+        ProjectAdapter project = new ProjectAdapter(contentProject);
+        project.addNatures("org.eclipse.wst.common.project.facet.core.nature");
+
+        // create .content.xml structure
+        InputStream contentXml = getClass().getResourceAsStream("content-nested-structure.xml");
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), contentXml);
+
+        // install content facet
+        project.installFacet("sling.content", "1.0");
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
+
+        Matcher<Node> postConditions = allOf(hasPath("/content/test-root/en"), hasPrimaryType("sling:Folder"),
+                hasMixinTypes("mix:language"), hasChildrenCount(3));
+
+        final RepositoryAccessor repo = new RepositoryAccessor(config);
+        Poller poller = new Poller();
+        poller.pollUntil(new Callable<Node>() {
+            @Override
+            public Node call() throws RepositoryException {
+                return repo.getNode("/content/test-root/en");
+
+            }
+        }, postConditions);
+
+        // update .content.xml structure
+        InputStream updatedContentXml = getClass()
+                .getResourceAsStream("content-nested-structure-deleted-all-nodes.xml");
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), updatedContentXml);
+
+        // poll until we only have no child nodes left
+        postConditions = allOf(hasPath("/content/test-root/en"), hasPrimaryType("sling:Folder"),
+                hasMixinTypes("mix:language"), hasChildrenCount(0));
         poller.pollUntil(new Callable<Node>() {
             @Override
             public Node call() throws RepositoryException {
