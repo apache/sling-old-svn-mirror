@@ -17,6 +17,7 @@
 package org.apache.sling.ide.eclipse.ui.internal;
 
 import org.apache.sling.ide.eclipse.ui.nav.model.JcrNode;
+import org.apache.sling.ide.eclipse.ui.nav.model.SyncDir;
 import org.eclipse.jface.viewers.IDecoration;
 import org.eclipse.jface.viewers.ILabelDecorator;
 import org.eclipse.jface.viewers.ILightweightLabelDecorator;
@@ -42,6 +43,10 @@ public class JcrNodeDecorator extends LabelProvider implements ILabelDecorator, 
             JcrNode node = (JcrNode) element;
             if (node.getPrimaryType() != null) {
                 decoration.addSuffix(" [" + node.getPrimaryType() + "]");
+            }
+
+            if (node instanceof SyncDir) {
+                decoration.addOverlay(SharedImages.CONTENT_OVERLAY, IDecoration.BOTTOM_RIGHT);
             }
         }
     }
