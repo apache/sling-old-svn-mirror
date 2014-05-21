@@ -121,6 +121,61 @@ public class JcrPartialCoverageAggregatesDeploymentTest {
 
     }
 
+    @Test
+    public void deployNodeWithChildrenAndOrderableNodeTypes() throws Exception {
+
+        wstServer.waitForServerToStart();
+
+        // create faceted project
+        IProject contentProject = projectRule.getProject();
+
+        ProjectAdapter project = new ProjectAdapter(contentProject);
+        project.addNatures("org.eclipse.wst.common.project.facet.core.nature");
+
+        // create a sling:Folder at /content/test-root
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/.content.xml"), getClass()
+                .getResourceAsStream("sling-folder-nodetype.xml"));
+
+        // create a nt:unstructured at /content/test-root/nested
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/nested/.content.xml"),
+                getClass().getResourceAsStream("nt-unstructured-nodetype.xml"));
+
+        // create a nt:unstructured at /content/test-root/nested/nested
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/nested/nested/.content.xml"),
+                getClass().getResourceAsStream("nt-unstructured-nodetype.xml"));
+
+        // install content facet
+        project.installFacet("sling.content", "1.0");
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
+
+        Matcher<Node> postConditions = allOf(hasPath("/content/test-root/nested"), hasPrimaryType("nt:unstructured"),
+                hasChildrenCount(1));
+
+        final RepositoryAccessor repo = new RepositoryAccessor(config);
+        Poller poller = new Poller();
+        poller.pollUntil(new Callable<Node>() {
+            @Override
+            public Node call() throws RepositoryException {
+                return repo.getNode("/content/test-root/nested");
+
+            }
+        }, postConditions);
+
+        // update jcr:title for /content/test-root
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/nested/.content.xml"),
+                getClass().getResourceAsStream("nt-unstructured-nodetype-with-title.xml"));
+
+        poller.pollUntil(new Callable<Node>() {
+            @Override
+            public Node call() throws RepositoryException {
+                return repo.getNode("/content/test-root/nested");
+
+            }
+        }, allOf(hasPath("/content/test-root/nested"), hasChildrenCount(1), hasPropertyValue("jcr:title", "Some Folder")));
+    }
+
 
     @After
     public void cleanup() throws Exception {
