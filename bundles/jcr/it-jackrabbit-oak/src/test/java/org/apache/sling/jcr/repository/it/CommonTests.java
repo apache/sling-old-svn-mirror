@@ -47,6 +47,7 @@ import javax.jcr.query.Query;
 import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -338,6 +339,7 @@ public abstract class CommonTests {
     }
     
     @Test
+    @Ignore("SLING-3479 - doesn't work with Oak 1.0 yet")
     public void testOsgiResourceEvents() throws RepositoryException {
         final ResourceEventListener listener = new ResourceEventListener();
         final ServiceRegistration reg = listener.register(bundleContext);

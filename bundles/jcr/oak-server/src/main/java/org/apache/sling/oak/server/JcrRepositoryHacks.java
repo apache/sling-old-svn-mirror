@@ -26,6 +26,7 @@ import javax.jcr.Session;
 import org.apache.jackrabbit.oak.Oak;
 import org.apache.jackrabbit.oak.api.ContentRepository;
 import org.apache.jackrabbit.oak.jcr.repository.RepositoryImpl;
+import org.apache.jackrabbit.oak.plugins.observation.CommitRateLimiter;
 import org.apache.jackrabbit.oak.spi.security.SecurityProvider;
 import org.apache.jackrabbit.oak.spi.whiteboard.Whiteboard;
 
@@ -49,8 +50,9 @@ class JcrRepositoryHacks extends RepositoryImpl {
         protected abstract Session doLogin() throws RepositoryException;
     };
     
-	JcrRepositoryHacks(ContentRepository contentRepository, Whiteboard whiteboard, SecurityProvider securityProvider) {
-		super(contentRepository, whiteboard, securityProvider);
+	JcrRepositoryHacks(ContentRepository contentRepository, Whiteboard whiteboard, 
+	        SecurityProvider securityProvider, int observationQueueLenght, CommitRateLimiter commitRateLimiter) {
+		super(contentRepository, whiteboard, securityProvider, observationQueueLenght, commitRateLimiter);
 	}
 	
     @Override

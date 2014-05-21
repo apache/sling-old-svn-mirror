@@ -38,6 +38,8 @@ public class OakRepositoryIT extends CommonTests {
     public Option[] config() {
         final String localRepo = System.getProperty("maven.repo.local", "");
         final String oakVersion = System.getProperty("oak.version", "NO_OAK_VERSION??");
+        final String slingOakServerVersion = System.getProperty("sling.oak.server.version", "NO_OAK_SERVER_VERSION??");
+        final String SLF4J_VERSION = "1.7.5"; 
 
         return options(
                 when( localRepo.length() > 0 ).useOptions(
@@ -48,12 +50,12 @@ public class OakRepositoryIT extends CommonTests {
                 mavenBundle("org.apache.sling", "org.apache.sling.fragment.activation", "1.0.2"),
                 mavenBundle("org.apache.sling", "org.apache.sling.fragment.ws", "1.0.2"),
 
-                mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "3.0.0"),
+                mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "4.0.0"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.logservice", "1.0.2"),
 
-                mavenBundle("org.slf4j", "slf4j-api", "1.6.4"),
-                mavenBundle("org.slf4j", "jcl-over-slf4j", "1.6.4"),
-                mavenBundle("org.slf4j", "log4j-over-slf4j", "1.6.4"),
+                mavenBundle("org.slf4j", "slf4j-api", SLF4J_VERSION),
+                mavenBundle("org.slf4j", "jcl-over-slf4j", SLF4J_VERSION),
+                mavenBundle("org.slf4j", "log4j-over-slf4j", SLF4J_VERSION),
 
                 mavenBundle("commons-io", "commons-io", "1.4"),
                 mavenBundle("commons-fileupload", "commons-fileupload", "1.2.2"),
@@ -76,16 +78,16 @@ public class OakRepositoryIT extends CommonTests {
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.mime", "2.1.4"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.classloader", "1.3.0"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.scheduler", "2.3.4"),
-                mavenBundle("org.apache.sling", "org.apache.sling.commons.threads", "3.1.0"),
+                mavenBundle("org.apache.sling", "org.apache.sling.commons.threads", "3.2.0"),
 
                 mavenBundle("org.apache.sling", "org.apache.sling.launchpad.api", "1.1.0"),
                 mavenBundle("org.apache.sling", "org.apache.sling.auth.core", "1.1.0"),
                 mavenBundle("org.apache.sling", "org.apache.sling.discovery.api", "1.0.0"),
                 mavenBundle("org.apache.sling", "org.apache.sling.discovery.standalone", "1.0.0"),
 
-                mavenBundle("org.apache.sling", "org.apache.sling.api", "2.4.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.settings", "1.2.2"),
-                mavenBundle("org.apache.sling", "org.apache.sling.resourceresolver", "1.0.6"),
+                mavenBundle("org.apache.sling", "org.apache.sling.api", "2.7.0"),
+                mavenBundle("org.apache.sling", "org.apache.sling.settings", "1.3.0"),
+                mavenBundle("org.apache.sling", "org.apache.sling.resourceresolver", "1.1.0"),
                 mavenBundle("org.apache.sling", "org.apache.sling.adapter", "2.1.0"),
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.resource", "2.2.6"),
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.classloader", "3.1.12"),
@@ -98,19 +100,23 @@ public class OakRepositoryIT extends CommonTests {
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.base", "2.2.2"),
                 
                 // Oak
-                mavenBundle("org.apache.sling", "org.apache.sling.jcr.oak.server", "0.0.1-SNAPSHOT"),
-                mavenBundle("com.google.guava", "guava", "14.0.1"),
+                mavenBundle("org.apache.sling", "org.apache.sling.jcr.oak.server", slingOakServerVersion),
+                mavenBundle("com.google.guava", "guava", "15.0"),
                 mavenBundle("com.google.code.findbugs", "jsr305", "2.0.0"),
-                mavenBundle("org.apache.jackrabbit", "jackrabbit-api", "2.7.1"),
-                mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-commons", "2.7.1"),
+                mavenBundle("org.apache.jackrabbit", "jackrabbit-api", "2.7.5"),
+                mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-commons", "2.7.5"),
                 mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-rmi", "2.4.2"),
                 mavenBundle("org.apache.jackrabbit", "oak-core", oakVersion),
                 // embedded for now mavenBundle("org.apache.jackrabbit", "oak-jcr", oakVersion),
                 mavenBundle("org.apache.jackrabbit", "oak-commons", oakVersion),
+                
+                // not needed anymore? 
                 mavenBundle("org.apache.jackrabbit", "oak-mk", oakVersion),
                 mavenBundle("org.apache.jackrabbit", "oak-mk-api", oakVersion),
                 mavenBundle("org.apache.jackrabbit", "oak-mk-remote", oakVersion),
+                
                 mavenBundle("org.apache.jackrabbit", "oak-lucene", oakVersion),
+                mavenBundle("org.apache.jackrabbit", "oak-blob", oakVersion),
 
                 // Testing
                 mavenBundle("org.apache.sling", "org.apache.sling.testing.tools", "1.0.6"),

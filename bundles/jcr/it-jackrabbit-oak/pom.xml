@@ -26,8 +26,9 @@
         <exam.version>3.3.0</exam.version>
         <url.version>1.5.2</url.version>
         <org.ops4j.pax.logging.DefaultServiceLog.level>WARN</org.ops4j.pax.logging.DefaultServiceLog.level>
-        <org.ops4j.pax.url.mvn.settings></org.ops4j.pax.url.mvn.settings>
-        <oak.version>0.10</oak.version>
+        <org.ops4j.pax.url.mvn.settings>${basedir}/src/main/resources/empty-maven-settings.xml</org.ops4j.pax.url.mvn.settings>
+        <oak.version>1.0.0</oak.version>
+        <sling.oak.server.version>${project.version}</sling.oak.server.version>
     </properties>
 
     <build>
@@ -69,6 +70,10 @@
                         <property>
                             <name>oak.version</name>
                             <value>${oak.version}</value>
+                        </property>
+                        <property>
+                            <name>sling.oak.server.version</name>
+                            <value>${sling.oak.server.version}</value>
                         </property>
                     </systemProperties>
                     <argLine>
@@ -167,6 +172,12 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.logservice</artifactId>
             <version>1.0.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.jcr.oak.server</artifactId>
+            <version>${sling.oak.server.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
