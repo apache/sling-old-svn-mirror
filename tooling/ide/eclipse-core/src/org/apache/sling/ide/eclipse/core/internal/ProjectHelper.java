@@ -47,8 +47,13 @@ public class ProjectHelper {
     private static final String[] CONTENT_PACKAGE_STRUCTURE_BASE = new String[] { "/", "/content", "/src/main/content" };
 
 	public static boolean isPotentialBundleProject(IProject project) {
-		String packaging = getMavenProperty(project, "packaging");
-		return (packaging!=null && "bundle".equals(packaging));
+
+        try {
+            return !isBundleProject(project) && project.getDescription().hasNature(JavaCore.NATURE_ID);
+        } catch (CoreException e) {
+            Activator.getDefault().getPluginLogger().warn("Failed getting project description", e);
+            return false;
+        }
 	}
 	
 	public static boolean isPotentialContentProject(IProject project) {
@@ -100,20 +105,16 @@ public class ProjectHelper {
 				}
 			}
 		} catch (ParserConfigurationException e) {
-			//TODO proper logging
-			e.printStackTrace();
+            Activator.getDefault().getPluginLogger().warn("Failed getting maven property for " + project.getName(), e);
 			return null;
 		} catch (SAXException e) {
-			//TODO proper logging
-			e.printStackTrace();
+            Activator.getDefault().getPluginLogger().warn("Failed getting maven property for " + project.getName(), e);
 			return null;
 		} catch (IOException e) {
-			//TODO proper logging
-			e.printStackTrace();
+            Activator.getDefault().getPluginLogger().warn("Failed getting maven property for " + project.getName(), e);
 			return null;
 		} catch (CoreException e) {
-			//TODO proper logging
-			e.printStackTrace();
+            Activator.getDefault().getPluginLogger().warn("Failed getting maven property for " + project.getName(), e);
 			return null;
 		}
 		return null;
