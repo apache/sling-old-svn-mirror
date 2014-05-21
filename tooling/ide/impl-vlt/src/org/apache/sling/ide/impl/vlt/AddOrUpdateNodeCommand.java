@@ -159,6 +159,13 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
     private void reorderChildNodes(Node node, ResourceProxy resource2) throws RepositoryException {
 
         ListIterator<ResourceProxy> coveredResourceChildren = getCoveredChildren(resource2).listIterator();
+
+        // do not process
+        if (!coveredResourceChildren.hasNext()) {
+            Activator.getDefault().getPluginLogger()
+                    .trace("Resource at {0} has no covered children, child node reordering", resource2.getPath());
+            return;
+        }
         List<Node> nodeChildren = new LinkedList<Node>();
         NodeIterator nodeChildrenIt = node.getNodes();
         while (nodeChildrenIt.hasNext()) {
