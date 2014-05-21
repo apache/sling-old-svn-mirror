@@ -41,7 +41,7 @@
             class="org.apache.sling.ide.eclipse.ui.wizards.np.NewSlingBundleWizard"
             icon="icons/obj16/sling.gif"
             id="org.apache.sling.ide.eclipse.ui.wizards.np.NewSlingBundleWizard"
-            name="New Sling Bundle Project"
+            name="Sling Bundle Project"
             project="true">
       </wizard>
    </extension>
