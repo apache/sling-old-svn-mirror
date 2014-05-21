@@ -66,7 +66,7 @@ public class ConvertToBundleAction implements IObjectActionDelegate {
 			IProject[] allProjects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
 			for (int i = 0; i < allProjects.length; i++) {
 				IProject p = allProjects[i];
-				if (p.isOpen() && !ProjectHelper.isBundleProject(p) && ProjectHelper.isPotentialBundleProject(p)) {
+                if (p.isOpen() && ProjectHelper.isPotentialBundleProject(p)) {
 					applicableProjects.add(p);
 				}
 			}
@@ -90,8 +90,7 @@ public class ConvertToBundleAction implements IObjectActionDelegate {
 			}
 
 			ConvertProjectsWizard wizard = new ConvertProjectsWizard(applicableProjects, initialSelection, 
-					"Convert Project(s) to Sling/OSGi Bundle(s)",
-					"Select project(s) to convert to Sling/OSGi bundle project(s)");
+                    "Convert to Sling Bundle Project(s)", "Select project(s) to convert to Sling Bundle project(s)");
 
 			final Display display = getDisplay();
 			final WizardDialog dialog = new WizardDialog(display.getActiveShell(), wizard);
