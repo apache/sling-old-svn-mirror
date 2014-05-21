@@ -160,7 +160,7 @@
             class="org.apache.sling.ide.eclipse.ui.wizards.NewSlingContentProjectWizard"
             icon="icons/obj16/sling.gif"
             id="org.apache.sling.ide.eclipse.ui.wizards.NewSlingContentProjectWizard"
-            name="New Sling Content Project"
+            name="Sling Content Project"
             project="true">
       </wizard>
    </extension>   
