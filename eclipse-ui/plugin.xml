@@ -487,6 +487,19 @@
            </objectClass>
          </enablement>
       </decorator>
+      <decorator
+      		adaptable="true"
+      		class="org.apache.sling.ide.eclipse.ui.internal.JcrNodeDecorator"
+            id="org.apache.sling.ide.eclipse-ui.JcrNodeDecorator"
+            label="JCR Node decorator"
+            lightweight="true"
+            state="true">
+            <enablement>
+            	<objectClass
+                   name="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
+            	</objectClass>
+            </enablement>
+      </decorator>
    </extension>
    <extension
          point="org.eclipse.ui.navigator.linkHelper">

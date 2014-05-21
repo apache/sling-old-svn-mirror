@@ -57,7 +57,7 @@ public class SyncDir extends JcrNode {
 	}
 
 	public String getLabel() {
-		return folder.getProjectRelativePath()+" [sling synched]";
+        return folder.getProjectRelativePath().toString();
 	}
 	
 	@Override
