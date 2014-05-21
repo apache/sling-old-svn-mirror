@@ -21,6 +21,7 @@ import java.util.Iterator;
 
 import org.apache.sling.ide.eclipse.core.ConfigurationHelper;
 import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
+import org.apache.sling.ide.eclipse.ui.internal.Activator;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -60,10 +61,11 @@ public class ConvertToContentPackageAction implements IObjectActionDelegate {
 		if (fSelection instanceof IStructuredSelection) {
 			final IProject project = (IProject) ((IStructuredSelection) fSelection).getFirstElement();
 
-			String jcrRootLocation = "src/main/content/jcr_root";
+            String jcrRootLocation = ProjectHelper.getInferredContentProjectContentRoot(project)
+                    .getProjectRelativePath().append("jcr_root").toPortableString();
 			final InputDialog id = new InputDialog(getDisplay().getActiveShell(), "Convert to Sling Content-Package Project", 
-					"Confirm jcr_root location of "+project.getName()+":", jcrRootLocation, new IInputValidator() {
-						
+		            "Confirm content sync root location of " + project.getName() + ":", jcrRootLocation,
+		            new IInputValidator() {
 						@Override
 						public String isValid(String newText) {
 							if (newText!=null && newText.trim().length()>0) {
@@ -74,7 +76,7 @@ public class ConvertToContentPackageAction implements IObjectActionDelegate {
 									return "Directory not found: "+newText;
 								}
 							} else {
-								return "Please specify location of jcr_root";
+                                return "Please specify location of the content sync root";
 							}
 						}
 					});
@@ -87,7 +89,7 @@ public class ConvertToContentPackageAction implements IObjectActionDelegate {
 						try {
 							ConfigurationHelper.convertToContentPackageProject(project, monitor, id.getValue());
 						} catch (CoreException e) {
-							e.printStackTrace();
+                            Activator.getDefault().getPluginLogger().warn("Could not convert project", e);
 							MessageDialog.openError(getDisplay().getActiveShell(), "Could not convert project",
 									e.getMessage());
 						}
@@ -96,7 +98,7 @@ public class ConvertToContentPackageAction implements IObjectActionDelegate {
 				try {
 					PlatformUI.getWorkbench().getProgressService().busyCursorWhile(r);
 				} catch (Exception e) {
-					e.printStackTrace();
+                    Activator.getDefault().getPluginLogger().warn("Could not convert project", e);
 					MessageDialog.openError(getDisplay().getActiveShell(), "Could not convert project",
 							e.getMessage());
 				}
@@ -114,7 +116,7 @@ public class ConvertToContentPackageAction implements IObjectActionDelegate {
 		fSelection = selection;
 		if (selection instanceof IStructuredSelection) {
 			final IStructuredSelection iss = (IStructuredSelection) selection;
-			Iterator<Object> it = iss.iterator();
+            Iterator<?> it = iss.iterator();
 			if (!it.hasNext()) {
 				action.setEnabled(false);
 				return;
