@@ -17,7 +17,7 @@
 	      <image
              icon="icons/obj16/sling_server.gif"
              id="slinggif"
-             typeIds="org.apache.sling.ide.launchpadServer"/>
+             typeIds="org.apache.sling.ide.launchpadServer,org.apache.sling.ide.launchpadRuntimeType"/>
 	      <image
              icon="icons/obj16/sling_content.gif"
              id="slingcontentgif"
