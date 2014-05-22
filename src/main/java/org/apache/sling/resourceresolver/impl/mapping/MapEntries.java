@@ -503,73 +503,81 @@ public class MapEntries implements EventHandler {
         Collections.sort(entries);
     }
 
+    /**
+     * Load aliases Search for all nodes inheriting the sling:alias
+     * property
+     */
     private Map<String, Map<String, String>> loadAliases(final ResourceResolver resolver) {
         final Map<String, Map<String, String>> map = new HashMap<String, Map<String, String>>();
         final String queryString = "SELECT sling:alias FROM nt:base WHERE sling:alias IS NOT NULL";
         final Iterator<Resource> i = resolver.findResources(queryString, "sql");
         while (i.hasNext()) {
-            final Resource resource = i.next();
+            final Resource resource = i.next();         
+            loadAlias(resource, map);
+        }
+        return map;
+    }
+    
+    /**
+     * Load alias given a resource
+     */
+    private void loadAlias(final Resource resource, Map<String, Map<String, String>> map) {
+        // ignore system tree
+        if (resource.getPath().startsWith(JCR_SYSTEM_PREFIX)) {
+            log.debug("loadAliases: Ignoring {}", resource);
+            return;
+        }
 
-            // ignore system tree
-            if (resource.getPath().startsWith(JCR_SYSTEM_PREFIX)) {
-                log.debug("loadAliases: Ignoring {}", resource);
-                continue;
-            }
+        // require properties
+        final ValueMap props = resource.adaptTo(ValueMap.class);
+        if (props == null) {
+            log.debug("loadAliases: Ignoring {} without properties", resource);
+            return;
+        }
 
-            // require properties
-            final ValueMap props = resource.adaptTo(ValueMap.class);
-            if (props == null) {
-                log.debug("loadAliases: Ignoring {} without properties", resource);
-                continue;
-            }
-
-            final String resourceName;
-            final String parentPath;
-            if (resource.getName().equals("jcr:content")) {
-                final Resource containingResource = resource.getParent();
-                parentPath = containingResource.getParent().getPath();
-                resourceName = containingResource.getName();
+        final String resourceName;
+        final String parentPath;
+        if (resource.getName().equals("jcr:content")) {
+            final Resource containingResource = resource.getParent();
+            parentPath = containingResource.getParent().getPath();
+            resourceName = containingResource.getName();
+        } else {
+            parentPath = resource.getParent().getPath();
+            resourceName = resource.getName();
+        }
+        Map<String, String> parentMap = map.get(parentPath);
+        for (final String alias : props.get(ResourceResolverImpl.PROP_ALIAS, String[].class)) {
+            if (parentMap != null && parentMap.containsKey(alias)) {
+                log.warn("Encountered duplicate alias {} under parent path {}. Refusing to replace current target {} with {}.", new Object[] {
+                        alias,
+                        parentPath,
+                        parentMap.get(alias),
+                        resourceName
+                });
             } else {
-                parentPath = resource.getParent().getPath();
-                resourceName = resource.getName();
-            }
-            Map<String, String> parentMap = map.get(parentPath);
-            for (final String alias : props.get(ResourceResolverImpl.PROP_ALIAS, String[].class)) {
-                if (parentMap != null && parentMap.containsKey(alias)) {
-                    log.warn("Encountered duplicate alias {} under parent path {}. Refusing to replace current target {} with {}.", new Object[] {
-                            alias,
-                            parentPath,
-                            parentMap.get(alias),
-                            resourceName
-                    });
+                // check alias
+                boolean invalid = alias.equals("..") || alias.equals(".");
+                if ( !invalid ) {
+                    for(final char c : alias.toCharArray()) {
+                        // invalid if / or # or a ?
+                        if ( c == '/' || c == '#' || c == '?' ) {
+                            invalid = true;
+                            break;
+                        }
+                    }
+                }
+                if ( invalid ) {
+                    log.warn("Encountered invalid alias {} under parent path {}. Refusing to use it.",
+                            alias, parentPath);
                 } else {
-                    // check alias
-                    boolean invalid = alias.equals("..") || alias.equals(".");
-                    if ( !invalid ) {
-                        for(final char c : alias.toCharArray()) {
-                            // invalid if / or # or a ?
-                            if ( c == '/' || c == '#' || c == '?' ) {
-                                invalid = true;
-                                break;
-                            }
-                        }
+                    if (parentMap == null) {
+                        parentMap = new HashMap<String, String>();
+                        map.put(parentPath, parentMap);
                     }
-                    if ( invalid ) {
-                        log.warn("Encountered invalid alias {} under parent path {}. Refusing to use it.",
-                                alias, parentPath);
-                    } else {
-                        if (parentMap == null) {
-                            parentMap = new HashMap<String, String>();
-                            map.put(parentPath, parentMap);
-                        }
-                        parentMap.put(alias, resourceName);
-                    }
+                    parentMap.put(alias, resourceName);
                 }
             }
         }
-
-        return map;
-
     }
     
     /**
