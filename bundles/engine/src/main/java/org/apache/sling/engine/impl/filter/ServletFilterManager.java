@@ -187,26 +187,29 @@ public class ServletFilterManager extends ServiceTracker {
                 filter.init(config);
 
                 // service id
-                Long serviceId = (Long) reference.getProperty(Constants.SERVICE_ID);
+                final Long serviceId = (Long) reference.getProperty(Constants.SERVICE_ID);
 
                 // get the order, Integer.MAX_VALUE by default
+                final String orderSource;
                 Object orderObj = reference.getProperty(Constants.SERVICE_RANKING);
                 if (orderObj == null) {
-                    // filter order is defined as lower value has higher priority
-                    // while service ranking is the opposite
-                    // In addition we allow different types than Integer
+                    // filter order is defined as lower value has higher
+                    // priority while service ranking is the opposite In
+                    // addition we allow different types than Integer
                     orderObj = reference.getProperty(EngineConstants.FILTER_ORDER);
-                    if ( orderObj != null ) {
-                        // we can use 0 as the default as this will be applied in
-                        // the next step anyway if this props contains an invalid
-                        // value
-                        Integer order = OsgiUtil.toInteger(orderObj, 0);
-                        order = order * -1;
+                    if (orderObj != null) {
+                        // we can use 0 as the default as this will be applied
+                        // in the next step anyway if this props contains an
+                        // invalid value
+                        orderSource = EngineConstants.FILTER_ORDER + "=" + orderObj;
+                        orderObj = Integer.valueOf(-1 * OsgiUtil.toInteger(orderObj, 0));
+                    } else {
+                        orderSource = "none";
                     }
+                } else {
+                    orderSource = Constants.SERVICE_RANKING + "=" + orderObj;
                 }
-                final int order = (orderObj instanceof Integer)
-                        ? ((Integer) orderObj).intValue()
-                        : 0;
+                final int order = (orderObj instanceof Integer) ? ((Integer) orderObj).intValue() : 0;
 
                 // register by scope
                 String[] scopes = OsgiUtil.toStringArray(
@@ -221,13 +224,13 @@ public class ServletFilterManager extends ServiceTracker {
                         try {
                             FilterChainType type = FilterChainType.valueOf(scope.toString());
                             getFilterChain(type).addFilter(filter, serviceId,
-                                order);
+                                order, orderSource);
 
                             if (type == FilterChainType.COMPONENT) {
                                 getFilterChain(FilterChainType.INCLUDE).addFilter(
-                                    filter, serviceId, order);
+                                    filter, serviceId, order, orderSource);
                                 getFilterChain(FilterChainType.FORWARD).addFilter(
-                                    filter, serviceId, order);
+                                    filter, serviceId, order, orderSource);
                             }
 
                         } catch (IllegalArgumentException iae) {
@@ -239,7 +242,7 @@ public class ServletFilterManager extends ServiceTracker {
                         "A Filter (Service ID %s) has been registered without a filter.scope property.",
                         reference.getProperty(Constants.SERVICE_ID)));
                     getFilterChain(FilterChainType.REQUEST).addFilter(filter,
-                        serviceId, order);
+                        serviceId, order, orderSource);
                 }
 
             } catch (ServletException ce) {
