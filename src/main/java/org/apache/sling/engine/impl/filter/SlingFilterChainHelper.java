@@ -33,33 +33,34 @@ import javax.servlet.Filter;
  */
 public class SlingFilterChainHelper {
 
-    SortedSet<FilterListEntry> filterList;
+    private static final Filter[] EMPTY_FILTER_ARRAY = new Filter[0];
 
-    Filter[] filters;
+    private SortedSet<FilterListEntry> filterList;
+
+    private Filter[] filters = EMPTY_FILTER_ARRAY;
 
     SlingFilterChainHelper() {
     }
 
-    public synchronized Filter addFilter(Filter filter,
-            Long filterId, int order) {
-        filters = null;
+    public synchronized Filter addFilter(final Filter filter,
+            final Long filterId, final int order, final String orderSource) {
         if (filterList == null) {
             filterList = new TreeSet<FilterListEntry>();
         }
-        filterList.add(new FilterListEntry(filter, filterId, order));
+        filterList.add(new FilterListEntry(filter, filterId, order, orderSource));
+        filters = this.getFilterArray();
         return filter;
     }
-
+/*
     public synchronized Filter[] removeAllFilters() {
         // will be returned after cleaning the lists
         Filter[] removedFilters = getFilters();
 
-        filters = null;
+        filters = EMPTY_FILTER_ARRAY;
         filterList = null;
 
         return removedFilters;
     }
-
     public synchronized Filter removeFilter(Filter filter) {
         if (filterList != null) {
             filters = null;
@@ -67,50 +68,61 @@ public class SlingFilterChainHelper {
                 FilterListEntry test = fi.next();
                 if (test.getFilter().equals(filter)) {
                     fi.remove();
+                    filters = this.getFilterArray();
                     return test.getFilter();
                 }
             }
         }
 
-        // no removed ComponentFilter
+        // no removed filter
         return null;
     }
+*/
 
-    public synchronized boolean removeFilterById(Object filterId) {
+    public synchronized boolean removeFilterById(final Object filterId) {
         if (filterList != null) {
-            filters = null;
             for (Iterator<FilterListEntry> fi = filterList.iterator(); fi.hasNext();) {
                 FilterListEntry test = fi.next();
-                if (test.getFitlerId() == filterId
-                    || (test.getFitlerId() != null && test.getFitlerId().equals(
+                if (test.getFilterId() == filterId
+                    || (test.getFilterId() != null && test.getFilterId().equals(
                         filterId))) {
                     fi.remove();
+                    filters = this.getFilterArray();
                     return true;
                 }
             }
         }
 
-        // no removed ComponentFilter
+        // no removed filter
         return false;
     }
 
     /**
      * Returns the list of <code>Filter</code>s added to this instance
      * or <code>null</code> if no filters have been added.
+     * This method doesn't need to be synced as it is called from synced methods.
      */
-    public synchronized Filter[] getFilters() {
-        if (filters == null) {
-            if (filterList != null && !filterList.isEmpty()) {
-                Filter[] tmp = new Filter[filterList.size()];
-                int i = 0;
-                for (FilterListEntry entry : filterList) {
-                    tmp[i] = entry.getFilter();
-                    i++;
-                }
-                filters = tmp;
+    private Filter[] getFilterArray() {
+        if (filterList != null && !filterList.isEmpty()) {
+            final Filter[] tmp = new Filter[filterList.size()];
+            int i = 0;
+            for (FilterListEntry entry : filterList) {
+                tmp[i] = entry.getFilter();
+                i++;
             }
+            return tmp;
         }
-        return filters;
+        return EMPTY_FILTER_ARRAY;
+    }
+
+    /**
+     * Returns the list of <code>Filter</code>s added to this instance
+     * or <code>null</code> if no filters have been added.
+     * This method doesn't need to be synced as it is only
+     * returned the current cached filter array.
+     */
+    public Filter[] getFilters() {
+        return this.filters;
     }
 
     /**
@@ -134,17 +146,20 @@ public class SlingFilterChainHelper {
 
         private final int order;
 
-        FilterListEntry(Filter filter, Long filterId, int order) {
+        private final String orderSource;
+
+        FilterListEntry(final Filter filter, final Long filterId, final int order, final String orderSource) {
             this.filter = filter;
             this.filterId = filterId;
             this.order = order;
+            this.orderSource = orderSource;
         }
 
         public Filter getFilter() {
             return filter;
         }
 
-        public Long getFitlerId() {
+        public Long getFilterId() {
             return filterId;
         }
 
@@ -152,22 +167,27 @@ public class SlingFilterChainHelper {
             return order;
         }
 
+        public String getOrderSource() {
+            return orderSource;
+        }
+
         /**
          * Note: this class has a natural ordering that is inconsistent with
          * equals.
          */
-        public int compareTo(FilterListEntry other) {
+        public int compareTo(final FilterListEntry other) {
             if (this == other || equals(other)) {
                 return 0;
             }
 
-            if (order < other.order) {
+            // new service.ranking order (correct)
+            if (order > other.order) {
                 return -1;
-            } else if (order > other.order) {
+            } else if (order < other.order) {
                 return 1;
             }
 
-            // if the filterId is comparable and the other is of the same class
+            // compare filter id (service id)
             if (filterId != null && other.filterId != null) {
                 int comp = filterId.compareTo(other.filterId);
                 if (comp != 0) {
@@ -175,8 +195,8 @@ public class SlingFilterChainHelper {
                 }
             }
 
-            // this is inserted, obj is existing key
-            return 1; // insert after current key
+            // consider equal ranking
+            return 0;
         }
 
         @Override
@@ -187,13 +207,14 @@ public class SlingFilterChainHelper {
             return filter.hashCode();
         }
 
-        public boolean equals(Object obj) {
+        @Override
+        public boolean equals(final Object obj) {
             if (this == obj) {
                 return true;
             }
 
             if (obj instanceof FilterListEntry) {
-                FilterListEntry other = (FilterListEntry) obj;
+                final FilterListEntry other = (FilterListEntry) obj;
                 return getFilter().equals(other.getFilter());
             }
 

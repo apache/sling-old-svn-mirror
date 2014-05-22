@@ -87,8 +87,10 @@ public class WebConsoleConfigPrinter {
                 pw.print(entry.getOrder());
                 pw.print(" : ");
                 pw.print(entry.getFilter().getClass());
-                pw.print(" (");
-                pw.print(entry.getFitlerId());
+                pw.print(" (id: ");
+                pw.print(entry.getFilterId());
+                pw.print(", property: ");
+                pw.print(entry.getOrderSource());
                 pw.println(")");
             }
         }
