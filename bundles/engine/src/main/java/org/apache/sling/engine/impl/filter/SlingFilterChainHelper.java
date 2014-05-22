@@ -51,33 +51,6 @@ public class SlingFilterChainHelper {
         filters = this.getFilterArray();
         return filter;
     }
-/*
-    public synchronized Filter[] removeAllFilters() {
-        // will be returned after cleaning the lists
-        Filter[] removedFilters = getFilters();
-
-        filters = EMPTY_FILTER_ARRAY;
-        filterList = null;
-
-        return removedFilters;
-    }
-    public synchronized Filter removeFilter(Filter filter) {
-        if (filterList != null) {
-            filters = null;
-            for (Iterator<FilterListEntry> fi = filterList.iterator(); fi.hasNext();) {
-                FilterListEntry test = fi.next();
-                if (test.getFilter().equals(filter)) {
-                    fi.remove();
-                    filters = this.getFilterArray();
-                    return test.getFilter();
-                }
-            }
-        }
-
-        // no removed filter
-        return null;
-    }
-*/
 
     public synchronized boolean removeFilterById(final Object filterId) {
         if (filterList != null) {
