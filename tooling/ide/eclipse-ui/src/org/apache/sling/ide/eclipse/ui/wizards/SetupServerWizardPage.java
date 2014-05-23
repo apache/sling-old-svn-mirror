@@ -152,23 +152,12 @@ public class SetupServerWizardPage extends WizardPage {
 	    
 	    SelectionAdapter radioListener = new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
-                existingServerCombo.getWidget().setEnabled(useExistingServer.getSelection());
-				newServerName.setEnabled(setupNewServer.getSelection());
-				newServerHostnameName.setEnabled(setupNewServer.getSelection());
-				newServerPort.setEnabled(setupNewServer.getSelection());
-				newServerDebugPort.setEnabled(setupNewServer.getSelection());
-                newServerUsername.setEnabled(setupNewServer.getSelection());
-                newServerPassword.setEnabled(setupNewServer.getSelection());
-				installToolingSupportBundle.setEnabled(setupNewServer.getSelection());
+                updateEnablements();
 				dialogChanged();
 			}
         };
 		useExistingServer.addSelectionListener(radioListener);
 		setupNewServer.addSelectionListener(radioListener);
-	    useExistingServer.setSelection(false);
-        existingServerCombo.getWidget().setEnabled(false);
-	    setupNewServer.setSelection(true);
-	    installToolingSupportBundle.setSelection(true);
 	    
 	    ModifyListener ml = new ModifyListener() {
 			
@@ -197,6 +186,13 @@ public class SetupServerWizardPage extends WizardPage {
 		newServerPort.addKeyListener(kl);
 		newServerDebugPort.addModifyListener(ml);
 		newServerDebugPort.addKeyListener(kl);
+
+        useExistingServer.setSelection(existingServerCombo.hasServers());
+        existingServerCombo.getWidget().setEnabled(existingServerCombo.hasServers());
+        setupNewServer.setSelection(!existingServerCombo.hasServers());
+        installToolingSupportBundle.setSelection(true);
+
+        updateEnablements();
 		
 		setPageComplete(false);
 		setControl(container);
@@ -247,6 +243,18 @@ public class SetupServerWizardPage extends WizardPage {
 		}
 		updateStatus(null);
 	}
+
+    private void updateEnablements() {
+
+        existingServerCombo.getWidget().setEnabled(useExistingServer.getSelection());
+        newServerName.setEnabled(setupNewServer.getSelection());
+        newServerHostnameName.setEnabled(setupNewServer.getSelection());
+        newServerPort.setEnabled(setupNewServer.getSelection());
+        newServerDebugPort.setEnabled(setupNewServer.getSelection());
+        newServerUsername.setEnabled(setupNewServer.getSelection());
+        newServerPassword.setEnabled(setupNewServer.getSelection());
+        installToolingSupportBundle.setEnabled(setupNewServer.getSelection());
+    }
 
 	private void updateStatus(String message) {
 		setErrorMessage(message);
