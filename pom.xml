@@ -53,9 +53,10 @@
         <organization.logo>http://sling.apache.org/site/media.data/logo.png</organization.logo>
         <!--
             Java API and class file compliance. This property supports
-            one of two values:
+            one of three values:
               - 5: Java 1.5 (default)
               - 6: Java 6
+              - 7: Java 7
             Using anything else causes the set-bundle-required-execution-environment
             to fail the build with an exception
         -->
@@ -198,9 +199,12 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                                     if (slingJavaVersion == "6") {
                                         bree = "JavaSE-1.6";
 	                                    System.out.println("Setting Bundle-RequiredExecutionEnvironment=" + bree + " from sling.java.version=" + slingJavaVersion);
+                                    } else if (slingJavaVersion == "7") {
+                                        bree = "JavaSE-1.7";
+	                                    System.out.println("Setting Bundle-RequiredExecutionEnvironment=" + bree + " from sling.java.version=" + slingJavaVersion);
                                     } else if (slingJavaVersion != "5") {
-                                        System.out.println("Unsupported sling.java.version=" + slingJavaVersion + "; must be 5 or 6.");
-                                        throw "sling.java.version must be 5 or 6";
+                                        System.out.println("Unsupported sling.java.version=" + slingJavaVersion + "; must be 5, 6 or 7.");
+                                        throw "sling.java.version must be 5, 6 or 7";
                                     }
                                     project.setProperty("sling.bree", bree);
                                 ]]></script>
@@ -385,7 +389,7 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>animal-sniffer-maven-plugin</artifactId>
-                    <version>1.9</version>
+                    <version>1.11</version>
                     <configuration>
                         <signature>
                             <groupId>org.codehaus.mojo.signature</groupId>
