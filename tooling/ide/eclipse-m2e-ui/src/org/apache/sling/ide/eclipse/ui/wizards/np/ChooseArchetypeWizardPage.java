@@ -51,7 +51,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.List;
 import org.eclipse.m2e.core.internal.index.IndexListener;
 import org.eclipse.m2e.core.repository.IRepository;
 
@@ -59,7 +58,7 @@ import org.eclipse.m2e.core.repository.IRepository;
 public class ChooseArchetypeWizardPage extends WizardPage implements IndexListener {
 	
 	private static final String LOADING_PLEASE_WAIT = "loading, please wait...";
-	private List knownArchetypesList;
+    private Combo knownArchetypes;
 	private Map<String, Archetype> archetypesMap = new HashMap<String, Archetype>();
 	private Button useDefaultWorkspaceLocationButton;
 	private Label locationLabel;
@@ -82,7 +81,7 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
 		GridLayout layout = new GridLayout();
 		container.setLayout(layout);
 		layout.numColumns = 3;
-		layout.verticalSpacing = 9;
+        layout.verticalSpacing = 9;
 
 	    useDefaultWorkspaceLocationButton = new Button(container, SWT.CHECK);
 	    GridData useDefaultWorkspaceLocationButtonData = new GridData(SWT.LEFT, SWT.CENTER, false, false, 3, 1);
@@ -144,16 +143,16 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
 		Label label = new Label(container, SWT.NULL);
 		label.setText("&Archetype:");
 
-		knownArchetypesList = new List(container, SWT.BORDER);
-		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
-		knownArchetypesList.setLayoutData(gd);
-		knownArchetypesList.addSelectionListener(new SelectionAdapter() {
+        knownArchetypes = new Combo(container, SWT.DROP_DOWN | SWT.READ_ONLY);
+        GridData gd = new GridData(GridData.FILL_HORIZONTAL);
+        knownArchetypes.setLayoutData(gd);
+		knownArchetypes.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				dialogChanged();
 			}
 		});
-		knownArchetypesList.addMouseListener(new MouseAdapter() {
+		knownArchetypes.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseDoubleClick(MouseEvent e) {
 				getContainer().showPage(getNextPage());
@@ -175,13 +174,15 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
     }
 
 	public Archetype getSelectedArchetype() {
-		String[] sel = knownArchetypesList.getSelection();
-		if (sel==null || sel.length!=1) {
-			return null;
-		}
-		String s = sel[0];
-		Archetype a = archetypesMap.get(s);
-		return a;
+
+        int idx = knownArchetypes.getSelectionIndex();
+        if (idx == -1) {
+            return null;
+        }
+
+        String archetype = knownArchetypes.getItem(idx);
+
+        return archetypesMap.get(archetype);
 	}
 	
     /*
@@ -192,7 +193,7 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
     @Override
     public void setVisible(boolean visible) {
         super.setVisible(visible);
-        if (visible && knownArchetypesList.getItemCount() == 0) {
+        if (visible && knownArchetypes.getItemCount() == 0) {
             // initialize as late as possible to take advantage of the error reporting
             // and progress from the parent wizard
             initialize();
@@ -200,7 +201,7 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
     }
 
 	private void initialize() {
-		knownArchetypesList.add(LOADING_PLEASE_WAIT);
+		knownArchetypes.add(LOADING_PLEASE_WAIT);
 		try {
             getContainer().run(true, false, new IRunnableWithProgress() {
 					
@@ -242,11 +243,11 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
 			        Display.getDefault().asyncExec(new Runnable() {
 			            public void run() {
 			            	Set<String> keys = archetypesMap.keySet();
-			            	knownArchetypesList.removeAll();
+			            	knownArchetypes.removeAll();
                             for (String aKey : keys) {
-                                knownArchetypesList.add(aKey);
+                                knownArchetypes.add(aKey);
                             }
-			            	knownArchetypesList.pack();
+			            	knownArchetypes.pack();
 			            }
 			          });
 			        monitor.done();
@@ -265,13 +266,13 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
 	}
 
 	private void dialogChanged() {
-		if (knownArchetypesList.getItemCount()==1 &&
-				knownArchetypesList.getItem(0).equals(LOADING_PLEASE_WAIT)) {
+		if (knownArchetypes.getItemCount()==1 &&
+				knownArchetypes.getItem(0).equals(LOADING_PLEASE_WAIT)) {
 			setErrorMessage(null);
 			setPageComplete(false);
 			return;
 		}
-		if (knownArchetypesList.getSelectionCount()!=1) {
+        if (knownArchetypes.getSelectionIndex() == -1) {
 			updateStatus("archetype must be selected");
 			return;
 		}
@@ -309,7 +310,7 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
             @Override
             public void run() {
                 if (isCurrentPage()) {
-                    knownArchetypesList.removeAll();
+                    knownArchetypes.removeAll();
                     initialize();
                 }
             }
