@@ -31,10 +31,6 @@ import org.hamcrest.TypeSafeMatcher;
 
 public class HasFileMatcher extends TypeSafeMatcher<IProject> {
 
-    public static final HasFileMatcher hasFile(String filePath, byte[] contents) {
-        return new HasFileMatcher(filePath, contents);
-    }
-
     private final String fileName;
     private final byte[] contents;
 
@@ -64,6 +60,10 @@ public class HasFileMatcher extends TypeSafeMatcher<IProject> {
 
         if (maybeFile == null || maybeFile.getType() != IResource.FILE) {
             return false;
+        }
+
+        if (contents == null) {
+            return true;
         }
 
         IFile file = (IFile) maybeFile;
