@@ -16,7 +16,12 @@
  */
 package org.apache.sling.ide.eclipse.ui.internal;
 
+import static java.util.Arrays.asList;
+
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -33,11 +38,15 @@ import org.eclipse.wst.server.core.ServerCore;
  */
 public class SlingLaunchpadCombo {
 
+    public enum ValidationFlag {
+        SKIP_SERVER_STARTED;
+    }
+
     private final Combo repositoryCombo;
     private IProject project;
 
     public SlingLaunchpadCombo(Composite parent, IProject project) {
-        repositoryCombo = new Combo(parent, SWT.DROP_DOWN);
+        repositoryCombo = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
         repositoryCombo.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 
         this.project = project;
@@ -54,7 +63,8 @@ public class SlingLaunchpadCombo {
     public void refreshRepositoryList(IProgressMonitor monitor) {
 
         repositoryCombo.removeAll();
-        List<IServer> servers = SelectionUtils.getServersLinkedToProject(project, monitor);
+        List<IServer> servers = project != null ? SelectionUtils.getServersLinkedToProject(project, monitor) : Arrays
+                .asList(ServerCore.getServers());
         if (servers.size() > 1) {
             repositoryCombo.add(""); // force selection only if there is more than one server
         }
@@ -79,7 +89,7 @@ public class SlingLaunchpadCombo {
         return repositoryCombo.getItemCount() > 0;
     }
 
-    public String getErrorMessage() {
+    public String getErrorMessage(ValidationFlag... flags) {
 
         if (!hasServers() && project != null) {
             return "The selected project is not configured with/added to any Sling server";
@@ -90,8 +100,13 @@ public class SlingLaunchpadCombo {
             return "Please select a repository";
         }
 
-        if (server.getServerState() != IServer.STATE_STARTED) {
-            return "Selected server is not started";
+        Set<ValidationFlag> flagSet = flags.length == 0 ? EnumSet.noneOf(ValidationFlag.class) : 
+            EnumSet.copyOf(asList(flags));
+
+        if (!flagSet.contains(ValidationFlag.SKIP_SERVER_STARTED)) {
+            if (server.getServerState() != IServer.STATE_STARTED) {
+                return "Selected server is not started";
+            }
         }
 
         return null;
