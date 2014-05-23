@@ -16,16 +16,17 @@
  */
 package org.apache.sling.ide.eclipse.ui.wizards;
 
+import static org.apache.sling.ide.eclipse.ui.internal.SlingLaunchpadCombo.ValidationFlag.SKIP_SERVER_STARTED;
+
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.artifacts.EmbeddedArtifact;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.ui.internal.Activator;
+import org.apache.sling.ide.eclipse.ui.internal.SlingLaunchpadCombo;
 import org.apache.sling.ide.osgi.OsgiClient;
 import org.apache.sling.ide.osgi.OsgiClientException;
 import org.apache.sling.ide.osgi.OsgiClientFactory;
@@ -33,6 +34,7 @@ import org.apache.sling.ide.transport.RepositoryInfo;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.wizard.WizardPage;
@@ -46,7 +48,6 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
@@ -63,7 +64,7 @@ public class SetupServerWizardPage extends WizardPage {
     private static final int HORIZONTAL_INDENT = 10;
 
     private Button useExistingServer;
-	private Combo existingServerCombo;
+    private SlingLaunchpadCombo existingServerCombo;
 	private Button setupNewServer;
 	private Text newServerName;
 	private Text newServerHostnameName;
@@ -74,8 +75,6 @@ public class SetupServerWizardPage extends WizardPage {
 	private Button installToolingSupportBundle;
 	
     private IServer server;
-
-	private Map<String, IServer> serversMap = new HashMap<String, IServer>();
 
     public SetupServerWizardPage(AbstractNewSlingApplicationWizard parent) {
 		super("chooseArchetypePage");
@@ -110,15 +109,14 @@ public class SetupServerWizardPage extends WizardPage {
 	    existingServerLabel.setText("Location:");
 	    existingServerLabel.setEnabled(true);
 
-	    existingServerCombo = new Combo(container, SWT.DROP_DOWN | SWT.READ_ONLY);
-	    GridData locationComboData = new GridData(SWT.FILL, SWT.CENTER, true, false);
-	    existingServerCombo.setLayoutData(locationComboData);
-	    existingServerCombo.addModifyListener(new ModifyListener() {
+        existingServerCombo = new SlingLaunchpadCombo(container, null);
+        existingServerCombo.getWidget().addModifyListener(new ModifyListener() {
 	      public void modifyText(ModifyEvent e) {
 	    	  dialogChanged();
 	      }
 	    });
-	    existingServerCombo.setEnabled(true);
+        existingServerCombo.refreshRepositoryList(new NullProgressMonitor());
+        existingServerCombo.getWidget().setEnabled(true);
 
         setupNewServer = new Button(container, SWT.RADIO);
         setupNewServer.setText("Setup new server");
@@ -154,7 +152,7 @@ public class SetupServerWizardPage extends WizardPage {
 	    
 	    SelectionAdapter radioListener = new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
-				existingServerCombo.setEnabled(useExistingServer.getSelection());
+                existingServerCombo.getWidget().setEnabled(useExistingServer.getSelection());
 				newServerName.setEnabled(setupNewServer.getSelection());
 				newServerHostnameName.setEnabled(setupNewServer.getSelection());
 				newServerPort.setEnabled(setupNewServer.getSelection());
@@ -164,11 +162,11 @@ public class SetupServerWizardPage extends WizardPage {
 				installToolingSupportBundle.setEnabled(setupNewServer.getSelection());
 				dialogChanged();
 			}
-		};
+        };
 		useExistingServer.addSelectionListener(radioListener);
 		setupNewServer.addSelectionListener(radioListener);
 	    useExistingServer.setSelection(false);
-	    existingServerCombo.setEnabled(false);
+        existingServerCombo.getWidget().setEnabled(false);
 	    setupNewServer.setSelection(true);
 	    installToolingSupportBundle.setSelection(true);
 	    
@@ -200,7 +198,6 @@ public class SetupServerWizardPage extends WizardPage {
 		newServerDebugPort.addModifyListener(ml);
 		newServerDebugPort.addKeyListener(kl);
 		
-		initialize();
 		setPageComplete(false);
 		setControl(container);
 	}
@@ -225,24 +222,16 @@ public class SetupServerWizardPage extends WizardPage {
         return text;
     }
 
-	private void initialize() {
-		IServer[] servers = ServerCore.getServers();
-		for (int i = 0; i < servers.length; i++) {
-			IServer server = servers[i];
-			String key = keyFor(server);
-			serversMap.put(key, server);
-			existingServerCombo.add(key);
-		}
-	}
-
-	private String keyFor(IServer server) {
-		return server.getName();
-	}
-
 	private void dialogChanged() {
+
+        // called too early
+        if (getControl() == null) {
+            return;
+        }
+
 		if (useExistingServer.getSelection()) {
-			if (existingServerCombo.getSelectionIndex()==-1) {
-				updateStatus("Choose existing server from the list");
+            if (existingServerCombo.getErrorMessage(SKIP_SERVER_STARTED) != null) {
+                updateStatus(existingServerCombo.getErrorMessage());
 				return;
 			}
 		} else if (setupNewServer.getSelection()) {
@@ -289,9 +278,7 @@ public class SetupServerWizardPage extends WizardPage {
         }
 
 		if (useExistingServer.getSelection()) {
-			String key = existingServerCombo.getItem(existingServerCombo.getSelectionIndex());
-            server = serversMap.get(key);
-            return server;
+            return existingServerCombo.getServer();
 		} else {
 			IServerType serverType = ServerCore.findServerType("org.apache.sling.ide.launchpadServer");
 			@SuppressWarnings("unused")
@@ -344,6 +331,7 @@ public class SetupServerWizardPage extends WizardPage {
 			IRuntimeType serverRuntime = ServerCore.findRuntimeType("org.apache.sling.ide.launchpadRuntimeType");
 			try {
                 // TODO there should be a nicer API for creating this, and also a central place for defaults
+                // TODO - we should not be creating runtimes, but maybe matching against existing ones
                 IRuntime runtime = serverRuntime.createRuntime(null, monitor);
                 runtime = runtime.createWorkingCopy().save(true, monitor);
                 IServerWorkingCopy wc = serverType.createServer(null, null, runtime, monitor);
