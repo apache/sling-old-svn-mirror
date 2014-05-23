@@ -78,13 +78,15 @@ public class SlingBundleModuleFactory extends ProjectModuleFactoryDelegate {
                 }
             }
         } catch (CoreException ce) {
-            // TODO logging
+            Activator.getDefault().getPluginLogger().warn("Failed creating module for project " + project, ce);
         }
 
         return null;
     }
 
     static class SlingBundleModuleDelegate extends ProjectModule {
+
+        private static final IModule[] EMPTY_MODULES = new IModule[0];
 
         public SlingBundleModuleDelegate(IModule module) {
             super(module.getProject());
@@ -171,7 +173,7 @@ public class SlingBundleModuleFactory extends ProjectModuleFactoryDelegate {
 
         @Override
         public IModule[] getChildModules() {
-            return new IModule[0]; // TODO revisit, do we need child modules?
+            return EMPTY_MODULES;
         }
     }
 }
