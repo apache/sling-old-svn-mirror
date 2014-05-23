@@ -133,7 +133,7 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
             });
 
             // ensure server is started and all modules are published
-            getContainer().run(true, false, new IRunnableWithProgress() {
+            getContainer().run(false, false, new IRunnableWithProgress() {
 
                 @Override
                 public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
