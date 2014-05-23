@@ -51,6 +51,11 @@ public class JcrNewNodeAction implements IObjectActionDelegate {
             return;
         }
         Repository repository = ServerUtil.getDefaultRepository(node.getProject());
+        if (repository == null) {
+            MessageDialog.openWarning(null, "Unable to create a new node", "Unable to create a new node since project "
+                    + node.getProject().getName() + " is not associated with a server or the server is not started.");
+            return;
+        }
         NodeTypeRegistry ntManager = repository.getNodeTypeRegistry();
         
         try {
