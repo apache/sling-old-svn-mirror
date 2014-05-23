@@ -57,6 +57,8 @@ public class NewSlingContentProjectWizard extends AbstractNewSlingApplicationWiz
         ops.add(new CreateFolder(project, "jcr_root"));
 
         ops.add(new CreateFolder(project, "jcr_root/content"));
+        ops.add(new CreateFile(project, "jcr_root/content/.content.xml", getClass().getResourceAsStream(
+                "res/folder.content.xml")));
         ops.add(new CreateFolder(project, "jcr_root/content/example"));
         ops.add(new CreateFile(project, "jcr_root/content/example/.content.xml", getClass().getResourceAsStream(
                 "res/.content.xml")));
