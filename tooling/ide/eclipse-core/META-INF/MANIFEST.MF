@@ -38,8 +38,10 @@ Import-Package: org.apache.commons.httpclient;version="3.1.0",
  org.eclipse.wst.server.core,
  org.eclipse.wst.server.core.model,
  org.eclipse.wst.server.core.util,
+ org.eclipse.wst.validation,
  org.json,
  org.osgi.service.component;version="1.1.0"
 Export-Package: org.apache.sling.ide.eclipse.core,
  org.apache.sling.ide.eclipse.core.internal,
- org.apache.sling.ide.eclipse.core.debug
+ org.apache.sling.ide.eclipse.core.debug,
+ org.apache.sling.ide.eclipse.internal.validation;x-friends:=org.apache.sling.ide.eclipse-test

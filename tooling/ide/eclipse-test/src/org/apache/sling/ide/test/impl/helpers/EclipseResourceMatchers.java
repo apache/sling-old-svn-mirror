@@ -25,6 +25,10 @@ public class EclipseResourceMatchers {
         return new HasFileMatcher(path, contents);
     }
 
+    public static Matcher<IProject> hasFile(String path) {
+        return new HasFileMatcher(path, null);
+    }
+
     public static Matcher<IProject> hasFolder(String path) {
         return new HasFolderMatcher(path);
     }

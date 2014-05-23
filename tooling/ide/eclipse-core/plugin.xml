@@ -181,5 +181,20 @@
                properties="canBeExported,canBeImported"
                class="org.apache.sling.ide.eclipse.core.internal.ContentResourceTester">
          </propertyTester>
-   </extension>    
+   </extension>
+   
+   <extension
+         id="bundleValidator"
+         point="org.eclipse.wst.validation.validatorV2"
+         name="Sling Bundle Validator">
+      <validator class="org.apache.sling.ide.eclipse.internal.validation.BundleProjectValidator">
+      	<include>
+          <rules>
+          	<facet
+                 id="sling.bundle">
+          	</facet>
+          </rules>
+      	</include>
+      </validator>
+   </extension>
 </plugin>    
