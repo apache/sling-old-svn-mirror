@@ -194,7 +194,6 @@ public class SetupServerWizardPage extends WizardPage {
 
         updateEnablements();
 		
-		setPageComplete(false);
 		setControl(container);
 	}
 
