@@ -26,7 +26,7 @@
         <exam.version>3.3.0</exam.version>
         <url.version>1.5.2</url.version>
         <org.ops4j.pax.logging.DefaultServiceLog.level>WARN</org.ops4j.pax.logging.DefaultServiceLog.level>
-        <org.ops4j.pax.url.mvn.settings>${basedir}/src/main/resources/empty-maven-settings.xml</org.ops4j.pax.url.mvn.settings>
+        <org.ops4j.pax.url.mvn.settings></org.ops4j.pax.url.mvn.settings>
         <oak.version>1.0.0</oak.version>
         <sling.oak.server.version>${project.version}</sling.oak.server.version>
     </properties>
