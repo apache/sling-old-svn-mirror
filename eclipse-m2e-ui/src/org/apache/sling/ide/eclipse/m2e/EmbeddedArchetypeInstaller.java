@@ -88,6 +88,9 @@ public class EmbeddedArchetypeInstaller {
 	}
 	
 	public void addResource(String fileExtension, URL origin) throws IOException {
+	    if (origin==null) {
+	        throw new IllegalArgumentException("origin must not be null");
+	    }
 		origins.put(fileExtension, origin.openStream());
 	}
 
