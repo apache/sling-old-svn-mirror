@@ -69,17 +69,17 @@ public class ContentImportTest {
         ProjectAdapter project = new ProjectAdapter(contentProject);
         project.addNatures(JavaCore.NATURE_ID, "org.eclipse.wst.common.project.facet.core.nature");
 
-        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en/hello.txt"),
-                new ByteArrayInputStream("hello, world".getBytes()));
-
-        project.createOrUpdateFile(Path.fromPortableString("META-INF/vault/filter.xml"), getClass()
-                .getResourceAsStream("filter-only-content-test-root-en.xml"));
-
         // install bundle facet
         project.installFacet("sling.content", "1.0");
 
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
+
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en/hello.txt"),
+                new ByteArrayInputStream("hello, world".getBytes()));
+
+        project.createOrUpdateFile(Path.fromPortableString("META-INF/vault/filter.xml"), getClass()
+                .getResourceAsStream("filter-only-content-test-root-en.xml"));
 
         // create server-side content
         RepositoryAccessor repo = new RepositoryAccessor(config);
@@ -105,17 +105,17 @@ public class ContentImportTest {
         ProjectAdapter project = new ProjectAdapter(contentProject);
         project.addNatures(JavaCore.NATURE_ID, "org.eclipse.wst.common.project.facet.core.nature");
 
-        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en/hello.txt"),
-                new ByteArrayInputStream("hello, world".getBytes()));
-
-        project.createOrUpdateFile(Path.fromPortableString("META-INF/vault/filter.xml"), getClass()
-                .getResourceAsStream("filter-only-content-test-root-en.xml"));
-
         // install bundle facet
         project.installFacet("sling.content", "1.0");
 
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
+
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en/hello.txt"),
+                new ByteArrayInputStream("hello, world".getBytes()));
+
+        project.createOrUpdateFile(Path.fromPortableString("META-INF/vault/filter.xml"), getClass()
+                .getResourceAsStream("filter-only-content-test-root-en.xml"));
 
         // create server-side content
         RepositoryAccessor repo = new RepositoryAccessor(config);
@@ -140,17 +140,17 @@ public class ContentImportTest {
         ProjectAdapter project = new ProjectAdapter(contentProject);
         project.addNatures(JavaCore.NATURE_ID, "org.eclipse.wst.common.project.facet.core.nature");
 
-        project.createOrUpdateFile(Path.fromPortableString("META-INF/vault/filter.xml"), getClass()
-                .getResourceAsStream("filter-only-content-test-root-en.xml"));
-
-        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/.vltignore"),
-                new ByteArrayInputStream("en\n".getBytes()));
-
         // install bundle facet
         project.installFacet("sling.content", "1.0");
 
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
+
+        project.createOrUpdateFile(Path.fromPortableString("META-INF/vault/filter.xml"), getClass()
+                .getResourceAsStream("filter-only-content-test-root-en.xml"));
+
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/.vltignore"),
+                new ByteArrayInputStream("en\n".getBytes()));
 
         // create server-side content
         RepositoryAccessor repo = new RepositoryAccessor(config);
@@ -175,6 +175,12 @@ public class ContentImportTest {
         ProjectAdapter project = new ProjectAdapter(contentProject);
         project.addNatures(JavaCore.NATURE_ID, "org.eclipse.wst.common.project.facet.core.nature");
 
+        // install bundle facet
+        project.installFacet("sling.content", "1.0");
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
+
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/hello.txt"), new ByteArrayInputStream(
                 "hello, world".getBytes()));
 
@@ -183,12 +189,6 @@ public class ContentImportTest {
 
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/.vltignore"), new ByteArrayInputStream(
                 "content/test-root/en\n".getBytes()));
-
-        // install bundle facet
-        project.installFacet("sling.content", "1.0");
-
-        ServerAdapter server = new ServerAdapter(wstServer.getServer());
-        server.installModule(contentProject);
 
         // create server-side content
         RepositoryAccessor repo = new RepositoryAccessor(config);

@@ -33,7 +33,6 @@ import javax.jcr.RepositoryException;
 
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.URIException;
-import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.test.impl.helpers.DisableDebugStatusHandlers;
 import org.apache.sling.ide.test.impl.helpers.ExternalSlingLaunchpad;
 import org.apache.sling.ide.test.impl.helpers.LaunchpadConfig;
@@ -85,14 +84,14 @@ public class ContentDeploymentTest {
         ProjectAdapter project = new ProjectAdapter(contentProject);
         project.addNatures(JavaCore.NATURE_ID, "org.eclipse.wst.common.project.facet.core.nature");
 
-        project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/hello.txt"), new ByteArrayInputStream(
-                "hello, world".getBytes()));
-
         // install bundle facet
         project.installFacet("sling.content", "1.0");
 
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
+
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/hello.txt"), new ByteArrayInputStream(
+                "hello, world".getBytes()));
 
         // verify that file is created
         final RepositoryAccessor repo = new RepositoryAccessor(config);
@@ -142,14 +141,14 @@ public class ContentDeploymentTest {
         ProjectAdapter project = new ProjectAdapter(contentProject);
         project.addNatures("org.eclipse.wst.common.project.facet.core.nature");
 
-        project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/hello.txt"),
-                new ByteArrayInputStream("hello, world".getBytes()));
-
         // install bundle facet
         project.installFacet("sling.content", "1.0");
 
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
+
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/hello.txt"), new ByteArrayInputStream(
+                "hello, world".getBytes()));
 
         // verifications
         final RepositoryAccessor repo = new RepositoryAccessor(config);
@@ -176,14 +175,14 @@ public class ContentDeploymentTest {
         ProjectAdapter project = new ProjectAdapter(contentProject);
         project.addNatures(JavaCore.NATURE_ID, "org.eclipse.wst.common.project.facet.core.nature");
 
-        project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/hello.esp"), new ByteArrayInputStream(
-                "// not really javascript".getBytes()));
-
         // install bundle facet
         project.installFacet("sling.content", "1.0");
 
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
+
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/hello.esp"), new ByteArrayInputStream(
+                "// not really javascript".getBytes()));
 
         // verify that file is created
         final RepositoryAccessor repo = new RepositoryAccessor(config);
