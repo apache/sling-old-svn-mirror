@@ -172,6 +172,12 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             }
         } else if (ProjectHelper.isContentProject(module[0].getProject())) {
 
+            if (kind == IServer.PUBLISH_FULL && deltaKind == ServerBehaviourDelegate.ADDED) {
+                logger.trace("Ignoring request to fully publish an added content module");
+                setModulePublishState(module, IServer.PUBLISH_STATE_NONE);
+                return;
+            }
+
             try {
                 publishContentModule(kind, deltaKind, module, monitor);
                 BundleStateHelper.resetBundleState(getServer(), module[0].getProject());
