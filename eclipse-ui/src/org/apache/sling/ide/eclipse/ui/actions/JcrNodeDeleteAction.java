@@ -52,7 +52,7 @@ public class JcrNodeDeleteAction implements IObjectActionDelegate {
 		if (this.node==null) {
 			return;
 		}
-		if (!MessageDialog.openConfirm(shell, "Delete JCR node", "Do you really want to delete '"+node.getName()+"'?")) {
+		if (!MessageDialog.openConfirm(shell, "Delete JCR node", "Do you really want to delete '"+node.getLabel()+"'?")) {
 			return;
 		}
 		node.delete();
@@ -71,7 +71,7 @@ public class JcrNodeDeleteAction implements IObjectActionDelegate {
 			Object element = iss.getFirstElement();
 			if (element instanceof JcrNode) {
 				final JcrNode n = (JcrNode)element;
-				if (n.canBeRenamed()) {
+				if (n.canBeDeleted()) {
 					action.setEnabled(true);
 					this.node = n;
 					return;

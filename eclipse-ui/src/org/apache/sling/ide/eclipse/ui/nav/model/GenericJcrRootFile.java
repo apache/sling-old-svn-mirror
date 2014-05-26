@@ -25,6 +25,7 @@ import java.util.List;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.sling.ide.eclipse.core.internal.Activator;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -93,6 +94,7 @@ public class GenericJcrRootFile extends JcrNode {
 				DirNode dirNodeParent = (DirNode)parent;
 				JcrNode dirNodeParentParent = dirNodeParent.getParent();
 				JcrNode effectiveSibling = dirNodeParent.getEffectiveSibling();
+				effectiveSibling.dirSibling = dirNodeParent;
 				handleProperties(element, effectiveSibling.properties);
 				effectiveParent = parent;
 				dirNodeParentParent.hide(parent);
@@ -207,6 +209,34 @@ public class GenericJcrRootFile extends JcrNode {
 		}
 		
 		SyncDirManager.syncDirChanged(getSyncDir());
+	}
+	
+	@Override
+	public boolean canBeRenamed() {
+	    return true;
+	}
+	
+	@Override
+	public boolean canBeDeleted() {
+	    return true;
+	}
+	
+	@Override
+	public void rename(String string) {
+        try {
+            file.move(file.getParent().getFullPath().append(string+".xml"), true, new NullProgressMonitor());
+        } catch (CoreException e) {
+            Activator.getDefault().getPluginLogger().error("Error renaming resource ("+file+"): "+e, e);
+        }
+	}
+	
+	@Override
+	public void delete() {
+        try {
+            file.delete(true, new NullProgressMonitor());
+        } catch (CoreException e) {
+            Activator.getDefault().getPluginLogger().error("Error deleting resource ("+file+"): "+e, e);
+        }
 	}
 	
 }
