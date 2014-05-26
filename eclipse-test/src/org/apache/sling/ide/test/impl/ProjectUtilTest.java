@@ -48,11 +48,10 @@ public class ProjectUtilTest {
         // install bundle facet
         project.installFacet("sling.content", "1.0");
 
+        project.createVltFilterWithRoots();
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/hello.txt"), new ByteArrayInputStream(
                 "goodbye, world".getBytes()));
 
-        project.createOrUpdateFile(Path.fromPortableString("META-INF/vault/filter.xml"), new ByteArrayInputStream(
-                "<workspaceFilter version=\"1.0\"/>".getBytes()));
 
         IPath filterPath = ProjectUtil.findFilterPath(contentProject);
         assertThat("filterPath.absolute", filterPath.isAbsolute(), equalTo(true));
