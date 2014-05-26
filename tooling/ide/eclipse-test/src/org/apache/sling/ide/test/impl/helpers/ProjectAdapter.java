@@ -160,6 +160,19 @@ public class ProjectAdapter {
 
     }
 
+    public void createVltFilterWithRoots(String... roots) throws CoreException {
+
+        StringBuilder builder = new StringBuilder();
+        builder.append("<workspaceFilter vesion=\"1.0\">\n");
+        for (String root : roots) {
+            builder.append("  <filter root=\"").append(root).append("\"/>\n");
+        }
+        builder.append("</workspaceFilter>\n");
+
+        createOrUpdateFile(Path.fromPortableString("META-INF/vault/filter.xml"), new ByteArrayInputStream(builder
+                .toString().getBytes()));
+    }
+
     public void createOsgiBundleManifest(OsgiBundleManifest osgiManifest) throws CoreException, IOException {
 
         Manifest m = new Manifest();

@@ -75,11 +75,9 @@ public class ContentImportTest {
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
 
+        project.createVltFilterWithRoots("/content/test-root/en");
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en/hello.txt"),
                 new ByteArrayInputStream("hello, world".getBytes()));
-
-        project.createOrUpdateFile(Path.fromPortableString("META-INF/vault/filter.xml"), getClass()
-                .getResourceAsStream("filter-only-content-test-root-en.xml"));
 
         // create server-side content
         RepositoryAccessor repo = new RepositoryAccessor(config);
@@ -111,11 +109,9 @@ public class ContentImportTest {
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
 
+        project.createVltFilterWithRoots("/content/test-root/en");
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en/hello.txt"),
                 new ByteArrayInputStream("hello, world".getBytes()));
-
-        project.createOrUpdateFile(Path.fromPortableString("META-INF/vault/filter.xml"), getClass()
-                .getResourceAsStream("filter-only-content-test-root-en.xml"));
 
         // create server-side content
         RepositoryAccessor repo = new RepositoryAccessor(config);
@@ -146,9 +142,7 @@ public class ContentImportTest {
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
 
-        project.createOrUpdateFile(Path.fromPortableString("META-INF/vault/filter.xml"), getClass()
-                .getResourceAsStream("filter-only-content-test-root-en.xml"));
-
+        project.createVltFilterWithRoots("/content/test-root/en");
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/.vltignore"),
                 new ByteArrayInputStream("en\n".getBytes()));
 
@@ -181,11 +175,9 @@ public class ContentImportTest {
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
 
+        project.createVltFilterWithRoots("/content/test-root/en");
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/hello.txt"), new ByteArrayInputStream(
                 "hello, world".getBytes()));
-
-        project.createOrUpdateFile(Path.fromPortableString("META-INF/vault/filter.xml"), getClass()
-                .getResourceAsStream("filter-only-content-test-root-en.xml"));
 
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/.vltignore"), new ByteArrayInputStream(
                 "content/test-root/en\n".getBytes()));

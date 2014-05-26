@@ -280,9 +280,7 @@ public class JcrFullCoverageAggregatesDeploymentTest {
         repo.createNode("/content", "sling:Folder");
         repo.createNode("/content/test-root", "sling:Folder");
 
-        // create filter.xml
-        InputStream filterXml = getClass().getResourceAsStream("filter-only-content-test-root-en.xml");
-        project.createOrUpdateFile(Path.fromPortableString("META-INF/vault/filter.xml"), filterXml);
+        project.createVltFilterWithRoots("/content/test-root/en");
 
         // create .content.xml structure
         InputStream contentXml = getClass().getResourceAsStream("content-nested-structure.xml");
