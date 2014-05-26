@@ -207,7 +207,7 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>oak-core</artifactId>
-            <version>0.19</version>
+            <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
 
@@ -253,7 +253,7 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>oak-jcr</artifactId>
-            <version>0.19</version>
+            <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
 
