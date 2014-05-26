@@ -80,15 +80,15 @@ public class JcrFullCoverageAggregatesDeploymentTest {
         ProjectAdapter project = new ProjectAdapter(contentProject);
         project.addNatures("org.eclipse.wst.common.project.facet.core.nature");
 
-        // create .content.xml structure
-        InputStream contentXml = getClass().getResourceAsStream("content-nested-structure.xml");
-        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), contentXml);
-
         // install content facet
         project.installFacet("sling.content", "1.0");
 
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
+
+        // create .content.xml structure
+        InputStream contentXml = getClass().getResourceAsStream("content-nested-structure.xml");
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), contentXml);
 
         Matcher<Node> postConditions = allOf(hasPath("/content/test-root/en"), hasPrimaryType("sling:Folder"),
                 hasMixinTypes("mix:language"), hasChildrenCount(3));
@@ -115,15 +115,15 @@ public class JcrFullCoverageAggregatesDeploymentTest {
         ProjectAdapter project = new ProjectAdapter(contentProject);
         project.addNatures("org.eclipse.wst.common.project.facet.core.nature");
 
-        // create .content.xml structure
-        InputStream contentXml = getClass().getResourceAsStream("content-nested-structure.xml");
-        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), contentXml);
-
         // install content facet
         project.installFacet("sling.content", "1.0");
 
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
+
+        // create .content.xml structure
+        InputStream contentXml = getClass().getResourceAsStream("content-nested-structure.xml");
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), contentXml);
 
         Matcher<Node> postConditions = allOf(hasPath("/content/test-root/en"), hasPrimaryType("sling:Folder"),
                 hasMixinTypes("mix:language"), hasChildrenCount(3));
@@ -166,15 +166,15 @@ public class JcrFullCoverageAggregatesDeploymentTest {
         ProjectAdapter project = new ProjectAdapter(contentProject);
         project.addNatures("org.eclipse.wst.common.project.facet.core.nature");
 
-        // create .content.xml structure
-        InputStream contentXml = getClass().getResourceAsStream("content-nested-structure.xml");
-        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), contentXml);
-
         // install content facet
         project.installFacet("sling.content", "1.0");
 
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
+
+        // create .content.xml structure
+        InputStream contentXml = getClass().getResourceAsStream("content-nested-structure.xml");
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), contentXml);
 
         Matcher<Node> postConditions = allOf(hasPath("/content/test-root/en"), hasPrimaryType("sling:Folder"),
                 hasMixinTypes("mix:language"), hasChildrenCount(3));
@@ -217,15 +217,15 @@ public class JcrFullCoverageAggregatesDeploymentTest {
         ProjectAdapter project = new ProjectAdapter(contentProject);
         project.addNatures("org.eclipse.wst.common.project.facet.core.nature");
 
-        // create .content.xml structure
-        InputStream contentXml = getClass().getResourceAsStream("content-nested-structure.xml");
-        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), contentXml);
-
         // install content facet
         project.installFacet("sling.content", "1.0");
 
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
+
+        // create .content.xml structure
+        InputStream contentXml = getClass().getResourceAsStream("content-nested-structure.xml");
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), contentXml);
 
         Matcher<Node> postConditions = allOf(hasPath("/content/test-root/en"), hasPrimaryType("sling:Folder"),
                 hasMixinTypes("mix:language"), hasChildrenNames("message", "error", "warning"));
@@ -269,6 +269,17 @@ public class JcrFullCoverageAggregatesDeploymentTest {
         ProjectAdapter project = new ProjectAdapter(contentProject);
         project.addNatures("org.eclipse.wst.common.project.facet.core.nature");
 
+        // install content facet
+        project.installFacet("sling.content", "1.0");
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
+
+        // create prerequisite data
+        final RepositoryAccessor repo = new RepositoryAccessor(config);
+        repo.createNode("/content", "sling:Folder");
+        repo.createNode("/content/test-root", "sling:Folder");
+
         // create filter.xml
         InputStream filterXml = getClass().getResourceAsStream("filter-only-content-test-root-en.xml");
         project.createOrUpdateFile(Path.fromPortableString("META-INF/vault/filter.xml"), filterXml);
@@ -276,17 +287,6 @@ public class JcrFullCoverageAggregatesDeploymentTest {
         // create .content.xml structure
         InputStream contentXml = getClass().getResourceAsStream("content-nested-structure.xml");
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en.xml"), contentXml);
-
-        // install content facet
-        project.installFacet("sling.content", "1.0");
-
-        // create prerequisite data
-        final RepositoryAccessor repo = new RepositoryAccessor(config);
-        repo.createNode("/content", "sling:Folder");
-        repo.createNode("/content/test-root", "sling:Folder");
-
-        ServerAdapter server = new ServerAdapter(wstServer.getServer());
-        server.installModule(contentProject);
 
         Matcher<Node> postConditions = allOf(hasPath("/content/test-root/en"), hasPrimaryType("sling:Folder"),
                 hasMixinTypes("mix:language"), hasChildrenCount(3));

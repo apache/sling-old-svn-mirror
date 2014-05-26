@@ -78,6 +78,12 @@ public class JcrPartialCoverageAggregatesDeploymentTest {
         ProjectAdapter project = new ProjectAdapter(contentProject);
         project.addNatures("org.eclipse.wst.common.project.facet.core.nature");
 
+        // install content facet
+        project.installFacet("sling.content", "1.0");
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
+
         // create a sling:Folder at /content/test-root
         InputStream contentXml = getClass().getResourceAsStream("sling-folder-nodetype.xml");
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/.content.xml"), contentXml);
@@ -86,12 +92,6 @@ public class JcrPartialCoverageAggregatesDeploymentTest {
         InputStream childContentXml = getClass().getResourceAsStream("sling-folder-nodetype.xml");
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/nested/.content.xml"),
                 childContentXml);
-
-        // install content facet
-        project.installFacet("sling.content", "1.0");
-
-        ServerAdapter server = new ServerAdapter(wstServer.getServer());
-        server.installModule(contentProject);
 
         Matcher<Node> postConditions = allOf(hasPath("/content/test-root"), hasPrimaryType("sling:Folder"),
                 hasChildrenCount(1));
@@ -132,6 +132,12 @@ public class JcrPartialCoverageAggregatesDeploymentTest {
         ProjectAdapter project = new ProjectAdapter(contentProject);
         project.addNatures("org.eclipse.wst.common.project.facet.core.nature");
 
+        // install content facet
+        project.installFacet("sling.content", "1.0");
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
+
         // create a sling:Folder at /content/test-root
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/.content.xml"), getClass()
                 .getResourceAsStream("sling-folder-nodetype.xml"));
@@ -143,12 +149,6 @@ public class JcrPartialCoverageAggregatesDeploymentTest {
         // create a nt:unstructured at /content/test-root/nested/nested
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/nested/nested/.content.xml"),
                 getClass().getResourceAsStream("nt-unstructured-nodetype.xml"));
-
-        // install content facet
-        project.installFacet("sling.content", "1.0");
-
-        ServerAdapter server = new ServerAdapter(wstServer.getServer());
-        server.installModule(contentProject);
 
         Matcher<Node> postConditions = allOf(hasPath("/content/test-root/nested"), hasPrimaryType("nt:unstructured"),
                 hasChildrenCount(1));
