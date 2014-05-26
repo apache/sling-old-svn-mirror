@@ -59,11 +59,14 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspaceRunnable;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.resources.mapping.ResourceMapping;
 import org.eclipse.core.resources.mapping.ResourceMappingContext;
 import org.eclipse.core.resources.mapping.ResourceTraversal;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -122,6 +125,8 @@ public class JcrNode implements IAdaptable {
 	final GenericJcrRootFile underlying;
 
 	JcrNode parent;
+	
+	DirNode dirSibling;
 
 	final List<JcrNode> children = new LinkedList<JcrNode>();
 
@@ -699,21 +704,41 @@ public class JcrNode implements IAdaptable {
 		return null;
 	}
 
-	public void rename(String string) {
+	public void rename(final String string) {
 		if (domElement!=null && underlying!=null) {
 			domElement.setName(string);
 			underlying.save();
 		}
+		if (resource!=null) {
+		    IWorkspaceRunnable r = new IWorkspaceRunnable() {
+
+                @Override
+                public void run(IProgressMonitor monitor) throws CoreException {
+                    final IPath fileRenamePath = resource.getParent().getFullPath().append(string);
+                    resource.move(fileRenamePath, true, monitor);
+                    if (dirSibling!=null) {
+                        final IPath dirRenamePath = dirSibling.getResource().getParent().getFullPath().append(string+".dir");
+                        dirSibling.getResource().move(dirRenamePath, true, monitor);
+                    }
+                }
+		    };
+		    try {
+                ResourcesPlugin.getWorkspace().run(r, null);
+            } catch (CoreException e) {
+                Activator.getDefault().getPluginLogger().error("Error renaming resource ("+resource+"): "+e, e);
+            }
+		}
 	}
 
 	public boolean canBeRenamed() {
-		if (resource!=null) {
-			return false;
-		}
+        if (parent==null) {
+            return false;
+        }
+	    if (resource!=null) {
+            // can be a file or a folder (project is virtually impossible)
+	        return true;
+	    }
 		if (domElement!=null && underlying!=null) {
-			if (getDomName().equals("jcr:content")) {
-				return false;
-			}
 			return true;
 		}
 		return false;
@@ -875,12 +900,43 @@ public class JcrNode implements IAdaptable {
 		effectiveUnderlying.save();
 	}
 
+	public boolean canBeDeleted() {
+	    if (parent==null) {
+	        return false;
+	    }
+	    if (resource!=null) {
+	        // can be a file or a folder (project is virtually impossible)
+	        return true;
+	    }
+        if (domElement!=null && underlying!=null) {
+            return true;
+        }
+        return false;
+    }
+	
 	public void delete() {
 		if (parent==null) {
 			// then I dont know how to delete
 			return;
 		}
 		parent.children.remove(this);
+		if (resource!=null) {
+            IWorkspaceRunnable r = new IWorkspaceRunnable() {
+
+                @Override
+                public void run(IProgressMonitor monitor) throws CoreException {
+                    resource.delete(true, monitor);
+                    if (dirSibling!=null) {
+                        dirSibling.getResource().delete(true, monitor);
+                    }
+                }
+            };
+            try {
+                ResourcesPlugin.getWorkspace().run(r, null);
+            } catch (CoreException e) {
+                Activator.getDefault().getPluginLogger().error("Error renaming resource ("+resource+"): "+e, e);
+            }
+		}
 		if (domElement!=null) {
 			Element parentNode = domElement.getParentElement();
 			domElement.remove();
@@ -906,7 +962,9 @@ public class JcrNode implements IAdaptable {
 				}
 			}
 		}
-		underlying.save();
+		if (underlying!=null) {
+		    underlying.save();
+		}
 	}
 
 	public IProject getProject() {

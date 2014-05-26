@@ -99,4 +99,14 @@ public class SyncDir extends JcrNode {
 	    return node;
 	}
 	
+	@Override
+	public boolean canBeRenamed() {
+	    return false;
+	}
+	
+	@Override
+	public boolean canBeDeleted() {
+	    return false;
+	}
+	
 }

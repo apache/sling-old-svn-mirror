@@ -132,4 +132,9 @@ public class DirNode extends JcrNode {
 		return false;
 	}
 	
+	@Override
+	public boolean canBeDeleted() {
+	    return false;
+	}
+	
 }
