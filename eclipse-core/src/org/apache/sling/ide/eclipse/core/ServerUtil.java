@@ -51,10 +51,13 @@ public abstract class ServerUtil {
 
     public static Repository getDefaultRepository(IProject project) {
         IServer server = getDefaultServer(project);
+        if (server == null) {
+            return null;
+        }
         try {
             return getRepository(server, new NullProgressMonitor());
         } catch (CoreException e) {
-            e.printStackTrace();
+            Activator.getDefault().getPluginLogger().warn("Failed getting a repository for " + project, e);
             return null;
         }
     }
