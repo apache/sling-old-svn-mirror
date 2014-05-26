@@ -49,6 +49,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
 import org.hamcrest.Matcher;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -232,6 +233,41 @@ public class ContentDeploymentTest {
                 throw e.getCause();
         }
 
+    }
+
+    @Test
+    @Ignore("SLING-3586")
+    public void deployFileWithMissingParentFromRepository() throws Exception {
+
+        wstServer.waitForServerToStart();
+
+        // create faceted project
+        IProject contentProject = projectRule.getProject();
+
+        ProjectAdapter project = new ProjectAdapter(contentProject);
+        project.addNatures(JavaCore.NATURE_ID, "org.eclipse.wst.common.project.facet.core.nature");
+
+        // install bundle facet
+        project.installFacet("sling.content", "1.0");
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
+
+        // create filter.xml
+        project.createVltFilterWithRoots("/test/demo/nested/structure");
+        // create file
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/demo/nested/structure/hello.txt"),
+                new ByteArrayInputStream("hello, world".getBytes()));
+
+        // verify that file is created
+        final RepositoryAccessor repo = new RepositoryAccessor(config);
+        Poller poller = new Poller();
+        poller.pollUntil(new Callable<Node>() {
+            @Override
+            public Node call() throws RepositoryException {
+                return repo.getNode("/test/demo/nested/structure/hello.txt");
+            }
+        }, nullValue(Node.class));
     }
 
     private void assertThatNode(final RepositoryAccessor repo, Poller poller, final String nodePath, Matcher<Node> matcher)
