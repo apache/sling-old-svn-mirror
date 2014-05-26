@@ -151,11 +151,13 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         if ((kind == IServer.PUBLISH_AUTO || kind == IServer.PUBLISH_INCREMENTAL)
                 && deltaKind == ServerBehaviourDelegate.NO_CHANGE) {
             logger.trace("Ignoring request to publish the module when no resources have changed; most likely another module has changed");
+            setModulePublishState(module, IServer.PUBLISH_STATE_NONE);
             return;
         }
         
         if (kind == IServer.PUBLISH_FULL && deltaKind == ServerBehaviourDelegate.REMOVED) {
             logger.trace("Ignoring request to unpublish all of the module resources");
+            setModulePublishState(module, IServer.PUBLISH_STATE_NONE);
             return;
         }
 
