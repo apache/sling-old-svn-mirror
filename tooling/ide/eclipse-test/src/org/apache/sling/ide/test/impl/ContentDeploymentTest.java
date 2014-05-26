@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.util.concurrent.Callable;
 
 import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 
 import org.apache.commons.httpclient.HttpException;
@@ -193,6 +194,44 @@ public class ContentDeploymentTest {
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/hello.esp.dir/.content.xml"), contentXml);
 
         assertThatNode(repo, poller, "/test/hello.esp/jcr:content", hasPropertyValue("jcr:mimeType", "text/javascript"));
+    }
+
+    @Test(expected = PathNotFoundException.class)
+    public void deployFileBeforeModuleDeploymentIsIgnored() throws Throwable {
+
+        wstServer.waitForServerToStart();
+
+        // create faceted project
+        IProject contentProject = projectRule.getProject();
+
+        ProjectAdapter project = new ProjectAdapter(contentProject);
+        project.addNatures(JavaCore.NATURE_ID, "org.eclipse.wst.common.project.facet.core.nature");
+
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/hello.txt"), new ByteArrayInputStream(
+                "hello, world".getBytes()));
+
+        // install bundle facet
+        project.installFacet("sling.content", "1.0");
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
+
+        // verify that file is created
+        final RepositoryAccessor repo = new RepositoryAccessor(config);
+        Poller poller = new Poller();
+        try {
+            poller.pollUntil(new Callable<Node>() {
+                @Override
+                public Node call() throws RepositoryException {
+                    return repo.getNode("/test/hello.txt");
+                }
+            }, nullValue(Node.class));
+        } catch (RuntimeException e) {
+            // unwrap the underlying repository exception, since the poller does not do that
+            if (e.getCause() != null)
+                throw e.getCause();
+        }
+
     }
 
     private void assertThatNode(final RepositoryAccessor repo, Poller poller, final String nodePath, Matcher<Node> matcher)
