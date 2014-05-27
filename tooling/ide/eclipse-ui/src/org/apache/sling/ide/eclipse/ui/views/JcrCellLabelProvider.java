@@ -83,16 +83,11 @@ public class JcrCellLabelProvider extends CellLabelProvider {
                 IPropertyDescriptor pd = (IPropertyDescriptor)element;
                 JcrNode jcrNode = (JcrNode)viewer.getInput();
                 Map.Entry me = (Entry) pd.getId();
-                PropertyDefinition prd = jcrNode.getPropertyDefinition(String.valueOf(me.getKey()));
-                if (prd==null) {
+                int propertyType = jcrNode.getPropertyType(String.valueOf(me.getKey()));
+                if (propertyType<=-1 || propertyType==PropertyType.UNDEFINED) {
                     cell.setText("");
                 } else {
-                    final int requiredType = prd.getRequiredType();
-                    if (requiredType!=-1) {
-                        cell.setText(PropertyType.nameFromValue(requiredType));
-                    } else {
-                        cell.setText("n/a");
-                    }
+                    cell.setText(PropertyType.nameFromValue(propertyType));
                 }
             } else {
                 cell.setText("");
@@ -166,7 +161,13 @@ public class JcrCellLabelProvider extends CellLabelProvider {
             JcrNode jcrNode = (JcrNode)viewer.getInput();
 //            jcrNode.getProperties().getPropertyValue(pd); 
             Map.Entry me = (Entry) pd.getId();
-            cell.setText(String.valueOf(me.getValue()));
+            final String rawValue = String.valueOf(me.getValue());
+            int index = rawValue.indexOf("}");
+            if (index!=-1) {
+                cell.setText(rawValue.substring(index+1));
+            } else {
+                cell.setText(rawValue);
+            }
         } else {
             cell.setText(String.valueOf(element));
         }
