@@ -16,13 +16,17 @@
  */
 package org.apache.sling.ide.eclipse.ui.views;
 
+import javax.jcr.PropertyType;
+
 class NewRow {
 
     private String name;
+    private Integer type;
     private Object value;
 
     public NewRow() {
         this.name = "";
+        this.type = PropertyType.STRING;
         this.value = "";
     }
     
@@ -39,12 +43,20 @@ class NewRow {
         this.value = value;
     }
 
+    public void setType(Integer type) {
+        this.type = type;
+    }
+    
     public Object getValue() {
         return value;
     }
 
     public Object getName() {
         return name;
+    }
+    
+    public Integer getType() {
+        return type;
     }
 
     public boolean isComplete() {

@@ -22,6 +22,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.jcr.PropertyType;
+
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 import org.eclipse.ui.views.properties.IPropertySource;
 import org.eclipse.ui.views.properties.TextPropertyDescriptor;
@@ -137,6 +139,26 @@ public class ModifiableProperties implements IPropertySource {
 
     public void addProperty(String name, String value) {
         domElement.addAttribute(name, value);
+        genericJcrRootFile.save();
+    }
+
+    public void renameProperty(String oldKey, String newKey) {
+        Attribute a = domElement.getAttribute(oldKey);
+        a.setName(newKey);
+        genericJcrRootFile.save();
+    }
+
+    public void changePropertyType(String key, int propertyType) {
+        Attribute a = domElement.getAttribute(key);
+        String value = a.getValue();
+        if (value.startsWith("{") && value.contains("}")) {
+            int index = value.indexOf("}");
+            value = value.substring(index+1);
+        }
+        if (propertyType!=PropertyType.STRING) {
+            value = "{" + PropertyType.nameFromValue(propertyType)+"}"+value;
+        }
+        a.setValue(value);
         genericJcrRootFile.save();
     }
 

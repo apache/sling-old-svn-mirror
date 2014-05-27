@@ -20,7 +20,7 @@ import org.apache.sling.ide.eclipse.ui.nav.model.JcrNode;
 import org.apache.sling.ide.eclipse.ui.nav.model.SyncDir;
 import org.apache.sling.ide.eclipse.ui.nav.model.SyncDirManager;
 import org.apache.sling.ide.eclipse.ui.nav.model.UpdateHandler;
-import org.apache.sling.ide.eclipse.ui.views.JcrEditingSupport.ColumnType;
+import org.apache.sling.ide.eclipse.ui.views.JcrEditingSupport.ColumnId;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
@@ -179,7 +179,7 @@ public class JcrPropertiesView extends ViewPart {
         column1.getColumn().setResizable(true);
         column1.getColumn().setWidth(300);
         column1.setLabelProvider(clp);
-        tableLayout.setColumnData(column1.getColumn(), new ColumnWeightData(5, 50));
+        tableLayout.setColumnData(column1.getColumn(), new ColumnWeightData(10, 80));
         
         final TableViewerColumn column2 = new TableViewerColumn(viewer, SWT.NONE);
         column2.getColumn().setText("Value");
@@ -216,10 +216,13 @@ public class JcrPropertiesView extends ViewPart {
         tableLayout.setColumnData(column6.getColumn(), new ColumnWeightData(5, 50));
 
         column0.setLabelProvider(clp);
-        column0.setEditingSupport(new JcrEditingSupport(this, viewer, ColumnType.NAME));
+        column0.setEditingSupport(new JcrEditingSupport(this, viewer, ColumnId.NAME));
 
-		column2.setLabelProvider(clp);
-		column2.setEditingSupport(new JcrEditingSupport(this, viewer, ColumnType.VALUE));
+        column1.setLabelProvider(clp);
+        column1.setEditingSupport(new JcrEditingSupport(this, viewer, ColumnId.TYPE));
+
+        column2.setLabelProvider(clp);
+		column2.setEditingSupport(new JcrEditingSupport(this, viewer, ColumnId.VALUE));
 		
 		// Create the help context id for the viewer's control
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(viewer.getControl(), "org.apache.sling.ide.eclipse-ui.viewer");
