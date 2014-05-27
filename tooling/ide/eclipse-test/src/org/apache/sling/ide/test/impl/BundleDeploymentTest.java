@@ -23,8 +23,7 @@ import java.io.InputStream;
 import java.util.concurrent.Callable;
 
 import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.io.IOUtils;
-import org.apache.sling.ide.osgi.OsgiClientException;
+import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.test.impl.helpers.DisableDebugStatusHandlers;
 import org.apache.sling.ide.test.impl.helpers.ExternalSlingLaunchpad;
 import org.apache.sling.ide.test.impl.helpers.LaunchpadConfig;
@@ -38,23 +37,18 @@ import org.apache.sling.ide.test.impl.helpers.SlingWstServer;
 import org.apache.sling.ide.test.impl.helpers.TemporaryProject;
 import org.apache.sling.ide.test.impl.helpers.ToolingSupportBundle;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
-import org.osgi.service.prefs.BackingStoreException;
 
-// http://www.eclipse.org/forums/index.php/t/457988/
-// https://github.com/jbosstools/jbosstools-server/blob/master/as/tests/org.jboss.ide.eclipse.as.test/src/org/jboss/ide/eclipse/as/test/util/ServerRuntimeUtils.java
-// https://github.com/jbosstools/jbosstools-server/blob/master/as/tests/org.jboss.ide.eclipse.as.archives.integration.test/src/org/jboss/ide/eclipse/as/archives/integration/test/BuildDeployTest.java
-// https://stackoverflow.com/questions/6660155/eclipse-plugin-java-based-project-how-to
 /**
  * The <tt>BundleDeploymentTest</tt> validates the basic workflows behind working with OSGi bundles
  *
  */
+// TODO - remove the bundle after the test
 public class BundleDeploymentTest {
 
     private final LaunchpadConfig config = LaunchpadConfig.getInstance();
@@ -73,9 +67,12 @@ public class BundleDeploymentTest {
     public DisableDebugStatusHandlers disableDebugHandlers = new DisableDebugStatusHandlers();
 
     @Test
-    public void deployBundleOnServer() throws CoreException, InterruptedException, BackingStoreException, IOException,
-            OsgiClientException {
+    public void deployBundleOnServer_localInstall() throws Exception {
 
+        deployBundleOnServer(true);
+    }
+
+    private void deployBundleOnServer(boolean installBundleLocally) throws Exception {
         wstServer.waitForServerToStart();
 
         // create faceted project
@@ -109,6 +106,7 @@ public class BundleDeploymentTest {
         project.installFacet("sling.bundle", "1.0");
 
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.setAttribute(ISlingLaunchpadServer.PROP_INSTALL_LOCALLY, installBundleLocally);
         server.installModule(bundleProject);
 
         final RepositoryAccessor repo = new RepositoryAccessor(config);
@@ -132,5 +130,11 @@ public class BundleDeploymentTest {
                 return null;
             }
         }, nullValue(Void.class));
+    }
+
+    @Test
+    public void deployBundleOnServer_jarredInstall() throws Exception {
+
+        deployBundleOnServer(false);
     }
 }

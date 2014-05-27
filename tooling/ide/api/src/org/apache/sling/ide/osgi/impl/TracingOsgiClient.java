@@ -54,18 +54,26 @@ public class TracingOsgiClient implements OsgiClient {
     @Override
     public void installLocalBundle(String explodedBundleLocation) throws OsgiClientException {
 
-        logInstallLocalBundle(explodedBundleLocation);
+        logInstallLocalBundle(null, explodedBundleLocation);
     }
 
-    private void logInstallLocalBundle(String explodedBundleLocation) throws OsgiClientException, Error {
+    private void logInstallLocalBundle(InputStream input, String explodedBundleLocation) throws OsgiClientException {
 
         Map<String, Object> props = new HashMap<String, Object>();
         long start = System.currentTimeMillis();
-        props.put(CommandExecutionProperties.ACTION_TYPE, "InstallLocalBundle");
+        if (input != null) {
+            props.put(CommandExecutionProperties.ACTION_TYPE, "InstallJarredBundle");
+        } else {
+            props.put(CommandExecutionProperties.ACTION_TYPE, "InstallLocalBundle");
+        }
         props.put(CommandExecutionProperties.ACTION_TARGET, explodedBundleLocation);
         props.put(CommandExecutionProperties.TIMESTAMP_START, start);
         try {
-            osgiClient.installLocalBundle(explodedBundleLocation);
+            if (input != null) {
+                osgiClient.installLocalBundle(input, explodedBundleLocation);
+            } else {
+                osgiClient.installLocalBundle(explodedBundleLocation);
+            }
             props.put(CommandExecutionProperties.RESULT_TEXT, "OK");
         } catch (Throwable t) {
             props.put(CommandExecutionProperties.RESULT_TEXT, "FAILED");
@@ -90,7 +98,7 @@ public class TracingOsgiClient implements OsgiClient {
     @Override
     public void installLocalBundle(InputStream jarredBundle, String sourceLocation) throws OsgiClientException {
 
-        logInstallLocalBundle(sourceLocation);
+        logInstallLocalBundle(jarredBundle, sourceLocation);
     }
 
 }
