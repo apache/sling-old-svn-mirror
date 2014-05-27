@@ -55,4 +55,11 @@ public class ServerAdapter {
         serverWorkingCopy.save(false, new NullProgressMonitor());
 
     }
+
+    public void setAttribute(String name, boolean value) throws CoreException {
+
+        IServerWorkingCopy serverWorkingCopy = server.createWorkingCopy();
+        serverWorkingCopy.setAttribute(name, value);
+        serverWorkingCopy.save(false, new NullProgressMonitor());
+    }
 }

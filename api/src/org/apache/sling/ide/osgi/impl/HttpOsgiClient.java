@@ -172,7 +172,9 @@ public class HttpOsgiClient implements OsgiClient {
 
             @Override
             void configureRequest(PostMethod method) throws IOException {
-                Part[] parts = new Part[] { new StringPart("bundle", IOUtils.toString(jarredBundle, "UTF-8")) };
+
+                Part[] parts = new Part[] { new FilePart("bundle", new ByteArrayPartSource("bundle.jar",
+                        IOUtils.toByteArray(jarredBundle))) };
                 method.setRequestEntity(new MultipartRequestEntity(parts, method.getParams()));
             }
         }.installBundle();        
