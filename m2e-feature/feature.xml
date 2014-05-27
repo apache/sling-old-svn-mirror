@@ -211,6 +211,10 @@
       
    </license>
 
+   <requires>
+      <import feature="org.sonatype.tycho.m2e.feature"/>
+   </requires>
+
    <plugin
          id="org.apache.sling.ide.eclipse-m2e-ui"
          download-size="0"

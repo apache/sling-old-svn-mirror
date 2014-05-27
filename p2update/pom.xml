@@ -9,5 +9,34 @@
   </parent>
   <artifactId>org.apache.sling.ide.p2update</artifactId>
   <packaging>eclipse-repository</packaging>
-  <name>Sling IDE Tools: P2 Repository</name>
+  <name>Sling IDE Tools: Update Site</name>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.jboss.tools.tycho-plugins</groupId>
+        <artifactId>repository-utils</artifactId>
+        <version>0.16.0</version>
+        <executions>
+          <execution>
+            <id>generate-facade</id>
+            <phase>package</phase>
+            <goals>
+              <goal>generate-repository-facade</goal>
+            </goals>
+            <configuration>
+              <siteTemplateFolder>siteTemplate</siteTemplateFolder>
+              <symbols>
+                <update.site.name>${project.name}</update.site.name>
+                <target.eclipse.version>Kepler or newer</target.eclipse.version>
+              </symbols>
+              <associateSites>
+                <site>http://repo1.maven.org/maven2/.m2e/connectors/m2eclipse-tycho/0.6.0/N/0.6.0.201207302152/</site>
+              </associateSites>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

@@ -66,6 +66,14 @@
         </pluginManagement>
 	</build>
 
+    <pluginRepositories>
+        <pluginRepository>
+            <id>jboss-public-repository-group</id>
+            <name>JBoss Public Repository Group</name>
+            <url>http://repository.jboss.org/nexus/content/groups/public/</url>
+        </pluginRepository>
+    </pluginRepositories>    
+
 	<properties>
 		<tycho.version>0.20.0</tycho.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
