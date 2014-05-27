@@ -220,7 +220,8 @@ public class ContentXmlHandler extends DefaultHandler {
             
             String[] values;
 
-            if (rawValue.charAt(0) == '[') {
+            // SLING-3609
+            if (rawValue.length()>0 && rawValue.charAt(0) == '[') {
 
                 if (rawValue.charAt(rawValue.length() - 1) != ']') {
                     throw new IllegalArgumentException("Invalid multi-valued property definition : '" + rawValue + "'");
