@@ -55,8 +55,8 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
     @Property(
             label = "Service Mappings",
             description = "Provides mappings from service name to user names. "
-                + "Each entry is of the form 'serviceName [ \":\" subServiceName ] \"=\" userName' "
-                + "where serviceName and subServiceName identify the service and userName "
+                + "Each entry is of the form 'bundleId [ \":\" subServiceName ] \"=\" userName' "
+                + "where bundleId and subServiceName identify the service and userName "
                 + "defines the name of the user to provide to the service. Invalid entries are logged and ignored.",
             unbounded = PropertyUnbounded.ARRAY)
     private static final String PROP_SERVICE2USER_MAPPING = "user.mapping";
