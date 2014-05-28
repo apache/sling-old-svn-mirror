@@ -177,16 +177,16 @@ public class SlingClient {
     
     /** Create path and all its parent folders, using MKCOL */
     public void mkdirs(String path) throws IOException {
-        // Call mkdir on all parent path, starting at the topmost one
+        // Call mkdir on all parent paths, starting at the topmost one
         final Stack<String> parents = new Stack<String>();
         path = getParentPath(path);
-        while(path.length() > 0) {
+        while(path.length() > 0 && !exists(path)) {
             parents.push(path);
             path = getParentPath(path);
         }
         
         while(!parents.isEmpty()) {
-            mkdir(parents.pop());
+        	mkdir(parents.pop());
         }
     }
     
