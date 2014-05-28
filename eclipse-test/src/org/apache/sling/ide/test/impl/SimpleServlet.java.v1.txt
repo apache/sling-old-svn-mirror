@@ -7,7 +7,6 @@ import org.apache.sling.api.servlets.*;
 
 public class SimpleServlet extends SlingSafeMethodsServlet {
     
-    @Override
     protected void doGet(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws ServletException,
             IOException {
