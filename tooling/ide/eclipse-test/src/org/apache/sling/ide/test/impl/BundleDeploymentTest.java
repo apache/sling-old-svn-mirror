@@ -31,8 +31,8 @@ import org.apache.sling.ide.test.impl.helpers.MavenDependency;
 import org.apache.sling.ide.test.impl.helpers.OsgiBundleManifest;
 import org.apache.sling.ide.test.impl.helpers.Poller;
 import org.apache.sling.ide.test.impl.helpers.ProjectAdapter;
-import org.apache.sling.ide.test.impl.helpers.ServerAdapter;
 import org.apache.sling.ide.test.impl.helpers.RepositoryAccessor;
+import org.apache.sling.ide.test.impl.helpers.ServerAdapter;
 import org.apache.sling.ide.test.impl.helpers.SlingWstServer;
 import org.apache.sling.ide.test.impl.helpers.TemporaryProject;
 import org.apache.sling.ide.test.impl.helpers.ToolingSupportBundle;
@@ -104,6 +104,26 @@ public class BundleDeploymentTest {
 
         // install bundle facet
         project.installFacet("sling.bundle", "1.0");
+
+        if (!TychoJREHelper.hasDefaultVM()) {
+            String jreHome = System.getProperty("tycho.jre.helper.jre.home");
+            if (jreHome!=null && jreHome.length()>0) {
+                System.out.println("Installing Default VM to be : "+jreHome);
+                TychoJREHelper.installDefaultVM(jreHome);
+            } else {
+                System.out.println("Cannot install Default VM, system property 'tycho.jre.helper.jre.home' not set! Test might fail!");
+            }
+        }
+
+//        bundleProject.build(IncrementalProjectBuilder.CLEAN_BUILD, pm);
+//        bundleProject.build(IncrementalProjectBuilder.FULL_BUILD, pm);
+//        ResourcesPlugin.getWorkspace().build(IncrementalProjectBuilder.FULL_BUILD, pm);
+//        bundleProject.refreshLocal(IResource.DEPTH_INFINITE, pm);
+        
+        System.out.println("Paranoia sleep of 5sec to make sure the bundle is properly built");
+        Thread.sleep(5000);
+        System.out.println("Continuing after 5sec sleep.");
+        
 
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.setAttribute(ISlingLaunchpadServer.PROP_INSTALL_LOCALLY, installBundleLocally);
