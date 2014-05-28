@@ -60,8 +60,7 @@ Import-Package: org.apache.commons.httpclient;version="3.1.0",
  org.eclipse.wst.common.project.facet.core,
  org.eclipse.wst.server.core,
  org.osgi.framework;version="1.6.0",
- org.osgi.util.tracker;version="1.5.0",
- org.sonatype.aether
+ org.osgi.util.tracker;version="1.5.0"
 Bundle-ActivationPolicy: lazy
 Export-Package: org.apache.sling.ide.eclipse.m2e,
  org.apache.sling.ide.eclipse.ui.wizards.np
