@@ -65,4 +65,18 @@ public class SlingJcrJackrabbitIT extends KarafTestSupport {
         assertEquals(Bundle.ACTIVE, bundle.getState());
     }
 
+    @Test
+    public void testOrgApacheServicemixBundlesConcurrent() {
+        final Bundle bundle = findBundle("org.apache.servicemix.bundles.concurrent");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
+    @Test
+    public void testOrgApacheCommonsPool() {
+        final Bundle bundle = findBundle("org.apache.commons.pool");
+        assertNotNull(bundle);
+        assertEquals(Bundle.ACTIVE, bundle.getState());
+    }
+
 }
