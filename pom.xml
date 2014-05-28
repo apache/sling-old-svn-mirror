@@ -50,6 +50,22 @@
 					</target>
 				</configuration>
 			</plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>ianal-maven-plugin</artifactId>
+                <version>1.0-alpha-1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>verify-legal-files</goal>
+                        </goals>
+                        <configuration>
+                            <!-- Fail the build if any artifacts are missing legal files -->
+                            <strict>true</strict>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>            
 		</plugins>
         <pluginManagement>
             <plugins>
