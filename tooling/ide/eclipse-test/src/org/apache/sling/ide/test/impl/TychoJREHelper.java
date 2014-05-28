@@ -44,8 +44,8 @@ public class TychoJREHelper {
         newVm.setName("Default-VM");
         File installLocation = new File(jrePath);
         newVm.setInstallLocation(installLocation);
-        newVm.convertToRealVM();
-        JavaRuntime.setDefaultVMInstall(newVm, new NullProgressMonitor());
+        IVMInstall realVm = newVm.convertToRealVM();
+        JavaRuntime.setDefaultVMInstall(realVm, new NullProgressMonitor());
     }
 
 }
