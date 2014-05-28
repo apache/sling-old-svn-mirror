@@ -67,4 +67,56 @@ the target platform is set up, you can create a new launch configuration.
 
 Now you can use the 'Sling IDE Tooling' launch configuration which is present 
 in the org.apache.sling.ide.target-definition project to launch a local instance
-of Eclipse with Sling IDE Tooling plug-ins picked up from the local workspace.  
+of Eclipse with Sling IDE Tooling plug-ins picked up from the local workspace.
+
+How to generate a signed release
+--------------------------------
+
+The build can be configured to sign the generated jars with a code signing
+certificates. This prevents unsigned content errors from appearing when
+installing the plugins and reassures the user that the content comes from
+a trusted source.
+
+Please note that this is different from GPG signatures.
+
+The following steps are needed to sign the generated jars.
+
+1. Obtain a code signing certificate. At the moment the ASF does not provide
+such a service, so you will have to obtain one yourself. One free possibility
+is Certum [1]. Expect at least two weeks of processing time, so plan this
+ahead of time.
+
+2. Import the certificate chain into a local keystore. The best approach is to
+install the certificate into a browser and ensure that the whole certificate
+chain is present. For Certum that would by the Certum CA, the Certum Level 3
+CA and the code signing certificate.  Backup the certificates from Fireox
+and then import them into the keystore, with a command similar to
+
+	keytool -importkeystore -destkeystore keystore_certum.jks -srckeystore \
+		backup.p12 -srcstoretype pkcs12 
+
+3. Insert properties controlling jarsigner behaviour in your settings.xml
+
+	<settings>
+	    <profiles>
+	        <profile>
+	            <id>sign</id>        
+	
+	            <properties>
+	                <jarsigner.alias>certum-codesigning</jarsigner.alias>
+	                <jarsigner.storepass>changeit</jarsigner.storepass>
+	                <jarsigner.tsa>http://time.certum.pl/</jarsigner.tsa>
+	                <!-- needed since we mix packages between projects -->
+	                <skipTests>true</skipTests>
+	                <jarsigner.keystore>/home/users/keystore_certum.jks</jarsigner.keystore>
+	            </properties>
+	        </profile>
+	    </profiles>
+	</settings>
+
+At this point you can launch a build using
+
+	mvn clean package -Psign
+
+All jars will be signed, and should install without any warnings.
+[1]: https://www.certum.eu/certum/cert,offer_en_open_source_cs.xml 
