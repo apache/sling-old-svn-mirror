@@ -28,18 +28,6 @@ public class SlingConsoleFactory implements IConsoleFactory {
 
     private MessageConsole console;
 
-    public static MessageConsole getConsole() {
-        // TODO not the right place, should converge with initConsole
-
-        for (IConsole console : ConsolePlugin.getDefault().getConsoleManager().getConsoles()) {
-            if (console.getName().equals(CONSOLE_NAME)) {
-                return (MessageConsole) console;
-            }
-        }
-
-        return null;
-    }
-
     @Override
     public void openConsole() {
 
