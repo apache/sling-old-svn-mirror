@@ -19,9 +19,19 @@ package org.apache.sling.ide.eclipse.ui.internal.console;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.text.DateFormat;
+import java.util.Collections;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Set;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.sling.ide.eclipse.ui.internal.Activator;
 import org.apache.sling.ide.transport.CommandExecutionProperties;
+import org.eclipse.ui.console.ConsolePlugin;
+import org.eclipse.ui.console.IConsole;
+import org.eclipse.ui.console.IConsoleListener;
+import org.eclipse.ui.console.IConsoleManager;
 import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
 import org.osgi.service.event.Event;
@@ -29,17 +39,91 @@ import org.osgi.service.event.EventHandler;
 
 public class SlingConsoleEventListener implements EventHandler {
 
+    private final Object sync = new Object();
+
+    private final Set<Event> delayedEvents = Collections.newSetFromMap(new LinkedHashMap<Event, Boolean>() {
+        private static final long serialVersionUID = 1L;
+        protected boolean removeEldestEntry(java.util.Map.Entry<Event, Boolean> eldest) {
+            return size() >= 500;
+        };
+    });
+
+    private MessageConsole slingConsole;
+    private IConsoleListener listener;
+
     @Override
     public void handleEvent(Event event) {
 
-        MessageConsole console = SlingConsoleFactory.getConsole();
-        if (console == null) {
-            return;
+        synchronized (sync) {
+
+            initSlingConsole();
+
+            if (slingConsole != null) {
+                logEvent(event, slingConsole);
+                return;
+            }
+
+            delayedEvents.add(event);
+
+            final IConsoleManager consoleManager = ConsolePlugin.getDefault().getConsoleManager();
+
+            if (listener == null) {
+                listener = new IConsoleListener() {
+
+                    @Override
+                    public void consolesRemoved(IConsole[] consoles) {
+                        synchronized (sync) {
+                            for (IConsole console : consoles) {
+                                if (console.equals(slingConsole)) {
+                                    slingConsole = null;
+                                }
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void consolesAdded(IConsole[] consoles) {
+                        synchronized (sync) {
+                            for (IConsole console : consoles) {
+                                if (console.getName().equals(SlingConsoleFactory.CONSOLE_NAME)) {
+                                    slingConsole = (MessageConsole) console;
+                                    synchronized (delayedEvents) {
+                                        for (Iterator<Event> it = delayedEvents.iterator(); it.hasNext();) {
+                                            logEvent(it.next(), slingConsole);
+                                            it.remove();
+                                        }
+                                    }
+                                    consoleManager.removeConsoleListener(listener);
+                                    listener = null;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                };
+
+                consoleManager.addConsoleListener(listener);
+            }
         }
+    }
+
+    private void initSlingConsole() {
+        if (slingConsole == null) {
+            final IConsoleManager consoleManager = ConsolePlugin.getDefault().getConsoleManager();
+            for (IConsole console : consoleManager.getConsoles()) {
+                if (console.getName().equals(SlingConsoleFactory.CONSOLE_NAME)) {
+                    slingConsole = (MessageConsole) console;
+                    break;
+                }
+            }
+        }
+    }
+
+    private void logEvent(Event event, MessageConsole console) {
 
         MessageConsoleStream messageStream = console.newMessageStream();
-
         try {
+
             Long start = (Long) event.getProperty(CommandExecutionProperties.TIMESTAMP_START);
             Long end = (Long) event.getProperty(CommandExecutionProperties.TIMESTAMP_END);
             String type = (String) event.getProperty(CommandExecutionProperties.ACTION_TYPE);
@@ -57,17 +141,10 @@ public class SlingConsoleEventListener implements EventHandler {
             if (t != null) {
                 t.printStackTrace(new PrintStream(messageStream));
             }
-
         } catch (IOException e) {
-            // TODO proper logging
-            e.printStackTrace();
+            Activator.getDefault().getPluginLogger().warn("Failed writing to the console", e);
         } finally {
-            try {
-                messageStream.close();
-            } catch (IOException e) {
-                // TODO proper logging
-                e.printStackTrace();
-            }
+            IOUtils.closeQuietly(messageStream);
         }
     }
 
