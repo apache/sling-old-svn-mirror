@@ -199,13 +199,18 @@ public class HttpOsgiClient implements OsgiClient {
 
                 int status = httpClient.executeMethod(method);
                 if (status != 200) {
+                    try {
+                        JSONObject result = parseResult(method);
+                        if (result.has("message")) {
+                            throw new OsgiClientException(result.getString("message"));
+                        }
+                    } catch (JSONException e) {
+                        // ignore, fallback to status code reporting
+                    }
                     throw new OsgiClientException("Method execution returned status " + status);
                 }
 
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                IOUtils.copy(method.getResponseBodyAsStream(), out);
-
-                JSONObject obj = new JSONObject(new String(out.toByteArray(), "UTF-8"));
+                JSONObject obj = parseResult(method);
 
                 if ("OK".equals(obj.getString("status"))) {
                     return;
@@ -225,6 +230,13 @@ public class HttpOsgiClient implements OsgiClient {
             } finally {
                 method.releaseConnection();
             }
+        }
+
+        private JSONObject parseResult(PostMethod method) throws IOException, JSONException {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            IOUtils.copy(method.getResponseBodyAsStream(), out);
+
+            return new JSONObject(new String(out.toByteArray(), "UTF-8"));
         }
 
         abstract void configureRequest(PostMethod method) throws IOException;
