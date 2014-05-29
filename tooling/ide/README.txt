@@ -17,8 +17,6 @@ to install  the following projects' artifacts in the local Maven repository:
 
 - The Sling Tooling Support Install bundle, located at
   http://svn.apache.org/viewvc/sling/trunk/tooling/support/install
-- The Jackrabbit FileVault project, located at
-  https://svn.apache.org/repos/asf/jackrabbit/commons/filevault/trunk
 
 For each of these locations, install the Maven artifacts in your local
 Maven repository using the following command:
@@ -46,7 +44,13 @@ How to run the Sling IDE tools in a test Eclipse instance
 ---------------------------------------------------------
 
 This howto assumes that you are running Eclipse Kepler with the Plug-In 
-Development Environment and Maven features installed.
+Development Environment and Maven features installed. You should have
+previously built the projects using
+
+    mvn package
+
+to ensure that Maven artifacts which are not available on p2 update sites are
+included in the workspace.
 
 To start with, import all the projects in Eclipse as Maven projects. Eclipse
 might prompt you to install an additional m2eclipse configurator for PDE
