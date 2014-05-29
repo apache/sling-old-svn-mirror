@@ -10,7 +10,8 @@
   <artifactId>org.apache.sling.ide.eclipse-ui</artifactId>
   <packaging>eclipse-plugin</packaging>
   <name>Sling IDE Tools: Eclipse UI</name>
-<build>
+
+  <build>
     <resources>
       <resource>
         <directory>src/main/java</directory>
@@ -19,4 +20,29 @@
         </excludes>
       </resource>
     </resources>
-</build></project>
+
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <configuration>
+                <artifactItems>
+                    <artifactItem>
+                        <groupId>de.pdark</groupId>
+                        <artifactId>decentxml</artifactId>
+                        <version>1.4</version>
+                    </artifactItem>                           
+                </artifactItems>
+                <outputDirectory>lib</outputDirectory>
+            </configuration>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>copy</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+  </build>
+</project>
