@@ -12,6 +12,12 @@
     <packaging>eclipse-test-plugin</packaging>
     <name>Sling IDE Tools: Eclipse Tests</name>
 
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/ide/eclipse-test</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/ide/eclipse-test</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/ide/eclipse-test</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>

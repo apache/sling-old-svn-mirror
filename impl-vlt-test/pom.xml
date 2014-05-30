@@ -7,6 +7,13 @@
   </parent>
   <artifactId>org.apache.sling.ide.impl-vlt-test</artifactId>
   <name>Sling IDE Tools: FileVault Implementation Tests</name>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/ide/impl-vlt-test</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/ide/impl-vlt-test</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/tooling/ide/impl-vlt-test</url>
+  </scm>
+
   <dependencies>
       <dependency>
           <groupId>junit</groupId>

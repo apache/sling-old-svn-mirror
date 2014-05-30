@@ -10,4 +10,10 @@
   <artifactId>org.apache.sling.ide.feature</artifactId>
   <packaging>eclipse-feature</packaging>
   <name>Sling IDE Tools: Eclipse Feature</name>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/ide/feature</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/ide/feature</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/tooling/ide/feature</url>
+  </scm>
 </project>

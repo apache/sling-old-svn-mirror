@@ -11,6 +11,13 @@
     <artifactId>org.apache.sling.ide.artifacts</artifactId>
     <packaging>eclipse-plugin</packaging>
     <name>Sling IDE Tools: Embedded Artifacts</name>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/ide/artifacts</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/ide/artifacts</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/ide/artifacts</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>

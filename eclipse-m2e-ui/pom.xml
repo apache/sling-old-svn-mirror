@@ -10,6 +10,13 @@
   <artifactId>org.apache.sling.ide.eclipse-m2e-ui</artifactId>
   <packaging>eclipse-plugin</packaging>
   <name>Sling IDE Tools: Eclipse M2Eclipse-based UI</name>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/ide/eclipse-m2e-ui</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/ide/eclipse-m2e-ui</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/tooling/ide/eclipse-m2e-ui</url>
+  </scm>
+
 <build>
     <resources>
       <resource>

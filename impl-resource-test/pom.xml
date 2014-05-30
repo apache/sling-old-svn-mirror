@@ -7,6 +7,13 @@
   </parent>
   <artifactId>org.apache.sling.ide.impl-resource-test</artifactId>
   <name>Sling IDE Tools: Resource-based Implementation Tests</name>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/ide/impl-resource-test</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/ide/impl-resource-test</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/tooling/ide/impl-resource-test</url>
+  </scm>
+
   <dependencies>
       <dependency>
           <groupId>junit</groupId>

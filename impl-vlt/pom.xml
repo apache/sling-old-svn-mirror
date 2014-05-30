@@ -10,4 +10,10 @@
   <artifactId>org.apache.sling.ide.impl-vlt</artifactId>
   <packaging>eclipse-plugin</packaging>
   <name>Sling IDE Tools: FileVault implementation</name>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/ide/impl-vlt</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/ide/impl-vlt</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/tooling/ide/impl-vlt</url>
+  </scm>
 </project>
