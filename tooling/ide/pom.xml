@@ -15,6 +15,12 @@
 	<name>Sling IDE Tools: Reactor</name>
     <url>http://sling.apache.org</url>
     
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/ide</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/ide</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/ide</url>
+    </scm>
+
 	<modules>
 		<module>target-definition</module>
 		<module>api</module>

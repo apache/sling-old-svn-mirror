@@ -11,4 +11,10 @@
   <artifactId>org.apache.sling.ide.target-definition</artifactId>
   <packaging>eclipse-target-definition</packaging>
   <name>Sling IDE Tools: Target definition</name>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/ide/target-definition</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/ide/target-definition</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/tooling/ide/target-definition</url>
+  </scm>
 </project>

@@ -11,6 +11,12 @@
   <packaging>eclipse-plugin</packaging>
   <name>Sling IDE Tools: FileVault wrapper</name>
 
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/ide/vlt-wrapper</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/ide/vlt-wrapper</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/tooling/ide/vlt-wrapper</url>
+  </scm>
+
     <build>
         <plugins>
             <plugin>

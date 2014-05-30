@@ -11,6 +11,12 @@
   <packaging>eclipse-plugin</packaging>
   <name>Sling IDE Tools: Eclipse UI</name>
 
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/ide/eclipse-ui</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/ide/eclipse-ui</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/tooling/ide/eclipse-ui</url>
+  </scm>
+
   <build>
     <resources>
       <resource>

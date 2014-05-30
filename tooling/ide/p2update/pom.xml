@@ -11,6 +11,12 @@
   <packaging>eclipse-repository</packaging>
   <name>Sling IDE Tools: Update Site</name>
 
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/ide/p2update</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/ide/p2update</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/tooling/ide/p2update</url>
+  </scm>
+
   <build>
     <plugins>
       <plugin>
