@@ -408,8 +408,8 @@ public class DefaultContentCreator implements ContentCreator {
 
                 node.setProperty(name, jcrValues, propertyType);
             } catch (ParseException e) {
-                // If this failes, fallback to the default
-                log.warn("Could not create dates for property, fallingback to defaults", e);
+                // If this fails, fallback to the default
+                log.warn("Could not create dates for property, falling back to defaults", e);
                 node.setProperty(name, values, propertyType);
             }
             if (this.importListener != null) {

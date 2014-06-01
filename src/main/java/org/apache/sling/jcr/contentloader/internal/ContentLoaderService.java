@@ -260,7 +260,7 @@ public class ContentLoaderService implements SynchronousBundleListener, JcrConte
         }
     }
 
-    /** Deativates this component, called by SCR to take out of service */
+    /** Deactivates this component, called by SCR to take out of service */
     protected void deactivate(ComponentContext componentContext) {
         componentContext.getBundleContext().removeBundleListener(this);
 
