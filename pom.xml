@@ -27,11 +27,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Private-Package>org.apache.sling.crankstart.*</Private-Package>
-                        <Import-Package>
-                            org.apache.sling.crankstart.api,
-                            *
-                        </Import-Package>
+                        <Private-Package>org.apache.sling.crankstart.testservices.*</Private-Package>
                     </instructions>
                 </configuration>
             </plugin>
