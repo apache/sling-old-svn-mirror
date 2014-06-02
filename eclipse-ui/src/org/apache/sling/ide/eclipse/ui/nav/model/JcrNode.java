@@ -1050,8 +1050,16 @@ public class JcrNode implements IAdaptable {
             createVaultFile((IFolder) resource, ".content.xml", newPrimaryType);
         } else if ("nt:folder".equals(newPrimaryType)) {
             // switching *to* an nt:folder also has its challenges..:
-            // 1) nt:folder doesn't allow arbitrary children for one
-            // 2)  but it also doesn't have an extra .content.xml - so that one would disappear
+            // 1) it is not allowed to occur within a 'default' and 'full coverage aggregate' node
+            // 2) nt:folder doesn't allow arbitrary children for one
+            // 3)  but it also doesn't have an extra .content.xml - so that one would disappear
+            
+            // 1)
+            if (domElement!=null) {
+                MessageDialog.openWarning(null, "Unable to change primaryType", "Unable to change jcr:primaryType to nt:folder"
+                        + " since the node is contained in a .content.xml");
+                return;
+            }
             
             Repository repository = ServerUtil.getDefaultRepository(getProject());
             if (repository == null) {
@@ -1061,7 +1069,7 @@ public class JcrNode implements IAdaptable {
             }
             NodeTypeRegistry ntManager = repository.getNodeTypeRegistry();
             
-            // verify 1)
+            // verify 2)
             Object[] cn = getChildren(true);
             for (int i = 0; i < cn.length; i++) {
                 JcrNode node = (JcrNode) cn[i];
@@ -1076,19 +1084,22 @@ public class JcrNode implements IAdaptable {
                     logger.error("Could not determine allowed primary child node types", e);
                 }
             }
-            if (resource instanceof IFolder) {
-                IFolder folder = (IFolder)resource;
-                // 2) delete the .content.xml
-                IFile contentXml = folder.getFile(".content.xml");
-                if (contentXml.exists()) {
-                    try {
-                        contentXml.delete(true, new NullProgressMonitor());
-                    } catch (CoreException e) {
-                        PluginLogger logger = Activator.getDefault().getPluginLogger();
-                        logger.error("Could not delete "+contentXml.getFullPath()+", e="+e, e);
-                        MessageDialog.openError(null, "Could not delete file",
-                                "Could not delete "+contentXml.getFullPath()+", "+e);
-                    }
+            if (!(resource instanceof IFolder)) {
+                MessageDialog.openWarning(null, "Unable to change primaryType", "Unable to change jcr:primaryType to nt:folder"
+                        + " as there is no underlying folder");
+                return;
+            }
+            IFolder folder = (IFolder)resource;
+            // 3) delete the .content.xml
+            IFile contentXml = folder.getFile(".content.xml");
+            if (contentXml.exists()) {
+                try {
+                    contentXml.delete(true, new NullProgressMonitor());
+                } catch (CoreException e) {
+                    PluginLogger logger = Activator.getDefault().getPluginLogger();
+                    logger.error("Could not delete "+contentXml.getFullPath()+", e="+e, e);
+                    MessageDialog.openError(null, "Could not delete file",
+                            "Could not delete "+contentXml.getFullPath()+", "+e);
                 }
             }
         } else {
@@ -1162,7 +1173,7 @@ public class JcrNode implements IAdaptable {
                 }
             }
         } catch(Exception e) {
-//            Activator.getDefault().getPluginLogger().warn("Exception occurred during analyzing propertyType ("+propertyName+") for "+this, e);
+            Activator.getDefault().getPluginLogger().warn("Exception occurred during analyzing propertyType ("+propertyName+") for "+this, e);
         }
         return -1;
     }

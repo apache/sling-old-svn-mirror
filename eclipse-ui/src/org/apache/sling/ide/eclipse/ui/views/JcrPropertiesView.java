@@ -418,7 +418,7 @@ public class JcrPropertiesView extends ViewPart {
         } else {
             viewer.setInput(jcrNode);
             titleLabel.setText(jcrNode.getJcrPath());
-            insertAction.setEnabled(true);
+            insertAction.setEnabled(!jcrNode.getPrimaryType().equals("nt:folder"));
             deleteAction.setEnabled(false);
             showInEditorAction.setEnabled(jcrNode.getFileForEditor()!=null);
         }
