@@ -19,7 +19,7 @@ package org.apache.sling.models.impl;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import java.util.Collections;
+import java.lang.reflect.AnnotatedElement;
 
 import javax.inject.Inject;
 
@@ -29,6 +29,7 @@ import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.Source;
 import org.apache.sling.models.impl.injectors.BindingsInjector;
 import org.apache.sling.models.impl.injectors.RequestAttributeInjector;
+import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,7 +37,6 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -68,9 +68,8 @@ public class MultipleInjectorTest {
 
         factory = new ModelAdapterFactory();
         factory.activate(componentCtx);
-        factory.bindInjector(bindingsInjector, Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 2L));
-        factory.bindInjector(attributesInjector,
-                Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 1L));
+        factory.bindInjector(bindingsInjector, new ServicePropertiesMap(2, 2));
+        factory.bindInjector(attributesInjector, new ServicePropertiesMap(1, 1));
 
         when(request.getAttribute(SlingBindings.class.getName())).thenReturn(bindings);
     }
@@ -89,6 +88,8 @@ public class MultipleInjectorTest {
         assertEquals(obj.firstAttribute, bindingsValue);
 
         verifyNoMoreInteractions(attributesInjector);
+        verify(bindingsInjector).getValue(eq(request), eq("firstAttribute"), eq(String.class), any(AnnotatedElement.class), any(DisposalCallbackRegistry.class));
+        verifyNoMoreInteractions(bindingsInjector);
     }
 
     @Test
