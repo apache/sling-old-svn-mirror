@@ -24,7 +24,7 @@ import org.osgi.framework.Version;
 /**
  * A task resource is a registered resource which has been
  * processed by a {@link ResourceTransformer} and is now
- * about to be processed by an {@InstallTask}.
+ * about to be processed by an {@link InstallTask}.
  */
 public interface TaskResource extends RegisteredResource {
 
