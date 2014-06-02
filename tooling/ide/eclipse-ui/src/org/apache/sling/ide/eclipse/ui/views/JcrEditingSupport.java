@@ -23,6 +23,8 @@ import java.util.Map.Entry;
 import javax.jcr.PropertyType;
 
 import org.apache.sling.ide.eclipse.ui.nav.model.JcrNode;
+import org.apache.sling.ide.eclipse.ui.nav.model.JcrProperty;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ComboBoxCellEditor;
 import org.eclipse.jface.viewers.EditingSupport;
@@ -57,8 +59,8 @@ public class JcrEditingSupport extends EditingSupport {
         public boolean canEdit() {
             IPropertyDescriptor pd = (IPropertyDescriptor) element;
             Map.Entry me = (Entry) pd.getId();
-            if (me.getKey().equals("jcr:primaryType") && (columnId==ColumnId.NAME)) {
-                return false;
+            if (me.getKey().equals("jcr:primaryType")) {
+                return columnId==ColumnId.VALUE;
             }
             return true;
         }
@@ -132,7 +134,34 @@ public class JcrEditingSupport extends EditingSupport {
                 break;
             }
             case VALUE: {
-                jcrNode.setPropertyValue(me.getKey(), value);
+                try{
+                    final JcrProperty property = getNode().getProperty(getPropertyName());
+                    final int propertyType = property.getType();
+                    String encodedValue;
+                    if (property.isMultiple()) {
+                        Object[] values = (Object[])value;
+                        encodedValue = "";
+                        for (int i = 0; i < values.length; i++) {
+                            Object aValue = values[i];
+                            String aValueAsString = PropertyTypeSupport.encodeValueAsString(aValue, propertyType);
+                            if (i==0) {
+                                encodedValue = aValueAsString;
+                            } else {
+                                encodedValue = encodedValue+","+aValueAsString;
+                            }
+                        }
+                        encodedValue = "["+encodedValue+"]";
+                    } else {
+                        encodedValue = PropertyTypeSupport.encodeValueAsString(value, propertyType);
+                    }
+                    if (propertyType!=PropertyType.STRING && propertyType!=PropertyType.NAME) {
+                        encodedValue = "{"+PropertyType.nameFromValue(propertyType)+"}"+encodedValue;
+                    }
+                    jcrNode.setPropertyValue(me.getKey(), encodedValue);
+                } catch(Exception e) {
+                    // emergency fallback
+                    jcrNode.setPropertyValue(me.getKey(), String.valueOf(value));
+                }
                 break;
             }
             }
@@ -221,6 +250,9 @@ public class JcrEditingSupport extends EditingSupport {
 
     @Override
     protected CellEditor getCellEditor(Object element) {
+        if (!canEdit(element)) {
+            return null;
+        }
         switch(columnId) {
         case NAME: {
             // no validator needed - any string is OK
@@ -233,9 +265,13 @@ public class JcrEditingSupport extends EditingSupport {
             return editor;
         }
         case VALUE: {
+            final Field field = asField(element);
+            if (getNode().getProperty(field.getPropertyName()).isMultiple()) {
+                // then launch the MVPEditor instead of returning an editor here
+                return new MVNCellEditor(tableViewer.getTable(), getNode(), field.getPropertyName());
+            }
             CellEditor editor = new TextCellEditor(tableViewer.getTable());
             // value might require a validator depending on the property type
-            Field field = asField(element);
             int propertyType = getNode().getPropertyType(field.getPropertyName());
             switch(propertyType) {
             case PropertyType.STRING:
