@@ -26,12 +26,20 @@ bundle mvn:org.apache.felix/org.apache.felix.metatype/1.0.10
 bundle mvn:org.apache.sling/org.apache.sling.commons.osgi/2.2.1-SNAPSHOT
 bundle mvn:org.apache.sling/org.apache.sling.commons.log/2.1.2
 bundle mvn:org.apache.felix/org.apache.felix.configadmin/1.6.0
+bundle mvn:org.apache.felix/org.apache.felix.webconsole/3.1.6
 
 # The crankstart.api.fragment bundle makes the crankstart.api package available
 # to bundles, required for bundles to provide crankstart extension commands like
 # the test.system.property command below
 bundle mvn:org.apache.sling/org.apache.sling.crankstart.api.fragment/0.0.1-SNAPSHOT
 bundle mvn:org.apache.sling/org.apache.sling.crankstart.test.services/0.0.1-SNAPSHOT
+
+# Test our Sling extension commands, that add a bundle via the Sling installer
+# (which requires commons.json and jcr-wrapper)
+bundle mvn:org.apache.sling/org.apache.sling.installer.core/3.5.0
+bundle mvn:org.apache.sling/org.apache.sling.commons.json/2.0.6
+bundle mvn:org.apache.sling/org.apache.sling.jcr.jcr-wrapper/2.0.0
+bundle mvn:org.apache.sling/org.apache.sling.crankstart.sling.extensions/0.0.1-SNAPSHOT
 
 # Now start our bundles
 start.all.bundles
@@ -51,6 +59,9 @@ config.factory org.apache.sling.crankstart.testservices.ConfigFactoryServlet
   
 # Test an extension command provided by our test-services bundle
 test.system.property the.test.system.property was set by test-services bundle
+  
+# Add the JUnit core via the Sling installer and our sling.extensions
+sling.installer.resource mvn:org.apache.sling/org.apache.sling.junit.core/1.0.8
   
 # Informative log  
 log felix http service should come up at http://localhost:${http.port}
