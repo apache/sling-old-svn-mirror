@@ -42,6 +42,10 @@ public class ServiceComponentHeaderValidatorTest {
 
     @Rule
     public TemporaryProject projectRule = new TemporaryProject();
+
+    @Rule
+    public DefaultJavaVMInstall jvm = new DefaultJavaVMInstall();
+
     private ProjectAdapter project;
     private Poller poller;
 

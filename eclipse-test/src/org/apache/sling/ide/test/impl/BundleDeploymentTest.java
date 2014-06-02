@@ -64,6 +64,9 @@ public class BundleDeploymentTest {
     public TemporaryProject projectRule = new TemporaryProject();
 
     @Rule
+    public DefaultJavaVMInstall jvm = new DefaultJavaVMInstall();
+
+    @Rule
     public DisableDebugStatusHandlers disableDebugHandlers = new DisableDebugStatusHandlers();
 
     @Test
@@ -104,24 +107,6 @@ public class BundleDeploymentTest {
 
         // install bundle facet
         project.installFacet("sling.bundle", "1.0");
-
-        //TODO
-        //SLING-3615: find a more appropriate way for this
-        // at the moment it works, BundleDeploymentTest runs first, thus the VM will be installed in 
-        // the 'runtime eclipse' and things are fine.. but this is not very stable indeed.
-        if (!TychoJREHelper.hasDefaultVM()) {
-            String jreHome = System.getProperty("tycho.jre.helper.jre.home");
-            if (jreHome!=null && jreHome.length()>0) {
-                System.out.println("Installing Default VM to be : "+jreHome);
-                TychoJREHelper.installDefaultVM(jreHome);
-            } else {
-                System.out.println("Cannot install Default VM, system property 'tycho.jre.helper.jre.home' not set! Test might fail!");
-            }
-        }
-
-        //SLING-3615 : sleeping 5sec to give Eclipse a chance to rebuild the workspace
-        Thread.sleep(5000);
-        
 
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.setAttribute(ISlingLaunchpadServer.PROP_INSTALL_LOCALLY, installBundleLocally);

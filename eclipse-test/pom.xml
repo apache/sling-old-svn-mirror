@@ -156,7 +156,7 @@
                 </os>
             </activation>
             <properties>
-                <ui.test.args>-XstartOnFirstThread -Dtycho.jre.helper.jre.home=/System/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home</ui.test.args>
+                <ui.test.args>-XstartOnFirstThread</ui.test.args>
             </properties>
         </profile>
     </profiles>
