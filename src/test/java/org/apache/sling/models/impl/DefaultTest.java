@@ -29,13 +29,13 @@ import org.apache.sling.models.impl.injectors.ValueMapInjector;
 import org.apache.sling.models.testmodels.classes.DefaultPrimitivesModel;
 import org.apache.sling.models.testmodels.classes.DefaultStringModel;
 import org.apache.sling.models.testmodels.classes.DefaultWrappersModel;
+import org.apache.sling.models.testmodels.interfaces.PropertyModelWithDefaults;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -54,8 +54,7 @@ public class DefaultTest {
         when(componentCtx.getBundleContext()).thenReturn(bundleContext);
         factory = new ModelAdapterFactory();
         factory.activate(componentCtx);
-        factory.bindInjector(new ValueMapInjector(),
-                Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 0L));
+        factory.bindInjector(new ValueMapInjector(), new ServicePropertiesMap(0, 0));
     }
 
     @Test
@@ -70,6 +69,20 @@ public class DefaultTest {
         assertEquals("firstDefault", model.getFirstProperty());
         assertEquals(2, model.getSecondProperty().length);
     }
+
+    @Test
+    public void testDefaultStringValueOnInterface() {
+        ValueMap vm = new ValueMapDecorator(Collections.<String, Object>singletonMap("first", "first value"));
+
+        Resource res = mock(Resource.class);
+        when(res.adaptTo(ValueMap.class)).thenReturn(vm);
+
+        PropertyModelWithDefaults model = factory.getAdapter(res, PropertyModelWithDefaults.class);
+        assertNotNull(model);
+        assertEquals("first value", model.getFirst());
+        assertEquals("second default", model.getSecond());
+    }
+
 
     @Test
     public void testDefaultPrimitives() {

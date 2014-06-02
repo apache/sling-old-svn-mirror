@@ -59,8 +59,7 @@ public class ConstructorTest {
 
         factory = new ModelAdapterFactory();
         factory.activate(componentCtx);
-        factory.bindInjector(new RequestAttributeInjector(),
-                Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 0L));
+        factory.bindInjector(new RequestAttributeInjector(), new ServicePropertiesMap(1, 1));
     }
 
     @Test

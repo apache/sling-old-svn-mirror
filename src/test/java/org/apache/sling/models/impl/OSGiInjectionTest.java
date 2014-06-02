@@ -17,9 +17,9 @@
 package org.apache.sling.models.impl;
 
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import java.util.Collections;
 import java.util.Dictionary;
 
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -43,7 +43,6 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleListener;
-import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 
@@ -70,7 +69,7 @@ public class OSGiInjectionTest {
 
         OSGiServiceInjector injectorFactory = new OSGiServiceInjector();
         injectorFactory.activate(componentCtx);
-        factory.bindInjector(injectorFactory, Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 0L));
+        factory.bindInjector(injectorFactory, new ServicePropertiesMap(1, 1));
 
         bindings.setSling(helper);
     }

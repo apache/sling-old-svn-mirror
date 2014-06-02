@@ -20,14 +20,15 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Collections;
+import java.util.Map;
 
-import org.apache.commons.lang.RandomStringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
+import org.apache.sling.models.annotations.Model;
+import org.apache.sling.models.impl.injectors.ChildResourceInjector;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
-import org.apache.sling.models.testmodels.classes.ViaModel;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,40 +38,51 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ViaTest {
-
-    @Mock
-    private Resource resource;
-
-    @Mock
-    private SlingHttpServletRequest request;
+public class InvalidAdaptationsTest {
 
     @Mock
     private ComponentContext componentCtx;
 
     @Mock
     private BundleContext bundleContext;
-    
+
     private ModelAdapterFactory factory;
 
     @Before
     public void setup() {
         when(componentCtx.getBundleContext()).thenReturn(bundleContext);
-        when(request.getResource()).thenReturn(resource);
+
         factory = new ModelAdapterFactory();
         factory.activate(componentCtx);
         factory.bindInjector(new ValueMapInjector(), new ServicePropertiesMap(1, 1));
+        factory.bindInjector(new ChildResourceInjector(), new ServicePropertiesMap(2, 0));
     }
 
     @Test
-    public void testProjectionToResource() {
-        String value = RandomStringUtils.randomAlphanumeric(10);
-        ValueMap map = new ValueMapDecorator(Collections.<String, Object> singletonMap("firstProperty", value));
-        when(resource.adaptTo(ValueMap.class)).thenReturn(map);
-        
-        ViaModel model = factory.getAdapter(request, ViaModel.class);
-        assertNotNull(model);
-        assertEquals(value, model.getFirstProperty());
+    public void testNonModelClass() {
+        Map<String, Object> emptyMap = Collections.<String, Object> emptyMap();
+
+        Resource res = mock(Resource.class);
+        when(res.adaptTo(ValueMap.class)).thenReturn(new ValueMapDecorator(emptyMap));
+
+        assertNull(factory.getAdapter(res, NonModel.class));
+    }
+
+    @Test
+    public void testWrongAdaptableClass() {
+        Map<String, Object> emptyMap = Collections.<String, Object> emptyMap();
+
+        Resource res = mock(Resource.class);
+        when(res.adaptTo(ValueMap.class)).thenReturn(new ValueMapDecorator(emptyMap));
+
+        assertNull(factory.getAdapter(res, RequestModel.class));
+    }
+
+    private class NonModel {
+    }
+
+    @Model(adaptables = SlingHttpServletRequest.class)
+    private class RequestModel {
     }
 
 }

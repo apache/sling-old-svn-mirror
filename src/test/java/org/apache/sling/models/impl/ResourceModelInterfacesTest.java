@@ -43,7 +43,6 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -62,10 +61,8 @@ public class ResourceModelInterfacesTest {
         when(componentCtx.getBundleContext()).thenReturn(bundleContext);
         factory = new ModelAdapterFactory();
         factory.activate(componentCtx);
-        factory.bindInjector(new ValueMapInjector(),
-                Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 1L));
-        factory.bindInjector(new ChildResourceInjector(),
-                Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 0L));
+        factory.bindInjector(new ValueMapInjector(), new ServicePropertiesMap(2, 2));
+        factory.bindInjector(new ChildResourceInjector(), new ServicePropertiesMap(1, 1));
     }
 
     @Test
