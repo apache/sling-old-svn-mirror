@@ -47,5 +47,6 @@
       <module>core</module>
       <module>launcher</module>
       <module>test-services</module>
+      <module>sling-extensions</module>
     </modules>
 </project>

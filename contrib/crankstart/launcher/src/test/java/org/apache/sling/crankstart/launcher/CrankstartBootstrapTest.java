@@ -135,6 +135,15 @@ public class CrankstartBootstrapTest {
         assertEquals("was set by test-services bundle", System.getProperty(TEST_SYSTEM_PROPERTY));
     }
     
+    @Test
+    @Retry(timeoutMsec=10000, intervalMsec=250)
+    public void testJUnitServlet() throws Exception {
+        final String path = "/system/sling/junit";
+        final GetMethod get = new GetMethod(baseUrl + path);
+        client.executeMethod(get);
+        assertEquals("Expecting JUnit servlet to be installed via sling extension command, at " + get.getURI(), 200, get.getStatusCode());
+    }
+    
     private static String getOsgiStoragePath() {
         final File tmpRoot = new File(System.getProperty("java.io.tmpdir"));
         final Random random = new Random();
