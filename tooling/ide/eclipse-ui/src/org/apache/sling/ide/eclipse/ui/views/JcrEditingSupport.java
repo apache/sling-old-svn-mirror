@@ -229,7 +229,7 @@ public class JcrEditingSupport extends EditingSupport {
         case TYPE: {
             // using a dropdown editor
             final ComboBoxCellEditor editor = new ComboBoxCellEditor(tableViewer.getTable(), 
-                    PropertyTypeSupport.SUPPORTED_PROPERTY_TYPES, SWT.READ_ONLY);
+                    PropertyTypeSupport.PROPERTY_TYPES, SWT.READ_ONLY);
             return editor;
         }
         case VALUE: {

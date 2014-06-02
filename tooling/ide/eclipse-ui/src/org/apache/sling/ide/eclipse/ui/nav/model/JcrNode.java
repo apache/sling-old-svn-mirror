@@ -19,11 +19,9 @@ package org.apache.sling.ide.eclipse.ui.nav.model;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -31,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.jcr.PropertyType;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.xml.parsers.ParserConfigurationException;
@@ -45,6 +42,7 @@ import org.apache.sling.ide.eclipse.core.ServerUtil;
 import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
 import org.apache.sling.ide.eclipse.core.internal.Activator;
 import org.apache.sling.ide.eclipse.ui.WhitelabelSupport;
+import org.apache.sling.ide.eclipse.ui.views.PropertyTypeSupport;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterResult;
 import org.apache.sling.ide.serialization.SerializationKind;
@@ -1146,32 +1144,8 @@ public class JcrNode implements IAdaptable {
             
             // resourceProxy could be containing a full tree
             // dive into the right position
-            Object propertyValue = doGetProperty(resourceProxy, propertyName);
-            if (propertyValue!=null) {
-                if (propertyValue instanceof String) {
-                    String rawValue = properties.getValue(propertyName);
-                    if (rawValue.startsWith("{Name}")) {
-                        return PropertyType.NAME;
-                    } else if (rawValue.startsWith("{Path}")) {
-                        return PropertyType.PATH;
-                    }
-                    return PropertyType.STRING;
-                } else if (propertyValue instanceof Long) {
-                    return PropertyType.LONG;
-                } else if (propertyValue instanceof BigDecimal) {
-                    return PropertyType.DECIMAL;
-                } else if (propertyValue instanceof Double) {
-                    return PropertyType.DOUBLE;
-                } else if (propertyValue instanceof Boolean) {
-                    return PropertyType.BOOLEAN;
-                } else if (propertyValue instanceof GregorianCalendar) {
-                    return PropertyType.DATE;
-                } else {
-                    //TODO
-                    Activator.getDefault().getPluginLogger().warn("Unsupported property type: "+propertyValue.getClass());
-                    return PropertyType.STRING;
-                }
-            }
+            String rawValue = properties.getValue(propertyName);
+            return PropertyTypeSupport.propertyTypeOfString(rawValue);
         } catch(Exception e) {
             Activator.getDefault().getPluginLogger().warn("Exception occurred during analyzing propertyType ("+propertyName+") for "+this, e);
         }
