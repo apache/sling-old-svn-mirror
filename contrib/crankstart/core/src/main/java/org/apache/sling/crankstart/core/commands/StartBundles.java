@@ -40,6 +40,7 @@ public class StartBundles implements CrankstartCommand {
     @Override
     public void execute(CrankstartContext crankstartContext, CrankstartCommandLine commandLine) throws Exception {
         int count = 0;
+        int failures = 0;
         for (Bundle bundle : crankstartContext.getOsgiFramework().getBundleContext().getBundles()) {
             if(isFragment(bundle)) {
                 log.debug("Ignoring fragment bundle {}", bundle.getSymbolicName());
@@ -47,14 +48,19 @@ public class StartBundles implements CrankstartCommand {
             }
             if(bundle.getState() != Bundle.ACTIVE) {
                 log.info("Starting bundle {}", bundle.getSymbolicName());
-                bundle.start();
-                count++;
+                try {
+                    bundle.start();
+                    count++;
+                } catch(Exception e) {
+                    log.warn("Failed to start bundle {}", bundle.getSymbolicName(), e);
+                    failures++;
+                }
             } else {
                 log.debug("Bundle {} is already active", bundle.getSymbolicName());
             }
         }
         
-        log.info("{} bundles started", count);
+        log.info("{} bundles started, {} failures", count, failures);
     }
     
     private boolean isFragment(Bundle b) {
