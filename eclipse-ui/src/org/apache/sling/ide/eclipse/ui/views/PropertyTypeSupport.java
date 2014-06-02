@@ -16,69 +16,66 @@
  */
 package org.apache.sling.ide.eclipse.ui.views;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.jcr.PropertyType;
+
+import org.apache.sling.ide.eclipse.ui.internal.Activator;
 
 public class PropertyTypeSupport {
 
-    static final String[] SUPPORTED_PROPERTY_TYPES = new String[] 
-            {"Boolean", "Date", "Decimal", "Double", "Long", "Name", "Path", "String"};
+    static final String[] PROPERTY_TYPES = new String[] {
+        "Binary",
+        "Boolean", 
+        "Date", 
+        "Decimal", 
+        "Double", 
+        "Long", 
+        "Name", 
+        "Path", 
+        "Reference", 
+        "String", 
+        "URI", 
+        "WeakReference"};
+    
+    static Map<String,Integer> propertyTypeIndices;
+    
+    static{
+        propertyTypeIndices = new HashMap<String,Integer>();
+        for (int i = 0; i < PROPERTY_TYPES.length; i++) {
+            String aPropertyType = PROPERTY_TYPES[i];
+            propertyTypeIndices.put(aPropertyType, i);
+        }
+    }
     
     static int indexOfPropertyType(int propertyType) {
-        switch(propertyType) {
-        case PropertyType.BOOLEAN: {
-            return 0;
-        }
-        case PropertyType.DATE: {
-            return 1;
-        }
-        case PropertyType.DECIMAL: {
-            return 2;
-        }
-        case PropertyType.DOUBLE: {
-            return 3;
-        }
-        case PropertyType.LONG: {
-            return 4;
-        }
-        case PropertyType.NAME: {
-            return 5;
-        }
-        case PropertyType.PATH: {
-            return 6;
-        }
-        case PropertyType.STRING: {
-            return 7;
-        }
-        default: {
-            //TODO: hardcode to STRING then
-            return 7;
-        }
+        String name = PropertyType.nameFromValue(propertyType);
+        return propertyTypeIndices.get(name);
+    }
+
+    static int propertyTypeOfIndex(int index) {
+        try{
+            String name = PROPERTY_TYPES[index];
+            int value = PropertyType.valueFromName(name);
+            return value;
+        } catch(Exception e) {
+            return PropertyType.STRING;
         }
     }
 
-    public static int propertyTypeOfIndex(int index) {
-        switch(index) {
-        case 0:
-            return PropertyType.BOOLEAN;
-        case 1:
-            return PropertyType.DATE;
-        case 2:
-            return PropertyType.DECIMAL;
-        case 3:
-            return PropertyType.DOUBLE;
-        case 4:
-            return PropertyType.LONG;
-        case 5:
-            return PropertyType.NAME;
-        case 6:
-            return PropertyType.PATH;
-        case 7:
-            return PropertyType.STRING;
-        default: {
-            //TODO: hardcode to STRING then
+    public static int propertyTypeOfString(String rawValue) {
+        if (!rawValue.startsWith("{")) {
             return PropertyType.STRING;
         }
+        for(int i=0; i<PROPERTY_TYPES.length; i++) {
+            if (rawValue.startsWith("{"+PROPERTY_TYPES[i]+"}")) {
+                return propertyTypeOfIndex(i);
+            }
         }
+        //TODO: hardcoded type here
+        Activator.getDefault().getPluginLogger().warn("Unsupported property type: "+rawValue);
+        return PropertyType.STRING;
     }
     
 }
