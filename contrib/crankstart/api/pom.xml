@@ -7,6 +7,7 @@
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
         <version>19</version>
+        <relativePath />
     </parent>
 
     <groupId>org.apache.sling</groupId>
