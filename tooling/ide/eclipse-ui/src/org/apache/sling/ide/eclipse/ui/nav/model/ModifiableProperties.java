@@ -30,6 +30,9 @@ import org.eclipse.ui.views.properties.TextPropertyDescriptor;
 
 import de.pdark.decentxml.Attribute;
 import de.pdark.decentxml.Element;
+import de.pdark.decentxml.Node;
+import de.pdark.decentxml.Parent;
+import de.pdark.decentxml.Text;
 
 public class ModifiableProperties implements IPropertySource {
 	
@@ -134,12 +137,47 @@ public class ModifiableProperties implements IPropertySource {
 
     public void deleteProperty(String displayName) {
         domElement.removeAttribute(displayName);
+        reformat();
         genericJcrRootFile.save();
     }
 
     public void addProperty(String name, String value) {
         domElement.addAttribute(name, value);
+        reformat();
         genericJcrRootFile.save();
+    }
+
+    private void reformat() {
+        List<Attribute> list = domElement.getAttributes();
+        if (list.size()==0) {
+            // then there are no attributes at all - nothing to format
+            return;
+        } else if (list.size()==1) {
+            // only one attribute - make sure it has no preSpace
+            Attribute first = list.get(0);
+            first.setPreSpace("");
+        } else {
+            final String NL = System.getProperty("line.separator");
+            final String INDENT = "    ";
+            // otherwise, make sure each element has the correct preSpace
+            final String correctPreSpace;
+            Element parent = domElement.getParentElement();
+            List<Node> nodes = parent.getNodes();
+            if (nodes.size()>1 && (nodes.get(0) instanceof Text) && (nodes.get(0).toXML().startsWith(NL))) {
+                correctPreSpace = nodes.get(0).toXML() + INDENT;
+            } else {
+                String totalIndent = INDENT;
+                while(parent!=null) {
+                    totalIndent = totalIndent + INDENT;
+                    parent = parent.getParentElement();
+                }
+                correctPreSpace = NL + totalIndent;
+            }
+            for (Iterator it = list.iterator(); it.hasNext();) {
+                Attribute attribute = (Attribute) it.next();
+                attribute.setPreSpace(correctPreSpace);
+            }
+        }
     }
 
     public void renameProperty(String oldKey, String newKey) {
