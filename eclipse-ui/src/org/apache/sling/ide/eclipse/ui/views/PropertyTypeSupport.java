@@ -16,6 +16,8 @@
  */
 package org.apache.sling.ide.eclipse.ui.views;
 
+import java.net.URI;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,11 +57,13 @@ public class PropertyTypeSupport {
     }
 
     static int propertyTypeOfIndex(int index) {
+        String name = null;
         try{
-            String name = PROPERTY_TYPES[index];
+            name = PROPERTY_TYPES[index];
             int value = PropertyType.valueFromName(name);
             return value;
         } catch(Exception e) {
+            Activator.getDefault().getPluginLogger().warn("Unsupported index ("+index+") and/or name ("+name+"): "+e, e);
             return PropertyType.STRING;
         }
     }
@@ -68,14 +72,61 @@ public class PropertyTypeSupport {
         if (!rawValue.startsWith("{")) {
             return PropertyType.STRING;
         }
-        for(int i=0; i<PROPERTY_TYPES.length; i++) {
-            if (rawValue.startsWith("{"+PROPERTY_TYPES[i]+"}")) {
-                return propertyTypeOfIndex(i);
+        int curlyEnd = rawValue.indexOf("}", 1);
+        if (curlyEnd==-1) {
+            return PropertyType.STRING;
+        }
+        String type = rawValue.substring(1, curlyEnd);
+        int index = -2;
+        try{
+            index = propertyTypeIndices.get(type);
+            return propertyTypeOfIndex(index);
+        } catch(Exception e) {
+            Activator.getDefault().getPluginLogger().warn("Unsupported type ("+type+") and/or index ("+index+"): "+e, e);
+            return PropertyType.STRING;
+        }
+    }
+
+    public static String encodeValueAsString(Object value, int propertyType) {
+        switch(propertyType) {
+        case PropertyType.BOOLEAN:
+        case PropertyType.DECIMAL:
+        case PropertyType.DOUBLE:
+        case PropertyType.LONG:
+        case PropertyType.NAME:
+        case PropertyType.PATH:
+        case PropertyType.STRING: {
+            return String.valueOf(value);
+        }
+        case PropertyType.BINARY: {
+            //TODO: how to handle binary here
+            return "";
+        }
+        case PropertyType.DATE: {
+            //TODO: double check
+            if (value instanceof GregorianCalendar) {
+                GregorianCalendar date = (GregorianCalendar)value;
+                return date.toString();
+            } else {
+                return String.valueOf(value);
             }
         }
-        //TODO: hardcoded type here
-        Activator.getDefault().getPluginLogger().warn("Unsupported property type: "+rawValue);
-        return PropertyType.STRING;
+        case PropertyType.URI: {
+            if (value instanceof URI) {
+                URI uri = (URI)value;
+                return uri.toString();
+            } else {
+                return String.valueOf(value);
+            }
+        }
+        case PropertyType.REFERENCE:
+        case PropertyType.WEAKREFERENCE: {
+            return String.valueOf(value);
+        }
+        default: {
+            return String.valueOf(value);
+        }
+        }
     }
     
 }

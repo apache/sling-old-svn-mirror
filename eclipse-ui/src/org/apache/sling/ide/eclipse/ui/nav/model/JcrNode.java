@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.jcr.PropertyType;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.xml.parsers.ParserConfigurationException;
@@ -421,7 +422,7 @@ public class JcrNode implements IAdaptable {
 
 	public Image getImage() {
 		boolean plainFolder = resource!=null && (resource instanceof IFolder);
-		String primaryType = getProperty("jcr:primaryType");
+		String primaryType = getProperty("jcr:primaryType").getValueAsString();
 		boolean typeFolder = primaryType!=null && ((primaryType.equals("nt:folder") || primaryType.equals("sling:Folder")));
 		boolean typeFile = primaryType!=null && ((primaryType.equals("nt:file") || primaryType.equals("nt:resource") || primaryType.equals("sling:File")));
 		typeFile |= (resource!=null && primaryType==null);
@@ -437,7 +438,7 @@ public class JcrNode implements IAdaptable {
 		String mimeType = null;
 		mimeType = getJcrContentProperty("jcr:mimeType");
 		if (mimeType == null) {
-			mimeType = getProperty("jcr:mimeType");
+			mimeType = getProperty("jcr:mimeType").getValueAsString();
 		}
 		
 		if (typeUnstructured) {
@@ -481,13 +482,13 @@ public class JcrNode implements IAdaptable {
 		for (int i = 0; i < chldrn.length; i++) {
 			JcrNode jcrNode = (JcrNode) chldrn[i];
 			if ("jcr:content".equals(jcrNode.getName())) {
-				return jcrNode.getProperty(propertyKey);
+				return jcrNode.getProperty(propertyKey).getValueAsString();
 			}
 		}
 		return null;
 	}
 
-	private String getProperty(String propertyKey) {
+	private String getPropertyAsString(String propertyKey) {
 		if (properties!=null) {
 			Object propertyValue = properties.getValue(propertyKey);
 			if (propertyValue!=null) {
@@ -1194,6 +1195,67 @@ public class JcrNode implements IAdaptable {
             }
         }
         return null;
+    }
+    
+    public JcrProperty getProperty(final String name) {
+        if (properties==null) {
+            return null;
+        }
+        return new JcrProperty() {
+
+            @Override
+            public String getName() {
+                return name;
+            }
+
+            
+            @Override
+            public int getType() {
+                return getPropertyType(name);
+            }
+            
+            @Override
+            public String getTypeAsString() {
+                int t = getPropertyType(name);
+                return PropertyType.nameFromValue(t);
+            };
+
+//            @Override
+//            public Object getValue() {
+//                throw new IllegalStateException("not yet implemented");
+//            }
+            
+            @Override
+            public String getValueAsString() {
+                Object propertyValue = getProperties().getValue(name);
+                if (propertyValue!=null) {
+                    return String.valueOf(propertyValue);
+                } else {
+                    return null;
+                }
+            }
+
+            @Override
+            public boolean isMultiple() {
+                String rawValue = getProperties().getValue(name);
+                if (rawValue.startsWith("{")) {
+                    int curlyEnd = rawValue.indexOf("}", 1);
+                    rawValue = rawValue.substring(curlyEnd+1);
+                }
+                return rawValue.startsWith("[") && rawValue.endsWith("]");
+            }
+            
+            @Override
+            public String[] getValuesAsString() {
+                String rawValue = getProperties().getValue(name);
+                if (rawValue.startsWith("{")) {
+                    int curlyEnd = rawValue.indexOf("}", 1);
+                    rawValue = rawValue.substring(curlyEnd+1);
+                }
+                rawValue = rawValue.substring(1, rawValue.length()-1);
+                return org.apache.jackrabbit.util.Text.explode(rawValue, ',');
+            }
+        };
     }
 
     public void renameProperty(String oldKey, String newKey) {

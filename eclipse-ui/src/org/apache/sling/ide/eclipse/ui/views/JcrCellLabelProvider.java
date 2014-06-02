@@ -23,6 +23,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.nodetype.PropertyDefinition;
 
 import org.apache.sling.ide.eclipse.ui.nav.model.JcrNode;
+import org.apache.sling.ide.eclipse.ui.nav.model.JcrProperty;
 import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.ViewerCell;
@@ -83,11 +84,17 @@ public class JcrCellLabelProvider extends CellLabelProvider {
                 IPropertyDescriptor pd = (IPropertyDescriptor)element;
                 JcrNode jcrNode = (JcrNode)viewer.getInput();
                 Map.Entry me = (Entry) pd.getId();
-                int propertyType = jcrNode.getPropertyType(String.valueOf(me.getKey()));
+                final String propertyName = String.valueOf(me.getKey());
+                int propertyType = jcrNode.getPropertyType(propertyName);
                 if (propertyType<=-1 || propertyType==PropertyType.UNDEFINED) {
                     cell.setText("");
                 } else {
-                    cell.setText(PropertyType.nameFromValue(propertyType));
+                    final JcrProperty property = jcrNode.getProperty(propertyName);
+                    String type = PropertyType.nameFromValue(propertyType);
+                    if (property!=null && property.isMultiple()) {
+                        type = type + "[]";
+                    }
+                    cell.setText(type);
                 }
             } else {
                 cell.setText("");
@@ -106,20 +113,34 @@ public class JcrCellLabelProvider extends CellLabelProvider {
                 JcrNode jcrNode = (JcrNode)viewer.getInput();
                 Map.Entry me = (Entry) pd.getId();
                 PropertyDefinition prd = jcrNode.getPropertyDefinition(String.valueOf(me.getKey()));
-                if (prd==null) {
-                    cell.setText("false");
-                } else if (index==3) {
+                if (index==3) {
                     // protected
-                    cell.setText(String.valueOf(prd.isProtected()));
+                    if (prd!=null) {
+                        cell.setText(String.valueOf(prd.isProtected()));
+                    } else {
+                        cell.setText("false");
+                    }
                 } else if (index==4) {
                     // mandatory
-                    cell.setText(String.valueOf(prd.isMandatory()));
+                    if (prd!=null) {
+                        cell.setText(String.valueOf(prd.isMandatory()));
+                    } else {
+                        cell.setText("false");
+                    }
                 } else if (index==5) {
                     // multiple
-                    cell.setText(String.valueOf(prd.isMultiple()));
+                    if (prd!=null) {
+                        cell.setText(String.valueOf(prd.isMultiple()));
+                    } else {
+                        cell.setText(String.valueOf(jcrNode.getProperty(String.valueOf(me.getKey())).isMultiple()));
+                    }
                 } else if (index==6) {
                     // auto creatd
-                    cell.setText(String.valueOf(prd.isAutoCreated()));
+                    if (prd!=null) {
+                        cell.setText(String.valueOf(prd.isAutoCreated()));
+                    } else {
+                        cell.setText("false");
+                    }
                 } else {
                     cell.setText("n/a");
                     return;
@@ -130,19 +151,24 @@ public class JcrCellLabelProvider extends CellLabelProvider {
     }
 
     private boolean canEdit(ViewerCell cell) {
+        if (cell.getColumnIndex()>2) {
+            return false;
+        }
         Object element = cell.getElement();
         if (element instanceof NewRow) {
-            return (cell.getColumnIndex()==0 || cell.getColumnIndex()==2);
+            // can edit everything of a newrow (other than type properties)
+            return true;
         } else if (element instanceof IPropertyDescriptor){
             IPropertyDescriptor pd = (IPropertyDescriptor)element;
             JcrNode jcrNode = (JcrNode)viewer.getInput();
             Map.Entry me = (Entry) pd.getId();
             if (me.getKey().equals("jcr:primaryType")) {
-                return false;
+                return cell.getColumnIndex()==2;
             } else {
                 return true;
             }
         } else {
+            // otherwise this is an unknown/unsupported cell element
             return false;
         }
     }
