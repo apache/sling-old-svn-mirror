@@ -119,14 +119,8 @@ public class BundleDeploymentTest {
             }
         }
 
-//        bundleProject.build(IncrementalProjectBuilder.CLEAN_BUILD, pm);
-//        bundleProject.build(IncrementalProjectBuilder.FULL_BUILD, pm);
-//        ResourcesPlugin.getWorkspace().build(IncrementalProjectBuilder.FULL_BUILD, pm);
-//        bundleProject.refreshLocal(IResource.DEPTH_INFINITE, pm);
-        
-        System.out.println("Paranoia sleep of 5sec to make sure the bundle is properly built");
+        //SLING-3615 : sleeping 5sec to give Eclipse a chance to rebuild the workspace
         Thread.sleep(5000);
-        System.out.println("Continuing after 5sec sleep.");
         
 
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
