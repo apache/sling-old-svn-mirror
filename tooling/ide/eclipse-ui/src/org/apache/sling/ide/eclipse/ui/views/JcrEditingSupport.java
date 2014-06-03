@@ -279,9 +279,9 @@ public class JcrEditingSupport extends EditingSupport {
                 // then launch the MVPEditor instead of returning an editor here
                 return new MVNCellEditor(tableViewer.getTable(), getNode(), field.getPropertyName());
             }
-//            if (getNode().getPropertyType(field.getPropertyName())==PropertyType.DATE) {
-//                return new DateTimeCellEditor(tableViewer.getTable(), getNode(), field.getPropertyName());
-//            }
+            if (getNode().getPropertyType(field.getPropertyName())==PropertyType.DATE) {
+                return new DateTimeCellEditor(tableViewer.getTable(), getNode(), field.getPropertyName());
+            }
             CellEditor editor;
             if (field.getPropertyName().equals("jcr:primaryType")) {
                 editor = new TextCellEditor(tableViewer.getTable()) {
