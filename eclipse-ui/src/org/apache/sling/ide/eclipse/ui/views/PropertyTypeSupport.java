@@ -17,6 +17,8 @@
 package org.apache.sling.ide.eclipse.ui.views;
 
 import java.net.URI;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -103,10 +105,14 @@ public class PropertyTypeSupport {
             return "";
         }
         case PropertyType.DATE: {
-            //TODO: double check
-            if (value instanceof GregorianCalendar) {
+            if (value instanceof Date) {
+                Date date = (Date)value;
+                Calendar c = Calendar.getInstance();
+                c.setTime(date);
+                return DateTimeSupport.print(c);
+            } else if (value instanceof GregorianCalendar) {
                 GregorianCalendar date = (GregorianCalendar)value;
-                return date.toString();
+                return DateTimeSupport.print(date);
             } else {
                 return String.valueOf(value);
             }
