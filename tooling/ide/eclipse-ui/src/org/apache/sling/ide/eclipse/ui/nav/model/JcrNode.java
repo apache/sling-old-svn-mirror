@@ -1240,12 +1240,15 @@ public class JcrNode implements IAdaptable {
             
             @Override
             public String getValueAsString() {
-                Object propertyValue = getProperties().getValue(name);
-                if (propertyValue!=null) {
-                    return String.valueOf(propertyValue);
-                } else {
+                String rawValue = getProperties().getValue(name);
+                if (rawValue==null) {
                     return null;
                 }
+                if (rawValue.startsWith("{")) {
+                    int curlyEnd = rawValue.indexOf("}", 1);
+                    rawValue = rawValue.substring(curlyEnd+1);
+                }
+                return rawValue;
             }
 
             @Override
