@@ -71,6 +71,10 @@ public class PropertyTypeSupport {
     }
 
     public static int propertyTypeOfString(String rawValue) {
+        if (rawValue==null) {
+            // avoid NPE
+            return PropertyType.STRING;
+        }
         if (!rawValue.startsWith("{")) {
             return PropertyType.STRING;
         }
