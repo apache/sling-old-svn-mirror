@@ -105,6 +105,25 @@ public class ModifiableProperties implements IPropertySource {
 
 	@Override
 	public void setPropertyValue(Object id, Object value) {
+	    final String key;
+	    if (id instanceof Map.Entry<?, ?>) {
+            Map.Entry<String, String> entry = (Map.Entry<String, String>)id;
+	        key = entry.getKey();
+	    } else {
+	        key = String.valueOf(id);
+	    }
+        if ("jcr:primaryType".equals(key)) {
+            node.changePrimaryType(String.valueOf(value));
+            if (id instanceof Map.Entry<?, ?>) {
+                Map.Entry<String, String> entry = (Map.Entry<String, String>)id;
+                entry.setValue(String.valueOf(value));
+            }
+        } else {
+            doSetPropertyValue(key, value);
+        }
+	}
+
+	void doSetPropertyValue(Object id, Object value) {
 	    if (id instanceof Map.Entry<?, ?>) {
 	        Map.Entry<String, String> entry = (Map.Entry<String, String>)id;
 	        entry.setValue(String.valueOf(value));

@@ -415,6 +415,9 @@ public class JcrNode implements IAdaptable {
 
 	public void setResource(IResource resource) {
 		if (this.resource!=null) {
+		    if (resource.equals(this.resource)) {
+		        return;
+		    }
 			throw new IllegalStateException("can only set resource once");
 		}
 		this.resource = resource;
@@ -1036,14 +1039,10 @@ public class JcrNode implements IAdaptable {
     }
 
     public void setPropertyValue(Object key, Object value) {
-        if ("jcr:primaryType".equals(key)) {
-            changePrimaryType(String.valueOf(value));
-        } else {
-            properties.setPropertyValue(key, value);
-        }
+        properties.setPropertyValue(key, value);
     }
 
-    private void changePrimaryType(String newPrimaryType) {
+    void changePrimaryType(String newPrimaryType) {
         Repository repository = ServerUtil.getDefaultRepository(getProject());
         if (repository == null) {
             MessageDialog.openWarning(null, "Unable to change primary type", "Unable to change primary type since project "
@@ -1115,7 +1114,7 @@ public class JcrNode implements IAdaptable {
                 }
             }
         } else {
-            properties.setPropertyValue("jcr:primaryType", newPrimaryType);
+            properties.doSetPropertyValue("jcr:primaryType", newPrimaryType);
         }
     }
 
