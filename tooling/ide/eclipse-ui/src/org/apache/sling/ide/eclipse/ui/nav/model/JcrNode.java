@@ -1044,6 +1044,26 @@ public class JcrNode implements IAdaptable {
     }
 
     private void changePrimaryType(String newPrimaryType) {
+        Repository repository = ServerUtil.getDefaultRepository(getProject());
+        if (repository == null) {
+            MessageDialog.openWarning(null, "Unable to change primary type", "Unable to change primary type since project "
+                    + getProject().getName() + " is not associated with a server or the server is not started.");
+            return;
+        }
+        NodeTypeRegistry ntManager = repository.getNodeTypeRegistry();
+        
+        try {
+            if (!ntManager.isAllowedPrimaryChildNodeType(getParent().getPrimaryType(), newPrimaryType)) {
+                MessageDialog.openWarning(null, "Unable to change primary type", "Parent (type '"+getParent().getPrimaryType()+"')"+
+                        " does not accept child with primary type '"+newPrimaryType+"'");
+                return;
+            }
+        } catch (RepositoryException e1) {
+            MessageDialog.openWarning(null, "Unable to change primary type", "Exception occured while trying to "+
+                    "verify node types: "+e1);
+            return;
+        }
+        
         if ("nt:folder".equals(getPrimaryType())) {
             // switching away from an nt:folder might require creating a .content.xml
             createVaultFile((IFolder) resource, ".content.xml", newPrimaryType);
@@ -1060,13 +1080,6 @@ public class JcrNode implements IAdaptable {
                 return;
             }
             
-            Repository repository = ServerUtil.getDefaultRepository(getProject());
-            if (repository == null) {
-                MessageDialog.openWarning(null, "Unable to create a new node", "Unable to create a new node since project "
-                        + getProject().getName() + " is not associated with a server or the server is not started.");
-                return;
-            }
-            NodeTypeRegistry ntManager = repository.getNodeTypeRegistry();
             
             // verify 2)
             Object[] cn = getChildren(true);
@@ -1238,6 +1251,9 @@ public class JcrNode implements IAdaptable {
             @Override
             public boolean isMultiple() {
                 String rawValue = getProperties().getValue(name);
+                if (rawValue==null) {
+                    return false;
+                }
                 if (rawValue.startsWith("{")) {
                     int curlyEnd = rawValue.indexOf("}", 1);
                     rawValue = rawValue.substring(curlyEnd+1);
