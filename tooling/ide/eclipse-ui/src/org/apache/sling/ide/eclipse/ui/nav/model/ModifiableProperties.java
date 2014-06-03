@@ -16,6 +16,7 @@
  */
 package org.apache.sling.ide.eclipse.ui.nav.model;
 
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -24,6 +25,7 @@ import java.util.Map;
 
 import javax.jcr.PropertyType;
 
+import org.apache.sling.ide.eclipse.ui.views.DateTimeSupport;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 import org.eclipse.ui.views.properties.IPropertySource;
 import org.eclipse.ui.views.properties.TextPropertyDescriptor;
@@ -31,7 +33,6 @@ import org.eclipse.ui.views.properties.TextPropertyDescriptor;
 import de.pdark.decentxml.Attribute;
 import de.pdark.decentxml.Element;
 import de.pdark.decentxml.Node;
-import de.pdark.decentxml.Parent;
 import de.pdark.decentxml.Text;
 
 public class ModifiableProperties implements IPropertySource {
@@ -162,20 +163,27 @@ public class ModifiableProperties implements IPropertySource {
             // otherwise, make sure each element has the correct preSpace
             final String correctPreSpace;
             Element parent = domElement.getParentElement();
-            List<Node> nodes = parent.getNodes();
-            if (nodes.size()>1 && (nodes.get(0) instanceof Text) && (nodes.get(0).toXML().startsWith(NL))) {
-                correctPreSpace = nodes.get(0).toXML() + INDENT;
-            } else {
-                String totalIndent = INDENT;
-                while(parent!=null) {
-                    totalIndent = totalIndent + INDENT;
-                    parent = parent.getParentElement();
+            if (parent!=null) {
+                List<Node> nodes = parent.getNodes();
+                if (nodes.size()>1 && (nodes.get(0) instanceof Text) && (nodes.get(0).toXML().startsWith(NL))) {
+                    correctPreSpace = nodes.get(0).toXML() + INDENT;
+                } else {
+                    String totalIndent = INDENT;
+                    while(parent!=null) {
+                        totalIndent = totalIndent + INDENT;
+                        parent = parent.getParentElement();
+                    }
+                    correctPreSpace = NL + totalIndent;
                 }
-                correctPreSpace = NL + totalIndent;
+            } else {
+                // guestimate
+                correctPreSpace = NL + INDENT;
             }
             for (Iterator it = list.iterator(); it.hasNext();) {
                 Attribute attribute = (Attribute) it.next();
-                attribute.setPreSpace(correctPreSpace);
+                if (!attribute.getName().startsWith("xmlns:")) {
+                    attribute.setPreSpace(correctPreSpace);
+                }
             }
         }
     }
@@ -189,6 +197,64 @@ public class ModifiableProperties implements IPropertySource {
     public void changePropertyType(String key, int propertyType) {
         Attribute a = domElement.getAttribute(key);
         String value = a.getValue();
+        
+        // when changing the property type, the value needs to be adjusted
+        // to make up a valid property
+        // a simple approach is to create default values if a conversion
+        // of the existing value is not possible/feasible.
+        switch(propertyType) {
+        case PropertyType.BINARY: {
+            value = "";
+            break;
+        }
+        case PropertyType.BOOLEAN: {
+            try{
+                value = String.valueOf(Boolean.parseBoolean(value));
+            } catch(Exception e) {
+                // hardcode to false then
+                value = "false";
+            }
+            break;
+        }
+        case PropertyType.DATE: {
+            try{
+                value = DateTimeSupport.print(DateTimeSupport.parseAsCalendar(value));
+            } catch(Exception e) {
+                value = DateTimeSupport.print(Calendar.getInstance());
+            }
+            break;
+        }
+        case PropertyType.DECIMAL: {
+            try{
+                Float f = Float.parseFloat(value);
+                value = String.valueOf(f);
+            } catch(Exception e) {
+                value = "0.0";
+            }
+            break;
+        }
+        case PropertyType.LONG: {
+            try{
+                value = String.valueOf(Long.parseLong(value));
+            } catch(Exception e) {
+                value = "0";
+            }
+            break;
+        }
+        case PropertyType.NAME:
+        case PropertyType.STRING: {
+            // no conversion needed, already converted
+            break;
+        }
+        case PropertyType.PATH: 
+        case PropertyType.URI:
+        case PropertyType.REFERENCE:
+        case PropertyType.WEAKREFERENCE: {
+            //TODO validation would be necessary but not implemented atm
+            // no conversion needed, already converted
+            break;
+        }
+        }
         if (value.startsWith("{") && value.contains("}")) {
             int index = value.indexOf("}");
             value = value.substring(index+1);
