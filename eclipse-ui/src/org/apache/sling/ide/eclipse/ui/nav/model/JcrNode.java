@@ -826,6 +826,11 @@ public class JcrNode implements IAdaptable {
 	    } else if (parentSk!=SerializationKind.FOLDER && childSk==SerializationKind.METADATA_PARTIAL) {
             createDomChild(childNodeName, childNodeType);
 	    } else {
+	        if (childNodeType.equals("nt:file")) {
+	            IFolder f = (IFolder)resource;
+	            createNtFile(f, childNodeName, childNodeType);
+	            return;
+	        }
 	        //TODO: FILE not yet supported
 	        MessageDialog.openWarning(Display.getDefault().getActiveShell(), "Error creating node", "Cannot create child of "+thisNodeType+" with type "+childNodeType+" (yet?)");
 	        return;
@@ -852,7 +857,7 @@ public class JcrNode implements IAdaptable {
         }
     }
 
-	private void createVaultFile(IFolder parent, String filename, String childNodeType) {
+    private void createVaultFile(IFolder parent, String filename, String childNodeType) {
         final String minimalContentXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<jcr:root \n    xmlns:sling=\"http://sling.apache.org/jcr/sling/1.0\"\n    xmlns:jcr=\"http://www.jcp.org/jcr/1.0\"\n    jcr:primaryType=\""+childNodeType+"\"/>";
         IFile file = parent.getFile(filename);
         if (file.exists()) {
@@ -866,7 +871,23 @@ public class JcrNode implements IAdaptable {
             MessageDialog.openInformation(Display.getDefault().getActiveShell(), 
                     "Cannot create JCR node on a File", "Following Exception encountered: "+e);
         }
-	}
+    }
+
+    private void createNtFile(IFolder parent, String filename, String childNodeType) {
+        IFile file = parent.getFile(filename);
+        if (file.exists()) {
+            // file already exists
+            return;
+        }
+        try {
+            file.create(new ByteArrayInputStream("".getBytes()), true, new NullProgressMonitor());
+        } catch (CoreException e) {
+            //TODO proper logging
+            e.printStackTrace();
+            MessageDialog.openWarning(Display.getDefault().getActiveShell(), 
+                    "Cannot create file "+filename, "Following Exception encountered: "+e);
+        }
+    }
 
     private SerializationKind getFallbackSerializationKind(String nodeType) {
         if (nodeType.equals("nt:file")) {
