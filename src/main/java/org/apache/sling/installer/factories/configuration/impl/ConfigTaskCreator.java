@@ -103,7 +103,7 @@ public class ConfigTaskCreator
             }
             if ( event.getType() == ConfigurationEvent.CM_DELETED ) {
                 this.changeListener.resourceRemoved(InstallableResource.TYPE_CONFIG, id);
-            } else {
+            } else if ( event.getType() == ConfigurationEvent.CM_UPDATED ) {
                 try {
                     final Configuration config = ConfigUtil.getConfiguration(configAdmin,
                             event.getFactoryPid(),
