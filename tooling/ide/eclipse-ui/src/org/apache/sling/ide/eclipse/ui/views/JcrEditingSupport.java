@@ -16,15 +16,22 @@
  */
 package org.apache.sling.ide.eclipse.ui.views;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.jcr.PropertyType;
 
+import org.apache.sling.ide.eclipse.core.ServerUtil;
 import org.apache.sling.ide.eclipse.ui.nav.model.JcrNode;
 import org.apache.sling.ide.eclipse.ui.nav.model.JcrProperty;
-import org.eclipse.core.runtime.IStatus;
+import org.apache.sling.ide.transport.NodeTypeRegistry;
+import org.apache.sling.ide.transport.Repository;
+import org.apache.sling.ide.transport.RepositoryException;
+import org.eclipse.jface.fieldassist.ContentProposalAdapter;
+import org.eclipse.jface.fieldassist.SimpleContentProposalProvider;
+import org.eclipse.jface.fieldassist.TextContentAdapter;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ComboBoxCellEditor;
 import org.eclipse.jface.viewers.EditingSupport;
@@ -34,8 +41,10 @@ import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 import org.eclipse.ui.views.properties.TextPropertyDescriptor;
 
@@ -270,7 +279,38 @@ public class JcrEditingSupport extends EditingSupport {
                 // then launch the MVPEditor instead of returning an editor here
                 return new MVNCellEditor(tableViewer.getTable(), getNode(), field.getPropertyName());
             }
-            CellEditor editor = new TextCellEditor(tableViewer.getTable());
+//            if (getNode().getPropertyType(field.getPropertyName())==PropertyType.DATE) {
+//                return new DateTimeCellEditor(tableViewer.getTable(), getNode(), field.getPropertyName());
+//            }
+            CellEditor editor;
+            if (field.getPropertyName().equals("jcr:primaryType")) {
+                editor = new TextCellEditor(tableViewer.getTable()) {
+                    @Override
+                    protected Control createControl(Composite parent) {
+                        Text text = (Text) super.createControl(parent);
+                        Repository repository = ServerUtil.getDefaultRepository(getNode().getProject());
+                        if (repository == null) {
+                            return text;
+                        }
+                        NodeTypeRegistry ntManager = repository.getNodeTypeRegistry();
+                        try {
+                            Collection<String> types = ntManager.getAllowedPrimaryChildNodeTypes(getNode().getParent().getPrimaryType());
+                            SimpleContentProposalProvider proposalProvider = new SimpleContentProposalProvider(types.toArray(new String[0]));
+                            proposalProvider.setFiltering(true);
+                            ContentProposalAdapter adapter = new ContentProposalAdapter(text, new TextContentAdapter(),
+                                    proposalProvider, null, null);
+                            adapter.setPropagateKeys(true);
+                            adapter
+                                    .setProposalAcceptanceStyle(ContentProposalAdapter.PROPOSAL_REPLACE);
+                            return text;
+                        } catch (RepositoryException e) {
+                            return text;
+                        }
+                    }
+                };
+            } else {
+                editor = new TextCellEditor(tableViewer.getTable());
+            }
             // value might require a validator depending on the property type
             int propertyType = getNode().getPropertyType(field.getPropertyName());
             switch(propertyType) {
