@@ -9,11 +9,16 @@ import org.apache.sling.ide.transport.NodeTypeRegistry;
 import org.apache.sling.ide.transport.RepositoryException;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.InputDialog;
+import org.eclipse.jface.fieldassist.ComboContentAdapter;
+import org.eclipse.jface.fieldassist.ContentProposalAdapter;
+import org.eclipse.jface.fieldassist.SimpleContentProposalProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
@@ -27,6 +32,8 @@ public class NewNodeDialog extends InputDialog {
     private final NodeTypeRegistry ntManager;
     protected String comboSelection;
     private Collection<String> allowedChildren;
+    private Combo combo;
+    private ContentProposalAdapter proposalAdapter;
 
     public NewNodeDialog(Shell parentShell, JcrNode node,
             NodeTypeRegistry ntManager) throws RepositoryException {
@@ -57,7 +64,7 @@ public class NewNodeDialog extends InputDialog {
         label.setLayoutData(data);
         label.setFont(parent.getFont());
 
-        final Combo combo = new Combo(composite, SWT.DROP_DOWN);
+        combo = new Combo(composite, SWT.DROP_DOWN);
         combo.moveAbove(errorMessageText);
         combo.setItems(allowedChildren.toArray(new String[0]));
         combo.setLayoutData(new GridData(GridData.GRAB_HORIZONTAL
@@ -78,11 +85,51 @@ public class NewNodeDialog extends InputDialog {
             }
             
         });
+
+        SimpleContentProposalProvider proposalProvider = new SimpleContentProposalProvider(combo.getItems());
+        proposalProvider.setFiltering(true);
+        final ComboContentAdapter controlContentAdapter = new ComboContentAdapter() {
+            @Override
+            public void insertControlContents(Control control, String text,
+                    int cursorPosition) {
+                Point selection = combo.getSelection();
+                combo.setText(text);
+                selection.x = selection.x + cursorPosition;
+                selection.y = selection.x;
+                combo.setSelection(selection);
+            }
+            
+            @Override
+            public Rectangle getInsertionBounds(Control control) {
+                final Rectangle insertionBounds = super.getInsertionBounds(control);
+                // always insert at start
+                insertionBounds.x = 0;
+                insertionBounds.y = 0;
+                return insertionBounds;
+            }
+            
+            
+        };
+        // this variant opens auto-complete on each character
+        proposalAdapter = new ContentProposalAdapter(combo, controlContentAdapter, proposalProvider, null, null);
+        // this variant opens auto-complete only when invoking the auto-complete hotkey
+//        proposalAdapter = new ContentAssistCommandAdapter(combo, controlContentAdapter,
+//            proposalProvider, null, new char[0], true);
         if (allowedChildren.size()==1) {
             combo.setText(allowedChildren.iterator().next());
         }
         
         return composite;
+    }
+    
+    @Override
+    protected void initializeBounds() {
+        super.initializeBounds();
+        // fix autocomplete popup size:
+        Point size = combo.getSize();
+        size.x /= 2;
+        size.y = 180;
+        proposalAdapter.setPopupSize(size);
     }
     
     public String getChosenNodeType() {
