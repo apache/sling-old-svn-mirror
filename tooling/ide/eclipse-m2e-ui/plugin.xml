@@ -1,35 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.0"?>
 <plugin>
-
-  <!-- Define the launch configuration's tab group -->
-  
-
-	<!-- Define images -->
-	
-	<!-- Define the editor section(s) we contribute to the WST UI -->
-  
-  <!-- Runtime images -->
-  
-  <!-- Menu contributions -->
-  
-   <!-- Property page for project to select directory to sync -->
-   <!--extension
-         point="org.eclipse.ui.newWizards">
-      <category
-            id="org.apache.sling.ide.eclipse.ui"
-            name="Sling">
-      </category>
-      <wizard
-            category="org.apache.sling.ide.eclipse.ui"
-            class="org.apache.sling.ide.eclipse.ui.wizards.NewNodeWizard"
-            id="org.apache.sling.ide.eclipse.ui.wizards.NewNodeWizard"
-            name="New node">
-         <selection
-               class="selection.Selection1">
-         </selection>
-      </wizard>
-   </extension-->
    <extension
          point="org.eclipse.ui.newWizards">
       <category
@@ -45,8 +16,4 @@
             project="true">
       </wizard>
    </extension>
-
-
-   
-   
 </plugin>    
