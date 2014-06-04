@@ -90,7 +90,7 @@ public class ConvertToBundleAction implements IObjectActionDelegate {
 			}
 
 			ConvertProjectsWizard wizard = new ConvertProjectsWizard(applicableProjects, initialSelection, 
-                    "Convert to Sling Bundle Project(s)", "Select project(s) to convert to Sling Bundle project(s)");
+                    "Convert to Bundle Project(s)", "Select project(s) to convert to Bundle project(s)");
 
 			final Display display = getDisplay();
 			final WizardDialog dialog = new WizardDialog(display.getActiveShell(), wizard);

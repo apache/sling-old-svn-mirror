@@ -63,7 +63,7 @@ public class ConvertToContentPackageAction implements IObjectActionDelegate {
 
             String jcrRootLocation = ProjectHelper.getInferredContentProjectContentRoot(project)
                     .getProjectRelativePath().append("jcr_root").toPortableString();
-			final InputDialog id = new InputDialog(getDisplay().getActiveShell(), "Convert to Sling Content-Package Project", 
+            final InputDialog id = new InputDialog(getDisplay().getActiveShell(), "Convert to Content Project",
 		            "Confirm content sync root location of " + project.getName() + ":", jcrRootLocation,
 		            new IInputValidator() {
 						@Override

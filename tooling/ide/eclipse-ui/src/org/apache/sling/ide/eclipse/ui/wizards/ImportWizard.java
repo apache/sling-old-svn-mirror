@@ -18,10 +18,10 @@ package org.apache.sling.ide.eclipse.ui.wizards;
 
 import java.lang.reflect.InvocationTargetException;
 
+import org.apache.sling.ide.eclipse.ui.WhitelabelSupport;
 import org.apache.sling.ide.eclipse.ui.internal.Activator;
 import org.apache.sling.ide.eclipse.ui.internal.ImportRepositoryContentAction;
 import org.apache.sling.ide.eclipse.ui.internal.ImportWizardPage;
-import org.apache.sling.ide.eclipse.ui.internal.SharedImages;
 import org.apache.sling.ide.serialization.SerializationException;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.eclipse.core.resources.IProject;
@@ -112,7 +112,7 @@ public class ImportWizard extends Wizard implements IImportWizard {
 		setWindowTitle("Repositoy Import"); // NON-NLS-1
 		setNeedsProgressMonitor(true);
 		mainPage = new ImportWizardPage("Import from Repository", selection); // NON-NLS-1
-        setDefaultPageImageDescriptor(SharedImages.SLING_LOG);
+        setDefaultPageImageDescriptor(WhitelabelSupport.getWizardBanner());
 
 	}
 
