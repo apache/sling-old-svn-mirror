@@ -19,6 +19,7 @@ package org.apache.sling.ide.eclipse.ui.internal;
 
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
+import org.apache.sling.ide.eclipse.ui.propertyPages.SlingProjectPropertyPage;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -28,7 +29,6 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -45,7 +45,6 @@ import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.ContainerSelectionDialog;
 import org.eclipse.ui.dialogs.ISelectionValidator;
-import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.eclipse.ui.dialogs.WizardDataTransferPage;
 import org.eclipse.wst.server.core.IServer;
 
@@ -202,10 +201,8 @@ public class ImportWizardPage extends WizardDataTransferPage {
         openPropertiesLink.setText("(<a>change</a>)");
         openPropertiesLink.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
-				PreferenceDialog dialog = PreferencesUtil.createPropertyDialogOn(getShell(), project, 
-						"org.apache.sling.ide.projectPropertyPage", 
-						new String[] {"org.apache.sling.ide.projectPropertyPage"}, null);
-				dialog.open();
+
+                SlingProjectPropertyPage.openPropertyDialog(getShell(), project);
 				updateWidgetEnablements();
 			}
 		});
