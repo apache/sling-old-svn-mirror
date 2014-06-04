@@ -83,6 +83,8 @@ public class JcrPropertiesView extends ViewPart {
 
     private JcrNode lastInput;
 
+    private Action synchedAction;
+
 	class ViewContentProvider implements IStructuredContentProvider {
 		public void inputChanged(Viewer v, Object oldInput, Object newInput) {
 		}
@@ -283,6 +285,7 @@ public class JcrPropertiesView extends ViewPart {
 		manager.add(deleteAction);
         manager.add(showInEditorAction);
         manager.add(pinAction);
+        manager.add(synchedAction);
 	}
 
 	private void fillContextMenu(IMenuManager manager) {
@@ -290,6 +293,7 @@ public class JcrPropertiesView extends ViewPart {
         manager.add(deleteAction);
         manager.add(showInEditorAction);
         manager.add(pinAction);
+        manager.add(synchedAction);
 		// Other plug-ins can contribute there actions here
 		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
@@ -299,6 +303,7 @@ public class JcrPropertiesView extends ViewPart {
 		manager.add(deleteAction);
         manager.add(showInEditorAction);
         manager.add(pinAction);
+        manager.add(synchedAction);
 	}
 
 	private void makeActions() {
@@ -375,6 +380,8 @@ public class JcrPropertiesView extends ViewPart {
 		        } else {
 		            setContentDescription("[pinned]");
 		        }
+		        // toggle state of syncedAction accordingly
+		        synchedAction.setEnabled(!pinAction.isChecked());
 		    }
 		};
 		pinAction.setText("Pin to selection");
@@ -383,6 +390,21 @@ public class JcrPropertiesView extends ViewPart {
                 .getImageDescriptor(IWorkbenchGraphicConstants.IMG_ETOOL_PIN_EDITOR));
 		pinAction.setDisabledImageDescriptor(WorkbenchImages
                 .getImageDescriptor(IWorkbenchGraphicConstants.IMG_ETOOL_PIN_EDITOR_DISABLED));
+		pinAction.setChecked(false);
+		
+		synchedAction = new Action("Link with Editor and selection", IAction.AS_CHECK_BOX) {
+            public void run() {
+                // toggle state of pinAction accordingly
+                pinAction.setEnabled(!synchedAction.isChecked());
+            }
+        };
+        synchedAction.setText("Link with Editor and selection");
+        synchedAction.setToolTipText("Link with Editor and selection");
+        synchedAction.setImageDescriptor(WorkbenchImages
+                .getImageDescriptor(ISharedImages.IMG_ELCL_SYNCED));
+        synchedAction.setDisabledImageDescriptor(WorkbenchImages
+                .getImageDescriptor(ISharedImages.IMG_ELCL_SYNCED_DISABLED));
+        synchedAction.setChecked(true);
 	}
 
 	private void hookDoubleClickAction() {
@@ -416,6 +438,9 @@ public class JcrPropertiesView extends ViewPart {
         if (pinAction.isChecked()) {
             lastInput = jcrNode;
         } else {
+            if (synchedAction.isChecked()) {
+                getViewSite().getPage().bringToTop(this);
+            }
             viewer.setInput(jcrNode);
             titleLabel.setText(jcrNode.getJcrPath());
             insertAction.setEnabled(!jcrNode.getPrimaryType().equals("nt:folder"));
