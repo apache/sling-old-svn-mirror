@@ -39,11 +39,6 @@
 
     <inceptionYear>2007</inceptionYear>
 
-    <prerequisites>
-        <maven>3.0.2</maven>
-    </prerequisites>
-
-
     <issueManagement>
         <system>Jira</system>
         <url>http://issues.apache.org/jira/browse/SLING</url>
