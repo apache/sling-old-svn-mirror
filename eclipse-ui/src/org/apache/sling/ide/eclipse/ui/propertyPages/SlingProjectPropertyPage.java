@@ -1,10 +1,15 @@
-package org.apache.sling.ide.eclipse.ui.internal;
+package org.apache.sling.ide.eclipse.ui.propertyPages;
+
+import java.util.List;
 
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.preference.IPreferenceNode;
+import org.eclipse.jface.preference.PreferenceDialog;
+import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -16,13 +21,43 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.ContainerSelectionDialog;
 import org.eclipse.ui.dialogs.ISelectionValidator;
+import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.eclipse.ui.internal.dialogs.PropertyPageContributorManager;
+import org.eclipse.ui.internal.dialogs.PropertyPageManager;
 
 public class SlingProjectPropertyPage extends PropertyPage {
 
+    private static final String PAGE_ID = "org.apache.sling.ide.projectPropertyPage";
+    private static final String PAGE_ID_OVERRIDE = PAGE_ID + ".override";
+
+    public static void openPropertyDialog(Shell shell, IProject project) {
+
+        // find out if the override page is contributed, and show that instead of the default one
+        // TODO - stop relying on internals
+
+        PropertyPageManager pageManager = new PropertyPageManager();
+        PropertyPageContributorManager.getManager().contribute(pageManager, project);
+
+        List<?> nodes = pageManager.getElements(PreferenceManager.PRE_ORDER);
+        boolean overridePresent = false;
+        for (Object node : nodes) {
+            if (((IPreferenceNode) node).getId().equals(PAGE_ID_OVERRIDE)) {
+                overridePresent = true;
+                break;
+            }
+        }
+
+        String pageId = overridePresent ? PAGE_ID_OVERRIDE : PAGE_ID;
+
+        PreferenceDialog dialog = PreferencesUtil.createPropertyDialogOn(shell, project,
+                pageId, new String[] { pageId }, null);
+        dialog.open();
+    }
 
     private Text folderText;
 

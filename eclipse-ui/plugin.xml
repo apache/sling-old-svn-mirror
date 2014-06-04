@@ -169,7 +169,7 @@
         <page 
             id="org.apache.sling.ide.projectPropertyPage" 
             name="Sling" 
-            class="org.apache.sling.ide.eclipse.ui.internal.SlingProjectPropertyPage"> 
+            class="org.apache.sling.ide.eclipse.ui.propertyPages.SlingProjectPropertyPage"> 
             <enabledWhen>
             <and>
              	<instanceof
