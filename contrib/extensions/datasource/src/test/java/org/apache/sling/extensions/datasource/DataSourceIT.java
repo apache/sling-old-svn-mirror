@@ -21,6 +21,7 @@ package org.apache.sling.extensions.datasource;
 import java.sql.Connection;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.sql.DataSource;
@@ -36,6 +37,7 @@ import org.osgi.util.tracker.ServiceTracker;
 import static org.apache.commons.beanutils.BeanUtils.getProperty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 @RunWith(PaxExam.class)
 public class DataSourceIT extends DataSourceTestBase{
@@ -50,15 +52,18 @@ public class DataSourceIT extends DataSourceTestBase{
     @Inject
     ConfigurationAdmin ca;
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testDataSourceAsService() throws Exception{
         Configuration config = ca.createFactoryConfiguration(PID, null);
         Dictionary<String, Object> p = new Hashtable<String, Object>();
         p.put("url","jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE");
         p.put("datasource.name","test");
+        p.put("initialSize","5");
+        p.put("defaultAutoCommit","default");
+        p.put("defaultReadOnly","false");
         p.put("datasource.svc.properties",new String[]{
-                "initialSize=5",
-                "testOnBorrow=true",
+                "initSQL=SELECT 1",
         });
         p.put("maxActive",70);
         config.update(p);
@@ -77,7 +82,17 @@ public class DataSourceIT extends DataSourceTestBase{
         //Cannot access directly so access via reflection
         assertEquals("70", getProperty(ds, "poolProperties.maxActive"));
         assertEquals("5", getProperty(ds, "poolProperties.initialSize"));
-        assertEquals("true", getProperty(ds, "poolProperties.testOnBorrow"));
+        assertEquals("SELECT 1", getProperty(ds, "poolProperties.initSQL"));
+        assertEquals("false", getProperty(ds, "poolProperties.defaultReadOnly"));
+        assertNull(getProperty(ds, "poolProperties.defaultAutoCommit"));
+
+        config = ca.listConfigurations("(datasource.name=test)")[0];
+        Dictionary dic = config.getProperties();
+        dic.put("defaultReadOnly", Boolean.TRUE);
+        config.update(dic);
+
+        TimeUnit.MILLISECONDS.sleep(100);
+        assertEquals("true", getProperty(ds, "poolProperties.defaultReadOnly"));
     }
 
 }
