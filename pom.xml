@@ -277,7 +277,7 @@
                 <module>performance/jcr-resource-2.0.10</module>
                 <module>performance/jcr-resource-2.1.0</module>
                 <module>performance/jcr-resource-2.2.0</module>
-                <module>performance/test</module>
+                <module>performance/tests</module>
             </modules>
         </profile>
     </profiles>
