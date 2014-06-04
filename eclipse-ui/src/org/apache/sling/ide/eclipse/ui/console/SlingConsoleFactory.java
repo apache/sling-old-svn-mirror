@@ -14,8 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.eclipse.ui.internal.console;
+package org.apache.sling.ide.eclipse.ui.console;
 
+import org.apache.sling.ide.eclipse.ui.WhitelabelSupport;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsole;
 import org.eclipse.ui.console.IConsoleFactory;
@@ -24,8 +25,8 @@ import org.eclipse.ui.console.MessageConsole;
 
 public class SlingConsoleFactory implements IConsoleFactory {
 
-    public static final String CONSOLE_NAME = "Sling console";
-
+    public static final String CONSOLE_TYPE_SLING = "Sling";
+    
     private MessageConsole console;
 
     @Override
@@ -41,7 +42,8 @@ public class SlingConsoleFactory implements IConsoleFactory {
     private void initConsole(IConsoleManager consoleManager) {
 
         if (console == null) {
-            console = new MessageConsole(CONSOLE_NAME, null);
+            console = new MessageConsole(WhitelabelSupport.getProductName() + " Console", CONSOLE_TYPE_SLING,
+                    WhitelabelSupport.getProductIcon(), true);
             consoleManager.addConsoles(new IConsole[] { console });
         }
     }

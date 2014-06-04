@@ -346,10 +346,12 @@
    </extension>
    <extension
          point="org.eclipse.ui.console.consoleFactories">
-         <!-- TODO - whitelabel -->
+         <!-- while the id raises a validation warning, it does no harm and it allows the consoleFactory
+         	  to be included in the whitelabel support, so don't remove it --> 
       <consoleFactory
+      		id="org.apache.sling.ide.eclipse.ui.console"
       		icon="icons/obj16/sling_misc.gif"
-            class="org.apache.sling.ide.eclipse.ui.internal.console.SlingConsoleFactory"
+            class="org.apache.sling.ide.eclipse.ui.console.SlingConsoleFactory"
             label="Sling Console">
       </consoleFactory>
    </extension>
