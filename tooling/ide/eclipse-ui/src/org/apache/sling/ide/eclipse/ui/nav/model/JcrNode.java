@@ -779,7 +779,7 @@ public class JcrNode implements IAdaptable {
         }
 	}
 	
-	public void createChild(String childNodeName, String childNodeType) {
+	public void createChild(final String childNodeName, final String childNodeType) {
 	    String thisNodeType = getPrimaryType();
 	    final SerializationKind parentSk = getSerializationKind(thisNodeType);
         final SerializationKind childSk = getSerializationKind(childNodeType);
@@ -789,42 +789,60 @@ public class JcrNode implements IAdaptable {
 	    } else if (parentSk==SerializationKind.FILE) {
             throw new IllegalStateException("cannot create child of nt:file");
 	    } else if (childSk==SerializationKind.FOLDER) {
-	        IFolder f = (IFolder)resource;
-	        IFolder newFolder = null;
+            IWorkspaceRunnable r = new IWorkspaceRunnable() {
+
+                @Override
+                public void run(IProgressMonitor monitor) throws CoreException {
+                    IFolder f = (IFolder)resource;
+                    IFolder newFolder = null;
+                    newFolder = f.getFolder(childNodeName);
+                    newFolder.create(true, true, new NullProgressMonitor());
+                    if (!childNodeType.equals("nt:folder")) {
+                        createVaultFile(newFolder, ".content.xml", childNodeType);
+                    }
+                }
+            };
+	        
 	        try {
-	            newFolder = f.getFolder(childNodeName);
-	            newFolder.create(true, true, new NullProgressMonitor());
+	            ResourcesPlugin.getWorkspace().run(r, null);
+	            if (childNodeType.equals("nt:folder")) {
+	                // trigger a publish, as folder creation is not propagated to 
+	                // the SlingLaunchpadBehavior otherwise
+	                //TODO: make configurable? Fix in Eclipse/WST?
+	                ServerUtil.triggerIncrementalBuild((IFolder)resource, null);
+	            }
 	        } catch (CoreException e) {
+	            Activator.getDefault().getPluginLogger().error("Error creating child "+childNodeName+": "+e, e);
 	            e.printStackTrace();
 	            MessageDialog.openError(Display.getDefault().getActiveShell(), "Error creating node", "Error creating child of "+thisNodeType+" with type "+childNodeType+": "+e);
 	            return;
-	        }
-	        
-	        if (!childNodeType.equals("nt:folder")) {
-	            createVaultFile(newFolder, ".content.xml", childNodeType);
-	        } else {
-	            // otherwise trigger a publish, as folder creation is not propagated to 
-	            // the SlingLaunchpadBehavior otherwise
-	            //TODO: make configurable? Fix in Eclipse/WST?
-	            ServerUtil.triggerIncrementalBuild(f, null);
 	        }
 	    } else if (parentSk==SerializationKind.FOLDER && childSk==SerializationKind.METADATA_FULL) {
             createVaultFile((IFolder)resource, childNodeName+".xml", childNodeType);
 	    } else if (parentSk==SerializationKind.FOLDER && childSk==SerializationKind.METADATA_PARTIAL) {
 //	        createVaultFile((IFolder)resource, childNodeName+".xml", childNodeType);
 
-            IFolder f = (IFolder)resource;
-            IFolder newFolder = null;
+            IWorkspaceRunnable r = new IWorkspaceRunnable() {
+
+                @Override
+                public void run(IProgressMonitor monitor) throws CoreException {
+                    IFolder f = (IFolder)resource;
+                    IFolder newFolder = null;
+                    newFolder = f.getFolder(childNodeName);
+                    newFolder.create(true, true, new NullProgressMonitor());
+                    createVaultFile(newFolder, ".content.xml", childNodeType);
+                }
+            };
+            
             try {
-                newFolder = f.getFolder(childNodeName);
-                newFolder.create(true, true, new NullProgressMonitor());
+                ResourcesPlugin.getWorkspace().run(r, null);
             } catch (CoreException e) {
+                Activator.getDefault().getPluginLogger().error("Error creating child "+childNodeName+": "+e, e);
                 e.printStackTrace();
                 MessageDialog.openError(Display.getDefault().getActiveShell(), "Error creating node", "Error creating child of "+thisNodeType+" with type "+childNodeType+": "+e);
                 return;
             }
             
-            createVaultFile(newFolder, ".content.xml", childNodeType);
 	    } else if (parentSk!=SerializationKind.FOLDER && childSk==SerializationKind.METADATA_PARTIAL) {
             createDomChild(childNodeName, childNodeType);
 	    } else {
