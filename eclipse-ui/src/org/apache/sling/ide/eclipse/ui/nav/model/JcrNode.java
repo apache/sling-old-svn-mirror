@@ -445,7 +445,7 @@ public class JcrNode implements IAdaptable {
 		}
 		
 		if (typeUnstructured) {
-			return WhitelabelSupport.JCR_NODE_ICON.createImage();
+            return WhitelabelSupport.getJcrNodeIcon().createImage();
 		} else if (plainFolder || typeFolder) {
 			return workbenchLabelProvider.getImage(ProjectUtil.getSyncDirectory(getProject()));
 		} else if (typeFile && resource!=null) {
@@ -456,14 +456,14 @@ public class JcrNode implements IAdaptable {
 				}
 			}
 			if (isVaultFile) {
-				return WhitelabelSupport.JCR_NODE_ICON.createImage();
+				return WhitelabelSupport.getJcrNodeIcon().createImage();
 			}
 			return workbenchLabelProvider.getImage(resource);
 		} else {
 			if (resource!=null && !isVaultFile) {
 				return workbenchLabelProvider.getImage(resource);
 			}
-			return WhitelabelSupport.JCR_NODE_ICON.createImage();
+			return WhitelabelSupport.getJcrNodeIcon().createImage();
 		}
 		
 	}

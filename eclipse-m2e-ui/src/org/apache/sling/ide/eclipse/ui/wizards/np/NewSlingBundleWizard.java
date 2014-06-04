@@ -23,13 +23,14 @@ import org.apache.sling.ide.artifacts.EmbeddedArtifact;
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.m2e.EmbeddedArchetypeInstaller;
 import org.apache.sling.ide.eclipse.m2e.internal.Activator;
+import org.apache.sling.ide.eclipse.ui.WhitelabelSupport;
 import org.eclipse.core.runtime.CoreException;
 
 public class NewSlingBundleWizard extends AbstractNewMavenBasedSlingApplicationWizard {
 
 	@Override
 	public String doGetWindowTitle() {
-		return "New Sling Bundle Project";
+        return "New " + WhitelabelSupport.getProductName() + " Bundle Project";
 	}
 
 	@Override

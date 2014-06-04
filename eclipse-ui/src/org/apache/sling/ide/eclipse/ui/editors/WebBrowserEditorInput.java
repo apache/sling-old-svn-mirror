@@ -16,7 +16,7 @@
  */
 package org.apache.sling.ide.eclipse.ui.editors;
 
-import org.apache.sling.ide.eclipse.ui.internal.SharedImages;
+import org.apache.sling.ide.eclipse.ui.WhitelabelSupport;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IPersistableElement;
@@ -50,7 +50,7 @@ public class WebBrowserEditorInput implements IEditorInput {
 
 	@Override
 	public ImageDescriptor getImageDescriptor() {
-		return SharedImages.SLING_ICON;
+        return WhitelabelSupport.getProductIcon();
 	}
 
 	@Override

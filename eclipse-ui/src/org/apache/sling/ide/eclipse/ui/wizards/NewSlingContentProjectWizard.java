@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.eclipse.core.ConfigurationHelper;
-import org.apache.sling.ide.eclipse.ui.internal.SharedImages;
+import org.apache.sling.ide.eclipse.ui.WhitelabelSupport;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -38,8 +38,8 @@ public class NewSlingContentProjectWizard extends AbstractNewSlingApplicationWiz
     public void addPages() {
         
         page = new WizardNewProjectCreationPage("New Project");
-        page.setImageDescriptor(SharedImages.SLING_LOG);
-        page.setDescription("Please select the coordinates for the new Sling content project");
+        page.setImageDescriptor(WhitelabelSupport.getProjectWizardBanner());
+        page.setDescription("Please select the coordinates for the new content project");
         addPage(page);
         addPage(getSetupServerWizardPage());
     }
@@ -109,7 +109,7 @@ public class NewSlingContentProjectWizard extends AbstractNewSlingApplicationWiz
 
     @Override
     public String doGetWindowTitle() {
-        return "New Sling Content Project";
+        return "New Content Project";
     }
 
     private static interface Operation {

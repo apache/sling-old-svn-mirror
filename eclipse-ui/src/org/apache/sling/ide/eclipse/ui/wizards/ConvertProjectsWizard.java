@@ -18,8 +18,8 @@ package org.apache.sling.ide.eclipse.ui.wizards;
 
 import java.util.List;
 
+import org.apache.sling.ide.eclipse.ui.WhitelabelSupport;
 import org.apache.sling.ide.eclipse.ui.internal.Activator;
-import org.apache.sling.ide.eclipse.ui.internal.SharedImages;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.wizard.Wizard;
 
@@ -32,7 +32,7 @@ public class ConvertProjectsWizard extends Wizard {
 	private String description;
 
 	public ConvertProjectsWizard(List<IProject> projects, List<IProject> initialSelection, String title, String description) {
-		setDefaultPageImageDescriptor(SharedImages.SLING_LOG);
+        setDefaultPageImageDescriptor(WhitelabelSupport.getWizardBanner());
 		setWindowTitle(title);
 		setDialogSettings(Activator.getDefault().getDialogSettings());
 		setNeedsProgressMonitor(true);

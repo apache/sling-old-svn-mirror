@@ -246,7 +246,7 @@ public class ImportWizardPage extends WizardDataTransferPage {
 				}
 				
                 if (!ProjectHelper.isContentProject(container.getProject())) {
-                    return "Project " + container.getProject().getName() + " is not a a Sling content project";
+                    return "Project " + container.getProject().getName() + " is not a content project";
                 }
 
 				if ( ! ProjectUtil.isInsideContentSyncRoot(container) ) {
@@ -296,7 +296,7 @@ public class ImportWizardPage extends WizardDataTransferPage {
 		}
 
         if (this.repositoryCombo == null || this.repositoryCombo.getServer() == null) {
-            setErrorMessage("Please select a Sling launchpad instance");
+            setErrorMessage("Please select a server instance");
 			return false;
 		}
 

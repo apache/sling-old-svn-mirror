@@ -16,7 +16,7 @@
  */
 package org.apache.sling.ide.eclipse.ui.editors;
 
-import org.apache.sling.ide.eclipse.ui.internal.SharedImages;
+import org.apache.sling.ide.eclipse.ui.WhitelabelSupport;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
@@ -56,7 +56,7 @@ public class WebBrowser extends EditorPart {
 		}
 		setInput(input);
 		setSite(site);
-		setTitleImage(SharedImages.SLING_ICON.createImage());
+        setTitleImage(WhitelabelSupport.getProductIcon().createImage());
 	}
 
 	@Override

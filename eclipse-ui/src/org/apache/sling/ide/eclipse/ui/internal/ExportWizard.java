@@ -20,6 +20,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.apache.sling.ide.eclipse.core.ServerUtil;
 import org.apache.sling.ide.eclipse.core.internal.ResourceChangeCommandFactory;
+import org.apache.sling.ide.eclipse.ui.WhitelabelSupport;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.Result;
@@ -41,7 +42,7 @@ public class ExportWizard extends Wizard {
     public void init(IWorkbench workbench, IResource syncStartPoint) {
         setWindowTitle("Repositoy Export"); // NON-NLS-1
         setNeedsProgressMonitor(true);
-        setDefaultPageImageDescriptor(SharedImages.SLING_LOG);
+        setDefaultPageImageDescriptor(WhitelabelSupport.getWizardBanner());
 
         this.syncStartPoint = syncStartPoint;
         this.exportPage = new ExportWizardPage(syncStartPoint);

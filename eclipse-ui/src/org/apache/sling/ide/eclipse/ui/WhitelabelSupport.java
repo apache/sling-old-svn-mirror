@@ -21,7 +21,50 @@ import org.eclipse.jface.resource.ImageDescriptor;
 
 public class WhitelabelSupport {
 
-	// allow customization of the JCR NODE ICON
-    public static ImageDescriptor JCR_NODE_ICON = SharedImages.NT_UNSTRUCTURED_ICON;
+    private static volatile ImageDescriptor PROJECT_WIZARD_BANNER = SharedImages.SLING_LOG;
+    private static volatile ImageDescriptor JCR_NODE_ICON = SharedImages.NT_UNSTRUCTURED_ICON;
+    private static volatile ImageDescriptor WIZARD_BANNER = SharedImages.SLING_LOG;
+    private static volatile ImageDescriptor PRODUCT_ICON = SharedImages.SLING_ICON;
+    private static volatile String PRODUCT_NAME = "Sling";
+
+    public static ImageDescriptor getJcrNodeIcon() {
+        return JCR_NODE_ICON;
+    }
+
+    public static void setJcrNodeIcon(ImageDescriptor jcrNodeIcon) {
+        JCR_NODE_ICON = jcrNodeIcon;
+    }
+
+    public static String getProductName() {
+        return PRODUCT_NAME;
+    }
+
+    public static void setProductName(String productName) {
+        PRODUCT_NAME = productName;
+    }
+
+    public static ImageDescriptor getWizardBanner() {
+        return WIZARD_BANNER;
+    }
+
+    public static void setWizardBanner(ImageDescriptor wizardBanner) {
+        WIZARD_BANNER = wizardBanner;
+    }
+
+    public static ImageDescriptor getProjectWizardBanner() {
+        return PROJECT_WIZARD_BANNER;
+    }
+
+    public static void setProjectWizardBanner(ImageDescriptor projectWizardBanner) {
+        PROJECT_WIZARD_BANNER = projectWizardBanner;
+    }
+
+    public static ImageDescriptor getProductIcon() {
+        return PRODUCT_ICON;
+    }
+
+    public static void setProductIcon(ImageDescriptor productIcon) {
+        PRODUCT_ICON = productIcon;
+    }
 
 }
