@@ -14,10 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.eclipse.ui.internal;
+package org.apache.sling.ide.eclipse.ui.wizards;
 
 import java.lang.reflect.InvocationTargetException;
 
+import org.apache.sling.ide.eclipse.ui.internal.Activator;
+import org.apache.sling.ide.eclipse.ui.internal.ImportRepositoryContentAction;
+import org.apache.sling.ide.eclipse.ui.internal.ImportWizardPage;
+import org.apache.sling.ide.eclipse.ui.internal.SharedImages;
 import org.apache.sling.ide.serialization.SerializationException;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.eclipse.core.resources.IProject;

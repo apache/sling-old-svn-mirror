@@ -19,6 +19,7 @@ package org.apache.sling.ide.eclipse.ui.internal;
 import java.util.Iterator;
 
 import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
+import org.apache.sling.ide.eclipse.ui.wizards.ImportWizard;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
