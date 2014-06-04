@@ -125,17 +125,17 @@
    <extension
          point="org.eclipse.ui.importWizards">
       <category
-            id="org.apache.sling.ide.eclipse.ui.internal.sampleCategory"
+            id="org.apache.sling.ide.eclipse.ui.wizards.import"
             name="Sling">
       </category>
       <wizard
-            category="org.apache.sling.ide.eclipse.ui.internal.sampleCategory"
-            class="org.apache.sling.ide.eclipse.ui.internal.ImportWizard"
+            category="org.apache.sling.ide.eclipse.ui.wizards.import"
+            class="org.apache.sling.ide.eclipse.ui.wizards.ImportWizard"
             icon="icons/obj16/sling_misc.gif"
-            id="org.apache.sling.ide.eclipse.ui.internal.ImportWizard"
-            name="Import from Sling Repository">
+            id="org.apache.sling.ide.eclipse.ui.wizards.importWizard"
+            name="Import from Repository">
          <description>
-            Import a file from the local file system into the workspace.
+            Import content from a remote Repository into the local Workspace.
          </description>
       </wizard>
    </extension>
@@ -144,13 +144,13 @@
          point="org.eclipse.ui.commands">
          <command
                id="org.apache.sling.ide.commands.importContent"
-               name="Import Content from a Sling Repository"
+               name="Import Content from a Repository"
                categoryId="org.eclipse.ui.category.window"
                defaultHandler="org.apache.sling.ide.eclipse.ui.internal.ImportContentAction">
          </command>
          <command
                id="org.apache.sling.ide.commands.exportContent"
-               name="Export content to a Sling Repository"
+               name="Export content to a Repository"
                categoryId="org.eclipse.ui.category.window"
                defaultHandler="org.apache.sling.ide.eclipse.ui.internal.ExportContentAction">
          </command>         
