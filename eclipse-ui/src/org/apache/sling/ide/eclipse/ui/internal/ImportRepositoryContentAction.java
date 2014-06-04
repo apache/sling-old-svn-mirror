@@ -326,6 +326,9 @@ public class ImportRepositoryContentAction {
     }
 
     private void createFile(IProject project, IPath path, byte[] node) throws CoreException {
+        if (node==null) {
+            throw new IllegalArgumentException("node must not be null");
+        }
 
         IFile destinationFile = project.getFile(path);
 
