@@ -36,7 +36,7 @@
                                 <artifactItem>
                                     <groupId>org.apache.sling</groupId>
                                     <artifactId>org.apache.sling.tooling.support.install</artifactId>
-                                    <version>0.0.1-SNAPSHOT</version>
+                                    <version>1.0.0</version>
                                     <outputDirectory>${project.build.directory}/artifacts/sling-tooling-support-install</outputDirectory>
                                 </artifactItem>
                                 <artifactItem>
@@ -63,6 +63,6 @@
         </plugins>
     </build>
     <properties>
-        <sling-bundle-archetype.version>1.0.1-SNAPSHOT</sling-bundle-archetype.version>
+        <sling-bundle-archetype.version>1.0.2</sling-bundle-archetype.version>
     </properties>
 </project>
