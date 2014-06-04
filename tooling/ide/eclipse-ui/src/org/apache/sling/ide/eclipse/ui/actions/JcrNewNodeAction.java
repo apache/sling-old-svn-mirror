@@ -50,6 +50,10 @@ public class JcrNewNodeAction implements IObjectActionDelegate {
             MessageDialog.openInformation(shell, "Cannot create node", "Node not in filter.xml");
             return;
         }
+        if (node.getNodeType().getName().equals("nt:file")) {
+            MessageDialog.openInformation(shell, "Cannot create node", "Node of type nt:file cannot have children");
+            return;
+        }
         Repository repository = ServerUtil.getDefaultRepository(node.getProject());
         if (repository == null) {
             MessageDialog.openWarning(null, "Unable to create a new node", "Unable to create a new node since project "
