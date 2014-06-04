@@ -26,7 +26,7 @@
              icon="icons/obj16/sling_bundle.gif"
              id="slingbundle"
              typeIds="sling.bundle"/>
-	</extension>  
+	</extension>
 	
 	<extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
 		<launchConfigurationTypeImage
@@ -563,11 +563,11 @@
     <extension
           point="org.eclipse.ui.views">
        <category
-             id="org.apache.sling.ide.eclipse-ui"
-             name="Apache Sling">
+             id="org.apache.sling.ide.views.sling"
+             name="Sling">
        </category>
        <view
-             category="org.apache.sling.ide.eclipse-ui"
+             category="org.apache.sling.ide.views.sling"
              class="org.apache.sling.ide.eclipse.ui.views.JcrPropertiesView"
              icon="icons/obj16/sling_misc.gif"
              id="org.apache.sling.ide.eclipse.ui.views.JcrPropertiesView"
