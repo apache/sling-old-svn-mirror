@@ -28,6 +28,14 @@
              typeIds="sling.bundle"/>
 	</extension>  
 	
+	<extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
+		<launchConfigurationTypeImage
+			id="org.apache.sling.ide.launchpadLaunchConfigurationTypeImage"
+	     	configTypeID="org.apache.sling.ide.launchpadLaunchConfigurationType"
+	     	icon="icons/obj16/sling_server.gif">
+		</launchConfigurationTypeImage>
+	</extension>	  
+	
 	<!-- Define the editor section(s) we contribute to the WST UI -->
    <extension point="org.eclipse.wst.server.ui.editorPageSections">      
       <section
