@@ -365,8 +365,8 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
         if (!result.isSuccess()) {
             // TODO - proper error logging
-            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, "Failed publishing "
-                    + result.toString()));
+            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, "Failed publishing path="
+                    + command.getPath() + ", result=" + result.toString()));
         }
 
     }
