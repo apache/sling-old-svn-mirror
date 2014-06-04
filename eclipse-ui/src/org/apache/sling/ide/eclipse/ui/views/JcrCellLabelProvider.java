@@ -79,7 +79,9 @@ public class JcrCellLabelProvider extends CellLabelProvider {
             final Object element = cell.getElement();
             if (element instanceof NewRow) {
                 NewRow newRow = (NewRow)element;
-                cell.setText("");
+                int propertyType = newRow.getType();
+                String type = PropertyType.nameFromValue(propertyType);
+                cell.setText(type);
             } else if (element instanceof IPropertyDescriptor) {
                 IPropertyDescriptor pd = (IPropertyDescriptor)element;
                 JcrNode jcrNode = (JcrNode)viewer.getInput();
