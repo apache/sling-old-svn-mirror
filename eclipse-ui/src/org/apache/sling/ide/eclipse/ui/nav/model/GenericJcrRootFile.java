@@ -94,8 +94,12 @@ public class GenericJcrRootFile extends JcrNode {
 				DirNode dirNodeParent = (DirNode)parent;
 				JcrNode dirNodeParentParent = dirNodeParent.getParent();
 				JcrNode effectiveSibling = dirNodeParent.getEffectiveSibling();
-				effectiveSibling.dirSibling = dirNodeParent;
-				handleProperties(element, effectiveSibling.properties);
+				if (effectiveSibling!=null) {
+				    effectiveSibling.dirSibling = dirNodeParent;
+				    handleProperties(element, effectiveSibling.properties);
+				} else {
+				    handleProperties(element, parent.properties);
+				}
 				effectiveParent = parent;
 				dirNodeParentParent.hide(parent);
 			} else {
