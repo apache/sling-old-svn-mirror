@@ -359,14 +359,14 @@
             id="org.apache.sling.ide.eclipse.ui.pluginProjectToolSet">
 
          <action
-            label="Convert to Sling Content Project..."
+            label="Convert to Content Project..."
             class="org.apache.sling.ide.eclipse.ui.wizards.ConvertToContentPackageAction"
             menubarPath="org.eclipse.ui.projectConfigure/additions"
             enablesFor="+"
             id="org.apache.sling.ide.eclipse.ui.wizards.ConvertToContentPackageAction">
       	</action>
          <action
-            label="Convert to Sling Bundle Project..."
+            label="Convert to Bundle Project..."
             class="org.apache.sling.ide.eclipse.ui.wizards.ConvertToBundleAction"
             menubarPath="org.eclipse.ui.projectConfigure/additions"
             enablesFor="+"

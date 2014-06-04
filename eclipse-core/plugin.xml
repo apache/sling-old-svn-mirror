@@ -6,13 +6,13 @@
   <extension point="org.eclipse.wst.server.core.moduleTypes">
     <moduleType
        id="sling.content"
-       name="Sling content module type"/>
+       name="Content module"/>
   </extension>
   
   <extension point="org.eclipse.wst.server.core.moduleTypes">
     <moduleType
        id="sling.bundle"
-       name="Sling bundle module type"/>
+       name="Bundle module"/>
   </extension>
 
   <!-- Define a sling module factory -->
@@ -42,8 +42,8 @@
 	<!-- Define the sling facet we support -->
 	<extension point="org.eclipse.wst.common.project.facet.core.facets">
 		<project-facet id="sling.content">
-			<label>Sling content module</label>
-			<description>Sling content modules contain content which is installed into the repository as-is. Good examples are static files ( HTML, CSS, JS ), scripts ( JSP, ESP ) and any other form of content.</description>
+			<label>Content module</label>
+			<description>Content modules contain resources which are installed into the repository as they are. Good examples are static files ( HTML, CSS, JS ), scripts ( JSP, ESP ) and any other form of content.</description>
 		</project-facet>
 		
   		<project-facet-version facet="sling.content" version="1.0"/>
@@ -57,8 +57,8 @@
   		</action>
 
 		<project-facet id="sling.bundle">
-			<label>Sling bundle module</label>
-			<description>Sling/OSGi bundle modules contain java code which is installed as an OSGi bundle in Sling.</description>
+			<label>Bundle module</label>
+			<description>OSGi bundle modules contain java code which is installed as an OSGi bundle in Sling-compatbile runtime.</description>
 		</project-facet>
 		
   		<project-facet-version facet="sling.bundle" version="1.0"/>
