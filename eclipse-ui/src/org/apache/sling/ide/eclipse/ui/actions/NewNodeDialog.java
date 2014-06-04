@@ -180,7 +180,7 @@ public class NewNodeDialog extends InputDialog {
                         if (details.length()!=0) {
                             details.append(", ");
                         }
-                        details.append("(name="+aChildNodeDef.getName()+", required primary type=");
+                        details.append("(name="+aChildNodeDef.getName()+", required primary type(s)=");
                         String[] requiredPrimaryTypeNames = aChildNodeDef.getRequiredPrimaryTypeNames();
                         if (requiredPrimaryTypeNames==null) {
                             details.append("null");
