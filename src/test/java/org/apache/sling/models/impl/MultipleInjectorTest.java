@@ -88,6 +88,7 @@ public class MultipleInjectorTest {
         assertEquals(obj.firstAttribute, bindingsValue);
 
         verifyNoMoreInteractions(attributesInjector);
+        verify(bindingsInjector).createAnnotationProcessor(any(), any(AnnotatedElement.class));
         verify(bindingsInjector).getValue(eq(request), eq("firstAttribute"), eq(String.class), any(AnnotatedElement.class), any(DisposalCallbackRegistry.class));
         verifyNoMoreInteractions(bindingsInjector);
     }

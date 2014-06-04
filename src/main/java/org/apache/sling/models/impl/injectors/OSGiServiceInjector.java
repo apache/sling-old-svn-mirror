@@ -27,6 +27,7 @@ import java.util.List;
 
 import javax.servlet.ServletRequest;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
@@ -34,9 +35,13 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.models.annotations.Filter;
+import org.apache.sling.models.annotations.injectorspecific.OSGiService;
 import org.apache.sling.models.spi.DisposalCallback;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
+import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor;
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
@@ -48,7 +53,7 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 5000)
-public class OSGiServiceInjector implements Injector {
+public class OSGiServiceInjector implements Injector, InjectAnnotationProcessorFactory {
 
     private static final Logger log = LoggerFactory.getLogger(OSGiServiceInjector.class);
 
@@ -64,17 +69,25 @@ public class OSGiServiceInjector implements Injector {
         this.bundleContext = ctx.getBundleContext();
     }
 
-    public Object getValue(Object adaptable, String name, Type type, AnnotatedElement element, DisposalCallbackRegistry callbackRegistry) {
-        Filter filter = element.getAnnotation(Filter.class);
+    public Object getValue(Object adaptable, String name, Type type, AnnotatedElement element,
+            DisposalCallbackRegistry callbackRegistry) {
+        OSGiService annotation = element.getAnnotation(OSGiService.class);
         String filterString = null;
-        if (filter != null) {
-            filterString = filter.value();
+        if (annotation != null) {
+            if (StringUtils.isNotBlank(annotation.filter())) {
+                filterString = annotation.filter();
+            }
+        } else {
+            Filter filter = element.getAnnotation(Filter.class);
+            if (filter != null) {
+                filterString = filter.value();
+            }
         }
-
         return getValue(adaptable, type, filterString, callbackRegistry);
     }
 
-    private <T> Object getService(Object adaptable, Class<T> type, String filter, DisposalCallbackRegistry callbackRegistry) {
+    private <T> Object getService(Object adaptable, Class<T> type, String filter,
+            DisposalCallbackRegistry callbackRegistry) {
         SlingScriptHelper helper = getScriptHelper(adaptable);
 
         if (helper != null) {
@@ -100,7 +113,8 @@ public class OSGiServiceInjector implements Injector {
         }
     }
 
-    private <T> Object[] getServices(Object adaptable, Class<T> type, String filter, DisposalCallbackRegistry callbackRegistry) {
+    private <T> Object[] getServices(Object adaptable, Class<T> type, String filter,
+            DisposalCallbackRegistry callbackRegistry) {
         SlingScriptHelper helper = getScriptHelper(adaptable);
 
         if (helper != null) {
@@ -147,7 +161,8 @@ public class OSGiServiceInjector implements Injector {
         if (type instanceof Class) {
             Class<?> injectedClass = (Class<?>) type;
             if (injectedClass.isArray()) {
-                Object[] services = getServices(adaptable, injectedClass.getComponentType(), filterString, callbackRegistry);
+                Object[] services = getServices(adaptable, injectedClass.getComponentType(), filterString,
+                        callbackRegistry);
                 if (services == null) {
                     return null;
                 }
@@ -180,16 +195,16 @@ public class OSGiServiceInjector implements Injector {
             return null;
         }
     }
-    
+
     private static class Callback implements DisposalCallback {
         private final ServiceReference[] refs;
         private final BundleContext context;
-        
+
         public Callback(ServiceReference[] refs, BundleContext context) {
             this.refs = refs;
             this.context = context;
         }
-        
+
         @Override
         public void onDisposed() {
             if (refs != null) {
@@ -199,5 +214,30 @@ public class OSGiServiceInjector implements Injector {
             }
         }
     }
+
+    @Override
+    public InjectAnnotationProcessor createAnnotationProcessor(Object adaptable, AnnotatedElement element) {
+        // check if the element has the expected annotation
+        OSGiService annotation = element.getAnnotation(OSGiService.class);
+        if (annotation != null) {
+            return new OSGiServiceAnnotationProcessor(annotation);
+        }
+        return null;
+    }
+
+    private static class OSGiServiceAnnotationProcessor extends AbstractInjectAnnotationProcessor {
+
+        private final OSGiService annotation;
+
+        public OSGiServiceAnnotationProcessor(OSGiService annotation) {
+            this.annotation = annotation;
+        }
+
+        @Override
+        public Boolean isOptional() {
+            return annotation.optional();
+        }
+    }
+
 
 }
