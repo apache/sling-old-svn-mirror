@@ -4,9 +4,10 @@ Apache Sling DataSource Provider
 This bundle enables creating and configuring JDBC DataSource in OSGi environment based on 
 OSGi configuration. It uses [Tomcat JDBC Pool][1] as the JDBC Connection Pool provider.
 
-1. Supports configuring the DataSource based on OSGi config wihich rich metatype
+1. Supports configuring the DataSource based on OSGi config with rich metatype
 2. Supports deploying of JDBC Driver as independent bundles and not as fragment
 3. Exposes the DataSource stats as JMX MBean 
+4. Supports updating of DataSource connection pool properties at runtime without restart
 
 Driver Loading
 --------------
@@ -36,6 +37,10 @@ Configuration
 
 If Felix WebConsole is used then you can configure it via Configuration UI at
 http://localhost:8080/system/console/configMgr/org.apache.sling.extensions.datasource.DataSourceFactory
+
+![Web Console Config](http://sling.apache.org/documentation/development/sling-datasource-config.png)
+
+Using the config ui above one can directly configure most of the properties as explained in [Tomcat Docs][1]
 
 Usage
 -----
