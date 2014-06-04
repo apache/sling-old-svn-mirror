@@ -25,8 +25,12 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.scripting.SlingBindings;
+import org.apache.sling.models.annotations.injectorspecific.ScriptVariable;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
+import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor;
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
 import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +38,7 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 1000)
-public class BindingsInjector implements Injector {
+public class BindingsInjector implements Injector, InjectAnnotationProcessorFactory {
 
     private static final Logger log = LoggerFactory.getLogger(BindingsInjector.class);
 
@@ -52,7 +56,8 @@ public class BindingsInjector implements Injector {
         }
     }
 
-    public Object getValue(Object adaptable, String name, Type type, AnnotatedElement element, DisposalCallbackRegistry callbackRegistry) {
+    public Object getValue(Object adaptable, String name, Type type, AnnotatedElement element,
+            DisposalCallbackRegistry callbackRegistry) {
         SlingBindings bindings = getBindings(adaptable);
         if (bindings == null) {
             return null;
@@ -72,6 +77,40 @@ public class BindingsInjector implements Injector {
             return (SlingBindings) request.getAttribute(SlingBindings.class.getName());
         } else {
             return null;
+        }
+    }
+
+    @Override
+    public InjectAnnotationProcessor createAnnotationProcessor(Object adaptable, AnnotatedElement element) {
+        // check if the element has the expected annotation
+        ScriptVariable annotation = element.getAnnotation(ScriptVariable.class);
+        if (annotation != null) {
+            return new ScriptVariableAnnotationProcessor(annotation);
+        }
+        return null;
+    }
+
+    private static class ScriptVariableAnnotationProcessor extends AbstractInjectAnnotationProcessor {
+
+        private final ScriptVariable annotation;
+
+        public ScriptVariableAnnotationProcessor(ScriptVariable annotation) {
+            this.annotation = annotation;
+        }
+
+        @Override
+        public Boolean isOptional() {
+            return annotation.optional();
+        }
+
+        @Override
+        public String getName() {
+            // since null is not allowed as default value in annotations, the empty string means, the default should be
+            // used!
+            if (annotation.name().isEmpty()) {
+                return null;
+            }
+            return annotation.name();
         }
     }
 

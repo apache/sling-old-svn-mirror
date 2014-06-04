@@ -49,7 +49,7 @@ public class PostConstructTest {
         ModelAdapterFactory factory = new ModelAdapterFactory();
         factory.activate(componentCtx);
         // no injectors are necessary
-        
+
         SubClass sc = factory.getAdapter(r, SubClass.class);
         assertTrue(sc.getPostConstructCalledTimestampInSub() > sc.getPostConstructCalledTimestampInSuper());
         assertTrue(sc.getPostConstructCalledTimestampInSuper() > 0);

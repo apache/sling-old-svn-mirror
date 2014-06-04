@@ -34,7 +34,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -65,6 +64,9 @@ import org.apache.sling.models.annotations.Via;
 import org.apache.sling.models.spi.DisposalCallback;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotation;
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -177,8 +179,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         if (type.isInterface()) {
             InvocationHandler handler = createInvocationHandler(adaptable, type);
             if (handler != null) {
-                return (AdapterType) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] { type },
-                        handler);
+                return (AdapterType) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] { type }, handler);
             } else {
                 return null;
             }
@@ -196,12 +197,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         Set<Field> result = new HashSet<Field>();
         while (type != null) {
             Field[] fields = type.getDeclaredFields();
-            for (Field field : fields) {
-                Inject injection = field.getAnnotation(Inject.class);
-                if (injection != null) {
-                    result.add(field);
-                }
-            }
+            addAnnotated(fields, result);
             type = type.getSuperclass();
         }
         return result;
@@ -211,76 +207,124 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         Set<Method> result = new HashSet<Method>();
         while (type != null) {
             Method[] methods = type.getDeclaredMethods();
-            for (Method method : methods) {
-                Inject injection = method.getAnnotation(Inject.class);
-                if (injection != null) {
-                    result.add(method);
-                }
-            }
+            addAnnotated(methods, result);
             type = type.getSuperclass();
         }
         return result;
     }
 
-    private InvocationHandler createInvocationHandler(final Object adaptable, final Class<?> type) {
-        Set<Method> injectableMethods = collectInjectableMethods(type);
-        Map<Method, Object> methods = new HashMap<Method, Object>();
-        MapBackedInvocationHandler handler = new MapBackedInvocationHandler(methods);
+    private <T extends AnnotatedElement> void addAnnotated(T[] elements, Set<T> set) {
+        for (T element : elements) {
+            Inject injection = getAnnotation(element, Inject.class);
+            if (injection != null) {
+                set.add(element);
+            } else {
+                InjectAnnotation modelInject = getAnnotation(element, InjectAnnotation.class);
+                if (modelInject != null) {
+                    set.add(element);
+                }
+            }
+        }
+    }
 
-        DisposalCallbackRegistryImpl registry = createAndRegisterCallbackRegistry(handler);
+    private static interface InjectCallback {
+        /**
+         * Is called each time when the given value should be injected into the given element
+         * @param element
+         * @param value
+         * @return true if injection was successful otherwise false
+         */
+        public boolean inject(AnnotatedElement element, Object value);
+    }
 
+    private static class SetFieldCallback implements InjectCallback {
+
+        private final Object object;
+
+        private SetFieldCallback(Object object) {
+            this.object = object;
+        }
+
+        @Override
+        public boolean inject(AnnotatedElement element, Object value) {
+            return setField((Field) element, object, value);
+        }
+    }
+
+    private static class SetMethodsCallback implements InjectCallback {
+
+        private final Map<Method, Object> methods;
+
+        private SetMethodsCallback( Map<Method, Object> methods) {
+            this.methods = methods;
+        }
+
+        @Override
+        public boolean inject(AnnotatedElement element, Object value) {
+            return setMethod((Method) element, methods, value);
+        }
+    }
+
+    private boolean injectFieldOrMethod(final AnnotatedElement element, final Object adaptable, final Type type,
+            final DisposalCallbackRegistry registry, InjectCallback callback) {
+
+        InjectAnnotationProcessor annotationProcessor = null;
+        String source = getSource(element);
+        boolean wasInjectionSuccessful = false;
+
+        // find the right injector
         for (Injector injector : sortedInjectors) {
-            Iterator<Method> it = injectableMethods.iterator();
-            while (it.hasNext()) {
-                Method method = it.next();
-                String source = getSource(method);
-                if (source == null || source.equals(injector.getName())) {
-                    String name = getName(method);
-                    Type returnType = mapPrimitiveClasses(method.getGenericReturnType());
-                    Object injectionAdaptable = getAdaptable(adaptable, method);
-                    if (injectionAdaptable != null) {
-                        Object value = injector.getValue(injectionAdaptable, name, returnType, method, registry);
-                        if (setMethod(method, methods, value)) {
-                            it.remove();
-                        }
+            if (source == null || source.equals(injector.getName())) {
+                // get annotation processor
+                if (injector instanceof InjectAnnotationProcessorFactory) {
+                    annotationProcessor = ((InjectAnnotationProcessorFactory) injector).createAnnotationProcessor(adaptable,
+                            element);
+                }
+
+                String name = getName(element, annotationProcessor);
+                Object injectionAdaptable = getAdaptable(adaptable, element, annotationProcessor);
+                if (injectionAdaptable != null) {
+                    Object value = injector.getValue(injectionAdaptable, name, type, element, registry);
+                    if (callback.inject(element, value)) {
+                        wasInjectionSuccessful = true;
+                        break;
                     }
                 }
             }
         }
+        // if injection failed, use default
+        if (!wasInjectionSuccessful) {
+            wasInjectionSuccessful = injectDefaultValue(element, type, annotationProcessor, callback);
+        }
 
+        // if default is not set, check if mandatory
+        if (!wasInjectionSuccessful && !isOptional(element, annotationProcessor)) {
+            return false;
+        }
+        return true;
+    }
+
+    private InvocationHandler createInvocationHandler(final Object adaptable, final Class<?> type) {
+        Set<Method> injectableMethods = collectInjectableMethods(type);
+        final Map<Method, Object> methods = new HashMap<Method, Object>();
+        SetMethodsCallback callback = new SetMethodsCallback(methods);
+        MapBackedInvocationHandler handler = new MapBackedInvocationHandler(methods);
+
+        DisposalCallbackRegistryImpl registry = createAndRegisterCallbackRegistry(handler);
+        Set<Method> requiredMethods = new HashSet<Method>();
+
+        for (Method method : injectableMethods) {
+            Type returnType = mapPrimitiveClasses(method.getGenericReturnType());
+            if (!injectFieldOrMethod(method, adaptable, returnType, registry, callback)) {
+                requiredMethods.add(method);
+            }
+        }
         registry.seal();
-
-        Iterator<Method> it = injectableMethods.iterator();
-        while (it.hasNext()) {
-            Method method = it.next();
-            Default defaultAnnotation = method.getAnnotation(Default.class);
-            if (defaultAnnotation != null) {
-                Type returnType = mapPrimitiveClasses(method.getGenericReturnType());
-                Object value = getDefaultValue(defaultAnnotation, returnType);
-                if (setMethod(method, methods, value)) {
-                    it.remove();
-                }
-            }
+        if (!requiredMethods.isEmpty()) {
+            log.warn("Required methods {} on model interface {} were not able to be injected.", requiredMethods, type);
+            return null;
         }
-
-        if (injectableMethods.isEmpty()) {
-            return handler;
-        } else {
-            Set<Method> requiredMethods = new HashSet<Method>();
-            for (Method method : injectableMethods) {
-                if (method.getAnnotation(Optional.class) == null) {
-                    requiredMethods.add(method);
-                }
-            }
-
-            if (!requiredMethods.isEmpty()) {
-                log.warn("Required methods {} on model class {} were not able to be injected.", requiredMethods,
-                        type);
-                return null;
-            } else {
-                return handler;
-            }
-        }
+        return handler;
     }
 
     private DisposalCallbackRegistryImpl createAndRegisterCallbackRegistry(Object object) {
@@ -367,160 +411,133 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         } else {
             object = constructorToUse.newInstance();
         }
+        InjectCallback callback = new SetFieldCallback(object);
 
         DisposalCallbackRegistryImpl registry = createAndRegisterCallbackRegistry(object);
 
-        for (Injector injector : sortedInjectors) {
-            Iterator<Field> it = injectableFields.iterator();
-            while (it.hasNext()) {
-                Field field = it.next();
-                String source = getSource(field);
-                if (source == null || source.equals(injector.getName())) {
-                    String name = getName(field);
-                    Type fieldType = mapPrimitiveClasses(field.getGenericType());
-                    Object injectionAdaptable = getAdaptable(adaptable, field);
-                    if (injectionAdaptable != null) {
-                        Object value = injector.getValue(injectionAdaptable, name, fieldType, field, registry);
-                        if (setField(field, object, value)) {
-                            it.remove();
-                        }
-                    }
-                }
+        Set<Field> requiredFields = new HashSet<Field>();
+
+        for (Field field : injectableFields) {
+            Type fieldType = mapPrimitiveClasses(field.getGenericType());
+            if (!injectFieldOrMethod(field, adaptable, fieldType, registry, callback)) {
+                requiredFields.add(field);
             }
         }
 
         registry.seal();
-
-        Iterator<Field> it = injectableFields.iterator();
-        while (it.hasNext()) {
-            Field field = it.next();
-            Default defaultAnnotation = field.getAnnotation(Default.class);
-            if (defaultAnnotation != null) {
-                Type fieldType = mapPrimitiveClasses(field.getGenericType());
-                Object value = getDefaultValue(defaultAnnotation, fieldType);
-                if (setField(field, object, value)) {
-                    it.remove();
-                }
-            }
+        if (!requiredFields.isEmpty()) {
+            log.warn("Required properties {} on model class {} were not able to be injected.", requiredFields, type);
+            return null;
+        }
+        try {
+            invokePostConstruct(object);
+            return object;
+        } catch (Exception e) {
+            log.error("Unable to invoke post construct method.", e);
+            return null;
         }
 
-        if (injectableFields.isEmpty()) {
-            try {
-                invokePostConstruct(object);
-                return object;
-            } catch (Exception e) {
-                log.error("Unable to invoke post construct method.", e);
-                return null;
-            }
-        } else {
-            Set<Field> requiredFields = new HashSet<Field>();
-            for (Field field : injectableFields) {
-                if (field.getAnnotation(Optional.class) == null) {
-                    requiredFields.add(field);
-                }
-            }
-
-            if (!requiredFields.isEmpty()) {
-                log.warn("Required properties {} on model class {} were not able to be injected.", requiredFields,
-                        type);
-                return null;
-            } else {
-                try {
-                    invokePostConstruct(object);
-                    return object;
-                } catch (Exception e) {
-                    log.error("Unable to invoke post construct method.", e);
-                    return null;
-                }
-            }
-        }
     }
 
-    private Object getDefaultValue(Default defaultAnnotation, Type type) {
+    private boolean isOptional(AnnotatedElement point, InjectAnnotationProcessor annotationProcessor) {
+        if (annotationProcessor != null) {
+            Boolean isOptional = annotationProcessor.isOptional();
+            if (isOptional != null) {
+                return isOptional.booleanValue();
+            }
+        }
+        return (point.getAnnotation(Optional.class) != null);
+    }
+
+    private boolean injectDefaultValue(AnnotatedElement point, Type type, InjectAnnotationProcessor processor,
+            InjectCallback callback) {
+
+        if (processor != null) {
+            if (processor.hasDefault()) {
+                return callback.inject(point, processor.getDefault());
+            }
+        }
+        Default defaultAnnotation = point.getAnnotation(Default.class);
+        if (defaultAnnotation == null) {
+            return false;
+        }
+
+        type = mapPrimitiveClasses(type);
+        Object value = null;
+
         if (type instanceof Class) {
             Class<?> injectedClass = (Class<?>) type;
             if (injectedClass.isArray()) {
                 Class<?> componentType = injectedClass.getComponentType();
                 if (componentType == String.class) {
-                    return defaultAnnotation.values();
+                    value = defaultAnnotation.values();
+                } else if (componentType == Integer.TYPE) {
+                    value = defaultAnnotation.intValues();
+                } else if (componentType == Integer.class) {
+                    value = ArrayUtils.toObject(defaultAnnotation.intValues());
+                } else if (componentType == Long.TYPE) {
+                    value = defaultAnnotation.longValues();
+                } else if (componentType == Long.class) {
+                    value = ArrayUtils.toObject(defaultAnnotation.longValues());
+                } else if (componentType == Boolean.TYPE) {
+                    value = defaultAnnotation.booleanValues();
+                } else if (componentType == Boolean.class) {
+                    value = ArrayUtils.toObject(defaultAnnotation.booleanValues());
+                } else if (componentType == Short.TYPE) {
+                    value = defaultAnnotation.shortValues();
+                } else if (componentType == Short.class) {
+                    value = ArrayUtils.toObject(defaultAnnotation.shortValues());
+                } else if (componentType == Float.TYPE) {
+                    value = defaultAnnotation.floatValues();
+                } else if (componentType == Float.class) {
+                    value = ArrayUtils.toObject(defaultAnnotation.floatValues());
+                } else if (componentType == Double.TYPE) {
+                    value = defaultAnnotation.doubleValues();
+                } else if (componentType == Double.class) {
+                    value = ArrayUtils.toObject(defaultAnnotation.doubleValues());
+                } else {
+                    log.warn("Default values for {} are not supported", componentType);
+                    return false;
                 }
-                if (componentType == Integer.TYPE) {
-                    return defaultAnnotation.intValues();
-                }
-                if (componentType == Integer.class) {
-                    return ArrayUtils.toObject(defaultAnnotation.intValues());
-                }
-                if (componentType == Long.TYPE) {
-                    return defaultAnnotation.longValues();
-                }
-                if (componentType == Long.class) {
-                    return ArrayUtils.toObject(defaultAnnotation.longValues());
-                }
-                if (componentType == Boolean.TYPE) {
-                    return defaultAnnotation.booleanValues();
-                }
-                if (componentType == Boolean.class) {
-                    return ArrayUtils.toObject(defaultAnnotation.booleanValues());
-                }
-                if (componentType == Short.TYPE) {
-                    return defaultAnnotation.shortValues();
-                }
-                if (componentType == Short.class) {
-                    return ArrayUtils.toObject(defaultAnnotation.shortValues());
-                }
-                if (componentType == Float.TYPE) {
-                    return defaultAnnotation.floatValues();
-                }
-                if (componentType == Float.class) {
-                    return ArrayUtils.toObject(defaultAnnotation.floatValues());
-                }
-                if (componentType == Double.TYPE) {
-                    return defaultAnnotation.doubleValues();
-                }
-                if (componentType == Double.class) {
-                    return ArrayUtils.toObject(defaultAnnotation.doubleValues());
-                }
-
-                log.warn("Default values for {} are not supported", componentType);
-                return null;
             } else {
                 if (injectedClass == String.class) {
-                    return defaultAnnotation.values()[0];
+                    value = defaultAnnotation.values()[0];
+                } else if (injectedClass == Integer.class) {
+                    value = defaultAnnotation.intValues()[0];
+                } else if (injectedClass == Long.class) {
+                    value = defaultAnnotation.longValues()[0];
+                } else if (injectedClass == Boolean.class) {
+                    value = defaultAnnotation.booleanValues()[0];
+                } else if (injectedClass == Short.class) {
+                    value = defaultAnnotation.shortValues()[0];
+                } else if (injectedClass == Float.class) {
+                    value = defaultAnnotation.floatValues()[0];
+                } else if (injectedClass == Double.class) {
+                    value = defaultAnnotation.doubleValues()[0];
+                } else {
+                    log.warn("Default values for {} are not supported", injectedClass);
+                    return false;
                 }
-                if (injectedClass == Integer.class) {
-                    return defaultAnnotation.intValues()[0];
-                }
-                if (injectedClass == Long.class) {
-                    return defaultAnnotation.longValues()[0];
-                }
-                if (injectedClass == Boolean.class) {
-                    return defaultAnnotation.booleanValues()[0];
-                }
-                if (injectedClass == Short.class) {
-                    return defaultAnnotation.shortValues()[0];
-                }
-                if (injectedClass == Float.class) {
-                    return defaultAnnotation.floatValues()[0];
-                }
-                if (injectedClass == Double.class) {
-                    return defaultAnnotation.doubleValues()[0];
-                }
-
-                log.warn("Default values for {} are not supported", injectedClass);
-                return null;
             }
         } else {
             log.warn("Cannot provide default for {}", type);
-            return null;
+            return false;
         }
+        return callback.inject(point, value);
     }
 
-    private Object getAdaptable(Object adaptable, AnnotatedElement point) {
-        Via viaAnnotation = point.getAnnotation(Via.class);
-        if (viaAnnotation == null) {
-            return adaptable;
+    private Object getAdaptable(Object adaptable, AnnotatedElement point, InjectAnnotationProcessor processor) {
+        String viaPropertyName = null;
+        if (processor != null) {
+            viaPropertyName = processor.getVia();
         }
-        String viaPropertyName = viaAnnotation.value();
+        if (viaPropertyName == null) {
+            Via viaAnnotation = point.getAnnotation(Via.class);
+            if (viaAnnotation == null) {
+                return adaptable;
+            }
+            viaPropertyName = viaAnnotation.value();
+        }
         try {
             return PropertyUtils.getProperty(adaptable, viaPropertyName);
         } catch (Exception e) {
@@ -529,19 +546,33 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         }
     }
 
-    private String getName(Field field) {
-        Named named = field.getAnnotation(Named.class);
+    private String getName(AnnotatedElement element, InjectAnnotationProcessor processor) {
+        // try to get the name from injector-specific annotation
+        if (processor != null) {
+            String name = processor.getName();
+            if (name != null) {
+                return name;
+            }
+        }
+        // alternative for name attribute
+        Named named = element.getAnnotation(Named.class);
         if (named != null) {
             return named.value();
         }
+        if (element instanceof Method) {
+            return getNameFromMethod((Method) element);
+        } else if (element instanceof Field) {
+            return getNameFromField((Field) element);
+        } else {
+            throw new IllegalArgumentException("The given element must be either method or field but is " + element);
+        }
+    }
+
+    private String getNameFromField(Field field) {
         return field.getName();
     }
 
-    private String getName(Method method) {
-        Named named = method.getAnnotation(Named.class);
-        if (named != null) {
-            return named.value();
-        }
+    private String getNameFromMethod(Method method) {
         String methodName = method.getName();
         if (methodName.startsWith("get")) {
             return methodName.substring(3, 4).toLowerCase() + methodName.substring(4);
@@ -606,7 +637,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         return type;
     }
 
-    private boolean setField(Field field, Object createdObject, Object value) {
+    private static boolean setField(Field field, Object createdObject, Object value) {
         if (value != null) {
             if (!isAcceptableType(field.getType(), value) && value instanceof Adaptable) {
                 value = ((Adaptable) value).adaptTo(field.getType());
@@ -634,7 +665,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         }
     }
 
-    private boolean setMethod(Method method, Map<Method, Object> methods, Object value) {
+    private static boolean setMethod(Method method, Map<Method, Object> methods, Object value) {
         if (value != null) {
             if (!isAcceptableType(method.getReturnType(), value) && value instanceof Adaptable) {
                 value = ((Adaptable) value).adaptTo(method.getReturnType());
@@ -649,7 +680,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         }
     }
 
-    private boolean isAcceptableType(Class<?> type, Object value) {
+    private static boolean isAcceptableType(Class<?> type, Object value) {
         if (type.isInstance(value)) {
             return true;
         }
@@ -690,8 +721,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         properties.put("scheduler.concurrent", false);
         properties.put("scheduler.period", Long.valueOf(30));
 
-        this.jobRegistration = bundleContext.registerService(Runnable.class.getName(), this,
-                properties);
+        this.jobRegistration = bundleContext.registerService(Runnable.class.getName(), this, properties);
 
         this.listener = new ModelPackageBundleListener(ctx.getBundleContext(), this);
 
@@ -703,7 +733,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         printerProps.put("felix.webconsole.configprinter.modes", "always");
 
         this.configPrinterRegistration = bundleContext.registerService(Object.class.getName(),
-            new ModelConfigurationPrinter(this), printerProps);
+                new ModelConfigurationPrinter(this), printerProps);
     }
 
     @Deactivate
