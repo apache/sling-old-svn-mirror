@@ -98,10 +98,12 @@ public class LinkHelper implements ILinkHelper {
 		}
 		final JcrNode node = (JcrNode) selectedElement;
 		// bring properties view to top, if it is open
-		IViewPart propertiesView = aPage.findView(IPageLayout.ID_PROP_SHEET);
-		if (propertiesView!=null) {
-			aPage.bringToTop(propertiesView);
-		}
+		// SLING-3641 : moved link-with-editor behavior to the JCR Properties view atm
+		//TODO: to be reviewed at a later stage with SLING-3641
+//		IViewPart propertiesView = aPage.findView(IPageLayout.ID_PROP_SHEET);
+//		if (propertiesView!=null) {
+//			aPage.bringToTop(propertiesView);
+//		}
 		final IResource resource = node.getResource();
 		if (resource==null || !(resource instanceof IFile)) {
 			return;
