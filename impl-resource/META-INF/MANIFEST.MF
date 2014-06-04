@@ -11,6 +11,6 @@ Require-Bundle: org.eclipse.core.runtime,
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Service-Component: OSGI-INF/RepositoryFactoryImpl.xml,
- OSGI-INF/SimpleXmlSerializationManager.xml, OSGI-INF/Tracer.xml,
+ OSGI-INF/SimpleXmlSerializationManager.xml,
  OSGI-INF/SimpleFilterLocator.xml
 Import-Package: org.json
