@@ -366,13 +366,17 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
             }
 
             if (value != null) {
-                node.setProperty(propertyName, value);
                 Object[] arguments = { propertyName, value, propertyValue, node.getPath() };
+                Activator.getDefault().getPluginLogger()
+                        .trace("Setting property {0} with value {1} (raw =  {2}) on node at {3}", arguments);
+                node.setProperty(propertyName, value);
                 Activator.getDefault().getPluginLogger()
                         .trace("Set property {0} with value {1} (raw =  {2}) on node at {3}", arguments);
             } else if (values != null) {
-                node.setProperty(propertyName, values);
                 Object[] arguments = { propertyName, values, propertyValue, node.getPath() };
+                Activator.getDefault().getPluginLogger()
+                        .trace("Setting property {0} with values {1} (raw =  {2}) on node at {3}", arguments);
+                node.setProperty(propertyName, values);
                 Activator.getDefault().getPluginLogger()
                         .trace("Set property {0} with values {1} (raw =  {2}) on node at {3}", arguments);
             } else {
