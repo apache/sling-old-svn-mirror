@@ -16,9 +16,12 @@
  */
 package org.apache.sling.ide.impl.vlt;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import javax.jcr.Value;
@@ -206,7 +209,19 @@ public class VltNodeType implements NodeType {
 
     @Override
     public NodeDefinition[] getChildNodeDefinitions() {
-        return childNodeDefinitions;
+        List<NodeDefinition> childNodeDefs = new LinkedList<NodeDefinition>();
+        childNodeDefs.addAll(Arrays.asList(getDeclaredChildNodeDefinitions()));
+        NodeType[] supers = getSupertypes();
+        if (supers!=null) {
+            for (int i = 0; i < supers.length; i++) {
+                NodeType aSuperNodeType = supers[i];
+                NodeDefinition[] superChildNodeDefs = aSuperNodeType.getChildNodeDefinitions();
+                if (superChildNodeDefs!=null) {
+                    childNodeDefs.addAll(Arrays.asList(superChildNodeDefs));
+                }
+            }
+        }
+        return childNodeDefs.toArray(new NodeDefinition[0]);
     }
     
     void setChildNodeDefinitions(NodeDefinition[] childNodeDefinitions) {
