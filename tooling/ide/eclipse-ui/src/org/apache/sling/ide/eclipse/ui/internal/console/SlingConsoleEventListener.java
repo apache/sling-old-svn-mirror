@@ -26,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.sling.ide.eclipse.ui.console.SlingConsoleFactory;
 import org.apache.sling.ide.eclipse.ui.internal.Activator;
 import org.apache.sling.ide.transport.CommandExecutionProperties;
 import org.eclipse.ui.console.ConsolePlugin;
@@ -85,7 +86,7 @@ public class SlingConsoleEventListener implements EventHandler {
                     public void consolesAdded(IConsole[] consoles) {
                         synchronized (sync) {
                             for (IConsole console : consoles) {
-                                if (console.getName().equals(SlingConsoleFactory.CONSOLE_NAME)) {
+                                if (console.getType().equals(SlingConsoleFactory.CONSOLE_TYPE_SLING)) {
                                     slingConsole = (MessageConsole) console;
                                     synchronized (delayedEvents) {
                                         for (Iterator<Event> it = delayedEvents.iterator(); it.hasNext();) {
@@ -111,7 +112,7 @@ public class SlingConsoleEventListener implements EventHandler {
         if (slingConsole == null) {
             final IConsoleManager consoleManager = ConsolePlugin.getDefault().getConsoleManager();
             for (IConsole console : consoleManager.getConsoles()) {
-                if (console.getName().equals(SlingConsoleFactory.CONSOLE_NAME)) {
+                if (console.getType().equals(SlingConsoleFactory.CONSOLE_TYPE_SLING)) {
                     slingConsole = (MessageConsole) console;
                     break;
                 }

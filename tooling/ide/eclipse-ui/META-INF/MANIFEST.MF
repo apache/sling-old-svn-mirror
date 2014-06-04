@@ -89,6 +89,7 @@ Require-Bundle: org.eclipse.wst.common.project.facet.ui,
  org.eclipse.swt
 Service-Component: OSGI-INF/*.xml
 Export-Package: org.apache.sling.ide.eclipse.ui,
+ org.apache.sling.ide.eclipse.ui.console,
  org.apache.sling.ide.eclipse.ui.internal;x-friends:="org.apache.sling.ide.eclipse-test",
  org.apache.sling.ide.eclipse.ui.propertyPages,
  org.apache.sling.ide.eclipse.ui.views,
