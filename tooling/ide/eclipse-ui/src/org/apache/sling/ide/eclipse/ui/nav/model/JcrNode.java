@@ -786,6 +786,8 @@ public class JcrNode implements IAdaptable {
 	    
 	    if (parentSk==SerializationKind.METADATA_FULL) {
 	        createDomChild(childNodeName, childNodeType);
+	    } else if (parentSk==SerializationKind.FILE) {
+            throw new IllegalStateException("cannot create child of nt:file");
 	    } else if (childSk==SerializationKind.FOLDER) {
 	        IFolder f = (IFolder)resource;
 	        IFolder newFolder = null;
