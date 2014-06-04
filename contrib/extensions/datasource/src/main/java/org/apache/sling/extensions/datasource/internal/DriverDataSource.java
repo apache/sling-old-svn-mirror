@@ -51,14 +51,16 @@ class DriverDataSource implements DataSource {
     private final DriverRegistry driverRegistry;
     private final BundleContext bundleContext;
     private final org.slf4j.Logger log = LoggerFactory.getLogger(getClass());
-    private org.apache.tomcat.jdbc.pool.jmx.ConnectionPool jmxPool;
     private Driver driver;
+    private final DataSourceFactory dataSourceFactory;
 
     public DriverDataSource(PoolConfiguration poolProperties, DriverRegistry driverRegistry,
-                            BundleContext bundleContext) {
+                            BundleContext bundleContext,
+                            DataSourceFactory dataSourceFactory) {
         this.poolProperties = poolProperties;
         this.driverRegistry = driverRegistry;
         this.bundleContext = bundleContext;
+        this.dataSourceFactory = dataSourceFactory;
     }
 
     public Connection getConnection() throws SQLException {
@@ -85,8 +87,9 @@ class DriverDataSource implements DataSource {
             if (log.isDebugEnabled()) {
                 log.debug("Unable to connect to database.", x);
             }
-            //Based on logic in org.apache.tomcat.jdbc.pool.PooledConnection.connectUsingDriver()
-            if (jmxPool!=null) {
+            //Based on logic in org.apache.tomcat.jdbc.pool.PooledConnection.connectUsingDriver()\
+            org.apache.tomcat.jdbc.pool.jmx.ConnectionPool jmxPool = getJmxPool();
+            if (jmxPool !=null) {
                 jmxPool.notify(org.apache.tomcat.jdbc.pool.jmx.ConnectionPool.NOTIFY_CONNECT,
                         ConnectionPool.getStackTrace(x));
             }
@@ -103,10 +106,6 @@ class DriverDataSource implements DataSource {
         }
 
         return connection;
-    }
-
-    public void setJmxPool(org.apache.tomcat.jdbc.pool.jmx.ConnectionPool jmxPool) {
-        this.jmxPool = jmxPool;
     }
 
     //~-------------------------------------< DataSource >
@@ -127,6 +126,7 @@ class DriverDataSource implements DataSource {
         return 0;
     }
 
+    @SuppressWarnings("UnusedDeclaration") //Part of JDK 7
     public Logger getParentLogger() throws SQLFeatureNotSupportedException {
         throw new SQLFeatureNotSupportedException();
     }
@@ -137,6 +137,13 @@ class DriverDataSource implements DataSource {
 
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
         return false;
+    }
+
+    private org.apache.tomcat.jdbc.pool.jmx.ConnectionPool getJmxPool() {
+        if(dataSourceFactory.getPool() != null){
+            return dataSourceFactory.getPool().getJmxPool();
+        }
+        return null;
     }
 
     private Driver getDriver() throws SQLException {
@@ -151,7 +158,7 @@ class DriverDataSource implements DataSource {
             driver = findMatchingDriver(drivers);
         }
 
-        if(driver == null){
+        if(driver == null && poolProperties.getDriverClassName() != null){
             log.debug("Looking for driver for [{}] via provided className [{}]",
                     url, poolProperties.getDriverClassName());
             driver = loadDriverClass();

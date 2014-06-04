@@ -19,6 +19,7 @@
 package org.apache.sling.extensions.datasource.internal;
 
 import java.lang.management.ManagementFactory;
+import java.sql.SQLException;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
@@ -26,7 +27,6 @@ import java.util.Properties;
 
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.sql.DataSource;
 
@@ -115,10 +115,7 @@ public class DataSourceFactory {
         }
 
         dataSource = createDataSource(props, bundleContext);
-
         registerDataSource(bundleContext);
-        registerJmx();
-
         log.info("Created DataSource [{}] with properties {}", name, getDataSourceDetails());
     }
 
@@ -139,20 +136,15 @@ public class DataSourceFactory {
     private DataSource createDataSource(Properties props, BundleContext bundleContext) throws Exception {
         PoolConfiguration poolProperties = org.apache.tomcat.jdbc.pool.DataSourceFactory.parsePoolProperties(props);
 
-        DriverDataSource driverDataSource = new DriverDataSource(poolProperties, driverRegistry, bundleContext);
+        DriverDataSource driverDataSource = new DriverDataSource(poolProperties, driverRegistry,
+                bundleContext, this);
 
         //Specify the DataSource such that connection creation logic is handled
         //by us where we take care of OSGi env
         poolProperties.setDataSource(driverDataSource);
 
-        org.apache.tomcat.jdbc.pool.DataSource dataSource =
-                new org.apache.tomcat.jdbc.pool.DataSource(poolProperties);
-        //initialise the pool itself
-        ConnectionPool pool = dataSource.createPool();
-        driverDataSource.setJmxPool(pool.getJmxPool());
-
         // Return the configured DataSource instance
-        return dataSource;
+        return new LazyJmxRegisteringDataSource(poolProperties);
     }
 
     private void registerDataSource(BundleContext bundleContext) {
@@ -163,12 +155,9 @@ public class DataSourceFactory {
         dsRegistration = bundleContext.registerService(DataSource.class, dataSource, svcProps);
     }
 
-    private void registerJmx() throws MalformedObjectNameException {
-        if(dataSource instanceof DataSourceProxy){
-            org.apache.tomcat.jdbc.pool.jmx.ConnectionPool pool =
-                    ((DataSourceProxy) dataSource).getPool().getJmxPool();
-
-            if(pool == null){
+    void registerJmx(ConnectionPool pool) throws SQLException {
+            org.apache.tomcat.jdbc.pool.jmx.ConnectionPool jmxPool = pool.getJmxPool();
+            if (jmxPool == null) {
                 //jmx not enabled
                 return;
             }
@@ -176,16 +165,19 @@ public class DataSourceFactory {
             table.put("type", "ConnectionPool");
             table.put("class", DataSource.class.getName());
             table.put("name", ObjectName.quote(name));
-            jmxName = new ObjectName("org.apache.sling", table);
 
             try {
+                jmxName = new ObjectName("org.apache.sling", table);
                 MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-                mbs.registerMBean(pool, jmxName);
-            }catch(Exception e){
+                mbs.registerMBean(jmxPool, jmxName);
+            } catch (Exception e) {
                 log.warn("Error occurred while registering the JMX Bean for " +
-                        "connection pool with name {}",jmxName, e);
+                        "connection pool with name {}", jmxName, e);
             }
-        }
+    }
+
+    ConnectionPool getPool() {
+        return ((DataSourceProxy) dataSource).getPool();
     }
 
     private void unregisterJmx(){
@@ -216,6 +208,33 @@ public class DataSourceFactory {
         if (!expression) {
             throw new IllegalArgumentException(
                     String.format(errorMessageTemplate, errorMessageArgs));
+        }
+    }
+
+    private class LazyJmxRegisteringDataSource extends org.apache.tomcat.jdbc.pool.DataSource {
+        private volatile boolean initialized;
+
+        public LazyJmxRegisteringDataSource(PoolConfiguration poolProperties) {
+            super(poolProperties);
+        }
+
+        @Override
+        public ConnectionPool createPool() throws SQLException {
+            ConnectionPool pool = super.createPool();
+            registerJmxLazily(pool);
+            return pool;
+        }
+
+        private void registerJmxLazily(ConnectionPool pool) throws SQLException {
+            if(!initialized){
+                synchronized (this){
+                    if(initialized){
+                        return;
+                    }
+                    DataSourceFactory.this.registerJmx(pool);
+                    initialized = true;
+                }
+            }
         }
     }
 
