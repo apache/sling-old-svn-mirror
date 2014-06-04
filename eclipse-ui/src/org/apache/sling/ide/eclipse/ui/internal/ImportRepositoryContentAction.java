@@ -317,6 +317,7 @@ public class ImportRepositoryContentAction {
         if (!destinationFolder.exists()) {
             logger.trace("Creating folder {0}", destinationFolder.getFullPath());
 
+            createParents(destinationFolder.getParent());
             destinationFolder.create(true, true, null /* TODO progress monitor */);
             destinationFolder.setSessionProperty(ResourceUtil.QN_IGNORE_NEXT_CHANGE, Boolean.TRUE.toString());
         }
