@@ -4,6 +4,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 
+import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.NodeType;
+
 import org.apache.sling.ide.eclipse.ui.nav.model.JcrNode;
 import org.apache.sling.ide.transport.NodeTypeRegistry;
 import org.apache.sling.ide.transport.RepositoryException;
@@ -34,6 +37,7 @@ public class NewNodeDialog extends InputDialog {
     private Collection<String> allowedChildren;
     private Combo combo;
     private ContentProposalAdapter proposalAdapter;
+    private NodeDefinition[] allChildNodeDefs;
 
     public NewNodeDialog(Shell parentShell, JcrNode node,
             NodeTypeRegistry ntManager) throws RepositoryException {
@@ -42,6 +46,8 @@ public class NewNodeDialog extends InputDialog {
         this.parentNodeType = node.getPrimaryType();
         this.ntManager = ntManager;
         final LinkedList<String> ac = new LinkedList<String>(ntManager.getAllowedPrimaryChildNodeTypes(parentNodeType));
+        final NodeType parentNt = ntManager.getNodeType(parentNodeType);
+        allChildNodeDefs = parentNt.getChildNodeDefinitions();
         Collections.sort(ac);
         this.allowedChildren = ac;
     }
@@ -52,6 +58,10 @@ public class NewNodeDialog extends InputDialog {
         
         Control[] children = composite.getChildren();
         Control errorMessageText = children[children.length-1];
+        GridData errorMessageGridData = new GridData(GridData.GRAB_HORIZONTAL
+                | GridData.HORIZONTAL_ALIGN_FILL);
+        errorMessageGridData.heightHint = convertHeightInCharsToPixels(2);
+        errorMessageText.setLayoutData(errorMessageGridData);
         
         // now add the node type dropbox-combo
         Label label = new Label(composite, SWT.WRAP);
@@ -137,13 +147,56 @@ public class NewNodeDialog extends InputDialog {
     }
 
     protected void validateInput() {
-        final String firstInput = getValue();
+        final String firstInput = getText().getText();
         final String secondInput = comboSelection;
         try {
             if (secondInput==null || secondInput.length()==0) {
                 setErrorMessage("");
             } else if (ntManager.isAllowedPrimaryChildNodeType(parentNodeType, secondInput)) {
-                setErrorMessage(null);
+                // also check on the name, not only the type
+                if (allChildNodeDefs==null) {
+                    setErrorMessage("No child node definitions found for "+parentNodeType);
+                } else {
+                    boolean fail = false;
+                    for (int i = 0; i < allChildNodeDefs.length; i++) {
+                        NodeDefinition aChildNodeDef = allChildNodeDefs[i];
+                        if (aChildNodeDef.getName()!=null && aChildNodeDef.getName().length()>0) {
+                            if (firstInput.equals(aChildNodeDef.getName())) {
+                                setErrorMessage(null);
+                                return;
+                            } else {
+                                // mark fail if no other child node definition matches
+                                fail = true;
+                            }
+                        }
+                    }
+                    if (!fail) {
+                        setErrorMessage(null);
+                        return;
+                    }
+                    StringBuffer details = new StringBuffer();
+                    for (int i = 0; i < allChildNodeDefs.length; i++) {
+                        NodeDefinition aChildNodeDef = allChildNodeDefs[i];
+                        if (details.length()!=0) {
+                            details.append(", ");
+                        }
+                        details.append("(name="+aChildNodeDef.getName()+", required primary type=");
+                        String[] requiredPrimaryTypeNames = aChildNodeDef.getRequiredPrimaryTypeNames();
+                        if (requiredPrimaryTypeNames==null) {
+                            details.append("null");
+                        } else {
+                            for (int j = 0; j < requiredPrimaryTypeNames.length; j++) {
+                                String rptn = requiredPrimaryTypeNames[j];
+                                if (j>0) {
+                                    details.append(",");
+                                }
+                                details.append(rptn);
+                            }
+                        }
+                        details.append(")");
+                    }
+                    setErrorMessage("No matching child node definition found for "+parentNodeType+". Expected one of: "+details);
+                }
             } else {
                 setErrorMessage("Error: Invalid child node type of "+parentNodeType);
             }
