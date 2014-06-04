@@ -16,6 +16,8 @@
  */
 package org.apache.sling.ide.eclipse.ui.actions;
 
+import javax.jcr.nodetype.NodeType;
+
 import org.apache.sling.ide.eclipse.core.ServerUtil;
 import org.apache.sling.ide.eclipse.ui.internal.Activator;
 import org.apache.sling.ide.eclipse.ui.nav.model.JcrNode;
@@ -50,10 +52,6 @@ public class JcrNewNodeAction implements IObjectActionDelegate {
             MessageDialog.openInformation(shell, "Cannot create node", "Node not in filter.xml");
             return;
         }
-        if (node.getNodeType().getName().equals("nt:file")) {
-            MessageDialog.openInformation(shell, "Cannot create node", "Node of type nt:file cannot have children");
-            return;
-        }
         Repository repository = ServerUtil.getDefaultRepository(node.getProject());
         if (repository == null) {
             MessageDialog.openWarning(null, "Unable to create a new node", "Unable to create a new node since project "
@@ -61,6 +59,11 @@ public class JcrNewNodeAction implements IObjectActionDelegate {
             return;
         }
         NodeTypeRegistry ntManager = repository.getNodeTypeRegistry();
+        final NodeType nodeType = node.getNodeType();
+        if (nodeType!=null && nodeType.getName()!=null && nodeType.getName().equals("nt:file")) {
+            MessageDialog.openInformation(shell, "Cannot create node", "Node of type nt:file cannot have children");
+            return;
+        }
         
         try {
             final NewNodeDialog nnd = new NewNodeDialog(shell, node, ntManager);
