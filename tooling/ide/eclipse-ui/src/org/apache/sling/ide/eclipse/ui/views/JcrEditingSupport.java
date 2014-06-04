@@ -200,7 +200,13 @@ public class JcrEditingSupport extends EditingSupport {
             } else if (columnId==ColumnId.VALUE) {
                 return newRow.getValue();
             } else if (columnId==ColumnId.TYPE) {
-                return newRow.getType();
+                final int propertyType = newRow.getType();
+                if (propertyType!=-1) {
+                    return PropertyTypeSupport.indexOfPropertyType(propertyType);
+                } else {
+                    //TODO: otherwise hardcode to STRING
+                    return PropertyTypeSupport.indexOfPropertyType(PropertyType.STRING);
+                }
             } else {
                 return null;
             }
@@ -222,7 +228,8 @@ public class JcrEditingSupport extends EditingSupport {
             } else if (columnId==ColumnId.VALUE) {
                 newRow.setValue(String.valueOf(value));
             } else if (columnId==ColumnId.TYPE) {
-                newRow.setType(1);
+                int propertyType = PropertyTypeSupport.propertyTypeOfIndex((Integer)value);
+                newRow.setType(propertyType);
             } else {
                 // otherwise non-editable
                 return;
