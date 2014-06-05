@@ -16,7 +16,10 @@
  */
 package org.apache.sling.ide.eclipse.m2e;
 
+import org.apache.maven.model.Plugin;
 import org.apache.sling.ide.eclipse.core.ConfigurationHelper;
+import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
+import org.apache.sling.ide.eclipse.m2e.internal.Activator;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -25,12 +28,29 @@ import org.eclipse.m2e.core.project.configurator.ProjectConfigurationRequest;
 
 public class BundleProjectConfigurator extends AbstractProjectConfigurator {
 
+    private static final String MAVEN_SLING_PLUGIN_ARTIFACT_ID = "maven-sling-plugin";
+    private static final String MAVEN_SLING_PLUGIN_GROUP_ID = "org.apache.sling";
+
     @Override
     public void configure(ProjectConfigurationRequest configRequest, IProgressMonitor monitor) throws CoreException {
-	// at this point the JDT project is already created by the tycho plugin
-	// we just need to setup the appropriate facets
-	IProject project = configRequest.getProject();
-	ConfigurationHelper.convertToBundleProject(project);
-    }
+        // at this point the JDT project is already created by the tycho plugin
+        // we just need to setup the appropriate facets
+        PluginLogger logger = Activator.getDefault().getPluginLogger();
+        IProject project = configRequest.getProject();
+        logger.trace("BundleProjectActivator called for POM {} and project {}", configRequest.getPom().getFullPath(),
+                project.getName());
 
+        // check for maven-sling-plugin as well (to make sure this is a Sling project)
+        for (Plugin plugin : configRequest.getMavenProject().getBuildPlugins()) {
+            if (plugin.getArtifactId().equals(MAVEN_SLING_PLUGIN_ARTIFACT_ID)
+                    && plugin.getGroupId().equals(MAVEN_SLING_PLUGIN_GROUP_ID)) {
+                logger.trace(
+                        "Found maven-sling-plugin in build plugins for project {}, therefore adding sling bundle facets!",
+                        project.getName());
+                ConfigurationHelper.convertToBundleProject(project);
+                return;
+            }
+        }
+        logger.trace("Couldn't find maven-sling-plugin in build plugins for project {}", project.getName());
+    }
 }
