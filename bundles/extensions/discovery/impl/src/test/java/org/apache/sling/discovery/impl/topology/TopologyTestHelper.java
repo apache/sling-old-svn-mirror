@@ -18,19 +18,26 @@
  */
 package org.apache.sling.discovery.impl.topology;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import junitx.util.PrivateAccessor;
 
 import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
+import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.discovery.impl.common.DefaultClusterViewImpl;
 import org.apache.sling.discovery.impl.common.DefaultInstanceDescriptionImpl;
+import org.apache.sling.discovery.impl.setup.Instance;
 
 public class TopologyTestHelper {
 
@@ -114,4 +121,29 @@ public class TopologyTestHelper {
         return (Map<String, String>) PrivateAccessor.getField(
                 instanceDescription, "properties");
     }
+    
+    public static void assertTopologyConsistsOf(TopologyView topology, String... slingIds) {
+        assertNotNull(topology);
+        assertEquals(topology.getInstances().size(), slingIds.length);
+        for(int i=0; i<slingIds.length; i++) {
+            final String aSlingId = slingIds[i];
+            final Set<?> instances = topology.getInstances();
+            boolean found = false;
+            for (Iterator<?> it = instances.iterator(); it.hasNext();) {
+                InstanceDescription anInstance = (InstanceDescription) it.next();
+                if (anInstance.getSlingId().equals(aSlingId)) {
+                    found = true;
+                    break;
+                }
+            }
+            assertTrue(found);
+        }
+    }
+    
+    public static Instance createInstance(Collection<Instance> instances, String debugName) throws Exception {
+        final Instance instance = Instance.newStandaloneInstance(debugName, true);
+        instances.add(instance);
+        return instance;
+    }
+
 }

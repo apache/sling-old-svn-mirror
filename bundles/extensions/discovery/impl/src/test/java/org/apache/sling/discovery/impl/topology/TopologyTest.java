@@ -19,8 +19,6 @@
 package org.apache.sling.discovery.impl.topology;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -29,35 +27,13 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.sling.discovery.InstanceDescription;
-import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.discovery.impl.setup.Instance;
 import org.apache.sling.discovery.impl.topology.announcement.Announcement;
-import org.apache.sling.discovery.impl.topology.connector.TopologyConnectorClientInformation;
 import org.junit.After;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TopologyTest {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
-    class Connector {
-        
-        private final Instance from;
-        private final Instance to;
-        private final int jettyPort;
-        private final TopologyConnectorClientInformation connectorInfo;
-
-        Connector(Instance from, Instance to) throws Throwable {
-            this.from = from;
-            this.to = to;
-            to.startJetty();
-            this.jettyPort = to.getJettyPort();
-            this.connectorInfo = from.connectTo("http://localhost:"+jettyPort+"/system/console/topology/connector");
-        }
-    }
-    
     private final List<Instance> instances = new LinkedList<Instance>();
     
     @After
@@ -68,20 +44,10 @@ public class TopologyTest {
         }
     }
     
-    private Instance createInstance(String debugName) throws Exception {
-        final Instance instance = Instance.newStandaloneInstance(debugName, true);
-        instances.add(instance);
-        return instance;
-    }
-
-    private Connector createConnector(Instance instance1, Instance instance2) throws Throwable {
-        return new Connector(instance1, instance2);
-    }
-    
     @Test
     public void testTwoNodes() throws Throwable {
-        Instance instance1 = createInstance("instance1");
-        Instance instance2 = createInstance("instance2");
+        Instance instance1 = TopologyTestHelper.createInstance(instances, "instance1");
+        Instance instance2 = TopologyTestHelper.createInstance(instances, "instance2");
         instance1.getConfig().setHeartbeatTimeout(2);
         instance1.getConfig().setHeartbeatInterval(1);
         instance2.getConfig().setHeartbeatTimeout(1);
@@ -95,7 +61,7 @@ public class TopologyTest {
         assertEquals(instance1.getSlingId(), instances1.iterator().next().getSlingId());
         assertEquals(instance2.getSlingId(), instances2.iterator().next().getSlingId());
         
-        Connector connector = createConnector(instance1, instance2);
+        new Connector(instance1, instance2);
         
         // check instance 1's announcements
         Collection<Announcement> instance1LocalAnnouncements = 
@@ -114,8 +80,8 @@ public class TopologyTest {
         assertEquals(false, instance2LocalAnnouncement.isInherited());
         
         // check topology
-        assertTopologyConsistsOf(instance1.getDiscoveryService().getTopology(), instance1.getSlingId(), instance2.getSlingId());
-        assertTopologyConsistsOf(instance2.getDiscoveryService().getTopology(), instance1.getSlingId(), instance2.getSlingId());
+        TopologyTestHelper.assertTopologyConsistsOf(instance1.getDiscoveryService().getTopology(), instance1.getSlingId(), instance2.getSlingId());
+        TopologyTestHelper.assertTopologyConsistsOf(instance2.getDiscoveryService().getTopology(), instance1.getSlingId(), instance2.getSlingId());
 
         instance1LocalAnnouncements = 
                 instance1.getAnnouncementRegistry().listLocalAnnouncements();
@@ -133,8 +99,8 @@ public class TopologyTest {
                 instance2.getAnnouncementRegistry().listLocalAnnouncements();
         assertEquals(0, instance2LocalAnnouncements.size());
 
-        assertTopologyConsistsOf(instance1.getDiscoveryService().getTopology(), instance1.getSlingId(), instance2.getSlingId());
-        assertTopologyConsistsOf(instance2.getDiscoveryService().getTopology(), instance2.getSlingId());
+        TopologyTestHelper.assertTopologyConsistsOf(instance1.getDiscoveryService().getTopology(), instance1.getSlingId(), instance2.getSlingId());
+        TopologyTestHelper.assertTopologyConsistsOf(instance2.getDiscoveryService().getTopology(), instance2.getSlingId());
         
         Thread.sleep(1000);
         instance1LocalAnnouncements = 
@@ -144,47 +110,7 @@ public class TopologyTest {
                 instance2.getAnnouncementRegistry().listLocalAnnouncements();
         assertEquals(0, instance2LocalAnnouncements.size());
 
-        assertTopologyConsistsOf(instance1.getDiscoveryService().getTopology(), instance1.getSlingId());
-        assertTopologyConsistsOf(instance2.getDiscoveryService().getTopology(), instance2.getSlingId());
+        TopologyTestHelper.assertTopologyConsistsOf(instance1.getDiscoveryService().getTopology(), instance1.getSlingId());
+        TopologyTestHelper.assertTopologyConsistsOf(instance2.getDiscoveryService().getTopology(), instance2.getSlingId());
     }
-
-    private void assertTopologyConsistsOf(TopologyView topology,
-            String... slingIds) {
-        assertNotNull(topology);
-        assertEquals(topology.getInstances().size(), slingIds.length);
-        for(int i=0; i<slingIds.length; i++) {
-            final String aSlingId = slingIds[i];
-            final Set instances = topology.getInstances();
-            boolean found = false;
-            for (Iterator it = instances.iterator(); it.hasNext();) {
-                InstanceDescription anInstance = (InstanceDescription) it.next();
-                if (anInstance.getSlingId().equals(aSlingId)) {
-                    found = true;
-                    break;
-                }
-            }
-            assertTrue(found);
-        }
-    }
-    
-    @Test
-    public void testLargeTopologyWithHub() throws Throwable {
-        logger.info("testLargeTopologyWithHub: start");
-        final int TEST_SIZE = 100;
-        Instance hub = createInstance("hub");
-        
-        List<String> slingIds = new LinkedList<String>();
-        slingIds.add(hub.getSlingId());
-        for(int i=0; i<TEST_SIZE; i++) {
-//            logger.info("testLargeTopologyWithHub: adding instance "+i);
-            Instance instance = createInstance("instance"+i);
-//            logger.info("testLargeTopologyWithHub: adding connector "+i);
-            Connector connector = createConnector(instance, hub);
-            slingIds.add(instance.getSlingId());
-        }
-        logger.info("testLargeTopologyWithHub: checking if all connectors are registered");
-        assertTopologyConsistsOf(hub.getDiscoveryService().getTopology(), slingIds.toArray(new String[slingIds.size()]));
-        logger.info("testLargeTopologyWithHub: end");
-    }
-
 }
