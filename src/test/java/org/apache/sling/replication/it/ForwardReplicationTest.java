@@ -16,39 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.sling.replication.it;
 
 import org.apache.sling.replication.communication.ReplicationActionType;
-import org.apache.sling.replication.communication.ReplicationHeader;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.apache.sling.replication.it.ReplicationUtils.*;
 
-/**
- * Integration test for commands on {@link org.apache.sling.replication.agent.ReplicationAgent}s
- */
-public class ReplicationAgentCommandsIntegrationTest extends ReplicationIntegrationTestBase {
+public class ForwardReplicationTest extends ReplicationIntegrationTestBase {
 
     @Test
-    public void testAddCommand() throws Exception {
-        String agentUrl= agentUrl("publish");
-
-        replicate(author, agentUrl, ReplicationActionType.ADD, "dummy");
+    public void testAddContent() throws Exception {
+        String nodePath = createRandomNode(authorClient, "/content");
+        assertExits(authorClient, nodePath);
+        replicate(author, "publish", ReplicationActionType.ADD, nodePath);
+        assertExits(publishClient, nodePath);
     }
 
-    @Test
-    @Ignore
-    public void testPollCommand() throws Exception {
-        String agentUrl = agentUrl("publish");
-        replicate(author, agentUrl, ReplicationActionType.POLL);
-    }
 
     @Test
-    public void testDeleteCommand() throws Exception {
-        String agentUrl= agentUrl("publish");
+    public void testDeleteContent() throws Exception {
+        String nodePath = createRandomNode(authorClient, "/content");
+        replicate(author, "publish", ReplicationActionType.ADD, nodePath);
+        assertExits(publishClient, nodePath);
 
-        replicate(author, agentUrl, ReplicationActionType.DELETE, "dummy");
+        replicate(author, "publish", ReplicationActionType.DELETE, nodePath);
+        assertNotExits(publishClient, nodePath);
     }
 
 }

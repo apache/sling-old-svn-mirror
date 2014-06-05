@@ -50,9 +50,6 @@
     optionally using -Dmaven.surefire.debug to enable debugging.
     -->
     <properties>
-        <!-- Set this to run the server on a specific port
-        <http.port></http.port>
-        -->
 
         <!-- Set this to run tests against an existing server instance -->
         <keepJarRunning>false</keepJarRunning>
@@ -80,7 +77,9 @@
 
         <!-- Options for the jar to execute. $JAREXEC_SERVER_PORT$ is replaced by the
         selected port number -->
-        <jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$ -Dsling.run.modes=author</jar.executor.jar.options>
+        <author.jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$ -Dsling.run.modes=author -Dsling.home=sling/author</author.jar.executor.jar.options>
+        <publish.jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$ -Dsling.run.modes=publish -Dsling.home=sling/publish</publish.jar.executor.jar.options>
+
 
         <!-- Change this to run selected tests only -->
         <tests.to.run>**/**Test.java</tests.to.run>
@@ -187,7 +186,8 @@
                         <phase>process-resources</phase>
                         <configuration>
                             <portNames>
-                                <portName>http.port</portName>
+                                <portName>author.http.port</portName>
+                                <portName>publish.http.port</portName>
                             </portNames>
                         </configuration>
                     </execution>
@@ -230,12 +230,17 @@
                         <test.server.hostname>${test.server.hostname}</test.server.hostname>
                         <test.server.username>${test.server.username}</test.server.username>
                         <test.server.password>${test.server.password}</test.server.password>
-                        <jar.executor.server.port>${http.port}</jar.executor.server.port>
+                        <author.jar.executor.server.port>${author.http.port}</author.jar.executor.server.port>
+                        <publish.jar.executor.server.port>${publish.http.port}</publish.jar.executor.server.port>
                         <jar.executor.vm.options>${jar.executor.vm.options}</jar.executor.vm.options>
                         <jar.executor.jar.folder>${project.basedir}/target/dependency</jar.executor.jar.folder>
                         <jar.executor.jar.name.regexp>org.apache.sling.launchpad.*jar$</jar.executor.jar.name.regexp>
                         <jar.executor.work.folder>${jar.executor.work.folder}</jar.executor.work.folder>
-                        <jar.executor.jar.options>${jar.executor.jar.options}</jar.executor.jar.options>
+
+                        <author.jar.executor.jar.options>${author.jar.executor.jar.options}</author.jar.executor.jar.options>
+                        <publish.jar.executor.jar.options>${publish.jar.executor.jar.options}</publish.jar.executor.jar.options>
+
+
                         <additional.bundles.path>
                             ${project.build.directory},${project.build.directory}/sling/additional-bundles
                         </additional.bundles.path>
@@ -283,6 +288,12 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.hc.core</artifactId>
             <version>1.0.6</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.osgi</artifactId>
+            <version>2.2.0</version>
             <scope>provided</scope>
         </dependency>
         <!-- FILEVAULT -->
