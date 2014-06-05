@@ -34,8 +34,8 @@ public class SlingLaunchpadLaunchConfigurationDelegate extends AbstractJavaLaunc
 
         IServer server = ServerUtil.getServer(configuration);
         if (server == null) {
-            throw new CoreException(new Status(IStatus.ERROR, "org.apache.sling.slingclipse", 0, "No server found",
-                    null));
+            throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "No server found for configuration "
+                    + configuration));
         }
 
         SlingLaunchpadBehaviour launchpad = (SlingLaunchpadBehaviour) server.loadAdapter(SlingLaunchpadBehaviour.class,

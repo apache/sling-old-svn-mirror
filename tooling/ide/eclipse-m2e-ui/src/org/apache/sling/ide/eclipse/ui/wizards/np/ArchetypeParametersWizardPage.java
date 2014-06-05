@@ -78,7 +78,7 @@ public class ArchetypeParametersWizardPage extends WizardPage {
 		super("archetypeParametersPage");
 		this.parent = parent;
 		setTitle("Configure Archetype Properties");
-		setDescription("This step configured the archetype properties");
+        setDescription("This step configures the archetype properties");
 		setImageDescriptor(parent.getLogo());
 	}
 

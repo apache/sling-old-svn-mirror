@@ -68,7 +68,7 @@ public class SlingProjectPropertyPage extends PropertyPage {
 
         c.setLayout(new GridLayout(3, false));
 
-        new Label(c, SWT.NONE).setText("Folder to sync");
+        new Label(c, SWT.NONE).setText("Content sync root directory");
         folderText = new Text(c, SWT.BORDER);
         folderText.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
         folderText.setText(ProjectUtil.getSyncDirectoryValue(getProject()));

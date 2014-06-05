@@ -16,7 +16,6 @@
  */
 package org.apache.sling.ide.eclipse.ui.internal;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;

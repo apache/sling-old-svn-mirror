@@ -34,8 +34,8 @@ public class NewNodeWizardPage extends WizardPage {
 	 */
 	public NewNodeWizardPage(ISelection selection) {
 		super("wizardPage");
-		setTitle("Add a new JCR node");
-		setDescription("Create a new JCR node under the current selection");
+        setTitle("Add a new Node");
+        setDescription("Create a new node under the current selection");
 		this.selection = selection;
 	}
 

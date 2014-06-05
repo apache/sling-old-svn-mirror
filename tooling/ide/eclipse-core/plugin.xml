@@ -76,8 +76,8 @@
   <extension point="org.eclipse.wst.server.core.runtimeTypes">
     <runtimeType
        id="org.apache.sling.ide.launchpadRuntimeType"
-       name="Sling Launchpad (runtime name)"
-       description="Sling Launchpad (runtime description)"
+       name="Sling Runtime"
+       description="A Sling-compatible runtime which contains the Felix Web Console and a JCR WebDAV remoting entry point."
        vendor="Sling"
        version="1.0"
        class="org.apache.sling.ide.eclipse.core.internal.SlingLaunchpadRuntime">
@@ -90,8 +90,8 @@
   <extension point="org.eclipse.wst.server.core.serverTypes">
      <serverType
        id="org.apache.sling.ide.launchpadServer"
-       name="External Sling Launchpad (server name)"
-       description="External Sling Launchpad (server description)"
+       name="Sling Server (external)"
+       description="A Sling server whose lifecycle is controlled independently from Eclipse."
        supportsRemoteHosts="true"
        runtime="true"
        startTimeout="30000"

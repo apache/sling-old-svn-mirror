@@ -64,7 +64,7 @@ public class ConnectionEditorSection extends ServerEditorSection {
         Section section = toolkit.createSection(parent, ExpandableComposite.TWISTIE | ExpandableComposite.EXPANDED
                 | ExpandableComposite.TITLE_BAR | Section.DESCRIPTION | ExpandableComposite.FOCUS_TITLE);
         section.setText("Connection");
-        section.setDescription("Specify how to connect to the launchpad instace");
+        section.setDescription("Connection details for this server");
         section.setLayoutData(new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_FILL));
 
         // ports

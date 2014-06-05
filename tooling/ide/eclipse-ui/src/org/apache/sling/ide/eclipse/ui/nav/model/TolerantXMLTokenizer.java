@@ -27,10 +27,10 @@ import de.pdark.decentxml.XMLTokenizer;
 /**
  * In parts inspired by/copied from de.pdark.decentxml.XMLTokenizer.
  * <p>
- * Note: this variant of the XMLTokenizer became necessary since 
- * XMLTokenizer incorrectly complains when encountering a '>' inside
- * an xml attribute value. The '>' is valid though.
- * TODO: file a bug with decentXml and remove this class as soon as fixed
+ * Note: this variant of the XMLTokenizer became necessary since XMLTokenizer incorrectly complains when encountering a
+ * '>' inside an xml attribute value. The '>' is valid though.
+ * 
+ * @see <a href="https://code.google.com/p/decentxml/issues/detail?id=5">decentxml bug report</a>
  */
 final class TolerantXMLTokenizer extends XMLTokenizer {
 	private final IFile file;

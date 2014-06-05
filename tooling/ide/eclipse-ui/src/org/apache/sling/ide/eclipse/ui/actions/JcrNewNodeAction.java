@@ -49,7 +49,8 @@ public class JcrNewNodeAction implements IObjectActionDelegate {
         IStructuredSelection ss = (IStructuredSelection)selection;
         JcrNode node = (JcrNode) ss.getFirstElement();
         if (!node.canCreateChild()) {
-            MessageDialog.openInformation(shell, "Cannot create node", "Node not in filter.xml");
+            MessageDialog.openInformation(shell, "Cannot create node",
+                    "Node is not covered by the workspace filter as defined in filter.xml");
             return;
         }
         Repository repository = ServerUtil.getDefaultRepository(node.getProject());

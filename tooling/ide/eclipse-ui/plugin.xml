@@ -390,21 +390,23 @@
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNewNodeAction"
                icon="icons/obj16/sling_misc.gif"
                id="org.apache.sling.ide.eclipse.ui.nav.NewJcrNodeAction"
-               label="&amp;New JCR Node"
+               label="&amp;New Node..."
                menubarPath="jcr">
          </action>
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameAction"
                icon="icons/obj16/sling_misc.gif"
                id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameAction"
-               label="&amp;Rename JCR Node"
+               definitionId="org.eclipse.ui.edit.rename"
+               label="&amp;Rename..."
                menubarPath="jcr">
          </action>
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteAction"
                icon="icons/obj16/sling_misc.gif"
                id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteAction"
-               label="&amp;Delete JCR Node"
+               definitionId="org.eclipse.ui.edit.delete"
+               label="&amp;Delete..."
                menubarPath="jcr">
          </action>
          <visibility>
@@ -449,21 +451,23 @@
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNewNodeAction"
                icon="icons/obj16/sling_misc.gif"
                id="org.apache.sling.ide.eclipse.ui.nav.NewNonJcrNodeAction"
-               label="New JCR Node"
+               label="Node..."
                menubarPath="common.new.menu/jcr">
          </action>
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameAction"
                icon="icons/obj16/sling_misc.gif"
                id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameAction"
-               label="&amp;Rename JCR Node"
+               label="&amp;Rename..."
+               definitionId="org.eclipse.ui.edit.rename"
                toolbarPath="common.new.menu/jcr">
          </action>
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteAction"
                icon="icons/obj16/sling_misc.gif"
                id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteAction"
-               label="&amp;Delete JCR Node"
+               label="&amp;Delete..."
+               definitionId="org.eclipse.ui.edit.delete"
                toolbarPath="common.new.menu/jcr">
          </action>
          <action
@@ -471,7 +475,7 @@
                icon="icons/obj16/sling_misc.gif"
                id="org.apache.sling.ide.eclipse.ui.actionsOpenHtmlInBrowserAction"
                label="&amp;Open .html (on server) in browser"
-               menubarPath="common.open.menu/jcr">
+               toolbarPath="common.open.menu/jcr">
          </action>
          <visibility>
                <objectState

@@ -76,7 +76,7 @@ public class ImportWizardPage extends WizardDataTransferPage {
 	public ImportWizardPage(String pageName, IStructuredSelection selection) {
 		super(pageName);
 		setTitle(pageName); // NON-NLS-1
-		setDescription("Import content from a Sling Repository into the workspace"); // NON-NLS-1
+        setDescription("Import content from a Repository into the workspace"); // NON-NLS-1
 
         Object selectedResource = selection.getFirstElement();
         if (selectedResource instanceof IProject) {

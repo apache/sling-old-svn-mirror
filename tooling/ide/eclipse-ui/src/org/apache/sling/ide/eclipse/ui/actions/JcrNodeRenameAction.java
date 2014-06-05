@@ -51,8 +51,8 @@ public class JcrNodeRenameAction implements IObjectActionDelegate {
 		if (this.node==null) {
 			return;
 		}
-		InputDialog id = new InputDialog(shell, "Change JCR node name", 
-				"Enter new name for JCR node '"+node.getDescription()+"':", node.getLabel(), new IInputValidator() {
+        InputDialog id = new InputDialog(shell, "Change Node Name", "Enter new name for node '" + node.getDescription()
+                + "':", node.getLabel(), new IInputValidator() {
 					
 					@Override
 					public String isValid(String newText) {
