@@ -53,7 +53,7 @@ import org.eclipse.wst.server.core.model.IModuleResourceDelta;
 import org.eclipse.wst.server.core.model.ServerBehaviourDelegate;
 import org.osgi.framework.Version;
 
-public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
+public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePublishSupport {
 
     private ResourceChangeCommandFactory commandFactory;
 	private ILaunch launch;
