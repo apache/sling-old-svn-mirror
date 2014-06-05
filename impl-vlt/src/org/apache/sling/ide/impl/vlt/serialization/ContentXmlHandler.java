@@ -66,6 +66,11 @@ public class ContentXmlHandler extends DefaultHandler {
             String value = attributes.getValue(i);
             Object typedValue = TypeHint.parsePossiblyTypedValue(value);
             
+            // unsupported
+            if (typedValue == null) {
+                continue;
+            }
+
             current.addProperty(attributeQName, typedValue);
         }
 
@@ -84,6 +89,12 @@ public class ContentXmlHandler extends DefaultHandler {
     
     // TODO - validate that this is comprehensive
     static enum TypeHint {
+        BINARY("Binary") {
+            @Override
+            Object parseValues(String[] values) {
+                return null;
+            }
+        },
         BOOLEAN("Boolean") {
             @Override
             Object parseValues(String[] values) {

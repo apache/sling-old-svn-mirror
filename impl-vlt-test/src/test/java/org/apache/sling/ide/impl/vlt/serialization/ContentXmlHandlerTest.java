@@ -19,7 +19,7 @@ package org.apache.sling.ide.impl.vlt.serialization;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.array;
 import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
@@ -146,6 +146,14 @@ public class ContentXmlHandlerTest {
 
         ResourceProxy root = parseContentXmlFile("full-coverage-escaped-names.xml", "/");
         assertThat("node contains /50-50", root.getChildren(), hasChildPath("/50-50"));
+    }
+
+    @Test
+    public void parseContentXmlWithBinaryProperty() throws ParserConfigurationException, SAXException, IOException {
+
+        ResourceProxy root = parseContentXmlFile("binary-property.xml", "/");
+
+        assertThat("root has 1 property, binary property is ignored", root.getProperties().entrySet(), hasSize(1));
     }
 
     private static Matcher<Calendar> millis(long millis) {
