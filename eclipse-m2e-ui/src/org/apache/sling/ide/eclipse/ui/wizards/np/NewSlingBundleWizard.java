@@ -38,7 +38,6 @@ public class NewSlingBundleWizard extends AbstractNewMavenBasedSlingApplicationW
 
         EmbeddedArtifactLocator artifactsLocator = Activator.getDefault().getArtifactsLocator();
 
-        // TODO - should we remove the special slingclipse-embedded artifact and simply install our version?
 	    EmbeddedArchetypeInstaller archetypeInstaller = new EmbeddedArchetypeInstaller(
 	    		"org.apache.sling", "sling-bundle-archetype", "slingclipse-embedded");
 	    try {

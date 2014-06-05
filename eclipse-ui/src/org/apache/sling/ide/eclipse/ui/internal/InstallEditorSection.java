@@ -88,7 +88,7 @@ public class InstallEditorSection extends ServerEditorSection {
         Section section = toolkit.createSection(parent, ExpandableComposite.TWISTIE | ExpandableComposite.EXPANDED
                 | ExpandableComposite.TITLE_BAR | Section.DESCRIPTION | ExpandableComposite.FOCUS_TITLE);
         section.setText("Install");
-        section.setDescription("Specify how to install artifacts to the launchpad instance");
+        section.setDescription("Specify how to install bundles on the server");
         section.setLayoutData(new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_FILL));
 
         // ports
@@ -109,7 +109,7 @@ public class InstallEditorSection extends ServerEditorSection {
         GridData data = new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1);
         bundleLocalInstallButton.setLayoutData(data);
         
-        quickLocalInstallButton = toolkit.createButton(composite, "Install bundles directly from local directory",
+        quickLocalInstallButton = toolkit.createButton(composite, "Install bundles directly from the filesystem",
                 SWT.RADIO);
         data = new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1);
         quickLocalInstallButton.setLayoutData(data);

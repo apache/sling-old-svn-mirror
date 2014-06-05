@@ -78,7 +78,7 @@ public class SetupServerWizardPage extends WizardPage {
 
     public SetupServerWizardPage(AbstractNewSlingApplicationWizard parent) {
 		super("chooseArchetypePage");
-		setTitle("Select or Setup Launchpad Server");
+        setTitle("Select or Create Server");
         setDescription("This step defines which server to use with the new project.");
 		setImageDescriptor(parent.getLogo());
 	}

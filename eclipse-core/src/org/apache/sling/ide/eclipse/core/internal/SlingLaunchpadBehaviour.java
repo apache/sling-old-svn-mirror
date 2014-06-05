@@ -118,7 +118,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
             setServerState(IServer.STATE_STARTED);
         } else {
             setServerState(IServer.STATE_STOPPED);
-            String message = "Unable to connect to Sling Lanchpad. Please make sure a Launchpad instance is running ";
+            String message = "Unable to connect to the Server. Please make sure a server instance is running ";
             if (result != null) {
                 message += " (" + result.toString() + ")";
             }
@@ -277,7 +277,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
             monitor.worked(1);
             if (supportBundleVersion == null) {
                 throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID,
-                        "The support bundle was not found, please install it via the server properties page"));
+                        "The support bundle was not found, please install it via the server properties page."));
             }
 
             IJavaProject javaProject = ProjectHelper.asJavaProject(project);

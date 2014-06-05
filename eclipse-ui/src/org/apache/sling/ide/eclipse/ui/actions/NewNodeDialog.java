@@ -41,7 +41,7 @@ public class NewNodeDialog extends InputDialog {
 
     public NewNodeDialog(Shell parentShell, JcrNode node,
             NodeTypeRegistry ntManager) throws RepositoryException {
-        super(parentShell, "Enter JCR node name", 
+        super(parentShell, "Enter Node Name",
                 "Enter name for new node under:\n path: "+node.getJcrPath(), "", null);
         this.parentNodeType = node.getPrimaryType();
         this.ntManager = ntManager;
