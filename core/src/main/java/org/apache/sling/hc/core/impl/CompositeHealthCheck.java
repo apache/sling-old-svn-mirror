@@ -18,7 +18,9 @@
 package org.apache.sling.hc.core.impl;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -27,15 +29,22 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.Result.Status;
-import org.apache.sling.hc.api.ResultLog;
+import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
+import org.apache.sling.hc.api.execution.HealthCheckExecutor;
 import org.apache.sling.hc.util.FormattingResultLog;
 import org.apache.sling.hc.util.HealthCheckFilter;
+import org.apache.sling.hc.util.HealthCheckMetadata;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,73 +75,140 @@ import org.slf4j.LoggerFactory;
 public class CompositeHealthCheck implements HealthCheck {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private BundleContext bundleContext;
 
     @Property(unbounded=PropertyUnbounded.ARRAY,
               label="Filter Tags",
               description="Tags used to select which health checks the composite health check executes.")
-    private static final String PROP_FILTER_TAGS = "filter.tags";
+    static final String PROP_FILTER_TAGS = "filter.tags";
     private String [] filterTags;
 
-    private final ThreadLocal<Boolean> recursionLock = new ThreadLocal<Boolean>();
 
+    @Reference
+    private HealthCheckExecutor healthCheckExecutor;
+
+    private BundleContext bundleContext;
+    private ServiceReference referenceToThis;
+    private HealthCheckFilter healthCheckFilter;
+    
     @Activate
     protected void activate(final ComponentContext ctx) {
         bundleContext = ctx.getBundleContext();
+        healthCheckFilter = new HealthCheckFilter(bundleContext);
+        referenceToThis = getReferenceByPid(PropertiesUtil.toString(ctx.getProperties().get(Constants.SERVICE_PID), "-1"));
+
         filterTags = PropertiesUtil.toStringArray(ctx.getProperties().get(PROP_FILTER_TAGS), new String[] {});
         log.debug("Activated, will select HealthCheck having tags {}", Arrays.asList(filterTags));
     }
 
     @Deactivate
     protected void deactivate() {
-        this.bundleContext = null;
+        bundleContext = null;
+        healthCheckFilter = null;
+        referenceToThis = null;
     }
 
     @Override
     public Result execute() {
-        if ( recursionLock.get() != null ) {
-            // recursion
-            return new Result(Status.CRITICAL,
-                  "Recursive invocation of composite health checks with filter tags : " + Arrays.asList(filterTags));
-        }
-        final FormattingResultLog resultLog = new FormattingResultLog();
-        final HealthCheckFilter filter = new HealthCheckFilter(bundleContext);
-        this.recursionLock.set(Boolean.TRUE);
-        try {
-            final List<HealthCheck> checks = filter.getTaggedHealthChecks(filterTags);
-            if (checks.size() == 0) {
-                resultLog.warn("HealthCheckFilter returns no HealthCheck for tags {}", Arrays.asList(filterTags));
-                return new Result(resultLog);
-            }
 
-            int executed = 0;
-            resultLog.debug("Executing {} HealthCheck selected by the {} tags", checks.size(), Arrays.asList(filterTags));
-            int failures = 0;
-            for (final HealthCheck hc : checks) {
-                if(hc == this) {
-                    resultLog.info("Cowardly forfeiting execution of this HealthCheck in an infinite loop, ignoring it");
-                    continue;
-                }
-                resultLog.debug("Executing {}", hc);
-                executed++;
-                final Result sub = hc.execute();
-                if(!sub.isOk()) {
-                    failures++;
-                }
-                for(final ResultLog.Entry e : sub) {
-                    resultLog.add(e);
-                }
-            }
-
-            if (failures == 0) {
-                resultLog.debug("{} HealthCheck executed, all ok", executed);
-            } else {
-                resultLog.warn("{} HealthCheck executed, {} failures", executed, failures);
-            }
-        } finally {
-            filter.dispose();
-            this.recursionLock.remove();
+        Result result = null;
+        if ((result = checkForRecursion(referenceToThis, new HashSet<String>())) != null) {
+            // return recursion error
+            return result;
         }
-        return new Result(resultLog);
+
+        FormattingResultLog resultLog = new FormattingResultLog();
+        List<HealthCheckExecutionResult> executionResults = healthCheckExecutor.execute(filterTags);
+        resultLog.debug("Executing {} HealthChecks selected by tags {}", executionResults.size(), Arrays.asList(filterTags));
+        result = new CompositeResult(resultLog, executionResults);
+
+        return result;
     }
+
+
+    Result checkForRecursion(ServiceReference hcReference, Set<String> alreadyBannedTags) {
+
+        HealthCheckMetadata thisCheckMetadata = new HealthCheckMetadata(hcReference);
+
+        Set<String> bannedTagsForThisCompositeCheck = new HashSet<String>();
+        bannedTagsForThisCompositeCheck.addAll(alreadyBannedTags);
+        bannedTagsForThisCompositeCheck.addAll(thisCheckMetadata.getTags());
+
+        String[] tagsForIncludedChecksArr = PropertiesUtil.toStringArray(hcReference.getProperty(PROP_FILTER_TAGS), new String[0]);
+        Set<String> tagsForIncludedChecks = new HashSet<String>(Arrays.asList(tagsForIncludedChecksArr));
+        
+        
+        log.debug("HC {} has banned tags {}", thisCheckMetadata.getName(), bannedTagsForThisCompositeCheck);
+        log.debug("tagsForIncludedChecks {}", tagsForIncludedChecks);
+
+        // is this HC ok?
+        Set<String> intersection = new HashSet<String>();
+        intersection.addAll(bannedTagsForThisCompositeCheck);
+        intersection.retainAll(tagsForIncludedChecks);
+        
+        if (!intersection.isEmpty()) {
+            return new Result(Status.HEALTH_CHECK_ERROR,
+                    "INVALID CONFIGURATION: Cycle detected in composite health check hierarchy. Health check '" + thisCheckMetadata.getName()
+                            + "' (" + hcReference.getProperty(Constants.SERVICE_PID) + ") must not have tag(s) " + intersection
+                            + " as a composite check in the hierarchy is itself already tagged alike (tags assigned to composite checks: "
+                            + bannedTagsForThisCompositeCheck + ")");
+        }
+        
+        // check each sub composite check
+        ServiceReference[] hcRefsOfCompositeCheck = healthCheckFilter.getTaggedHealthCheckServiceReferences(tagsForIncludedChecksArr);
+        for (ServiceReference hcRefOfCompositeCheck : hcRefsOfCompositeCheck) {
+            if (CompositeHealthCheck.class.getName().equals(hcRefOfCompositeCheck.getProperty(ComponentConstants.COMPONENT_NAME))) {
+                log.debug("Checking sub composite HC {}, {}", hcRefOfCompositeCheck, hcRefOfCompositeCheck.getProperty(ComponentConstants.COMPONENT_NAME));
+                Result result = checkForRecursion(hcRefOfCompositeCheck, bannedTagsForThisCompositeCheck);
+                if (result != null) {
+                    // found recursion
+                    return result;
+                }
+            }
+
+        }
+
+        // no recursion detected
+        return null;
+
+    }
+
+    private ServiceReference getReferenceByPid(String servicePid) {
+
+        if (servicePid == null) {
+            return null;
+        }
+
+        String filterString = "(" + Constants.SERVICE_PID + "=" + servicePid + ")";
+        ServiceReference[] refs = null;
+        try {
+            refs = bundleContext.getServiceReferences(HealthCheck.class.getName(), filterString);
+        } catch (InvalidSyntaxException e) {
+            log.error("Invalid filter " + filterString, e);
+        }
+        if (refs == null || refs.length == 0) {
+            return null;
+        } else if (refs.length == 1) {
+            return refs[0];
+        } else {
+            throw new IllegalStateException("OSGi Framework returned more than one service reference for unique service pid =" + servicePid);
+        }
+
+    }
+
+    void setHealthCheckFilter(HealthCheckFilter healthCheckFilter) {
+        this.healthCheckFilter = healthCheckFilter;
+    }
+
+    void setFilterTags(String[] filterTags) {
+        this.filterTags = filterTags;
+    }
+
+    void setHealthCheckExecutor(HealthCheckExecutor healthCheckExecutor) {
+        this.healthCheckExecutor = healthCheckExecutor;
+    }
+
+    void setReferenceToThis(ServiceReference referenceToThis) {
+        this.referenceToThis = referenceToThis;
+    }
+
 }

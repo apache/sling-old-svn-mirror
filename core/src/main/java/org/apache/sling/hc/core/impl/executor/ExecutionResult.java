@@ -43,7 +43,7 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
     /**
      * Full constructor
      */
-    ExecutionResult(final HealthCheckMetadata metadata,
+    public ExecutionResult(final HealthCheckMetadata metadata,
             final Result simpleResult,
             final long elapsedTimeInMs,
             final boolean timedout) {
@@ -57,7 +57,7 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
     /**
      * Shortcut constructor for a result
      */
-    ExecutionResult(final HealthCheckMetadata metadata,
+    public ExecutionResult(final HealthCheckMetadata metadata,
             final Result simpleResult,
             final long elapsedTimeInMs) {
         this(metadata, simpleResult, elapsedTimeInMs, false);
@@ -66,7 +66,7 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
     /**
      * Shortcut constructor to create error/timed out result.
      */
-    ExecutionResult(final HealthCheckMetadata metadata,
+    public ExecutionResult(final HealthCheckMetadata metadata,
             final Result.Status status,
             final String errorMessage,
             final long elapsedTime, boolean timedOut) {
