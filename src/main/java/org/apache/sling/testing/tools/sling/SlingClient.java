@@ -83,16 +83,8 @@ public class SlingClient {
      *  and even arguments are values.
      */
     public String createNode(String path, String...properties) throws IOException {
-        Map<String, Object> props = null;
-        if(properties != null && properties.length > 0) {
-            props = new HashMap<String, Object>();
-            if(properties.length % 2 != 0) {
-                throw new IllegalArgumentException("Odd number of properties is invalid:" + properties.length);
-            }
-            for(int i=0 ; i<properties.length; i+=2) {
-                props.put(properties[i], properties[i+1]);
-            }
-        }
+        Map<String, Object> props = extractMap(properties);
+
         return createNode(path, props);
     }
     
@@ -144,6 +136,51 @@ public class SlingClient {
         } else {
             return locationHeaderValue;
         }
+    }
+
+    private Map<String, Object> extractMap(String[] properties) {
+        Map<String, Object> props = null;
+        if(properties != null && properties.length > 0) {
+            props = new HashMap<String, Object>();
+            if(properties.length % 2 != 0) {
+                throw new IllegalArgumentException("Odd number of properties is invalid:" + properties.length);
+            }
+            for(int i=0 ; i<properties.length; i+=2) {
+                props.put(properties[i], properties[i+1]);
+            }
+        }
+
+        return props;
+    }
+
+    /** Updates a node at specified path, with optional properties
+     *  specified as a list of String arguments, odd values are keys
+     *  and even arguments are values.
+     */
+    public void setProperties(String path, String... properties) throws IOException {
+        Map<String, Object> props = extractMap(properties);
+        setProperties(path, props);
+    }
+
+    /** Updates a node at specified path, with optional properties
+    */
+     public void setProperties(String path, Map<String, Object> properties) throws IOException {
+        final MultipartEntity entity = new MultipartEntity();
+        // Add user properties
+        if(properties != null) {
+            for(Map.Entry<String, Object> e : properties.entrySet()) {
+                entity.addPart(e.getKey(), new StringBody(e.getValue().toString()));
+            }
+        }
+
+        final HttpResponse response =
+                executor.execute(
+                        builder.buildPostRequest(path)
+                                .withEntity(entity)
+                                .withCredentials(username, password)
+                )
+                        .assertStatus(200)
+                        .getResponse();
     }
     
     /** Delete supplied path */
