@@ -148,6 +148,12 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
 
         logger.trace(traceOperation(kind, deltaKind, module));
 
+        if (getServer().getServerState() == IServer.STATE_STOPPED) {
+            logger.trace("Ignoring request to publish module when the server is stopped");
+            setModulePublishState(module, IServer.PUBLISH_STATE_NONE);
+            return;
+        }
+
         if ((kind == IServer.PUBLISH_AUTO || kind == IServer.PUBLISH_INCREMENTAL)
                 && deltaKind == ServerBehaviourDelegate.NO_CHANGE) {
             logger.trace("Ignoring request to publish the module when no resources have changed; most likely another module has changed");
@@ -227,6 +233,28 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                 break;
             default:
                 trace.append("UNKONWN - ").append(deltaKind).append(", ");
+                break;
+        }
+
+        switch (getServer().getServerState()) {
+            case IServer.STATE_STARTED:
+                trace.append("STARTED, ");
+                break;
+
+            case IServer.STATE_STARTING:
+                trace.append("STARTING, ");
+                break;
+
+            case IServer.STATE_STOPPED:
+                trace.append("STOPPED, ");
+                break;
+
+            case IServer.STATE_STOPPING:
+                trace.append("STOPPING, ");
+                break;
+
+            default:
+                trace.append("UNKONWN - ").append(getServer().getServerState()).append(", ");
                 break;
         }
 
@@ -393,7 +421,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
         if (file == null) {
             // Usually happens on server startup, it seems to be safe to ignore for now
             Activator.getDefault().getPluginLogger()
-                    .trace("Got null '{0}' and '{1}' for {2}", IFile.class.getSimpleName(),
+                    .trace("Got null {0} and {1} for {2}", IFile.class.getSimpleName(),
                             IFolder.class.getSimpleName(), resource);
             return null;
         }
