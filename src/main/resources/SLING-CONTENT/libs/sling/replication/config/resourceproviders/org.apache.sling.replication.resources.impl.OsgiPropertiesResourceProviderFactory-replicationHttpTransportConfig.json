@@ -1,0 +1,16 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "name" : "replicationHttpTransportConfig",
+    "provider.roots" : [ "/libs/sling/replication/config/transport/http" ],
+    "serviceType" : "org.apache.sling.replication.transport.impl.HttpTransportHandlerFactory",
+    "providerType" : "osgiConfig",
+    "resourceProperties" : [
+        "../sling:resourceType=replication/config/transport/http/list",
+
+        "sling:resourceType=replication/config/transport/http",
+        "name={name}",
+        "endpoints={endpoints}"
+    ]
+
+
+}

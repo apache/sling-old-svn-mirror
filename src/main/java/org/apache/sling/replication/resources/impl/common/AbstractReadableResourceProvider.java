@@ -27,6 +27,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -129,6 +130,14 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
         return getResourceProperties(resourceName);
     }
 
+    /**
+     * Binds the variables in the resource property templates to the properties.
+     * Template: resourcePropertyName = "{osgiPropertyName}"
+     * Property: osgiPropertyName = osgiPropertyValue
+     * Result: resourcePropertyName = osgiPropertyValue
+     * @param properties
+     * @return
+     */
     protected Map<String, Object> bindMainResourceProperties(Map<String, Object> properties) {
         Map<String, Object> result = new HashMap<String, Object>();
 
@@ -150,10 +159,18 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
 
 
         }
-        return result;
+        return fixMap(result);
     }
 
-    protected Map<String, Object> unbindMainResourceProperties(Map<String, Object> requestProperties) {
+    /**
+     * Unbinds the variables in the resource property templates to the properties.
+     * Template: resourcePropertyName = "{osgiPropertyName}"
+     * Property: resourcePropertyName = osgiPropertyValue
+     * Result: osgiPropertyName = osgiPropertyValue
+     * @param properties
+     * @return
+     */
+    protected Map<String, Object> unbindMainResourceProperties(Map<String, Object> properties) {
         Map<String, Object> result = new HashMap<String, Object>();
 
         Map<String, String > resourcePropertyTemplates = additionalResourcePropertiesMap.get(MAIN_RESOURCE_PREFIX);
@@ -164,13 +181,13 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
 
             if (templateValue.startsWith("{") && templateValue.endsWith("}")) {
                 String propertyName = templateValue.substring(1, templateValue.length()-1);
-                Object propertyValue = requestProperties.get(templateName);
+                Object propertyValue = properties.get(templateName);
                 if (propertyValue != null) {
                     result.put(propertyName, propertyValue);
                 }
             }
         }
-        return result;
+        return fixMap(result);
     }
 
     protected Resource buildMainResource(ResourceResolver resourceResolver,
@@ -198,6 +215,45 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
         }
 
         return hasPermission;
+    }
+
+
+    static <K,V> Map<String, Object> fixMap(Map<K, V> map) {
+        Map<String, Object> result = new HashMap<String , Object>();
+        for (Map.Entry<K, V> entry : map.entrySet()) {
+            K key = entry.getKey();
+            V value = entry.getValue();
+
+            if (!(key instanceof String)) continue;
+            if (!isAcceptedType(value.getClass())) continue;
+
+            String fixedKey = (String) key;
+            Object fixedValue = value;
+            if (fixedValue.getClass().isArray()) {
+                Class componentType = fixedValue.getClass().getComponentType();
+
+                if (!isAcceptedType(componentType)) {
+                    Object[] array = (Object[]) value;
+                    if (array == null || array.length == 0) {
+                        continue;
+                    }
+                    fixedValue = Arrays.asList(array).toArray(new String[array.length]);
+                }
+            }
+
+            if (fixedKey == null || fixedValue == null) {
+                continue;
+            }
+
+
+            result.put(fixedKey, fixedValue);
+        }
+
+        return result;
+    }
+
+    static <T> boolean isAcceptedType(Class<T> clazz) {
+        return clazz.isPrimitive() || clazz == String.class || clazz.isArray();
     }
 
 

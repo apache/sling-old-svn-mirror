@@ -141,27 +141,27 @@ public class ReplicationAgentQueueEventServlet extends SlingAllMethodsServlet {
 
         // flush the buffers to make sure the container sends the bytes
         writer.flush();
-        if (log.isInfoEnabled()) {
-            log.info("SSE event {}: {}", event, message);
+        if (log.isDebugEnabled()) {
+            log.debug("SSE event {}: {}", event, message);
         }
     }
 
     private class SSEListener implements EventHandler {
         public void handleEvent(Event event) {
-            if (log.isInfoEnabled()) {
-                log.info("SSE listener running on event {}", event);
+            if (log.isDebugEnabled()) {
+                log.debug("SSE listener running on event {}", event);
             }
             Object pathProperty = event.getProperty("replication.package.paths");
             Object agentNameProperty = event.getProperty("replication.agent.name");
-            if (log.isInfoEnabled()) {
-                log.info("cached events {}", cachedEvents.size());
+            if (log.isDebugEnabled()) {
+                log.debug("cached events {}", cachedEvents.size());
             }
             if (pathProperty != null && agentNameProperty != null) {
                 String agentName = String.valueOf(agentNameProperty);
                 String[] paths = (String[]) pathProperty;
                 synchronized (cachedEvents) {
-                    if (log.isInfoEnabled()) {
-                        log.info("queue event for agent {} on paths {}", agentName, Arrays.toString(paths));
+                    if (log.isDebugEnabled()) {
+                        log.debug("queue event for agent {} on paths {}", agentName, Arrays.toString(paths));
                     }
                     Collection<String> eventsForAgent = cachedEvents.get(agentName);
                     if (eventsForAgent == null) {
