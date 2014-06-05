@@ -3,5 +3,5 @@
     "name" : "http-publish-receive",
     "TransportAuthenticationProviderFactory.target" : "(name=user)",
     "authentication.properties" : ["user=admin","password=admin"],
-    "endpoints" : [ "http://localhost:4503/system/replication/importer/default" ]
+    "endpoints" : [ "http://localhost:4503/libs/sling/replication/importer/default" ]
 }

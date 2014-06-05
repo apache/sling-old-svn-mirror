@@ -19,15 +19,18 @@
 package org.apache.sling.replication.it;
 
 import java.io.IOException;
+import java.util.UUID;
+
 import org.junit.Test;
 
+import static org.apache.sling.replication.it.ReplicationUtils.*;
 /**
  * Integration test for {@link org.apache.sling.replication.agent.ReplicationAgent} resources
  */
-public class ReplicationAgentResourcesIntegrationTest extends ReplicationITBase {
+public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegrationTestBase {
 
     @Test
-    public void testDefaultAgentConfigurationResources() throws IOException {
+    public void testDefaultAgentConfigurationResources() throws Exception {
         String[] defaultAgentNames = new String[]{
                 "publish",
                 "publish-reverse",
@@ -36,13 +39,13 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationITBase 
                 "cache-flush"
         };
         for (String agentName : defaultAgentNames) {
-            assertResourceExists(getAgentConfigUrl(agentName));
+            assertExits(authorClient, agentConfigUrl(agentName));
         }
 
     }
 
     @Test
-    public void testDefaultPublishAgentResources() throws IOException {
+    public void testDefaultPublishAgentResources() throws Exception {
         // these agents do not exist as they are bundled to publish runMode
         String[] defaultPublishAgentNames = new String[]{
                 "reverserepo",
@@ -50,24 +53,24 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationITBase 
                 "cache-flush"
         };
         for (String agentName : defaultPublishAgentNames) {
-            assertResourceDoesNotExist(getAgentUrl(agentName));
+            assertNotExits(authorClient, agentUrl(agentName));
         }
     }
 
     @Test
-    public void testDefaultAuthorAgentResources() throws IOException {
+    public void testDefaultAuthorAgentResources() throws Exception {
         // these agents exist as they are bundled to author runMode
         String[] defaultAuthorAgentNames = new String[]{
                 "publish",
                 "publish-reverse"
         };
         for (String agentName : defaultAuthorAgentNames) {
-            assertResourceExists(getAgentUrl(agentName));
+            assertExits(authorClient, agentUrl(agentName));
         }
     }
 
     @Test
-    public void testDefaultPublishAgentQueueResources() throws IOException {
+    public void testDefaultPublishAgentQueueResources() throws Exception {
         // these agent queues do not exist as they are bundled to publish runMode
         String[] defaultPublishAgentNames = new String[]{
                 "reverserepo",
@@ -75,39 +78,38 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationITBase 
                 "cache-flush"
         };
         for (String agentName : defaultPublishAgentNames) {
-            assertResourceDoesNotExist(getAgentUrl(agentName)+"/queue");
+            assertNotExits(authorClient, queueUrl(agentName));
         }
     }
 
     @Test
-    public void testDefaultAuthorAgentQueueResources() throws IOException {
+    public void testDefaultAuthorAgentQueueResources() throws Exception {
         // these agent queues exist as they are bundled to author runMode
         String[] defaultAuthorAgentNames = new String[]{
                 "publish",
                 "publish-reverse"
         };
         for (String agentName : defaultAuthorAgentNames) {
-            assertResourceExists(getAgentUrl(agentName)+"/queue");
+            assertExits(authorClient, queueUrl(agentName));
         }
     }
 
     @Test
     public void testDefaultAgentsRootResource() throws Exception {
-        String rootResource = getAgentRootUrl();
-        assertResourceExists(rootResource);
-        assertJsonResponseContains(rootResource,
+        assertExits(authorClient, agentRootUrl());
+        assertResponseContains(author, agentRootUrl(),
                 "sling:resourceType", "replication/agents",
-                "items", "[\"publish-reverse\",\"publish\"]");
+                "items", "publish-reverse","publish");
     }
 
     @Test
     public void testAgentConfigurationResourceCreate() throws Exception {
-        String agentName = "sample-create-config";
-        String newConfigResource = getAgentConfigUrl(agentName);
+        String agentName = "sample-create-config" + UUID.randomUUID();
+        String newConfigResource = agentConfigUrl(agentName);
 
-        assertPostResourceWithParameters(201, newConfigResource, "name", agentName, "transportHandler", "(name=author)");
-        assertResourceExists(newConfigResource);
-        assertJsonResponseContains(newConfigResource,
+        authorClient.createNode(newConfigResource, "name", agentName, "transportHandler", "(name=author)");
+        assertExits(authorClient, newConfigResource);
+        assertResponseContains(author, newConfigResource,
                 "sling:resourceType", "replication/config/agent",
                 "name", agentName,
                 "transportHandler", "(name=author)");
@@ -115,24 +117,29 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationITBase 
 
     @Test
     public void testAgentConfigurationResourceDelete() throws Exception {
-        String agentName = "sample-delete-config";
-        String newConfigResource = getAgentConfigUrl(agentName);
-        assertPostResourceWithParameters(201, newConfigResource, "name", agentName, "transportHandler", "(name=author)");
-        assertResourceExists(newConfigResource);
-        assertPostResourceWithParameters(200, newConfigResource, ":operation", "delete");
-        assertResourceDoesNotExist(newConfigResource);
+        String agentName = "sample-delete-config" + UUID.randomUUID();
+        String newConfigResource = agentConfigUrl(agentName);
+        authorClient.createNode(newConfigResource, "name", agentName, "transportHandler", "(name=author)");
+        assertExits(authorClient, newConfigResource);
+
+        deleteNode(author, newConfigResource);
+        // authorClient.delete does not work for some reason
+        assertNotExits(authorClient, newConfigResource);
     }
 
 
     @Test
     public void testAgentConfigurationResourceUpdate() throws Exception {
-        String agentName = "sample-update-config";
-        String newConfigResource = getAgentConfigUrl(agentName);
-        assertPostResourceWithParameters(201, newConfigResource, "name", agentName, "transportHandler", "(name=author)");
-        assertResourceExists(newConfigResource);
-        assertJsonResponseContains(newConfigResource,
+        String agentName = "sample-create-config" + UUID.randomUUID();
+        String newConfigResource = agentConfigUrl(agentName);
+
+        authorClient.createNode(newConfigResource, "name", agentName, "transportHandler", "(name=author)");
+        assertExits(authorClient, newConfigResource);
+        authorClient.setProperties(newConfigResource, "transportHandler", "(name=updated)");
+        assertResponseContains(author, newConfigResource,
                 "sling:resourceType", "replication/config/agent",
                 "name", agentName,
-                "transportHandler", "(name=author)");
+                "transportHandler", "(name=updated)");
     }
+
 }

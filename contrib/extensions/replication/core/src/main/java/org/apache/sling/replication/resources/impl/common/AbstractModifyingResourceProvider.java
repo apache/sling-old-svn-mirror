@@ -56,14 +56,12 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
 
         String resourceName = pathInfo.getMainResourceName();
 
-        final boolean deleted = this.deletedResources.remove(resourceName);
-        Map existingResource = getMainResourceProperties(resourceName);
-        if (!deleted && existingResource != null) {
+        boolean added = addToChangedResources(resourceName, properties, true);
+
+
+        if (!added) {
             throw new PersistenceException("Resource already exists at " + path, null, resourceName, null);
         }
-
-        properties = unbindMainResourceProperties(properties);
-        this.changedResources.put(resourceName, properties);
 
         return buildMainResource(resolver, pathInfo, properties);
     }
@@ -93,7 +91,12 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
     }
 
     public void commit(ResourceResolver resolver) throws PersistenceException {
+        if (!hasChanges(resolver)) {
+            return;
+        }
+
         save(resolver, changedResources, deletedResources);
+
         revert(resolver);
     }
 
@@ -114,10 +117,30 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
 
         String resourceName = pathInfo.getMainResourceName();
 
-        this.deletedResources.remove(resourceName);
+        addToChangedResources(resourceName, properties, false);
+    }
 
-        properties = unbindMainResourceProperties(properties);
+    private boolean addToChangedResources(String resourceName, Map<String, Object> newProperties, boolean failIfAlreadyExists) {
+        final boolean deleted = this.deletedResources.remove(resourceName);
+        Map<String, Object> existingResource = getMainResourceProperties(resourceName);
+        if (failIfAlreadyExists && !deleted && existingResource != null) {
+            return false;
+        }
+
+        Map<String, Object> properties = new HashMap<String, Object>();
+        if (existingResource != null) {
+            properties.putAll(existingResource);
+        }
+
+        newProperties = unbindMainResourceProperties(newProperties);
+
+        if (newProperties != null) {
+            properties.putAll(newProperties);
+        }
+
         this.changedResources.put(resourceName, properties);
+
+        return true;
     }
 
     @Override
