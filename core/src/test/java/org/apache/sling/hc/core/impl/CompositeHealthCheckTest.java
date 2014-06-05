@@ -91,7 +91,7 @@ public class CompositeHealthCheckTest {
     }
 
     @Test
-    public void testRecursionCheckSimle() {
+    public void testSimpleRecursion() {
 
         // composite check referencing itself
         final String[] filterTags = new String[] { "check1" };
@@ -123,7 +123,7 @@ public class CompositeHealthCheckTest {
     }
 
     @Test
-    public void testRecursionCheckCyclic() {
+    public void testCyclicRecursion() {
 
         // three checks, cyclic
         final String[] filterTags = new String[] { "check2" };
