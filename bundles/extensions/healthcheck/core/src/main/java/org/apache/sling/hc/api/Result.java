@@ -22,7 +22,7 @@ import java.util.Iterator;
 /** The result of executing a {@link HealthCheck} */
 public class Result implements Iterable <ResultLog.Entry> {
 
-    private final ResultLog resultLog;
+    protected final ResultLog resultLog;
 
     public enum Status {
         DEBUG,              // used by ResultLog for debug messages, not an actual output status

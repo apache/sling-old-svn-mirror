@@ -408,7 +408,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         return result;
     }
 
-    static String msHumanReadable(final long millis) {
+    public static String msHumanReadable(final long millis) {
 
         double number = millis;
         final String[] units = new String[] { "ms", "sec", "min", "h", "days" };
