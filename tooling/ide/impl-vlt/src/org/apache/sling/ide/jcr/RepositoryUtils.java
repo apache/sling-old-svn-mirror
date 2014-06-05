@@ -31,36 +31,43 @@ import org.apache.sling.ide.transport.RepositoryInfo;
 public abstract class RepositoryUtils {
 
     private static final RepositoryProvider REPOSITORY_PROVIDER = new RepositoryProvider();
+    private static final Object SYNC = new Object();
     private static final String[] WEBDAV_URL_LOCATIONS = new String[] { "server/-/jcr:root", "crx/-/jcr:root" };
 
     public static Repository getRepository(RepositoryInfo repositoryInfo) throws RepositoryException {
-
-        return REPOSITORY_PROVIDER.getRepository(getRepositoryAddress(repositoryInfo));
+        synchronized (SYNC) {
+            return REPOSITORY_PROVIDER.getRepository(getRepositoryAddress(repositoryInfo));
+        }
     }
 
     public static RepositoryAddress getRepositoryAddress(RepositoryInfo repositoryInfo) {
         StringBuilder errors = new StringBuilder();
         for (String webDavUrlLocation : WEBDAV_URL_LOCATIONS) {
-            Session session = null;
-            try {
-                // TODO proper error handling
+
+                Session session = null;
                 String url = repositoryInfo.getUrl() + webDavUrlLocation;
-                RepositoryAddress address = new RepositoryAddress(url);
-                Repository repository = REPOSITORY_PROVIDER.getRepository(address);
-                // TODO - this can be costly performance-wise ; we should cache this information
-                session = repository.login(new SimpleCredentials(repositoryInfo.getUsername(), repositoryInfo
-                        .getPassword().toCharArray()));
-                return address;
-            } catch (URISyntaxException e) {
-                throw new RuntimeException(e);
-            } catch (RepositoryException e) {
-                errors.append(webDavUrlLocation).append(" : ").append(e.getMessage()).append('\n');
-                continue;
-            } finally {
-                if (session != null) {
-                    session.logout();
+                try {
+                    // TODO proper error handling
+                    RepositoryAddress address = new RepositoryAddress(url);
+                    Repository repository;
+                    synchronized (SYNC) {
+                        repository = REPOSITORY_PROVIDER.getRepository(address);
+                    }
+
+                    // TODO - this can be costly performance-wise ; we should cache this information
+                    session = repository.login(new SimpleCredentials(repositoryInfo.getUsername(), repositoryInfo
+                            .getPassword().toCharArray()));
+                    return address;
+                } catch (URISyntaxException e) {
+                    throw new RuntimeException(e);
+                } catch (RepositoryException e) {
+                    errors.append(url).append(" : ").append(e.getMessage()).append('\n');
+                    continue;
+                } finally {
+                    if (session != null) {
+                        session.logout();
+                    }
                 }
-            }
         }
 
         errors.deleteCharAt(errors.length() - 1);
