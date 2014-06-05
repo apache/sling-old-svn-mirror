@@ -22,8 +22,12 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.sling.commons.testing.junit.Retry;
+import org.apache.sling.commons.testing.junit.RetryRule;
 import org.apache.sling.discovery.impl.setup.Instance;
-import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,10 +36,30 @@ public class LargeTopologyWithHubTest {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private final List<Instance> instances = new LinkedList<Instance>();
+    private static List<Instance> instances;
+    private static Instance hub;
+    private static List<String> slingIds;
+    private static final int TEST_SIZE = 100;
     
-    @After
-    public void tearDown() throws Exception {
+    @Rule
+    public final RetryRule retryRule = new RetryRule();
+
+    @BeforeClass
+    public static void setup() throws Throwable {
+        instances = new LinkedList<Instance>();
+        hub = TopologyTestHelper.createInstance(instances, "hub");
+        
+        slingIds = new LinkedList<String>();
+        slingIds.add(hub.getSlingId());
+        for(int i=0; i<TEST_SIZE; i++) {
+            Instance instance = TopologyTestHelper.createInstance(instances, "instance"+i);
+            new Connector(instance, hub);
+            slingIds.add(instance.getSlingId());
+        }
+    }
+    
+    @AfterClass
+    public static void tearDown() throws Exception {
         for (Iterator<Instance> it = instances.iterator(); it.hasNext();) {
             final Instance instance = it.next();
             instance.stop();
@@ -43,22 +67,12 @@ public class LargeTopologyWithHubTest {
     }
     
     @Test
-    public void testLargeTopologyWithHub() throws Throwable {
-        logger.info("testLargeTopologyWithHub: start");
-        final int TEST_SIZE = 100;
-        Instance hub = TopologyTestHelper.createInstance(instances, "hub");
-        
-        List<String> slingIds = new LinkedList<String>();
-        slingIds.add(hub.getSlingId());
-        for(int i=0; i<TEST_SIZE; i++) {
-//            logger.info("testLargeTopologyWithHub: adding instance "+i);
-            Instance instance = TopologyTestHelper.createInstance(instances, "instance"+i);
-//            logger.info("testLargeTopologyWithHub: adding connector "+i);
-            new Connector(instance, hub);
-            slingIds.add(instance.getSlingId());
-        }
+    @Retry(timeoutMsec=30000, intervalMsec=500)
+    public void testLargeTopologyWithHub() {
         logger.info("testLargeTopologyWithHub: checking if all connectors are registered");
-        TopologyTestHelper.assertTopologyConsistsOf(hub.getDiscoveryService().getTopology(), slingIds.toArray(new String[slingIds.size()]));
+        TopologyTestHelper.assertTopologyConsistsOf(
+                hub.getDiscoveryService().getTopology(), 
+                slingIds.toArray(new String[slingIds.size()]));
         logger.info("testLargeTopologyWithHub: end");
     }
 

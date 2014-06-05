@@ -124,7 +124,7 @@ public class TopologyTestHelper {
     
     public static void assertTopologyConsistsOf(TopologyView topology, String... slingIds) {
         assertNotNull(topology);
-        assertEquals(topology.getInstances().size(), slingIds.length);
+        assertEquals(slingIds.length, topology.getInstances().size());
         for(int i=0; i<slingIds.length; i++) {
             final String aSlingId = slingIds[i];
             final Set<?> instances = topology.getInstances();
