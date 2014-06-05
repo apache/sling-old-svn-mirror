@@ -16,11 +16,9 @@
  */
 package org.apache.sling.ide.serialization;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.jcr.nodetype.NodeType;
@@ -28,9 +26,6 @@ import javax.jcr.nodetype.NodeType;
 import org.apache.sling.ide.transport.NodeTypeRegistry;
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryException;
-import org.apache.sling.ide.transport.ResourceProxy;
-import org.apache.sling.ide.transport.Result;
-import org.apache.sling.ide.util.PathUtil;
 
 /**
  * The <tt>SerializationKindManager</tt> is a helper class which implements common logic dealing with how to serialize
@@ -49,8 +44,8 @@ public class SerializationKindManager {
         List<NodeType> nodeTypes = repository.getNodeTypeRegistry().getNodeTypes();
 
         // detect node types which have an nt:file or nt:folder parent in the hierarchy
-        for (Iterator it = nodeTypes.iterator(); it.hasNext();) {
-            final NodeType nt = (NodeType) it.next();
+        for (Iterator<NodeType> it = nodeTypes.iterator(); it.hasNext();) {
+            final NodeType nt = it.next();
             final String nodeType = nt.getName();
             SerializationKind serializationKind = getSerializationKind(nodeType, repository.getNodeTypeRegistry());
             if (serializationKind == null) {
