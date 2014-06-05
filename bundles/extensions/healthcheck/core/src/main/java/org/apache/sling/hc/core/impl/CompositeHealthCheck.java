@@ -110,8 +110,8 @@ public class CompositeHealthCheck implements HealthCheck {
     @Override
     public Result execute() {
 
-        Result result = null;
-        if ((result = checkForRecursion(referenceToThis, new HashSet<String>())) != null) {
+        Result result = checkForRecursion(referenceToThis, new HashSet<String>());
+        if(result != null) {
             // return recursion error
             return result;
         }
