@@ -3,6 +3,7 @@ package org.apache.sling.crankstart.launcher;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -13,11 +14,18 @@ import java.io.Reader;
 import java.net.ServerSocket;
 import java.util.Random;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.apache.sling.commons.testing.junit.Retry;
 import org.apache.sling.commons.testing.junit.RetryRule;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -28,7 +36,7 @@ import org.junit.Test;
 public class CrankstartBootstrapTest {
     
     private static final int port = getAvailablePort();
-    private static final HttpClient client = new HttpClient();
+    private static DefaultHttpClient client;
     private static Thread crankstartThread;
     private static String baseUrl = "http://localhost:" + port;
     public static final String TEST_RESOURCE = "/launcher-test.crank.txt";
@@ -55,6 +63,18 @@ public class CrankstartBootstrapTest {
         return result;
     }
     
+    @Before
+    public void setupHttpClient() {
+        client = new DefaultHttpClient(); 
+    }
+    
+    private void setAdminCredentials() {
+        client.getCredentialsProvider().setCredentials(
+                AuthScope.ANY, 
+                new UsernamePasswordCredentials("admin", "admin"));
+        client.addRequestInterceptor(new PreemptiveAuthInterceptor(), 0);
+    }
+    
     @BeforeClass
     public static void testExtensionPropertyBeforeTests() {
         assertNull(TEST_SYSTEM_PROPERTY + " should not be set before tests", System.getProperty(TEST_SYSTEM_PROPERTY));
@@ -62,7 +82,8 @@ public class CrankstartBootstrapTest {
     
     @BeforeClass
     public static void setup() {
-        final GetMethod get = new GetMethod(baseUrl);
+        client = new DefaultHttpClient(); 
+        final HttpUriRequest get = new HttpGet(baseUrl);
         System.setProperty("http.port", String.valueOf(port));
         System.setProperty("osgi.storage.path", getOsgiStoragePath());
         
@@ -71,7 +92,7 @@ public class CrankstartBootstrapTest {
         final Reader input = new InputStreamReader(is);
         
         try {
-            client.executeMethod(get);
+            client.execute(get);
             fail("Expecting connection to " + port + " to fail before starting HTTP service");
         } catch(IOException expected) {
         }
@@ -101,20 +122,36 @@ public class CrankstartBootstrapTest {
         crankstartThread.join();
     }
     
+    private void closeConnection(HttpResponse r) throws IOException {
+        if(r != null && r.getEntity() != null) {
+            EntityUtils.consume(r.getEntity());
+        }
+    }
+    
     @Test
     @Retry(timeoutMsec=10000, intervalMsec=250)
     public void testHttpRoot() throws Exception {
-        final GetMethod get = new GetMethod(baseUrl);
-        client.executeMethod(get);
-        assertEquals("Expecting page not found at " + get.getURI(), 404, get.getStatusCode());
+        final HttpUriRequest get = new HttpGet(baseUrl);
+        HttpResponse response = null;
+        try {
+            response = client.execute(get);
+            assertEquals("Expecting page not found at " + get.getURI(), 404, response.getStatusLine().getStatusCode());
+        } finally {
+            closeConnection(response);
+        }
     }
     
     @Test
     @Retry(timeoutMsec=10000, intervalMsec=250)
     public void testSingleConfigServlet() throws Exception {
-        final GetMethod get = new GetMethod(baseUrl + "/single");
-        client.executeMethod(get);
-        assertEquals("Expecting success for " + get.getURI(), 200, get.getStatusCode());
+        final HttpUriRequest get = new HttpGet(baseUrl + "/single");
+        HttpResponse response = null;
+        try {
+            response = client.execute(get);
+            assertEquals("Expecting success for " + get.getURI(), 200, response.getStatusLine().getStatusCode());
+        } finally {
+            closeConnection(response);
+        }
     }
     
     @Test
@@ -122,9 +159,14 @@ public class CrankstartBootstrapTest {
     public void testConfigFactoryServlet() throws Exception {
         final String [] paths = { "/foo", "/bar/test" };
         for(String path : paths) {
-            final GetMethod get = new GetMethod(baseUrl + path);
-            client.executeMethod(get);
-            assertEquals("Expecting success for " + get.getURI(), 200, get.getStatusCode());
+            final HttpUriRequest get = new HttpGet(baseUrl + path);
+            HttpResponse response = null;
+            try {
+                response = client.execute(get);
+                assertEquals("Expecting success for " + get.getURI(), 200, response.getStatusLine().getStatusCode());
+            } finally {
+                closeConnection(response);
+            }
         }
     }
     
@@ -139,9 +181,42 @@ public class CrankstartBootstrapTest {
     @Retry(timeoutMsec=10000, intervalMsec=250)
     public void testJUnitServlet() throws Exception {
         final String path = "/system/sling/junit";
-        final GetMethod get = new GetMethod(baseUrl + path);
-        client.executeMethod(get);
-        assertEquals("Expecting JUnit servlet to be installed via sling extension command, at " + get.getURI(), 200, get.getStatusCode());
+        final HttpUriRequest get = new HttpGet(baseUrl + path);
+        HttpResponse response = null;
+        try {
+            response = client.execute(get);
+            assertEquals("Expecting JUnit servlet to be installed via sling extension command, at " + get.getURI(), 200, response.getStatusLine().getStatusCode());
+        } finally {
+            closeConnection(response);
+        }
+    }
+    
+    @Test
+    @Retry(timeoutMsec=10000, intervalMsec=250)
+    public void testFelixFormatConfig() throws Exception {
+        setAdminCredentials();
+        final String path = "/system/console/config/configuration-status-20140606-1347+0200.txt";
+        final HttpUriRequest get = new HttpGet(baseUrl + path);
+        HttpResponse response = null;
+        try {
+            response = client.execute(get);
+            assertEquals("Expecting config dump to be available at " + get.getURI(), 200, response.getStatusLine().getStatusCode());
+            assertNotNull("Expecting response entity", response.getEntity());
+            String encoding = "UTF-8";
+            if(response.getEntity().getContentEncoding() != null) {
+                encoding = response.getEntity().getContentEncoding().getValue();
+            }
+            final String content = IOUtils.toString(response.getEntity().getContent(), encoding);
+            final String [] expected = new String[] {
+                    "array = [foo, bar.from.launcher.test]",
+                    "service.ranking.launcher.test = 54321"
+            };
+            for(String exp : expected) {
+                assertTrue("Expecting config content to contain " + exp, content.contains(exp));
+            }
+        } finally {
+            closeConnection(response);
+        }
     }
     
     private static String getOsgiStoragePath() {

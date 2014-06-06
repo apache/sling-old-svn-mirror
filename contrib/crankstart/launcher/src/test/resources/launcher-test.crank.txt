@@ -57,6 +57,12 @@ config.factory org.apache.sling.crankstart.testservices.ConfigFactoryServlet
   path=/bar/test
   message=Not used
   
+# Test Felix format configs
+config felix.format.test FORMAT:felix.config
+  mongouri="mongodb://localhost:27017"
+  service.ranking.launcher.test=I"54321"
+  array=["foo","bar.from.launcher.test"]
+  
 # Test an extension command provided by our test-services bundle
 test.system.property the.test.system.property was set by test-services bundle
   

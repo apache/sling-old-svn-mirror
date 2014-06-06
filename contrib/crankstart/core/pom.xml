@@ -36,6 +36,44 @@
                     <target>1.6</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.3</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <artifactSet>
+                                <includes>
+                                    <include>org.apache.felix:org.apache.felix.configadmin</include>
+                                </includes>
+                                <excludes>
+                                    <exclude>org.osgi</exclude>
+                                </excludes>
+                            </artifactSet>
+                            <filters>
+                                <filter>
+                                    <artifact>org.apache.felix:org.apache.felix.configadmin</artifact>
+                                    <includes>
+                                        <include>org/apache/felix/cm/file/Config*</include>
+                                    </includes>
+                                </filter>
+                            </filters>
+                            <relocations>
+                                <relocation>
+                                    <pattern>org.apache.felix.cm.file</pattern>
+                                    <shadedPattern>org.apache.felix.SHADED.cm.file</shadedPattern>
+                                </relocation>
+                            </relocations>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
           </plugins>
     </build>   
 
@@ -57,6 +95,16 @@
             <artifactId>org.apache.sling.crankstart.api</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>provided</scope>
+        </dependency>
+        <!-- 
+            We use a class from the config admin implementation to read config files,
+            and we process it using maven-shade-plugin to avoid conflicts 
+         -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.configadmin</artifactId>
+            <version>1.2.8</version>
+            <scope>compile</scope>
         </dependency>
          <dependency>
             <groupId>org.slf4j</groupId>
