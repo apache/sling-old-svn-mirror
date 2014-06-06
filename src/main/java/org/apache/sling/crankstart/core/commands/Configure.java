@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.Hashtable;
 
 import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.sling.crankstart.api.CrankstartCommand;
@@ -97,6 +98,10 @@ public class Configure implements CrankstartCommand {
     @SuppressWarnings("unchecked")
     private Dictionary<String, Object> parseFelixConfig(Dictionary<String, Object> properties) throws IOException {
         // Build a stream in Felix .config format and parse it
+        if(properties == null) {
+            return new Hashtable<String, Object>();
+        }
+        
         final StringBuilder sb = new StringBuilder();
         final Enumeration<String> keys = properties.keys();
         while(keys.hasMoreElements()) {
