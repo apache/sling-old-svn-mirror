@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.sling.commons.testing.junit.Retry;
 import org.apache.sling.commons.testing.junit.RetryRule;
+import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.discovery.impl.setup.Instance;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -69,11 +70,11 @@ public class LargeTopologyWithHubTest {
     @Test
     @Retry(timeoutMsec=30000, intervalMsec=500)
     public void testLargeTopologyWithHub() {
-        logger.info("testLargeTopologyWithHub: checking if all connectors are registered");
-        TopologyTestHelper.assertTopologyConsistsOf(
-                hub.getDiscoveryService().getTopology(), 
-                slingIds.toArray(new String[slingIds.size()]));
-        logger.info("testLargeTopologyWithHub: end");
+        final TopologyView tv = hub.getDiscoveryService().getTopology();
+        logger.info(
+                "testLargeTopologyWithHub: checking if all connectors are registered, TopologyView has {} Instances", 
+                tv.getInstances().size());
+        TopologyTestHelper.assertTopologyConsistsOf(tv, slingIds.toArray(new String[slingIds.size()]));
+        logger.info("testLargeTopologyWithHub: test passed");
     }
-
 }
