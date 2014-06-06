@@ -28,6 +28,11 @@
                 <configuration>
                     <instructions>
                         <Private-Package>org.apache.sling.crankstart.extensions.*</Private-Package>
+                        <Import-Package>
+                            org.apache.felix.inventory.*;resolution:=optional,
+                            org.apache.commons.io.*;resolution:=optional,
+                            *
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
@@ -61,6 +66,18 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.installer.core</artifactId>
             <version>3.5.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.inventory</artifactId>
+            <version>1.0.4</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
