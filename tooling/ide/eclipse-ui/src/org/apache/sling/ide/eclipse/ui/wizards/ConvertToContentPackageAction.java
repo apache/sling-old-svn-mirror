@@ -27,7 +27,6 @@ import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -45,7 +44,6 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.ContainerSelectionDialog;
 import org.eclipse.ui.dialogs.ElementTreeSelectionDialog;
 import org.eclipse.ui.dialogs.ISelectionStatusValidator;
-import org.eclipse.ui.dialogs.ISelectionValidator;
 import org.eclipse.ui.model.BaseWorkbenchContentProvider;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
@@ -79,35 +77,32 @@ public class ConvertToContentPackageAction implements IObjectActionDelegate {
             if (initialContainer != null) {
                 dialog.setInitialElementSelections(Arrays.asList(initialContainer));
             }
-           dialog.addFilter(new ViewerFilter(){
+            dialog.addFilter(new ViewerFilter() {
 
                 @Override
                 public boolean select(Viewer viewer, Object parentElement, Object element) {
                     if (element instanceof IProject) {
                         return ((IProject) element).equals(project);
                     }
-                    // we want only folders
+                    // display folders only
                     return element instanceof IContainer;
                 }
-                
             });
-            dialog.setInput(project);
+            dialog.setInput(project); // this is the root element
             dialog.setAllowMultiple(false);
             dialog.setValidator(new ISelectionStatusValidator() {
 
                 @Override
                 public IStatus validate(Object[] selection) {
-                    
+
                     if (selection.length > 0) {
                         final Object item = selection[0];
                         if (item instanceof IFolder) {
                             IContainer selectedContainer = (IContainer) item;
-                            String errorMsg = ProjectHelper.validateContentPackageStructure(selectedContainer); 
+                            String errorMsg = ProjectHelper.validateContentPackageStructure(selectedContainer);
                             if (errorMsg != null) {
                                 return new Status(IStatus.ERROR, Activator.PLUGIN_ID, errorMsg);
                             }
-                          
-                            
                         }
                     }
                     return new Status(IStatus.OK, Activator.PLUGIN_ID, "");
@@ -124,8 +119,8 @@ public class ConvertToContentPackageAction implements IObjectActionDelegate {
                         public void run(IProgressMonitor monitor) throws InvocationTargetException,
                                 InterruptedException {
                             try {
-                                ConfigurationHelper.convertToContentPackageProject(project, monitor,
-                                        folder.getFullPath().append("jcr_root").toPortableString());
+                                ConfigurationHelper.convertToContentPackageProject(project, monitor, folder
+                                        .getFullPath().append("jcr_root").toPortableString());
                             } catch (CoreException e) {
                                 Activator.getDefault().getPluginLogger().warn("Could not convert project", e);
                                 MessageDialog.openError(getDisplay().getActiveShell(), "Could not convert project",
@@ -141,10 +136,8 @@ public class ConvertToContentPackageAction implements IObjectActionDelegate {
                                 e.getMessage());
                     }
                 }
-
             }
         }
-
     }
 
     /*
