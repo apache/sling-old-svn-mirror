@@ -17,139 +17,177 @@
 package org.apache.sling.ide.eclipse.ui.wizards;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.Iterator;
 
 import org.apache.sling.ide.eclipse.core.ConfigurationHelper;
 import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
 import org.apache.sling.ide.eclipse.ui.internal.Activator;
+import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.IInputValidator;
-import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.dialogs.ContainerSelectionDialog;
+import org.eclipse.ui.dialogs.ElementTreeSelectionDialog;
+import org.eclipse.ui.dialogs.ISelectionStatusValidator;
+import org.eclipse.ui.dialogs.ISelectionValidator;
+import org.eclipse.ui.model.BaseWorkbenchContentProvider;
+import org.eclipse.ui.model.WorkbenchLabelProvider;
 
 public class ConvertToContentPackageAction implements IObjectActionDelegate {
 
-	private ISelection fSelection;
+    private ISelection fSelection;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction,
-	 *      org.eclipse.ui.IWorkbenchPart)
-	 */
-	public void setActivePart(IAction action, IWorkbenchPart targetPart) {
-	}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction,
+     * org.eclipse.ui.IWorkbenchPart)
+     */
+    public void setActivePart(IAction action, IWorkbenchPart targetPart) {
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
-	 */
-	public void run(IAction action) {
-		if (fSelection instanceof IStructuredSelection) {
-			final IProject project = (IProject) ((IStructuredSelection) fSelection).getFirstElement();
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
+     */
+    public void run(IAction action) {
+        if (fSelection instanceof IStructuredSelection) {
+            final IProject project = (IProject) ((IStructuredSelection) fSelection).getFirstElement();
 
-            String jcrRootLocation = ProjectHelper.getInferredContentProjectContentRoot(project)
-                    .getProjectRelativePath().append("jcr_root").toPortableString();
-            final InputDialog id = new InputDialog(getDisplay().getActiveShell(), "Convert to Content Project",
-		            "Confirm content sync root location of " + project.getName() + ":", jcrRootLocation,
-		            new IInputValidator() {
-						@Override
-						public String isValid(String newText) {
-							if (newText!=null && newText.trim().length()>0) {
-								final IResource l = project.findMember(newText);
-								if (l!=null && l.exists()) {
-									return null;
-								} else {
-									return "Directory not found: "+newText;
-								}
-							} else {
-                                return "Please specify location of the content sync root";
-							}
-						}
-					});
-			if (id.open() == IStatus.OK) {
-				IRunnableWithProgress r = new IRunnableWithProgress() {
-					
-					@Override
-					public void run(IProgressMonitor monitor) throws InvocationTargetException,
-							InterruptedException {
-						try {
-							ConfigurationHelper.convertToContentPackageProject(project, monitor, id.getValue());
-						} catch (CoreException e) {
-                            Activator.getDefault().getPluginLogger().warn("Could not convert project", e);
-							MessageDialog.openError(getDisplay().getActiveShell(), "Could not convert project",
-									e.getMessage());
-						}
-					}
-				};
-				try {
-					PlatformUI.getWorkbench().getProgressService().busyCursorWhile(r);
-				} catch (Exception e) {
-                    Activator.getDefault().getPluginLogger().warn("Could not convert project", e);
-					MessageDialog.openError(getDisplay().getActiveShell(), "Could not convert project",
-							e.getMessage());
-				}
-			}
-		}
-	}
+            ElementTreeSelectionDialog dialog = new ElementTreeSelectionDialog(getDisplay().getActiveShell(),
+                    new WorkbenchLabelProvider(), new BaseWorkbenchContentProvider());
+            dialog.setMessage("Select content sync root location (containing the jcr root)");
+            dialog.setTitle("Content Sync Root");
+            IContainer initialContainer = ProjectHelper.getInferredContentProjectContentRoot(project);
+            if (initialContainer != null) {
+                dialog.setInitialElementSelections(Arrays.asList(initialContainer));
+            }
+           dialog.addFilter(new ViewerFilter(){
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction,
-	 *      org.eclipse.jface.viewers.ISelection)
-	 */
-	public void selectionChanged(IAction action, ISelection selection) {
-		fSelection = selection;
-		if (selection instanceof IStructuredSelection) {
-			final IStructuredSelection iss = (IStructuredSelection) selection;
+                @Override
+                public boolean select(Viewer viewer, Object parentElement, Object element) {
+                    if (element instanceof IProject) {
+                        return ((IProject) element).equals(project);
+                    }
+                    // we want only folders
+                    return element instanceof IContainer;
+                }
+                
+            });
+            dialog.setInput(project);
+            dialog.setAllowMultiple(false);
+            dialog.setValidator(new ISelectionStatusValidator() {
+
+                @Override
+                public IStatus validate(Object[] selection) {
+                    
+                    if (selection.length > 0) {
+                        final Object item = selection[0];
+                        if (item instanceof IFolder) {
+                            IContainer selectedContainer = (IContainer) item;
+                            String errorMsg = ProjectHelper.validateContentPackageStructure(selectedContainer); 
+                            if (errorMsg != null) {
+                                return new Status(IStatus.ERROR, Activator.PLUGIN_ID, errorMsg);
+                            }
+                          
+                            
+                        }
+                    }
+                    return new Status(IStatus.OK, Activator.PLUGIN_ID, "");
+                }
+
+            });
+            if (dialog.open() == ContainerSelectionDialog.OK) {
+                Object[] result = dialog.getResult();
+                if (result != null && result.length > 0) {
+                    final IFolder folder = (IFolder) result[0];
+                    IRunnableWithProgress r = new IRunnableWithProgress() {
+
+                        @Override
+                        public void run(IProgressMonitor monitor) throws InvocationTargetException,
+                                InterruptedException {
+                            try {
+                                ConfigurationHelper.convertToContentPackageProject(project, monitor,
+                                        folder.getFullPath().append("jcr_root").toPortableString());
+                            } catch (CoreException e) {
+                                Activator.getDefault().getPluginLogger().warn("Could not convert project", e);
+                                MessageDialog.openError(getDisplay().getActiveShell(), "Could not convert project",
+                                        e.getMessage());
+                            }
+                        }
+                    };
+                    try {
+                        PlatformUI.getWorkbench().getProgressService().busyCursorWhile(r);
+                    } catch (Exception e) {
+                        Activator.getDefault().getPluginLogger().warn("Could not convert project", e);
+                        MessageDialog.openError(getDisplay().getActiveShell(), "Could not convert project",
+                                e.getMessage());
+                    }
+                }
+
+            }
+        }
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction,
+     * org.eclipse.jface.viewers.ISelection)
+     */
+    public void selectionChanged(IAction action, ISelection selection) {
+        fSelection = selection;
+        if (selection instanceof IStructuredSelection) {
+            final IStructuredSelection iss = (IStructuredSelection) selection;
             Iterator<?> it = iss.iterator();
-			if (!it.hasNext()) {
-				action.setEnabled(false);
-				return;
-			}
-			while(it.hasNext()) {
-				Object elem = it.next();
-				if (elem!=null && (elem instanceof IProject)) {
-					final IProject project = (IProject) elem;
-					if (ProjectHelper.isContentProject(project)) {
-						action.setEnabled(false);
-						return;
-					} else if (ProjectHelper.isPotentialContentProject(project)) {
-						continue;
-					} else {
-						action.setEnabled(false);
-						return;
-					}
-				} else {
-					action.setEnabled(false);
-					return;
-				}
-			}
-			action.setEnabled(true);
-		} else {
-			action.setEnabled(false);
-		}
-	}
+            if (!it.hasNext()) {
+                action.setEnabled(false);
+                return;
+            }
+            while (it.hasNext()) {
+                Object elem = it.next();
+                if (elem != null && (elem instanceof IProject)) {
+                    final IProject project = (IProject) elem;
+                    if (ProjectHelper.isContentProject(project)) {
+                        action.setEnabled(false);
+                        return;
+                    } else {
+                        continue;
+                    }
+                } else {
+                    action.setEnabled(false);
+                    return;
+                }
+            }
+            action.setEnabled(true);
+        } else {
+            action.setEnabled(false);
+        }
+    }
 
-	public Display getDisplay() {
-		Display display = Display.getCurrent();
-		if (display == null)
-			display = Display.getDefault();
-		return display;
-	}
+    public Display getDisplay() {
+        Display display = Display.getCurrent();
+        if (display == null)
+            display = Display.getDefault();
+        return display;
+    }
 
 }
