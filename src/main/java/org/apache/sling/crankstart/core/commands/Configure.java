@@ -16,8 +16,13 @@
  */
 package org.apache.sling.crankstart.core.commands;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Dictionary;
+import java.util.Enumeration;
 
+import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.sling.crankstart.api.CrankstartCommand;
 import org.apache.sling.crankstart.api.CrankstartCommandLine;
 import org.apache.sling.crankstart.api.CrankstartContext;
@@ -30,6 +35,7 @@ import org.slf4j.LoggerFactory;
 public class Configure implements CrankstartCommand {
     public static final String I_CONFIGURE = "config";
     public static final String FACTORY_SUFFIX = ".factory";
+    public static final String FELIX_FORMAT_SUFFIX = "FORMAT:felix.config";
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     @Override
@@ -43,8 +49,21 @@ public class Configure implements CrankstartCommand {
 
     @Override
     public void execute(CrankstartContext crankstartContext, CrankstartCommandLine commandLine) throws Exception {
-        final String pid = commandLine.getQualifier();
-        final Dictionary<String, Object> properties = commandLine.getProperties();
+        
+        // Configs can be in our plain format or in Felix .config format, which supports various data types 
+        String pid = null;
+        boolean felixFormat = false;
+        if(commandLine.getQualifier().endsWith(FELIX_FORMAT_SUFFIX)) {
+            felixFormat = true;
+            pid = commandLine.getQualifier().split(" ")[0].trim();
+        } else {
+            pid = commandLine.getQualifier();
+        }
+        
+        Dictionary<String, Object> properties = commandLine.getProperties();
+        if(felixFormat) {
+            properties = parseFelixConfig(properties);
+        }
         final BundleContext bundleContext = crankstartContext.getOsgiFramework().getBundleContext();
         
         // TODO: wait for configadmin service?
@@ -73,5 +92,24 @@ public class Configure implements CrankstartCommand {
             .getMethod("update", Dictionary.class)
             .invoke(config, properties);
         log.info("Updated configuration {}: {}", pid, properties);
+    }
+    
+    @SuppressWarnings("unchecked")
+    private Dictionary<String, Object> parseFelixConfig(Dictionary<String, Object> properties) throws IOException {
+        // Build a stream in Felix .config format and parse it
+        final StringBuilder sb = new StringBuilder();
+        final Enumeration<String> keys = properties.keys();
+        while(keys.hasMoreElements()) {
+            final String key = keys.nextElement();
+            final Object value = properties.get(key);
+            sb.append(key).append("=").append(value).append("\n");
+        }
+        
+        final InputStream is = new ByteArrayInputStream(sb.toString().getBytes("UTF-8")); 
+        try {
+            return ConfigurationHandler.read(is);
+        } finally {
+            is.close();
+        }
     }
 }
