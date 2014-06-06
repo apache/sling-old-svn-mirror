@@ -6,7 +6,7 @@
 # ----------------------------------------------------------------------------
 
 # TODO adapt this: default values for our variables
-defaults http.port 4502
+defaults http.port 8080
 defaults osgi.storage.path cq-crankstart
 defaults felix.http.jetty.version 2.2.0
 
