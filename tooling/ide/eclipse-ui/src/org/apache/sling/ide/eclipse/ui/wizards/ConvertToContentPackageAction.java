@@ -119,8 +119,7 @@ public class ConvertToContentPackageAction implements IObjectActionDelegate {
                         public void run(IProgressMonitor monitor) throws InvocationTargetException,
                                 InterruptedException {
                             try {
-                                ConfigurationHelper.convertToContentPackageProject(project, monitor, folder
-                                        .getProjectRelativePath().append("jcr_root").toPortableString());
+                                ConfigurationHelper.convertToContentPackageProject(project, monitor, folder.getFolder("jcr_root").getProjectRelativePath());
                             } catch (CoreException e) {
                                 Activator.getDefault().getPluginLogger().warn("Could not convert project", e);
                                 MessageDialog.openError(getDisplay().getActiveShell(), "Could not convert project",

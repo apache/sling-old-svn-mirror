@@ -18,6 +18,7 @@ package org.apache.sling.ide.eclipse.core;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.wst.common.project.facet.core.IFacetedProject;
 import org.eclipse.wst.common.project.facet.core.IProjectFacet;
@@ -26,7 +27,7 @@ import org.eclipse.wst.common.project.facet.core.ProjectFacetsManager;
 public class ConfigurationHelper {
 
 	public static void convertToContentPackageProject(IProject aContentProject,
-			IProgressMonitor monitor, String jcr_root) throws CoreException {
+			IProgressMonitor monitor, IPath jcr_root) throws CoreException {
 		IProjectFacet slingContentFacet = ProjectFacetsManager.getProjectFacet("sling.content");
 		IFacetedProject fp2 = ProjectFacetsManager.create(aContentProject, true, null);
 		fp2.installProjectFacet(slingContentFacet.getLatestVersion(), null, null);
