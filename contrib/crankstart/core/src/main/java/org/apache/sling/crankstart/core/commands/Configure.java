@@ -27,6 +27,7 @@ import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.sling.crankstart.api.CrankstartCommand;
 import org.apache.sling.crankstart.api.CrankstartCommandLine;
 import org.apache.sling.crankstart.api.CrankstartContext;
+import org.apache.sling.crankstart.api.CrankstartException;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
@@ -96,7 +97,7 @@ public class Configure implements CrankstartCommand {
     }
     
     @SuppressWarnings("unchecked")
-    private Dictionary<String, Object> parseFelixConfig(Dictionary<String, Object> properties) throws IOException {
+    private Dictionary<String, Object> parseFelixConfig(Dictionary<String, Object> properties) {
         // Build a stream in Felix .config format and parse it
         if(properties == null) {
             return new Hashtable<String, Object>();
@@ -110,11 +111,15 @@ public class Configure implements CrankstartCommand {
             sb.append(key).append("=").append(value).append("\n");
         }
         
-        final InputStream is = new ByteArrayInputStream(sb.toString().getBytes("UTF-8")); 
         try {
-            return ConfigurationHandler.read(is);
-        } finally {
-            is.close();
+            final InputStream is = new ByteArrayInputStream(sb.toString().getBytes("UTF-8"));
+            try {
+                return ConfigurationHandler.read(is);
+            } finally {
+                is.close();
+            }
+        } catch(IOException ioe) {
+            throw new CrankstartException("Parsing error (Felix format config) for\n" + sb, ioe);
         }
     }
 }
