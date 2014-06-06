@@ -116,7 +116,7 @@ public class SlingProjectPropertyPage extends PropertyPage {
                 }
 
                 IPath selectedPath = (IPath) results[0];
-                folderText.setText(selectedPath.removeFirstSegments(1).toOSString());
+                folderText.setText(selectedPath.removeFirstSegments(1).toString());
             }
         });
 
