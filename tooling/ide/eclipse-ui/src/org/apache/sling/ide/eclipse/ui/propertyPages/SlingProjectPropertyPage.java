@@ -6,6 +6,7 @@ import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.IPreferenceNode;
 import org.eclipse.jface.preference.PreferenceDialog;
@@ -71,7 +72,7 @@ public class SlingProjectPropertyPage extends PropertyPage {
         new Label(c, SWT.NONE).setText("Content sync root directory");
         folderText = new Text(c, SWT.BORDER);
         folderText.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-        folderText.setText(ProjectUtil.getSyncDirectoryValue(getProject()));
+        folderText.setText(ProjectUtil.getSyncDirectoryValue(getProject()).toString());
 
         folderText.addModifyListener(new ModifyListener() {
 
@@ -115,7 +116,7 @@ public class SlingProjectPropertyPage extends PropertyPage {
                 }
 
                 IPath selectedPath = (IPath) results[0];
-                folderText.setText(selectedPath.removeFirstSegments(1).toOSString());
+                folderText.setText(selectedPath.removeFirstSegments(1).toString());
             }
         });
 
@@ -146,7 +147,7 @@ public class SlingProjectPropertyPage extends PropertyPage {
     @Override
     public boolean performOk() {
 
-        ProjectUtil.setSyncDirectoryPath(getProject(), folderText.getText());
+        ProjectUtil.setSyncDirectoryPath(getProject(), new Path(folderText.getText()));
 
         return super.performOk();
     }

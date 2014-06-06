@@ -78,12 +78,21 @@ public class ProjectHelper {
         return null;
     }
 
-    private static boolean hasContentPackageStructure(IContainer base) {
-
+    public static String validateContentPackageStructure(IContainer base) {
         IFile filterXml = base.getFile(Path.fromPortableString("META-INF/vault/filter.xml"));
         IFolder jcrRoot = base.getFolder(Path.fromPortableString("jcr_root"));
-
-        return filterXml.exists() && jcrRoot.exists();
+        
+        if (!filterXml.exists()) {
+            return String.format("Could not find FileVault filter at '%s'", filterXml.getRawLocationURI());
+        }
+        if (!jcrRoot.exists()) {
+            return String.format("Could not find JCR root at '%s'", jcrRoot.getRawLocationURI());
+        }
+        return null;
+    }
+    public static boolean hasContentPackageStructure(IContainer base) {
+        return validateContentPackageStructure(base) == null;
+       
     }
 	
 	public static String getMavenProperty(IProject project, String name) {

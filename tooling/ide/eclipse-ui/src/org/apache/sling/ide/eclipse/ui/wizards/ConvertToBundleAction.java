@@ -158,11 +158,8 @@ public class ConvertToBundleAction implements IObjectActionDelegate {
 					if (ProjectHelper.isBundleProject(project)) {
 						action.setEnabled(false);
 						return;
-					} else if (ProjectHelper.isPotentialBundleProject(project)) {
-						continue;
 					} else {
-						action.setEnabled(false);
-						return;
+						continue;
 					}
 				} else {
 					action.setEnabled(false);
