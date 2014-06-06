@@ -18,6 +18,7 @@
  */
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
+import java.security.Principal;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,6 +38,9 @@ import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.AttributableResourceProvider;
@@ -386,6 +390,22 @@ public class JcrResourceProvider
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         if (type == Session.class) {
             return (AdapterType) session;
+        } else if (type == Principal.class) {       
+            try {
+                if (this.session instanceof JackrabbitSession){
+                    JackrabbitSession s =((JackrabbitSession) this.session);
+                    final UserManager um = s.getUserManager();
+                    if (um != null) {
+                        final Authorizable auth = um.getAuthorizable(s.getUserID());
+                        if (auth != null) {
+                            return (AdapterType) auth.getPrincipal();
+                        }
+                    }
+                }
+                log.debug("not able to adapto Resource to Principal, let the base class try to adapt");
+            } catch (RepositoryException e) {
+                log.warn("error while adapting Resource to Principal, let the base class try to adapt", e);
+            }
         }
         return super.adaptTo(type);
     }
