@@ -63,6 +63,8 @@ config felix.format.test FORMAT:felix.config
   service.ranking.launcher.test=I"54321"
   array=["foo","bar.from.launcher.test"]
   
+config empty.config.should.work FORMAT:felix.config
+  
 # Test an extension command provided by our test-services bundle
 test.system.property the.test.system.property was set by test-services bundle
   
