@@ -19,32 +19,11 @@
 package org.apache.sling.scripting.thymeleaf;
 
 import java.io.Reader;
-import java.util.Locale;
-import java.util.Map;
 
-import org.thymeleaf.context.Context;
+import org.thymeleaf.context.IContext;
 
-// TODO WebContext?
-public class SlingContext extends Context {
+public interface SlingContext extends IContext {
 
-    private final Reader reader;
-
-    public SlingContext(final Reader reader) {
-        this.reader = reader;
-    }
-
-    public SlingContext(Locale locale, final Reader reader) {
-        super(locale);
-        this.reader = reader;
-    }
-
-    public SlingContext(Locale locale, Map<String, ?> variables, final Reader reader) {
-        super(locale, variables);
-        this.reader = reader;
-    }
-
-    public Reader getReader() {
-        return reader;
-    }
+    Reader getReader();
 
 }

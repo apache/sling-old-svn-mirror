@@ -18,29 +18,11 @@
  */
 package org.apache.sling.scripting.thymeleaf;
 
-import org.thymeleaf.Arguments;
-import org.thymeleaf.messageresolver.IMessageResolver;
-import org.thymeleaf.messageresolver.MessageResolution;
+import org.thymeleaf.PatternSpec;
+import org.thymeleaf.templatemode.ITemplateModeHandler;
 
-public class SlingMessageResolver implements IMessageResolver {
+public interface SlingTemplateModeHandler extends ITemplateModeHandler {
 
-    @Override
-    public String getName() {
-        return getClass().getSimpleName();
-    }
-
-    @Override
-    public Integer getOrder() {
-        return 0; // TODO make configurable
-    }
-
-    @Override
-    public MessageResolution resolveMessage(final Arguments arguments, final String key, final Object[] messageParameters) {
-        return new MessageResolution("TODO"); // TODO
-    }
-
-    @Override
-    public void initialize() {
-    }
+    PatternSpec getPatternSpec();
 
 }
