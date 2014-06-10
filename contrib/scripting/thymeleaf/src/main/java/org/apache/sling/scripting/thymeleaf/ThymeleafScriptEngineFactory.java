@@ -18,20 +18,36 @@
  */
 package org.apache.sling.scripting.thymeleaf;
 
+import java.util.Dictionary;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import javax.script.ScriptEngine;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyUnbounded;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.ComponentContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.messageresolver.IMessageResolver;
+import org.thymeleaf.templateresolver.ITemplateResolver;
 
 @Component(
-    name = "org.apache.sling.scripting.thymeleaf.ThymeleafScriptEngineFactory",
-    label = "%org.apache.sling.scripting.thymeleaf.ThymeleafScriptEngineFactory.label",
-    description = "%org.apache.sling.scripting.thymeleaf.ThymeleafScriptEngineFactory.description",
+    label = "Apache Sling Scripting Thymeleaf “Script Engine Factory”",
+    description = "scripting engine for Thymeleaf templates",
     immediate = true,
     metatype = true
 )
@@ -43,30 +59,105 @@ import org.thymeleaf.TemplateEngine;
 })
 public class ThymeleafScriptEngineFactory extends AbstractScriptEngineFactory {
 
-    private SlingResourceResolver resourceResolver;
+    @Reference(referenceInterface = ITemplateResolver.class, cardinality = ReferenceCardinality.MANDATORY_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
+    final private Set<ITemplateResolver> templateResolvers = new LinkedHashSet<ITemplateResolver>();
 
-    private SlingTemplateResolver templateResolver;
-
-    private SlingMessageResolver messageResolver;
+    @Reference(referenceInterface = IMessageResolver.class, cardinality = ReferenceCardinality.MANDATORY_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
+    final private Set<IMessageResolver> messageResolvers = new LinkedHashSet<IMessageResolver>();
 
     private TemplateEngine templateEngine;
 
+    public static final String DEFAULT_EXTENSION = "html";
+
+    @Property(value = {DEFAULT_EXTENSION}, unbounded = PropertyUnbounded.ARRAY)
+    public static final String EXTENSIONS_PARAMETER = "org.apache.sling.scripting.thymeleaf.extensions";
+
+    public static final String DEFAULT_MIMETYPE = "text/html";
+
+    @Property(value = {DEFAULT_MIMETYPE}, unbounded = PropertyUnbounded.ARRAY)
+    public static final String MIMETYPES_PARAMETER = "org.apache.sling.scripting.thymeleaf.mimetypes";
+
+    public static final String DEFAULT_NAME = "thymeleaf";
+
+    @Property(value = {DEFAULT_NAME}, unbounded = PropertyUnbounded.ARRAY)
+    public static final String NAMES_PARAMETER = "org.apache.sling.scripting.thymeleaf.names";
+
+    public static final String TEMPLATE_CHARSET = "UTF-8";
+
+    private final Logger logger = LoggerFactory.getLogger(ThymeleafScriptEngineFactory.class);
+
     public ThymeleafScriptEngineFactory() {
-        // TODO make configurable
-        setExtensions("html");
-        setMimeTypes("text/html");
-        setNames("thymeleaf");
-        setupThymeleaf();
     }
 
-    // TODO make configurable
-    protected void setupThymeleaf() {
-        resourceResolver = new SlingResourceResolver();
-        templateResolver = new SlingTemplateResolver(resourceResolver);
-        messageResolver = new SlingMessageResolver();
-        templateEngine = new TemplateEngine();
-        templateEngine.setTemplateResolver(templateResolver);
-        templateEngine.setMessageResolver(messageResolver);
+    @Activate
+    private void activate(final ComponentContext componentContext) {
+        logger.debug("activate");
+        configure(componentContext);
+        configureTemplateEngine();
+    }
+
+    @Modified
+    private void modified(final ComponentContext componentContext) {
+        logger.debug("modified");
+        configure(componentContext);
+        configureTemplateEngine();
+    }
+
+    @Deactivate
+    private void deactivate(final ComponentContext componentContext) {
+        logger.debug("deactivate");
+        templateEngine = null;
+    }
+
+    protected void bindTemplateResolvers(final ITemplateResolver templateResolver) {
+        logger.debug("binding template resolver '{}'", templateResolver.getName());
+        templateResolvers.add(templateResolver);
+        configureTemplateEngine();
+    }
+
+    protected void unbindTemplateResolvers(final ITemplateResolver templateResolver) {
+        logger.debug("unbinding template resolver '{}'", templateResolver.getName());
+        templateResolvers.remove(templateResolver);
+        configureTemplateEngine();
+    }
+
+    protected void bindMessageResolvers(final IMessageResolver messageResolver) {
+        logger.debug("binding message resolver '{}'", messageResolver.getName());
+        messageResolvers.add(messageResolver);
+        configureTemplateEngine();
+    }
+
+    protected void unbindMessageResolvers(final IMessageResolver messageResolver) {
+        logger.debug("unbinding message resolver '{}'", messageResolver.getName());
+        messageResolvers.remove(messageResolver);
+        configureTemplateEngine();
+    }
+
+    private synchronized void configure(final ComponentContext componentContext) {
+        final Dictionary properties = componentContext.getProperties();
+
+        final String[] extensions = PropertiesUtil.toStringArray(properties.get(EXTENSIONS_PARAMETER), new String[]{DEFAULT_EXTENSION});
+        setExtensions(extensions);
+
+        final String[] mimeTypes = PropertiesUtil.toStringArray(properties.get(MIMETYPES_PARAMETER), new String[]{DEFAULT_MIMETYPE});
+        setMimeTypes(mimeTypes);
+
+        final String[] names = PropertiesUtil.toStringArray(properties.get(NAMES_PARAMETER), new String[]{DEFAULT_NAME});
+        setNames(names);
+    }
+
+    // the configuration of the Thymeleaf TemplateEngine is static and we need to recreate on modification
+    private synchronized void configureTemplateEngine() {
+        logger.info("configure template engine");
+        if (templateEngine == null || templateEngine.isInitialized()) {
+            templateEngine = new TemplateEngine();
+        }
+        if (templateResolvers.size() > 0) {
+            templateEngine.setTemplateResolvers(templateResolvers);
+        }
+        if (messageResolvers.size() > 0) {
+            templateEngine.setMessageResolvers(messageResolvers);
+        }
     }
 
     @Override
@@ -81,7 +172,12 @@ public class ThymeleafScriptEngineFactory extends AbstractScriptEngineFactory {
 
     @Override
     public ScriptEngine getScriptEngine() {
-        return new ThymeleafScriptEngine(this, templateEngine);
+        logger.debug("get script engine for Thymeleaf");
+        return new ThymeleafScriptEngine(this);
+    }
+
+    TemplateEngine getTemplateEngine() {
+        return templateEngine;
     }
 
 }

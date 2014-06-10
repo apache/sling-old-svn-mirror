@@ -16,23 +16,41 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.thymeleaf;
+package org.apache.sling.scripting.thymeleaf.impl;
 
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.input.ReaderInputStream;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.scripting.thymeleaf.SlingContext;
+import org.apache.sling.scripting.thymeleaf.ThymeleafScriptEngineFactory;
+import org.osgi.framework.Constants;
 import org.thymeleaf.TemplateProcessingParameters;
 import org.thymeleaf.context.IContext;
 import org.thymeleaf.exceptions.TemplateProcessingException;
 import org.thymeleaf.resourceresolver.IResourceResolver;
 import org.thymeleaf.util.Validate;
 
-public class SlingResourceResolver implements IResourceResolver {
+@Component(
+    label = "Apache Sling Scripting Thymeleaf “Script Reader Resource Resolver”",
+    description = "script reader resource resolver for Sling Scripting Thymeleaf",
+    immediate = true,
+    metatype = true
+)
+@Service
+@Properties({
+    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
+    @Property(name = Constants.SERVICE_DESCRIPTION, value = "script reader resource resolver for Sling Scripting Thymeleaf"),
+    @Property(name = Constants.SERVICE_RANKING, intValue = 0, propertyPrivate = false)
+})
+public class ScriptReaderResourceResolver implements IResourceResolver {
 
     @Override
     public String getName() {
-        return getClass().getSimpleName();
+        return getClass().getName();
     }
 
     @Override
@@ -43,7 +61,7 @@ public class SlingResourceResolver implements IResourceResolver {
         final IContext context = templateProcessingParameters.getContext();
         if (context instanceof SlingContext) {
             final SlingContext slingContext = (SlingContext) context;
-            return new ReaderInputStream(slingContext.getReader(), StandardCharsets.UTF_8);
+            return new ReaderInputStream(slingContext.getReader(), ThymeleafScriptEngineFactory.TEMPLATE_CHARSET);
         } else {
             throw new TemplateProcessingException("Cannot handle context: " + context.getClass().getName());
         }

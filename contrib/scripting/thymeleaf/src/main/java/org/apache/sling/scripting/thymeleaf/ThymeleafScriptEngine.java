@@ -23,22 +23,27 @@ import java.util.Locale;
 
 import javax.script.Bindings;
 import javax.script.ScriptContext;
-import javax.script.ScriptEngineFactory;
 import javax.script.ScriptException;
+import javax.servlet.ServletContext;
 
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
-import org.thymeleaf.TemplateEngine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.thymeleaf.context.IContext;
 
 public class ThymeleafScriptEngine extends AbstractSlingScriptEngine {
 
-    private final TemplateEngine templateEngine;
+    private final ThymeleafScriptEngineFactory thymeleafScriptEngineFactory;
 
-    public ThymeleafScriptEngine(final ScriptEngineFactory scriptEngineFactory, final TemplateEngine templateEngine) {
-        super(scriptEngineFactory);
-        this.templateEngine = templateEngine;
+    private final Logger logger = LoggerFactory.getLogger(ThymeleafScriptEngine.class);
+
+    public ThymeleafScriptEngine(final ThymeleafScriptEngineFactory thymeleafScriptEngineFactory) {
+        super(thymeleafScriptEngineFactory);
+        this.thymeleafScriptEngineFactory = thymeleafScriptEngineFactory;
     }
 
     @Override
@@ -50,15 +55,19 @@ public class ThymeleafScriptEngine extends AbstractSlingScriptEngine {
             throw new ScriptException("SlingScriptHelper missing from bindings");
         }
 
-        final Locale locale = helper.getRequest().getLocale();
+        final SlingHttpServletRequest request = helper.getRequest();
+        final SlingHttpServletResponse response = helper.getResponse();
+        final ServletContext servletContext = null; // only used by Thymeleaf's ServletContextResourceResolver
+
+        final Locale locale = helper.getResponse().getLocale();
         final String scriptName = helper.getScript().getScriptResource().getPath();
 
         try {
-            final IContext context = new SlingContext(locale, bindings, reader);
-            templateEngine.process(scriptName, context, scriptContext.getWriter());
+            final IContext context = new SlingWebContext(request, response, servletContext, locale, bindings, reader);
+            thymeleafScriptEngineFactory.getTemplateEngine().process(scriptName, context, scriptContext.getWriter());
         } catch (Exception e) {
-            final String message = String.format("Failure rendering Thymeleaf template '%s': %s", scriptName, e.getMessage());
-            throw new ScriptException(message);
+            logger.error("Failure rendering Thymeleaf template '{}': {}", scriptName, e.getMessage());
+            throw new ScriptException(e);
         }
 
         return null;
