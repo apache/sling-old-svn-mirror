@@ -181,7 +181,10 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
             ResourceProxy rp = coveredResourceChildren.next();
             Node n = nodeChildrenListIt.next();
 
-            reorderChildNodes(n, rp);
+            if (n.getPrimaryNodeType().hasOrderableChildNodes()) {
+                // SLING-3653 : only iterate down when *this* node (==n) is orderable
+                reorderChildNodes(n, rp);
+            }
 
             if (Text.getName(rp.getPath()).equals(n.getName())) {
                 continue;
