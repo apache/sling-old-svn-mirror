@@ -169,10 +169,14 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
 
         if (ProjectHelper.isBundleProject(module[0].getProject())) {
             String serverMode = getServer().getMode();
-            if (!serverMode.equals(ILaunchManager.DEBUG_MODE)) {
+            if (!serverMode.equals(ILaunchManager.DEBUG_MODE) || kind==IServer.PUBLISH_CLEAN) {
                 // in debug mode, we rely on the hotcode replacement feature of eclipse/jvm
                 // otherwise, for run and profile modes we explicitly publish the bundle module
+                
                 // TODO: make this configurable as part of the server config
+                
+                // SLING-3655 : when doing PUBLISH_CLEAN, the bundle deployment mechanism should 
+                // still be triggered
                 publishBundleModule(module, monitor);
                 BundleStateHelper.resetBundleState(getServer(), module[0].getProject());
             }
