@@ -387,6 +387,20 @@
             id="org.apache.sling.ide.eclipse.ui.pluginDomNodeToolSet"
             objectClass="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
          <action
+               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeExportContentAction"
+               icon="icons/obj16/sling_misc.gif"
+               id="org.apache.sling.ide.menu.exportContentAction"
+               label="Export Content..."
+               menubarPath="jcr">
+         </action>
+         <action
+               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeImportContentAction"
+               id="org.apache.sling.ide.menu.importContentAction"
+               icon="icons/obj16/sling_misc.gif"
+               label="Import Content..."
+               menubarPath="jcr">
+         </action>
+         <action
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNewNodeAction"
                icon="icons/obj16/sling_misc.gif"
                id="org.apache.sling.ide.eclipse.ui.nav.NewJcrNodeAction"
@@ -453,6 +467,20 @@
                id="org.apache.sling.ide.eclipse.ui.nav.NewNonJcrNodeAction"
                label="Node..."
                menubarPath="common.new.menu/jcr">
+         </action>
+         <action
+               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeExportContentAction"
+               icon="icons/obj16/sling_misc.gif"
+               id="org.apache.sling.ide.menu.exportContentAction"
+               label="Export Content..."
+               menubarPath="jcr">
+         </action>
+         <action
+               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeImportContentAction"
+               id="org.apache.sling.ide.menu.importContentAction"
+               icon="icons/obj16/sling_misc.gif"
+               label="Import Content..."
+               menubarPath="jcr">
          </action>
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameAction"

@@ -28,6 +28,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import javax.jcr.PropertyType;
 import javax.jcr.nodetype.NodeType;
@@ -704,6 +705,33 @@ public class JcrNode implements IAdaptable {
 		org.apache.sling.ide.eclipse.ui.internal.Activator.getDefault().getPluginLogger().warn("No file found for editor for node="+this);
 		return null;
 	}
+
+    public IResource getResourceForImportExport() {
+        String path = getJcrPath();
+        StringTokenizer st = new StringTokenizer(path, "/");
+        JcrNode root = getParent();
+        while(true) {
+            JcrNode thisParent = root.getParent();
+            if (thisParent==null) {
+                break;
+            }
+            root = thisParent;
+        }
+        if (!(root instanceof SyncDir)) {
+            return null;
+        }
+        IFolder folder = ((SyncDir)root).getFolder();
+        while(st.hasMoreTokens()) {
+            String nodeStr = st.nextToken();
+            IResource child = folder.findMember(nodeStr);
+            if (child==null || !(child instanceof IFolder)) {
+                break;
+            } else {
+                folder = (IFolder) child;
+            }
+        }
+        return folder;
+    }
 
 	public void rename(final String string) {
 		if (domElement!=null && underlying!=null) {
