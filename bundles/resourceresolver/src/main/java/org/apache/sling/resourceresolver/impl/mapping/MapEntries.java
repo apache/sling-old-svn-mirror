@@ -399,7 +399,7 @@ public class MapEntries implements EventHandler {
                 }
             }
             for (final String target : this.aliasMap.keySet()) {
-                if (target.startsWith(checkPath)) {
+                if (checkPath.startsWith(target)) { 
                     doInit = true;
                     break;
                 }
