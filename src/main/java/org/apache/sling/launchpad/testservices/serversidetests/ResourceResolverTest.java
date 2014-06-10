@@ -143,7 +143,7 @@ public class ResourceResolverTest {
         vanity = new String[] {"testVanity","testV", "testVanityToUpdate"};
         rootNode.setProperty("sling:vanityPath", vanity);
         rootNode.addMixin("sling:VanityPath");
-        session.save();
+        saveMappings(session);
     }
     
     private void closeResolver() {
@@ -1250,10 +1250,8 @@ public class ResourceResolverTest {
         assertTrue(res instanceof NonExistingResource);
         assertEquals("/"+alias+".print.html", res.getPath());
         
-        
-        //Commenting for now until SLING-3563 is solved
         //create new child with alias
-        /*String childNodeName = "rootChildAlias";
+        String childNodeName = "rootChildAlias";
         Node childNode = maybeCreateNode(rootNode, childNodeName, "nt:unstructured");
         childNode.setProperty("sling:alias", "childAlias");
         saveMappings(session);
@@ -1296,14 +1294,14 @@ public class ResourceResolverTest {
         saveMappings(session);
         
         path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)+ "/"+ rootPath + "/childAlias" +
-                ".print.html/suffix.pdf");
+                ".print.html");
 
         request = new FakeSlingHttpServletRequest(path);
         res = resResolver.resolve(request, path);
         
         assertNotNull(res);
         assertTrue(res instanceof NonExistingResource);
-        assertEquals("/"+alias+".print.html", res.getPath());*/
+        assertEquals (rootPath + "/childAlias.print.html", res.getPath());
     }
     
     @Test public void testResolveResourceAliasJcrContent() throws Exception {
