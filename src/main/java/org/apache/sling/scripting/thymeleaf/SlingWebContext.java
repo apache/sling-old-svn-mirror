@@ -18,7 +18,6 @@
  */
 package org.apache.sling.scripting.thymeleaf;
 
-import java.io.Reader;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.Map;
@@ -28,6 +27,7 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.thymeleaf.context.AbstractContext;
 import org.thymeleaf.context.IWebContext;
 import org.thymeleaf.context.VariablesMap;
@@ -46,15 +46,12 @@ public class SlingWebContext implements SlingContext, IWebContext {
 
     private final ServletContext servletContext;
 
-    private final Reader reader;
-
-    public SlingWebContext(final SlingHttpServletRequest servletRequest, final SlingHttpServletResponse servletResponse, final ServletContext servletContext, final Locale locale, final Map<String, ?> variables, final Reader reader) {
+    public SlingWebContext(final SlingHttpServletRequest servletRequest, final SlingHttpServletResponse servletResponse, final ServletContext servletContext, final Locale locale, final Map<String, ?> variables) {
         this.servletRequest = servletRequest;
         this.servletResponse = servletResponse;
         this.servletContext = servletContext;
         this.locale = locale;
         this.variables.putAll(variables);
-        this.reader = reader;
     }
 
     @Override
@@ -98,8 +95,8 @@ public class SlingWebContext implements SlingContext, IWebContext {
     }
 
     @Override
-    public Reader getReader() {
-        return reader;
+    public ResourceResolver getResourceResolver() {
+        return servletRequest.getResourceResolver();
     }
 
     @Override

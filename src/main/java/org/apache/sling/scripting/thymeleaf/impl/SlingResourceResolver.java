@@ -20,13 +20,13 @@ package org.apache.sling.scripting.thymeleaf.impl;
 
 import java.io.InputStream;
 
-import org.apache.commons.io.input.ReaderInputStream;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.scripting.thymeleaf.SlingContext;
-import org.apache.sling.scripting.thymeleaf.ThymeleafScriptEngineFactory;
 import org.osgi.framework.Constants;
 import org.thymeleaf.TemplateProcessingParameters;
 import org.thymeleaf.context.IContext;
@@ -36,17 +36,20 @@ import org.thymeleaf.util.Validate;
 
 @Component(
     label = "Apache Sling Scripting Thymeleaf “Script Reader Resource Resolver”",
-    description = "script reader resource resolver for Sling Scripting Thymeleaf",
+    description = "Sling resource resolver for Sling Scripting Thymeleaf",
     immediate = true,
     metatype = true
 )
 @Service
 @Properties({
     @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
-    @Property(name = Constants.SERVICE_DESCRIPTION, value = "script reader resource resolver for Sling Scripting Thymeleaf"),
+    @Property(name = Constants.SERVICE_DESCRIPTION, value = "Sling resource resolver for Sling Scripting Thymeleaf"),
     @Property(name = Constants.SERVICE_RANKING, intValue = 0, propertyPrivate = false)
 })
-public class ScriptReaderResourceResolver implements IResourceResolver {
+public class SlingResourceResolver implements IResourceResolver {
+
+    public SlingResourceResolver() {
+    }
 
     @Override
     public String getName() {
@@ -61,7 +64,9 @@ public class ScriptReaderResourceResolver implements IResourceResolver {
         final IContext context = templateProcessingParameters.getContext();
         if (context instanceof SlingContext) {
             final SlingContext slingContext = (SlingContext) context;
-            return new ReaderInputStream(slingContext.getReader(), ThymeleafScriptEngineFactory.TEMPLATE_CHARSET);
+            final ResourceResolver resourceResolver = slingContext.getResourceResolver();
+            final Resource resource = resourceResolver.getResource(resourceName);
+            return resource.adaptTo(InputStream.class);
         } else {
             throw new TemplateProcessingException("Cannot handle context: " + context.getClass().getName());
         }

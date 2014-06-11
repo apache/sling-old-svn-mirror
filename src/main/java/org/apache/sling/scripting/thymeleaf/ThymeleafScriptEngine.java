@@ -47,7 +47,7 @@ public class ThymeleafScriptEngine extends AbstractSlingScriptEngine {
     }
 
     @Override
-    public Object eval(Reader reader, ScriptContext scriptContext) throws ScriptException {
+    public Object eval(final Reader reader, final ScriptContext scriptContext) throws ScriptException {
         final Bindings bindings = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
         final SlingScriptHelper helper = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
 
@@ -63,7 +63,7 @@ public class ThymeleafScriptEngine extends AbstractSlingScriptEngine {
         final String scriptName = helper.getScript().getScriptResource().getPath();
 
         try {
-            final IContext context = new SlingWebContext(request, response, servletContext, locale, bindings, reader);
+            final IContext context = new SlingWebContext(request, response, servletContext, locale, bindings);
             thymeleafScriptEngineFactory.getTemplateEngine().process(scriptName, context, scriptContext.getWriter());
         } catch (Exception e) {
             logger.error("Failure rendering Thymeleaf template '{}': {}", scriptName, e.getMessage());
