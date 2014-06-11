@@ -95,7 +95,9 @@ public class PropertyTypeSupport {
 
     public static String encodeValueAsString(Object value, int propertyType) {
         switch(propertyType) {
-        case PropertyType.BOOLEAN:
+        case PropertyType.BOOLEAN: {
+            return Boolean.toString(value.equals((Integer)1));
+        }
         case PropertyType.DECIMAL:
         case PropertyType.DOUBLE:
         case PropertyType.LONG:

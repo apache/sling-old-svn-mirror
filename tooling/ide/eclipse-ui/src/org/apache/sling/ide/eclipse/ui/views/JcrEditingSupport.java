@@ -94,13 +94,23 @@ public class JcrEditingSupport extends EditingSupport {
             }
             case VALUE: {
                 final int propertyType = getNode().getPropertyType(getPropertyName());
-                if ((propertyType!=-1) && (propertyType!=PropertyType.STRING)) {
-                    String rawValue = String.valueOf(me.getValue());
-                    int index = rawValue.indexOf("}");
-                    if (index!=-1) {
-                        String actualValue = rawValue.substring(index+1);
-                        return actualValue;
+                String rawValue = String.valueOf(me.getValue());
+                int index = rawValue.indexOf("}");
+                if (index!=-1) {
+                    rawValue = rawValue.substring(index+1);
+                }
+                if ((propertyType!=-1) && (propertyType==PropertyType.BOOLEAN)) {
+                    try{
+                        if (Boolean.parseBoolean(String.valueOf(rawValue))) {
+                            return 1;
+                        } else {
+                            return 0;
+                        }
+                    } catch(Exception e) {
+                        return 0;
                     }
+                } else if ((propertyType!=-1) && (propertyType!=PropertyType.STRING)) {
+                    return rawValue;
                 }
                 return String.valueOf(me.getValue());
             }
@@ -177,6 +187,13 @@ public class JcrEditingSupport extends EditingSupport {
 
             view.refreshContent();
         }
+
+        public int getPropertyType() {
+            IPropertyDescriptor pd = (IPropertyDescriptor) element;
+            Map.Entry me = (Entry) pd.getId();
+            String value = String.valueOf(me.getValue());
+            return PropertyTypeSupport.propertyTypeOfString(value);
+        }
     }
     
     private class NewRowField extends Field {
@@ -194,10 +211,27 @@ public class JcrEditingSupport extends EditingSupport {
         }
         
         @Override
+        public int getPropertyType() {
+            return newRow.getType();
+        }
+        
+        @Override
         public Object getValue() {
             if (columnId==ColumnId.NAME) {
                 return newRow.getName();
             } else if (columnId==ColumnId.VALUE) {
+                final int propertyType = newRow.getType();
+                if (propertyType==PropertyType.BOOLEAN) {
+                    try{
+                        if (Boolean.parseBoolean(String.valueOf(newRow.getValue()))) {
+                            return 1;
+                        } else {
+                            return 0;
+                        }
+                    } catch(Exception e) {
+                        return 0;
+                    }
+                }
                 return newRow.getValue();
             } else if (columnId==ColumnId.TYPE) {
                 final int propertyType = newRow.getType();
@@ -226,7 +260,7 @@ public class JcrEditingSupport extends EditingSupport {
             if (columnId==ColumnId.NAME) {
                 newRow.setName(String.valueOf(value));
             } else if (columnId==ColumnId.VALUE) {
-                newRow.setValue(String.valueOf(value));
+                newRow.setValue(PropertyTypeSupport.encodeValueAsString(value, getPropertyType()));
             } else if (columnId==ColumnId.TYPE) {
                 int propertyType = PropertyTypeSupport.propertyTypeOfIndex((Integer)value);
                 newRow.setType(propertyType);
@@ -266,6 +300,15 @@ public class JcrEditingSupport extends EditingSupport {
 
     @Override
     protected CellEditor getCellEditor(Object element) {
+        try{
+            return doGetCellEditor(element);
+        } catch(Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    
+    protected CellEditor doGetCellEditor(Object element) {
         if (!canEdit(element)) {
             return null;
         }
@@ -286,8 +329,11 @@ public class JcrEditingSupport extends EditingSupport {
                 // then launch the MVPEditor instead of returning an editor here
                 return new MVNCellEditor(tableViewer.getTable(), getNode(), field.getPropertyName());
             }
-            if (getNode().getPropertyType(field.getPropertyName())==PropertyType.DATE) {
+            if (field.getPropertyType()==PropertyType.DATE) {
                 return new DateTimeCellEditor(tableViewer.getTable(), getNode(), field.getPropertyName());
+            }
+            if (field.getPropertyType()==PropertyType.BOOLEAN) {
+                return new ComboBoxCellEditor(tableViewer.getTable(), new String[] {"false", "true"}, SWT.READ_ONLY);
             }
             CellEditor editor;
             if (field.getPropertyName().equals("jcr:primaryType")) {
@@ -375,8 +421,14 @@ public class JcrEditingSupport extends EditingSupport {
     void handleNewRowUpdate(NewRow newRow) {
         if (newRow.isComplete()) {
             tableViewer.remove(newRow);
-            JcrNode jcrNode = (JcrNode)tableViewer.getInput();
-            jcrNode.addProperty(String.valueOf(newRow.getName()), String.valueOf(newRow.getValue()));
+            final JcrNode jcrNode = (JcrNode)tableViewer.getInput();
+            final Integer type = newRow.getType();
+            String encodeValueAsString = PropertyTypeSupport.encodeValueAsString(newRow.getValue(), type);
+            if (type!=PropertyType.STRING && type!=PropertyType.NAME) {
+                encodeValueAsString = "{"+PropertyType.nameFromValue(type)+"}"+encodeValueAsString;
+            }
+            final String propertyName = String.valueOf(newRow.getName());
+            jcrNode.addProperty(propertyName, encodeValueAsString);
             view.refreshContent();
         } else {
             tableViewer.update(newRow, null);
