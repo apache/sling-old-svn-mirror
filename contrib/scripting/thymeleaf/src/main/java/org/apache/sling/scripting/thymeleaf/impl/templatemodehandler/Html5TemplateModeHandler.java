@@ -46,7 +46,7 @@ public class Html5TemplateModeHandler extends AbstractTemplateModeHandler {
 
     public static final String TEMPLATE_MODE_NAME = "HTML5";
 
-    public static final String DEFAULT_PATTERN = "";
+    public static final String DEFAULT_PATTERN = "*.html";
 
     @Property(value = {DEFAULT_PATTERN}, unbounded = PropertyUnbounded.ARRAY)
     public static final String PATTERNS_PARAMETER = "org.apache.sling.scripting.thymeleaf.impl.templatemodehandler.Html5TemplateModeHandler.patterns";
