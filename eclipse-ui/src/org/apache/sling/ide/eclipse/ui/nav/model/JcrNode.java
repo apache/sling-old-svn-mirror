@@ -290,6 +290,18 @@ public class JcrNode implements IAdaptable {
 				}
 			}
 		}
+		for (Iterator it = values.iterator(); it.hasNext();) {
+            JcrNode jcrNode = (JcrNode) it.next();
+            if (jcrNode instanceof DirNode) {
+                DirNode dirNode = (DirNode)jcrNode;
+                // DirNodes are candidates for hiding
+                JcrNode effectiveSibling = dirNode.getEffectiveSibling();
+                if (effectiveSibling!=null) {
+                    it.remove();
+                    continue;
+                }
+            }
+        }
 		
 		return values.toArray();
 	}
