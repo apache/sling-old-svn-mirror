@@ -18,12 +18,11 @@
  */
 package org.apache.sling.scripting.thymeleaf;
 
-import java.io.Reader;
-
+import org.apache.sling.api.resource.ResourceResolver;
 import org.thymeleaf.context.IContext;
 
 public interface SlingContext extends IContext {
 
-    Reader getReader();
+    ResourceResolver getResourceResolver();
 
 }
