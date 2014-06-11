@@ -118,6 +118,12 @@ public class ServersActionModeFiddlerActionDelegate implements
 	        }
 	    }
         
+        if (server!=null) {
+            if (server.getServerState() != IServer.STATE_STARTED) {
+                server = null;
+                modules = null;
+            }
+        }
         cleanAction.setEnabled(server!=null);
         publishAction.setEnabled(server!=null);
 
