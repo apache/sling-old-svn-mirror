@@ -32,11 +32,16 @@ public class DirNode extends JcrNode {
 	private static String decode(String name) {
 		if (name.endsWith(".dir")) {
 			return name.substring(0, name.length()-4);
-		} else if (name.equals("_jcr_content")) {
-			return "jcr:content";
-		} else {
-			return null;
+		} else if (!name.startsWith("_")) {
+		    return null;
 		}
+		name = name.substring(1);
+		int pos = name.indexOf("_");
+		if (pos==-1) {
+		    return null;
+		}
+		name = name.substring(0, pos) + ":" + name.substring(pos+1);
+		return name;
 	}
 
 	static boolean isDirNode(IResource resource) {
@@ -137,4 +142,8 @@ public class DirNode extends JcrNode {
 	    return false;
 	}
 	
+	@Override
+	public String getLabel() {
+	    return getDecodedName();
+	}
 }
