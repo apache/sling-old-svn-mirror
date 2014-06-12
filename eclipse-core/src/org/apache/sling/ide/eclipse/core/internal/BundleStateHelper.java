@@ -121,7 +121,8 @@ public class BundleStateHelper {
 			if (resultCode!=HttpStatus.SC_OK) {
 				return " ["+resultCode+"]";
 			}
-            String responseBodyAsString = method.getResponseBodyAsString(16*1024); // relevant data is in first 1k anyway
+            String responseBodyAsString = method.getResponseBodyAsString(); // explicitly not limiting buffer here - even though this results in a warning
+                                                                            // cannot know the size of a bundle in advance, large bundles can have large json
 			JSONObject result = new JSONObject(responseBodyAsString);
             JSONArray dataArray = (JSONArray) result.get("data");
             JSONObject firstElement = (JSONObject) dataArray.get(0);
