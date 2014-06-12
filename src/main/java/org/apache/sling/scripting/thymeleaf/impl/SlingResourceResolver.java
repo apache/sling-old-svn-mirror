@@ -35,7 +35,7 @@ import org.thymeleaf.resourceresolver.IResourceResolver;
 import org.thymeleaf.util.Validate;
 
 @Component(
-    label = "Apache Sling Scripting Thymeleaf “Script Reader Resource Resolver”",
+    label = "Apache Sling Scripting Thymeleaf “Sling Resource Resolver”",
     description = "Sling resource resolver for Sling Scripting Thymeleaf",
     immediate = true,
     metatype = true
