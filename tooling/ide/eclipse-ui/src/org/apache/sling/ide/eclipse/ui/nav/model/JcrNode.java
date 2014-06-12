@@ -1125,12 +1125,12 @@ public class JcrNode implements IAdaptable {
 
     void changePrimaryType(String newPrimaryType) {
         Repository repository = ServerUtil.getDefaultRepository(getProject());
-        if (repository == null) {
+        NodeTypeRegistry ntManager = (repository==null) ? null : repository.getNodeTypeRegistry();
+        if (ntManager == null) {
             MessageDialog.openWarning(null, "Unable to change primary type", "Unable to change primary type since project "
                     + getProject().getName() + " is not associated with a server or the server is not started.");
             return;
         }
-        NodeTypeRegistry ntManager = repository.getNodeTypeRegistry();
         
         try {
             if (!ntManager.isAllowedPrimaryChildNodeType(getParent().getPrimaryType(), newPrimaryType)) {
@@ -1205,10 +1205,10 @@ public class JcrNode implements IAdaptable {
 
     public NodeType getNodeType() {
         Repository repository = ServerUtil.getDefaultRepository(getProject());
-        if (repository==null) {
+        NodeTypeRegistry ntManager = (repository==null) ? null : repository.getNodeTypeRegistry();
+        if (ntManager==null) {
             return null;
         }
-        NodeTypeRegistry ntManager = repository.getNodeTypeRegistry();
         return ntManager.getNodeType(getPrimaryType());
     }
 

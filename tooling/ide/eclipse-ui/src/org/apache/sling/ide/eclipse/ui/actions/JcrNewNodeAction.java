@@ -54,12 +54,12 @@ public class JcrNewNodeAction implements IObjectActionDelegate {
             return;
         }
         Repository repository = ServerUtil.getDefaultRepository(node.getProject());
-        if (repository == null) {
+        NodeTypeRegistry ntManager = (repository==null) ? null : repository.getNodeTypeRegistry();
+        if (ntManager == null) {
             MessageDialog.openWarning(null, "Unable to create a new node", "Unable to create a new node since project "
                     + node.getProject().getName() + " is not associated with a server or the server is not started.");
             return;
         }
-        NodeTypeRegistry ntManager = repository.getNodeTypeRegistry();
         final NodeType nodeType = node.getNodeType();
         if (nodeType!=null && nodeType.getName()!=null && nodeType.getName().equals("nt:file")) {
             MessageDialog.openInformation(shell, "Cannot create node", "Node of type nt:file cannot have children");

@@ -26,6 +26,8 @@ package org.apache.sling.ide.transport;
  */
 public interface RepositoryFactory {
 
+    public Repository getRepository(RepositoryInfo repositoryInfo, boolean acceptsDisconnectedRepository) throws RepositoryException;
+
     /**
      * Returns a <tt>Repository</tt> instance for the specified <tt>repositoryInfo</tt>
      * 
@@ -37,7 +39,7 @@ public interface RepositoryFactory {
      * @return
      * @throws RepositoryException
      */
-    Repository getRepository(RepositoryInfo repositoryInfo) throws RepositoryException;
+    Repository connectRepository(RepositoryInfo repositoryInfo) throws RepositoryException;
 
-    void stopRepository(RepositoryInfo repositoryInfo);
+    void disconnectRepository(RepositoryInfo repositoryInfo);
 }

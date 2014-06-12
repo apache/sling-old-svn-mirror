@@ -87,7 +87,7 @@ public class ImportRepositoryContentAction {
             SerializationException, CoreException {
         Repository repository;
         try {
-            repository = ServerUtil.getRepository(server, monitor);
+            repository = ServerUtil.getConnectedRepository(server, monitor);
         } catch (CoreException e) {
             throw new InvocationTargetException(e);
         }

@@ -41,13 +41,17 @@ public class SerializationKindManager {
     public void init(Repository repository) throws RepositoryException {
 
         // first pass, init the mappings
-        List<NodeType> nodeTypes = repository.getNodeTypeRegistry().getNodeTypes();
+        final NodeTypeRegistry nodeTypeRegistry = repository.getNodeTypeRegistry();
+        if (nodeTypeRegistry==null) {
+            throw new IllegalStateException("nodeTypeRegistry must not be null here");
+        }
+        final List<NodeType> nodeTypes = nodeTypeRegistry.getNodeTypes();
 
         // detect node types which have an nt:file or nt:folder parent in the hierarchy
         for (Iterator<NodeType> it = nodeTypes.iterator(); it.hasNext();) {
             final NodeType nt = it.next();
             final String nodeType = nt.getName();
-            SerializationKind serializationKind = getSerializationKind(nodeType, repository.getNodeTypeRegistry());
+            SerializationKind serializationKind = getSerializationKind(nodeType, nodeTypeRegistry);
             if (serializationKind == null) {
                 // don't care
                 continue;

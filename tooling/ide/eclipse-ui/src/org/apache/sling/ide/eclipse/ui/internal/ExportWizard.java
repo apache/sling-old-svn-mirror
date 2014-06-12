@@ -69,7 +69,7 @@ public class ExportWizard extends Wizard {
                         @Override
                         public void run() {
                             try {
-                                selectedServer[0] = ServerUtil.getRepository(exportPage.getServer(), monitor);
+                                selectedServer[0] = ServerUtil.getConnectedRepository(exportPage.getServer(), monitor);
                             } catch (CoreException e) {
                                 throw new RuntimeException(e);
                             }
