@@ -16,17 +16,23 @@
  */
 package org.apache.sling.ide.eclipse.core.internal;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.sling.ide.eclipse.core.ServiceUtil;
 import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
 import org.apache.sling.ide.eclipse.core.debug.PluginLoggerRegistrar;
 import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.osgi.OsgiClientFactory;
 import org.apache.sling.ide.serialization.SerializationManager;
+import org.apache.sling.ide.transport.CommandExecutionProperties;
 import org.apache.sling.ide.transport.RepositoryFactory;
 import org.eclipse.core.runtime.Plugin;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**
@@ -45,6 +51,7 @@ public class Activator extends Plugin {
 	// The shared instance
 	private static Activator plugin;
 
+    private ServiceTracker<EventAdmin, EventAdmin> eventAdmin;
     private ServiceTracker<RepositoryFactory, RepositoryFactory> repositoryFactory;
     private ServiceTracker<SerializationManager, SerializationManager> serializationManager;
     private ServiceTracker<FilterLocator, FilterLocator> filterLocator;
@@ -58,6 +65,10 @@ public class Activator extends Plugin {
 		plugin = this;
 
         tracerRegistration = PluginLoggerRegistrar.register(this);
+
+        eventAdmin = new ServiceTracker<EventAdmin, EventAdmin>(context, EventAdmin.class,
+                null);
+        eventAdmin.open();
 
         repositoryFactory = new ServiceTracker<RepositoryFactory, RepositoryFactory>(context, RepositoryFactory.class,
                 null);
@@ -126,5 +137,20 @@ public class Activator extends Plugin {
 
     public PluginLogger getPluginLogger() {
         return (PluginLogger) ServiceUtil.getNotNull(tracer);
+    }
+    
+    public void issueConsoleLog(String actionType, String path, String message) {
+        Map<String, Object> props = new HashMap<String, Object>();
+        props.put(CommandExecutionProperties.RESULT_TEXT, message);
+        props.put(CommandExecutionProperties.ACTION_TYPE, actionType);
+        props.put(CommandExecutionProperties.ACTION_TARGET, path);
+        props.put(CommandExecutionProperties.TIMESTAMP_START, System.currentTimeMillis());
+        props.put(CommandExecutionProperties.TIMESTAMP_END, System.currentTimeMillis());
+        Event event = new Event(CommandExecutionProperties.REPOSITORY_TOPIC, props);
+        getEventAdmin().postEvent(event);
+    }
+    
+    public EventAdmin getEventAdmin() {
+        return (EventAdmin) ServiceUtil.getNotNull(eventAdmin);
     }
 }
