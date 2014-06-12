@@ -34,7 +34,6 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.scripting.thymeleaf.SlingTemplateModeHandler;
-import org.apache.sling.scripting.thymeleaf.ThymeleafScriptEngineFactory;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -72,6 +71,13 @@ public class NonCachingTemplateResolver implements ITemplateResolver {
     @Property(intValue = DEFAULT_ORDER)
     public static final String ORDER_PARAMETER = "org.apache.sling.scripting.thymeleaf.impl.NonCachingTemplateResolver.order";
 
+    private String encoding;
+
+    public static final String DEFAULT_ENCODING = "UTF-8";
+
+    @Property(value = DEFAULT_ENCODING)
+    public static final String ENCODING_PARAMETER = "org.apache.sling.scripting.thymeleaf.impl.NonCachingTemplateResolver.encoding";
+
     private final Logger logger = LoggerFactory.getLogger(NonCachingTemplateResolver.class);
 
     public NonCachingTemplateResolver() {
@@ -107,6 +113,7 @@ public class NonCachingTemplateResolver implements ITemplateResolver {
     private synchronized void configure(final ComponentContext componentContext) {
         final Dictionary properties = componentContext.getProperties();
         order = PropertiesUtil.toInteger(properties.get(ORDER_PARAMETER), DEFAULT_ORDER);
+        encoding = PropertiesUtil.toString(properties.get(ENCODING_PARAMETER), DEFAULT_ENCODING);
     }
 
     @Override
@@ -123,7 +130,7 @@ public class NonCachingTemplateResolver implements ITemplateResolver {
     public TemplateResolution resolveTemplate(TemplateProcessingParameters templateProcessingParameters) {
         final String templateName = templateProcessingParameters.getTemplateName();
         final String resourceName = templateName; // TODO
-        final String characterEncoding = ThymeleafScriptEngineFactory.TEMPLATE_CHARSET;
+        final String characterEncoding = encoding;
         final String templateMode = computeTemplateMode(templateName);
         final ITemplateResolutionValidity validity = new NonCacheableTemplateResolutionValidity();
         return new TemplateResolution(templateName, resourceName, resourceResolver, characterEncoding, templateMode, validity);

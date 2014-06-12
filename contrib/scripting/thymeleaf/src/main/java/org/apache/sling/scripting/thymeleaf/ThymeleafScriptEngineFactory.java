@@ -82,8 +82,6 @@ public class ThymeleafScriptEngineFactory extends AbstractScriptEngineFactory {
     @Property(value = {DEFAULT_NAME}, unbounded = PropertyUnbounded.ARRAY)
     public static final String NAMES_PARAMETER = "org.apache.sling.scripting.thymeleaf.names";
 
-    public static final String TEMPLATE_CHARSET = "UTF-8";
-
     private final Logger logger = LoggerFactory.getLogger(ThymeleafScriptEngineFactory.class);
 
     public ThymeleafScriptEngineFactory() {

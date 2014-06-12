@@ -12,4 +12,3 @@ Features
 * out of the box support for _legacy_ HTML5 through embedded _NekoHTML_
 * runtime configurable `TemplateModeHandler`s for _XML_, _VALIDXML_, _XHTML_, _VALIDXHTML_, _HTML5_ and _LEGACYHTML5_
 * `MessageResolver` backed by `ResourceBundleProvider` from `org.apache.sling.i18n`
-* uses `UTF-8` charset for reading templates
