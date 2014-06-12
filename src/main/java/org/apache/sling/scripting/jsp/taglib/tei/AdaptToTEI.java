@@ -18,12 +18,24 @@ package org.apache.sling.scripting.jsp.taglib.tei;
 
 import javax.servlet.jsp.tagext.TagData;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class AdaptToTEI extends AbstractVarTEI {
 
-    public static final String ATTR_ADAPT_TO = "adaptTo";
+	private static final Logger log = LoggerFactory.getLogger(AdaptToTEI.class);
+	public static final String ATTR_ADAPT_TO = "adaptTo";
 
-    @Override
-    protected String getClassName(TagData data) {
-        return data.getAttributeString(ATTR_ADAPT_TO);
-    }
+	@Override
+	protected String getClassName(TagData data) {
+
+		String clazz = data.getAttributeString(ATTR_ADAPT_TO);
+		try {
+			AdaptToTEI.class.getClassLoader().loadClass(clazz);
+			return clazz;
+		} catch (ClassNotFoundException e) {
+			log.warn("Unable to retrieve class " + clazz, e);
+		}
+		return Object.class.getName();
+	}
 }
