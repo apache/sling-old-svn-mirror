@@ -50,8 +50,9 @@ public abstract class RepositoryUtils {
      * @return
      */
     public static boolean isRepositoryProviderReady() {
-        Iterator<RepositoryFactory> providerIt = ServiceRegistry.lookupProviders(RepositoryFactory.class);
-        return providerIt.hasNext();
+        final Iterator<RepositoryFactory> providerIt = ServiceRegistry.lookupProviders(RepositoryFactory.class, RepositoryFactory.class.getClassLoader());
+        final boolean isReady = providerIt.hasNext();
+        return isReady;
     }
     
     public static Repository getRepository(RepositoryInfo repositoryInfo) throws RepositoryException {
