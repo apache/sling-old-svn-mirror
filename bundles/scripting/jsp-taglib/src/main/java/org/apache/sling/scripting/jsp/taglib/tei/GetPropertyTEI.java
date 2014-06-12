@@ -29,8 +29,10 @@ public class GetPropertyTEI extends AbstractVarTEI {
         final String className = data.getAttributeString(ATTR_RETURN_CLASS);
         if (defaultValue != null) {
             return defaultValue.getClass().getName();
-        } else {
+        } else if (className != null){
             return className;
+        } else {
+        	return Object.class.getName();
         }
     }
 }
