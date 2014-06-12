@@ -16,6 +16,10 @@
  */
 package org.apache.sling.ide.eclipse.ui.views;
 
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.apache.sling.ide.eclipse.core.internal.Activator;
 import org.apache.sling.ide.eclipse.ui.nav.model.JcrNode;
 import org.apache.sling.ide.eclipse.ui.nav.model.SyncDir;
 import org.apache.sling.ide.eclipse.ui.nav.model.SyncDirManager;
@@ -32,8 +36,13 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.layout.TableColumnLayout;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.CellLabelProvider;
+import org.eclipse.jface.viewers.CellNavigationStrategy;
+import org.eclipse.jface.viewers.ColumnViewerEditor;
+import org.eclipse.jface.viewers.ColumnViewerEditorActivationEvent;
+import org.eclipse.jface.viewers.ColumnViewerEditorActivationStrategy;
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.FocusCellOwnerDrawHighlighter;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -42,13 +51,18 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
+import org.eclipse.jface.viewers.TableViewerEditor;
+import org.eclipse.jface.viewers.TableViewerFocusCellManager;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.TraverseEvent;
+import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
@@ -84,6 +98,12 @@ public class JcrPropertiesView extends ViewPart {
     private JcrNode lastInput;
 
     private Action synchedAction;
+
+    private String lastEditedOldPropertyName;
+
+    private String lastEditedNewPropertyName;
+
+    private ColumnId lastEditedColumnId;
 
 	class ViewContentProvider implements IStructuredContentProvider {
 		public void inputChanged(Viewer v, Object oldInput, Object newInput) {
@@ -146,7 +166,29 @@ public class JcrPropertiesView extends ViewPart {
         tableParent.setLayoutData(new GridData(GridData.FILL_BOTH));
         TableColumnLayout tableLayout = new TableColumnLayout();
         tableParent.setLayout(tableLayout);
-        viewer = new TableViewer(tableParent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER );
+        
+        viewer = new TableViewer(tableParent, SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER | SWT.HIDE_SELECTION | SWT.FULL_SELECTION);
+        TableViewerFocusCellManager focusCellManager = new TableViewerFocusCellManager(
+                viewer, new FocusCellOwnerDrawHighlighter(viewer), new CellNavigationStrategy());
+        ColumnViewerEditorActivationStrategy actSupport = new ColumnViewerEditorActivationStrategy(
+                viewer){
+
+            @Override
+            protected boolean isEditorActivationEvent(
+                    ColumnViewerEditorActivationEvent event) {
+                resetLastValueEdited();
+                return event.eventType == ColumnViewerEditorActivationEvent.TRAVERSAL
+                        || event.eventType == ColumnViewerEditorActivationEvent.MOUSE_DOUBLE_CLICK_SELECTION
+                        || (event.eventType == ColumnViewerEditorActivationEvent.KEY_PRESSED && event.keyCode == SWT.CR)
+                        || event.eventType == ColumnViewerEditorActivationEvent.PROGRAMMATIC;
+            }
+        };
+        int features = ColumnViewerEditor.TABBING_HORIZONTAL
+                | ColumnViewerEditor.TABBING_MOVE_TO_ROW_NEIGHBOR
+                | ColumnViewerEditor.TABBING_VERTICAL
+                | ColumnViewerEditor.KEYBOARD_ACTIVATION
+                | ColumnViewerEditor.KEEP_EDITOR_ON_DOUBLE_CLICK;
+        TableViewerEditor.create(viewer, focusCellManager, actSupport, features);
         viewer.getTable().setLinesVisible(true);
         viewer.getTable().setHeaderVisible(true);
         viewer.setContentProvider(new ViewContentProvider());
@@ -249,6 +291,18 @@ public class JcrPropertiesView extends ViewPart {
             }
         };
         getViewSite().getPage().addSelectionListener(listener);
+	}
+	
+    void resetLastValueEdited() {
+        this.lastEditedOldPropertyName = null;
+        this.lastEditedNewPropertyName = null;
+        this.lastEditedColumnId = null;
+    }
+	
+	void setLastValueEdited(String oldPropertyName, String newPropertyName, ColumnId columnId) {
+	    this.lastEditedOldPropertyName = oldPropertyName;
+	    this.lastEditedNewPropertyName = newPropertyName;
+	    this.lastEditedColumnId = columnId;
 	}
 	
 	@Override
@@ -430,11 +484,55 @@ public class JcrPropertiesView extends ViewPart {
             JcrNode newnode = syncDir.getNode(jcrnode.getJcrPath());
             if (newnode!=null) {
                 viewer.setInput(newnode);
+                if (lastEditedNewPropertyName!=null) {
+                    // set the selection/focus accordingly
+                    
+                    for(int i=0;;i++) {
+                        Object element = viewer.getElementAt(i);
+                        if (element==null) {
+                            break;
+                        }
+                        final IPropertyDescriptor pd = (IPropertyDescriptor) element;
+                        Map.Entry<String,Object> me = (Entry<String, Object>) pd.getId();
+                        String key = me.getKey();
+                        if (lastEditedNewPropertyName.equals(key)) {
+                            // set the selection to this one
+                            final int column;
+                            if (lastEditedColumnId==ColumnId.NAME) {
+                                column = 0;
+                            } else if (lastEditedColumnId==ColumnId.TYPE) {
+                                column = 1;
+                            } else {
+                                column = 2;
+                            }
+                            Display.getDefault().asyncExec(new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    try{
+                                        // edit
+                                        viewer.editElement(pd, column);
+                                        // and cancel immediately - to get the selection right
+                                        viewer.cancelEditing();
+                                    } catch(Exception e) {
+                                        Activator.getDefault().getPluginLogger().error("Exception occured on edit/cancel: "+e, e);
+                                    }
+                                }
+                                
+                            });
+                            break;
+                        }
+                    }
+                    
+                }
             }
         }
     }
 
     private void setInput(JcrNode jcrNode) {
+        // reset the last edited values..:
+        resetLastValueEdited();
+
         if (pinAction.isChecked()) {
             lastInput = jcrNode;
         } else {

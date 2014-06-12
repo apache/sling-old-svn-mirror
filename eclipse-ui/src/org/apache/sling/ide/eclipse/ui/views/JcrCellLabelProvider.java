@@ -63,14 +63,14 @@ public class JcrCellLabelProvider extends CellLabelProvider {
     public void update(ViewerCell cell) {
         int index = cell.getColumnIndex();
         if (isNewRow(cell)) {
-            cell.setFont(italic);
+//            cell.setFont(italic);
         } else {
             cell.setFont(normal);
-        }
-        if (canEdit(cell)) {
-            cell.setForeground(normalColor);
-        } else {
-            cell.setForeground(greyColor);
+            if (canEdit(cell)) {
+                cell.setForeground(normalColor);
+            } else {
+                cell.setForeground(greyColor);
+            }
         }
         if (index==0) {
             updateName(cell);

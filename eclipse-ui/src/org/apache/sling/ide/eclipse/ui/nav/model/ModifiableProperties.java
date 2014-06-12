@@ -38,6 +38,7 @@ import de.pdark.decentxml.Text;
 public class ModifiableProperties implements IPropertySource {
 	
 	private Map<String, String> properties = new HashMap<String, String>();
+	private List<String> propertiesOrder = new LinkedList<String>();
 	private JcrNode node;
 	private Element domElement;
 	private GenericJcrRootFile genericJcrRootFile;
@@ -68,19 +69,27 @@ public class ModifiableProperties implements IPropertySource {
 
 	@Override
 	public IPropertyDescriptor[] getPropertyDescriptors() {
-		final List<IPropertyDescriptor> result = new LinkedList<IPropertyDescriptor>();
+		final Map<String,IPropertyDescriptor> conversionMap = new HashMap<String,IPropertyDescriptor>();
 		for (Iterator<Map.Entry<String, String>> it = properties.entrySet().iterator(); it.hasNext();) {
 			Map.Entry<String, String> entry = it.next();
-			TextPropertyDescriptor pd = new TextPropertyDescriptor(entry, entry.getKey());
-			result.add(pd);
+			TextPropertyDescriptor pd = new JcrTextPropertyDescriptor(entry, entry.getKey());
+			conversionMap.put(entry.getKey(), pd);
 		}
+		final List<String> propertiesOrderCopy = new LinkedList<String>(propertiesOrder);
 		final String jcrPrimaryType = "jcr:primaryType";
         if (!properties.containsKey(jcrPrimaryType)) {
 		    Map<String, String> pseudoMap = new HashMap<String, String>();
 		    pseudoMap.put(jcrPrimaryType, node.getPrimaryType());
-		    result.add(new TextPropertyDescriptor(pseudoMap.entrySet().iterator().next(), jcrPrimaryType));
+		    final TextPropertyDescriptor pseudoPd = new JcrTextPropertyDescriptor(pseudoMap.entrySet().iterator().next(), jcrPrimaryType);
+		    propertiesOrderCopy.add(0, jcrPrimaryType);
+            conversionMap.put(jcrPrimaryType, pseudoPd);
 		}
-		return result.toArray(new IPropertyDescriptor[] {});
+        IPropertyDescriptor[] result = new IPropertyDescriptor[conversionMap.size()];
+        for (int i = 0; i < result.length; i++) {
+            String aPropertyName = propertiesOrderCopy.get(i);
+            result[i] = conversionMap.get(aPropertyName);
+        }
+        return result;
 	}
 
 	public String getValue(String key) {
@@ -150,6 +159,7 @@ public class ModifiableProperties implements IPropertySource {
 				    continue;
 				}
                 properties.put(name, a.getValue());
+                propertiesOrder.add(name);
 			}
 		}
 		this.genericJcrRootFile = genericJcrRootFile;
@@ -247,6 +257,15 @@ public class ModifiableProperties implements IPropertySource {
             try{
                 Float f = Float.parseFloat(value);
                 value = String.valueOf(f);
+            } catch(Exception e) {
+                value = "0.0";
+            }
+            break;
+        }
+        case PropertyType.DOUBLE: {
+            try{
+                Double d = Double.parseDouble(value);
+                value = String.valueOf(d);
             } catch(Exception e) {
                 value = "0.0";
             }

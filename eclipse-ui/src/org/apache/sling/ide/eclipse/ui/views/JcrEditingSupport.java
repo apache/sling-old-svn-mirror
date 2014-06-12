@@ -26,6 +26,8 @@ import javax.jcr.PropertyType;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
 import org.apache.sling.ide.eclipse.ui.nav.model.JcrNode;
 import org.apache.sling.ide.eclipse.ui.nav.model.JcrProperty;
+import org.apache.sling.ide.eclipse.ui.nav.model.JcrTextPropertyDescriptor;
+import org.apache.sling.ide.eclipse.ui.nav.model.ModifiableProperties;
 import org.apache.sling.ide.transport.NodeTypeRegistry;
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryException;
@@ -131,7 +133,7 @@ public class JcrEditingSupport extends EditingSupport {
                 // then ignore this
                 return;
             }
-            IPropertyDescriptor pd = (IPropertyDescriptor) element;
+            JcrTextPropertyDescriptor pd = (JcrTextPropertyDescriptor) element;
             JcrNode jcrNode = getNode();
             Map.Entry me = (Entry) pd.getId();
             
@@ -139,6 +141,7 @@ public class JcrEditingSupport extends EditingSupport {
             case NAME: {
                 final String oldKey = String.valueOf(getValue());
                 final String newKey = String.valueOf(value);
+                pd.setNewPropertyName(newKey);
                 Map<String, String> pseudoMap = new HashMap<String, String>();
                 final String propertyValue = jcrNode.getProperties().getValue(oldKey);
                 pseudoMap.put(newKey, propertyValue);
@@ -193,6 +196,15 @@ public class JcrEditingSupport extends EditingSupport {
             Map.Entry me = (Entry) pd.getId();
             String value = String.valueOf(me.getValue());
             return PropertyTypeSupport.propertyTypeOfString(value);
+        }
+
+        public String getNewPropertyName() {
+            JcrTextPropertyDescriptor pd = (JcrTextPropertyDescriptor) element;
+            if (pd.getNewPropertyName()!=null) {
+                return pd.getNewPropertyName();
+            } else {
+                return getPropertyName();
+            }
         }
     }
     
@@ -252,13 +264,24 @@ public class JcrEditingSupport extends EditingSupport {
         }
         
         @Override
+        public String getNewPropertyName() {
+            return getPropertyName();
+        }
+        
+        @Override
         public void setValue(Object element, Object value) {
             if (getValue().equals(value)) {
                 // then ignore this
                 return;
             }
             if (columnId==ColumnId.NAME) {
-                newRow.setName(String.valueOf(value));
+                String newName = String.valueOf(value);
+                ModifiableProperties props = getNode().getProperties();
+                int cnt = 1;
+                while(props.getValue(newName)!=null) {
+                    newName = String.valueOf(value)+(cnt++);
+                }
+                newRow.setName(newName);
             } else if (columnId==ColumnId.VALUE) {
                 newRow.setValue(PropertyTypeSupport.encodeValueAsString(value, getPropertyType()));
             } else if (columnId==ColumnId.TYPE) {
@@ -301,7 +324,12 @@ public class JcrEditingSupport extends EditingSupport {
     @Override
     protected CellEditor getCellEditor(Object element) {
         try{
-            return doGetCellEditor(element);
+            final CellEditor result = doGetCellEditor(element);
+            if (result!=null) {
+                Field field = asField(element);
+                view.setLastValueEdited(field.getPropertyName(), field.getNewPropertyName(), columnId);
+            }
+            return result;
         } catch(Exception e) {
             e.printStackTrace();
             return null;
@@ -320,7 +348,10 @@ public class JcrEditingSupport extends EditingSupport {
         case TYPE: {
             // using a dropdown editor
             final ComboBoxCellEditor editor = new ComboBoxCellEditor(tableViewer.getTable(), 
-                    PropertyTypeSupport.PROPERTY_TYPES, SWT.READ_ONLY);
+                    PropertyTypeSupport.PROPERTY_TYPES, SWT.NONE);
+            editor.setActivationStyle(ComboBoxCellEditor.DROP_DOWN_ON_KEY_ACTIVATION | 
+                    ComboBoxCellEditor.DROP_DOWN_ON_MOUSE_ACTIVATION |
+                    ComboBoxCellEditor.DROP_DOWN_ON_TRAVERSE_ACTIVATION);
             return editor;
         }
         case VALUE: {
@@ -415,6 +446,13 @@ public class JcrEditingSupport extends EditingSupport {
         if (!field.canEdit()) {
             return;
         }
+        String newPropertyName;
+        if (columnId==ColumnId.NAME) {
+            newPropertyName = String.valueOf(value);
+        } else {
+            newPropertyName = field.getPropertyName();
+        }
+        view.setLastValueEdited(field.getPropertyName(), newPropertyName, columnId);
         field.setValue(element, value);
     }
 
