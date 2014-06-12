@@ -13,3 +13,9 @@ Features
 * runtime configurable `TemplateModeHandler`s for _XML_, _VALIDXML_, _XHTML_, _VALIDXHTML_, _HTML5_ and _LEGACYHTML5_
 * `ResourceResolver` backed by Sling's `ResourceResolver`
 * `MessageResolver` backed by `ResourceBundleProvider` from `org.apache.sling.i18n`
+
+relevant Thymeleaf issues
+-------------------------
+
+* [Create OSGi bundle](https://github.com/thymeleaf/thymeleaf/issues/32)
+* [Remove initialize() steps in extension points](https://github.com/thymeleaf/thymeleaf/issues/54)
