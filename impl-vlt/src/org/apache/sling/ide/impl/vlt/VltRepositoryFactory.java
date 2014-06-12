@@ -34,20 +34,39 @@ public class VltRepositoryFactory implements RepositoryFactory {
     private EventAdmin eventAdmin;
 
     private Map<String,VltRepository> repositoryMap = new HashMap<String,VltRepository>();
-    
+
     @Override
-    public Repository getRepository(RepositoryInfo repositoryInfo) throws RepositoryException {
+    public Repository getRepository(RepositoryInfo repositoryInfo,
+            boolean acceptsDisconnectedRepository) throws RepositoryException {
 
         final String key = getKey(repositoryInfo);
         
         synchronized(repositoryMap) {
             VltRepository repo = repositoryMap.get(key);
-            if (repo!=null && !repo.isMarkedStopped()) {
+            if (repo==null) {
+                return null;
+            }
+            if (!repo.isDisconnected() || acceptsDisconnectedRepository) {
+                return repo;
+            }
+        }
+        return null;
+    }
+    
+    
+    @Override
+    public Repository connectRepository(RepositoryInfo repositoryInfo) throws RepositoryException {
+
+        final String key = getKey(repositoryInfo);
+        
+        synchronized(repositoryMap) {
+            VltRepository repo = repositoryMap.get(key);
+            if (repo!=null && !repo.isDisconnected()) {
                 return repo;
             }
             
             repo = new VltRepository(repositoryInfo, eventAdmin);
-            repo.init();
+            repo.connect();
             
             repositoryMap.put(key, repo);
             return repo;
@@ -55,14 +74,14 @@ public class VltRepositoryFactory implements RepositoryFactory {
     }
     
     @Override
-    public void stopRepository(RepositoryInfo repositoryInfo) {
+    public void disconnectRepository(RepositoryInfo repositoryInfo) {
         final String key = getKey(repositoryInfo);
         synchronized(repositoryMap) {
             VltRepository r = repositoryMap.get(key);
-            // marking the repository as stopped allows us to keep using it
+            // marking the repository as disconnected allows us to keep using it
             // (eg for node type registry lookups) although the server is stopped
             //TODO we might come up with a proper online/offline handling here
-            r.markStopped();
+            r.disconnected();
         }
     }
 

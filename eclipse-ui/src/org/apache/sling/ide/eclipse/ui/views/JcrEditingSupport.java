@@ -342,10 +342,10 @@ public class JcrEditingSupport extends EditingSupport {
                     protected Control createControl(Composite parent) {
                         Text text = (Text) super.createControl(parent);
                         Repository repository = ServerUtil.getDefaultRepository(getNode().getProject());
-                        if (repository == null) {
+                        NodeTypeRegistry ntManager = (repository==null) ? null : repository.getNodeTypeRegistry();
+                        if (ntManager == null) {
                             return text;
                         }
-                        NodeTypeRegistry ntManager = repository.getNodeTypeRegistry();
                         try {
                             Collection<String> types = ntManager.getAllowedPrimaryChildNodeTypes(getNode().getParent().getPrimaryType());
                             SimpleContentProposalProvider proposalProvider = new SimpleContentProposalProvider(types.toArray(new String[0]));

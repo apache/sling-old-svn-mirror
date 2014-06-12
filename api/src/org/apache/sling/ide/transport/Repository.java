@@ -99,5 +99,12 @@ public interface Repository {
 
 	Command<byte[]> newGetNodeCommand(String path);
 	
+	/**
+	 * Returns the node type registry - when the underlying server is started -
+	 * or null when the server is not started at the moment.
+	 * @return the node type registry - when the underlying server is started -
+     * or null when the server is not started at the moment
+	 */
 	NodeTypeRegistry getNodeTypeRegistry();
+
 }

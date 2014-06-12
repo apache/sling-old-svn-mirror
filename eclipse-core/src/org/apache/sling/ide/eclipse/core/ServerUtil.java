@@ -55,7 +55,17 @@ public abstract class ServerUtil {
             return null;
         }
         try {
-            return getRepository(server, new NullProgressMonitor());
+            RepositoryFactory repository = Activator.getDefault().getRepositoryFactory();
+            try {
+                RepositoryInfo repositoryInfo = getRepositoryInfo(server, new NullProgressMonitor());
+                return repository.getRepository(repositoryInfo, true);
+            } catch (URISyntaxException e) {
+                throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
+            } catch (RuntimeException e) {
+                throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
+            } catch (RepositoryException e) {
+                throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
+            }
         } catch (CoreException e) {
             Activator.getDefault().getPluginLogger().warn("Failed getting a repository for " + project, e);
             return null;
@@ -117,11 +127,28 @@ public abstract class ServerUtil {
         return result;
     }
 
-    public static Repository getRepository(IServer server, IProgressMonitor monitor) throws CoreException {
+    public static Repository getConnectedRepository(IServer server, IProgressMonitor monitor) throws CoreException {
+        if (server.getServerState()!=IServer.STATE_STARTED) {
+            throw new CoreException(new Status(Status.WARNING, Activator.PLUGIN_ID, "Server not started, please start server first."));
+        }
         RepositoryFactory repository = Activator.getDefault().getRepositoryFactory();
         try {
             RepositoryInfo repositoryInfo = getRepositoryInfo(server, monitor);
-            return repository.getRepository(repositoryInfo);
+            return repository.getRepository(repositoryInfo, false);
+        } catch (URISyntaxException e) {
+            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
+        } catch (RuntimeException e) {
+            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
+        } catch (RepositoryException e) {
+            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
+        }
+    }
+
+    public static Repository connectRepository(IServer server, IProgressMonitor monitor) throws CoreException {
+        RepositoryFactory repository = Activator.getDefault().getRepositoryFactory();
+        try {
+            RepositoryInfo repositoryInfo = getRepositoryInfo(server, monitor);
+            return repository.connectRepository(repositoryInfo);
         } catch (URISyntaxException e) {
             throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
         } catch (RuntimeException e) {
@@ -135,7 +162,7 @@ public abstract class ServerUtil {
         RepositoryFactory repository = Activator.getDefault().getRepositoryFactory();
         try {
             RepositoryInfo repositoryInfo = getRepositoryInfo(server, monitor);
-            repository.stopRepository(repositoryInfo);
+            repository.disconnectRepository(repositoryInfo);
         } catch (URISyntaxException e) {
             throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
         } catch (RuntimeException e) {

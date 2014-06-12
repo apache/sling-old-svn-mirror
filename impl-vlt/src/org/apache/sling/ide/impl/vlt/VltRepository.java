@@ -25,34 +25,43 @@ public class VltRepository implements Repository {
 
     private javax.jcr.Repository jcrRepo;
     private Credentials credentials;
-    private boolean markedStopped = false;
+    private boolean disconnected = false;
 
     public VltRepository(RepositoryInfo repositoryInfo, EventAdmin eventAdmin) {
         this.repositoryInfo = repositoryInfo;
         this.eventAdmin = eventAdmin;
     }
 
-    public synchronized void markStopped() {
-        this.markedStopped = true;
+    public synchronized void disconnected() {
+        this.disconnected = true;
     }
 
-    public synchronized boolean isMarkedStopped() {
-        return markedStopped;
+    public synchronized boolean isDisconnected() {
+        return disconnected;
     }
 
     public RepositoryInfo getRepositoryInfo() {
         return repositoryInfo;
     }
 
-    public void init() {
+    public void connect() {
         try {
             jcrRepo = RepositoryUtils.getRepository(repositoryInfo);
             credentials = RepositoryUtils.getCredentials(repositoryInfo);
+
         } catch (RepositoryException e) {
             throw new RuntimeException(e);
         }
         // loading nodeTypeRegistry:
-        getNodeTypeRegistry();
+        loadNodeTypeRegistry();
+    }
+
+    private void loadNodeTypeRegistry() {
+        try {
+            ntRegistry = new VltNodeTypeRegistry(this);
+        } catch (org.apache.sling.ide.transport.RepositoryException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -103,14 +112,6 @@ public class VltRepository implements Repository {
     public synchronized NodeTypeRegistry getNodeTypeRegistry() {
         if (repositoryInfo==null) {
             throw new IllegalStateException("repositoryInfo must not be null");
-        }
-        if (ntRegistry!=null) {
-            return ntRegistry;
-        }
-        try {
-            ntRegistry = new VltNodeTypeRegistry(this);
-        } catch (org.apache.sling.ide.transport.RepositoryException e) {
-            throw new RuntimeException(e);
         }
         return ntRegistry;
     }

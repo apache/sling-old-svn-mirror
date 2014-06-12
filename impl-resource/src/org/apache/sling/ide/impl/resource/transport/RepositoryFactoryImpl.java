@@ -31,13 +31,20 @@ public class RepositoryFactoryImpl implements RepositoryFactory {
     private EventAdmin eventAdmin;
 
     @Override
-    public Repository getRepository(RepositoryInfo repositoryInfo) throws RepositoryException {
+    public Repository connectRepository(RepositoryInfo repositoryInfo) throws RepositoryException {
         //TODO: currently not doing repository-caching
         return new RepositoryImpl(repositoryInfo, eventAdmin);
     }
     
     @Override
-    public void stopRepository(RepositoryInfo repositoryInfo) {
+    public Repository getRepository(RepositoryInfo repositoryInfo,
+            boolean acceptsDisconnectedRepository) throws RepositoryException {
+        //TODO: currently not doing repository-caching
+        return new RepositoryImpl(repositoryInfo, eventAdmin);
+    }
+    
+    @Override
+    public void disconnectRepository(RepositoryInfo repositoryInfo) {
         //TODO: not yet implemented
     }
 

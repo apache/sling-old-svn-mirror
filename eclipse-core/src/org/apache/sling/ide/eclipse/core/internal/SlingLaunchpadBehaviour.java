@@ -85,7 +85,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
 
             Repository repository;
             try {
-                repository = ServerUtil.getRepository(getServer(), monitor);
+                repository = ServerUtil.connectRepository(getServer(), monitor);
             } catch (CoreException e) {
                 setServerState(IServer.STATE_STOPPED);
                 throw e;
@@ -320,7 +320,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
 
         PluginLogger logger = Activator.getDefault().getPluginLogger();
 
-		Repository repository = ServerUtil.getRepository(getServer(), monitor);
+		Repository repository = ServerUtil.getConnectedRepository(getServer(), monitor);
         
         // TODO it would be more efficient to have a module -> filter mapping
         // it would be simpler to implement this in SlingContentModuleAdapter, but
