@@ -30,10 +30,10 @@ public class ServerModuleDecorator extends BaseLabelProvider implements ILightwe
 			return;
 		}
 		IServerModule serverModule = (IServerModule)element;
-		Object state = BundleStateHelper.getBundleState(serverModule.getServer(), serverModule.getModule()[0].getProject());
-		if (state==null) {
-			return;
-		}
+//		Object state = BundleStateHelper.getBundleState(serverModule.getServer(), serverModule.getModule()[0].getProject());
+//		if (state==null) {
+//			return;
+//		}
 		//decoration.addSuffix(String.valueOf(state));
 	}
 
