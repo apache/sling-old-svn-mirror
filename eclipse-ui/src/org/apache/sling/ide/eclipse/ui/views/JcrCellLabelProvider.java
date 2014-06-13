@@ -153,14 +153,17 @@ public class JcrCellLabelProvider extends CellLabelProvider {
     }
 
     private boolean canEdit(ViewerCell cell) {
-        if (cell.getColumnIndex()>2) {
-            return false;
-        }
         Object element = cell.getElement();
         if (element instanceof NewRow) {
             // can edit everything of a newrow (other than type properties)
+            if (cell.getColumnIndex()>2) {
+                return false;
+            }
             return true;
         } else if (element instanceof IPropertyDescriptor){
+            if (cell.getColumnIndex()>2 && cell.getColumnIndex()!=5) {
+                return false;
+            }
             IPropertyDescriptor pd = (IPropertyDescriptor)element;
             JcrNode jcrNode = (JcrNode)viewer.getInput();
             Map.Entry me = (Entry) pd.getId();
