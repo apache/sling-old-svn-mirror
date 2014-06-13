@@ -53,7 +53,7 @@ import org.eclipse.ui.views.properties.TextPropertyDescriptor;
 public class JcrEditingSupport extends EditingSupport {
     
     static enum ColumnId {
-        NAME, TYPE, VALUE
+        NAME, TYPE, VALUE, MULTIPLE
     }
 
     private final ColumnId columnId;
@@ -115,6 +115,10 @@ public class JcrEditingSupport extends EditingSupport {
                     return rawValue;
                 }
                 return String.valueOf(me.getValue());
+            }
+            case MULTIPLE: {
+                boolean isMultiple = getNode().getProperty(getPropertyName()).isMultiple();
+                return isMultiple ? 1 : 0;
             }
             default: {
                 throw new IllegalStateException("Unknown columnId: "+columnId);
@@ -186,6 +190,45 @@ public class JcrEditingSupport extends EditingSupport {
                 }
                 break;
             }
+            case MULTIPLE: {
+                if (!(value instanceof Integer)) {
+                    // value must be an integer
+                    return;
+                }
+                final Integer newIsMultipleValue = (Integer) value;
+                final boolean newIsMultiple = newIsMultipleValue==1;
+                final JcrProperty property = getNode().getProperty(getPropertyName());
+                final boolean oldIsMultiple = property.isMultiple();
+                if (newIsMultiple==oldIsMultiple) {
+                    // then nothing is to be done
+                    return;
+                }
+                final String oldPropertyValue = getNode().getProperties().getValue(getPropertyName());
+                // split {type} prefix from value
+                int cPos = oldPropertyValue.indexOf("}");
+                final String prefix;
+                final String rawValue;
+                if (cPos==-1) {
+                    prefix = "";
+                    rawValue = oldPropertyValue;
+                } else {
+                    prefix = oldPropertyValue.substring(0, cPos+1);
+                    rawValue = oldPropertyValue.substring(cPos+1);
+                }
+                String newValue;
+                if (newIsMultiple) {
+                    newValue = prefix + "[" + rawValue + "]";
+                } else {
+                    newValue = rawValue.substring(1, rawValue.length()-1);
+                    int commaPos = newValue.indexOf(",");
+                    if (commaPos!=-1) {
+                        newValue = newValue.substring(0, commaPos);
+                    }
+                    newValue = prefix + newValue;
+                }
+                jcrNode.setPropertyValue(getPropertyName(), newValue);
+                break;
+            }
             }
 
             view.refreshContent();
@@ -253,6 +296,9 @@ public class JcrEditingSupport extends EditingSupport {
                     //TODO: otherwise hardcode to STRING
                     return PropertyTypeSupport.indexOfPropertyType(PropertyType.STRING);
                 }
+            } else if (columnId==ColumnId.MULTIPLE) {
+                //TODO
+                return 0;
             } else {
                 return null;
             }
@@ -287,6 +333,9 @@ public class JcrEditingSupport extends EditingSupport {
             } else if (columnId==ColumnId.TYPE) {
                 int propertyType = PropertyTypeSupport.propertyTypeOfIndex((Integer)value);
                 newRow.setType(propertyType);
+            } else if (columnId==ColumnId.MULTIPLE) {
+                // do nothing at the moment
+                //TODO
             } else {
                 // otherwise non-editable
                 return;
@@ -415,6 +464,12 @@ public class JcrEditingSupport extends EditingSupport {
             }
             }
             return editor;
+        }
+        case MULTIPLE: {
+            if (element instanceof NewRow) {
+                return null;
+            }
+            return new ComboBoxCellEditor(tableViewer.getTable(), new String[] {"false", "true"}, SWT.READ_ONLY);
         }
         default: {
             throw new IllegalStateException("Unknown columnId: "+columnId);

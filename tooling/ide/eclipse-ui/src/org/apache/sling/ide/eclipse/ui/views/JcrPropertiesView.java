@@ -236,28 +236,28 @@ public class JcrPropertiesView extends ViewPart {
         column3.getColumn().setResizable(true);
         column3.getColumn().setWidth(300);
         column3.setLabelProvider(clp);
-        tableLayout.setColumnData(column3.getColumn(), new ColumnWeightData(5, 50));
+        tableLayout.setColumnData(column3.getColumn(), new ColumnWeightData(5, 57));
 
         final TableViewerColumn column4 = new TableViewerColumn(viewer, SWT.NONE);
         column4.getColumn().setText("Mandatory");
         column4.getColumn().setResizable(true);
         column4.getColumn().setWidth(300);
         column4.setLabelProvider(clp);
-        tableLayout.setColumnData(column4.getColumn(), new ColumnWeightData(5, 50));
+        tableLayout.setColumnData(column4.getColumn(), new ColumnWeightData(5, 62));
 
         final TableViewerColumn column5 = new TableViewerColumn(viewer, SWT.NONE);
         column5.getColumn().setText("Multiple");
         column5.getColumn().setResizable(true);
         column5.getColumn().setWidth(300);
         column5.setLabelProvider(clp);
-        tableLayout.setColumnData(column5.getColumn(), new ColumnWeightData(5, 50));
+        tableLayout.setColumnData(column5.getColumn(), new ColumnWeightData(5, 82));
 
         final TableViewerColumn column6 = new TableViewerColumn(viewer, SWT.NONE);
         column6.getColumn().setText("Auto Created");
         column6.getColumn().setResizable(true);
         column6.getColumn().setWidth(300);
         column6.setLabelProvider(clp);
-        tableLayout.setColumnData(column6.getColumn(), new ColumnWeightData(5, 50));
+        tableLayout.setColumnData(column6.getColumn(), new ColumnWeightData(5, 77));
 
         column0.setLabelProvider(clp);
         column0.setEditingSupport(new JcrEditingSupport(this, viewer, ColumnId.NAME));
@@ -267,6 +267,8 @@ public class JcrPropertiesView extends ViewPart {
 
         column2.setLabelProvider(clp);
 		column2.setEditingSupport(new JcrEditingSupport(this, viewer, ColumnId.VALUE));
+	
+        column5.setEditingSupport(new JcrEditingSupport(this, viewer, ColumnId.MULTIPLE));
 		
 		// Create the help context id for the viewer's control
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(viewer.getControl(), "org.apache.sling.ide.eclipse-ui.viewer");
@@ -502,8 +504,12 @@ public class JcrPropertiesView extends ViewPart {
                                 column = 0;
                             } else if (lastEditedColumnId==ColumnId.TYPE) {
                                 column = 1;
-                            } else {
+                            } else if (lastEditedColumnId==ColumnId.VALUE) {
                                 column = 2;
+                            } else if (lastEditedColumnId==ColumnId.MULTIPLE) {
+                                column = 5;
+                            } else {
+                                throw new IllegalStateException("Unknown columnId="+lastEditedColumnId);
                             }
                             Display.getDefault().asyncExec(new Runnable() {
 
