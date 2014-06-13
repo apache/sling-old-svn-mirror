@@ -128,6 +128,9 @@ public abstract class ServerUtil {
     }
 
     public static Repository getConnectedRepository(IServer server, IProgressMonitor monitor) throws CoreException {
+        if (server==null) {
+            throw new CoreException(new Status(Status.WARNING, Activator.PLUGIN_ID, "No server available/selected."));
+        }
         if (server.getServerState()!=IServer.STATE_STARTED) {
             throw new CoreException(new Status(Status.WARNING, Activator.PLUGIN_ID, "Server not started, please start server first."));
         }
