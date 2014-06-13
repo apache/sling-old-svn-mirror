@@ -29,20 +29,28 @@ import de.pdark.decentxml.Element;
 
 public class DirNode extends JcrNode {
 	
-	private static String decode(String name) {
-		if (name.endsWith(".dir")) {
-			return name.substring(0, name.length()-4);
-		} else if (!name.startsWith("_")) {
-		    return null;
-		}
-		name = name.substring(1);
-		int pos = name.indexOf("_");
-		if (pos==-1) {
-		    return null;
-		}
-		name = name.substring(0, pos) + ":" + name.substring(pos+1);
-		return name;
-	}
+    static String encode(String name) {
+        int colon = name.indexOf(":");
+        if (colon==-1) {
+            return name;
+        }
+        return "_" + name.substring(0, colon) + "_" + name.substring(colon+1);
+    }
+
+    static String decode(String name) {
+        if (name.endsWith(".dir")) {
+            return name.substring(0, name.length()-4);
+        } else if (!name.startsWith("_")) {
+            return null;
+        }
+        name = name.substring(1);
+        int pos = name.indexOf("_");
+        if (pos==-1) {
+            return null;
+        }
+        name = name.substring(0, pos) + ":" + name.substring(pos+1);
+        return name;
+    }
 
 	static boolean isDirNode(IResource resource) {
 		if (resource==null) {
