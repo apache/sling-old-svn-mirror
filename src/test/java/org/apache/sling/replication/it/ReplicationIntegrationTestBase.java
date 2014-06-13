@@ -19,21 +19,11 @@
 
 package org.apache.sling.replication.it;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.sling.testing.tools.http.Request;
 import org.apache.sling.testing.tools.sling.SlingClient;
 import org.apache.sling.testing.tools.sling.SlingInstance;
 import org.apache.sling.testing.tools.sling.SlingInstanceManager;
-import org.apache.sling.testing.tools.sling.SlingTestBase;
-import org.junit.BeforeClass;
 
-import static org.apache.sling.replication.it.ReplicationUtils.assertExits;
+import static org.apache.sling.replication.it.ReplicationUtils.assertExists;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -64,7 +54,7 @@ public abstract class ReplicationIntegrationTestBase {
                     .replace("http://localhost:4503", publish.getServerBaseUrl());
             authorClient.setProperties("/libs/sling/replication/config/transport/http/http-publish-receive",
                     "endpoints", receiverUrl);
-            assertExits(authorClient, "/libs/sling/replication/agent/publish");
+            assertExists(authorClient, "/libs/sling/replication/agent/publish");
         }
         catch (Exception ex) {
 
