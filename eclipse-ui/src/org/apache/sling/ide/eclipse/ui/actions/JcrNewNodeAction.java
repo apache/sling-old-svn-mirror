@@ -29,14 +29,17 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.wst.server.ui.internal.Messages;
 
 public class JcrNewNodeAction implements IObjectActionDelegate {
 
 	private ISelection selection;
 	private Shell shell;
+    private boolean doNotAskAgain;
 
 	public JcrNewNodeAction() {
 	}
@@ -56,9 +59,27 @@ public class JcrNewNodeAction implements IObjectActionDelegate {
         Repository repository = ServerUtil.getDefaultRepository(node.getProject());
         NodeTypeRegistry ntManager = (repository==null) ? null : repository.getNodeTypeRegistry();
         if (ntManager == null) {
-            MessageDialog.openWarning(null, "Unable to create a new node", "Unable to create a new node since project "
-                    + node.getProject().getName() + " is not associated with a server or the server is not started.");
-            return;
+            
+            if (!doNotAskAgain) {
+                MessageDialog dialog = new MessageDialog(null,  "Unable to validate node type", null,
+                        "Unable to validate node types since project " + node.getProject().getName() + " is not associated with a server or the server is not started.",
+                        MessageDialog.QUESTION_WITH_CANCEL, 
+                        new String[] {"Cancel", "Continue (do not ask again)", "Continue"}, 1) {
+                    @Override
+                    protected void configureShell(Shell shell) {
+                        super.configureShell(shell);
+                        setShellStyle(getShellStyle() | SWT.SHEET);
+                    }
+                };
+                int choice = dialog.open();
+                if (choice <= 0) {
+                    return;
+                }
+                if (choice==1) {
+                    doNotAskAgain = true;
+                }
+            }
+
         }
         final NodeType nodeType = node.getNodeType();
         if (nodeType!=null && nodeType.getName()!=null && nodeType.getName().equals("nt:file")) {

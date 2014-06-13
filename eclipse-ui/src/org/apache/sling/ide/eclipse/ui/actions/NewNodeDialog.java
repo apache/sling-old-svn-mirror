@@ -31,6 +31,8 @@ import org.eclipse.swt.widgets.Shell;
 
 public class NewNodeDialog extends InputDialog {
 
+    private static String lastChosenNodeType = null;
+    
     private final String parentNodeType;
     private final NodeTypeRegistry ntManager;
     protected String comboSelection;
@@ -45,11 +47,13 @@ public class NewNodeDialog extends InputDialog {
                 "Enter name for new node under:\n path: "+node.getJcrPath(), "", null);
         this.parentNodeType = node.getPrimaryType();
         this.ntManager = ntManager;
-        final LinkedList<String> ac = new LinkedList<String>(ntManager.getAllowedPrimaryChildNodeTypes(parentNodeType));
-        final NodeType parentNt = ntManager.getNodeType(parentNodeType);
-        allChildNodeDefs = parentNt.getChildNodeDefinitions();
-        Collections.sort(ac);
-        this.allowedChildren = ac;
+        if (ntManager!=null) {
+            final LinkedList<String> ac = new LinkedList<String>(ntManager.getAllowedPrimaryChildNodeTypes(parentNodeType));
+            final NodeType parentNt = ntManager.getNodeType(parentNodeType);
+            allChildNodeDefs = parentNt.getChildNodeDefinitions();
+            Collections.sort(ac);
+            this.allowedChildren = ac;
+        }
     }
 
     @Override
@@ -76,7 +80,9 @@ public class NewNodeDialog extends InputDialog {
 
         combo = new Combo(composite, SWT.DROP_DOWN);
         combo.moveAbove(errorMessageText);
-        combo.setItems(allowedChildren.toArray(new String[0]));
+        if (allowedChildren!=null) {
+            combo.setItems(allowedChildren.toArray(new String[0]));
+        }
         combo.setLayoutData(new GridData(GridData.GRAB_HORIZONTAL
                 | GridData.HORIZONTAL_ALIGN_FILL));
         combo.addSelectionListener(new SelectionAdapter() {
@@ -123,10 +129,12 @@ public class NewNodeDialog extends InputDialog {
         // this variant opens auto-complete on each character
         proposalAdapter = new ContentProposalAdapter(combo, controlContentAdapter, proposalProvider, null, null);
         // this variant opens auto-complete only when invoking the auto-complete hotkey
-//        proposalAdapter = new ContentAssistCommandAdapter(combo, controlContentAdapter,
-//            proposalProvider, null, new char[0], true);
-        if (allowedChildren.size()==1) {
+        if (allowedChildren!=null && allowedChildren.size()==1) {
             combo.setText(allowedChildren.iterator().next());
+        } else if (allowedChildren!=null) {
+            if (allowedChildren.contains(lastChosenNodeType)) {
+                combo.setText(lastChosenNodeType);
+            }
         }
         
         return composite;
@@ -143,6 +151,7 @@ public class NewNodeDialog extends InputDialog {
     }
     
     public String getChosenNodeType() {
+        lastChosenNodeType = comboSelection;
         return comboSelection;
     }
 
@@ -152,6 +161,8 @@ public class NewNodeDialog extends InputDialog {
         try {
             if (secondInput==null || secondInput.length()==0) {
                 setErrorMessage("");
+            } else if (ntManager==null) {
+                setErrorMessage(null);
             } else if (ntManager.isAllowedPrimaryChildNodeType(parentNodeType, secondInput)) {
                 // also check on the name, not only the type
                 if (allChildNodeDefs==null) {
