@@ -72,6 +72,8 @@ public class ContentImportTest {
         // install bundle facet
         project.installFacet("sling.content", "1.0");
 
+        wstServer.waitForServerToStart();
+
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
 
@@ -106,6 +108,8 @@ public class ContentImportTest {
         // install bundle facet
         project.installFacet("sling.content", "1.0");
 
+        wstServer.waitForServerToStart();
+
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
 
@@ -139,6 +143,8 @@ public class ContentImportTest {
         // install bundle facet
         project.installFacet("sling.content", "1.0");
 
+        wstServer.waitForServerToStart();
+
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
 
@@ -171,6 +177,8 @@ public class ContentImportTest {
 
         // install bundle facet
         project.installFacet("sling.content", "1.0");
+
+        wstServer.waitForServerToStart();
 
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
