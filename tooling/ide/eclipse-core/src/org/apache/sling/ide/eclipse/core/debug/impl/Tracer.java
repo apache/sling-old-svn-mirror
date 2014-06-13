@@ -59,6 +59,14 @@ public class Tracer implements DebugOptionsListener, PluginLogger {
     }
 
     @Override
+    public void trace(String message, Throwable error) {
+        if (!debugEnabled)
+            return;
+
+        trace.trace("/debug", message, error);
+    }
+
+    @Override
     public void warn(String message) {
         logInternal(IStatus.WARNING, message, null);
     }

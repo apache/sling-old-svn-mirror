@@ -78,4 +78,30 @@ public interface PluginLogger {
      */
     void trace(String message, Object... arguments);
 
+    /**
+     * Sends a trace message using the platform debug facility
+     * 
+     * <p>
+     * By default these trace messages are ignored, and are only logged if debugging is enabled for a specific plug-in.
+     * </p>
+     * 
+     * <p>
+     * Usage guide:
+     * </p>
+     * 
+     * <pre>
+     * try {
+     *     // code here
+     * } catch (RuntimeException e) {
+     *     logger.trace(&quot;An unexpected error has occured&quot;, e);
+     * }
+     * </pre>
+     * 
+     * @param message A string message
+     * @param error the error that occured
+     * 
+     * @see <a href="https://wiki.eclipse.org/FAQ_How_do_I_use_the_platform_debug_tracing_facility%3F">How do I use the
+     *      platform debug tracing facility?</a>
+     */
+    void trace(String message, Throwable error);
 }
