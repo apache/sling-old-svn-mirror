@@ -1151,16 +1151,12 @@ public class JcrNode implements IAdaptable {
         if (pt!=null && pt.length()!=0) {
             return pt;
         }
-        if (domElement==null) {
-            if (resource!=null) {
-                if (resource instanceof IContainer) {
-                    return "nt:folder";
-                } else {
-                    return "nt:file";
-                }
+        if (resource!=null) {
+            if (resource instanceof IContainer) {
+                return "nt:folder";
+            } else {
+                return "nt:file";
             }
-        } else if (resource instanceof IFolder) {
-            return "nt:folder";
         }
         return "";
     }
