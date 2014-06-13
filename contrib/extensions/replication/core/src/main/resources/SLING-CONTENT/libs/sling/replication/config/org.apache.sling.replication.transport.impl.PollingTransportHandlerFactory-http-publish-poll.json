@@ -4,5 +4,5 @@
     "poll.items" : 10,
     "TransportAuthenticationProviderFactory.target" : "(name=user)",
     "authentication.properties" : ["user=admin","password=admin"],
-    "endpoints" : [ "http://localhost:4503/system/replication/agent/reverserepo" ]
+    "endpoints" : [ "http://localhost:4503/libs/sling/replication/agent/reverserepo" ]
 }
