@@ -26,7 +26,6 @@ import java.util.List;
 
 import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
-
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 
@@ -53,7 +52,7 @@ public class FileVaultReplicationPackage implements ReplicationPackage {
             paths[i] = filterSets.get(i).getRoot();
         }
         this.paths = paths;
-        this.id = pkg.getFile().getAbsolutePath();
+        this.id = pkg.getFile() != null ? pkg.getFile().getAbsolutePath() : String.valueOf(pkg.getId());
         this.action = ReplicationActionType.ADD.toString();
     }
 
