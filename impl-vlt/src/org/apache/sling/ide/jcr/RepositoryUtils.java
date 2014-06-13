@@ -37,6 +37,10 @@ public abstract class RepositoryUtils {
     private static final RepositoryProvider REPOSITORY_PROVIDER = new RepositoryProvider();
     private static final Object SYNC = new Object();
     private static final String[] WEBDAV_URL_LOCATIONS = new String[] { "server/-/jcr:root", "crx/-/jcr:root" };
+    static {
+        // force eager loading of class, making sure that it's found by the registry provider
+        org.apache.jackrabbit.vault.davex.DAVExRepositoryFactory.class.getName();
+    }
 
     /**
      * Tries to figure out, if the repository provider is ready.
