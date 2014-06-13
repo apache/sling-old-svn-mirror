@@ -30,7 +30,7 @@ public class ReplicationPackageImporterResourcesIntegrationTest extends Replicat
     @Test
     public void testImporterRootResource() throws Exception {
         String rootResource = importerRootUrl();
-        assertExits(authorClient, rootResource);
+        assertExists(authorClient, rootResource);
         assertResponseContains(author, rootResource,
                 "sling:resourceType", "replication/importers",
                 "items", "default");
@@ -39,7 +39,7 @@ public class ReplicationPackageImporterResourcesIntegrationTest extends Replicat
     @Test
     public void testDefaultImporterResource() throws Exception {
         String rootResource = importerUrl("default");
-        assertExits(authorClient, rootResource);
+        assertExists(authorClient, rootResource);
         assertResponseContains(author, rootResource,
                 "sling:resourceType", "replication/importer",
                 "name", "default");

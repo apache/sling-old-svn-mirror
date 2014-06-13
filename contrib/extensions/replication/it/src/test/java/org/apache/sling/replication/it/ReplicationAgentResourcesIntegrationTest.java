@@ -18,7 +18,6 @@
  */
 package org.apache.sling.replication.it;
 
-import java.io.IOException;
 import java.util.UUID;
 
 import org.junit.Test;
@@ -39,7 +38,7 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
                 "cache-flush"
         };
         for (String agentName : defaultAgentNames) {
-            assertExits(authorClient, agentConfigUrl(agentName));
+            assertExists(authorClient, agentConfigUrl(agentName));
         }
 
     }
@@ -65,7 +64,7 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
                 "publish-reverse"
         };
         for (String agentName : defaultAuthorAgentNames) {
-            assertExits(authorClient, agentUrl(agentName));
+            assertExists(authorClient, agentUrl(agentName));
         }
     }
 
@@ -90,13 +89,13 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
                 "publish-reverse"
         };
         for (String agentName : defaultAuthorAgentNames) {
-            assertExits(authorClient, queueUrl(agentName));
+            assertExists(authorClient, queueUrl(agentName));
         }
     }
 
     @Test
     public void testDefaultAgentsRootResource() throws Exception {
-        assertExits(authorClient, agentRootUrl());
+        assertExists(authorClient, agentRootUrl());
         assertResponseContains(author, agentRootUrl(),
                 "sling:resourceType", "replication/agents",
                 "items", "publish-reverse","publish");
@@ -108,7 +107,7 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
         String newConfigResource = agentConfigUrl(agentName);
 
         authorClient.createNode(newConfigResource, "name", agentName, "transportHandler", "(name=author)");
-        assertExits(authorClient, newConfigResource);
+        assertExists(authorClient, newConfigResource);
         assertResponseContains(author, newConfigResource,
                 "sling:resourceType", "replication/config/agent",
                 "name", agentName,
@@ -120,7 +119,7 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
         String agentName = "sample-delete-config" + UUID.randomUUID();
         String newConfigResource = agentConfigUrl(agentName);
         authorClient.createNode(newConfigResource, "name", agentName, "transportHandler", "(name=author)");
-        assertExits(authorClient, newConfigResource);
+        assertExists(authorClient, newConfigResource);
 
         deleteNode(author, newConfigResource);
         // authorClient.delete does not work for some reason
@@ -134,7 +133,7 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
         String newConfigResource = agentConfigUrl(agentName);
 
         authorClient.createNode(newConfigResource, "name", agentName, "transportHandler", "(name=author)");
-        assertExits(authorClient, newConfigResource);
+        assertExists(authorClient, newConfigResource);
         authorClient.setProperties(newConfigResource, "transportHandler", "(name=updated)");
         assertResponseContains(author, newConfigResource,
                 "sling:resourceType", "replication/config/agent",
