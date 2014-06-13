@@ -25,7 +25,14 @@ import java.util.Map;
 
 import javax.jcr.PropertyType;
 
+import org.apache.sling.ide.eclipse.core.internal.Activator;
 import org.apache.sling.ide.eclipse.ui.views.DateTimeSupport;
+import org.eclipse.core.resources.IWorkspaceRunnable;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 import org.eclipse.ui.views.properties.IPropertySource;
 import org.eclipse.ui.views.properties.TextPropertyDescriptor;
@@ -122,7 +129,23 @@ public class ModifiableProperties implements IPropertySource {
 	        key = String.valueOf(id);
 	    }
         if ("jcr:primaryType".equals(key)) {
-            node.changePrimaryType(String.valueOf(value));
+            final String newPrimaryType = String.valueOf(value);
+            IWorkspaceRunnable r = new IWorkspaceRunnable() {
+
+                @Override
+                public void run(IProgressMonitor monitor) throws CoreException {
+                    node.changePrimaryType(newPrimaryType);
+                }
+            };
+            
+            try {
+                ResourcesPlugin.getWorkspace().run(r, null);
+            } catch (CoreException e) {
+                Activator.getDefault().getPluginLogger().error("Error changing type to "+newPrimaryType+": "+e, e);
+                e.printStackTrace();
+                MessageDialog.openError(Display.getDefault().getActiveShell(), "Error changing primary type", "Error changing primary type to "+newPrimaryType+": "+e);
+                return;
+            }
             if (id instanceof Map.Entry<?, ?>) {
                 Map.Entry<String, String> entry = (Map.Entry<String, String>)id;
                 entry.setValue(String.valueOf(value));

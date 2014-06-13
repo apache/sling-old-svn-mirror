@@ -67,7 +67,9 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
@@ -84,10 +86,16 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import de.pdark.decentxml.Attribute;
+import de.pdark.decentxml.Document;
 import de.pdark.decentxml.Element;
 import de.pdark.decentxml.Namespace;
 import de.pdark.decentxml.Node;
 import de.pdark.decentxml.Text;
+import de.pdark.decentxml.XMLParser;
+import de.pdark.decentxml.XMLSource;
+import de.pdark.decentxml.XMLStringSource;
+import de.pdark.decentxml.XMLTokenizer;
 import de.pdark.decentxml.XMLTokenizer.Type;
 
 /** WIP: model object for a jcr node shown in the content package view in project explorer **/
@@ -833,10 +841,21 @@ public class JcrNode implements IAdaptable {
 
                 @Override
                 public void run(IProgressMonitor monitor) throws CoreException {
-                    IFolder f = (IFolder)resource;
-                    IFolder newFolder = null;
-                    newFolder = f.getFolder(childNodeName);
-                    newFolder.create(true, true, new NullProgressMonitor());
+                    IFolder newFolder = prepareCreateFolderChild(childNodeName);
+                    if (parentSk==SerializationKind.METADATA_PARTIAL) {
+                        // when the parent is partial and we're creating a folder here,
+                        // then we're running into a SLING-3639 type of problem
+                        // the way around this is to make a 'pointer' in the 'root'
+                        // .content.xml, and have a directory structure leaving to
+                        // the new node, together with a .content.xml describing
+                        // the type (unless it's a nt:folder that is)
+                        
+                        // 1) 'pointer' in the 'root .content.xml'
+                        createDomChild(childNodeName, null);
+                        
+                        // 2) directory structure is created above already
+                        // 3) new .content.xml is done below
+                    }
                     if (!childNodeType.equals("nt:folder")) {
                         createVaultFile(newFolder, ".content.xml", childNodeType);
                     }
@@ -845,7 +864,7 @@ public class JcrNode implements IAdaptable {
 	        
 	        try {
 	            ResourcesPlugin.getWorkspace().run(r, null);
-	            if (childNodeType.equals("nt:folder")) {
+	            if (childNodeType.equals("nt:folder") && parentSk==SerializationKind.FOLDER) {
 	                // trigger a publish, as folder creation is not propagated to 
 	                // the SlingLaunchpadBehavior otherwise
 	                //TODO: make configurable? Fix in Eclipse/WST?
@@ -918,14 +937,45 @@ public class JcrNode implements IAdaptable {
     }
 
     private void createVaultFile(IFolder parent, String filename, String childNodeType) {
-        final String minimalContentXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<jcr:root \n    xmlns:sling=\"http://sling.apache.org/jcr/sling/1.0\"\n    xmlns:jcr=\"http://www.jcp.org/jcr/1.0\"\n    jcr:primaryType=\""+childNodeType+"\"/>";
-        IFile file = parent.getFile(filename);
-        if (file.exists()) {
-            System.out.println("then what?");
-        }
+        createVaultFileWithContent(parent, filename, childNodeType, null);
+    }
+
+    private void createVaultFileWithContent(IFolder parent, String filename, String childNodeType, Element content) {
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<jcr:root \n    xmlns:sling=\"http://sling.apache.org/jcr/sling/1.0\"\n    xmlns:jcr=\"http://www.jcp.org/jcr/1.0\"\n    jcr:primaryType=\""+childNodeType+"\"/>";
+        final IFile file = parent.getFile(filename);
         try {
-            file.create(new ByteArrayInputStream(minimalContentXml.getBytes()), true, new NullProgressMonitor());
-        } catch (CoreException e) {
+            if (content!=null) {
+                XMLParser parser = new XMLParser () {
+                    @Override
+                    protected XMLTokenizer createTokenizer(XMLSource source) {
+                        XMLTokenizer tolerantTokenizerIgnoringEntities = new TolerantXMLTokenizer(source, file);
+                        tolerantTokenizerIgnoringEntities.setTreatEntitiesAsText (this.isTreatEntitiesAsText());
+                        return tolerantTokenizerIgnoringEntities;
+                    }
+                };
+                Document document = parser.parse (new XMLStringSource (xml));
+                // add the attributes of content
+                List<Attribute> attributes = content.getAttributes();
+                for (Iterator it = attributes.iterator(); it.hasNext();) {
+                    Attribute anAttribute = (Attribute) it.next();
+                    if (anAttribute.getName().equals("jcr:primaryType")) {
+                        // skip this
+                        continue;
+                    }
+                    document.getRootElement().addAttribute(anAttribute);
+                }
+                // then copy all the children
+                document.getRootElement().addNodes(content.getChildren());
+                
+                // then save the document
+                xml = document.toXML();
+            }
+            if (file.exists()) {
+                file.setContents(new ByteArrayInputStream(xml.getBytes()), true, true, new NullProgressMonitor());
+            } else {
+                file.create(new ByteArrayInputStream(xml.getBytes()), true, new NullProgressMonitor());
+            }
+        } catch (Exception e) {
             //TODO proper logging
             e.printStackTrace();
             MessageDialog.openInformation(Display.getDefault().getActiveShell(), 
@@ -952,7 +1002,7 @@ public class JcrNode implements IAdaptable {
     private SerializationKind getFallbackSerializationKind(String nodeType) {
         if (nodeType.equals("nt:file")) {
             return SerializationKind.FILE;
-        } else if (nodeType.equals("nt:folder")) {
+        } else if (nodeType.equals("nt:folder") || nodeType.equals("sling:Folder")) {
             return SerializationKind.FOLDER;
         } else {
             return SerializationKind.METADATA_PARTIAL;
@@ -968,7 +1018,9 @@ public class JcrNode implements IAdaptable {
 			throw new IllegalArgumentException("effectiveUnderlying must not be null");
 		}
 		Element element = new Element(nodeName);
-		element.addAttribute("jcr:primaryType", nodeType);
+		if (nodeType!=null) {
+		    element.addAttribute("jcr:primaryType", nodeType);
+		}
 		StringBuffer indent = new StringBuffer();
 		Element parElement = domElement.getParentElement();
 		while(parElement!=null) {
@@ -1107,8 +1159,10 @@ public class JcrNode implements IAdaptable {
                     return "nt:file";
                 }
             }
+        } else if (resource instanceof IFolder) {
+            return "nt:folder";
         }
-        return null;
+        return "";
     }
 
     public void deleteProperty(String displayName) {
@@ -1143,60 +1197,146 @@ public class JcrNode implements IAdaptable {
                     "verify node types: "+e1);
             return;
         }
+        String thisNodeType = getPrimaryType();
+        final SerializationKind currentSk = getSerializationKind(thisNodeType);
+        final SerializationKind newSk = getSerializationKind(newPrimaryType);
         
-        if ("nt:folder".equals(getPrimaryType())) {
-            // switching away from an nt:folder might require creating a .content.xml
-            createVaultFile((IFolder) resource, ".content.xml", newPrimaryType);
-        } else if ("nt:folder".equals(newPrimaryType)) {
-            // switching *to* an nt:folder also has its challenges..:
-            // 1) it is not allowed to occur within a 'default' and 'full coverage aggregate' node
-            // 2) nt:folder doesn't allow arbitrary children for one
-            // 3)  but it also doesn't have an extra .content.xml - so that one would disappear
-            
-            // 1)
-            if (domElement!=null) {
-                MessageDialog.openWarning(null, "Unable to change primaryType", "Unable to change jcr:primaryType to nt:folder"
-                        + " since the node is contained in a .content.xml");
-                return;
-            }
-            
-            
-            // verify 2)
-            Object[] cn = getChildren(true);
-            for (int i = 0; i < cn.length; i++) {
-                JcrNode node = (JcrNode) cn[i];
-                try {
-                    if (!ntManager.isAllowedPrimaryChildNodeType("nt:folder", node.getPrimaryType())) {
+        if (currentSk.equals(newSk)) {
+            if (newSk!=SerializationKind.FOLDER) {
+                // easiest - we should just be able to change the type in the .content.xml
+                properties.doSetPropertyValue("jcr:primaryType", newPrimaryType);
+            } else {
+                if (thisNodeType.equals("nt:folder")) {
+                    // switching away from an nt:folder might require creating a .content.xml
+                    createVaultFile((IFolder) resource, ".content.xml", newPrimaryType);
+                } else if (newPrimaryType.equals("nt:folder")) {
+                    // switching *to* an nt:folder also has its challenges..:
+                    // 1) it is not allowed to occur within a 'default' and 'full coverage aggregate' node
+                    // 2) nt:folder doesn't allow arbitrary children for one
+                    // 3)  but it also doesn't have an extra .content.xml - so that one would disappear
+                    
+                    // 1)
+                    if (domElement!=null) {
                         MessageDialog.openWarning(null, "Unable to change primaryType", "Unable to change jcr:primaryType to nt:folder"
-                                + " since nt:folder cannot have child of type "+node.getPrimaryType());
+                                + " since the node is contained in a .content.xml");
                         return;
                     }
-                } catch (RepositoryException e) {
-                    PluginLogger logger = Activator.getDefault().getPluginLogger();
-                    logger.error("Could not determine allowed primary child node types", e);
+                    
+                    
+                    // verify 2)
+                    if (!verifyNodeTypeChange(ntManager, newPrimaryType)) {
+                        return;
+                    }
+                    if (!(resource instanceof IFolder)) {
+                        MessageDialog.openWarning(null, "Unable to change primaryType", "Unable to change jcr:primaryType to nt:folder"
+                                + " as there is no underlying folder");
+                        return;
+                    }
+                    IFolder folder = (IFolder)resource;
+                    // 3) delete the .content.xml
+                    IFile contentXml = folder.getFile(".content.xml");
+                    if (contentXml.exists()) {
+                        try {
+                            contentXml.delete(true, new NullProgressMonitor());
+                        } catch (CoreException e) {
+                            PluginLogger logger = Activator.getDefault().getPluginLogger();
+                            logger.error("Could not delete "+contentXml.getFullPath()+", e="+e, e);
+                            MessageDialog.openError(null, "Could not delete file",
+                                    "Could not delete "+contentXml.getFullPath()+", "+e);
+                        }
+                    }
+                } else {
+                    properties.doSetPropertyValue("jcr:primaryType", newPrimaryType);
                 }
             }
-            if (!(resource instanceof IFolder)) {
-                MessageDialog.openWarning(null, "Unable to change primaryType", "Unable to change jcr:primaryType to nt:folder"
-                        + " as there is no underlying folder");
+            return;
+        }
+        
+        if (newSk==SerializationKind.FOLDER) {
+            // switching to a folder
+            if (currentSk==SerializationKind.FILE) {
+                MessageDialog.openWarning(null, "Unable to change primary type",
+                        "Changing from a file to a folder type is currently not supported");
                 return;
             }
-            IFolder folder = (IFolder)resource;
-            // 3) delete the .content.xml
-            IFile contentXml = folder.getFile(".content.xml");
-            if (contentXml.exists()) {
-                try {
-                    contentXml.delete(true, new NullProgressMonitor());
-                } catch (CoreException e) {
-                    PluginLogger logger = Activator.getDefault().getPluginLogger();
-                    logger.error("Could not delete "+contentXml.getFullPath()+", e="+e, e);
-                    MessageDialog.openError(null, "Could not delete file",
-                            "Could not delete "+contentXml.getFullPath()+", "+e);
+            if (newPrimaryType.equals("nt:folder")) {
+                // verify
+                if (!verifyNodeTypeChange(ntManager, newPrimaryType)) {
+                    return;
                 }
             }
+            try {
+                // create the new directory structure pointing to 'this'
+                IFolder newFolder = getParent().prepareCreateFolderChild(getJcrPathName());
+                
+                if (!newPrimaryType.equals("nt:folder")) {
+                    // move any children from the existing 'this' to a new vault file
+                    createVaultFileWithContent(newFolder, ".content.xml", newPrimaryType, domElement);
+                }
+                
+                // remove myself
+                if (domElement!=null) {
+                    domElement.remove();
+                    if (underlying!=null) {
+                        underlying.save();
+                    }
+                }
+
+                // add a pointer in the corresponding .content.xml to point to this (folder) child
+                getParent().createDomChild(getJcrPathName(), 
+                        null);
+                if (newPrimaryType.equals("nt:folder")) {
+                    // delete the .content.xml
+                    if (properties!=null && properties.getUnderlying()!=null) {
+                        IFile contentXml = properties.getUnderlying().file;
+                        if (contentXml!=null && contentXml.exists()) {
+                            contentXml.delete(true, new NullProgressMonitor());
+                        }
+                    }
+                }
+                ServerUtil.triggerIncrementalBuild(newFolder, null);
+                return;
+            } catch (CoreException e) {
+                MessageDialog.openWarning(null, "Unable to change primaryType", "Exception occurred: "+e);
+                PluginLogger logger = Activator.getDefault().getPluginLogger();
+                logger.error("Exception occurred", e);
+                return;
+            }
+        } else if (newSk==SerializationKind.FILE) {
+            MessageDialog.openWarning(null, "Unable to change primary type",
+                    "Changing to/from a file is currently not supported");
+            return;
         } else {
-            properties.doSetPropertyValue("jcr:primaryType", newPrimaryType);
+            // otherwise we're going from a folder to partial-or-full
+            if (domElement==null && (resource instanceof IFolder)) {
+                createVaultFile((IFolder) resource, ".content.xml", newPrimaryType);
+            } else {
+                
+                //TODO: revert above creation of pointer + folder + .content.xml
+                //      but this might be rather very trick and something for later
+                properties.doSetPropertyValue("jcr:primaryType", newPrimaryType);
+            }
         }
+        
+    }
+
+    private boolean verifyNodeTypeChange(NodeTypeRegistry ntManager,
+            final String newNodeType) {
+        Object[] cn = getChildren(true);
+        for (int i = 0; i < cn.length; i++) {
+            JcrNode node = (JcrNode) cn[i];
+            try {
+                if (!ntManager.isAllowedPrimaryChildNodeType(newNodeType, node.getPrimaryType())) {
+                    MessageDialog.openWarning(null, "Unable to change primaryType", "Unable to change jcr:primaryType to nt:folder"
+                            + " since nt:folder cannot have child of type "+node.getPrimaryType());
+                    return false;
+                }
+            } catch (RepositoryException e) {
+                PluginLogger logger = Activator.getDefault().getPluginLogger();
+                logger.error("Could not determine allowed primary child node types", e);
+            }
+        }
+        return true;
     }
 
     public void addProperty(String name, String value) {
@@ -1363,6 +1503,42 @@ public class JcrNode implements IAdaptable {
 
     public void changePropertyType(String key, int propertyType) {
         properties.changePropertyType(key, propertyType);
+    }
+
+    private IFolder prepareCreateFolderChild(final String childNodeName)
+            throws CoreException {
+        // 0) find base folder for creating new subfolders
+        List<String> parentNames = new LinkedList<String>();
+        JcrNode node = JcrNode.this;
+        while(!(node.resource instanceof IFolder) && !(node instanceof SyncDir)) {
+            parentNames.add(0, node.getJcrPathName());
+            node = node.getParent();
+        }
+        if (!(node.resource instanceof IFolder)) {
+            throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Could not find base folder for creating child. (1) Expected a folder at "+node.resource));
+        }
+        IFolder folder = (IFolder) node.resource;
+        parentNames.add(childNodeName);
+        for (Iterator it = parentNames.iterator(); it
+                .hasNext();) {
+            String aParentName = (String) it.next();
+            String encodedParentName = DirNode.encode(aParentName);
+            IResource member = folder.findMember(encodedParentName);
+            if (member!=null && !(member instanceof IFolder)) {
+                throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Could not find base folder for creating child. (2) Expected a folder at "+member));
+            }
+            if (member!=null && member.exists()) {
+                folder = (IFolder) member;
+                it.remove();
+                continue;
+            }
+            folder = folder.getFolder(encodedParentName);
+            if (!folder.exists()) {
+                folder.create(true, true, new NullProgressMonitor());
+            }
+        }
+        
+        return folder;
     }
 
 }
