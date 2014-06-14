@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.sling.servlets.get.impl.helpers;
+package org.apache.sling.commons.json.sling;
 
 import java.util.Iterator;
 import java.util.LinkedList;

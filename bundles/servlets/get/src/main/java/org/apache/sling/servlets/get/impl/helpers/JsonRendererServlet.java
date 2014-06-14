@@ -30,6 +30,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
+import org.apache.sling.commons.json.sling.ResourceTraversor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
