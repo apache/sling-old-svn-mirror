@@ -26,6 +26,7 @@ import org.apache.sling.commons.testing.junit.Retry;
 import org.apache.sling.commons.testing.junit.RetryRule;
 import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.discovery.impl.setup.Instance;
+import org.apache.sling.testing.tools.sling.TimeoutsProvider;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -35,7 +36,7 @@ import org.slf4j.LoggerFactory;
 
 public class LargeTopologyWithHubTest {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private static final Logger logger = LoggerFactory.getLogger(LargeTopologyWithHubTest.class);
 
     private static List<Instance> instances;
     private static Instance hub;
@@ -52,8 +53,13 @@ public class LargeTopologyWithHubTest {
         
         slingIds = new LinkedList<String>();
         slingIds.add(hub.getSlingId());
+        final int defaultHeartbeatTimeout = 30;
+        final int heartbeatTimeout = TimeoutsProvider.getInstance().getTimeout(defaultHeartbeatTimeout);
+        logger.info("setUp: using heartbeatTimeout of "+heartbeatTimeout+"sec "
+                + "(default: "+defaultHeartbeatTimeout+")");
         for(int i=0; i<TEST_SIZE; i++) {
             Instance instance = TopologyTestHelper.createInstance(instances, "instance"+i);
+            instance.getConfig().setHeartbeatTimeout(heartbeatTimeout);
             new Connector(instance, hub);
             slingIds.add(instance.getSlingId());
         }
