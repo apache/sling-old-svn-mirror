@@ -108,8 +108,8 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
             props.setProperty(VaultPackage.NAME_GROUP, packageGroup);
             String packageName = String.valueOf(request.getTime());
             props.setProperty(VaultPackage.NAME_NAME, packageName);
-            if (log.isInfoEnabled()) {
-                log.info("assembling package {}", packageGroup + '/' + packageName);
+            if (log.isDebugEnabled()) {
+                log.debug("assembling package {}", packageGroup + '/' + packageName);
             }
             inf.setProperties(props);
 
@@ -140,14 +140,12 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
     @Override
     protected ReplicationPackage readPackageForAdd(final InputStream stream, boolean install)
             throws ReplicationPackageReadingException {
-        if (log.isInfoEnabled()) {
-            log.info("reading a stream {}", stream);
+        if (log.isDebugEnabled()) {
+            log.debug("reading a stream");
         }
         Session session = null;
         ReplicationPackage pkg = null;
         try {
-            log.info("reading package for addition");
-
             session = getSession();
             if (session != null) {
                 final JcrPackage jcrPackage = packaging.getPackageManager(session).upload(stream, true,
