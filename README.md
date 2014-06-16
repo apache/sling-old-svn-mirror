@@ -60,5 +60,31 @@ Following snippet demonstrates accessing the DataSource named `foo` via DS annot
         private DataSource dataSource;
     }
 
+Convert Driver jars to Bundle
+-----------------------------
+
+Most of the JDBC driver jars have the required OSGi headers and can be directly deployed to OSGi container
+as bundles. However some of the drivers e.g. Postgres are not having such headers and hence need to be 
+converted to OSGi bundles. For them we can use the [Bnd Wrap][2] command.
+
+For example to convert the Postgres driver jar follow the steps below
+
+    $ wget https://github.com/bndtools/bnd/releases/download/2.3.0.REL/biz.aQute.bnd-2.3.0.jar -O bnd.jar
+    $ wget http://jdbc.postgresql.org/download/postgresql-9.3-1101.jdbc41.jar
+    $ cat > bnd.bnd <<EOT
+    Bundle-Version: 9.3.1101
+    Bundle-SymbolicName: org.postgresql
+    Export-Package: org.postgresql
+    Include-Resource: @postgresql-9.3-1101.jdbc41.jar
+    EOT
+    $ java -jar bnd.jar bnd.bnd
+    
+In the steps above we
+
+1. Download the bnd jar and postgres driver jar
+2. Create a bnd file with required instructions. 
+3. Execute the bnd command
+4. Resulting bundle is present in `org.postgresql-9.3.1101.jar`
  
 [1]: http://tomcat.apache.org/tomcat-7.0-doc/jdbc-pool.html
+[2]: http://www.aqute.biz/Bnd/Wrapping
