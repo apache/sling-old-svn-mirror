@@ -125,9 +125,8 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
             log.info("getting first item in the queue");
         }
 
-        HashMap<String, Object> props = new HashMap<String, Object>();
-        Collection<Job> jobs = jobManager.findJobs(QueryType.QUEUED, topic, -1, props);
-        jobs.addAll(jobManager.findJobs(QueryType.ACTIVE, topic, -1, props));
+        Collection<Job> jobs = jobManager.findJobs(QueryType.QUEUED, topic, -1);
+        jobs.addAll(jobManager.findJobs(QueryType.ACTIVE, topic, -1));
         if (jobs.size() > 0) {
             ArrayList<Job> list = new ArrayList<Job>(jobs);
             Collections.sort(list, new Comparator<Job>() {

@@ -18,9 +18,9 @@
  */
 package org.apache.sling.replication.servlet;
 
-import java.io.IOException;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
+import java.io.IOException;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
@@ -29,7 +29,6 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.communication.ReplicationParameter;
 import org.apache.sling.replication.queue.ReplicationQueue;
@@ -45,7 +44,7 @@ import org.apache.sling.replication.resources.ReplicationConstants;
 @Service(value = Servlet.class)
 @Properties({
         @Property(name = "sling.servlet.resourceTypes", value = ReplicationConstants.AGENT_QUEUE_RESOURCE_TYPE),
-        @Property(name = "sling.servlet.methods", value = { "GET", "POST", "DELETE" } ) })
+        @Property(name = "sling.servlet.methods", value = {"GET", "POST", "DELETE"})})
 public class ReplicationAgentQueueServlet extends SlingAllMethodsServlet {
 
     @Override
@@ -60,10 +59,10 @@ public class ReplicationAgentQueueServlet extends SlingAllMethodsServlet {
         if (agent != null) {
             try {
                 ReplicationQueue queue = agent.getQueue(queueName);
-
                 response.getWriter().write(toJSoN(queue));
             } catch (Exception e) {
-                response.getWriter().write("{\"status\" : \"error\",\"message\":\"error reading from the queue\"}");
+                response.getWriter().write("{\"status\" : \"error\",\"message\":\"error reading from the queue\",\"reason\":\""
+                        + e.getLocalizedMessage() + "\"}");
             }
         } else {
             response.getWriter().write("{\"status\" : \"error\",\"message\":\"queue not found\"}");
@@ -72,12 +71,12 @@ public class ReplicationAgentQueueServlet extends SlingAllMethodsServlet {
 
 
     @Override
-     protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
+    protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
             throws ServletException, IOException {
         @SuppressWarnings("unchecked")
         String operation = request.getParameter(":operation");
 
-        if("delete".equals(operation)) {
+        if ("delete".equals(operation)) {
             doDelete(request, response);
         }
     }
@@ -88,7 +87,7 @@ public class ReplicationAgentQueueServlet extends SlingAllMethodsServlet {
             throws ServletException, IOException {
         ReplicationQueue queue = request.getResource().adaptTo(ReplicationQueue.class);
 
-        while(!queue.isEmpty()){
+        while (!queue.isEmpty()) {
             queue.removeHead();
         }
     }
@@ -114,7 +113,12 @@ public class ReplicationAgentQueueServlet extends SlingAllMethodsServlet {
     }
 
     private String toJSoN(ReplicationQueueItemState status) {
-        return "\"attempts\":" + status.getAttempts() + ",\"state\":\"" + status.getItemState().name() + "\",\"entered\":\"" + status.getEntered().getTime() + "\"";
+        StringBuilder builder = new StringBuilder("\"attempts\":" + status.getAttempts() + ",\"state\":\"" +
+                status.getItemState().name() + "\"");
+        if (status.getEntered() != null) {
+            builder.append(",\"entered\":\"").append(status.getEntered().getTime()).append("\"");
+        }
+        return builder.toString();
     }
 
     private String toJSoN(ReplicationQueueItem item) {
