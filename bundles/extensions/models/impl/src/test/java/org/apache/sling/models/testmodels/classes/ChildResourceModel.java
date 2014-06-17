@@ -16,7 +16,10 @@
  */
 package org.apache.sling.models.testmodels.classes;
 
+import java.util.List;
+
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.Model;
@@ -26,9 +29,23 @@ public class ChildResourceModel {
 
     @Inject
     private Resource firstChild;
-    
+
+    @Inject @Named("secondChild")
+    private List<Resource> grandChildren;
+
+    @Inject @Named("emptyChild")
+    private List<Resource> emptyGrandChildren;
+
     public Resource getFirstChild() {
         return firstChild;
+    }
+
+    public List<Resource> getGrandChildren() {
+        return grandChildren;
+    }
+
+    public List<Resource> getEmptyGrandChildren() {
+        return emptyGrandChildren;
     }
 
 }

@@ -17,7 +17,12 @@
 package org.apache.sling.models.impl.injectors;
 
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
@@ -47,11 +52,54 @@ public class ChildResourceInjector implements Injector, InjectAnnotationProcesso
     public Object getValue(Object adaptable, String name, Type declaredType, AnnotatedElement element,
             DisposalCallbackRegistry callbackRegistry) {
         if (adaptable instanceof Resource) {
-            return ((Resource) adaptable).getChild(name);
+            Resource child = ((Resource) adaptable).getChild(name);
+            if (child != null) {
+                return getValue(child, declaredType);
+            }
+        }
+        return null;
+    }
+
+    private Object getValue(Resource adaptable, Type declaredType) {
+        if (declaredType instanceof Class) {
+            return adaptable;
+        } else if (isDeclaredTypeCollection(declaredType)) {
+            return getResultList(adaptable, declaredType);
         } else {
             return null;
         }
     }
+
+    private Object getResultList(Resource resource, Type declaredType) {
+       List<Resource> result = new ArrayList<Resource>();
+       Class<?> type = getActualType((ParameterizedType) declaredType);
+       if (type != null && resource != null) {
+           Iterator<Resource> children = resource.listChildren();
+           while (children.hasNext()) {
+               result.add(children.next());
+           }
+       }
+       return result;
+   }
+
+   private Class<?> getActualType(ParameterizedType declaredType) {
+       Type[] types = declaredType.getActualTypeArguments();
+       if (types != null && types.length > 0) {
+           return (Class<?>) types[0];
+       }
+       return null;
+   }
+
+    private boolean isDeclaredTypeCollection(Type declaredType) {
+       boolean isCollection = false;
+       if (declaredType instanceof ParameterizedType) {
+           ParameterizedType type = (ParameterizedType) declaredType;
+           Class<?> collectionType = (Class<?>) type.getRawType();
+           isCollection = collectionType.equals(Collection.class)
+                   || collectionType.equals(List.class);
+       }
+       return isCollection;
+   }
 
     @Override
     public InjectAnnotationProcessor createAnnotationProcessor(Object adaptable, AnnotatedElement element) {

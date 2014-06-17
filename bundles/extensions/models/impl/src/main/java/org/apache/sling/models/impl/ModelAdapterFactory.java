@@ -25,15 +25,18 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -622,10 +625,31 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
     private static boolean setField(Field field, Object createdObject, Object value) {
         if (value != null) {
-            if (!isAcceptableType(field.getType(), value) && value instanceof Adaptable) {
-                value = ((Adaptable) value).adaptTo(field.getType());
-                if (value == null) {
-                    return false;
+            if (!isAcceptableType(field.getType(), field.getGenericType(), value)) {
+                Class<?> declaredType = field.getType();
+                Type genericType = field.getGenericType();
+                if (value instanceof Adaptable) {
+                    value = ((Adaptable) value).adaptTo(field.getType());
+                    if (value == null) {
+                        return false;
+                    }
+                } else if (genericType instanceof ParameterizedType) {
+                    ParameterizedType type = (ParameterizedType) genericType;
+                    Class<?> collectionType = (Class<?>) declaredType;
+                    if (value instanceof Collection &&
+                            (collectionType.equals(Collection.class) || collectionType.equals(List.class)) &&
+                            type.getActualTypeArguments().length == 1) {
+                        List<Object> result = new ArrayList<Object>();
+                        for (Object valueObject : (Collection<?>) value) {
+                            if (valueObject instanceof Adaptable) {
+                                Object adapted = ((Adaptable) valueObject).adaptTo((Class<?>) type.getActualTypeArguments()[0]);
+                                if (adapted != null) {
+                                    result.add(adapted);
+                                }
+                            }
+                        }
+                        value = result;
+                    }
                 }
             }
             boolean accessible = field.isAccessible();
@@ -650,7 +674,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
     private static boolean setMethod(Method method, Map<Method, Object> methods, Object value) {
         if (value != null) {
-            if (!isAcceptableType(method.getReturnType(), value) && value instanceof Adaptable) {
+            if (!isAcceptableType(method.getReturnType(), method.getGenericReturnType(), value) && value instanceof Adaptable) {
                 value = ((Adaptable) value).adaptTo(method.getReturnType());
                 if (value == null) {
                     return false;
@@ -663,9 +687,23 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         }
     }
 
-    private static boolean isAcceptableType(Class<?> type, Object value) {
+    private static boolean isAcceptableType(Class<?> type, Type genericType, Object value) {
         if (type.isInstance(value)) {
-            return true;
+            if ((type == Collection.class || type == List.class) && genericType instanceof ParameterizedType &&
+                    value instanceof Collection) {
+                Iterator<?> it = ((Collection<?>) value).iterator();
+                if (!it.hasNext()) {
+                    // empty collection, so it doesn't really matter
+                    return true;
+                } else {
+                    // this is not an ideal way to get the actual component type, but erasure...
+                    Class<?> actualComponentType = it.next().getClass();
+                    Class<?> desiredComponentType = (Class<?>) ((ParameterizedType) genericType).getActualTypeArguments()[0];
+                    return desiredComponentType.isAssignableFrom(actualComponentType);
+                }
+            } else {
+                return true;
+            }
         }
 
         if (type == Integer.TYPE) {
