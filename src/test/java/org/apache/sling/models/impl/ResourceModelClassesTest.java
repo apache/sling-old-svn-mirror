@@ -29,6 +29,8 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.models.impl.injectors.ChildResourceInjector;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
+import org.apache.sling.models.testmodels.classes.ArrayPrimitivesModel;
+import org.apache.sling.models.testmodels.classes.ArrayWrappersModel;
 import org.apache.sling.models.testmodels.classes.ChildModel;
 import org.apache.sling.models.testmodels.classes.ChildResourceModel;
 import org.apache.sling.models.testmodels.classes.ChildValueMapModel;
@@ -90,6 +92,50 @@ public class ResourceModelClassesTest {
         assertEquals("three", array[0]);
 
         assertTrue(model.isPostConstructCalled());
+    }
+
+    @Test
+    public void testArrayPrimitivesModel() {
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("intArray", new int[] { 1, 2, 9, 8 });
+        map.put("secondIntArray", new Integer[] {1, 2, 9, 8});
+
+        ValueMap vm = new ValueMapDecorator(map);
+        Resource res = mock(Resource.class);
+        when(res.adaptTo(ValueMap.class)).thenReturn(vm);
+
+        ArrayPrimitivesModel model = factory.getAdapter(res, ArrayPrimitivesModel.class);
+        assertNotNull(model);
+
+        int[] primitiveIntArray = model.getIntArray();
+        assertEquals(4, primitiveIntArray.length);
+        assertEquals(2, primitiveIntArray[1]);
+
+        int[] secondPrimitiveIntArray = model.getSecondIntArray();
+        assertEquals(4, secondPrimitiveIntArray.length);
+        assertEquals(2, secondPrimitiveIntArray[1]);
+    }
+
+    @Test
+    public void testArrayWrappersModel() {
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("intArray", new Integer[] {1, 2, 9, 8});
+        map.put("secondIntArray", new int[] {1, 2, 9, 8});
+
+        ValueMap vm = new ValueMapDecorator(map);
+        Resource res = mock(Resource.class);
+        when(res.adaptTo(ValueMap.class)).thenReturn(vm);
+
+        ArrayWrappersModel model = factory.getAdapter(res, ArrayWrappersModel.class);
+        assertNotNull(model);
+
+        Integer[] intArray = model.getIntArray();
+        assertEquals(4, intArray.length);
+        assertEquals(new Integer(2), intArray[1]);
+
+        Integer[] secondIntArray = model.getSecondIntArray();
+        assertEquals(4, secondIntArray.length);
+        assertEquals(new Integer(2), secondIntArray[1]);
     }
 
     @Test
