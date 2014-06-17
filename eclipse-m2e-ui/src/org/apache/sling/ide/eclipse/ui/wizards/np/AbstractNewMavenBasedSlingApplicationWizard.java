@@ -54,10 +54,14 @@ public abstract class AbstractNewMavenBasedSlingApplicationWizard extends Abstra
 	public void addPages() {
 		chooseArchetypePage = new ChooseArchetypeWizardPage(this);
 		addPage(chooseArchetypePage);
-		archetypeParametersPage = new ArchetypeParametersWizardPage(this);
+		archetypeParametersPage = createArchetypeParametersWizardPage();
 		addPage(archetypeParametersPage);
         addPage(getSetupServerWizardPage());
 	}
+	
+    protected ArchetypeParametersWizardPage createArchetypeParametersWizardPage() {
+        return new ArchetypeParametersWizardPage(this);
+    }
 	
     public ChooseArchetypeWizardPage getChooseArchetypePage() {
 		return chooseArchetypePage;
