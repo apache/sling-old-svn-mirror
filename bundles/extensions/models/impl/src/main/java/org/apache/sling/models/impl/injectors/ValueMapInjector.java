@@ -17,6 +17,7 @@
 package org.apache.sling.models.impl.injectors;
 
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 
 import org.apache.commons.lang.StringUtils;
@@ -54,7 +55,33 @@ public class ValueMapInjector implements InjectAnnotationProcessorFactory, Injec
         if (map == null) {
             return null;
         } else if (type instanceof Class<?>) {
-            return map.get(name, (Class<?>) type);
+            Class<?> clazz = (Class<?>) type;
+            try {
+                return map.get(name, clazz);
+            } catch (ClassCastException e) {
+                // handle case of primitive/wrapper arrays
+                if (clazz.isArray()) {
+                    Class<?> componentType = clazz.getComponentType();
+                    if (componentType.isPrimitive()) {
+                        Class<?> wrapper = getWrapperForPrimitive(componentType);
+                        if (wrapper != null) {
+                            Object wrapperArray = map.get(name, Array.newInstance(wrapper, 0).getClass());
+                            if (wrapperArray != null) {
+                                return unwrapArray(wrapperArray, componentType);
+                            }
+                        }
+                    } else {
+                        Class<?> primitiveType = getPrimitiveForWrapper(componentType);
+                        if (primitiveType != null) {
+                            Object primitiveArray = map.get(name, Array.newInstance(primitiveType, 0).getClass());
+                            if (primitiveArray != null) {
+                                return wrapArray(primitiveArray, componentType);
+                            }
+                        }
+                    }
+                }
+                return null;
+            }
         } else {
             log.debug("ValueMapInjector doesn't support non-class types {}", type);
             return null;
@@ -70,6 +97,76 @@ public class ValueMapInjector implements InjectAnnotationProcessorFactory, Injec
         } else {
             return null;
         }
+    }
+
+    private Object unwrapArray(Object wrapperArray, Class<?> primitiveType) {
+        int length = Array.getLength(wrapperArray);
+        Object primitiveArray = Array.newInstance(primitiveType, length);
+        for (int i = 0; i < length; i++) {
+            Array.set(primitiveArray, i, Array.get(wrapperArray, i));
+        }
+        return primitiveArray;
+    }
+
+    private Object wrapArray(Object primitiveArray, Class<?> wrapperType) {
+        int length = Array.getLength(primitiveArray);
+        Object wrapperArray = Array.newInstance(wrapperType, length);
+        for (int i = 0; i < length; i++) {
+            Array.set(wrapperArray, i, Array.get(primitiveArray, i));
+        }
+        return wrapperArray;
+    }
+
+    private Class<?> getPrimitiveForWrapper(Class<?> clazz) {
+        if (clazz == Integer.class) {
+            return Integer.TYPE;
+        }
+        if (clazz == Long.class) {
+            return Long.TYPE;
+        }
+        if (clazz == Boolean.class) {
+            return Boolean.TYPE;
+        }
+        if (clazz == Double.class) {
+            return Double.TYPE;
+        }
+        if (clazz == Float.class) {
+            return Float.TYPE;
+        }
+        if (clazz == Short.class) {
+            return Short.TYPE;
+        }
+        if (clazz == Character.class) {
+            return Character.TYPE;
+        }
+
+        return null;
+    }
+
+    private Class<?> getWrapperForPrimitive(Class<?> clazz) {
+        if (clazz == Integer.TYPE) {
+            return Integer.class;
+        }
+        if (clazz == Long.TYPE) {
+            return Long.class;
+        }
+        if (clazz == Boolean.TYPE) {
+            return Boolean.class;
+        }
+        if (clazz == Double.TYPE) {
+            return Double.class;
+        }
+        if (clazz == Float.TYPE) {
+            return Float.class;
+        }
+        if (clazz == Short.TYPE) {
+            return Short.class;
+        }
+        if (clazz == Character.TYPE) {
+            return Character.class;
+        }
+
+        return null;
     }
 
     @Override
