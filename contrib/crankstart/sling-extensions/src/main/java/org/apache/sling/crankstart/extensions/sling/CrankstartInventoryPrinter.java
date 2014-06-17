@@ -20,7 +20,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.util.Collection;
+import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.felix.inventory.Format;
@@ -32,6 +37,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 
 @Component
@@ -70,14 +76,24 @@ public class CrankstartInventoryPrinter implements InventoryPrinter {
     private void bundles(PrintWriter out) throws IOException {
         int ok = 0;
         int errors = 0;
+        final AtomicInteger warnings = new AtomicInteger();
+        
+        // Get the list of Maven coordinates from any fragment bundles,
+        // so that we can ignore their entries when returned by the
+        // bundles that they are attached to
+        final Set<String> fragmentCoords = new TreeSet<String>();
         for(Bundle b : bundleContext.getBundles()) {
-            final String coords = mavenCoordinates(b);
+            if(isFragment(b)) {
+                fragmentCoords.add(mavenCoordinates(b, null, warnings));
+            }
+        }
+        
+        for(Bundle b : bundleContext.getBundles()) {
+            final String coords = mavenCoordinates(b, fragmentCoords, warnings);
             if(coords.length() == 0) {
                 errors++;
-                out.print("# ERROR: Maven coordinates not found for bundle ");
-                out.print(b.getSymbolicName());
-                out.print(" version ");
-                out.print(b.getVersion());
+                out.print("# ERROR: Maven coordinates not found for ");
+                out.print(getBundleInfo(b));
                 out.println();
             } else {
                 ok++;
@@ -92,39 +108,60 @@ public class CrankstartInventoryPrinter implements InventoryPrinter {
         out.print(ok);
         out.print(" bundles processed sucessfully, ");
         out.print(errors);
-        out.println(" errors.");
+        out.print(" errors, ");
+        out.print(warnings.get());
+        out.print(" warnings.");
+        out.println();
     }
     
-    private String mavenCoordinates(Bundle b) throws IOException {
+    private static boolean isFragment(final Bundle bundle) {
+        Dictionary<?, ?> headerMap = bundle.getHeaders();
+        return headerMap.get(Constants.FRAGMENT_HOST) != null;
+    }
+    
+    private String mavenCoordinates(Bundle b, Collection<String> fragmentCoordinates, AtomicInteger warningsCounter) throws IOException {
         final StringBuilder sb = new StringBuilder();
         
         @SuppressWarnings("unchecked")
         final Enumeration<URL> entries = b.findEntries("META-INF/maven", "pom.properties", true);
         
-        int count=0;
+        // Get the pom.properties from the bundle itself, ignoring any attached fragments
         while(entries != null && entries.hasMoreElements()) {
             final URL u = entries.nextElement();
             java.util.Properties props = new java.util.Properties();
             InputStream is = null;
             try {
                 is = u.openStream();
-                props.load(u.openStream());
-                sb.append("mvn:")
+                props.load(is);
+                final StringBuilder thisBundle = new StringBuilder();
+                thisBundle.append("mvn:")
                 .append(props.get("groupId"))
                 .append("/")
                 .append(props.get("artifactId"))
                 .append("/")
                 .append(props.get("version"));
+                
+                if(fragmentCoordinates != null && !isFragment(b) && fragmentCoordinates.contains(thisBundle.toString())) {
+                    // fragment bundle - ignore
+                } else {
+                    if(sb.length() > 0) {
+                        warningsCounter.incrementAndGet();
+                        sb.append(" WARN - multiple non-fragment entries?? ");
+                        sb.append(getBundleInfo(b)).append(" ");
+                    }
+                    sb.append(thisBundle);
+                }
             } finally {
                 IOUtils.closeQuietly(is);
             }
-            count++;
         }
         
-        if(count > 1) {
-            sb.append(" WARNING - multiple entries, how to handle that?");
-        }
- 
+        return sb.toString();
+    }
+    
+    private static String getBundleInfo(Bundle b) {
+        final StringBuilder sb = new StringBuilder();
+        sb.append("bundle ").append(b.getSymbolicName()).append(" (").append(b.getBundleId()).append(")");
         return sb.toString();
     }
     
