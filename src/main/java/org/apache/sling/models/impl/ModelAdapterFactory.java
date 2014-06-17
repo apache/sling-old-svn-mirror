@@ -47,6 +47,7 @@ import javax.inject.Named;
 
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.ClassUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
@@ -612,29 +613,11 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
     }
 
     private Type mapPrimitiveClasses(Type type) {
-        if (type == Integer.TYPE) {
-            return Integer.class;
+        if (type instanceof Class<?>) {
+            return ClassUtils.primitiveToWrapper((Class<?>) type);
+        } else {
+            return type;
         }
-        if (type == Long.TYPE) {
-            return Long.class;
-        }
-        if (type == Boolean.TYPE) {
-            return Boolean.class;
-        }
-        if (type == Double.TYPE) {
-            return Double.class;
-        }
-        if (type == Float.TYPE) {
-            return Float.class;
-        }
-        if (type == Short.TYPE) {
-            return Short.class;
-        }
-        if (type == Character.TYPE) {
-            return Character.class;
-        }
-
-        return type;
     }
 
     private static boolean setField(Field field, Object createdObject, Object value) {
