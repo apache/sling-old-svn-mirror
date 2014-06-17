@@ -56,9 +56,8 @@ import org.w3c.dom.Document;
 import org.xml.sax.helpers.DefaultHandler;
 
 @Component(
-    name = "org.apache.sling.urlrewriter.SlingUrlRewriteFilter",
-    label = "%org.apache.sling.urlrewriter.label",
-    description = "%org.apache.sling.urlrewriter.description",
+    label = "Apache Sling URL Rewriter",
+    description = "multi-purpose service for altering HTTP requests/responses based on Tuckey's UrlRewriteFilter",
     immediate = true,
     metatype = true
 )
