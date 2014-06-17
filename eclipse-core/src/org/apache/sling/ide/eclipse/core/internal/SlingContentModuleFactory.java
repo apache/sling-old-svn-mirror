@@ -30,6 +30,19 @@ public class SlingContentModuleFactory extends ProjectModuleFactoryDelegate {
     static final String SLING_CONTENT_FACET_ID = "sling.content";
 	private static final IPath[] SETTINGS_PATHS = new IPath[] {new Path(".settings")};
     
+	@Override
+	public IModule[] getModules(IProject project) {
+	    final IModule[] result = super.getModules(project);
+	    if (result!=null && result.length>0) {
+	        return result;
+	    } else {
+	        // try clearing the cache
+	        // might fix SLING-3663 which could be due to a synchronization issue at first access time
+	        clearCache(project);
+	        return super.getModules(project);
+	    }
+	}
+	
     @Override
     protected IPath[] getListenerPaths() {
     	// returning the .settings path instead of null (as done by the parent)
