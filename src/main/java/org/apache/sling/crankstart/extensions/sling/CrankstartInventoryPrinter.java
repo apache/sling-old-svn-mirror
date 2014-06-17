@@ -38,6 +38,10 @@ import org.apache.felix.scr.annotations.Service;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
 
 @Component
@@ -71,6 +75,35 @@ public class CrankstartInventoryPrinter implements InventoryPrinter {
     
     private void configs(PrintWriter out) throws IOException {
         out.println("# TODO - dump OSGi configurations with FORMAT:felix.config");
+        
+        final ServiceReference ref = bundleContext.getServiceReference(ConfigurationAdmin.class.getName());
+        if(ref == null) {
+            out.println("WARN - ConfigurationAdmin service not available");
+            return;
+        }
+        
+        final ConfigurationAdmin ca = (ConfigurationAdmin)bundleContext.getService(ref);
+        try {
+            final Configuration [] allCfg = ca.listConfigurations(null);
+            if(allCfg != null) {
+                for(Configuration cfg : allCfg) {
+                    if(cfg.getFactoryPid() != null && cfg.getFactoryPid().length() > 0) {
+                        out.print("config.factory ");
+                        out.print(cfg.getFactoryPid());
+                    } else {
+                        out.print("config ");
+                        out.print(cfg.getPid());
+                    }
+                    out.println(" FORMAT:felix.config");
+                    out.print(" TODO - output values using org/apache/felix/cm/file/ConfigurationHandler");
+                    out.println();
+                }
+            }
+        } catch(InvalidSyntaxException ise) {
+            throw new RuntimeException("Unexpected InvalidSyntaxException", ise);
+        } finally {
+            bundleContext.ungetService(ref);
+        }
     }
     
     private void bundles(PrintWriter out) throws IOException {
