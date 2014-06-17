@@ -89,7 +89,7 @@ public abstract class AbstractAuthorizablePostServlet extends
      * Collects the properties that form the content to be written back to the
      * repository. NOTE: In the returned map, the key is the property name not a
      * path.
-     * 
+     *
      * @throws RepositoryException if a repository error occurs
      * @throws ServletException if an internal error occurs
      */
@@ -129,7 +129,7 @@ public abstract class AbstractAuthorizablePostServlet extends
                 // be used.
                 continue; // skip it.
             }
-            
+
             propPath = authorizablePath + "/" + propPath;
 
             // @TypeHint example
@@ -230,7 +230,7 @@ public abstract class AbstractAuthorizablePostServlet extends
      * Returns the request property for the given property path. If such a
      * request property does not exist yet it is created and stored in the
      * <code>props</code>.
-     * 
+     *
      * @param props The map of already seen request properties.
      * @param paramPath The absolute path of the property including the
      *            <code>suffix</code> to be looked up.
@@ -257,25 +257,25 @@ public abstract class AbstractAuthorizablePostServlet extends
     /**
      * Removes all properties listed as {@link RequestProperty#isDelete()} from
      * the authorizable.
-     * 
+     *
      * @param authorizable The
      *            <code>org.apache.jackrabbit.api.security.user.Authorizable</code>
      *            that should have properties deleted.
      * @param reqProperties The map of request properties to check for
      *            properties to be removed.
-     * @param response The <code>HtmlResponse</code> to be updated with
+     * @param changes The <code>List</code> to be updated with
      *            information on deleted properties.
      * @throws RepositoryException Is thrown if an error occurrs checking or
      *             removing properties.
      */
-    protected void processDeletes(Authorizable resource,
+    protected void processDeletes(Authorizable authorizable,
             Map<String, RequestProperty> reqProperties,
             List<Modification> changes) throws RepositoryException {
 
         for (RequestProperty property : reqProperties.values()) {
             if (property.isDelete()) {
-                if (resource.hasProperty(property.getName())) {
-                    resource.removeProperty(property.getName());
+                if (authorizable.hasProperty(property.getName())) {
+                    authorizable.removeProperty(property.getName());
                     changes.add(Modification.onDeleted(property.getPath()));
                 }
             }
@@ -284,7 +284,7 @@ public abstract class AbstractAuthorizablePostServlet extends
 
     /**
      * Writes back the content
-     * 
+     *
      * @throws RepositoryException if a repository error occurs
      * @throws ServletException if an internal error occurs
      */
@@ -325,7 +325,7 @@ public abstract class AbstractAuthorizablePostServlet extends
 
     /**
      * set property without processing, except for type hints
-     * 
+     *
      * @param parent the parent node
      * @param prop the request property
      * @throws RepositoryException if a repository error occurs.
@@ -454,19 +454,20 @@ public abstract class AbstractAuthorizablePostServlet extends
     }
 
     /**
-     * Removes the property with the given name from the parent resource if it
+     * Removes the property with the given name from the authorizable if it
      * exists.
-     * 
-     * @param parent the parent resource
+     *
+     * @param authorizable the <code>org.apache.jackrabbit.api.security.user.Authorizable</code>
+     *         that should have properties deleted.
      * @param name the name of the property to remove
      * @return path of the property that was removed or <code>null</code> if it
      *         was not removed
      * @throws RepositoryException if a repository error occurs.
      */
-    private boolean removePropertyIfExists(Authorizable resource, String name)
+    private boolean removePropertyIfExists(Authorizable authorizable, String name)
             throws RepositoryException {
-        if (resource.getProperty(name) != null) {
-            resource.removeProperty(name);
+        if (authorizable.getProperty(name) != null) {
+            authorizable.removeProperty(name);
             return true;
         }
         return false;
@@ -512,12 +513,12 @@ public abstract class AbstractAuthorizablePostServlet extends
         return requirePrefix;
     }
 
-    
+
     protected String convertToString(Object obj) {
         if (obj == null) {
             return null;
         }
-        
+
         if (obj instanceof String) {
             return (String)obj;
         } else if (obj instanceof String[]) {
@@ -537,12 +538,12 @@ public abstract class AbstractAuthorizablePostServlet extends
         }
         return null;
     }
-    
+
     protected String[] convertToStringArray(Object obj) {
         if (obj == null) {
             return null;
         }
-        
+
         if (obj instanceof String) {
             return new String[] {(String)obj};
         } else if (obj instanceof String[]) {
@@ -564,10 +565,10 @@ public abstract class AbstractAuthorizablePostServlet extends
         if (obj == null) {
             return null;
         }
-        
+
         if (obj instanceof String) {
             return new RequestParameter[] {
-                new RequestParameterImpl((String)obj, null) 
+                new RequestParameterImpl((String)obj, null)
             };
         } else if (obj instanceof String[]) {
             String [] strValues = (String[])obj;
@@ -583,7 +584,7 @@ public abstract class AbstractAuthorizablePostServlet extends
         }
         return null;
     }
-    
+
     static class RequestParameterImpl implements RequestParameter {
 
         private String value;
@@ -600,7 +601,7 @@ public abstract class AbstractAuthorizablePostServlet extends
         String getEncoding() {
             return this.encoding;
         }
-        
+
         void setEncoding(String encoding) {
             // recode this parameter by encoding the string with the current
             // encoding and decode the bytes with the encoding
@@ -684,7 +685,7 @@ public abstract class AbstractAuthorizablePostServlet extends
             return this.getString();
         }
     }
-    
+
     static class SlingUnsupportedEncodingException extends SlingIOException {
 
         private static final long serialVersionUID = -4482276105859280247L;
@@ -694,5 +695,5 @@ public abstract class AbstractAuthorizablePostServlet extends
         }
 
     }
-    
+
 }
