@@ -20,6 +20,7 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 
+import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
@@ -63,16 +64,16 @@ public class ValueMapInjector implements InjectAnnotationProcessorFactory, Injec
                 if (clazz.isArray()) {
                     Class<?> componentType = clazz.getComponentType();
                     if (componentType.isPrimitive()) {
-                        Class<?> wrapper = getWrapperForPrimitive(componentType);
-                        if (wrapper != null) {
+                        Class<?> wrapper = ClassUtils.primitiveToWrapper(componentType);
+                        if (wrapper != componentType) {
                             Object wrapperArray = map.get(name, Array.newInstance(wrapper, 0).getClass());
                             if (wrapperArray != null) {
                                 return unwrapArray(wrapperArray, componentType);
                             }
                         }
                     } else {
-                        Class<?> primitiveType = getPrimitiveForWrapper(componentType);
-                        if (primitiveType != null) {
+                        Class<?> primitiveType = ClassUtils.wrapperToPrimitive(componentType);
+                        if (primitiveType != componentType) {
                             Object primitiveArray = map.get(name, Array.newInstance(primitiveType, 0).getClass());
                             if (primitiveArray != null) {
                                 return wrapArray(primitiveArray, componentType);
@@ -115,58 +116,6 @@ public class ValueMapInjector implements InjectAnnotationProcessorFactory, Injec
             Array.set(wrapperArray, i, Array.get(primitiveArray, i));
         }
         return wrapperArray;
-    }
-
-    private Class<?> getPrimitiveForWrapper(Class<?> clazz) {
-        if (clazz == Integer.class) {
-            return Integer.TYPE;
-        }
-        if (clazz == Long.class) {
-            return Long.TYPE;
-        }
-        if (clazz == Boolean.class) {
-            return Boolean.TYPE;
-        }
-        if (clazz == Double.class) {
-            return Double.TYPE;
-        }
-        if (clazz == Float.class) {
-            return Float.TYPE;
-        }
-        if (clazz == Short.class) {
-            return Short.TYPE;
-        }
-        if (clazz == Character.class) {
-            return Character.TYPE;
-        }
-
-        return null;
-    }
-
-    private Class<?> getWrapperForPrimitive(Class<?> clazz) {
-        if (clazz == Integer.TYPE) {
-            return Integer.class;
-        }
-        if (clazz == Long.TYPE) {
-            return Long.class;
-        }
-        if (clazz == Boolean.TYPE) {
-            return Boolean.class;
-        }
-        if (clazz == Double.TYPE) {
-            return Double.class;
-        }
-        if (clazz == Float.TYPE) {
-            return Float.class;
-        }
-        if (clazz == Short.TYPE) {
-            return Short.class;
-        }
-        if (clazz == Character.TYPE) {
-            return Character.class;
-        }
-
-        return null;
     }
 
     @Override
