@@ -1,12 +1,12 @@
-Sling Classloader Leak Detector
-===============================
+Apache Sling Classloader Leak Detector
+======================================
 
 This bundle provides support for tracing classloader leaks which occur due to
-improper cleanup in bundles. Refer to [SLING-3359][1] for background details
+improper cleanup in bundles. Refer to [SLING-3359][1] for background details.
 
 The bundle registers a Felix Configuration Printer which dumps out a list of
-suspected classloaders which are not getting garbage collected. it can be accessed
-at http://localhost:8080/system/console/status-leakdetector
+suspected classloaders which are not getting garbage collected.
+It can be accessed at http://localhost:8080/system/console/status-leakdetector
 
     Possible classloader leak detected
     Number of suspicious bundles - 1
@@ -19,8 +19,8 @@ at http://localhost:8080/system/console/status-leakdetector
 ### JVM Arguments
 
  By default on Oracle JDK the classloaders and related classes from Permgen are
- not garbage collected by default. This bundle relies on Classloaders getting
- gced for it work. So to enable that pass on following arguments
+ not garbage collected by default. This bundle relies on classloaders getting
+ garbage collected for it work. So to enable that pass on following arguments
 
      -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled
 
