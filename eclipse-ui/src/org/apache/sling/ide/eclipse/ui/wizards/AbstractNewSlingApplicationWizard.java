@@ -190,7 +190,9 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 
     protected void publishModules(final List<IProject> createdProjects, IProgressMonitor monitor) throws CoreException {
         IServer server = setupServerWizardPage.getOrCreateServer(monitor);
-        server.start(ILaunchManager.RUN_MODE, monitor);
+        if (setupServerWizardPage.getStartServer()) {
+            server.start(ILaunchManager.RUN_MODE, monitor);
+        }
         List<IModule[]> modules = new ArrayList<IModule[]>();
         for (IProject project : createdProjects) {
             IModule module = ServerUtil.getModule(project);
@@ -200,7 +202,7 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
         }
 
         if (modules.size() > 0) {
-            server.publish(IServer.PUBLISH_FULL, modules, null, null);
+            server.publish(IServer.PUBLISH_CLEAN, modules, null, null);
         }
     }
 

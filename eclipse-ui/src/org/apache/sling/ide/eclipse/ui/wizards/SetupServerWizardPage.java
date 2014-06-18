@@ -76,6 +76,8 @@ public class SetupServerWizardPage extends WizardPage {
 	
     private IServer server;
 
+    private Button startExistingServerButton;
+
     public SetupServerWizardPage(AbstractNewSlingApplicationWizard parent) {
 		super("chooseArchetypePage");
         setTitle("Select or Create Server");
@@ -94,6 +96,7 @@ public class SetupServerWizardPage extends WizardPage {
 		container.setLayout(layout);
 		layout.numColumns = 3;
 		layout.verticalSpacing = 9;
+		layout.marginBottom = 10;
 
         GridDataFactory singleRowGridDataFactory = GridDataFactory.swtDefaults().align(SWT.LEFT, SWT.CENTER)
                 .span(layout.numColumns, 1);
@@ -117,6 +120,15 @@ public class SetupServerWizardPage extends WizardPage {
 	    });
         existingServerCombo.refreshRepositoryList(new NullProgressMonitor());
         existingServerCombo.getWidget().setEnabled(true);
+
+        {
+            startExistingServerButton = new Button(container, SWT.CHECK);
+            GridData gd = new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1);
+            gd.horizontalIndent = HORIZONTAL_INDENT;
+            startExistingServerButton.setLayoutData(gd);
+            startExistingServerButton.setText("Start server after project creation (if server not yet started).");
+            startExistingServerButton.setSelection(true);
+        }
 
         setupNewServer = new Button(container, SWT.RADIO);
         setupNewServer.setText("Setup new server");
@@ -189,6 +201,7 @@ public class SetupServerWizardPage extends WizardPage {
 
         useExistingServer.setSelection(existingServerCombo.hasServers());
         existingServerCombo.getWidget().setEnabled(existingServerCombo.hasServers());
+        startExistingServerButton.setEnabled(existingServerCombo.hasServers());
         setupNewServer.setSelection(!existingServerCombo.hasServers());
         installToolingSupportBundle.setSelection(true);
 
@@ -246,6 +259,7 @@ public class SetupServerWizardPage extends WizardPage {
     private void updateEnablements() {
 
         existingServerCombo.getWidget().setEnabled(useExistingServer.getSelection());
+        startExistingServerButton.setEnabled(useExistingServer.getSelection());
         newServerName.setEnabled(setupNewServer.getSelection());
         newServerHostnameName.setEnabled(setupNewServer.getSelection());
         newServerPort.setEnabled(setupNewServer.getSelection());
@@ -276,6 +290,13 @@ public class SetupServerWizardPage extends WizardPage {
         // TODO remove credential hardcoding
         return factory.createOsgiClient(new RepositoryInfo("admin", "admin", "http://" + hostname + ":" + launchpadPort
                 + "/"));
+    }
+    
+    public boolean getStartServer() {
+        if (!useExistingServer.getSelection()) {
+            return true; // new servers are automatically started
+        }
+        return startExistingServerButton.getSelection();
     }
 	
     public IServer getOrCreateServer(IProgressMonitor monitor) throws CoreException {
