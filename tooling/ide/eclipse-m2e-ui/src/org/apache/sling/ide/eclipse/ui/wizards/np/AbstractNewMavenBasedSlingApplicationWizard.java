@@ -25,6 +25,7 @@ import org.apache.sling.ide.eclipse.ui.wizards.AbstractNewSlingApplicationWizard
 import org.apache.sling.ide.eclipse.ui.wizards.Projects;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -77,6 +78,11 @@ public abstract class AbstractNewMavenBasedSlingApplicationWizard extends Abstra
         String javaPackage = archetypeParametersPage.getJavaPackage();
         Properties properties = archetypeParametersPage.getProperties();
         ProjectImportConfiguration configuration = new ProjectImportConfiguration();
+
+        IProject existingProject = ResourcesPlugin.getWorkspace().getRoot().getProject(artifactId);
+        if (existingProject!=null && existingProject.exists()) {
+            throw new IllegalStateException("Project already exists with name "+artifactId);
+        }
 
         advance(monitor, 1);
 

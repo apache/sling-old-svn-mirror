@@ -25,6 +25,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.eclipse.core.ConfigurationHelper;
 import org.apache.sling.ide.eclipse.ui.WhitelabelSupport;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
@@ -47,7 +48,10 @@ public class NewSlingContentProjectWizard extends AbstractNewSlingApplicationWiz
 
     @Override
     protected List<IProject> createProjects(IProgressMonitor monitor) throws CoreException {
-
+        IProject existingProject = ResourcesPlugin.getWorkspace().getRoot().getProject(page.getProjectName());
+        if (existingProject!=null && existingProject.exists()) {
+            throw new IllegalStateException("Project already exists with name "+page.getProjectName());
+        }
         IProject project = page.getProjectHandle();
 
         List<Operation> ops = new ArrayList<Operation>();
