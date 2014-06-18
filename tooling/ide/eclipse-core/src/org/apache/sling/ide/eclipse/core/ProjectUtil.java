@@ -90,7 +90,7 @@ public abstract class ProjectUtil {
     }
     
     public static File getSyncDirectoryFile(IProject project) {
-    	return getSyncDirectoryValue(project).toFile();
+        return new File(project.getLocation().toFile(), getSyncDirectoryValue(project).toString());
     }
 
     public static IPath getSyncDirectoryFullPath(IProject project) {
