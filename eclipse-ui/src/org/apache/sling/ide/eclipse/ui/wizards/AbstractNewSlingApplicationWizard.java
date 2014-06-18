@@ -85,7 +85,6 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
     }
 
     public void reportError(Throwable t) {
-        Activator.getDefault().getPluginLogger().error("Error occurred: "+t, t);
         if (t instanceof CoreException) {
             reportError((CoreException) t);
             return;
