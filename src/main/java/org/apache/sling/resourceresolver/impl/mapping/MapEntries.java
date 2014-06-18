@@ -466,11 +466,11 @@ public class MapEntries implements EventHandler {
             // add resolution entries for this node
             MapEntry childResolveEntry = null;
             try{
-            	childResolveEntry=MapEntry.createResolveEntry(childPath, child, trailingSlash);
+                childResolveEntry=MapEntry.createResolveEntry(childPath, child, trailingSlash);
             }catch (IllegalArgumentException iae){
-        		//ignore this entry
-        		log.debug("ignored entry due exception ",iae);
-        	}
+                //ignore this entry
+                log.debug("ignored entry due exception ",iae);
+            }
             if (childResolveEntry != null) {
                 entries.add(childResolveEntry);
             }
@@ -490,9 +490,9 @@ public class MapEntries implements EventHandler {
      * Add an entry to the resolve map.
      */
     private void addEntry(final Map<String, List<MapEntry>> entryMap, final String key, final MapEntry entry) {
-    	if (entry==null){
-    		return;
-    	}
+        if (entry==null){
+            return;
+        }
         List<MapEntry> entries = entryMap.get(key);
         if (entries == null) {
             entries = new ArrayList<MapEntry>();
@@ -744,7 +744,7 @@ public class MapEntries implements EventHandler {
                     final String redirect = intPath;
                     MapEntry mapEntry = getMapEntry(url, -1, false, redirect);
                     if (mapEntry!=null){
-                    	entries.add(mapEntry);
+                        entries.add(mapEntry);
                     }
                 }
             }
@@ -770,10 +770,10 @@ public class MapEntries implements EventHandler {
             }
 
             for (final Entry<String, List<String>> entry : map.entrySet()) {
-            	MapEntry mapEntry = getMapEntry(ANY_SCHEME_HOST + entry.getKey(), -1, false, entry.getValue().toArray(new String[0]));
-            	if (mapEntry!=null){
-            		entries.add(mapEntry);
-            	}
+                MapEntry mapEntry = getMapEntry(ANY_SCHEME_HOST + entry.getKey(), -1, false, entry.getValue().toArray(new String[0]));
+                if (mapEntry!=null){
+                    entries.add(mapEntry);
+                }
             }
         }
     }
@@ -822,7 +822,7 @@ public class MapEntries implements EventHandler {
             entry = getMapEntry(entry.getPattern(), entry.getStatus(), false, newRedir);
         }
         if (entry!=null){
-        	entries.put(path, entry);
+            entries.put(path, entry);
         }
     }
 
@@ -967,14 +967,14 @@ public class MapEntries implements EventHandler {
     private MapEntry getMapEntry(String url, final int status, final boolean trailingSlash,
             final String... redirect){
 
-    	MapEntry mapEntry = null;
-    	try{
-    		mapEntry = new MapEntry(url, status, trailingSlash, redirect);
-    	}catch (IllegalArgumentException iae){
-    		//ignore this entry
-    		log.debug("ignored entry due exception ",iae);
-    	}
-    	return mapEntry;
+        MapEntry mapEntry = null;
+        try{
+            mapEntry = new MapEntry(url, status, trailingSlash, redirect);
+        }catch (IllegalArgumentException iae){
+            //ignore this entry
+            log.debug("ignored entry due exception ",iae);
+        }
+        return mapEntry;
     }
 
 }
