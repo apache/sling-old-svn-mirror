@@ -90,7 +90,8 @@ public class ConvertToBundleAction implements IObjectActionDelegate {
 			}
 
 			ConvertProjectsWizard wizard = new ConvertProjectsWizard(applicableProjects, initialSelection, 
-                    "Convert to Bundle Project(s)", "Select project(s) to convert to Bundle project(s)");
+                    "Convert to Bundle Project(s)", "Select project(s) to convert to Bundle project(s)\n"
+                            + "List contains open Java projects that are not yet bundle or content projects.");
 
 			final Display display = getDisplay();
 			final WizardDialog dialog = new WizardDialog(display.getActiveShell(), wizard);
@@ -155,14 +156,13 @@ public class ConvertToBundleAction implements IObjectActionDelegate {
 				Object elem = it.next();
 				if (elem!=null && (elem instanceof IProject)) {
 					final IProject project = (IProject) elem;
-					if (ProjectHelper.isBundleProject(project)) {
+					if (ProjectHelper.isBundleProject(project) || ProjectHelper.isContentProject(project)) {
 						action.setEnabled(false);
 						return;
-					} else if (ProjectHelper.isPotentialBundleProject(project)) {
-						continue;
 					} else {
-						action.setEnabled(false);
-						return;
+					    // SLING-3651 : always show action -
+					    //              allows to provide more filter detail infos
+						continue;
 					}
 				} else {
 					action.setEnabled(false);

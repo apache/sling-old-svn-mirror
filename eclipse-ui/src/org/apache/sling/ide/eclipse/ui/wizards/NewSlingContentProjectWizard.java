@@ -27,6 +27,7 @@ import org.apache.sling.ide.eclipse.ui.WhitelabelSupport;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.ui.dialogs.WizardNewProjectCreationPage;
 import org.eclipse.wst.server.core.IServer;
 
@@ -94,7 +95,7 @@ public class NewSlingContentProjectWizard extends AbstractNewSlingApplicationWiz
             throws CoreException {
         Projects projects = new Projects();
         for (IProject project : createdProjects) {
-            ConfigurationHelper.convertToContentPackageProject(project, monitor, "jcr_root");
+            ConfigurationHelper.convertToContentPackageProject(project, monitor, new Path("jcr_root"));
             projects.getContentProjects().add(project);
         }
 
