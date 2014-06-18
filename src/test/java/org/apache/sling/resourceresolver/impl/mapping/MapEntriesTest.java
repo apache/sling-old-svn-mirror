@@ -79,6 +79,7 @@ public class MapEntriesTest {
         configs.add(new VanityPathConfig("/badVanityPath", false));
         configs.add(new VanityPathConfig("/redirectingVanityPath", false));
         configs.add(new VanityPathConfig("/redirectingVanityPath301", false));
+        configs.add(new VanityPathConfig("/vanityPathOnJcrContent", false));
 
         Collections.sort(configs);
         when(resourceResolverFactory.getAdministrativeResourceResolver(null)).thenReturn(resourceResolver);
@@ -168,30 +169,41 @@ public class MapEntriesTest {
 
         final List<Resource> resources = new ArrayList<Resource>();
 
-        Resource justVanityPath = mock(Resource.class);
+        Resource justVanityPath = mock(Resource.class, "justVanityPath");
         when(justVanityPath.getPath()).thenReturn("/justVanityPath");
         when(justVanityPath.getName()).thenReturn("justVanityPath");
         when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
         resources.add(justVanityPath);
 
-        Resource badVanityPath = mock(Resource.class);
+        Resource badVanityPath = mock(Resource.class, "badVanityPath");
         when(badVanityPath.getPath()).thenReturn("/badVanityPath");
         when(badVanityPath.getName()).thenReturn("badVanityPath");
         when(badVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/content/mypage/en-us-{132"));
         resources.add(badVanityPath);
 
 
-        Resource redirectingVanityPath = mock(Resource.class);
+        Resource redirectingVanityPath = mock(Resource.class, "redirectingVanityPath");
         when(redirectingVanityPath.getPath()).thenReturn("/redirectingVanityPath");
         when(redirectingVanityPath.getName()).thenReturn("redirectingVanityPath");
         when(redirectingVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/redirectingVanityPath", "sling:redirect", true));
         resources.add(redirectingVanityPath);
 
-        Resource redirectingVanityPath301 = mock(Resource.class);
+        Resource redirectingVanityPath301 = mock(Resource.class, "redirectingVanityPath301");
         when(redirectingVanityPath301.getPath()).thenReturn("/redirectingVanityPath301");
         when(redirectingVanityPath301.getName()).thenReturn("redirectingVanityPath301");
         when(redirectingVanityPath301.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/redirectingVanityPath301", "sling:redirect", true, "sling:redirectStatus", 301));
         resources.add(redirectingVanityPath301);
+
+        Resource vanityPathOnJcrContentParent = mock(Resource.class, "vanityPathOnJcrContentParent");
+        when(vanityPathOnJcrContentParent.getPath()).thenReturn("/vanityPathOnJcrContent");
+        when(vanityPathOnJcrContentParent.getName()).thenReturn("vanityPathOnJcrContent");
+
+        Resource vanityPathOnJcrContent = mock(Resource.class, "vanityPathOnJcrContent");
+        when(vanityPathOnJcrContent.getPath()).thenReturn("/vanityPathOnJcrContent/jcr:content");
+        when(vanityPathOnJcrContent.getName()).thenReturn("jcr:content");
+        when(vanityPathOnJcrContent.getParent()).thenReturn(vanityPathOnJcrContentParent);
+        when(vanityPathOnJcrContent.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/vanityPathOnJcrContent"));
+        resources.add(vanityPathOnJcrContent);
 
         when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
 
@@ -207,7 +219,7 @@ public class MapEntriesTest {
         mapEntries.doInit();
 
         List<MapEntry> entries = mapEntries.getResolveMaps();
-        assertEquals(6, entries.size());
+        assertEquals(8, entries.size());
         for (MapEntry entry : entries) {
             if (entry.getPattern().contains("/target/redirectingVanityPath301")) {
                 assertEquals(301, entry.getStatus());
@@ -217,6 +229,10 @@ public class MapEntriesTest {
                 assertFalse(entry.isInternal());
             } else if (entry.getPattern().contains("/target/justVanityPath")) {
                 assertTrue(entry.isInternal());
+            } else if (entry.getPattern().contains("/target/vanityPathOnJcrContent")) {
+                for (String redirect : entry.getRedirect()) {
+                    assertFalse(redirect.contains("jcr:content"));
+                }
             }
         }
     }
