@@ -30,6 +30,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.jface.dialogs.IMessageProvider;
@@ -84,6 +85,7 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
     }
 
     public void reportError(Throwable t) {
+        Activator.getDefault().getPluginLogger().error("Error occurred: "+t, t);
         if (t instanceof CoreException) {
             reportError((CoreException) t);
             return;
@@ -213,7 +215,7 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 
     protected void configureContentProject(IProject aContentProject, List<IProject> projects, IProgressMonitor monitor)
             throws CoreException {
-        ConfigurationHelper.convertToContentPackageProject(aContentProject, monitor, "src/main/content/jcr_root");
+        ConfigurationHelper.convertToContentPackageProject(aContentProject, monitor, new Path("src/main/content/jcr_root"));
     }
 
     protected void configureReactorProject(IProject reactorProject, IProgressMonitor monitor) throws CoreException {

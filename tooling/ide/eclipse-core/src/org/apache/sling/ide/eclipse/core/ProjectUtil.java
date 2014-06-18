@@ -51,8 +51,8 @@ public abstract class ProjectUtil {
 		} else if (!ProjectHelper.isContentProject(project)) {
 			return null;
 		}
-		String syncDirectoryValue = ProjectUtil.getSyncDirectoryValue(project);
-		if (syncDirectoryValue==null || syncDirectoryValue.length()==0) {
+		IPath syncDirectoryValue = ProjectUtil.getSyncDirectoryValue(project);
+		if (syncDirectoryValue==null || syncDirectoryValue.isEmpty()) {
 			return null;
 		}
 		IResource syncDir = project.findMember(syncDirectoryValue);
@@ -73,7 +73,7 @@ public abstract class ProjectUtil {
      * @param project the project, must not be null
      * @return the value of the sync directory
      */
-    public static String getSyncDirectoryValue(IProject project) {
+    public static IPath getSyncDirectoryValue(IProject project) {
         String value = null;
         try {
             value = project.getPersistentProperty(new QualifiedName(Activator.PLUGIN_ID, PROPERTY_SYNC_ROOT));
@@ -82,14 +82,15 @@ public abstract class ProjectUtil {
         }
 
         // TODO central place for defaults
-        if (value == null)
-            value = PROPERTY_SYNC_ROOT_DEFAULT_VALUE;
-
-        return value;
+        if (value == null) {
+            return Path.fromOSString(PROPERTY_SYNC_ROOT_DEFAULT_VALUE);
+        } else {
+            return Path.fromPortableString(value);
+        }
     }
     
     public static File getSyncDirectoryFile(IProject project) {
-    	return new File(project.getLocation().toFile(), getSyncDirectoryValue(project));
+    	return getSyncDirectoryValue(project).toFile();
     }
 
     public static IPath getSyncDirectoryFullPath(IProject project) {
@@ -107,10 +108,10 @@ public abstract class ProjectUtil {
      * @param project the project, must not be null
      * @param path the value
      */
-    public static void setSyncDirectoryPath(IProject project, String path) {
+    public static void setSyncDirectoryPath(IProject project, IPath path) {
 
         try {
-            project.setPersistentProperty(new QualifiedName(Activator.PLUGIN_ID, PROPERTY_SYNC_ROOT), path);
+            project.setPersistentProperty(new QualifiedName(Activator.PLUGIN_ID, PROPERTY_SYNC_ROOT), path.toPortableString());
         } catch (CoreException e) {
             Activator.getDefault().getPluginLogger().error(e.getMessage(), e);
         }
