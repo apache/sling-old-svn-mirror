@@ -306,15 +306,15 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
 
     @Override
     public void indexChanged(IRepository repository) {
-        Display.getDefault().asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                if (isCurrentPage()) {
-                    knownArchetypes.removeAll();
-                    initialize();
-                }
-            }
-        });
+//        Display.getDefault().asyncExec(new Runnable() {
+//            @Override
+//            public void run() {
+//                if (isCurrentPage()) {
+//                    knownArchetypes.removeAll();
+//                    initialize();
+//                }
+//            }
+//        });
     }
 
     @Override
