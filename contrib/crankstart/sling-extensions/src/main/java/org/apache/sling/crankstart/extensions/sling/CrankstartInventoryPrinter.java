@@ -16,9 +16,12 @@
  */
 package org.apache.sling.crankstart.extensions.sling;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,8 +30,10 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.felix.inventory.Format;
 import org.apache.felix.inventory.InventoryPrinter;
 import org.apache.felix.scr.annotations.Activate;
@@ -55,6 +60,13 @@ import org.osgi.service.component.ComponentContext;
 public class CrankstartInventoryPrinter implements InventoryPrinter {
 
     private BundleContext bundleContext;
+    private static final String INDENT = "  ";
+    
+    // Properties to ignore when dumping configs
+    private static final String [] PROPS_TO_IGNORE = {
+        Constants.SERVICE_PID,
+        "service.factoryPid"
+    };
     
     @Activate
     public void activate(ComponentContext ctx) {
@@ -75,19 +87,21 @@ public class CrankstartInventoryPrinter implements InventoryPrinter {
     }
     
     private void configs(PrintWriter out) throws IOException {
-        out.println("# TODO - dump OSGi configurations with FORMAT:felix.config");
-        
         final ServiceReference ref = bundleContext.getServiceReference(ConfigurationAdmin.class.getName());
         if(ref == null) {
             out.println("WARN - ConfigurationAdmin service not available");
             return;
         }
         
+        out.println("# The CRANKSTART_CONFIG_ID property that we add to configs is meant to detect which factory configs have already been created");
+        
         final ConfigurationAdmin ca = (ConfigurationAdmin)bundleContext.getService(ref);
         try {
             final Configuration [] allCfg = ca.listConfigurations(null);
+            int count = 0;
             if(allCfg != null) {
                 for(Configuration cfg : allCfg) {
+                    count++;
                     if(cfg.getFactoryPid() != null && cfg.getFactoryPid().length() > 0) {
                         out.print("config.factory ");
                         out.print(cfg.getFactoryPid());
@@ -96,10 +110,34 @@ public class CrankstartInventoryPrinter implements InventoryPrinter {
                         out.print(cfg.getPid());
                     }
                     out.println(" FORMAT:felix.config");
-                    out.print(" TODO - output values using org/apache/felix/cm/file/ConfigurationHandler");
+                    
+                    out.print(INDENT);
+                    out.print("CRANKSTART_CONFIG_ID=\"");
+                    out.print(UUID.randomUUID());
+                    out.println("\"");
+                    
+                    // Need to indent the config properties 
+                    final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    ConfigurationHandler.write(bos, cfg.getProperties());
+                    final BufferedReader r = new BufferedReader(new StringReader(new String(bos.toString())));
+                    String line = null;
+                    
+                    readingLines:
+                    while((line = r.readLine()) != null) {
+                        for(String p : PROPS_TO_IGNORE) {
+                            if(line.startsWith(p)) {
+                                continue readingLines;
+                            }
+                        }
+                        out.print(INDENT);
+                        out.println(line);
+                    }
                     out.println();
                 }
             }
+            out.print("# ");
+            out.print(count);
+            out.println(" configurations processed");
         } catch(InvalidSyntaxException ise) {
             throw new RuntimeException("Unexpected InvalidSyntaxException", ise);
         } finally {
@@ -233,7 +271,5 @@ public class CrankstartInventoryPrinter implements InventoryPrinter {
         } finally {
             resource.close();
         }
-    }
-    
-    
+    }    
 }
