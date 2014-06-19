@@ -156,47 +156,77 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         }
     }
 
-    private void reorderChildNodes(Node node, ResourceProxy resource2) throws RepositoryException {
+    private void reorderChildNodes(Node nodeToReorder, ResourceProxy resourceToReorder) throws RepositoryException {
 
-        ListIterator<ResourceProxy> coveredResourceChildren = resource2.getCoveredChildren().listIterator();
+        List<ResourceProxy> children = resourceToReorder.getChildren();
+        ListIterator<ResourceProxy> childrenIterator = children.listIterator();
 
         // do not process
-        if (!coveredResourceChildren.hasNext()) {
+        if (!childrenIterator.hasNext()) {
             Activator.getDefault().getPluginLogger()
-                    .trace("Resource at {0} has no covered children, child node reordering", resource2.getPath());
+                    .trace("Resource at {0} has no children, skipping child node reordering",
+                            resourceToReorder.getPath());
             return;
         }
         List<Node> nodeChildren = new LinkedList<Node>();
-        NodeIterator nodeChildrenIt = node.getNodes();
+        NodeIterator nodeChildrenIt = nodeToReorder.getNodes();
         while (nodeChildrenIt.hasNext()) {
             nodeChildren.add(nodeChildrenIt.nextNode());
         }
         ListIterator<Node> nodeChildrenListIt = nodeChildren.listIterator();
 
-        // in here we should really have equal count of elements, but allow a NSEE
-        // to be raised if one of the iterators has too many
+        // it is possible for the repository and the local workspace to have a different types of elements
+        // for instance if the repository has been changed independently of the local workspace modifications
+        // therefore allow for the
         boolean changed = false;
-        while (coveredResourceChildren.hasNext() || nodeChildrenListIt.hasNext()) {
 
-            ResourceProxy rp = coveredResourceChildren.next();
-            Node n = nodeChildrenListIt.next();
+        traceResourcesAndNodes(children, nodeChildren);
 
-            // descend into covered child resources and perform reordering
-            reorderChildNodes(n, rp);
+        if (children.size() != nodeChildren.size()) {
+            Activator.getDefault().getPluginLogger()
+                    .warn("Different number of children between the local workspace and the repository for path "
+                            + resourceToReorder.getPath() + ". Reordering will not be performed");
+            return;
+        }
+
+        while (childrenIterator.hasNext() || nodeChildrenListIt.hasNext()) {
+
+            ResourceProxy childResource = childrenIterator.next();
+            Node childNode = nodeChildrenListIt.next();
 
             // order is as expected, skip reordering
-            if (Text.getName(rp.getPath()).equals(n.getName())) {
+            if (Text.getName(childResource.getPath()).equals(childNode.getName())) {
+                // descend into covered child resources once they are properly arranged and perform reordering
+                if (resourceToReorder.covers(childResource.getPath())) {
+                    reorderChildNodes(childNode, childResource);
+                }
                 continue;
             }
 
             // don't perform any reordering if this particular node does not have reorderable children
-            if (!n.getPrimaryNodeType().hasOrderableChildNodes()) {
+            if (!nodeToReorder.getPrimaryNodeType().hasOrderableChildNodes()) {
+                Activator
+                        .getDefault()
+                        .getPluginLogger()
+                        .trace("Node at {0} does not have orderable child nodes, skipping reordering of {1}",
+                                nodeToReorder.getPath(), childResource.getPath());
                 continue;
             }
 
-            String expectedParentName = coveredResourceChildren.hasPrevious() ? Text.getName(coveredResourceChildren
-                    .previous().getPath()) : null;
-            node.orderBefore(expectedParentName, n.getName());
+            String expectedParentName;
+            if (childrenIterator.hasNext()) {
+                expectedParentName = Text.getName(childrenIterator.next().getPath());
+                childrenIterator.previous(); // move back
+            } else {
+                expectedParentName = null;
+            }
+
+            Activator.getDefault().getPluginLogger()
+                    .trace("For node at {0} ordering {1} before {2}", nodeToReorder.getPath(),
+                            Text.getName(childResource.getPath()),
+                            expectedParentName);
+
+            nodeToReorder.orderBefore(Text.getName(childResource.getPath()), expectedParentName);
             changed = true;
             break;
         }
@@ -204,9 +234,28 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         // re-read the data and run the ordering again
         // this makes sure that we don't have inconsistent data in the node list
         if (changed) {
-            reorderChildNodes(node, resource2);
+            reorderChildNodes(nodeToReorder, resourceToReorder);
         }
 
+    }
+
+    private void traceResourcesAndNodes(List<ResourceProxy> children, List<Node> nodeChildren)
+            throws RepositoryException {
+        
+        StringBuilder out = new StringBuilder();
+        out.append("Comparison of nodes and resources before reordering \n");
+        
+        out.append(" === Resources === \n");
+        for (int i = 0; i < children.size(); i++) {
+            out.append(String.format("%3d. %s%n", i, children.get(i).getPath()));
+        }
+
+        out.append(" === Nodes === \n");
+        for (int i = 0; i < nodeChildren.size(); i++) {
+            out.append(String.format("%3d. %s%n", i, nodeChildren.get(i).getPath()));
+        }
+
+        Activator.getDefault().getPluginLogger().trace(out.toString());
     }
 
     private Node createNode(ResourceProxy resource, Session session) throws RepositoryException, FileNotFoundException {

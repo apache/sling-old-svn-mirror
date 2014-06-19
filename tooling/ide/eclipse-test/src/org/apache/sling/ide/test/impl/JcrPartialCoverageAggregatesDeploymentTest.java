@@ -17,11 +17,13 @@
 package org.apache.sling.ide.test.impl;
 
 import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasChildrenCount;
+import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasChildrenNames;
 import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasPath;
 import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasPrimaryType;
 import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasPropertyValue;
 import static org.hamcrest.CoreMatchers.allOf;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.concurrent.Callable;
 
@@ -41,6 +43,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.Path;
 import org.hamcrest.Matcher;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -176,6 +179,64 @@ public class JcrPartialCoverageAggregatesDeploymentTest {
         }, allOf(hasPath("/content/test-root/nested"), hasChildrenCount(1), hasPropertyValue("jcr:title", "Some Folder")));
     }
 
+    @Test
+    public void deploySlingOrderedFolderWithJcrContentNode() throws Exception {
+
+        wstServer.waitForServerToStart();
+
+        // create faceted project
+        IProject contentProject = projectRule.getProject();
+
+        ProjectAdapter project = new ProjectAdapter(contentProject);
+        project.addNatures("org.eclipse.wst.common.project.facet.core.nature");
+
+        // install content facet
+        project.installFacet("sling.content", "1.0");
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
+
+        // create a nt:file at /content/test-root/file.txt
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/file.txt"),
+                new ByteArrayInputStream("hello, world".getBytes()));
+
+        // create a sling:OrderedFolder at /content/test-root
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/.content.xml"), getClass()
+                .getResourceAsStream("sling-ordered-folder-with-children.xml"));
+
+        Matcher<Node> postConditions = allOf(hasPath("/content/test-root"), hasPrimaryType("sling:OrderedFolder"),
+                hasChildrenNames("file.txt", "jcr:content"));
+
+        final RepositoryAccessor repo = new RepositoryAccessor(config);
+        Poller poller = new Poller();
+        poller.pollUntil(new Callable<Node>() {
+            @Override
+            public Node call() throws RepositoryException {
+                return repo.getNode("/content/test-root");
+
+            }
+        }, postConditions);
+
+        // reorder the children of the /content/test-root node
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/.content.xml"), getClass()
+                .getResourceAsStream("sling-ordered-folder-with-children-reordered.xml"));
+
+        postConditions = allOf(hasPath("/content/test-root"), hasPrimaryType("sling:OrderedFolder"),
+                hasChildrenNames("jcr:content", "file.txt"));
+
+        poller.pollUntil(new Callable<Node>() {
+            @Override
+            public Node call() throws RepositoryException {
+                return repo.getNode("/content/test-root");
+
+            }
+        }, postConditions);
+    }
+
+    @Before
+    public void ensureCleanState() throws Exception {
+        new RepositoryAccessor(config).tryDeleteResource("/content/test-root");
+    }
 
     @After
     public void cleanup() throws Exception {
