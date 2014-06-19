@@ -149,8 +149,10 @@ public class CrankstartFileProcessor implements Callable<Object> {
         extensionCommands.clear();
         final BundleContext bc = crankstartContext.getOsgiFramework().getBundleContext();
         final ServiceReference [] refs = bc.getServiceReferences(CrankstartCommand.class.getName(), null);
-        for(ServiceReference ref : refs) {
-            extensionCommands.add((CrankstartCommand)bc.getService(ref));
+        if(refs != null) {
+            for(ServiceReference ref : refs) {
+                extensionCommands.add((CrankstartCommand)bc.getService(ref));
+            }
         }
         log.info("Reloaded extension commands: {}", getDescriptions(extensionCommands));
     }
