@@ -102,7 +102,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         updateNode(node, resource);
         processDeletedNodes(node, resource);
 
-        for (ResourceProxy child : getCoveredChildren(resource)) {
+        for (ResourceProxy child : resource.getCoveredChildren()) {
             update(child, session);
         }
 
@@ -126,7 +126,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
         // gather a list of existing paths for all covered children
         // all nodes which are not found in these paths will be deleted
-        List<ResourceProxy> coveredResourceChildren = getCoveredChildren(resource2);
+        List<ResourceProxy> coveredResourceChildren = resource2.getCoveredChildren();
         if (coveredResourceChildren.size() == 0) {
             Activator.getDefault().getPluginLogger()
                     .trace("Resource at {0} has no covered children, skipping deleted nodes processing",
@@ -158,7 +158,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
     private void reorderChildNodes(Node node, ResourceProxy resource2) throws RepositoryException {
 
-        ListIterator<ResourceProxy> coveredResourceChildren = getCoveredChildren(resource2).listIterator();
+        ListIterator<ResourceProxy> coveredResourceChildren = resource2.getCoveredChildren().listIterator();
 
         // do not process
         if (!coveredResourceChildren.hasNext()) {
@@ -207,23 +207,6 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
             reorderChildNodes(node, resource2);
         }
 
-    }
-
-    private List<ResourceProxy> getCoveredChildren(ResourceProxy resource) {
-        // TODO - this is a workaround for partial coverage nodes being sent here
-        // when a .content.xml file with partial coverage is added here, the children are listed with no properties
-        // and get all their properties deleted
-
-        List<ResourceProxy> coveredChildren = new ArrayList<ResourceProxy>();
-        for (ResourceProxy child : resource.getChildren()) {
-            if (child.getProperties().isEmpty()) {
-                continue;
-            }
-
-            coveredChildren.add(child);
-        }
-
-        return coveredChildren;
     }
 
     private Node createNode(ResourceProxy resource, Session session) throws RepositoryException, FileNotFoundException {

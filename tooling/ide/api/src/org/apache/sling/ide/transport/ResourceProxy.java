@@ -73,6 +73,30 @@ public class ResourceProxy {
         return res;
     }
 
+    public List<ResourceProxy> getCoveredChildren() {
+
+        List<ResourceProxy> coveredChildren = new ArrayList<ResourceProxy>();
+        for (ResourceProxy child : getChildren()) {
+            if (child.getProperties().isEmpty()) {
+                continue;
+            }
+
+            coveredChildren.add(child);
+        }
+
+        return coveredChildren;
+    }
+
+    public boolean covers(String path) {
+        for (ResourceProxy child : getCoveredChildren()) {
+            if (child.getPath().equals(path)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     @Override
     public String toString() {
         StringBuilder out = new StringBuilder();
