@@ -41,11 +41,12 @@
             <plugin>
                 <groupId>org.codehaus.modello</groupId>
                 <artifactId>modello-maven-plugin</artifactId>
-                <version>1.1</version>
+                <version>1.8.1</version>
                 <executions>
                     <execution>
                         <id>bundle-manifest.xml</id>
                         <goals>
+                            <goal>xsd</goal>
                             <goal>java</goal>
                             <goal>xpp3-reader</goal>
                             <goal>xpp3-writer</goal>
@@ -145,7 +146,7 @@
         <dependency>
             <groupId>org.codehaus.plexus</groupId>
             <artifactId>plexus-utils</artifactId>
-            <version>1.5.15</version>
+            <version>3.0.17</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
