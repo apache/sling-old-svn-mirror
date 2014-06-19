@@ -80,6 +80,7 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
         try {
 
             final Context rhinoContext = Context.enter();
+            rhinoContext.setOptimizationLevel(optimizationLevel());
 
             if (ScriptRuntime.hasTopCall(rhinoContext)) {
                 // reuse the top scope if we are included
@@ -225,5 +226,9 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
                     entry.getValue());
             }
         }
+    }
+
+    private int optimizationLevel() {
+        return ((RhinoJavaScriptEngineFactory)getFactory()).getOptimizationLevel();
     }
 }
