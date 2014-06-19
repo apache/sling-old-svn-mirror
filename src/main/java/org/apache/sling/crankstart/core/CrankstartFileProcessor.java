@@ -143,6 +143,9 @@ public class CrankstartFileProcessor implements Callable<Object> {
     /** Reload our extension commands from the OSGi framework 
      * @throws InvalidSyntaxException */
     private synchronized void reloadExtensionCommands() throws InvalidSyntaxException {
+        if(crankstartContext.getOsgiFramework() == null) {
+            return;
+        }
         extensionCommands.clear();
         final BundleContext bc = crankstartContext.getOsgiFramework().getBundleContext();
         final ServiceReference [] refs = bc.getServiceReferences(CrankstartCommand.class.getName(), null);
