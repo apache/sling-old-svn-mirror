@@ -20,12 +20,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.felix.inventory.Format;
@@ -109,7 +110,7 @@ public class CrankstartInventoryPrinter implements InventoryPrinter {
     private void bundles(PrintWriter out) throws IOException {
         int ok = 0;
         int errors = 0;
-        final AtomicInteger warnings = new AtomicInteger();
+        int warnings = 0;
         
         // Get the list of Maven coordinates from any fragment bundles,
         // so that we can ignore their entries when returned by the
@@ -117,21 +118,30 @@ public class CrankstartInventoryPrinter implements InventoryPrinter {
         final Set<String> fragmentCoords = new TreeSet<String>();
         for(Bundle b : bundleContext.getBundles()) {
             if(isFragment(b)) {
-                fragmentCoords.add(mavenCoordinates(b, null, warnings));
+                final List<String> coords = getMavenCoordinates(b, null);
+                if(coords.size() > 1) {
+                    warnings++;
+                    multipleWarning(out, b, coords);
+                } else {
+                    fragmentCoords.add(coords.get(0));
+                }
             }
         }
         
         for(Bundle b : bundleContext.getBundles()) {
-            final String coords = mavenCoordinates(b, fragmentCoords, warnings);
-            if(coords.length() == 0) {
+            final List<String> coords = getMavenCoordinates(b, fragmentCoords);
+            if(coords.isEmpty()) {
                 errors++;
                 out.print("# ERROR: Maven coordinates not found for ");
                 out.print(getBundleInfo(b));
                 out.println();
+            } else if(coords.size() > 1){
+                warnings++;
+                multipleWarning(out, b, coords);
             } else {
                 ok++;
                 out.print("bundle ");
-                out.println(coords);
+                out.println(coords.get(0));
             }
         }
         
@@ -142,8 +152,16 @@ public class CrankstartInventoryPrinter implements InventoryPrinter {
         out.print(" bundles processed sucessfully, ");
         out.print(errors);
         out.print(" errors, ");
-        out.print(warnings.get());
+        out.print(warnings);
         out.print(" warnings.");
+        out.println();
+    }
+    
+    private void multipleWarning(PrintWriter out, Bundle b, List<String> coords) {
+        out.print("# WARN: multiple Maven coordinates for ");
+        out.print(getBundleInfo(b));
+        out.print(": ");
+        out.print(coords);
         out.println();
     }
     
@@ -152,8 +170,8 @@ public class CrankstartInventoryPrinter implements InventoryPrinter {
         return headerMap.get(Constants.FRAGMENT_HOST) != null;
     }
     
-    private String mavenCoordinates(Bundle b, Collection<String> fragmentCoordinates, AtomicInteger warningsCounter) throws IOException {
-        final StringBuilder sb = new StringBuilder();
+    private List<String> getMavenCoordinates(Bundle b, Collection<String> fragmentCoordinates) throws IOException {
+        final List<String> result = new ArrayList<String>();
         
         @SuppressWarnings("unchecked")
         final Enumeration<URL> entries = b.findEntries("META-INF/maven", "pom.properties", true);
@@ -177,24 +195,25 @@ public class CrankstartInventoryPrinter implements InventoryPrinter {
                 if(fragmentCoordinates != null && !isFragment(b) && fragmentCoordinates.contains(thisBundle.toString())) {
                     // fragment bundle - ignore
                 } else {
-                    if(sb.length() > 0) {
-                        warningsCounter.incrementAndGet();
-                        sb.append(" WARN - multiple non-fragment entries?? ");
-                        sb.append(getBundleInfo(b)).append(" ");
-                    }
-                    sb.append(thisBundle);
+                    result.add(thisBundle.toString());
                 }
             } finally {
                 IOUtils.closeQuietly(is);
             }
         }
         
-        return sb.toString();
+        return result;
     }
     
     private static String getBundleInfo(Bundle b) {
         final StringBuilder sb = new StringBuilder();
-        sb.append("bundle ").append(b.getSymbolicName()).append(" (").append(b.getBundleId()).append(")");
+        sb.append("bundle ")
+        .append(b.getSymbolicName())
+        .append(" ")
+        .append(b.getVersion())
+        .append(" (")
+        .append(b.getBundleId())
+        .append(")");
         return sb.toString();
     }
     
