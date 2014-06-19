@@ -18,7 +18,8 @@
   under the License.
 -->
 <model xmlns="http://modello.codehaus.org/MODELLO/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
- xsi:schemaLocation="http://modello.codehaus.org/MODELLO/1.0.0 http://modello.codehaus.org/xsd/modello-1.0.0.xsd">
+ xsi:schemaLocation="http://modello.codehaus.org/MODELLO/1.0.0 http://modello.codehaus.org/xsd/modello-1.0.0.xsd"
+ xsd.namespace="http://sling.apache.org/maven/1.0.0">
     <id>bundle-list</id>
     <name>BundleList</name>
     <description>
@@ -31,7 +32,7 @@
         </default>
     </defaults>
     <classes>
-        <class rootElement="true" xml.tagName="bundles">
+        <class rootElement="true" xml.tagName="bundles" xsd.compositor="sequence">
             <name>BundleList</name>
             <description>List of bundles.</description>
             <version>1.0.0</version>
@@ -47,7 +48,7 @@
                 </field>
             </fields>
         </class>
-        <class xml.tagName="startLevel">
+        <class xml.tagName="startLevel" xsd.compositor="sequence">
         	<name>StartLevel</name>
             <version>1.0.0</version>
             <superClass>org.apache.sling.maven.projectsupport.bundlelist.BaseStartLevel</superClass>
