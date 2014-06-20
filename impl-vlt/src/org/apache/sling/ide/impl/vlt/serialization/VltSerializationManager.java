@@ -164,12 +164,12 @@ public class VltSerializationManager implements SerializationManager {
 
     protected void bindVaultFsLocator(VaultFsLocator fsLocator) {
 
-        getBuilder().fsLocator = fsLocator;
+        getBuilder().setLocator(fsLocator);
     }
 
     protected void unbindVaultFsLocator(VaultFsLocator fsLocator) {
 
-    	getBuilder().fsLocator = null;
+        getBuilder().setLocator(null);
     }
     
     private VltSerializationDataBuilder getBuilder() {

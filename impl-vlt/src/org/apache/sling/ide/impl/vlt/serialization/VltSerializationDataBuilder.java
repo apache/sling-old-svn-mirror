@@ -55,7 +55,7 @@ import org.apache.sling.ide.transport.ResourceProxy;
 
 public class VltSerializationDataBuilder implements SerializationDataBuilder {
 
-    VaultFsLocator fsLocator;
+    private VaultFsLocator fsLocator;
     private SerializationKindManager skm;
 	private org.apache.sling.ide.transport.Repository repo;
 	private Session session;
@@ -202,6 +202,11 @@ public class VltSerializationDataBuilder implements SerializationDataBuilder {
             throw new SerializationException(e);
         }
     }
+    
+    public void setLocator(VaultFsLocator locator) {
+
+        this.fsLocator = locator;
+    }    
 
 
 }
