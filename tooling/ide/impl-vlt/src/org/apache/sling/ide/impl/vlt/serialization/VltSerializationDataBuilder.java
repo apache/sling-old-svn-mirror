@@ -16,8 +16,6 @@
  */
 package org.apache.sling.ide.impl.vlt.serialization;
 
-import static org.apache.sling.ide.util.PathUtil.getName;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +27,7 @@ import javax.jcr.Node;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 import javax.jcr.nodetype.NodeType;
 
 import org.apache.jackrabbit.vault.fs.api.Aggregate;
@@ -44,6 +43,8 @@ import org.apache.jackrabbit.vault.util.Constants;
 import org.apache.jackrabbit.vault.util.JcrConstants;
 import org.apache.jackrabbit.vault.util.MimeTypes;
 import org.apache.jackrabbit.vault.util.PlatformNameFormat;
+import org.apache.jackrabbit.vault.util.Text;
+import org.apache.sling.ide.impl.vlt.Activator;
 import org.apache.sling.ide.impl.vlt.VaultFsLocator;
 import org.apache.sling.ide.jcr.RepositoryUtils;
 import org.apache.sling.ide.serialization.SerializationData;
@@ -108,32 +109,9 @@ public class VltSerializationDataBuilder implements SerializationDataBuilder {
 
         try {
 
-            VaultFile vaultFile = fs.getFile(resource.getPath());
-            String platformPath = resource.getPath();
-            if (vaultFile == null) {
+            AggregateWrapper wrapper = findAggregate(resource);
 
-                // TODO - not sure why we need to try both ... not a performance impact but ugly nonetheless
-                platformPath = PlatformNameFormat.getPlatformPath(resource.getPath()) + VltSerializationManager.EXTENSION_XML;
-                vaultFile = fs.getFile(platformPath);
-
-                if (vaultFile == null) {
-                    platformPath = PlatformNameFormat.getPlatformPath(resource.getPath());
-                    vaultFile = fs.getFile(platformPath);
-                }
-
-                if (vaultFile == null) {
-                    // TODO proper logging ; discover if this is expected or not and fail hard if it's not
-                    System.err.println("No vaultFile at path " + resource.getPath());
-                    return null;
-                }
-            }
-
-            String nameHint = getName(platformPath);
-            String fileOrFolderPathHint = vaultFile.getPath();
-
-            Aggregate aggregate = vaultFile.getAggregate();
-
-            if (aggregate == null) {
+            if (wrapper == null) {
             	//TODO: there are valid cases apparently when aggregate is null and yet there
             	// are children which must be honored.. so we can't throw an exception here
             	// but we should review why this aggregate is null here and if that's valid.
@@ -141,12 +119,26 @@ public class VltSerializationDataBuilder implements SerializationDataBuilder {
             	return null;
             }
 
-            NodeType[] mixinNodeTypes = aggregate.getNode().getMixinNodeTypes();
+            String fileOrFolderPathHint;
+            if (wrapper.parent == null) {
+                fileOrFolderPathHint = PlatformNameFormat.getPlatformPath(wrapper.aggregate.getPath());
+            } else {
+                fileOrFolderPathHint = PlatformNameFormat.getPlatformPath(wrapper.parent.getPath()) + ".dir"
+                        + File.separatorChar + PlatformNameFormat.getPlatformPath(wrapper.aggregate.getRelPath());
+            }
+
+            Activator.getDefault().getPluginLogger()
+                    .trace("Got location {0} for path {1}", fileOrFolderPathHint, resource.getPath());
+            String nameHint = PlatformNameFormat.getPlatformName(wrapper.aggregate.getName());
+
+
+            NodeType[] mixinNodeTypes = wrapper.aggregate.getNode().getMixinNodeTypes();
             List<String> mixinNodeTypeNames = new ArrayList<String>(mixinNodeTypes.length);
             for (NodeType nodeType : mixinNodeTypes)
                 mixinNodeTypeNames.add(nodeType.getName());
 
-            SerializationKind serializationKind = skm.getSerializationKind(aggregate.getNode().getPrimaryNodeType()
+            SerializationKind serializationKind = skm.getSerializationKind(wrapper.aggregate.getNode()
+                    .getPrimaryNodeType()
                     .getName(), mixinNodeTypeNames);
 
             if (resource.getPath().equals("/") || serializationKind == SerializationKind.METADATA_PARTIAL
@@ -154,10 +146,10 @@ public class VltSerializationDataBuilder implements SerializationDataBuilder {
                 nameHint = Constants.DOT_CONTENT_XML;
             }
 
-            Aggregator aggregator = fs.getAggregateManager().getAggregator(aggregate.getNode(), null);
+            Aggregator aggregator = fs.getAggregateManager().getAggregator(wrapper.aggregate.getNode(), null);
             if (aggregator instanceof FileAggregator) {
                 // TODO - copy-pasted from FileAggregator, and really does not belong here...
-                Node content = aggregate.getNode();
+                Node content = wrapper.aggregate.getNode();
                 if (content.isNodeType(JcrConstants.NT_FILE)) {
                     content = content.getNode(JcrConstants.JCR_CONTENT);
                 }
@@ -171,24 +163,37 @@ public class VltSerializationDataBuilder implements SerializationDataBuilder {
                 }
                 if (mimeType == null) {
                     // guess mime type from name
-                    mimeType = MimeTypes.getMimeType(aggregate.getNode().getName(), MimeTypes.APPLICATION_OCTET_STREAM);
+                    mimeType = MimeTypes.getMimeType(wrapper.aggregate.getNode().getName(),
+                            MimeTypes.APPLICATION_OCTET_STREAM);
                 }
 
-                boolean needsDir = !MimeTypes.matches(aggregate.getNode().getName(), mimeType,
+                boolean needsDir = !MimeTypes.matches(wrapper.aggregate.getNode().getName(), mimeType,
                         MimeTypes.APPLICATION_OCTET_STREAM);
+
+                if (!needsDir) {
+                    if (content.hasProperty(JcrConstants.JCR_MIXINTYPES)) {
+                        for (Value v : content.getProperty(JcrConstants.JCR_MIXINTYPES).getValues()) {
+                            if (!v.getString().equals(JcrConstants.MIX_LOCKABLE)) {
+                                needsDir = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
                 if (!needsDir) {
                     return SerializationData.empty(fileOrFolderPathHint, serializationKind);
                 }
             } else if (aggregator instanceof GenericAggregator) {
                 // TODO - copy-pasted from GenericAggregator
-                if (aggregate.getNode().getPrimaryNodeType().getName().equals("nt:folder")
-                        && aggregate.getNode().getMixinNodeTypes().length == 0) {
+                if (wrapper.aggregate.getNode().getPrimaryNodeType().getName().equals("nt:folder")
+                        && wrapper.aggregate.getNode().getMixinNodeTypes().length == 0) {
                     return SerializationData.empty(fileOrFolderPathHint, serializationKind);
                 }
             }
 
 
-            DocViewSerializer s = new DocViewSerializer(aggregate);
+            DocViewSerializer s = new DocViewSerializer(wrapper.aggregate);
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             s.writeContent(out);
             
@@ -202,11 +207,67 @@ public class VltSerializationDataBuilder implements SerializationDataBuilder {
             throw new SerializationException(e);
         }
     }
-    
+
+    private AggregateWrapper findAggregate(ResourceProxy resource) throws IOException, RepositoryException {
+
+        VaultFile vaultFile = fs.getFile(resource.getPath());
+        String platformPath = resource.getPath();
+
+        if (vaultFile == null) {
+
+            // TODO - not sure why we need to try both ... not a performance impact but ugly nonetheless
+            platformPath = PlatformNameFormat.getPlatformPath(resource.getPath()) + VltSerializationManager.EXTENSION_XML;
+            vaultFile = fs.getFile(platformPath);
+
+            if (vaultFile == null) {
+                platformPath = PlatformNameFormat.getPlatformPath(resource.getPath());
+                vaultFile = fs.getFile(platformPath);
+            }
+
+            if (vaultFile == null) {
+                // TODO proper logging ; discover if this is expected or not and fail hard if it's not
+                // this file might be a leaf aggregate of a vaultfile higher in the resource path ; so look for a
+                // parent higher
+
+                String parentPath = Text.getRelativeParent(resource.getPath(), 1);
+                while (!parentPath.equals("/")) {
+                    VaultFile parentFile = fs.getFile(parentPath);
+                    if (parentFile != null && parentFile.getAggregate() != null
+                            && parentFile.getAggregate().getLeaves() != null) {
+                        for (Aggregate leaf : parentFile.getAggregate().getLeaves()) {
+                            if (leaf.getPath().equals(resource.getPath())) {
+
+                                return new AggregateWrapper(leaf, parentFile.getAggregate());
+                            }
+                        }
+                    }
+
+                    parentPath = Text.getRelativeParent(parentPath, 1);
+                }
+
+                System.err.println("No vaultFile at path " + resource.getPath());
+                return null;
+            }
+        }
+
+        return new AggregateWrapper(vaultFile.getAggregate(), null);
+    }
+
     public void setLocator(VaultFsLocator locator) {
 
         this.fsLocator = locator;
-    }    
+    }
 
+    static class AggregateWrapper {
+
+        private AggregateWrapper(Aggregate aggregate, Aggregate parent) {
+
+            this.aggregate = aggregate;
+            this.parent = parent;
+        }
+
+        public Aggregate aggregate;
+        public Aggregate parent;
+    }
 
 }
