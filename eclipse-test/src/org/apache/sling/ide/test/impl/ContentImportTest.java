@@ -87,10 +87,7 @@ public class ContentImportTest {
         repo.createNode("/content/test-root/en/files", "nt:folder");
         repo.createFile("/content/test-root/en/files/first.txt", "first file".getBytes());
 
-        ImportRepositoryContentAction action = new ImportRepositoryContentAction(wstServer.getServer(),
-                Path.fromPortableString("/content/test-root"), contentProject, Activator.getDefault()
-                        .getSerializationManager());
-        action.run(new NullProgressMonitor());
+        runImport(contentProject);
 
         assertThat(contentProject, hasFolder("jcr_root/content/test-root/en/files"));
         assertThat(contentProject, hasFile("jcr_root/content/test-root/en/files/first.txt", "first file".getBytes()));
@@ -123,10 +120,7 @@ public class ContentImportTest {
         repo.createNode("/content/test-root/de/files", "nt:folder");
         repo.createFile("/content/test-root/de/files/first.txt", "first file".getBytes());
 
-        ImportRepositoryContentAction action = new ImportRepositoryContentAction(wstServer.getServer(),
-                Path.fromPortableString("/content/test-root"), contentProject, Activator.getDefault()
-                        .getSerializationManager());
-        action.run(new NullProgressMonitor());
+        runImport(contentProject);
 
         assertThat(contentProject.findMember("jcr_root/content/test-root/de"), nullValue());
     }
@@ -158,10 +152,7 @@ public class ContentImportTest {
         repo.createNode("/content/test-root/en/files", "nt:folder");
         repo.createFile("/content/test-root/en/files/first.txt", "first file".getBytes());
 
-        ImportRepositoryContentAction action = new ImportRepositoryContentAction(wstServer.getServer(),
-                Path.fromPortableString("/content/test-root"), contentProject, Activator.getDefault()
-                        .getSerializationManager());
-        action.run(new NullProgressMonitor());
+        runImport(contentProject);
 
         assertThat(contentProject.findMember("jcr_root/content/test-root/en"), nullValue());
     }
@@ -196,14 +187,20 @@ public class ContentImportTest {
         repo.createNode("/content/test-root/en/files", "nt:folder");
         repo.createFile("/content/test-root/en/files/first.txt", "first file".getBytes());
 
-        ImportRepositoryContentAction action = new ImportRepositoryContentAction(wstServer.getServer(),
-                Path.fromPortableString("/content/test-root"), contentProject, Activator.getDefault()
-                        .getSerializationManager());
-        action.run(new NullProgressMonitor());
+        runImport(contentProject);
 
         assertThat(contentProject.findMember("jcr_root/content/test-root/en"), nullValue());
     }
 
+    private void runImport(IProject contentProject) throws SerializationException, InvocationTargetException,
+            InterruptedException, CoreException {
+
+        ImportRepositoryContentAction action = new ImportRepositoryContentAction(wstServer.getServer(),
+                Path.fromPortableString("/content/test-root"), contentProject, Activator.getDefault()
+                        .getSerializationManager());
+
+        action.run(new NullProgressMonitor());
+    }
     @Before
     public void setUp() throws Exception {
         RepositoryAccessor repo = new RepositoryAccessor(config);
