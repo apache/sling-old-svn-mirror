@@ -94,7 +94,7 @@ public class ResourceChangeCommandFactory {
         }
 
         FileInfo info = createFileInfo(resource, repository);
-        Activator.getDefault().getPluginLogger().trace("For {0} build fileInfo {1}", resource, info);
+        Activator.getDefault().getPluginLogger().trace("For {0} built fileInfo {1}", resource, info);
         if (info == null) {
             return null;
         }
@@ -168,6 +168,9 @@ public class ResourceChangeCommandFactory {
         if (filter != null) {
             FilterResult filterResult = getFilterResult(resource, filter, ProjectUtil.getSyncDirectoryFile(project),
                     syncFolder, repository);
+
+            Activator.getDefault().getPluginLogger().trace("FilterResult for {0} is {1}", resource, filterResult);
+
             if (filterResult == FilterResult.DENY || filterResult == FilterResult.PREREQUISITE) {
                 return null;
             }
@@ -191,7 +194,8 @@ public class ResourceChangeCommandFactory {
         String filePath = serializationManager.getBaseResourcePath(absFilePath);
 
         IPath osPath = Path.fromOSString(filePath);
-        String repositoryPath = osPath.makeRelativeTo(syncFolder.getLocation()).toPortableString();
+        String repositoryPath = serializationManager.getRepositoryPath(osPath.makeRelativeTo(syncFolder.getLocation())
+                .toPortableString());
 
         Activator.getDefault().getPluginLogger().trace("Filtering by {0} for {1}", repositoryPath, resource);
 
@@ -234,8 +238,8 @@ public class ResourceChangeCommandFactory {
             }
         }
 
-        return new ResourceProxy(resourceLocation, Collections.singletonMap(Repository.JCR_PRIMARY_TYPE,
-                (Object) fallbackPrimaryType));
+        return new ResourceProxy(serializationManager.getRepositoryPath(resourceLocation), Collections.singletonMap(
+                Repository.JCR_PRIMARY_TYPE, (Object) fallbackPrimaryType));
     }
 
     public Command<?> newCommandForRemovedResources(Repository repository, IResource removed) throws CoreException {
