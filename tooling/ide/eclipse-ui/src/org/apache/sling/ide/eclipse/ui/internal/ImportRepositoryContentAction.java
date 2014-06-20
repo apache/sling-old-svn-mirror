@@ -26,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.util.Text;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.ResourceUtil;
@@ -204,7 +205,7 @@ public class ImportRepositoryContentAction {
 
         final List<ResourceProxy> resourceChildren = new LinkedList<ResourceProxy>(resource.getChildren());
 		if (serializationData != null) {
-	
+
             IPath fileOrFolderPath = contentSyncRootDir.getProjectRelativePath().append(
                     serializationData.getFileOrFolderNameHint());
 	
@@ -225,6 +226,30 @@ public class ImportRepositoryContentAction {
 								.hasNext();) {
 	                    	ResourceProxy child = it.next();
 	                        if (Repository.NT_RESOURCE.equals(child.getProperties().get(Repository.JCR_PRIMARY_TYPE))) {
+
+                                ResourceProxy reloadedChildResource = executeCommand(repository
+                                        .newListChildrenNodeCommand(child.getPath()));
+
+                                logger.trace(
+                                        "Skipping direct handling of {0} node at {1} ; will additionally handle {2} direct children",
+                                        Repository.NT_RESOURCE, child.getPath(), reloadedChildResource.getChildren()
+                                                .size());
+
+                                if (reloadedChildResource.getChildren().size() != 0) {
+                                    // 1. create holder directory ; needs platform name format
+
+                                    String pathName = Text.getName(reloadedChildResource.getPath());
+                                    pathName = serializationManager.getOsPath(pathName);
+
+                                    createFolder(project, directoryPath.append(pathName));
+
+                                    // 2. recursively handle all resources
+                                    for (ResourceProxy grandChild : reloadedChildResource.getChildren()) {
+                                        crawlChildrenAndImport(repository, filter, grandChild.getPath(), project,
+                                                projectRelativePath);
+                                    }
+                                }
+	                            
 	                        	it.remove();
 	                        	break;
 	                        }
