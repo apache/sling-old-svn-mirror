@@ -141,6 +141,28 @@ public class RepositoryAccessor {
         }
     }
     
+    /**
+     * Executes a user-specified <tt>runnable</tt> on the repository
+     * 
+     * <p>
+     * All exceptions are propagated as they happen. It is the responsibility of the runnable to call
+     * <tt>session.save()</tt> to persist the changes.
+     * </p>
+     * 
+     * @param runnable
+     * @return the result of the runnable's execution
+     * @throws RepositoryException any exception that occurs when executing the runnable
+     */
+    public <T> T doWithSession(SessionRunnable<T> runnable) throws RepositoryException {
+
+        Session session = login();
+        try {
+            return runnable.doWithSession(session);
+        } finally {
+            session.logout();
+        }
+    }
+
     private Session login() throws RepositoryException {
         
         RepositoryInfo repositoryInfo = new RepositoryInfo(config.getUsername(), config.getPassword(), config.getUrl());
@@ -157,4 +179,7 @@ public class RepositoryAccessor {
     }
 
 
+    public interface SessionRunnable<T> {
+        public T doWithSession(Session session) throws RepositoryException;
+    }
 }
