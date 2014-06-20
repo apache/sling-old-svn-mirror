@@ -162,6 +162,16 @@ public class VltSerializationManager implements SerializationManager {
         throw new IllegalArgumentException("Unsupported serialization kind " + serializationKind);
     }
 
+    @Override
+    public String getRepositoryPath(String osPath) {
+        return PlatformNameFormat.getRepositoryPath(osPath);
+    }
+
+    @Override
+    public String getOsPath(String repositoryPath) {
+        return PlatformNameFormat.getPlatformPath(repositoryPath);
+    }
+
     protected void bindVaultFsLocator(VaultFsLocator fsLocator) {
 
         getBuilder().setLocator(fsLocator);

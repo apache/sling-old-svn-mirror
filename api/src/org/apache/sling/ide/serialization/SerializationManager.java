@@ -33,6 +33,10 @@ public interface SerializationManager {
 
     String getSerializationFilePath(String baseFilePath, SerializationKind serializationKind);
 
+    String getRepositoryPath(String osPath);
+
+    String getOsPath(String repositoryPath);
+
     SerializationDataBuilder newBuilder(Repository repository, File contentSyncRoot) throws SerializationException;
 
     /**

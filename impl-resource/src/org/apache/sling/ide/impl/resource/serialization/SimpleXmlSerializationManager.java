@@ -167,6 +167,16 @@ public class SimpleXmlSerializationManager implements SerializationManager, Seri
         }
     }
 
+    @Override
+    public String getRepositoryPath(String osPath) {
+        return osPath;
+    }
+
+    @Override
+    public String getOsPath(String repositoryPath) {
+        return repositoryPath;
+    }
+
     private void startElement(TransformerHandler handler, String tagName) throws SAXException {
 
         handler.startElement("", tagName, tagName, null);
