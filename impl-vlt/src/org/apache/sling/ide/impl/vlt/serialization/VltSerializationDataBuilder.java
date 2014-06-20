@@ -111,7 +111,7 @@ public class VltSerializationDataBuilder implements SerializationDataBuilder {
 
             AggregateWrapper wrapper = findAggregate(resource);
 
-            if (wrapper == null) {
+            if (wrapper == null || wrapper.aggregate == null) {
             	//TODO: there are valid cases apparently when aggregate is null and yet there
             	// are children which must be honored.. so we can't throw an exception here
             	// but we should review why this aggregate is null here and if that's valid.
