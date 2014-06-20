@@ -39,6 +39,12 @@ public class HasFolderMatcher extends TypeSafeMatcher<IProject> {
         description.appendText("project with a folder located at " + folderName);
     }
 
+    @Override
+    protected void describeMismatchSafely(IProject item, Description mismatchDescription) {
+        mismatchDescription.appendText("at location ").appendText(folderName).appendText(" found member ")
+                .appendValue(item.findMember(folderName));
+    }
+
     /*
      * (non-Javadoc)
      * 
