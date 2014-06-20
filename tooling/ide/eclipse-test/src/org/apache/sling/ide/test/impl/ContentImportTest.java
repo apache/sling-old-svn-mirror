@@ -22,18 +22,27 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 import java.io.ByteArrayInputStream;
+import java.lang.reflect.InvocationTargetException;
+
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.ValueFactory;
 
 import org.apache.sling.ide.eclipse.core.internal.Activator;
 import org.apache.sling.ide.eclipse.ui.internal.ImportRepositoryContentAction;
+import org.apache.sling.ide.serialization.SerializationException;
 import org.apache.sling.ide.test.impl.helpers.DisableDebugStatusHandlers;
 import org.apache.sling.ide.test.impl.helpers.ExternalSlingLaunchpad;
 import org.apache.sling.ide.test.impl.helpers.LaunchpadConfig;
 import org.apache.sling.ide.test.impl.helpers.ProjectAdapter;
 import org.apache.sling.ide.test.impl.helpers.RepositoryAccessor;
+import org.apache.sling.ide.test.impl.helpers.RepositoryAccessor.SessionRunnable;
 import org.apache.sling.ide.test.impl.helpers.ServerAdapter;
 import org.apache.sling.ide.test.impl.helpers.SlingWstServer;
 import org.apache.sling.ide.test.impl.helpers.TemporaryProject;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
@@ -201,6 +210,72 @@ public class ContentImportTest {
 
         action.run(new NullProgressMonitor());
     }
+    
+    @Test
+    public void importFilesWithExtraNodesUnderJcrContent() throws Exception {
+        
+        // create faceted project
+        IProject contentProject = projectRule.getProject();
+
+        ProjectAdapter project = new ProjectAdapter(contentProject);
+        project.addNatures(JavaCore.NATURE_ID, "org.eclipse.wst.common.project.facet.core.nature");
+
+        // install bundle facet
+        project.installFacet("sling.content", "1.0");
+
+        wstServer.waitForServerToStart();
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
+
+        project.createVltFilterWithRoots("/content/test-root");
+
+        // create sling:Folder at /content/test-root
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/.content.xml"),
+                getClass().getResourceAsStream("sling-folder-nodetype.xml"));
+
+        // create server-side content
+        RepositoryAccessor repo = new RepositoryAccessor(config);
+        repo.createNode("/content/test-root", "sling:Folder");
+        repo.createFile("/content/test-root/file.txt", "hello, world".getBytes());
+        repo.doWithSession(new SessionRunnable<Void>() {
+            @Override
+            public Void doWithSession(Session session) throws RepositoryException {
+
+                ValueFactory valueFactory = session.getValueFactory();
+                
+                Node contentNode = session.getNode("/content/test-root/file.txt/jcr:content");
+                contentNode.addMixin("sling:chunks");
+
+                Node chunkNode = contentNode.addNode("firstChunk", "sling:chunk");
+                chunkNode.setProperty("sling:offset", valueFactory.createValue(0));
+                chunkNode.setProperty( "jcr:data",
+                        valueFactory.createValue( valueFactory.createBinary(
+                                        new ByteArrayInputStream("hello, world".getBytes()))));
+
+                session.save();
+
+                return null;
+            }
+        });
+        
+        runImport(contentProject);
+
+        assertThat("File not properly imported", contentProject,
+                hasFile("jcr_root/content/test-root/file.txt", "hello, world".getBytes()));
+        assertThat("File extra serialization dir not imported", contentProject,
+                hasFolder("jcr_root/content/test-root/file.txt.dir"));
+        assertThat("File jcr:content data not serialized in .content.xml", contentProject,
+                hasFile("jcr_root/content/test-root/file.txt.dir/.content.xml"));
+        assertThat("File jcr:content extra dir not serialized as _jcr_content", contentProject,
+                hasFolder("jcr_root/content/test-root/file.txt.dir/_jcr_content"));
+        assertThat("First chunk dir not serialized", contentProject,
+                hasFolder("jcr_root/content/test-root/file.txt.dir/_jcr_content/firstChunk"));
+        assertThat("First chunk properties not serialized", contentProject,
+                hasFile("jcr_root/content/test-root/file.txt.dir/_jcr_content/firstChunk/.content.xml"));
+
+    }
+
     @Before
     public void setUp() throws Exception {
         RepositoryAccessor repo = new RepositoryAccessor(config);
