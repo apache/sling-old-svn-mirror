@@ -45,6 +45,12 @@ public class HasFileMatcher extends TypeSafeMatcher<IProject> {
         description.appendText("project with a filed named " + fileName + " and contents (elided)");
     }
 
+    @Override
+    protected void describeMismatchSafely(IProject item, Description mismatchDescription) {
+        mismatchDescription.appendText("at location ").appendText(fileName).appendText(" found member ")
+                .appendValue(item.findMember(fileName)).appendText("; contents (elided)");
+    }
+
     /*
      * (non-Javadoc)
      * 
