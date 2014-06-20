@@ -164,7 +164,8 @@ public class VltSerializationManager implements SerializationManager {
 
     @Override
     public String getRepositoryPath(String osPath) {
-        return PlatformNameFormat.getRepositoryPath(osPath);
+        // TODO - this is a bit risky, we might clean legitimate directories which contain '.dir'
+        return PlatformNameFormat.getRepositoryPath(osPath).replace(".dir/", "/");
     }
 
     @Override

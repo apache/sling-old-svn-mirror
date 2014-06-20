@@ -24,7 +24,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assume;
 import org.junit.Before;
@@ -109,5 +108,31 @@ public class VltSerializationManagerTest {
 
         assertThat(serializationManager.getBaseResourcePath(contentFile.getAbsolutePath()),
                 is(contentFile.getAbsolutePath()));
+    }
+
+    @Test
+    public void getOsPath_CleanName() {
+        assertThat(serializationManager.getOsPath("/content/test"), is("/content/test"));
+    }
+
+    @Test
+    public void getOsPath_MangledName() {
+        assertThat(serializationManager.getOsPath("/content/test/jcr:content"), is("/content/test/_jcr_content"));
+    }
+
+    @Test
+    public void getRepositoryPath_CleanName() {
+        assertThat(serializationManager.getRepositoryPath("/content/test"), is("/content/test"));
+    }
+
+    @Test
+    public void getRepositoryPath_MangledName() {
+        assertThat(serializationManager.getRepositoryPath("/content/test/_jcr_content"),
+                is("/content/test/jcr:content"));
+    }
+
+    @Test
+    public void getRepositoryPath_SerializationDir() {
+        assertThat(serializationManager.getRepositoryPath("/content/test.dir/file"), is("/content/test/file"));
     }
 }
