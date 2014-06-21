@@ -50,30 +50,6 @@ public class ArtifactsLocatorImpl implements EmbeddedArtifactLocator {
         return new EmbeddedArtifact(artifactId + "-" + version + "." + extension, version, jarUrl);
     }
 
-    @Override
-    public EmbeddedArtifact[] loadSlingBundleArchetype() {
-
-        BundleContext bundleContext = context.getBundleContext();
-
-        String version = "1.0.1-SNAPSHOT"; // TODO - remove version hardcoding
-        String artifactId = "sling-bundle-archetype";
-        String extension = "jar";
-
-        URL resourceUrl = loadResource(bundleContext, ARTIFACTS_LOCATION + "/archetypes/" + artifactId + "."
-                + extension);
-
-        EmbeddedArtifact jarArtifact = new EmbeddedArtifact(artifactId + "-" + version + "." + extension, version,
-                resourceUrl);
-
-        extension = "pom";
-        resourceUrl = loadResource(bundleContext, ARTIFACTS_LOCATION + "/archetypes/" + artifactId + "." + extension);
-
-        EmbeddedArtifact pomArtifact = new EmbeddedArtifact(artifactId + "-" + version + "." + extension, version,
-                resourceUrl);
-
-        return new EmbeddedArtifact[] { pomArtifact, jarArtifact };
-    }
-
     private URL loadResource(BundleContext bundleContext, String resourceLocation) {
 
         URL resourceUrl = bundleContext.getBundle().getResource(resourceLocation);

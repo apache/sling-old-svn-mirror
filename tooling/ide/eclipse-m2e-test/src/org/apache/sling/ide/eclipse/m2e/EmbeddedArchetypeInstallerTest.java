@@ -23,8 +23,6 @@ import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.sling.ide.artifacts.EmbeddedArtifact;
-import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
-import org.apache.sling.ide.eclipse.m2e.internal.Activator;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.m2e.core.embedder.IMaven;
@@ -52,12 +50,15 @@ public class EmbeddedArchetypeInstallerTest {
     @Test
     public void testInstallArchetype() throws IOException, CoreException {
         
-        EmbeddedArtifactLocator artifactsLocator = Activator.getDefault().getArtifactsLocator();
-
         EmbeddedArchetypeInstaller archetypeInstaller = new EmbeddedArchetypeInstaller(archetypeGroupId,
                 archetypeArtifactId, archetypeVersion);
 
-        EmbeddedArtifact[] archetypeArtifacts = artifactsLocator.loadSlingBundleArchetype();
+        EmbeddedArtifact[] archetypeArtifacts = new EmbeddedArtifact[] {
+                new EmbeddedArtifact("jar", archetypeVersion, getClass().getClassLoader().getResource(
+                        "META-INF/MANIFEST.MF")),
+                new EmbeddedArtifact("pom", archetypeVersion, getClass().getClassLoader().getResource(
+                        "META-INF/MANIFEST.MF"))
+        };
 
         archetypeInstaller.addResource("pom", archetypeArtifacts[0].openInputStream());
         archetypeInstaller.addResource("jar", archetypeArtifacts[1].openInputStream());

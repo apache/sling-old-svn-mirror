@@ -21,10 +21,4 @@ public interface EmbeddedArtifactLocator {
     public static final String SUPPORT_BUNDLE_SYMBOLIC_NAME = "org.apache.sling.tooling.support.install";
 
     EmbeddedArtifact loadToolingSupportBundle();
-
-    /**
-     * @return a two-element array, where the first element is the pom artifact, and the second element is the jar
-     *         artifact
-     */
-    EmbeddedArtifact[] loadSlingBundleArchetype();
 }

@@ -25,6 +25,8 @@ import java.util.Set;
 
 import org.apache.maven.archetype.catalog.Archetype;
 import org.apache.maven.archetype.catalog.ArchetypeCatalog;
+import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
+import org.apache.sling.ide.eclipse.m2e.internal.Activator;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -203,6 +205,7 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
 
 	private void initialize() {
 		knownArchetypes.add(LOADING_PLEASE_WAIT);
+        knownArchetypes.select(0);
 		try {
             getContainer().run(true, false, new RefreshArchetypesRunnable());
 		} catch (InvocationTargetException e) {
@@ -240,7 +243,6 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
 		setPageComplete(message == null);
 	}
 
-
 	public IPath getLocation() {
 		if (!useDefaultWorkspaceLocationButton.getSelection() && 
 				locationCombo.getText().length()>0) {
@@ -257,6 +259,9 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
 
     @Override
     public void indexChanged(IRepository repository) {
+
+        Activator.getDefault().getPluginLogger()
+                .trace("Reloading archetypes as index for repository {0} has changed", repository);
 
         try {
             new RefreshArchetypesRunnable().run(new NullProgressMonitor());
@@ -288,6 +293,8 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
         @Override
         public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 
+            PluginLogger logger = Activator.getDefault().getPluginLogger();
+
             monitor.beginTask("Discovering archetypes...", 5);
             ArchetypeManager manager = MavenPluginActivator.getDefault().getArchetypeManager();
             monitor.worked(1);
@@ -297,15 +304,18 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
 
             Collection<ArchetypeCatalogFactory> archetypeCatalogs = manager.getArchetypeCatalogs();
             monitor.worked(2);
-            ArrayList<Archetype> list = new ArrayList<Archetype>();
+            ArrayList<Archetype> candidates = new ArrayList<Archetype>();
             for (ArchetypeCatalogFactory catalogFactory : archetypeCatalogs) {
                 try {
                     ArchetypeCatalog catalog = catalogFactory.getArchetypeCatalog();
                     @SuppressWarnings("unchecked")
                     java.util.List<Archetype> arcs = catalog.getArchetypes();
 
+                    logger.trace("Catalog factory {0} provided {1} archetypes", catalogFactory,
+                            arcs != null ? arcs.size() : 0);
+
                     if (arcs != null) {
-                        list.addAll(arcs);
+                        candidates.addAll(arcs);
                     }
                 } catch (CoreException ce) {
                     throw new InvocationTargetException(ce);
@@ -313,18 +323,28 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
             }
             monitor.worked(1);
             boolean changed = false;
-            for (Archetype archetype2 : list) {
-                if (getWizard().acceptsArchetype(archetype2)) {
-                    String key = keyFor(archetype2);
-                    Archetype old = archetypesMap.put(key, archetype2);
-                    if (old == null) {
+
+            logger.trace("Considering {0} archetypes from {1} archetype catalogs", candidates.size(),
+                    archetypeCatalogs.size());
+
+            for (Archetype candidate : candidates) {
+                if (getWizard().acceptsArchetype(candidate)) {
+                    String key = keyFor(candidate);
+                    Archetype old = archetypesMap.put(key, candidate);
+
+                    logger.trace("Registered archetype {0}", candidate);
+
+                    if (old == null || !old.equals(candidate)) {
                         changed = true;
                     }
+
+                    logger.trace("Old archetype was {0}, changed = {1}", old, changed);
                 }
             }
 
             monitor.worked(1);
-            if (changed) {
+            if (changed || archetypesMap.isEmpty()) {
+                logger.trace("Triggering refresh since changed is true");
                 Display.getDefault().asyncExec(new Runnable() {
                     public void run() {
                         Set<String> keys = archetypesMap.keySet();
@@ -333,6 +353,13 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
                             knownArchetypes.add(aKey);
                         }
                         knownArchetypes.pack();
+
+                        if (knownArchetypes.getItems().length == 0) {
+                            setErrorMessage("No suitable archetypes found. Please make sure that the proper maven repositories are configured and indexes are up to date.");
+                        } else {
+                            setErrorMessage(null);
+                        }
+
                     }
                 });
             }

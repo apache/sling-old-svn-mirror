@@ -16,4 +16,13 @@
             project="true">
       </wizard>
    </extension>
+    <extension
+         point="org.eclipse.ui.trace.traceComponents">
+      <component
+            id="org.eclipse.ui.trace.tracingPrefPage"
+            label="Sling IDE Tooling">
+         <bundle
+               name="org.apache.sling.ide.eclipse-m2e-ui"></bundle>
+      </component>
+   </extension>   
 </plugin>    
