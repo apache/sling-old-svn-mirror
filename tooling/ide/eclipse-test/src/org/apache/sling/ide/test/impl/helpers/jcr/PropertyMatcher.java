@@ -20,7 +20,7 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
 import org.hamcrest.Description;
-import org.junit.internal.matchers.TypeSafeMatcher;
+import org.hamcrest.TypeSafeMatcher;
 
 /**
  * The <tt>NodePathMatcher</tt> matches a value of a node's property
@@ -38,7 +38,7 @@ public class PropertyMatcher extends TypeSafeMatcher<Node> {
 
     @Override
     public void describeTo(Description description) {
-        description.appendText("node[" + name + "] = " + value);
+        description.appendText("node[").appendValue(name).appendText("] = ").appendValue(value);
     }
 
     @Override
@@ -50,4 +50,17 @@ public class PropertyMatcher extends TypeSafeMatcher<Node> {
         }
     }
 
+    @Override
+    protected void describeMismatchSafely(Node item, Description mismatchDescription) {
+        try {
+            if (item.hasProperty(name)) {
+                mismatchDescription.appendText("was node [").appendValue(name).appendText("] = ")
+                        .appendValue(item.getProperty(name).getString());
+            } else {
+                mismatchDescription.appendText("was node without a property named ").appendValue(name);
+            }
+        } catch (RepositoryException e) {
+            super.describeMismatchSafely(item, mismatchDescription);
+        }
+    }
 }

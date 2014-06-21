@@ -25,7 +25,7 @@ import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 
 import org.hamcrest.Description;
-import org.junit.internal.matchers.TypeSafeMatcher;
+import org.hamcrest.TypeSafeMatcher;
 
 /**
  * The <tt>ChildrenCountMatcher</tt> matches the node's children count
@@ -51,6 +51,17 @@ public class ChildrenNameMatcher extends TypeSafeMatcher<Node> {
             return item != null && childrenNames(item.getNodes()).equals(Arrays.asList(childrenNames));
         } catch (RepositoryException e) {
             return false;
+        }
+    }
+
+    @Override
+    protected void describeMismatchSafely(Node node, Description mismatchDescription) {
+
+        try {
+            List<String> actualChildrenNames = childrenNames(node.getNodes());
+            mismatchDescription.appendText("was node with children named ").appendText(actualChildrenNames.toString());
+        } catch (RepositoryException e) {
+            super.describeMismatchSafely(node, mismatchDescription);
         }
     }
 
