@@ -39,19 +39,6 @@
                                     <version>1.0.0</version>
                                     <outputDirectory>${project.build.directory}/artifacts/sling-tooling-support-install</outputDirectory>
                                 </artifactItem>
-                                <artifactItem>
-                                  <groupId>org.apache.sling</groupId>
-                                  <artifactId>sling-bundle-archetype</artifactId>
-                                  <version>${sling-bundle-archetype.version}</version>
-                                  <outputDirectory>${project.build.directory}/artifacts/archetypes</outputDirectory>
-                                </artifactItem>
-                                <artifactItem>
-                                  <groupId>org.apache.sling</groupId>
-                                  <artifactId>sling-bundle-archetype</artifactId>
-                                  <version>${sling-bundle-archetype.version}</version>
-                                  <type>pom</type>
-                                  <outputDirectory>${project.build.directory}/artifacts/archetypes</outputDirectory>
-                                </artifactItem>                                
                             </artifactItems>
                             <overWriteReleases>false</overWriteReleases>
                             <overWriteSnapshots>true</overWriteSnapshots>
@@ -62,7 +49,4 @@
             </plugin>
         </plugins>
     </build>
-    <properties>
-        <sling-bundle-archetype.version>1.0.2</sling-bundle-archetype.version>
-    </properties>
 </project>
