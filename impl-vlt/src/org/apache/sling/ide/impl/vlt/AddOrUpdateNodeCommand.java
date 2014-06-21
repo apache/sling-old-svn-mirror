@@ -124,29 +124,30 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
         // TODO - we probably don't support SNS here ( and in other places as well )
 
-        // gather a list of existing paths for all covered children
-        // all nodes which are not found in these paths will be deleted
-        List<ResourceProxy> coveredResourceChildren = resource2.getCoveredChildren();
-        if (coveredResourceChildren.size() == 0) {
+        List<ResourceProxy> resourceChildren = resource2.getChildren();
+        if (resourceChildren.size() == 0) {
             Activator.getDefault().getPluginLogger()
-                    .trace("Resource at {0} has no covered children, skipping deleted nodes processing",
+                    .trace("Resource at {0} has no children, skipping deleted nodes processing",
                             resource2.getPath());
             return;
         }
+        
         Map<String, ResourceProxy> resourceChildrenPaths = new HashMap<String, ResourceProxy>(
-                coveredResourceChildren.size());
-        for (ResourceProxy coveredChild : coveredResourceChildren) {
-            resourceChildrenPaths.put(coveredChild.getPath(), coveredChild);
+                resourceChildren.size());
+        for (ResourceProxy child : resourceChildren) {
+            resourceChildrenPaths.put(child.getPath(), child);
         }
 
         for (NodeIterator it = node.getNodes(); it.hasNext();) {
 
             Node child = it.nextNode();
-            if (hasFileLikePrimaryNodeType(child)) {
-                continue;
-            }
+
             if (resourceChildrenPaths.containsKey(child.getPath())) {
-                processDeletedNodes(child, resourceChildrenPaths.get(child.getPath()));
+                // only descend for reordering when the child node is covered ; otherwise we
+                // don't have enough information
+                if (resource2.covers(child.getPath())) {
+                    processDeletedNodes(child, resourceChildrenPaths.get(child.getPath()));
+                }
                 continue;
             }
 

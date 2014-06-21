@@ -6,5 +6,5 @@
     <jcr:content jcr:primaryType="nt:unstructured">
         <child jcr:primaryType="nt:unstructured"/>
     </jcr:content>
-    <file.txt/>          
+    <folder/>          
 </jcr:root>
