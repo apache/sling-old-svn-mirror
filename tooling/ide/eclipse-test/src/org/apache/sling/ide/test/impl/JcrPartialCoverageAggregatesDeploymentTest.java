@@ -197,7 +197,7 @@ public class JcrPartialCoverageAggregatesDeploymentTest {
         server.installModule(contentProject);
 
         // create a nt:file at /content/test-root/file.txt
-        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/file.txt"),
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/folder/file.txt"),
                 new ByteArrayInputStream("hello, world".getBytes()));
 
         // create a sling:OrderedFolder at /content/test-root
@@ -205,7 +205,7 @@ public class JcrPartialCoverageAggregatesDeploymentTest {
                 .getResourceAsStream("sling-ordered-folder-with-children.xml"));
 
         Matcher<Node> postConditions = allOf(hasPath("/content/test-root"), hasPrimaryType("sling:OrderedFolder"),
-                hasChildrenNames("file.txt", "jcr:content"));
+                hasChildrenNames("folder", "jcr:content"));
 
         final RepositoryAccessor repo = new RepositoryAccessor(config);
         Poller poller = new Poller();
@@ -222,7 +222,7 @@ public class JcrPartialCoverageAggregatesDeploymentTest {
                 .getResourceAsStream("sling-ordered-folder-with-children-reordered.xml"));
 
         postConditions = allOf(hasPath("/content/test-root"), hasPrimaryType("sling:OrderedFolder"),
-                hasChildrenNames("jcr:content", "file.txt"));
+                hasChildrenNames("jcr:content", "folder"));
 
         poller.pollUntil(new Callable<Node>() {
             @Override
