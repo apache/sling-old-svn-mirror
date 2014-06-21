@@ -20,9 +20,10 @@ import java.util.Arrays;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.NodeType;
 
 import org.hamcrest.Description;
-import org.junit.internal.matchers.TypeSafeMatcher;
+import org.hamcrest.TypeSafeMatcher;
 
 /**
  * The <tt>NodePathMatcher</tt> matches the node's mixin types
@@ -38,20 +39,34 @@ public class MixinTypesMatcher extends TypeSafeMatcher<Node> {
 
     @Override
     public void describeTo(Description description) {
-        description.appendText("node with mixinTypes " + Arrays.toString(mixinTypes));
+        description.appendText("node with mixinTypes ").appendValue(mixinTypes);
     }
 
     @Override
     public boolean matchesSafely(Node item) {
         try {
-            String[] mixinTypes = new String[item.getMixinNodeTypes().length];
-            for (int i = 0; i < item.getMixinNodeTypes().length; i++) {
-                mixinTypes[i] = item.getMixinNodeTypes()[i].getName();
-            }
-            
-            return item != null && Arrays.equals(this.mixinTypes, mixinTypes);
+            return Arrays.equals(this.mixinTypes, mixinTypes(item));
         } catch (RepositoryException e) {
             return false;
+        }
+    }
+
+    private String[] mixinTypes(Node item) throws RepositoryException {
+
+        NodeType[] mixinNodeTypes = item.getMixinNodeTypes();
+        String[] mixinTypes = new String[mixinNodeTypes.length];
+        for (int i = 0; i < mixinNodeTypes.length; i++) {
+            mixinTypes[i] = mixinNodeTypes[i].getName();
+        }
+        return mixinTypes;
+    }
+
+    @Override
+    protected void describeMismatchSafely(Node item, Description mismatchDescription) {
+        try {
+            mismatchDescription.appendText("was node with mixinTypes ").appendValue(mixinTypes(item));
+        } catch (RepositoryException e) {
+            super.describeMismatchSafely(item, mismatchDescription);
         }
     }
 

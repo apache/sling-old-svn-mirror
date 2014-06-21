@@ -20,7 +20,7 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
 import org.hamcrest.Description;
-import org.junit.internal.matchers.TypeSafeMatcher;
+import org.hamcrest.TypeSafeMatcher;
 
 /**
  * The <tt>NodePathMatcher</tt> matches the node's path
@@ -48,4 +48,17 @@ public class NodePathMatcher extends TypeSafeMatcher<Node> {
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.hamcrest.TypeSafeMatcher#describeMismatchSafely(java.lang.Object, org.hamcrest.Description)
+     */
+    @Override
+    protected void describeMismatchSafely(Node item, Description mismatchDescription) {
+        try {
+            mismatchDescription.appendText("was node at path ").appendValue(item.getPath());
+        } catch (RepositoryException e) {
+            super.describeMismatchSafely(item, mismatchDescription);
+        }
+    }
 }

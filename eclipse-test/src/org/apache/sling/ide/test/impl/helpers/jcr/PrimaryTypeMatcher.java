@@ -20,7 +20,7 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
 import org.hamcrest.Description;
-import org.junit.internal.matchers.TypeSafeMatcher;
+import org.hamcrest.TypeSafeMatcher;
 
 /**
  * The <tt>NodePathMatcher</tt> matches the node's primaryType
@@ -45,6 +45,17 @@ public class PrimaryTypeMatcher extends TypeSafeMatcher<Node> {
             return item != null && item.getPrimaryNodeType().getName().equals(primaryType);
         } catch (RepositoryException e) {
             return false;
+        }
+    }
+
+    @Override
+    protected void describeMismatchSafely(Node item, Description mismatchDescription) {
+
+        try {
+            mismatchDescription.appendText("was node with primary type ")
+                .appendValue(item.getPrimaryNodeType().getName());
+        } catch (RepositoryException e) {
+            super.describeMismatchSafely(item, mismatchDescription);
         }
     }
 
