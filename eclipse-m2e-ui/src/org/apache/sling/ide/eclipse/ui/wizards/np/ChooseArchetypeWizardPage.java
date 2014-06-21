@@ -29,6 +29,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.wizard.WizardPage;
@@ -57,7 +58,7 @@ import org.eclipse.m2e.core.repository.IRepository;
 @SuppressWarnings("restriction")
 public class ChooseArchetypeWizardPage extends WizardPage implements IndexListener {
 	
-	private static final String LOADING_PLEASE_WAIT = "loading, please wait...";
+    private static final String LOADING_PLEASE_WAIT = "loading, please wait...";
     private Combo knownArchetypes;
 	private Map<String, Archetype> archetypesMap = new HashMap<String, Archetype>();
 	private Button useDefaultWorkspaceLocationButton;
@@ -203,57 +204,7 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
 	private void initialize() {
 		knownArchetypes.add(LOADING_PLEASE_WAIT);
 		try {
-            getContainer().run(true, false, new IRunnableWithProgress() {
-					
-				@Override
-				public void run(IProgressMonitor monitor) throws InvocationTargetException,
-						InterruptedException {
-                    monitor.beginTask("Discovering archetypes...", 5);
-				    ArchetypeManager manager = MavenPluginActivator.getDefault().getArchetypeManager();
-				    monitor.worked(1);
-					
-				    // optionally allow the parent to install any archetypes
-                    getWizard().installArchetypes();
-				    
-				    Collection<ArchetypeCatalogFactory> archetypeCatalogs = manager.getArchetypeCatalogs();
-				    monitor.worked(2);
-				    ArrayList<Archetype> list = new ArrayList<Archetype>();
-                    for (ArchetypeCatalogFactory catalogFactory : archetypeCatalogs) {
-				        try {
-                            ArchetypeCatalog catalog = catalogFactory.getArchetypeCatalog();
-                            @SuppressWarnings("unchecked")
-                            java.util.List<Archetype> arcs = catalog.getArchetypes();
-
-				          if(arcs != null) {
-				            list.addAll(arcs);
-				          }
-                        } catch (CoreException ce) {
-                            throw new InvocationTargetException(ce);
-				        }
-				      }
-				    monitor.worked(1);
-                    for (Archetype archetype2 : list) {
-                        if (getWizard().acceptsArchetype(archetype2)) {
-                            String key = keyFor(archetype2);
-                            archetypesMap.put(key, archetype2);
-                        }
-                    }
-
-				    monitor.worked(1);
-			        Display.getDefault().asyncExec(new Runnable() {
-			            public void run() {
-			            	Set<String> keys = archetypesMap.keySet();
-			            	knownArchetypes.removeAll();
-                            for (String aKey : keys) {
-                                knownArchetypes.add(aKey);
-                            }
-			            	knownArchetypes.pack();
-			            }
-			          });
-			        monitor.done();
-
-				}
-			});
+            getContainer().run(true, false, new RefreshArchetypesRunnable());
 		} catch (InvocationTargetException e) {
             getWizard().reportError(e.getTargetException());
 		} catch (InterruptedException e) {
@@ -306,15 +257,21 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
 
     @Override
     public void indexChanged(IRepository repository) {
-//        Display.getDefault().asyncExec(new Runnable() {
-//            @Override
-//            public void run() {
-//                if (isCurrentPage()) {
-//                    knownArchetypes.removeAll();
-//                    initialize();
-//                }
-//            }
-//        });
+
+        try {
+            new RefreshArchetypesRunnable().run(new NullProgressMonitor());
+        } catch (final InvocationTargetException e) {
+            Display.getDefault().asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    if (isCurrentPage()) {
+                        setErrorMessage("Failed refreshing archetypes : " + e.getCause().getMessage());
+                    }
+                }
+            });
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     @Override
@@ -325,5 +282,62 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
     @Override
     public void indexUpdating(IRepository repository) {
 
+    }
+
+    class RefreshArchetypesRunnable implements IRunnableWithProgress {
+        @Override
+        public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
+
+            monitor.beginTask("Discovering archetypes...", 5);
+            ArchetypeManager manager = MavenPluginActivator.getDefault().getArchetypeManager();
+            monitor.worked(1);
+
+            // optionally allow the parent to install any archetypes
+            getWizard().installArchetypes();
+
+            Collection<ArchetypeCatalogFactory> archetypeCatalogs = manager.getArchetypeCatalogs();
+            monitor.worked(2);
+            ArrayList<Archetype> list = new ArrayList<Archetype>();
+            for (ArchetypeCatalogFactory catalogFactory : archetypeCatalogs) {
+                try {
+                    ArchetypeCatalog catalog = catalogFactory.getArchetypeCatalog();
+                    @SuppressWarnings("unchecked")
+                    java.util.List<Archetype> arcs = catalog.getArchetypes();
+
+                    if (arcs != null) {
+                        list.addAll(arcs);
+                    }
+                } catch (CoreException ce) {
+                    throw new InvocationTargetException(ce);
+                }
+            }
+            monitor.worked(1);
+            boolean changed = false;
+            for (Archetype archetype2 : list) {
+                if (getWizard().acceptsArchetype(archetype2)) {
+                    String key = keyFor(archetype2);
+                    Archetype old = archetypesMap.put(key, archetype2);
+                    if (old == null) {
+                        changed = true;
+                    }
+                }
+            }
+
+            monitor.worked(1);
+            if (changed) {
+                Display.getDefault().asyncExec(new Runnable() {
+                    public void run() {
+                        Set<String> keys = archetypesMap.keySet();
+                        knownArchetypes.removeAll();
+                        for (String aKey : keys) {
+                            knownArchetypes.add(aKey);
+                        }
+                        knownArchetypes.pack();
+                    }
+                });
+            }
+            monitor.done();
+
+        }
     }
 }
