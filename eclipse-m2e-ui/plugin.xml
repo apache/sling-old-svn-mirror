@@ -24,5 +24,17 @@
          <bundle
                name="org.apache.sling.ide.eclipse-m2e-ui"></bundle>
       </component>
-   </extension>   
+   </extension>
+    <!-- marker to tell m2e that this plugin contains a lifecycle-mapping-metadata.xml -->
+    <extension point="org.eclipse.m2e.core.lifecycleMappingMetadataSource">
+    </extension>
+    <extension
+            point="org.eclipse.m2e.core.projectConfigurators">
+        <configurator
+                class="org.apache.sling.ide.eclipse.m2e.internal.BundleProjectConfigurator"
+                id="org.apache.sling.ide.eclipse.m2e.bundleconfigurator"
+                name="Sling Bundle Configurator"
+                secondaryTo="maven-bundle-plugin">
+        </configurator>
+    </extension>
 </plugin>    
