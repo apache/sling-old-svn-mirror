@@ -75,6 +75,13 @@ public class SlingJSPTaglibTest extends RenderingTestBase {
 		final String content = getContent(testPage + ".html", CONTENT_TYPE_HTML);
 		log.info(content);
 		assertContains(content, "All Tests Succeeded");
+		
+		// tests for the encoding stuff
+		assertContains(content, "HTML_ENCODE:&amp;amp&#x3b;Hello World&#x21;&lt;script&gt;&lt;&#x2f;script&gt;");
+		assertContains(content, "DEFAULT:&amp;amp&#x3b;Hello World&#x21;&lt;script&gt;&lt;&#x2f;script&gt;");
+		assertContains(content, "EL_VALUE:I&#x27;m Awesome&#x21;&#x21;");
+		assertContains(content, "BODY_CONTENT:&amp;copy&#x3b;Body Content");
+		assertContains(content, "BODY_CONTENT_FALLBACK:1");
 
 		log.info("testTaglib - TEST SUCCESSFUL");
 	}
