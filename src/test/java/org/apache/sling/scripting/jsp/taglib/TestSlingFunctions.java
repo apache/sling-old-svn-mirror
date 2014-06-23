@@ -18,7 +18,9 @@ package org.apache.sling.scripting.jsp.taglib;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -85,6 +87,41 @@ public class TestSlingFunctions {
 	}
 
 	@Test
+	public void testEscape() {
+		log.info("testEncode");
+
+		log.info("Testing HTML Escaping");
+		assertEquals("&amp;nbsp&#x3b;Here is some text&#x21;",
+				SlingFunctions.escape("&nbsp;Here is some text!", "HTML"));
+
+		log.info("Testing HTML Attr Escaping");
+		assertEquals(
+				"&amp;nbsp&#x3b;Here&#x20;is&#x20;some&#x20;text&#x21;&quot;",
+				SlingFunctions
+						.escape("&nbsp;Here is some text!\"", "HTML_ATTR"));
+
+		log.info("Testing invalid values");
+		try {
+			SlingFunctions.escape(null, null);
+			fail("Expected null pointer exception");
+		} catch (NullPointerException npe) {
+			log.info("Encountered expected exception");
+		}
+		try {
+			SlingFunctions.escape(null, "Invalid");
+			fail("Expected invalid argument exception");
+		} catch (IllegalArgumentException iae) {
+			log.info("Encountered expected exception");
+		}
+
+		log.info("Testing null/empty values");
+		assertNull(SlingFunctions.escape(null, "html"));
+		assertEquals("", SlingFunctions.escape("", "html"));
+
+		log.info("Tests successful!");
+	}
+
+	@Test
 	public void testGetResource() {
 		log.info("testGetResource");
 		Resource resource = SlingFunctions.getResource(resolver, TEST_PATH);
@@ -132,33 +169,37 @@ public class TestSlingFunctions {
 	}
 
 	@Test
-	public void testGetValue(){
+	public void testGetValue() {
 		log.info("testGetValue");
 		Resource resource = SlingFunctions.getResource(resolver, TEST_PATH);
 		ValueMap properties = resource.adaptTo(ValueMap.class);
-		
+
 		log.info("Testing using class coersion");
-		Date retrievedDate = SlingFunctions.getValue(properties, "date", Date.class);
-		assertEquals(date,retrievedDate);
+		Date retrievedDate = SlingFunctions.getValue(properties, "date",
+				Date.class);
+		assertEquals(date, retrievedDate);
 		assertTrue(retrievedDate instanceof Date);
-		
+
 		log.info("Testing with default value on existing key");
-		Long retrievedLong = SlingFunctions.getValue(properties, "long", new Long(-123L));
-		assertEquals(new Long(0L),retrievedLong);
+		Long retrievedLong = SlingFunctions.getValue(properties, "long",
+				new Long(-123L));
+		assertEquals(new Long(0L), retrievedLong);
 		assertTrue(retrievedLong instanceof Long);
-		
+
 		log.info("Testing with no value and class coersion");
-		Date fakeDate = SlingFunctions.getValue(properties, "date1", Date.class);
+		Date fakeDate = SlingFunctions
+				.getValue(properties, "date1", Date.class);
 		assertTrue(fakeDate == null);
-		
+
 		log.info("Testing with no value and default specified");
-		Long fakeLong = SlingFunctions.getValue(properties, "long1", new Long(-123L));
-		assertEquals(new Long(-123L),fakeLong);
+		Long fakeLong = SlingFunctions.getValue(properties, "long1", new Long(
+				-123L));
+		assertEquals(new Long(-123L), fakeLong);
 		assertTrue(fakeLong instanceof Long);
 
 		log.info("Tests successful!");
 	}
-	
+
 	@Test
 	public void testListChildResources() {
 		log.info("testListChildResources");
