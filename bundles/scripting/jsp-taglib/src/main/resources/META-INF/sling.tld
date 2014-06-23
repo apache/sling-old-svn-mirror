@@ -24,6 +24,12 @@
 		<function-signature>java.lang.Object adaptTo(org.apache.sling.api.adapter.Adaptable, java.lang.String)</function-signature>
 	</function>
 
+    <function>
+        <name>encode</name>
+        <function-class>org.apache.sling.scripting.jsp.taglib.SlingFunctions</function-class>
+        <function-signature>java.lang.String encode(java.lang.String, java.lang.String)</function-signature>
+    </function>
+
 	<function>
 		<name>findResources</name>
 		<function-class>org.apache.sling.scripting.jsp.taglib.SlingFunctions</function-class>
@@ -435,6 +441,44 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 	</tag>
+
+    <tag>
+        <description>
+            Writes properly XSS encoded text to the response using the 
+            OWASP ESAPI for supporting a number of encoding modes.
+        </description>
+        <name>encode</name>
+        <tag-class>
+            org.apache.sling.scripting.jsp.taglib.EncodeTag
+        </tag-class>
+        <body-content>JSP</body-content>
+        <attribute>
+            <description>
+                The value to encode.
+            </description>
+            <name>value</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>
+                The default value to be used if the value is either 
+                null or an empty string.
+            </description>
+            <name>default</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>
+                The mode to use for encoding.  Must be one of the 
+                valid modes found in XSSSupport.ENCODING_MODE.
+            </description>
+            <name>mode</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
 
 	<tag>
 		<description>

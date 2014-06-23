@@ -7,15 +7,29 @@ AdaptTo Tag
     Test 1: AdaptTo Tag
     result: <sling:adaptTo adaptable="${resource}" adaptTo="org.apache.sling.api.resource.ValueMap" var="props" /><c:choose><c:when test="${not empty props}">SUCCESS</c:when><c:otherwise>ERROR<c:set var="success" value="false" /></c:otherwise></c:choose>
     
-    Test 2: Test Non-Existent Class Handling
-    result: <sling:adaptTo adaptable="${resource}" adaptTo="org.apache.sling.api.resource.ValueMap2" var="props2" /><c:choose><c:when test="${empty props2}">SUCCESS</c:when><c:otherwise>ERROR<c:set var="success" value="false" /></c:otherwise></c:choose>
-    
-    Test 3: Test Null Adaptable Handling
+    Test 2: Test Null Adaptable Handling
     result: <sling:adaptTo adaptable="${res}" adaptTo="org.apache.sling.api.resource.ValueMap" var="props3" /><c:choose><c:when test="${empty props3}">SUCCESS</c:when><c:otherwise>ERROR<c:set var="success" value="false" /></c:otherwise></c:choose>
     
-    Test 4: Test Non-Adaptable Handling
+    Test 3: Test Non-Adaptable Handling
     result: <c:catch var="adaptionException"><sling:adaptTo adaptable="res" adaptTo="org.apache.sling.api.resource.ValueMap" var="props3" /></c:catch><c:choose><c:when test="${not empty adaptionException}">SUCCESS: ${adaptionException}</c:when><c:otherwise>ERROR<c:set var="success" value="false" /></c:otherwise></c:choose>
 
+Encode Tag
+    Test 1: HTML Encode
+    Result: HTML_ENCODE:<sling:encode value="&amp;Hello World!<script></script>" mode="HTML" />
+
+    Test 2: Default
+    Result: DEFAULT:<sling:encode default="&amp;Hello World!<script></script>" mode="HTML" />
+
+    Test 3: EL Value
+    <c:set var="encode_test">I'm Awesome!!</c:set>
+    Result: EL_VALUE:<sling:encode value="${encode_test}" mode="HTML" />
+    
+    Test 4: Body Content
+    Result: BODY_CONTENT:<sling:encode mode="HTML">&copy;Body Content</sling:encode>
+    
+    Test 5: Body Content Fallback
+    Result: BODY_CONTENT_FALLBACK:<sling:encode value="1" mode="HTML">2</sling:encode>
+    
 Find Resources Tag
     Test 1: Find Resources
     Result: <sling:findResources query="/jcr:root//element(*, nt:file) order by @jcr:score" language="xpath" var="foundResources" /><c:choose><c:when test="${not empty foundResources}">SUCCESS</c:when><c:otherwise>ERROR<c:set var="success" value="false" /></c:otherwise></c:choose>
@@ -68,13 +82,10 @@ AdaptTo Function
     Test 1: AdaptTo
     result: <c:set var="props4" value="${sling:adaptTo(resource,'org.apache.sling.api.resource.ValueMap')}" /><c:choose><c:when test="${not empty props4}">SUCCESS</c:when><c:otherwise>ERROR<c:set var="success" value="false" /></c:otherwise></c:choose>
     
-    Test 2: Test Non-Existent Class Handling
-    result: <c:set var="props5" value="${sling:adaptTo(resource,'org.apache.sling.api.resource.ValueMap2')}" /><c:choose><c:when test="${empty props5}">SUCCESS</c:when><c:otherwise>ERROR<c:set var="success" value="false" /></c:otherwise></c:choose>
-    
-    Test 3: Test Null Adaptable Handling
+    Test 2: Test Null Adaptable Handling
     result: <c:set var="props6" value="${sling:adaptTo(res,'org.apache.sling.api.resource.ValueMap')}" /><c:choose><c:when test="${empty props6}">SUCCESS</c:when><c:otherwise>ERROR<c:set var="success" value="false" /></c:otherwise></c:choose>
     
-    Test 4: Test Non-Adaptable Handling
+    Test 3: Test Non-Adaptable Handling
     result: <c:catch var="adaptionException2"><c:set var="props7" value="${sling:adaptTo('res','org.apache.sling.api.resource.ValueMap')}" /></c:catch><c:choose><c:when test="${not empty adaptionException2}">SUCCESS: ${adaptionException}</c:when><c:otherwise>ERROR<c:set var="success" value="false" /></c:otherwise></c:choose>
 
 Find Resources Function
