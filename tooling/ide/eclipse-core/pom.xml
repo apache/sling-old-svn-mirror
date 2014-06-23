@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.apache.sling.ide</groupId>
     <artifactId>reactor</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.2-SNAPSHOT</version>
   </parent>
   <artifactId>org.apache.sling.ide.eclipse-core</artifactId>
   <packaging>eclipse-plugin</packaging>
