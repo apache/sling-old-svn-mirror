@@ -10,7 +10,7 @@
     </parent>
 	<groupId>org.apache.sling.ide</groupId>
 	<artifactId>reactor</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Sling IDE Tools: Reactor</name>
     <url>http://sling.apache.org</url>
@@ -62,6 +62,11 @@
 						</artifact>
 					</target>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-versions-plugin</artifactId>
+				<version>${tycho.version}</version>
 			</plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

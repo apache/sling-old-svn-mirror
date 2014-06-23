@@ -2,7 +2,7 @@
 <feature
       id="org.apache.sling.ide.m2e-feature"
       label="Sling IDE Tools, M2e-based"
-      version="0.0.1.qualifier"
+      version="1.0.0.qualifier"
       provider-name="The Apache Foundation">
 
    <license url="http://www.apache.org/licenses/LICENSE-2.0">
