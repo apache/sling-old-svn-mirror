@@ -96,14 +96,6 @@
                       <target>1.6</target>
                     </configuration>
                 </plugin>
-                <plugin>
-                    <groupId>org.eclipse.tycho</groupId>
-                    <artifactId>tycho-packaging-plugin</artifactId>
-                    <version>${tycho.version}</version>
-                    <configuration>
-                        <format>'RELEASE'</format>
-                    </configuration>
-                </plugin>
                 <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
                 <!--
                     We embed some bundles that are not available on p2 update sites. To make the build seamless, we copy them early in the process.
