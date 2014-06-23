@@ -156,6 +156,12 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
     private volatile Injector[] sortedInjectors = new Injector[0];
 
+    @Reference(name = "injectAnnotationProcessorFactory", referenceInterface = InjectAnnotationProcessorFactory.class,
+            cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
+    private final Map<Object, InjectAnnotationProcessorFactory> injectAnnotationProcessorFactories = new TreeMap<Object, InjectAnnotationProcessorFactory>();
+
+    private volatile InjectAnnotationProcessorFactory[] sortedInjectAnnotationProcessorFactories = new InjectAnnotationProcessorFactory[0];
+
     private ModelPackageBundleListener listener;
 
     private ServiceRegistration jobRegistration;
@@ -275,16 +281,18 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         InjectAnnotationProcessor annotationProcessor = null;
         String source = getSource(element);
         boolean wasInjectionSuccessful = false;
+        
+        // find an appropriate annotation processor
+        for (InjectAnnotationProcessorFactory factory : sortedInjectAnnotationProcessorFactories) {
+            annotationProcessor = factory.createAnnotationProcessor(adaptable, element);
+            if (annotationProcessor != null) {
+                break;
+            }
+        }
 
         // find the right injector
         for (Injector injector : sortedInjectors) {
             if (source == null || source.equals(injector.getName())) {
-                // get annotation processor
-                if (injector instanceof InjectAnnotationProcessorFactory) {
-                    annotationProcessor = ((InjectAnnotationProcessorFactory) injector).createAnnotationProcessor(adaptable,
-                            element);
-                }
-
                 String name = getName(element, annotationProcessor);
                 Object injectionAdaptable = getAdaptable(adaptable, element, annotationProcessor);
                 if (injectionAdaptable != null) {
@@ -784,8 +792,26 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         }
     }
 
+    protected void bindInjectAnnotationProcessorFactory(final InjectAnnotationProcessorFactory injector, final Map<String, Object> props) {
+        synchronized (injectors) {
+            injectAnnotationProcessorFactories.put(ServiceUtil.getComparableForServiceRanking(props), injector);
+            sortedInjectAnnotationProcessorFactories = injectAnnotationProcessorFactories.values().toArray(new InjectAnnotationProcessorFactory[injectAnnotationProcessorFactories.size()]);
+        }
+    }
+
+    protected void unbindInjectAnnotationProcessorFactory(final InjectAnnotationProcessorFactory injector, final Map<String, Object> props) {
+        synchronized (injectors) {
+            injectAnnotationProcessorFactories.remove(ServiceUtil.getComparableForServiceRanking(props));
+            sortedInjectAnnotationProcessorFactories = injectors.values().toArray(new InjectAnnotationProcessorFactory[injectAnnotationProcessorFactories.size()]);
+        }
+    }
+
     Injector[] getInjectors() {
         return sortedInjectors;
+    }
+
+    InjectAnnotationProcessorFactory[] getInjectAnnotationProcessorFactories() {
+        return sortedInjectAnnotationProcessorFactories;
     }
 
 }

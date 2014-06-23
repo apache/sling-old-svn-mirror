@@ -19,14 +19,12 @@ package org.apache.sling.models.impl;
 import java.io.PrintWriter;
 
 import org.apache.sling.models.spi.Injector;
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
 
 public class ModelConfigurationPrinter {
 
     private final ModelAdapterFactory modelAdapterFactory;
 
-    /**
-     * @param modelAdapterFactory
-     */
     ModelConfigurationPrinter(ModelAdapterFactory modelAdapterFactory) {
         this.modelAdapterFactory = modelAdapterFactory;
     }
@@ -39,6 +37,17 @@ public class ModelConfigurationPrinter {
         } else {
             for (Injector injector : injectors) {
                 printWriter.printf("%s - %s", injector.getName(), injector.getClass().getName());
+                printWriter.println();
+            }
+        }
+        printWriter.println();
+        printWriter.println("Sling Models Inject Annotation Processor Factories:");
+        InjectAnnotationProcessorFactory[] factories = modelAdapterFactory.getInjectAnnotationProcessorFactories();
+        if (factories == null) {
+            printWriter.println("none");
+        } else {
+            for (InjectAnnotationProcessorFactory factory : factories) {
+                printWriter.printf("%s", factory.getClass().getName());
                 printWriter.println();
             }
         }

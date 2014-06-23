@@ -63,8 +63,11 @@ public class CustomInjectorTest {
 
     @Test
     public void testInjectorWithCustomAnnotation() {
+        CustomAnnotationInjector injector = new CustomAnnotationInjector();
+
         factory.bindInjector(new SimpleInjector(), new ServicePropertiesMap(1, 1));
-        factory.bindInjector(new CustomAnnotationInjector(), new ServicePropertiesMap(1, 1));
+        factory.bindInjector(injector, new ServicePropertiesMap(1, 1));
+        factory.bindInjectAnnotationProcessorFactory(injector, new ServicePropertiesMap(1, 1));
 
         CustomAnnotationModel model = factory.getAdapter(new Object(), CustomAnnotationModel.class);
         assertNotNull(model);
