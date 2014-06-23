@@ -18,9 +18,7 @@ package org.apache.sling.models.spi.injectorspecific;
 
 import java.lang.reflect.AnnotatedElement;
 
-import org.apache.sling.models.spi.Injector;
-
-public interface InjectAnnotationProcessorFactory extends Injector {
+public interface InjectAnnotationProcessorFactory {
     /**
      * 
      * @param adaptable the object from which this model is adapted
