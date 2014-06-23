@@ -168,5 +168,80 @@
                 </plugins>
             </build>
         </profile>
+        <!-- adapted from https://svn.apache.org/repos/asf/jackrabbit/commons/filevault/trunk/pom.xml -->
+        <profile>
+            <id>source-release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <configuration>
+                            <finalName>sling-ide-tooling-${project.version}</finalName>
+                            <descriptors>
+                                <descriptor>assembly.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </plugin>
+                    <!-- JCR-2455: Automatic staging of non-Maven release artifacts -->
+                    <plugin>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <configuration>
+                            <target>
+                                <checksum file="${basedir}/target/sling-ide-tooling-${project.version}-src.zip" algorithm="MD5" fileext=".md5"/>
+                                <checksum file="${basedir}/target/sling-ide-tooling-${project.version}-src.zip" algorithm="SHA1" fileext=".sha"/>
+                                <checksum file="${basedir}/target/sling-ide-tooling-${project.version}-src.zip" algorithm="SHA1" property="checksum" />
+                                <echo file="${basedir}/target/vote.txt">
+From: ${username}@apache.org
+To: dev@sling.apache.org
+Subject: [VOTE] Release Apache Sling IDE Tooling ${project.version}
+
+Hi,
+
+We solved ${jira.fixedIssues} issues in this release:
+https://issues.apache.org/jira/browse/SLING/fixforversion/${jira.fixVersion}
+
+There are still some outstanding issues:
+https://issues.apache.org/jira/browse/SLING/component/12320908
+
+The release candidate has been uploaded at https://dist.apache.org/repos/dist/dev/sling,
+and can be built using
+
+    mvn clean package
+    
+The resulting binaries can be installed into an Eclipse instance by installing from the update site which
+is found at p2update/target/repository after building the project. 
+
+Please vote to approve this release:
+
+  [ ] +1 Approve the release
+  [ ]  0 Don't care
+  [ ] -1 Don't release, because ...
+
+This majority vote is open for at least 72 hours.
+                                        </echo>
+                                        <echo />
+                                        <echo>
+The release candidate has been prepared in:
+
+${basedir}/target/
+
+A release vote template has been generated for you:
+
+file://${basedir}/target/vote.txt
+                                </echo>
+                                <echo />
+                            </target>
+                        </configuration>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.apache.ant</groupId>
+                                <artifactId>ant-nodeps</artifactId>
+                                <version>1.8.1</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 </project>
