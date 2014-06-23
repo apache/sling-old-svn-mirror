@@ -53,15 +53,13 @@ public abstract class SelectionUtils {
 		}
 		List<IServer> servers = new ArrayList<IServer>();
 
-        IModule module = ServerUtil.getModule(project);
-
-        if (module == null) {
-            return Collections.emptyList();
-        }
+        IModule[] modules = ServerUtil.getModules(project);
 
         for (IServer server : ServerCore.getServers()) {
-            if (ServerUtil.containsModule(server, module, monitor)) {
-                servers.add(server);
+            for (IModule module : modules) {
+                if (ServerUtil.containsModule(server, module, monitor)) {
+                    servers.add(server);
+                }
             }
         }
 
