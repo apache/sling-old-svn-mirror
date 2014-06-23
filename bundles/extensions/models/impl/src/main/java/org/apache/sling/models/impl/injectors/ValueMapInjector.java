@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 2000)
-public class ValueMapInjector implements InjectAnnotationProcessorFactory, Injector {
+public class ValueMapInjector implements Injector, InjectAnnotationProcessorFactory {
 
     private static final Logger log = LoggerFactory.getLogger(ValueMapInjector.class);
 

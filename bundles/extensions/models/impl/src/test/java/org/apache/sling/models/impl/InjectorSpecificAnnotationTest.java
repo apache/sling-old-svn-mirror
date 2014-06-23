@@ -77,15 +77,33 @@ public class InjectorSpecificAnnotationTest {
         osgiInjector = new OSGiServiceInjector();
         osgiInjector.activate(componentCtx);
 
-        factory.bindInjector(new BindingsInjector(),
+        BindingsInjector bindingsInjector = new BindingsInjector();
+        ValueMapInjector valueMapInjector = new ValueMapInjector();
+        ChildResourceInjector childResourceInjector = new ChildResourceInjector();
+        RequestAttributeInjector requestAttributeInjector = new RequestAttributeInjector();
+
+        factory.bindInjector(bindingsInjector,
                 Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 1L));
-        factory.bindInjector(new ValueMapInjector(),
+        factory.bindInjector(valueMapInjector,
                 Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 2L));
-        factory.bindInjector(new ChildResourceInjector(),
+        factory.bindInjector(childResourceInjector,
                 Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 3L));
-        factory.bindInjector(new RequestAttributeInjector(),
+        
+        factory.bindInjector(requestAttributeInjector,
                 Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 4L));
         factory.bindInjector(osgiInjector, Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 5L));
+
+        factory.bindInjectAnnotationProcessorFactory(bindingsInjector,
+                Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 1L));
+        factory.bindInjectAnnotationProcessorFactory(valueMapInjector,
+                Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 2L));
+        factory.bindInjectAnnotationProcessorFactory(childResourceInjector,
+                Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 3L));
+        factory.bindInjectAnnotationProcessorFactory(requestAttributeInjector,
+                Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 4L));
+        factory.bindInjectAnnotationProcessorFactory(osgiInjector,
+                Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 5L));
+
         SlingBindings bindings = new SlingBindings();
         bindings.setLog(log);
         Mockito.when(request.getAttribute(SlingBindings.class.getName())).thenReturn(bindings);

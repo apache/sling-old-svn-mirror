@@ -20,11 +20,12 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
 
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
+import org.apache.sling.models.spi.Injector;
 import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
 
-public class CustomAnnotationInjector implements InjectAnnotationProcessorFactory {
+public class CustomAnnotationInjector implements Injector, InjectAnnotationProcessorFactory {
 
     @Override
     public String getName() {
