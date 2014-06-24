@@ -32,6 +32,7 @@ import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.ResourceUtil;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
 import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
+import org.apache.sling.ide.eclipse.core.progress.ProgressUtils;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterResult;
 import org.apache.sling.ide.filter.IgnoredResources;
@@ -54,6 +55,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.wst.server.core.IServer;
 
 // intentionally does not implement IRunnableWithProgress to cut dependency on JFace
@@ -67,6 +69,11 @@ public class ImportRepositoryContentAction {
     private SerializationManager serializationManager;
 	private SerializationDataBuilder builder;
     private IgnoredResources ignoredResources;
+    private IProgressMonitor monitor;
+    private Repository repository;
+    private Filter filter;
+    private File contentSyncRoot;
+    private IFolder contentSyncRootDir;
 
     /**
      * @param server
@@ -86,17 +93,17 @@ public class ImportRepositoryContentAction {
 
     public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException,
             SerializationException, CoreException {
-        Repository repository;
-        try {
-            repository = ServerUtil.getConnectedRepository(server, monitor);
-        } catch (CoreException e) {
-            throw new InvocationTargetException(e);
-        }
+
+        // TODO: We should try to make this give 'nice' progress feedback (aka here's what I'm processing)
+        monitor.beginTask("Repository import", IProgressMonitor.UNKNOWN);
+
+        this.monitor = monitor;
+
+        repository = ServerUtil.getConnectedRepository(server, monitor);
 
         this.builder = serializationManager.newBuilder(
         		repository, ProjectUtil.getSyncDirectoryFile(project));
 
-        monitor.setTaskName("Loading configuration...");
         ISlingLaunchpadServer launchpad = (ISlingLaunchpadServer) server.loadAdapter(
                 ISlingLaunchpadServer.class, monitor);
 
@@ -117,22 +124,22 @@ public class ImportRepositoryContentAction {
             throw new InvocationTargetException(e1);
         }
 
-        Filter filter = ProjectUtil.loadFilter(project);
+        filter = ProjectUtil.loadFilter(project);
 
-        monitor.worked(5);
+        ProgressUtils.advance(monitor, 1);
 
         try {
 
-            // TODO: We should try to make this give 'nice' progress feedback (aka here's what I'm
-            // processing)
-            monitor.setTaskName("Importing...");
-            monitor.worked(10);
-
-            IFolder syncDir = ProjectUtil.getSyncDirectory(project);
-            IPath repositoryImportRoot = projectRelativePath.makeRelativeTo(syncDir.getProjectRelativePath())
+            contentSyncRootDir = ProjectUtil.getSyncDirectory(project);
+            IPath repositoryImportRoot = projectRelativePath
+                    .makeRelativeTo(contentSyncRootDir.getProjectRelativePath())
                     .makeAbsolute();
 
-            readVltIgnoresNotUnderImportRoot(syncDir, repositoryImportRoot);
+            contentSyncRoot = ProjectUtil.getSyncDirectoryFullPath(project).toFile();
+
+            readVltIgnoresNotUnderImportRoot(contentSyncRootDir, repositoryImportRoot);
+
+            ProgressUtils.advance(monitor, 1);
 
             Activator
                     .getDefault()
@@ -140,11 +147,10 @@ public class ImportRepositoryContentAction {
                     .trace("Starting import; repository start point is {0}, workspace start point is {1}",
                             repositoryImportRoot, projectRelativePath);
 
-            crawlChildrenAndImport(repository, filter, repositoryImportRoot.toPortableString(), project,
-                    projectRelativePath);
+            crawlChildrenAndImport(repositoryImportRoot.toPortableString());
 
-            monitor.setTaskName("Import Complete");
-            monitor.worked(100);
+        } catch (OperationCanceledException e) {
+            throw e;
         } catch (Exception e) {
             throw new InvocationTargetException(e);
         } finally {
@@ -175,12 +181,7 @@ public class ImportRepositoryContentAction {
 
     /**
      * Crawls the repository and recursively imports founds resources
-     * 
-     * @param repository the sling repository to import from
-     * @param filter
      * @param path the current path to import from
-     * @param project the project to create resources in
-     * @param projectRelativePath the path, relative to the project root, where the resources should be created
      * @param tracer
      * @throws JSONException
      * @throws RepositoryException
@@ -188,17 +189,13 @@ public class ImportRepositoryContentAction {
      * @throws IOException
      */
     // TODO: This probably should be pushed into the service layer
-    private void crawlChildrenAndImport(Repository repository, Filter filter, String path,
-            IProject project, IPath projectRelativePath)
+    private void crawlChildrenAndImport(String path)
             throws RepositoryException, CoreException, IOException, SerializationException {
-
-        File contentSyncRoot = ProjectUtil.getSyncDirectoryFullPath(project).toFile();
-        IFolder contentSyncRootDir = ProjectUtil.getSyncDirectory(project);
 
         logger.trace("crawlChildrenAndImport({0},  {1}, {2}, {3}", repository, path, project, projectRelativePath);
 
         ResourceProxy resource = executeCommand(repository.newListChildrenNodeCommand(path));
-
+        
         // TODO we should know all node types for which to create files and folders
         SerializationData serializationData = builder.buildSerializationData(contentSyncRoot, resource);
         logger.trace("For resource at path {0} got serialization data {1}", resource.getPath(), serializationData);
@@ -245,8 +242,7 @@ public class ImportRepositoryContentAction {
 
                                     // 2. recursively handle all resources
                                     for (ResourceProxy grandChild : reloadedChildResource.getChildren()) {
-                                        crawlChildrenAndImport(repository, filter, grandChild.getPath(), project,
-                                                projectRelativePath);
+                                        crawlChildrenAndImport(grandChild.getPath());
                                     }
                                 }
 	                            
@@ -285,6 +281,8 @@ public class ImportRepositoryContentAction {
 	            return;
 	        }
         }
+		
+        ProgressUtils.advance(monitor, 1);
 
         for (ResourceProxy child : resourceChildren) {
 
@@ -300,7 +298,7 @@ public class ImportRepositoryContentAction {
                 }
             }
 
-            crawlChildrenAndImport(repository, filter, child.getPath(), project, projectRelativePath);
+            crawlChildrenAndImport(child.getPath());
         }
     }
 
