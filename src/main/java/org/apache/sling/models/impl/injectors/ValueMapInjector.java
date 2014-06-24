@@ -18,7 +18,11 @@ package org.apache.sling.models.impl.injectors;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Array;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.lang.StringUtils;
@@ -83,6 +87,25 @@ public class ValueMapInjector implements Injector, InjectAnnotationProcessorFact
                 }
                 return null;
             }
+        } else if (type instanceof ParameterizedType) {
+            // list support
+            ParameterizedType pType = (ParameterizedType) type;
+            if (pType.getActualTypeArguments().length != 1) {
+                return null;
+            }
+            Class<?> collectionType = (Class<?>) pType.getRawType();
+            if (!(collectionType.equals(Collection.class) || collectionType.equals(List.class))) {
+                return null;
+            }
+
+            Class<?> itemType = (Class<?>) pType.getActualTypeArguments()[0];
+            Object array = map.get(name, Array.newInstance(itemType, 0).getClass());
+            if (array == null) {
+                return null;
+
+            }
+
+            return Arrays.asList((Object[]) array);
         } else {
             log.debug("ValueMapInjector doesn't support non-class types {}", type);
             return null;

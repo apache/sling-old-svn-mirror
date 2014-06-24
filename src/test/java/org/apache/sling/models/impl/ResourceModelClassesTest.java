@@ -35,6 +35,7 @@ import org.apache.sling.models.testmodels.classes.ArrayWrappersModel;
 import org.apache.sling.models.testmodels.classes.ChildModel;
 import org.apache.sling.models.testmodels.classes.ChildResourceModel;
 import org.apache.sling.models.testmodels.classes.ChildValueMapModel;
+import org.apache.sling.models.testmodels.classes.ListModel;
 import org.apache.sling.models.testmodels.classes.ParentModel;
 import org.apache.sling.models.testmodels.classes.ResourceModelWithRequiredField;
 import org.apache.sling.models.testmodels.classes.ResourceModelWithRequiredFieldOptionalStrategy;
@@ -138,6 +139,26 @@ public class ResourceModelClassesTest {
         Integer[] secondIntArray = model.getSecondIntArray();
         assertEquals(4, secondIntArray.length);
         assertEquals(new Integer(2), secondIntArray[1]);
+    }
+
+    @Test
+    public void testListModel() {
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("intList", new Integer[] {1, 2, 9, 8});
+        map.put("stringList", new String[] {"hello", "world"});
+
+        ValueMap vm = new ValueMapDecorator(map);
+        Resource res = mock(Resource.class);
+        when(res.adaptTo(ValueMap.class)).thenReturn(vm);
+
+        ListModel model = factory.getAdapter(res, ListModel.class);
+        assertNotNull(model);
+
+        assertEquals(4, model.getIntList().size());
+        assertEquals(new Integer(2), model.getIntList().get(1));
+
+        assertEquals(2, model.getStringList().size());
+        assertEquals("hello", model.getStringList().get(0));
     }
 
     @Test
