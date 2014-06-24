@@ -74,7 +74,7 @@ public interface SlingRepository extends Repository {
      * @return The administrative Session
      * @throws LoginException If this method is not supported or is disabled by
      *             the implementation.
-     * @throws RepositoryException If an error occurrs creating the
+     * @throws RepositoryException If an error occurs creating the
      *             administrative session
      * @deprecated as of 2.2 (bundle version 2.2.0) because of inherent security
      *             issues. Services requiring specific permissions should use
@@ -97,7 +97,7 @@ public interface SlingRepository extends Repository {
      * @return A Session with appropriate permissions to execute the service.
      * @throws LoginException If there is no service account defined for the
      *             calling bundle or the defined service account does not exist.
-     * @throws RepositoryException if an error occurrs.
+     * @throws RepositoryException if an error occurs.
      * @since 2.2 (bundle version 2.2.0) to replace
      *        {@link #loginAdministrative(String)}
      * @see <a
