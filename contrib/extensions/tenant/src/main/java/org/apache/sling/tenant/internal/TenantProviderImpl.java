@@ -83,6 +83,8 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    private static final Collection<Tenant> EMPTY_TENANT_LIST = Collections.<Tenant>emptyList();
+
     /**
      * Root path for tenant
      */
@@ -113,7 +115,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
     private WebConsolePlugin plugin;
 
     @Activate
-    private void activate(final BundleContext bundleContext, final Map<String, Object> properties) {
+    protected void activate(final BundleContext bundleContext, final Map<String, Object> properties) {
         this.tenantRootPath = PropertiesUtil.toString(properties.get(TENANT_ROOT), RESOURCE_TENANT_ROOT);
         this.adapterFactory = new TenantAdapterFactory(bundleContext, this, PropertiesUtil.toStringArray(properties.get(TENANT_PATH_MATCHER), DEFAULT_PATH_MATCHER));
         this.plugin = new WebConsolePlugin(bundleContext, this);
@@ -179,24 +181,27 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
         Iterator<Tenant> result = call(new ResourceResolverTask<Iterator<Tenant>>() {
             public Iterator<Tenant> call(ResourceResolver resolver) {
                 Resource tenantRootRes = resolver.getResource(tenantRootPath);
-
-                List<Tenant> tenantList = new ArrayList<Tenant>();
-                Iterator<Resource> tenantResourceList = tenantRootRes.listChildren();
-                while (tenantResourceList.hasNext()) {
-                    Resource tenantRes = tenantResourceList.next();
-
-                    if (filter == null || filter.matches(ResourceUtil.getValueMap(tenantRes))) {
-                        TenantImpl tenant = new TenantImpl(tenantRes);
-                        tenantList.add(tenant);
+                if (tenantRootRes != null) {
+                    List<Tenant> tenantList = new ArrayList<Tenant>();
+                    Iterator<Resource> tenantResourceList = tenantRootRes.listChildren();
+                    while (tenantResourceList.hasNext()) {
+                        Resource tenantRes = tenantResourceList.next();
+                        if (filter == null || filter.matches(ResourceUtil.getValueMap(tenantRes))) {
+                            TenantImpl tenant = new TenantImpl(tenantRes);
+                            tenantList.add(tenant);
+                        }
                     }
+                    return tenantList.iterator();
+                } else {
+                    // tenant root does not exist, thus no tenant exists
+                    return EMPTY_TENANT_LIST.iterator();
                 }
-                return tenantList.iterator();
             }
         });
 
         if (result == null) {
             // no filter or no resource resolver for calling
-            result = Collections.<Tenant> emptyList().iterator();
+            result = EMPTY_TENANT_LIST.iterator();
         }
 
         return result;
