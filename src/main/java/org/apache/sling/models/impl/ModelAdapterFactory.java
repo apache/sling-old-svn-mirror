@@ -61,8 +61,10 @@ import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.commons.osgi.ServiceUtil;
 import org.apache.sling.models.annotations.Default;
+import org.apache.sling.models.annotations.DefaultInjectionStrategy;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.Optional;
+import org.apache.sling.models.annotations.Required;
 import org.apache.sling.models.annotations.Source;
 import org.apache.sling.models.annotations.Via;
 import org.apache.sling.models.spi.DisposalCallback;
@@ -187,7 +189,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         }
 
         if (type.isInterface()) {
-            InvocationHandler handler = createInvocationHandler(adaptable, type);
+            InvocationHandler handler = createInvocationHandler(adaptable, type, modelAnnotation);
             if (handler != null) {
                 return (AdapterType) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] { type }, handler);
             } else {
@@ -195,7 +197,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
             }
         } else {
             try {
-                return createObject(adaptable, type);
+                return createObject(adaptable, type, modelAnnotation);
             } catch (Exception e) {
                 log.error("unable to create object", e);
                 return null;
@@ -276,7 +278,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
     }
 
     private boolean injectFieldOrMethod(final AnnotatedElement element, final Object adaptable, final Type type,
-            final DisposalCallbackRegistry registry, InjectCallback callback) {
+            final Model modelAnnotation, final DisposalCallbackRegistry registry, InjectCallback callback) {
 
         InjectAnnotationProcessor annotationProcessor = null;
         String source = getSource(element);
@@ -310,13 +312,13 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         }
 
         // if default is not set, check if mandatory
-        if (!wasInjectionSuccessful && !isOptional(element, annotationProcessor)) {
+        if (!wasInjectionSuccessful && !isOptional(element, modelAnnotation, annotationProcessor)) {
             return false;
         }
         return true;
     }
 
-    private InvocationHandler createInvocationHandler(final Object adaptable, final Class<?> type) {
+    private InvocationHandler createInvocationHandler(final Object adaptable, final Class<?> type, Model modelAnnotation) {
         Set<Method> injectableMethods = collectInjectableMethods(type);
         final Map<Method, Object> methods = new HashMap<Method, Object>();
         SetMethodsCallback callback = new SetMethodsCallback(methods);
@@ -327,7 +329,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
         for (Method method : injectableMethods) {
             Type returnType = mapPrimitiveClasses(method.getGenericReturnType());
-            if (!injectFieldOrMethod(method, adaptable, returnType, registry, callback)) {
+            if (!injectFieldOrMethod(method, adaptable, returnType, modelAnnotation, registry, callback)) {
                 requiredMethods.add(method);
             }
         }
@@ -379,7 +381,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
     }
 
     @SuppressWarnings("unchecked")
-    private <AdapterType> AdapterType createObject(Object adaptable, Class<AdapterType> type)
+    private <AdapterType> AdapterType createObject(Object adaptable, Class<AdapterType> type, Model modelAnnotation)
             throws InstantiationException, InvocationTargetException, IllegalAccessException {
         Set<Field> injectableFields = collectInjectableFields(type);
 
@@ -431,7 +433,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
         for (Field field : injectableFields) {
             Type fieldType = mapPrimitiveClasses(field.getGenericType());
-            if (!injectFieldOrMethod(field, adaptable, fieldType, registry, callback)) {
+            if (!injectFieldOrMethod(field, adaptable, fieldType, modelAnnotation, registry, callback)) {
                 requiredFields.add(field);
             }
         }
@@ -451,14 +453,19 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
     }
 
-    private boolean isOptional(AnnotatedElement point, InjectAnnotationProcessor annotationProcessor) {
+    private boolean isOptional(AnnotatedElement point, Model modelAnnotation, InjectAnnotationProcessor annotationProcessor) {
         if (annotationProcessor != null) {
             Boolean isOptional = annotationProcessor.isOptional();
             if (isOptional != null) {
                 return isOptional.booleanValue();
             }
         }
-        return (point.getAnnotation(Optional.class) != null);
+        if (modelAnnotation.defaultInjectionStrategy() == DefaultInjectionStrategy.REQUIRED) {
+            return (point.getAnnotation(Optional.class) != null);
+        } else {
+            return (point.getAnnotation(Required.class) == null);
+        }
+        
     }
 
     private boolean injectDefaultValue(AnnotatedElement point, Type type, InjectAnnotationProcessor processor,

@@ -19,16 +19,26 @@ package org.apache.sling.models.testmodels.classes;
 import javax.inject.Inject;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.models.annotations.DefaultInjectionStrategy;
 import org.apache.sling.models.annotations.Model;
+import org.apache.sling.models.annotations.Required;
 
-@Model(adaptables = Resource.class)
-public class ResourceModelWithRequiredField {
+@Model(adaptables = Resource.class, defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL)
+public class ResourceModelWithRequiredFieldOptionalStrategy {
 
     @Inject
+    private String optional;
+
+    @Inject
+    @Required
     private String required;
 
     public String getRequired() {
         return required;
+    }
+
+    public String getOptional() {
+        return optional;
     }
 
 }
