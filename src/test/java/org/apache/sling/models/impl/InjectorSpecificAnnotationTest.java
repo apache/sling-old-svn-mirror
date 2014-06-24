@@ -88,7 +88,6 @@ public class InjectorSpecificAnnotationTest {
                 Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 2L));
         factory.bindInjector(childResourceInjector,
                 Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 3L));
-        
         factory.bindInjector(requestAttributeInjector,
                 Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 4L));
         factory.bindInjector(osgiInjector, Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 5L));
