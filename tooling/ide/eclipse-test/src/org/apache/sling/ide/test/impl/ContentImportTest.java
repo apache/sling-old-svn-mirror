@@ -276,6 +276,50 @@ public class ContentImportTest {
 
     }
 
+    @Test
+    public void importFullCoverageNode() throws Exception {
+
+        // create faceted project
+        IProject contentProject = projectRule.getProject();
+
+        ProjectAdapter project = new ProjectAdapter(contentProject);
+        project.addNatures(JavaCore.NATURE_ID, "org.eclipse.wst.common.project.facet.core.nature");
+
+        // install bundle facet
+        project.installFacet("sling.content", "1.0");
+
+        wstServer.waitForServerToStart();
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
+
+        project.createVltFilterWithRoots("/content/test-root");
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/hello.txt"),
+                new ByteArrayInputStream("hello, world".getBytes()));
+
+        // create server-side content
+        RepositoryAccessor repo = new RepositoryAccessor(config);
+        repo.doWithSession(new SessionRunnable<Void>() {
+
+            @Override
+            public Void doWithSession(Session session) throws RepositoryException {
+                Node configNode = session.getRootNode().addNode(
+                        "content/test-root/org.apache.sling.example.Component.config", "sling:OsgiConfig");
+                configNode.setProperty("enabled", Boolean.TRUE.toString());
+
+                session.save();
+
+                return null;
+
+            }
+        });
+
+        runImport(contentProject);
+
+        assertThat(contentProject,
+                hasFile("jcr_root/content/test-root/org.apache.sling.example.Component.config.xml"));
+    }
+
     @Before
     public void setUp() throws Exception {
         RepositoryAccessor repo = new RepositoryAccessor(config);

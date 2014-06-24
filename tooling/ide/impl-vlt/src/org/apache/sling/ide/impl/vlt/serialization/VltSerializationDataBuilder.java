@@ -127,10 +127,7 @@ public class VltSerializationDataBuilder implements SerializationDataBuilder {
                         + File.separatorChar + PlatformNameFormat.getPlatformPath(wrapper.aggregate.getRelPath());
             }
 
-            Activator.getDefault().getPluginLogger()
-                    .trace("Got location {0} for path {1}", fileOrFolderPathHint, resource.getPath());
             String nameHint = PlatformNameFormat.getPlatformName(wrapper.aggregate.getName());
-
 
             NodeType[] mixinNodeTypes = wrapper.aggregate.getNode().getMixinNodeTypes();
             List<String> mixinNodeTypeNames = new ArrayList<String>(mixinNodeTypes.length);
@@ -144,7 +141,13 @@ public class VltSerializationDataBuilder implements SerializationDataBuilder {
             if (resource.getPath().equals("/") || serializationKind == SerializationKind.METADATA_PARTIAL
                     || serializationKind == SerializationKind.FILE || serializationKind == SerializationKind.FOLDER) {
                 nameHint = Constants.DOT_CONTENT_XML;
+            } else if (serializationKind == SerializationKind.METADATA_FULL) {
+                nameHint += ".xml";
+                fileOrFolderPathHint += ".xml";
             }
+
+            Activator.getDefault().getPluginLogger()
+                    .trace("Got location {0} for path {1}", fileOrFolderPathHint, resource.getPath());
 
             Aggregator aggregator = fs.getAggregateManager().getAggregator(wrapper.aggregate.getNode(), null);
             if (aggregator instanceof FileAggregator) {
