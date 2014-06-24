@@ -17,6 +17,8 @@
  **************************************************************************/
 package org.apache.sling.ide.eclipse.ui.wizards;
 
+import static org.apache.sling.ide.eclipse.core.progress.ProgressUtils.advance;
+
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -29,7 +31,6 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.ILaunchManager;
@@ -219,14 +220,6 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 
     protected void configureReactorProject(IProject reactorProject, IProgressMonitor monitor) throws CoreException {
         // nothing to be done
-    }
-
-    protected void advance(IProgressMonitor monitor, int step) {
-
-        monitor.worked(step);
-        if (monitor.isCanceled()) {
-            throw new OperationCanceledException();
-        }
     }
 
     protected void finishConfiguration(List<IProject> projects, IServer server, IProgressMonitor monitor)

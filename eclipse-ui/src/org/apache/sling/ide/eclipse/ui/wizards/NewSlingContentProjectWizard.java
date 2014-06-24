@@ -16,6 +16,8 @@
  */
 package org.apache.sling.ide.eclipse.ui.wizards;
 
+import static org.apache.sling.ide.eclipse.core.progress.ProgressUtils.advance;
+
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
