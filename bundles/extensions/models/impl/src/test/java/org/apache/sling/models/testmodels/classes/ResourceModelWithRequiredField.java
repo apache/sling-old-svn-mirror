@@ -23,10 +23,10 @@ import org.apache.sling.models.annotations.Model;
 
 @Model(adaptables = Resource.class)
 public class ResourceModelWithRequiredField {
-    
+
     @Inject
     private String required;
-    
+
     public String getRequired() {
         return required;
     }

@@ -14,7 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Version("1.1.0")
 package org.apache.sling.models.annotations;
 
-import aQute.bnd.annotation.Version;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+/**
+ * Marker annotation for required injections.
+ */
+@Target({ ElementType.FIELD, ElementType.METHOD })
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Required {
+
+}

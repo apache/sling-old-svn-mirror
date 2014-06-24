@@ -37,6 +37,7 @@ import org.apache.sling.models.testmodels.classes.ChildResourceModel;
 import org.apache.sling.models.testmodels.classes.ChildValueMapModel;
 import org.apache.sling.models.testmodels.classes.ParentModel;
 import org.apache.sling.models.testmodels.classes.ResourceModelWithRequiredField;
+import org.apache.sling.models.testmodels.classes.ResourceModelWithRequiredFieldOptionalStrategy;
 import org.apache.sling.models.testmodels.classes.SimplePropertyModel;
 import org.junit.Before;
 import org.junit.Test;
@@ -152,6 +153,39 @@ public class ResourceModelClassesTest {
         ResourceModelWithRequiredField model = factory.getAdapter(res, ResourceModelWithRequiredField.class);
         assertNull(model);
 
+        verify(vm).get("required", String.class);
+    }
+
+    @Test
+    public void testRequiredPropertyModelOptionalStrategyAvailable() {
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("first", "first-value");
+        map.put("third", "third-value");
+        ValueMap vm = spy(new ValueMapDecorator(map));
+
+        Resource res = mock(Resource.class);
+        when(res.adaptTo(ValueMap.class)).thenReturn(vm);
+
+        ResourceModelWithRequiredFieldOptionalStrategy model = factory.getAdapter(res, ResourceModelWithRequiredFieldOptionalStrategy.class);
+        assertNull(model);
+
+        verify(vm).get("optional", String.class);
+        verify(vm).get("required", String.class);
+    }
+
+    @Test
+    public void testRequiredPropertyModelOptionalStrategyNotAvailable() {
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("required", "first-value");
+        ValueMap vm = spy(new ValueMapDecorator(map));
+
+        Resource res = mock(Resource.class);
+        when(res.adaptTo(ValueMap.class)).thenReturn(vm);
+
+        ResourceModelWithRequiredFieldOptionalStrategy model = factory.getAdapter(res, ResourceModelWithRequiredFieldOptionalStrategy.class);
+        assertNotNull(model);
+
+        verify(vm).get("optional", String.class);
         verify(vm).get("required", String.class);
     }
 

@@ -31,4 +31,6 @@ public @interface Model {
 
     public Class<?>[] adaptables();
 
+    public DefaultInjectionStrategy defaultInjectionStrategy() default DefaultInjectionStrategy.REQUIRED;
+
 }

@@ -14,7 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Version("1.1.0")
-package org.apache.sling.models.annotations;
+package org.apache.sling.models.testmodels.classes;
 
-import aQute.bnd.annotation.Version;
+import javax.inject.Inject;
+
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.models.annotations.DefaultInjectionStrategy;
+import org.apache.sling.models.annotations.Model;
+import org.apache.sling.models.annotations.Required;
+
+@Model(adaptables = Resource.class, defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL)
+public class ResourceModelWithRequiredFieldOptionalStrategy {
+
+    @Inject
+    private String optional;
+
+    @Inject
+    @Required
+    private String required;
+
+    public String getRequired() {
+        return required;
+    }
+
+    public String getOptional() {
+        return optional;
+    }
+
+}
