@@ -16,15 +16,5 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+@aQute.bnd.annotation.Version("0.0.1")
 package org.apache.sling.scripting.thymeleaf;
-
-import aQute.bnd.annotation.ProviderType;
-import org.thymeleaf.PatternSpec;
-import org.thymeleaf.templatemode.ITemplateModeHandler;
-
-@ProviderType
-public interface SlingTemplateModeHandler extends ITemplateModeHandler {
-
-    PatternSpec getPatternSpec();
-
-}
