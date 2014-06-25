@@ -268,44 +268,32 @@ public class VltSerializationDataBuilder implements SerializationDataBuilder {
      */
     private List<Aggregate> findAggregateChain(ResourceProxy resource) throws IOException, RepositoryException {
 
-        VaultFile vaultFile = fs.getFile(resource.getPath());
-        String platformPath = resource.getPath();
+        VaultFile vaultFile = fs.getFile(PlatformNameFormat.getPlatformPath(resource.getPath()));
 
-        if (vaultFile == null) {
-
-            // TODO - not sure why we need to try both ... not a performance impact but ugly nonetheless
-            platformPath = PlatformNameFormat.getPlatformPath(resource.getPath()) + VltSerializationManager.EXTENSION_XML;
-            vaultFile = fs.getFile(platformPath);
-
-            if (vaultFile == null) {
-                platformPath = PlatformNameFormat.getPlatformPath(resource.getPath());
-                vaultFile = fs.getFile(platformPath);
-            }
-
-            if (vaultFile == null) {
+        if (vaultFile == null || vaultFile.getAggregate() == null) {
                 // this file might be a leaf aggregate of a vaultfile higher in the resource path ; so look for a
                 // parent higher
 
-                String parentPath = Text.getRelativeParent(resource.getPath(), 1);
-                while (!parentPath.equals("/")) {
-                    VaultFile parentFile = fs.getFile(PlatformNameFormat.getPlatformPath(parentPath));
+            String parentPath = Text.getRelativeParent(resource.getPath(), 1);
+            while (!parentPath.equals("/")) {
+                VaultFile parentFile = fs.getFile(PlatformNameFormat.getPlatformPath(parentPath));
 
-                    if (parentFile != null) {
-                        Aggregate parentAggregate = parentFile.getAggregate();
-                        ArrayList<Aggregate> parents = new ArrayList<Aggregate>();
-                        parents.add(parentAggregate);
-                        List<Aggregate> chain = lookForAggregateInLeaves(resource, parentAggregate, parents);
-                        if (chain != null) {
-                            return chain;
-                        }
+                if (parentFile != null) {
+                    Aggregate parentAggregate = parentFile.getAggregate();
+                    ArrayList<Aggregate> parents = new ArrayList<Aggregate>();
+                    parents.add(parentAggregate);
+                    List<Aggregate> chain = lookForAggregateInLeaves(resource, parentAggregate, parents);
+                    if (chain != null) {
+                        return chain;
                     }
-
-                    parentPath = Text.getRelativeParent(parentPath, 1);
                 }
 
-                return null;
+                parentPath = Text.getRelativeParent(parentPath, 1);
             }
+
+            return null;
         }
+
 
         return Collections.singletonList(vaultFile.getAggregate());
     }
