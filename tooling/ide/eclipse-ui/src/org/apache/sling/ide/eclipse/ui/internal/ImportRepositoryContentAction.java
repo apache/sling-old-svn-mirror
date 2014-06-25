@@ -196,31 +196,27 @@ public class ImportRepositoryContentAction {
 
         ResourceProxy resource = executeCommand(repository.newListChildrenNodeCommand(path));
         
-        // TODO we should know all node types for which to create files and folders
         SerializationData serializationData = builder.buildSerializationData(contentSyncRoot, resource);
         logger.trace("For resource at path {0} got serialization data {1}", resource.getPath(), serializationData);
 
         final List<ResourceProxy> resourceChildren = new LinkedList<ResourceProxy>(resource.getChildren());
 		if (serializationData != null) {
 
-            IPath fileOrFolderPath = contentSyncRootDir.getProjectRelativePath().append(
-                    serializationData.getFileOrFolderNameHint());
+            IPath serializationFolderPath = contentSyncRootDir.getProjectRelativePath().append(
+                    serializationData.getFolderPath());
 	
 	        switch (serializationData.getSerializationKind()) {
 	            case FILE: {
 	                byte[] contents = executeCommand(repository.newGetNodeCommand(path));
-	                importFile(project, fileOrFolderPath, contents);
+                    createFile(project, getPathForPlainFileNode(resource, serializationFolderPath), contents);
 	
 	                if (serializationData.hasContents()) {
-	                    // TODO - should we abstract out .dir serialization?
-	                    IPath directoryPath = fileOrFolderPath.addFileExtension("dir");
-	                    createFolder(project, directoryPath);
-	                    createFile(project, directoryPath.append(serializationData.getNameHint()),
+                        createFolder(project, serializationFolderPath);
+                        createFile(project, serializationFolderPath.append(serializationData.getFileName()),
 	                            serializationData.getContents());
 	                    
-	                    // filter out the child of type Repository.NT_RESOURCE
-	                    for (Iterator<ResourceProxy> it = resourceChildren.iterator(); it
-								.hasNext();) {
+                        // special processing for nt:resource nodes
+                        for (Iterator<ResourceProxy> it = resourceChildren.iterator(); it.hasNext();) {
 	                    	ResourceProxy child = it.next();
 	                        if (Repository.NT_RESOURCE.equals(child.getProperties().get(Repository.JCR_PRIMARY_TYPE))) {
 
@@ -233,12 +229,10 @@ public class ImportRepositoryContentAction {
                                                 .size());
 
                                 if (reloadedChildResource.getChildren().size() != 0) {
-                                    // 1. create holder directory ; needs platform name format
 
                                     String pathName = Text.getName(reloadedChildResource.getPath());
                                     pathName = serializationManager.getOsPath(pathName);
-
-                                    createFolder(project, directoryPath.append(pathName));
+                                    createFolder(project, serializationFolderPath.append(pathName));
 
                                     // 2. recursively handle all resources
                                     for (ResourceProxy grandChild : reloadedChildResource.getChildren()) {
@@ -256,12 +250,12 @@ public class ImportRepositoryContentAction {
 	            case FOLDER:
 	            case METADATA_PARTIAL: {
 
-                    IFolder folder = createFolder(project, fileOrFolderPath);
+                    IFolder folder = createFolder(project, serializationFolderPath);
 
                     parseIgnoreFiles(folder, path);
 
 	                if (serializationData.hasContents()) {
-	                    createFile(project, fileOrFolderPath.append(serializationData.getNameHint()),
+                        createFile(project, serializationFolderPath.append(serializationData.getFileName()),
 	                            serializationData.getContents());
 	                }
 	                break;
@@ -269,7 +263,8 @@ public class ImportRepositoryContentAction {
 	
 	            case METADATA_FULL: {
 	                if (serializationData.hasContents()) {
-	                    createFile(project, fileOrFolderPath, serializationData.getContents());
+                        createFile(project, serializationFolderPath.append(serializationData.getFileName()),
+                                serializationData.getContents());
 	                }
 	                break;
 	            }
@@ -280,6 +275,8 @@ public class ImportRepositoryContentAction {
 	        if (serializationData.getSerializationKind() == SerializationKind.METADATA_FULL) {
 	            return;
 	        }
+        } else {
+            logger.warn("No serialization data found for " + resource.getPath());
         }
 		
         ProgressUtils.advance(monitor, 1);
@@ -300,6 +297,23 @@ public class ImportRepositoryContentAction {
 
             crawlChildrenAndImport(child.getPath());
         }
+    }
+
+    /**
+     * Returns the path for serializing the nt:resource data of a nt:file node
+     * 
+     * <p>
+     * The path will be one level above the <tt>serializationFolderPath</tt>, and the name will be the last path segment
+     * of the resource.
+     * </p>
+     * 
+     * @param resource The resource
+     * @param serializationFolderPath the folder where the serialization data should be stored
+     * @return the path for the plain file node
+     */
+    private IPath getPathForPlainFileNode(ResourceProxy resource, IPath serializationFolderPath) {
+
+        return serializationFolderPath.removeLastSegments(1).append(Text.getName(resource.getPath()));
     }
 
     private void parseIgnoreFiles(IFolder folder, String path) throws IOException, CoreException {
@@ -326,12 +340,6 @@ public class ImportRepositoryContentAction {
 
         Result<T> result = command.execute();
         return result.get();
-    }
-
-    private void importFile(IProject project, IPath destinationPath, byte[] content)
-            throws CoreException {
-
-        createFile(project, destinationPath, content);
     }
 
     private IFolder createFolder(IProject project, IPath destinationPath) throws CoreException {
@@ -380,7 +388,7 @@ public class ImportRepositoryContentAction {
     	}
     	createParents(container.getParent());
     	IFolder parentFolder = (IFolder)container;
-    	parentFolder.create(true, true, null);
+        parentFolder.create(true, true, null);
     }
 
 }
