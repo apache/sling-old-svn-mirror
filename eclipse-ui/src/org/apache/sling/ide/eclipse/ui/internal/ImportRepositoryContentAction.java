@@ -276,7 +276,7 @@ public class ImportRepositoryContentAction {
 	            return;
 	        }
         } else {
-            logger.warn("No serialization data found for " + resource.getPath());
+            logger.trace("No serialization data found for {0}", resource.getPath());
         }
 		
         ProgressUtils.advance(monitor, 1);
