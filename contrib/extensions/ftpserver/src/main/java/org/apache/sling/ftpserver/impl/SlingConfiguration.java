@@ -80,6 +80,10 @@ public class SlingConfiguration implements ConnectionConfig {
 
     static final int PROP_MAX_DOWNLOAD_DEFAULT = 0;
 
+    static final String PROP_FTP_HOME = "home";
+
+    static final String PROP_FTP_HOME_DEFAULT = "/";
+
     public SlingConfiguration(final Map<String, Object> config) {
         this.config = config;
     }
@@ -142,11 +146,19 @@ public class SlingConfiguration implements ConnectionConfig {
         return get(PROP_MAX_UPLOAD, PROP_MAX_UPLOAD_DEFAULT);
     }
 
+    String getFtpHome() {
+        return get(PROP_FTP_HOME, PROP_FTP_HOME_DEFAULT);
+    }
+
     boolean get(final String name, final boolean defaultValue) {
         return PropertiesUtil.toBoolean(this.config.get(name), defaultValue);
     }
 
     int get(final String name, final int defaultValue) {
         return PropertiesUtil.toInteger(this.config.get(name), defaultValue);
+    }
+
+    String get(final String name, final String defaultValue) {
+        return PropertiesUtil.toString(this.config.get(name), defaultValue);
     }
 }

@@ -27,7 +27,7 @@ public class SlingFileSystemFactory implements FileSystemFactory {
 
     public FileSystemView createFileSystemView(User user) throws FtpException {
         if (user instanceof SlingUser) {
-            return new SlingFileSystemView(((SlingUser) user).getResolver());
+            return new SlingFileSystemView(((SlingUser) user));
         }
 
         throw new FtpException("User " + user.getName() + " of type " + user.getClass() + " not supported");

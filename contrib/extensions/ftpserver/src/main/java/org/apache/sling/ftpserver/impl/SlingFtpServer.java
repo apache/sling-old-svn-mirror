@@ -148,7 +148,15 @@ import org.slf4j.LoggerFactory;
                 + "Setting this to zero disables this limitation. "
                 + "This property can be configured on a per user basis setting the numeric "
                 + SlingUserManager.FTP_MAX_UPLOAD_RATE + " user property. The default value is "
-                + SlingConfiguration.PROP_MAX_UPLOAD_DEFAULT)
+                + SlingConfiguration.PROP_MAX_UPLOAD_DEFAULT),
+    @Property(
+            name = SlingConfiguration.PROP_FTP_HOME,
+            value = SlingConfiguration.PROP_FTP_HOME_DEFAULT,
+            label = "Default Ftp Home folder",
+            description = "The default folder where a user will be taken to after successful log in. "
+                    + "This property can be configured on a per user basis setting the string "
+                    + SlingUserManager.FTP_HOME_FOLDER + " user property. The default value is "
+                    + SlingConfiguration.PROP_FTP_HOME_DEFAULT)
 })
 public class SlingFtpServer {
 

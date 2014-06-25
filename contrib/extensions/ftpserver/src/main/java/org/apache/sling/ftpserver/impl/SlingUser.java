@@ -33,11 +33,13 @@ public class SlingUser implements User {
 
     private final String name;
 
-    private int maxIdleTimeSec = 0; // no limit
+    private int maxIdleTimeSec = SlingConfiguration.PROP_MAX_IDLE_TIME_DEFAULT;
 
-    private boolean isEnabled = true;
+    private boolean isEnabled = SlingConfiguration.PROP_ENABLED_DEFAULT;
 
     private List<Authority> authorities;
+
+    private String homeDirectory = SlingConfiguration.PROP_FTP_HOME_DEFAULT;
 
     SlingUser(final String name, final ResourceResolver resolver) {
         this.resolver = resolver;
@@ -111,8 +113,12 @@ public class SlingUser implements User {
         return this.isEnabled;
     }
 
+    void setHomeDirectory(final String homeDirectory) {
+        this.homeDirectory = homeDirectory;
+    }
+
     public String getHomeDirectory() {
-        return "/";
+        return homeDirectory;
     }
 
     public void setMaxIdleTimeSec(int maxIdleTimeSec) {

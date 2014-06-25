@@ -26,12 +26,12 @@ import org.apache.sling.api.resource.ResourceUtil;
 
 public class SlingFileSystemView implements FileSystemView {
 
-    private final ResourceResolver resolver;
+    private final SlingUser slingUser;
 
     private FtpFile cwd;
 
-    public SlingFileSystemView(final ResourceResolver resolver) {
-        this.resolver = resolver;
+    public SlingFileSystemView(final SlingUser user) {
+        this.slingUser = user;
         this.cwd = getHomeDirectory();
     }
 
@@ -53,7 +53,7 @@ public class SlingFileSystemView implements FileSystemView {
     }
 
     public void dispose() {
-        this.resolver.close();
+        this.getResovler().close();
     }
 
     public FtpFile getFile(String path) {
@@ -62,16 +62,16 @@ public class SlingFileSystemView implements FileSystemView {
         }
 
         path = ResourceUtil.normalize(path);
-        Resource res = this.resolver.getResource(path);
+        Resource res = this.getResovler().getResource(path);
         if (res != null) {
             return new SlingFtpFile(res);
         }
 
-        return new SlingFtpFile(path, this.resolver);
+        return new SlingFtpFile(path, this.getResovler());
     }
 
     public FtpFile getHomeDirectory() {
-        return getFile("/");
+        return getFile(slingUser.getHomeDirectory());
     }
 
     public FtpFile getWorkingDirectory() {
@@ -81,6 +81,10 @@ public class SlingFileSystemView implements FileSystemView {
     public boolean isRandomAccessible() {
         // only stream access to data
         return false;
+    }
+
+    private ResourceResolver getResovler() {
+        return this.slingUser.getResolver();
     }
 
 }

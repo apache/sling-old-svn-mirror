@@ -71,6 +71,8 @@ public class SlingUserManager implements UserManager {
 
     static final String FTP_MAX_UPLOAD_RATE = FTP_PROPERTY_FOLDER + "/maxUploadRate";
 
+    static final String FTP_HOME_FOLDER = FTP_PROPERTY_FOLDER + "/home";
+
     private final ResourceResolverFactory rrFactory;
 
     private final SlingConfiguration config;
@@ -219,6 +221,7 @@ public class SlingUserManager implements UserManager {
 
         user.setEnabled(getProperty(repoUser, FTP_ENABLED, config.isEnabled()));
         user.setMaxIdleTimeSec(getProperty(repoUser, FTP_MAX_IDLE_TIME_SEC, config.getMaxIdelTimeSec()));
+        user.setHomeDirectory(getProperty(repoUser, FTP_HOME_FOLDER, config.getFtpHome()));
 
         List<Authority> list = new ArrayList<Authority>();
         list.add(new ConcurrentLoginPermission(//
@@ -232,6 +235,19 @@ public class SlingUserManager implements UserManager {
         user.setAuthorities(list);
 
         return user;
+    }
+
+    private String getProperty(final Authorizable a, final String prop, final String defaultValue) {
+        try {
+            Value[] vals = a.getProperty(prop);
+            if (vals != null && vals.length > 0) {
+                return vals[0].getString();
+            }
+        } catch (RepositoryException re) {
+            // ignore
+        }
+
+        return defaultValue;
     }
 
     private int getProperty(final Authorizable a, final String prop, final int defaultValue) {
