@@ -76,22 +76,22 @@ public class SlingWebContext implements SlingContext, IWebContext {
 
     @Override
     public VariablesMap<String, String[]> getRequestParameters() {
-        return null;
+        throw new UnsupportedOperationException("Deprecated method is not supported.");
     }
 
     @Override
     public VariablesMap<String, Object> getRequestAttributes() {
-        return null;
+        throw new UnsupportedOperationException("Deprecated method is not supported.");
     }
 
     @Override
     public VariablesMap<String, Object> getSessionAttributes() {
-        return null;
+        throw new UnsupportedOperationException("Deprecated method is not supported.");
     }
 
     @Override
     public VariablesMap<String, Object> getApplicationAttributes() {
-        return null;
+        throw new UnsupportedOperationException("Deprecated method is not supported.");
     }
 
     @Override
