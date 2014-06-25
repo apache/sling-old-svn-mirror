@@ -21,12 +21,15 @@ package org.apache.sling.resourceresolver.impl.console;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Dictionary;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Set;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -71,6 +74,7 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
         props.put(Constants.SERVICE_PID, getClass().getName());
         props.put("felix.webconsole.label", "jcrresolver");
         props.put("felix.webconsole.title", "Resource Resolver");
+        props.put("felix.webconsole.css", "/jcrresolver/res/ui/resourceresolver.css");
         props.put("felix.webconsole.category", "Sling");
         props.put("felix.webconsole.configprinter.modes", "always");
 
@@ -275,10 +279,17 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
         pw.println("<th class='content'>Redirect</th>");
         pw.println("</tr>");
 
+        Set<String> usedPatterns = new HashSet<String>();
+        
         for (MapEntry entry : list) {
-            pw.println("<tr class='content'>");
+            String pattern = entry.getPattern();
+            pw.print("<tr class='content");
+            if (!usedPatterns.add(pattern)) {
+                pw.print(" duplicate");
+            }
+            pw.println("'>");
             pw.println("<td class='content' style='vertical-align: top'>"
-                    + entry.getPattern() + "</td>");
+                    + pattern + "</td>");
 
             pw.print("<td class='content' style='vertical-align: top'>");
             String[] repls = entry.getRedirect();
@@ -336,6 +347,17 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
 
     private void separatorText(PrintWriter pw) {
         pw.println();
+    }
+
+    /**
+     * Method to retrieve static resources from this bundle.
+     */
+    @SuppressWarnings("unused")
+    private URL getResource(final String path) {
+        if (path.startsWith("/jcrresolver/res/ui/")) {
+            return this.getClass().getResource(path.substring(12));
+        }
+        return null;
     }
 
     private static class ResolverRequest extends HttpServletRequestWrapper {
