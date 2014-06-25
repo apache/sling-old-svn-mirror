@@ -40,6 +40,7 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -49,6 +50,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.startlevel.StartLevel;
 
 @Component
 @Service
@@ -61,6 +63,9 @@ public class CrankstartInventoryPrinter implements InventoryPrinter {
 
     private BundleContext bundleContext;
     private static final String INDENT = "  ";
+    
+    @Reference
+    private StartLevel startLevel;
     
     // Properties to ignore when dumping configs
     private static final String [] PROPS_TO_IGNORE = {
@@ -146,9 +151,16 @@ public class CrankstartInventoryPrinter implements InventoryPrinter {
     }
     
     private void bundles(PrintWriter out) throws IOException {
+        for(int i=1; i<=startLevel.getStartLevel(); i++) {
+            bundles(out, i);
+        }
+    }
+    
+    private void bundles(PrintWriter out, int level) throws IOException {
         int ok = 0;
         int errors = 0;
         int warnings = 0;
+        int count = 0;
         
         // Get the list of Maven coordinates from any fragment bundles,
         // so that we can ignore their entries when returned by the
@@ -167,6 +179,17 @@ public class CrankstartInventoryPrinter implements InventoryPrinter {
         }
         
         for(Bundle b : bundleContext.getBundles()) {
+            if(startLevel.getBundleStartLevel(b) != level) {
+                continue;
+            }
+            
+            if(count==0) {
+                out.println();
+                out.print("# bundles for start level ");
+                out.println(level);
+            }
+            count++;
+            
             final List<String> coords = getMavenCoordinates(b, fragmentCoords);
             if(coords.isEmpty()) {
                 errors++;
@@ -183,16 +206,21 @@ public class CrankstartInventoryPrinter implements InventoryPrinter {
             }
         }
         
-        out.println("start.all.bundles");
-        
-        out.print("# ");
-        out.print(ok);
-        out.print(" bundles processed sucessfully, ");
-        out.print(errors);
-        out.print(" errors, ");
-        out.print(warnings);
-        out.print(" warnings.");
-        out.println();
+        if(count > 0) {
+            out.println();
+            out.print("# ");
+            out.print("start level ");
+            out.print(level);
+            out.print(": ");
+            out.print(ok);
+            out.print(" bundles processed sucessfully, ");
+            out.print(errors);
+            out.print(" errors, ");
+            out.print(warnings);
+            out.print(" warnings.");
+            out.println();
+            out.println("start.all.bundles");
+        }
     }
     
     private void multipleWarning(PrintWriter out, Bundle b, List<String> coords) {
