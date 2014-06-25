@@ -18,9 +18,11 @@
  */
 package org.apache.sling.scripting.thymeleaf;
 
+import aQute.bnd.annotation.ProviderType;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.thymeleaf.context.IContext;
 
+@ProviderType
 public interface SlingContext extends IContext {
 
     ResourceResolver getResourceResolver();

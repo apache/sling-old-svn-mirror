@@ -103,6 +103,13 @@
       <artifactId>org.apache.felix.scr.annotations</artifactId>
       <scope>provided</scope>
     </dependency>
+    <!-- bndlib -->
+    <dependency>
+      <groupId>biz.aQute.bnd</groupId>
+      <artifactId>bndlib</artifactId>
+      <version>2.3.0</version>
+      <scope>provided</scope>
+    </dependency>
     <!-- Thymeleaf -->
     <dependency>
       <groupId>org.thymeleaf</groupId>
@@ -156,7 +163,9 @@
           <instructions>
             <Bundle-Category>sling</Bundle-Category>
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-            <Export-Package/>
+            <Export-Package>
+              org.apache.sling.scripting.thymeleaf
+            </Export-Package>
             <Import-Package>
               org.apache.commons.io.input;version="1.4.9999",
               *
