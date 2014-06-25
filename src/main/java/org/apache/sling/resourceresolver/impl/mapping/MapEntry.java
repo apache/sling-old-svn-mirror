@@ -63,6 +63,8 @@ public class MapEntry implements Comparable<MapEntry> {
     private final String[] redirect;
 
     private final int status;
+    
+    private long order;
 
     public static String appendSlash(String path) {
         if (!path.endsWith("/")) {
@@ -143,14 +145,14 @@ public class MapEntry implements Comparable<MapEntry> {
                 final int status = props
                                 .get(MapEntries.PROP_REDIRECT_EXTERNAL_STATUS,
                                                 302);
-                return new MapEntry(url, status, trailingSlash, redirect);
+                return new MapEntry(url, status, trailingSlash, 0, redirect);
             }
 
             final String[] internalRedirectProps = props.get(ResourceResolverImpl.PROP_REDIRECT_INTERNAL,
                 String[].class);
             final String[] internalRedirect = filterRegExp(internalRedirectProps);
             if (internalRedirect != null) {
-                return new MapEntry(url, -1, trailingSlash, internalRedirect);
+                return new MapEntry(url, -1, trailingSlash, 0, internalRedirect);
             }
         }
 
@@ -213,7 +215,7 @@ public class MapEntry implements Comparable<MapEntry> {
                     if (!redir.contains("$")) {
                     	MapEntry mapEntry = null;
                     	try{
-                    		mapEntry = new MapEntry(redir.concat(endHook), status, trailingSlash, url);
+                    		mapEntry = new MapEntry(redir.concat(endHook), status, trailingSlash, 0, url);
                     	}catch (IllegalArgumentException iae){
                     		//ignore this entry
                             LoggerFactory
@@ -236,7 +238,7 @@ public class MapEntry implements Comparable<MapEntry> {
     }
 
     public MapEntry(String url, final int status, final boolean trailingSlash,
-                    final String... redirect) {
+                    final long order, final String... redirect) {
 
         // ensure trailing slashes on redirects if the url
         // ends with a trailing slash
@@ -260,6 +262,7 @@ public class MapEntry implements Comparable<MapEntry> {
 
         this.redirect = redirect;
         this.status = status;
+        this.order = order;
     }
 
     // Returns the replacement or null if the value does not match
@@ -317,7 +320,15 @@ public class MapEntry implements Comparable<MapEntry> {
 
         // lengths are equal, but the entries are not
         // so order based on the pattern
-        return ownPatternString.toString().compareTo(mPatternString);
+        int stringComparison = ownPatternString.toString().compareTo(mPatternString);
+        if (stringComparison == 0 && order != m.order) {
+            if (m.order > order) {
+                return 1;
+            } else {
+                return -1;
+            }
+        }
+        return stringComparison;
     }
 
     // ---------- Object overwrite
@@ -383,5 +394,9 @@ public class MapEntry implements Comparable<MapEntry> {
         }
 
         return list.isEmpty() ? null : (String[]) list.toArray(new String[list.size()]);
+    }
+
+    void setOrder(long order) {
+        this.order = order;
     }
 }

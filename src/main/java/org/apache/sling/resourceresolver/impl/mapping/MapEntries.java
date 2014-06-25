@@ -25,18 +25,16 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -97,15 +95,13 @@ public class MapEntries implements EventHandler {
 
     private Collection<MapEntry> mapMaps;
 
-    private Collection<String> vanityTargets;
+    private Map <String,List <String>> vanityTargets;
 
     private Map<String, Map<String, String>> aliasMap;
 
     private ServiceRegistration registration;
 
     private EventAdmin eventAdmin;
-
-    private final Semaphore initTrigger = new Semaphore(0);
 
     private final ReentrantLock initializing = new ReentrantLock();
 
@@ -125,7 +121,7 @@ public class MapEntries implements EventHandler {
 
         this.resolveMapsMap = Collections.singletonMap(GLOBAL_LIST_KEY, (List<MapEntry>)Collections.EMPTY_LIST);
         this.mapMaps = Collections.<MapEntry> emptyList();
-        this.vanityTargets = Collections.<String> emptySet();
+        this.vanityTargets = Collections.<String,List <String>>emptyMap();
         this.aliasMap = Collections.<String, Map<String, String>>emptyMap();
         this.registration = null;
         this.eventAdmin = null;
@@ -149,7 +145,7 @@ public class MapEntries implements EventHandler {
 
         this.resolveMapsMap = Collections.singletonMap(GLOBAL_LIST_KEY, (List<MapEntry>)Collections.EMPTY_LIST);
         this.mapMaps = Collections.<MapEntry> emptyList();
-        this.vanityTargets = Collections.<String> emptySet();
+        this.vanityTargets = Collections.<String,List <String>>emptyMap();
         this.aliasMap = Collections.<String, Map<String, String>>emptyMap();
 
         doInit();
@@ -160,41 +156,6 @@ public class MapEntries implements EventHandler {
         props.put(Constants.SERVICE_DESCRIPTION, "Map Entries Observation");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         this.registration = bundleContext.registerService(EventHandler.class.getName(), this, props);
-
-        final Thread updateThread = new Thread(new Runnable() {
-            public void run() {
-                MapEntries.this.init();
-            }
-        }, "MapEntries Update");
-        updateThread.setDaemon(true);
-        updateThread.start();
-    }
-
-    /**
-     * Signals the init method that a the doInit method should be called.
-     */
-    private void triggerInit() {
-        // only release if there is not one in the queue already
-        if (initTrigger.availablePermits() < 1) {
-            initTrigger.release();
-        }
-    }
-
-    /**
-     * Runs as the method of the update thread. Waits for the triggerInit method
-     * to trigger a call to doInit. Terminates when the resolver has been
-     * null-ed after having been triggered.
-     */
-    private void init() {
-        while (this.resolver != null) {
-            try {
-                this.initTrigger.acquire();
-                this.doInit();
-            } catch (final InterruptedException ie) {
-                // just continue acquisition
-            }
-        }
-
     }
 
     /**
@@ -212,36 +173,22 @@ public class MapEntries implements EventHandler {
                 return;
             }
 
-            final Map<String, List<MapEntry>> newResolveMapsMap = new HashMap<String, List<MapEntry>>();
-            final List<MapEntry> globalResolveMap = new ArrayList<MapEntry>();
-            final SortedMap<String, MapEntry> newMapMaps = new TreeMap<String, MapEntry>();
-
-            // load the /etc/map entries into the maps
-            loadResolverMap(resolver, globalResolveMap, newMapMaps);
-
-            // load the configuration into the resolver map
-            final Collection<String> vanityTargets = (this.enabledVanityPaths ? this.loadVanityPaths(resolver, newResolveMapsMap) : Collections.<String> emptySet());
-            loadConfiguration(factory, globalResolveMap);
-
-            // load the configuration into the mapper map
-            loadMapConfiguration(factory, newMapMaps);
-
-            // sort global list and add to map
-            Collections.sort(globalResolveMap);
-            newResolveMapsMap.put(GLOBAL_LIST_KEY, globalResolveMap);
-
+            final Map<String, List<MapEntry>> newResolveMapsMap = new ConcurrentHashMap<String, List<MapEntry>>();  
+ 
+            final Map<String,List<String>> vanityTargets = (this.enabledVanityPaths ? this.loadVanityPaths(resolver, newResolveMapsMap) : Collections.<String,List <String>>emptyMap());
+            
             //optimization made in SLING-2521
             if (enableOptimizeAliasResolution){
                 final Map<String, Map<String, String>> aliasMap = this.loadAliases(resolver);
-                this.aliasMap = makeUnmodifiableMap(aliasMap);
+                this.aliasMap = aliasMap;
             }
 
-            this.vanityTargets = Collections.unmodifiableCollection(vanityTargets);
-            this.resolveMapsMap = Collections.unmodifiableMap(newResolveMapsMap);
-            this.mapMaps = Collections.unmodifiableSet(new TreeSet<MapEntry>(newMapMaps.values()));
+            this.vanityTargets = vanityTargets;
+            this.resolveMapsMap = newResolveMapsMap; 
+
+            doUpdateConfiguration();
 
             sendChangeEvent();
-
         } catch (final Exception e) {
 
             log.warn("doInit: Unexpected problem during initialization", e);
@@ -253,17 +200,174 @@ public class MapEntries implements EventHandler {
         }
     }
 
-    public boolean isOptimizeAliasResolutionEnabled(){
-        return this.enableOptimizeAliasResolution;
+    private void doAddAttributes(String path, String[] addedAttributes) {
+        this.initializing.lock();
+        try {
+            boolean configurationUpdate = false;
+            for (String changedAttribute:addedAttributes){
+                if ("sling:vanityPath".equals(changedAttribute)) {
+                    doAddVanity(path); 
+                } else if ("sling:vanityOrder".equals(changedAttribute)) {
+                    doUpdateVanityOrder(path, false);
+                } else if ("sling:alias".equals(changedAttribute)) {
+                    doAddAlias(path);
+                } else {
+                    configurationUpdate = true;
+                }
+            }
+            if (configurationUpdate) {
+                doUpdateConfiguration();
+            }
+            sendChangeEvent();
+        } finally {
+            this.initializing.unlock();
+        }
     }
 
-
-    private <K1, K2, V> Map<K1, Map<K2, V>> makeUnmodifiableMap(final Map<K1, Map<K2, V>> map) {
-        final Map<K1, Map<K2, V>> newMap = new HashMap<K1, Map<K2, V>>();
-        for (final K1 key : map.keySet()) {
-            newMap.put(key, Collections.unmodifiableMap(map.get(key)));
+    private void doUpdateAttributes(String path, String[] changedAttributes) {
+        this.initializing.lock();
+        try {
+            boolean configurationUpdate = false;
+            for (String changedAttribute:changedAttributes){
+                if ("sling:vanityPath".equals(changedAttribute)) {
+                    doUpdateVanity(path);
+                } else if ("sling:vanityOrder".equals(changedAttribute)) {
+                    doUpdateVanityOrder(path, false);
+                } else if ("sling:alias".equals(changedAttribute)) {
+                    doUpdateAlias(path);
+                } else {
+                    configurationUpdate = true;
+                }
+            }
+            if (configurationUpdate) {
+                doUpdateConfiguration();
+            }
+            sendChangeEvent();
+        } finally {
+            this.initializing.unlock();
         }
-        return Collections.unmodifiableMap(newMap);
+    }
+
+    private void doRemoveAttributes(String path, String[] removedAttributes, boolean nodeDeletion) {
+        this.initializing.lock();
+        try {
+            boolean configurationUpdate = false;
+            for (String changedAttribute:removedAttributes){
+                if ("sling:vanityPath".equals(changedAttribute)){
+                    doRemoveVanity(path);
+                } else if ("sling:vanityOrder".equals(changedAttribute)) {
+                    doUpdateVanityOrder(path, true);
+                } else if ("sling:alias".equals(changedAttribute)) {
+                    doRemoveAlias(path, nodeDeletion);
+                } else {
+                    configurationUpdate = true;
+                }
+            }
+            if (configurationUpdate) {
+                doUpdateConfiguration();
+            }
+            sendChangeEvent();
+        } finally {
+            this.initializing.unlock();
+        }
+    }
+
+    private void doUpdateConfiguration(){
+        final List<MapEntry> globalResolveMap = new ArrayList<MapEntry>();
+        final SortedMap<String, MapEntry> newMapMaps = new TreeMap<String, MapEntry>();
+        // load the /etc/map entries into the maps
+        loadResolverMap(resolver, globalResolveMap, newMapMaps);
+        // load the configuration into the resolver map
+        loadConfiguration(factory, globalResolveMap);
+        // load the configuration into the mapper map
+        loadMapConfiguration(factory, newMapMaps);
+        // sort global list and add to map
+        Collections.sort(globalResolveMap);
+        resolveMapsMap.put(GLOBAL_LIST_KEY, globalResolveMap);
+        this.mapMaps = Collections.unmodifiableSet(new TreeSet<MapEntry>(newMapMaps.values()));
+    }
+
+    private void doAddVanity(String path) {
+        Resource resource = resolver.getResource(path);
+        loadVanityPath(resource, resolveMapsMap, vanityTargets);
+    }
+
+    private void doUpdateVanity(String path) {
+         doRemoveVanity(path);
+         doAddVanity(path);
+    }
+
+    private void doRemoveVanity(String path) {
+        String actualContentPath = getActualContentPath(path);
+        List <String> l = vanityTargets.get(actualContentPath);
+        if (l != null){
+            for (String s : l){
+                List<MapEntry> entries = this.resolveMapsMap.get(s);
+                for (Iterator<MapEntry> iterator =entries.iterator(); iterator.hasNext(); ) {
+                    MapEntry entry = iterator.next();
+                    String redirect = getMapEntryRedirect(entry);
+                    if (redirect != null && redirect.equals(path)) {
+                        iterator.remove();
+                    }
+                }
+            }
+        }
+        vanityTargets.remove(actualContentPath);
+    }
+
+    private void doUpdateVanityOrder(String path, boolean deletion) {
+        Resource resource = resolver.getResource(path);
+        final ValueMap props = resource.adaptTo(ValueMap.class);
+
+        long vanityOrder;
+        if (deletion) {
+            vanityOrder = 0;
+        } else {
+            vanityOrder = props.get("sling:vanityOrder", Long.class);
+        }
+
+        String actualContentPath = getActualContentPath(path);
+        List<String> vanityPaths = vanityTargets.get(actualContentPath);
+        boolean updatedOrder = false;
+        for (String vanityTarget : vanityPaths) {
+            List<MapEntry> entries = this.resolveMapsMap.get(vanityTarget);
+            for (MapEntry entry : entries) {
+                String redirect = getMapEntryRedirect(entry);
+                if (redirect != null && redirect.equals(actualContentPath)) {
+                    entry.setOrder(vanityOrder);
+                    updatedOrder = true;
+                }
+            }
+            if (updatedOrder) {
+                Collections.sort(entries);
+            }
+        }
+    }
+
+    private void doAddAlias(String path) {
+        Resource resource = resolver.getResource(path);
+        loadAlias(resource, this.aliasMap);
+    }
+
+    private void doUpdateAlias(String path) {
+        doRemoveAlias(path, false);
+        doAddAlias(path);
+    }
+
+    private void doRemoveAlias(String path, boolean nodeDeletion) {
+        if (nodeDeletion) { 
+            if (!"/".equals(path)){
+                path = path.substring(0, path.lastIndexOf("/"));
+            }
+        } else {
+            Resource resource = resolver.getResource(path); 
+            path = resource.getParent().getPath();
+        }
+        this.aliasMap.remove(path); 
+    }
+
+    public boolean isOptimizeAliasResolutionEnabled() {
+        return this.enableOptimizeAliasResolution;
     }
 
     /**
@@ -303,9 +407,6 @@ public class MapEntries implements EventHandler {
             final ResourceResolver oldResolver = this.resolver;
             this.resolver = null;
 
-            // trigger initialization to terminate init thread
-            triggerInit();
-
             if (oldResolver != null) {
                 oldResolver.close();
             } else {
@@ -331,7 +432,7 @@ public class MapEntries implements EventHandler {
             entries.addAll(list);
         }
         Collections.sort(entries);
-        return entries;
+        return Collections.unmodifiableList(entries);
     }
 
     /**
@@ -382,37 +483,77 @@ public class MapEntries implements EventHandler {
             return;
         }
 
-        // check whether a remove event has an influence on vanity paths
-        boolean doInit = true;
-        if (SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic()) && !path.startsWith(this.mapRoot)) {
-            final String checkPath;
-            if ( path.endsWith("/jcr:content") ) {
-                checkPath = path.substring(0, path.length() - 12);
-            } else {
-                checkPath = path;
-            }
-            doInit = false;
-            for (final String target : this.vanityTargets) {
-                if (target.startsWith(checkPath)) {
-                    doInit = true;
-                    break;
+        //removal of a node is handled differently
+        if (SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic())) {
+            final String actualContentPath = getActualContentPath(path);
+            for (final String target : this.vanityTargets.keySet()) {
+                if (target.startsWith(actualContentPath)) {
+                    doRemoveAttributes(actualContentPath, new String [] {"sling:vanityPath"}, true);
                 }
             }
             for (final String target : this.aliasMap.keySet()) {
-                if (checkPath.startsWith(target)) { 
-                    doInit = true;
-                    break;
+                if (actualContentPath.startsWith(target)) {
+                    doRemoveAttributes(actualContentPath, new String [] {"sling:alias"}, true);
                 }
             }
-        }
+        } else {
+            String [] addedAttributes = (String []) event.getProperty(SlingConstants.PROPERTY_ADDED_ATTRIBUTES);    
+            if (addedAttributes != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug("found added attributes {}", addedAttributes);
+                }
+                doAddAttributes(path, addedAttributes);
+            }
 
-        // trigger an update
-        if (doInit) {
-            triggerInit();
+            String [] changedAttributes = (String []) event.getProperty(SlingConstants.PROPERTY_CHANGED_ATTRIBUTES);        
+            if (changedAttributes != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug("found changed attributes {}", changedAttributes);
+                }
+                doUpdateAttributes(path, changedAttributes);
+            }
+
+            String [] removedAttributes = (String []) event.getProperty(SlingConstants.PROPERTY_REMOVED_ATTRIBUTES);        
+            if (removedAttributes != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug("found removed attributes {}", removedAttributes);
+                }
+                final String checkPath = getActualContentPath(path);
+                doRemoveAttributes(checkPath, removedAttributes, false);
+            } 
         }
     }
 
     // ---------- internal
+
+    //TODO add unit test
+    private String getActualContentPath(String path){
+        final String checkPath;
+        if ( path.endsWith("/jcr:content") ) {
+            checkPath = path.substring(0, path.length() - "/jcr:content".length());
+        } else {
+            checkPath = path;
+        }
+        return checkPath;
+    }
+
+    //TODO add unit test
+    private String getMapEntryRedirect(MapEntry mapEntry) {
+        String[] redirect = mapEntry.getRedirect();
+        if (redirect.length > 1) {
+            log.warn("something went wrong, please restart the bundle");
+            return null;
+        }
+
+        String path = redirect[0];
+        if (path.endsWith("$1")) {
+            path = path.substring(0, path.length() - "$1".length());
+        } else if (path.endsWith(".html")) {
+            path = path.substring(0, path.length() - ".html".length());
+        }
+
+        return path;
+    }
 
     /**
      * Send an OSGi event
@@ -508,7 +649,7 @@ public class MapEntries implements EventHandler {
      * property
      */
     private Map<String, Map<String, String>> loadAliases(final ResourceResolver resolver) {
-        final Map<String, Map<String, String>> map = new HashMap<String, Map<String, String>>();
+        final Map<String, Map<String, String>> map = new ConcurrentHashMap<String, Map<String, String>>();
         final String queryString = "SELECT sling:alias FROM nt:base WHERE sling:alias IS NOT NULL";
         final Iterator<Resource> i = resolver.findResources(queryString, "sql");
         while (i.hasNext()) {
@@ -579,23 +720,21 @@ public class MapEntries implements EventHandler {
             }
         }
     }
-    
+
     /**
      * Load vanity paths Search for all nodes inheriting the sling:VanityPath
      * mixin
      */
-    private Collection<String> loadVanityPaths(final ResourceResolver resolver, final Map<String, List<MapEntry>> entryMap) {
+    private Map <String, List<String>> loadVanityPaths(final ResourceResolver resolver, final Map<String, List<MapEntry>> entryMap) {
         // sling:VanityPath (uppercase V) is the mixin name
         // sling:vanityPath (lowercase) is the property name
-        final Set<String> targetPaths = new HashSet<String>();
+        final Map <String, List<String>> targetPaths = new ConcurrentHashMap <String, List<String>>();
         final String queryString = "SELECT sling:vanityPath, sling:redirect, sling:redirectStatus FROM sling:VanityPath WHERE sling:vanityPath IS NOT NULL ORDER BY sling:vanityOrder DESC";
         final Iterator<Resource> i = resolver.findResources(queryString, "sql");
 
-        final Set<String> processedVanityPaths = new HashSet<String>();
-
         while (i.hasNext()) {
             final Resource resource = i.next();
-            loadVanityPath(resource, entryMap, processedVanityPaths, targetPaths);
+            loadVanityPath(resource, entryMap, targetPaths);
         }
 
         return targetPaths;
@@ -604,14 +743,14 @@ public class MapEntries implements EventHandler {
     /**
      * Load vanity path given a resource
      */
-    private void loadVanityPath(final Resource resource, final Map<String, List<MapEntry>> entryMap, final Set<String> processedVanityPaths, final Set<String> targetPaths) {
+    private void loadVanityPath(final Resource resource, final Map<String, List<MapEntry>> entryMap, final Map <String, List<String>> targetPaths) {
         // ignore system tree
         if (resource.getPath().startsWith(JCR_SYSTEM_PREFIX)) {
             log.debug("loadVanityPaths: Ignoring {}", resource);
             return;
         }
 
-        // check whitelist
+        // check white list
         if ( this.vanityPathConfig != null ) {
             boolean allowed = false;
             for(final VanityPathConfig config : this.vanityPathConfig) {
@@ -632,6 +771,11 @@ public class MapEntries implements EventHandler {
             return;
         }
 
+        long vanityOrder = 0;
+        if (props.containsKey("sling:vanityOrder")) {
+            vanityOrder = props.get("sling:vanityOrder", Long.class);
+        }   
+
         // url is ignoring scheme and host.port and the path is
         // what is stored in the sling:vanityPath property
         final String[] pVanityPaths = props.get("sling:vanityPath", new String[0]);
@@ -639,52 +783,60 @@ public class MapEntries implements EventHandler {
             final String[] result = this.getVanityPathDefinition(pVanityPath);
             if (result != null) {
                 final String url = result[0] + result[1];
-
-                if ( !processedVanityPaths.contains(url) ) {
-                    processedVanityPaths.add(url);
-                    // redirect target is the node providing the
-                    // sling:vanityPath
-                    // property (or its parent if the node is called
-                    // jcr:content)
-                    final Resource redirectTarget;
-                    if (resource.getName().equals("jcr:content")) {
-                        redirectTarget = resource.getParent();
-                    } else {
-                        redirectTarget = resource;
-                    }
-                    final String redirect = redirectTarget.getPath();
-                    final String redirectName = redirectTarget.getName();
-
-                    // whether the target is attained by a external redirect or
-                    // by an internal redirect is defined by the sling:redirect
-                    // property
-                    final int status = props.get("sling:redirect", false) ? props.get(
-                            PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS, factory.getDefaultVanityPathRedirectStatus())
-                            : -1;
-
-                            final String checkPath = result[1];
-
-                            if (redirectName.indexOf('.') > -1) {
-                                // 1. entry with exact match
-                                this.addEntry(entryMap, checkPath, getMapEntry(url + "$", status, false, redirect));
-
-                                final int idx = redirectName.lastIndexOf('.');
-                                final String extension = redirectName.substring(idx + 1);
-
-                                // 2. entry with extension
-                                this.addEntry(entryMap, checkPath, getMapEntry(url + "\\." + extension, status, false, redirect));
-                            } else {
-                                // 1. entry with exact match
-                                this.addEntry(entryMap, checkPath, getMapEntry(url + "$", status, false, redirect + ".html"));
-
-                                // 2. entry with match supporting selectors and extension
-                                this.addEntry(entryMap, checkPath, getMapEntry(url + "(\\..*)", status, false, redirect + "$1"));
-                            }
-                            // 3. keep the path to return
-                            targetPaths.add(redirect);
+                // redirect target is the node providing the
+                // sling:vanityPath
+                // property (or its parent if the node is called
+                // jcr:content)
+                final Resource redirectTarget;
+                if (resource.getName().equals("jcr:content")) {
+                    redirectTarget = resource.getParent();
+                } else {
+                    redirectTarget = resource;
                 }
+                final String redirect = redirectTarget.getPath();
+                final String redirectName = redirectTarget.getName();
+
+                // whether the target is attained by a external redirect or
+                // by an internal redirect is defined by the sling:redirect
+                // property
+                final int status = props.get("sling:redirect", false) ? props.get(
+                        PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS, factory.getDefaultVanityPathRedirectStatus())
+                        : -1;
+
+                final String checkPath = result[1];
+
+                if (redirectName.indexOf('.') > -1) {
+                    // 1. entry with exact match
+                    this.addEntry(entryMap, checkPath, getMapEntry(url + "$", status, false, vanityOrder, redirect));
+
+                    final int idx = redirectName.lastIndexOf('.');
+                    final String extension = redirectName.substring(idx + 1);
+
+                    // 2. entry with extension
+                    this.addEntry(entryMap, checkPath, getMapEntry(url + "\\." + extension, status, false, vanityOrder, redirect));
+                } else {
+                    // 1. entry with exact match
+                    this.addEntry(entryMap, checkPath, getMapEntry(url + "$", status, false, vanityOrder, redirect + ".html"));
+
+                    // 2. entry with match supporting selectors and extension
+                    this.addEntry(entryMap, checkPath, getMapEntry(url + "(\\..*)", status, false, vanityOrder, redirect + "$1"));
+                }
+                // 3. keep the path to return
+                this.updateTargetPaths(targetPaths, redirect, checkPath);
             }
         }
+    }
+    
+    private void updateTargetPaths(final Map<String, List<String>> targetPaths, final String key, final String entry) {
+        if (entry==null){
+            return;
+        }
+        List<String> entries = targetPaths.get(key);
+        if (entries == null) {
+            entries = new ArrayList<String>();
+            targetPaths.put(key, entries);
+        }
+        entries.add(entry); 
     }
     
     /**
@@ -969,7 +1121,20 @@ public class MapEntries implements EventHandler {
 
         MapEntry mapEntry = null;
         try{
-            mapEntry = new MapEntry(url, status, trailingSlash, redirect);
+            mapEntry = new MapEntry(url, status, trailingSlash, 0, redirect);
+        }catch (IllegalArgumentException iae){
+            //ignore this entry
+            log.debug("ignored entry due exception ",iae);
+        }
+        return mapEntry;
+    }
+    
+    private MapEntry getMapEntry(String url, final int status, final boolean trailingSlash, long order,
+            final String... redirect){
+
+        MapEntry mapEntry = null;
+        try{
+            mapEntry = new MapEntry(url, status, trailingSlash, order, redirect);
         }catch (IllegalArgumentException iae){
             //ignore this entry
             log.debug("ignored entry due exception ",iae);
