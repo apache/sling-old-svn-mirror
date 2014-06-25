@@ -44,31 +44,31 @@ public class InjectorSpecificAnnotationTest {
 
     @Test
     public void test() throws Exception {
-	String value = RandomStringUtils.randomAlphanumeric(10);
+    String value = RandomStringUtils.randomAlphanumeric(10);
 
-	ResourceResolver resolver = null;
-	Node createdNode = null;
-	try {
-	    resolver = rrFactory.getAdministrativeResourceResolver(null);
-	    Session session = resolver.adaptTo(Session.class);
-	    Node rootNode = session.getRootNode();
-	    createdNode = rootNode.addNode("test_" + RandomStringUtils.randomAlphanumeric(10));
-	    createdNode.setProperty("testProperty", value);
-	    session.save();
+    ResourceResolver resolver = null;
+    Node createdNode = null;
+    try {
+        resolver = rrFactory.getAdministrativeResourceResolver(null);
+        Session session = resolver.adaptTo(Session.class);
+        Node rootNode = session.getRootNode();
+        createdNode = rootNode.addNode("test_" + RandomStringUtils.randomAlphanumeric(10));
+        createdNode.setProperty("testProperty", value);
+        session.save();
 
-	    Resource resource = resolver.getResource(createdNode.getPath());
+        Resource resource = resolver.getResource(createdNode.getPath());
 
-	    SlingPropertyAnnotationTestModel model = resource.adaptTo(SlingPropertyAnnotationTestModel.class);
+        SlingPropertyAnnotationTestModel model = resource.adaptTo(SlingPropertyAnnotationTestModel.class);
 
-	    assertNotNull("Model is null", model);
-	    assertEquals("Test Property is not set correctly", value, model.getTestProperty());
-	} finally {
-	    if (createdNode != null) {
-		createdNode.remove();
-	    }
-	    if (resolver != null) {
-		resolver.close();
-	    }
-	}
+        assertNotNull("Model is null", model);
+        assertEquals("Test Property is not set correctly", value, model.getTestProperty());
+    } finally {
+        if (createdNode != null) {
+        createdNode.remove();
+        }
+        if (resolver != null) {
+        resolver.close();
+        }
+    }
     }
 }
