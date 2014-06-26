@@ -257,8 +257,7 @@ and can be built using
 
     mvn clean package
     
-The resulting binaries can be installed into an Eclipse instance by installing from the update site which
-is found at p2update/target/repository after building the project. 
+The resulting binaries can be installed into an Eclipse instance by installing from the update site which is found at p2update/target/repository after building the project. 
 
 Please vote to approve this release:
 
