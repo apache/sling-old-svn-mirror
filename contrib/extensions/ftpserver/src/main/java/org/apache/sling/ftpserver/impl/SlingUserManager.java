@@ -127,12 +127,22 @@ public class SlingUserManager implements UserManager {
     }
 
     public boolean doesExist(String name) throws FtpException {
-        return getRepoUser(name) != null;
+        final ResourceResolver admin = this.getAdminResolver();
+        try {
+            return getRepoUser(name, admin) != null;
+        } finally {
+            admin.close();
+        }
     }
 
     public User getUserByName(String name) throws FtpException {
-        org.apache.jackrabbit.api.security.user.User repoUser = getRepoUser(name);
-        return (repoUser != null) ? createUser(name, repoUser, null) : null;
+        final ResourceResolver admin = this.getAdminResolver();
+        try {
+            org.apache.jackrabbit.api.security.user.User repoUser = getRepoUser(name, admin);
+            return (repoUser != null) ? createUser(name, repoUser, null) : null;
+        } finally {
+            admin.close();
+        }
     }
 
     public String[] getAllUserNames() throws FtpException {
@@ -173,28 +183,23 @@ public class SlingUserManager implements UserManager {
      * user exists or if a group of that name exists.
      *
      * @param name The name of the user to retrieve
+     * @param admin administrative resource resolver
      * @return The repository user or {@code null} if no such user exists or if
      *         a group of that name exists.
      * @throws FtpException If the repository user manager cannot be retrieved
      *             or an error occurrs looking for the user
      */
-    private org.apache.jackrabbit.api.security.user.User getRepoUser(final String name) throws FtpException {
-        final ResourceResolver admin = this.getAdminResolver();
-        try {
-            org.apache.jackrabbit.api.security.user.UserManager um = admin.adaptTo(org.apache.jackrabbit.api.security.user.UserManager.class);
-            if (um != null) {
-                Authorizable a;
-                try {
-                    a = um.getAuthorizable(name);
-                    return (a != null && !a.isGroup()) ? (org.apache.jackrabbit.api.security.user.User) a : null;
-                } catch (RepositoryException e) {
-                    throw new FtpException(e);
-                }
+    private org.apache.jackrabbit.api.security.user.User getRepoUser(final String name, final ResourceResolver admin) throws FtpException {
+        org.apache.jackrabbit.api.security.user.UserManager um = admin.adaptTo(org.apache.jackrabbit.api.security.user.UserManager.class);
+        if (um != null) {
+            Authorizable a;
+            try {
+                a = um.getAuthorizable(name);
+                return (a != null && !a.isGroup()) ? (org.apache.jackrabbit.api.security.user.User) a : null;
+            } catch (RepositoryException e) {
+                throw new FtpException(e);
             }
-        } finally {
-            admin.close();
         }
-
         throw new FtpException("Missing internal user manager; cannot find user");
     }
 
