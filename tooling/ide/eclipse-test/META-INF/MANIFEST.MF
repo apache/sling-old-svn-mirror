@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Sling IDE Tools: Eclipse Tests
 Bundle-SymbolicName: org.apache.sling.ide.eclipse-test
-Bundle-Version: 1.0.2.qualifier
+Bundle-Version: 1.0.0.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Require-Bundle: org.junit,
  org.eclipse.core.runtime,
