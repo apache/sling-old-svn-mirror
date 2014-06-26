@@ -328,18 +328,20 @@ public class MapEntries implements EventHandler {
 
         String actualContentPath = getActualContentPath(path);
         List<String> vanityPaths = vanityTargets.get(actualContentPath);
-        boolean updatedOrder = false;
-        for (String vanityTarget : vanityPaths) {
-            List<MapEntry> entries = this.resolveMapsMap.get(vanityTarget);
-            for (MapEntry entry : entries) {
-                String redirect = getMapEntryRedirect(entry);
-                if (redirect != null && redirect.equals(actualContentPath)) {
-                    entry.setOrder(vanityOrder);
-                    updatedOrder = true;
+        if (vanityPaths != null) {
+            boolean updatedOrder = false;
+            for (String vanityTarget : vanityPaths) {
+                List<MapEntry> entries = this.resolveMapsMap.get(vanityTarget);
+                for (MapEntry entry : entries) {
+                    String redirect = getMapEntryRedirect(entry);
+                    if (redirect != null && redirect.equals(actualContentPath)) {
+                        entry.setOrder(vanityOrder);
+                        updatedOrder = true;
+                    }
                 }
-            }
-            if (updatedOrder) {
-                Collections.sort(entries);
+                if (updatedOrder) {
+                    Collections.sort(entries);
+                }
             }
         }
     }
