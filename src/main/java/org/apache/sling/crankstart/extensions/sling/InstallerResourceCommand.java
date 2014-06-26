@@ -19,6 +19,7 @@ package org.apache.sling.crankstart.extensions.sling;
 import java.io.InputStream;
 import java.net.URL;
 
+import org.apache.commons.io.input.AutoCloseInputStream;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.crankstart.api.CrankstartCommand;
@@ -57,19 +58,15 @@ public class InstallerResourceCommand implements CrankstartCommand {
         if(ref == null) {
             throw new CrankstartException("Installer service not available, cannot register resource (" + serviceClass + ")");
         }
-        InputStream stream = null;
         final OsgiInstaller installer = (OsgiInstaller)ctx.getService(ref);
         try {
-            stream = url.openStream();
+            final InputStream stream = new AutoCloseInputStream(url.openStream());
             final String digest = resourceRef;
             final InstallableResource r = new InstallableResource(resourceRef, stream, null, digest, "file", 100);
             installer.registerResources("crankstart", new InstallableResource[] { r });
             log.info("Resource registered with Sling installer: {}", resourceRef);
         } finally {
             ctx.ungetService(ref);
-            if(stream != null) {
-                stream.close();
-            }
         }
     }
 }
