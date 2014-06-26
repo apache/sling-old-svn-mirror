@@ -16,6 +16,8 @@
  */
 package org.apache.sling.ide.eclipse.ui.wizards.np;
 
+import static org.apache.sling.ide.eclipse.core.progress.ProgressUtils.advance;
+
 import java.util.List;
 import java.util.Properties;
 

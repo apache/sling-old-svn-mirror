@@ -29,6 +29,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
@@ -87,13 +88,15 @@ public class ImportWizard extends Wizard implements IImportWizard {
         };
 
         try {
-            getContainer().run(false, true, runnable);
+            getContainer().run(true, true, runnable);
         } catch (InvocationTargetException e) {
             Throwable cause = e.getCause();
             mainPage.setErrorMessage("Import error : " + cause.getMessage()
                     + " . Please see the error log for details.");
             Activator.getDefault().getPluginLogger().error("Repository import failed", cause);
             return false;
+        } catch (OperationCanceledException e) {
+            System.out.println("Here");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return false;

@@ -1,21 +1,22 @@
-/*************************************************************************
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- * ADOBE CONFIDENTIAL
- * __________________
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Copyright 2014 Adobe Systems Incorporated
- *  All Rights Reserved.
- *
- * NOTICE:  All information contained herein is, and remains
- * the property of Adobe Systems Incorporated and its suppliers,
- * if any.  The intellectual and technical concepts contained
- * herein are proprietary to Adobe Systems Incorporated and its
- * suppliers and are protected by trade secret or copyright law.
- * Dissemination of this information or reproduction of this material
- * is strictly forbidden unless prior written permission is obtained
- * from Adobe Systems Incorporated.
- **************************************************************************/
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.sling.ide.eclipse.ui.wizards;
+
+import static org.apache.sling.ide.eclipse.core.progress.ProgressUtils.advance;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -29,7 +30,6 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.ILaunchManager;
@@ -219,14 +219,6 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 
     protected void configureReactorProject(IProject reactorProject, IProgressMonitor monitor) throws CoreException {
         // nothing to be done
-    }
-
-    protected void advance(IProgressMonitor monitor, int step) {
-
-        monitor.worked(step);
-        if (monitor.isCanceled()) {
-            throw new OperationCanceledException();
-        }
     }
 
     protected void finishConfiguration(List<IProject> projects, IServer server, IProgressMonitor monitor)

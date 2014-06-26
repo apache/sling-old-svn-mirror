@@ -14,19 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.eclipse.core.internal;
+package org.apache.sling.ide.eclipse.core.progress;
 
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.wst.common.project.facet.core.IDelegate;
-import org.eclipse.wst.common.project.facet.core.IProjectFacetVersion;
+import org.eclipse.core.runtime.OperationCanceledException;
 
-public class SlingContentFacetUninstallDelegate implements IDelegate {
+/**
+ * The <tt>ProgressUtils</tt> provides convenience methods for working with {@link IProgressMonitor} instances.
+ *
+ */
+public abstract class ProgressUtils {
 
-    @Override
-    public void execute(IProject arg0, IProjectFacetVersion arg1, Object arg2, IProgressMonitor arg3)
-            throws CoreException {
+    public static void advance(IProgressMonitor monitor, int ticks) {
+        monitor.worked(ticks);
+        if (monitor.isCanceled()) {
+            throw new OperationCanceledException();
+        }
     }
 
+    private ProgressUtils() {
+
+    }
 }
