@@ -40,6 +40,7 @@ bundle mvn:org.apache.sling/org.apache.sling.installer.core/3.5.0
 bundle mvn:org.apache.sling/org.apache.sling.commons.json/2.0.6
 bundle mvn:org.apache.sling/org.apache.sling.jcr.jcr-wrapper/2.0.0
 bundle mvn:org.apache.sling/org.apache.sling.crankstart.sling.extensions/0.0.1-SNAPSHOT
+bundle mvn:commons-io/commons-io/2.4
 
 # Now start our bundles
 start.all.bundles
