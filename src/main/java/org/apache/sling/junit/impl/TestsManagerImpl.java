@@ -27,6 +27,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.junit.Renderer;
+import org.apache.sling.junit.SlingTestContext;
+import org.apache.sling.junit.SlingTestContextProvider;
 import org.apache.sling.junit.TestSelector;
 import org.apache.sling.junit.TestsManager;
 import org.apache.sling.junit.TestsProvider;
@@ -174,16 +176,35 @@ public class TestsManagerImpl implements TestsManager {
     public void executeTests(Collection<String> testNames, Renderer renderer, TestSelector selector) throws Exception {
         renderer.title(2, "Running tests");
         final JUnitCore junit = new JUnitCore();
-        junit.addListener(renderer.getRunListener());
-        for(String className : testNames) {
-            renderer.title(3, className);
-            final String testMethodName = selector == null ? null : selector.getSelectedTestMethodName();
-            if(testMethodName != null && testMethodName.length() > 0) {
-                log.debug("Running test method {} from test class {}", testMethodName, className);
-                junit.run(Request.method(getTestClass(className), testMethodName));
-            } else {
-                log.debug("Running test class {}", className);
-                junit.run(getTestClass(className));
+        
+        // Create a test context if we don't have one yet
+        final boolean createContext =  !SlingTestContextProvider.hasContext();
+        if(createContext) {
+            SlingTestContextProvider.createContext();
+        }
+        
+        try {
+            junit.addListener(new TestContextRunListenerWrapper(renderer.getRunListener()));
+            for(String className : testNames) {
+                renderer.title(3, className);
+                
+                // If we have a test context, clear its output metadata
+                if(SlingTestContextProvider.hasContext()) {
+                    SlingTestContextProvider.getContext().output().clear();
+                }
+                
+                final String testMethodName = selector == null ? null : selector.getSelectedTestMethodName();
+                if(testMethodName != null && testMethodName.length() > 0) {
+                    log.debug("Running test method {} from test class {}", testMethodName, className);
+                    junit.run(Request.method(getTestClass(className), testMethodName));
+                } else {
+                    log.debug("Running test class {}", className);
+                    junit.run(getTestClass(className));
+                }
+            }
+        } finally {
+            if(createContext) {
+                SlingTestContextProvider.deleteContext();
             }
         }
     }
