@@ -306,7 +306,7 @@ public class MapEntries implements EventHandler {
                 for (Iterator<MapEntry> iterator =entries.iterator(); iterator.hasNext(); ) {
                     MapEntry entry = iterator.next();
                     String redirect = getMapEntryRedirect(entry);
-                    if (redirect != null && redirect.equals(path)) {
+                    if (redirect != null && redirect.equals(actualContentPath)) {
                         iterator.remove();
                     }
                 }
