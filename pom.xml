@@ -264,15 +264,11 @@
                 <module>contrib</module>
             </modules>
         </profile>
-         <!-- Profile for including performan tests -->
+         <!-- Profile for including performance tests -->
         <profile>
             <id>withPerformanceTest</id>
             <modules>
-                <module>performance/base</module>
-                <module>performance/jcr-resource-2.0.10</module>
-                <module>performance/jcr-resource-2.1.0</module>
-                <module>performance/jcr-resource-2.2.0</module>
-                <module>performance/tests</module>
+                <module>performance</module>
             </modules>
         </profile>
     </profiles>

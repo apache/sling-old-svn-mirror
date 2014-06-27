@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling</artifactId>
+        <version>19</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>org.apache.sling</groupId>
+    <artifactId>org.apache.sling.performance.reactor</artifactId>
+    <packaging>pom</packaging>
+    <version>0.9.9-SNAPSHOT</version>
+
+    <name>Apache Sling Performance Test Tools Reactor</name>
+    <description>Reactor for the Apache Sling Performance Test Tools</description>
+    <inceptionYear>2014</inceptionYear>
+    
+    <modules>
+        <module>base</module>
+        <module>jcr-resource-2.0.10</module>
+        <module>jcr-resource-2.1.0</module>
+        <module>jcr-resource-2.2.0</module>
+        <module>jcr-resource-2.2.10</module>
+        <module>tests</module>
+    </modules>
+</project>
