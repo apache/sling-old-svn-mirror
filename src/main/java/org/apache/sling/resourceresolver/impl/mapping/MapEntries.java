@@ -200,8 +200,13 @@ public class MapEntries implements EventHandler {
         }
     }
 
-    private void doAddAttributes(String path, String[] addedAttributes) {
+    private boolean doAddAttributes(String path, String[] addedAttributes, boolean refreshed) {
         this.initializing.lock();
+        boolean newRefreshed = refreshed;
+        if (!newRefreshed) {
+            resolver.refresh();
+            newRefreshed = true;
+        }
         try {
             boolean configurationUpdate = false;
             for (String changedAttribute:addedAttributes){
@@ -222,10 +227,16 @@ public class MapEntries implements EventHandler {
         } finally {
             this.initializing.unlock();
         }
+        return newRefreshed;
     }
 
-    private void doUpdateAttributes(String path, String[] changedAttributes) {
+    private boolean doUpdateAttributes(String path, String[] changedAttributes, boolean refreshed) {
         this.initializing.lock();
+        boolean newRefreshed = refreshed;
+        if (!newRefreshed) {
+            resolver.refresh();
+            newRefreshed = true;
+        }
         try {
             boolean configurationUpdate = false;
             for (String changedAttribute:changedAttributes){
@@ -246,10 +257,16 @@ public class MapEntries implements EventHandler {
         } finally {
             this.initializing.unlock();
         }
+        return newRefreshed;
     }
 
-    private void doRemoveAttributes(String path, String[] removedAttributes, boolean nodeDeletion) {
+    private boolean doRemoveAttributes(String path, String[] removedAttributes, boolean nodeDeletion, boolean refreshed) {
         this.initializing.lock();
+        boolean newRefreshed = refreshed;
+        if (!newRefreshed) {
+            resolver.refresh();
+            newRefreshed = true;
+        }
         try {
             boolean configurationUpdate = false;
             for (String changedAttribute:removedAttributes){
@@ -270,6 +287,7 @@ public class MapEntries implements EventHandler {
         } finally {
             this.initializing.unlock();
         }
+        return newRefreshed;
     }
 
     private void doUpdateConfiguration(){
@@ -485,43 +503,45 @@ public class MapEntries implements EventHandler {
             return;
         }
 
+        boolean wasResolverRefreshed = false;
+
         //removal of a node is handled differently
         if (SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic())) {
             final String actualContentPath = getActualContentPath(path);
             for (final String target : this.vanityTargets.keySet()) {
                 if (target.startsWith(actualContentPath)) {
-                    doRemoveAttributes(actualContentPath, new String [] {"sling:vanityPath"}, true);
+                    wasResolverRefreshed = doRemoveAttributes(actualContentPath, new String [] {"sling:vanityPath"}, true, wasResolverRefreshed);
                 }
             }
             for (final String target : this.aliasMap.keySet()) {
                 if (actualContentPath.startsWith(target)) {
-                    doRemoveAttributes(actualContentPath, new String [] {"sling:alias"}, true);
+                    wasResolverRefreshed = doRemoveAttributes(actualContentPath, new String [] {"sling:alias"}, true, wasResolverRefreshed);
                 }
             }
         } else {
-            String [] addedAttributes = (String []) event.getProperty(SlingConstants.PROPERTY_ADDED_ATTRIBUTES);    
+            String [] addedAttributes = (String []) event.getProperty(SlingConstants.PROPERTY_ADDED_ATTRIBUTES);
             if (addedAttributes != null) {
                 if (log.isDebugEnabled()) {
                     log.debug("found added attributes {}", addedAttributes);
                 }
-                doAddAttributes(path, addedAttributes);
+                wasResolverRefreshed = doAddAttributes(path, addedAttributes, wasResolverRefreshed);
             }
 
-            String [] changedAttributes = (String []) event.getProperty(SlingConstants.PROPERTY_CHANGED_ATTRIBUTES);        
+            String [] changedAttributes = (String []) event.getProperty(SlingConstants.PROPERTY_CHANGED_ATTRIBUTES);
             if (changedAttributes != null) {
                 if (log.isDebugEnabled()) {
                     log.debug("found changed attributes {}", changedAttributes);
                 }
-                doUpdateAttributes(path, changedAttributes);
+                wasResolverRefreshed = doUpdateAttributes(path, changedAttributes, wasResolverRefreshed);
             }
 
-            String [] removedAttributes = (String []) event.getProperty(SlingConstants.PROPERTY_REMOVED_ATTRIBUTES);        
+            String [] removedAttributes = (String []) event.getProperty(SlingConstants.PROPERTY_REMOVED_ATTRIBUTES);
             if (removedAttributes != null) {
                 if (log.isDebugEnabled()) {
                     log.debug("found removed attributes {}", removedAttributes);
                 }
                 final String checkPath = getActualContentPath(path);
-                doRemoveAttributes(checkPath, removedAttributes, false);
+                wasResolverRefreshed = doRemoveAttributes(checkPath, removedAttributes, false, wasResolverRefreshed);
             } 
         }
     }
