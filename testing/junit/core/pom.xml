@@ -59,7 +59,7 @@
                     <instructions>
                         <Bundle-Activator>org.apache.sling.junit.Activator</Bundle-Activator>
                         <Export-Package>
-                            org.apache.sling.junit;version=1.1.0,
+                            org.apache.sling.junit;version=1.2.0,
                             org.apache.sling.junit.annotations;version=1.0.8,
                         </Export-Package>
                         <_exportcontents>

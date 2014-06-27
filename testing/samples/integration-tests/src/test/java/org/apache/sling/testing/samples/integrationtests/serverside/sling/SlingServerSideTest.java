@@ -29,7 +29,7 @@ public class SlingServerSideTest extends SlingServerSideTestsBase
 implements SlingRemoteTestParameters, SlingTestsCountChecker {
     
     public static final String TEST_SELECTOR = "org.apache.sling.testing.samples.sampletests";
-    public static final int TESTS_AT_THIS_PATH = 8;
+    public static final int TESTS_AT_THIS_PATH = 9;
     
     public void checkNumberOfTests(int numberOfTestsExecuted) {
         assertEquals(TESTS_AT_THIS_PATH, numberOfTestsExecuted);

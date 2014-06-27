@@ -91,10 +91,10 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <!-- TODO create separate API package, this is just to get the special Sling test runner -->
+            <!-- TODO create separate API package, this is just to get the special Sling test runner and SlingTestContext -->
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.junit.core</artifactId>
-            <version>1.0.8</version>
+            <version>1.0.9-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         
