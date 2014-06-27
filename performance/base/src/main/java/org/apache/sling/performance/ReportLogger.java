@@ -9,9 +9,14 @@ import java.util.Date;
 
 import org.apache.commons.io.output.FileWriterWithEncoding;
 import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ReportLogger {
 
+    private static boolean reportFolderLogged = false;
+    private static final Logger logger = LoggerFactory.getLogger(ReportLogger.class);
+    
     public static final String REPORTS_DIR = "performance-reports";
 
 	public enum ReportType {
@@ -93,7 +98,7 @@ public class ReportLogger {
     private static void writeReportClassLevel(String resultFileName, String testSuiteName,
             DescriptiveStatistics statistics) throws IOException {
     	
-        File report = new File("target/" + REPORTS_DIR, resultFileName + ".txt");
+        File report = getReportFile(resultFileName, ".txt");
 		boolean needsPrefix = !report.exists();
 	    PrintWriter writer = new PrintWriter(
 	    		new FileWriterWithEncoding(report, "UTF-8", true));
@@ -129,7 +134,7 @@ public class ReportLogger {
      */
     private static void writeReportMethodLevel(String resultFileName, String testSuiteName, String testCaseName, String className,
             String methodName, DescriptiveStatistics statistics) throws IOException {
-        File report = new File("target/" + REPORTS_DIR, resultFileName + ".txt");
+        File report = getReportFile(resultFileName, ".txt");
 	
     	boolean needsPrefix = !report.exists();
     	PrintWriter writer = new PrintWriter(
@@ -170,6 +175,16 @@ public class ReportLogger {
 		Date date = new Date();
 
 		return dateFormat.format(date);
+	}
+	
+	private static File getReportFile(String resultFileName, String extension) {
+	    final String folder = "target/" + REPORTS_DIR;
+	    final String filename =  resultFileName + extension;
+	    if(!reportFolderLogged) {
+	        logger.info("Writing performance test results under {}", folder);
+	        reportFolderLogged = true;
+	    }
+	    return new File(folder, filename);
 	}
 
 }
