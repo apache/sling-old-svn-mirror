@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Slingclipse-M2Eclipse-based-WST-plugin
 Bundle-SymbolicName: org.apache.sling.ide.eclipse-m2e-ui;singleton:=true
 Bundle-Activator: org.apache.sling.ide.eclipse.m2e.internal.Activator
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 1.0.0
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .
 Import-Package: org.apache.commons.httpclient;version="3.1.0",
@@ -68,5 +68,5 @@ Import-Package: org.apache.commons.httpclient;version="3.1.0",
  org.osgi.framework;version="1.6.0",
  org.osgi.util.tracker;version="1.5.0"
 Bundle-ActivationPolicy: lazy
-Export-Package: org.apache.sling.ide.eclipse.m2e,
- org.apache.sling.ide.eclipse.ui.wizards.np
+Export-Package: org.apache.sling.ide.eclipse.m2e,org.apache.sling.ide.
+ eclipse.ui.wizards.np

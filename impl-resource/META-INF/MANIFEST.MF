@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Slingclipse-http
 Bundle-SymbolicName: org.apache.sling.ide.impl-resource
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 1.0.0
 Require-Bundle: org.eclipse.core.runtime,
  org.apache.sling.ide.api;bundle-version="0.0.1",
  org.apache.commons.httpclient;bundle-version="3.1.0",
