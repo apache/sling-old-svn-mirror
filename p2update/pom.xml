@@ -34,6 +34,16 @@
   </scm>
 
   <build>
+    <!-- ensure that extra files are picked up by the maven-source-plugin -->
+    <resources>
+        <resource>
+            <directory>.</directory>
+            <includes>
+                <include>category.xml</include>
+                <include>siteTemplate/*</include>
+            </includes>
+        </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.jboss.tools.tycho-plugins</groupId>

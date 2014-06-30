@@ -33,4 +33,16 @@
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/ide/target-definition</developerConnection>
     <url>http://svn.apache.org/viewvc/sling/trunk/tooling/ide/target-definition</url>
   </scm>
+  
+  <build>
+    <!-- ensure that extra files are picked up by the maven-source-plugin -->
+    <resources>
+        <resource>
+            <directory>.</directory>
+            <includes>
+                <include>*.target</include>
+            </includes>
+        </resource>
+    </resources>
+  </build>  
 </project>

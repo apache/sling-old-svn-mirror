@@ -35,7 +35,27 @@
     </scm>
 
     <build>
+        <!-- ensure that extra files are picked up by the maven-source-plugin -->
+        <resources>
+            <resource>
+                <directory>.</directory>
+                <includes>
+                    <include>build.properties</include>
+                    <include>META-INF/*</include>
+                    <include>OSGI-INF/*</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestFile>META-INF/MANIFEST.MF</manifestFile>
+                    </archive>
+                </configuration>
+            </plugin>        
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>

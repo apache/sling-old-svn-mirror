@@ -32,4 +32,18 @@
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/ide/feature</developerConnection>
     <url>http://svn.apache.org/viewvc/sling/trunk/tooling/ide/feature</url>
   </scm>
+  
+  <build>
+    <!-- ensure that extra files are picked up by the maven-source-plugin -->
+    <resources>
+        <resource>
+            <directory>.</directory>
+            <includes>
+                <include>build.properties</include>
+                <include>META-INF/*</include>
+                <include>feature.xml</include>
+            </includes>
+        </resource>
+    </resources>
+  </build>  
 </project>
