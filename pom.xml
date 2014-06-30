@@ -52,6 +52,10 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Import-Package>
+                          javax.jcr.*;version=1.0,
+                          *
+                        </Import-Package>
                         <Export-Package>
                             org.apache.sling.scripting.javascript,
                             org.mozilla.javascript;
