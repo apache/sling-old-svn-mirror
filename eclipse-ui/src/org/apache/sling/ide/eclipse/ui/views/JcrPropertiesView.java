@@ -293,6 +293,15 @@ public class JcrPropertiesView extends ViewPart {
             }
         };
         getViewSite().getPage().addSelectionListener(listener);
+        final ISelection selection = getViewSite().getPage().getSelection();
+        Display.getCurrent().asyncExec(new Runnable() {
+
+            @Override
+            public void run() {
+                listener.selectionChanged(null, selection);
+            }
+            
+        });
 	}
 	
     void resetLastValueEdited() {
