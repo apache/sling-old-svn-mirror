@@ -2,14 +2,12 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Slingclipse-api
 Bundle-SymbolicName: org.apache.sling.ide.api
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 1.0.0
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
-Export-Package: org.apache.sling.ide.filter,
- org.apache.sling.ide.osgi,
- org.apache.sling.ide.serialization,
- org.apache.sling.ide.transport,
- org.apache.sling.ide.util
+Export-Package: org.apache.sling.ide.filter,org.apache.sling.ide.osgi,
+ org.apache.sling.ide.serialization,org.apache.sling.ide.transport,org
+ .apache.sling.ide.util
 Import-Package: javax.jcr.nodetype,
  org.apache.commons.httpclient;version="3.1.0",
  org.apache.commons.httpclient.auth;version="3.1.0",

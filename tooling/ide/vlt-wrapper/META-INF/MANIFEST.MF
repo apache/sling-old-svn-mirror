@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.apache.sling.ide.vlt-wrapper
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 1.0.0
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
@@ -15,29 +15,19 @@ Bundle-ClassPath: .,
  lib/jackrabbit-jcr-commons-2.4.0.jar,
  lib/jackrabbit-spi-commons-2.4.0.jar,
  lib/jackrabbit-webdav-2.4.0.jar
-Export-Package: javax.jcr,
- javax.jcr.nodetype,
- org.apache.jackrabbit.util,
- org.apache.jackrabbit.vault.davex,
- org.apache.jackrabbit.vault.fs,
- org.apache.jackrabbit.vault.fs.api,
- org.apache.jackrabbit.vault.fs.config,
- org.apache.jackrabbit.vault.fs.filter,
- org.apache.jackrabbit.vault.fs.impl,
- org.apache.jackrabbit.vault.fs.impl.aggregator,
- org.apache.jackrabbit.vault.fs.impl.io,
- org.apache.jackrabbit.vault.fs.impl.io.legacycnd,
- org.apache.jackrabbit.vault.fs.io,
- org.apache.jackrabbit.vault.fs.spi,
- org.apache.jackrabbit.vault.fs.spi.impl.jcr20,
- org.apache.jackrabbit.vault.packaging,
- org.apache.jackrabbit.vault.packaging.impl,
- org.apache.jackrabbit.vault.util,
- org.apache.jackrabbit.vault.util.xml.serialize,
- org.apache.jackrabbit.vault.util.xml.xerces.dom,
- org.apache.jackrabbit.vault.util.xml.xerces.util,
- org.apache.jackrabbit.vault.util.xml.xerces.xni,
- org.apache.jackrabbit.vault.util.xml.xerces.xni.parser
+Export-Package: javax.jcr,javax.jcr.nodetype,org.apache.jackrabbit.uti
+ l,org.apache.jackrabbit.vault.davex,org.apache.jackrabbit.vault.fs,or
+ g.apache.jackrabbit.vault.fs.api,org.apache.jackrabbit.vault.fs.confi
+ g,org.apache.jackrabbit.vault.fs.filter,org.apache.jackrabbit.vault.f
+ s.impl,org.apache.jackrabbit.vault.fs.impl.aggregator,org.apache.jack
+ rabbit.vault.fs.impl.io,org.apache.jackrabbit.vault.fs.impl.io.legacy
+ cnd,org.apache.jackrabbit.vault.fs.io,org.apache.jackrabbit.vault.fs.
+ spi,org.apache.jackrabbit.vault.fs.spi.impl.jcr20,org.apache.jackrabb
+ it.vault.packaging,org.apache.jackrabbit.vault.packaging.impl,org.apa
+ che.jackrabbit.vault.util,org.apache.jackrabbit.vault.util.xml.serial
+ ize,org.apache.jackrabbit.vault.util.xml.xerces.dom,org.apache.jackra
+ bbit.vault.util.xml.xerces.util,org.apache.jackrabbit.vault.util.xml.
+ xerces.xni,org.apache.jackrabbit.vault.util.xml.xerces.xni.parser
 Require-Bundle: org.eclipse.core.runtime
 Import-Package: org.apache.commons.httpclient;version="3.1.0",
  org.apache.commons.httpclient.auth;version="3.1.0",
