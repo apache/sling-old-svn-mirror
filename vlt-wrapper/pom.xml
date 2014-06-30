@@ -32,9 +32,27 @@
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/ide/vlt-wrapper</developerConnection>
     <url>http://svn.apache.org/viewvc/sling/trunk/tooling/ide/vlt-wrapper</url>
   </scm>
-
-    <build>
-        <plugins>
+  <build>
+    <!-- ensure that extra files are picked up by the maven-source-plugin -->
+    <resources>
+        <resource>
+            <directory>.</directory>
+            <includes>
+                <include>build.properties</include>
+                <include>META-INF/*</include>
+            </includes>
+        </resource>
+    </resources>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <configuration>
+                <archive>
+                    <manifestFile>META-INF/MANIFEST.MF</manifestFile>
+                </archive>
+            </configuration>
+        </plugin>        
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
