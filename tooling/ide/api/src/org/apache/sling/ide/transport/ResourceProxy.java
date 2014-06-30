@@ -21,6 +21,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * The <tt>ResourceProxy</tt> is a representation of a resource as found in the local workspace
+ * 
+ * <p>
+ * The resource usually has properties, as returned from <tt>{@link #getProperties()}</tt>. If no properties are found,
+ * it means that the resource is only a reference and not that it is an empty resource.
+ * </p>
+ * 
+ * <p>
+ * The resource only has information about the first row of children, as returned by {@link #getChildren()}. It does not
+ * necessarily know about second-level children.
+ * </p>
+ * 
+ * <p>
+ * By exception, if the child is <tt>covered</tt>, then all information about that child and its descendants is known.
+ * </p>
+ *
+ */
 public class ResourceProxy {
 
     private final String path;
