@@ -49,7 +49,6 @@
 		<module>impl-vlt-test</module>
 		<module>eclipse-core</module>
 		<module>eclipse-ui</module>
-		<module>eclipse-test</module>
 		<module>feature</module>
 		<module>eclipse-m2e-ui</module>
 		<module>eclipse-m2e-test</module>
@@ -117,6 +116,9 @@
                         
                         <!-- test data -->
                         <exclude>**/*.binary</exclude>
+                        
+                        <!-- prevent failures when eclipse-test is not activated as a submodule -->
+                        <exclude>eclipse-test/**</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -231,6 +233,15 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <id>eclipse-test</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>eclipse-test</module>
+            </modules>
         </profile>
         <!-- adapted from https://svn.apache.org/repos/asf/jackrabbit/commons/filevault/trunk/pom.xml -->
         <profile>
