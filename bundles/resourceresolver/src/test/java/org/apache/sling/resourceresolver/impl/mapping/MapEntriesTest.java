@@ -25,6 +25,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -292,5 +293,37 @@ public class MapEntriesTest {
         for (final MapEntry entry : entries) {
             assertTrue(resultSet.remove(entry.getRedirect()[0]));
         }
+    }
+    
+    @Test
+    public void test_getActualContentPath() throws Exception {
+
+        Method method = MapEntries.class.getDeclaredMethod("getActualContentPath", String.class);
+        method.setAccessible(true);
+        
+        String actualContent = (String) method.invoke(mapEntries, "/content");
+        assertEquals("/content", actualContent);
+        
+        actualContent = (String) method.invoke(mapEntries, "/content/jcr:content");
+        assertEquals("/content", actualContent);
+    }
+    
+    @Test
+    public void test_getMapEntryRedirect() throws Exception {
+
+        Method method = MapEntries.class.getDeclaredMethod("getMapEntryRedirect", MapEntry.class);
+        method.setAccessible(true);
+        
+        MapEntry mapEntry = new MapEntry("/content", -1, false, 0, "/content");     
+        String actualContent = (String) method.invoke(mapEntries, mapEntry);
+        assertEquals("/content", actualContent);
+        
+        mapEntry = new MapEntry("/content", -1, false, 0, "/content$1");     
+        actualContent = (String) method.invoke(mapEntries, mapEntry);
+        assertEquals("/content", actualContent);
+        
+        mapEntry = new MapEntry("/content", -1, false, 0, "/content.html");     
+        actualContent = (String) method.invoke(mapEntries, mapEntry);
+        assertEquals("/content", actualContent);
     }
 }

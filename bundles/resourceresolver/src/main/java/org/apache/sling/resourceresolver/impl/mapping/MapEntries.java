@@ -548,7 +548,6 @@ public class MapEntries implements EventHandler {
 
     // ---------- internal
 
-    //TODO add unit test
     private String getActualContentPath(String path){
         final String checkPath;
         if ( path.endsWith("/jcr:content") ) {
@@ -559,7 +558,6 @@ public class MapEntries implements EventHandler {
         return checkPath;
     }
 
-    //TODO add unit test
     private String getMapEntryRedirect(MapEntry mapEntry) {
         String[] redirect = mapEntry.getRedirect();
         if (redirect.length > 1) {
