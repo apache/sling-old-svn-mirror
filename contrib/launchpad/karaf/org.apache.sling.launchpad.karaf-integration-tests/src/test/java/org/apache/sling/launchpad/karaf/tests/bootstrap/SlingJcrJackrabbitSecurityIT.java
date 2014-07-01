@@ -34,33 +34,26 @@ import static org.junit.Assert.assertNotNull;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class SlingJcrJackrabbitIT extends KarafTestSupport {
+public class SlingJcrJackrabbitSecurityIT extends KarafTestSupport {
 
     @Configuration
     public Option[] configuration() {
         return OptionUtils.combine(baseConfiguration(),
             addBootFeature("derby-sling"),
-            addBootFeature("sling-jcr-jackrabbit")
+            addBootFeature("sling-jcr-jackrabbit-security")
         );
     }
 
     @Test
-    public void testOrgApacheSlingJcrJackrabbitServer() {
-        final Bundle bundle = findBundle("org.apache.sling.jcr.jackrabbit.server");
+    public void testOrgApacheSlingJcrJackrabbitAccessmanager() {
+        final Bundle bundle = findBundle("org.apache.sling.jcr.jackrabbit.accessmanager");
         assertNotNull(bundle);
         assertEquals(Bundle.ACTIVE, bundle.getState());
     }
 
     @Test
-    public void testOrgApacheServicemixBundlesConcurrent() {
-        final Bundle bundle = findBundle("org.apache.servicemix.bundles.concurrent");
-        assertNotNull(bundle);
-        assertEquals(Bundle.ACTIVE, bundle.getState());
-    }
-
-    @Test
-    public void testOrgApacheCommonsPool() {
-        final Bundle bundle = findBundle("org.apache.commons.pool");
+    public void testOrgApacheSlingJcrJackrabbitUsermanager() {
+        final Bundle bundle = findBundle("org.apache.sling.jcr.jackrabbit.usermanager");
         assertNotNull(bundle);
         assertEquals(Bundle.ACTIVE, bundle.getState());
     }
