@@ -16,6 +16,8 @@
  */
 package org.apache.sling.crankstart.launcher;
 
+import org.apache.sling.crankstart.api.CrankstartConstants;
+
 /** Execute a crankstart file */
 public class Main {
     public static final String CLASSPATH_PREFIX = "classpath ";
@@ -28,6 +30,7 @@ public class Main {
         } else {
             crankFile = args[0];
         }
+        System.setProperty(CrankstartConstants.CRANKSTART_JAR_PATH, Main.class.getProtectionDomain().getCodeSource().getLocation().getPath());
         new CrankstartBootstrap(crankFile).start();
     }
 }
