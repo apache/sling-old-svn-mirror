@@ -650,9 +650,9 @@ public class MapEntries implements EventHandler {
     /**
      * Add an entry to the resolve map.
      */
-    private void addEntry(final Map<String, List<MapEntry>> entryMap, final String key, final MapEntry entry) {
+    private boolean addEntry(final Map<String, List<MapEntry>> entryMap, final String key, final MapEntry entry) {
         if (entry==null){
-            return;
+            return false;
         }
         List<MapEntry> entries = entryMap.get(key);
         if (entries == null) {
@@ -662,6 +662,7 @@ public class MapEntries implements EventHandler {
         entries.add(entry);
         // and finally sort list
         Collections.sort(entries);
+        return true;
     }
 
     /**
@@ -825,6 +826,7 @@ public class MapEntries implements EventHandler {
 
                 final String checkPath = result[1];
 
+                boolean addedEntry;
                 if (redirectName.indexOf('.') > -1) {
                     // 1. entry with exact match
                     this.addEntry(entryMap, checkPath, getMapEntry(url + "$", status, false, vanityOrder, redirect));
@@ -833,22 +835,24 @@ public class MapEntries implements EventHandler {
                     final String extension = redirectName.substring(idx + 1);
 
                     // 2. entry with extension
-                    this.addEntry(entryMap, checkPath, getMapEntry(url + "\\." + extension, status, false, vanityOrder, redirect));
+                    addedEntry = this.addEntry(entryMap, checkPath, getMapEntry(url + "\\." + extension, status, false, vanityOrder, redirect));
                 } else {
                     // 1. entry with exact match
                     this.addEntry(entryMap, checkPath, getMapEntry(url + "$", status, false, vanityOrder, redirect + ".html"));
 
                     // 2. entry with match supporting selectors and extension
-                    this.addEntry(entryMap, checkPath, getMapEntry(url + "(\\..*)", status, false, vanityOrder, redirect + "$1"));
+                    addedEntry = this.addEntry(entryMap, checkPath, getMapEntry(url + "(\\..*)", status, false, vanityOrder, redirect + "$1"));
                 }
-                // 3. keep the path to return
-                this.updateTargetPaths(targetPaths, redirect, checkPath);
+                if (addedEntry) {
+                    // 3. keep the path to return
+                    this.updateTargetPaths(targetPaths, redirect, checkPath);
+                }
             }
         }
     }
     
     private void updateTargetPaths(final Map<String, List<String>> targetPaths, final String key, final String entry) {
-        if (entry==null){
+        if (entry == null) {
             return;
         }
         List<String> entries = targetPaths.get(key);
@@ -856,7 +860,7 @@ public class MapEntries implements EventHandler {
             entries = new ArrayList<String>();
             targetPaths.put(key, entries);
         }
-        entries.add(entry); 
+        entries.add(entry);
     }
     
     /**
