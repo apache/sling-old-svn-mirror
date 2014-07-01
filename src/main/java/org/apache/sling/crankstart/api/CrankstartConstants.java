@@ -18,4 +18,5 @@ package org.apache.sling.crankstart.api;
 
 public class CrankstartConstants {
     public static final String CRANKSTART_INPUT_FILENAME = "crankstart.input.filename";
+    public static final String CRANKSTART_JAR_PATH = "crankstart.jar.path";
 }
