@@ -853,7 +853,7 @@ public class MapEntries implements EventHandler {
     
     private void updateTargetPaths(final Map<String, List<String>> targetPaths, final String key, final String entry) {
         if (entry == null) {
-            return;
+           return;
         }
         List<String> entries = targetPaths.get(key);
         if (entries == null) {
