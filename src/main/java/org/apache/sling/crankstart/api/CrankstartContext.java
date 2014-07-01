@@ -25,6 +25,7 @@ import org.osgi.framework.launch.Framework;
 public class CrankstartContext {
     private Framework osgiFramework;
     private final Map<String, String> osgiFrameworkProperties = new HashMap<String, String>();
+    private final Map<String, Object> attributes = new HashMap<String, Object>();
     
     public void setOsgiFrameworkProperty(String key, String value) {
         osgiFrameworkProperties.put(key, value);
@@ -43,5 +44,13 @@ public class CrankstartContext {
     
     public Framework getOsgiFramework() {
         return osgiFramework;
+    }
+    
+    public void setAttribute(String key, Object value) {
+        attributes.put(key, value);
+    }
+    
+    public Object getAttribute(String key) {
+        return attributes.get(key);
     }
 }
