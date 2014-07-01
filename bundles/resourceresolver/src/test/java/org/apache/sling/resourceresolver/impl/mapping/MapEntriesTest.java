@@ -356,9 +356,9 @@ public class MapEntriesTest {
         method.invoke(mapEntries, "/justVanityPath");
 
         entries = mapEntries.getResolveMaps();
-
         assertEquals(2, entries.size());
         
+        //bad vanity
         Resource badVanityPath = mock(Resource.class, "badVanityPath");
         when(resourceResolver.getResource("/badVanityPath")).thenReturn(badVanityPath);
         when(badVanityPath.getPath()).thenReturn("/badVanityPath");
@@ -373,6 +373,7 @@ public class MapEntriesTest {
         vanityTargets = (Map<String, List<String>>) field.get(mapEntries);
         assertEquals(1, vanityTargets.size());
         
+        //vanity under jcr:content
         Resource vanityPathOnJcrContentParent = mock(Resource.class, "vanityPathOnJcrContentParent");
         when(vanityPathOnJcrContentParent.getPath()).thenReturn("/vanityPathOnJcrContent");
         when(vanityPathOnJcrContentParent.getName()).thenReturn("vanityPathOnJcrContent");
@@ -423,18 +424,122 @@ public class MapEntriesTest {
         method.invoke(mapEntries, "/justVanityPath");
  
         assertEquals(2, resolveMapsMap.size());
-        
+        assertEquals(1, vanityTargets.size());
         assertNotNull(resolveMapsMap.get("/target/justVanityPath"));
         assertNull(resolveMapsMap.get("/target/justVanityPathUpdated"));
         assertEquals(1, vanityTargets.get("/justVanityPath").size());
         assertEquals("/target/justVanityPath", vanityTargets.get("/justVanityPath").get(0));
         
+        //update vanity path
         when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPathUpdated"));
         method1.invoke(mapEntries, "/justVanityPath");
                
+        assertEquals(2, resolveMapsMap.size());
+        assertEquals(1, vanityTargets.size());
         assertNull(resolveMapsMap.get("/target/justVanityPath"));
         assertNotNull(resolveMapsMap.get("/target/justVanityPathUpdated"));
         assertEquals(1, vanityTargets.get("/justVanityPath").size());
         assertEquals("/target/justVanityPathUpdated", vanityTargets.get("/justVanityPath").get(0));
+        
+        //vanity under jcr:content
+        Resource vanityPathOnJcrContentParent = mock(Resource.class, "vanityPathOnJcrContentParent");
+        when(vanityPathOnJcrContentParent.getPath()).thenReturn("/vanityPathOnJcrContent");
+        when(vanityPathOnJcrContentParent.getName()).thenReturn("vanityPathOnJcrContent");
+
+        Resource vanityPathOnJcrContent = mock(Resource.class, "vanityPathOnJcrContent");
+        when(resourceResolver.getResource("/vanityPathOnJcrContent/jcr:content")).thenReturn(vanityPathOnJcrContent);
+        when(vanityPathOnJcrContent.getPath()).thenReturn("/vanityPathOnJcrContent/jcr:content");
+        when(vanityPathOnJcrContent.getName()).thenReturn("jcr:content");
+        when(vanityPathOnJcrContent.getParent()).thenReturn(vanityPathOnJcrContentParent);
+        when(vanityPathOnJcrContent.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/vanityPathOnJcrContent"));
+        
+        method.invoke(mapEntries, "/vanityPathOnJcrContent/jcr:content");
+        
+        assertEquals(3, resolveMapsMap.size());
+        assertEquals(2, vanityTargets.size());
+        assertNotNull(resolveMapsMap.get("/target/vanityPathOnJcrContent"));
+        assertNull(resolveMapsMap.get("/target/vanityPathOnJcrContentUpdated"));
+        assertEquals(1, vanityTargets.get("/vanityPathOnJcrContent").size());
+        assertEquals("/target/vanityPathOnJcrContent", vanityTargets.get("/vanityPathOnJcrContent").get(0));
+        
+        //update vanity path
+        when(vanityPathOnJcrContent.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/vanityPathOnJcrContentUpdated"));     
+        method1.invoke(mapEntries, "/vanityPathOnJcrContent/jcr:content");
+        
+        assertEquals(3, resolveMapsMap.size());
+        assertEquals(2, vanityTargets.size());
+        assertNull(resolveMapsMap.get("/target/vanityPathOnJcrContent"));
+        assertNotNull(resolveMapsMap.get("/target/vanityPathOnJcrContentUpdated"));
+        assertEquals(1, vanityTargets.get("/vanityPathOnJcrContent").size());
+        assertEquals("/target/vanityPathOnJcrContentUpdated", vanityTargets.get("/vanityPathOnJcrContent").get(0));
     }
+    
+    @Test
+    public void test_doRemoveVanity() throws Exception {
+        Field field0 = MapEntries.class.getDeclaredField("resolveMapsMap");
+        field0.setAccessible(true);   
+        Map<String, List<MapEntry>> resolveMapsMap = (Map<String, List<MapEntry>>) field0.get(mapEntries);
+        assertEquals(1, resolveMapsMap.size());
+        
+        Field field = MapEntries.class.getDeclaredField("vanityTargets");
+        field.setAccessible(true);
+        Map<String, List<String>> vanityTargets = (Map<String, List<String>>) field.get(mapEntries);
+        assertEquals(0, vanityTargets.size());
+        
+        Method method = MapEntries.class.getDeclaredMethod("doAddVanity", String.class);
+        method.setAccessible(true);
+        
+        Method method1 = MapEntries.class.getDeclaredMethod("doRemoveVanity", String.class);
+        method1.setAccessible(true);
+        
+        Resource justVanityPath = mock(Resource.class, "justVanityPath");
+        when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
+        when(justVanityPath.getPath()).thenReturn("/justVanityPath");                 
+        when(justVanityPath.getName()).thenReturn("justVanityPath");
+        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
+        
+        method.invoke(mapEntries, "/justVanityPath");
+        
+        assertEquals(2, resolveMapsMap.size());
+        assertEquals(1, vanityTargets.size());
+        assertNotNull(resolveMapsMap.get("/target/justVanityPath"));
+        assertEquals(1, vanityTargets.get("/justVanityPath").size());
+        assertEquals("/target/justVanityPath", vanityTargets.get("/justVanityPath").get(0));
+        
+        //remove vanity path
+        method1.invoke(mapEntries, "/justVanityPath");
+        
+        assertEquals(1, resolveMapsMap.size());
+        assertEquals(0, vanityTargets.size());      
+        assertNull(resolveMapsMap.get("/target/justVanityPath"));
+        
+        //vanity under jcr:content
+        Resource vanityPathOnJcrContentParent = mock(Resource.class, "vanityPathOnJcrContentParent");
+        when(vanityPathOnJcrContentParent.getPath()).thenReturn("/vanityPathOnJcrContent");
+        when(vanityPathOnJcrContentParent.getName()).thenReturn("vanityPathOnJcrContent");
+
+        Resource vanityPathOnJcrContent = mock(Resource.class, "vanityPathOnJcrContent");
+        when(resourceResolver.getResource("/vanityPathOnJcrContent/jcr:content")).thenReturn(vanityPathOnJcrContent);
+        when(vanityPathOnJcrContent.getPath()).thenReturn("/vanityPathOnJcrContent/jcr:content");
+        when(vanityPathOnJcrContent.getName()).thenReturn("jcr:content");
+        when(vanityPathOnJcrContent.getParent()).thenReturn(vanityPathOnJcrContentParent);
+        when(vanityPathOnJcrContent.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/vanityPathOnJcrContent"));
+        
+        method.invoke(mapEntries, "/vanityPathOnJcrContent/jcr:content");
+        
+        assertEquals(2, resolveMapsMap.size());
+        assertEquals(1, vanityTargets.size());
+        assertNotNull(resolveMapsMap.get("/target/vanityPathOnJcrContent"));
+        assertEquals(1,vanityTargets.get("/vanityPathOnJcrContent").size());
+        assertEquals("/target/vanityPathOnJcrContent", vanityTargets.get("/vanityPathOnJcrContent").get(0));
+        
+        //remove vanity path
+        method1.invoke(mapEntries, "/vanityPathOnJcrContent/jcr:content");
+        
+        assertEquals(1, resolveMapsMap.size());
+        assertEquals(0, vanityTargets.size());      
+        assertNull(resolveMapsMap.get("/target/vanityPathOnJcrContent"));
+        
+    }
+    
 }
