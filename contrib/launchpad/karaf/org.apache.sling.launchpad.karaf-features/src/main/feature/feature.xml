@@ -166,6 +166,7 @@
     <feature version="${project.version}">webconsole-sling</feature>
     <feature version="${project.version}">derby-sling</feature>
     <feature version="${project.version}">sling</feature>
+    <feature version="${project.version}">sling-servlets</feature>
     <feature version="${project.version}">sling-jcr-jackrabbit</feature>
     <!-- ... -->
     <feature version="${project.version}">sling-fragments</feature>
@@ -197,14 +198,17 @@
   <!-- TODO needs a database impl! -->
   <feature name="sling-jcr-jackrabbit" version="${project.version}">
     <feature version="${project.version}">sling-jcr</feature>
-    <feature version="${project.version}">sling-servlets</feature>
-    <!-- org.apache.sling.jcr.jackrabbit.accessmanager requires org.apache.sling.servlets.post -->
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.jackrabbit.accessmanager/2.1.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.jackrabbit.server/2.1.3-SNAPSHOT</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.jackrabbit.usermanager/2.2.0</bundle>
     <!-- bundle dependencies -->
     <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.concurrent/1.3.4_1</bundle>
     <bundle dependency="true">mvn:commons-pool/commons-pool/1.6</bundle>
+  </feature>
+  <!-- Apache Sling JCR Jackrabbit Security -->
+  <feature name="sling-jcr-jackrabbit-security" version="${project.version}">
+    <feature version="${project.version}">sling-jcr-jackrabbit</feature>
+    <feature version="${project.version}">sling-servlets</feature>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.jackrabbit.accessmanager/2.1.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.jackrabbit.usermanager/2.2.0</bundle>
   </feature>
   <!-- Apache Sling Scripting -->
   <feature name="sling-scripting" version="${project.version}">
