@@ -321,13 +321,19 @@ public class MapEntries implements EventHandler {
         if (l != null){
             for (String s : l){
                 List<MapEntry> entries = this.resolveMapsMap.get(s);
-                for (Iterator<MapEntry> iterator =entries.iterator(); iterator.hasNext(); ) {
-                    MapEntry entry = iterator.next();
-                    String redirect = getMapEntryRedirect(entry);
-                    if (redirect != null && redirect.equals(actualContentPath)) {
-                        iterator.remove();
+                if (entries!= null) {
+                    for (Iterator<MapEntry> iterator =entries.iterator(); iterator.hasNext(); ) {
+                        MapEntry entry = iterator.next();
+                        String redirect = getMapEntryRedirect(entry);
+                        if (redirect != null && redirect.equals(actualContentPath)) {
+                            iterator.remove();
+                        }
                     }
                 }
+                entries = this.resolveMapsMap.get(s);
+                if (entries!= null && entries.isEmpty()) {
+                    this.resolveMapsMap.remove(s);
+                }     
             }
         }
         vanityTargets.remove(actualContentPath);

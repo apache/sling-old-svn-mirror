@@ -396,4 +396,45 @@ public class MapEntriesTest {
         assertNotNull(vanityTargets.get("/vanityPathOnJcrContent"));
     }
     
+    @Test
+    public void test_doUpdateVanity() throws Exception {
+        Field field0 = MapEntries.class.getDeclaredField("resolveMapsMap");
+        field0.setAccessible(true);   
+        Map<String, List<MapEntry>> resolveMapsMap = (Map<String, List<MapEntry>>) field0.get(mapEntries);
+        assertEquals(1, resolveMapsMap.size());
+        
+        Field field = MapEntries.class.getDeclaredField("vanityTargets");
+        field.setAccessible(true);
+        Map<String, List<String>> vanityTargets = (Map<String, List<String>>) field.get(mapEntries);
+        assertEquals(0, vanityTargets.size());
+        
+        Method method = MapEntries.class.getDeclaredMethod("doAddVanity", String.class);
+        method.setAccessible(true);
+        
+        Method method1 = MapEntries.class.getDeclaredMethod("doUpdateVanity", String.class);
+        method1.setAccessible(true);
+        
+        Resource justVanityPath = mock(Resource.class, "justVanityPath");
+        when(resourceResolver.getResource("/justVanityPath")).thenReturn(justVanityPath);
+        when(justVanityPath.getPath()).thenReturn("/justVanityPath");                 
+        when(justVanityPath.getName()).thenReturn("justVanityPath");
+        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
+        
+        method.invoke(mapEntries, "/justVanityPath");
+ 
+        assertEquals(2, resolveMapsMap.size());
+        
+        assertNotNull(resolveMapsMap.get("/target/justVanityPath"));
+        assertNull(resolveMapsMap.get("/target/justVanityPathUpdated"));
+        assertEquals(1, vanityTargets.get("/justVanityPath").size());
+        assertEquals("/target/justVanityPath", vanityTargets.get("/justVanityPath").get(0));
+        
+        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPathUpdated"));
+        method1.invoke(mapEntries, "/justVanityPath");
+               
+        assertNull(resolveMapsMap.get("/target/justVanityPath"));
+        assertNotNull(resolveMapsMap.get("/target/justVanityPathUpdated"));
+        assertEquals(1, vanityTargets.get("/justVanityPath").size());
+        assertEquals("/target/justVanityPathUpdated", vanityTargets.get("/justVanityPath").get(0));
+    }
 }
