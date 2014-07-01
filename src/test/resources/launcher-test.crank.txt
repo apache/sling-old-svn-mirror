@@ -69,8 +69,13 @@ config empty.config.should.work FORMAT:felix.config
 # Test an extension command provided by our test-services bundle
 test.system.property the.test.system.property was set by test-services bundle
   
-# Add the JUnit core via the Sling installer and our sling.extensions
+# Prepare additional resources for the Sling installer
 sling.installer.resource mvn:org.apache.sling/org.apache.sling.junit.core/1.0.8
+sling.installer.resource mvn:org.apache.sling/org.apache.sling.commons.mime/2.1.4
+sling.installer.resource mvn:org.apache.sling/org.apache.sling.settings/1.3.0
+
+# And register the installer resources
+sling.installer.register crankstart
   
 # Informative log  
 log felix http service should come up at http://localhost:${http.port}
