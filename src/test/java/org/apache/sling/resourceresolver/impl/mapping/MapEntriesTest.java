@@ -25,6 +25,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -161,7 +162,7 @@ public class MapEntriesTest {
     }
 
     @Test
-    public void test_vanity_path_registration() {
+    public void test_vanity_path_registration() throws Exception {
         // specifically making this a weird value because we want to verify that
         // the configuration value is being used
         int DEFAULT_VANITY_STATUS = 333333;
@@ -236,6 +237,12 @@ public class MapEntriesTest {
                 }
             }
         }
+        
+        Field field = MapEntries.class.getDeclaredField("vanityTargets");
+        field.setAccessible(true);
+        Map<String, List<String>> vanityTargets = (Map<String, List<String>>) field.get(mapEntries);
+        assertEquals(4, vanityTargets.size());        
+        
     }
 
     private ValueMap buildValueMap(Object... string) {
