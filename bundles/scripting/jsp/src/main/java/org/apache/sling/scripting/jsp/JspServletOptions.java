@@ -18,7 +18,8 @@ package org.apache.sling.scripting.jsp;
 
 import java.util.Dictionary;
 import java.util.Enumeration;
-import java.util.Properties;
+import java.util.Map;
+import java.util.TreeMap;
 
 import javax.servlet.ServletContext;
 
@@ -43,7 +44,10 @@ public class JspServletOptions implements Options {
     /** Default source and target VM version (value is "1.6"). */
     private static final String DEFAULT_VM_VERSION = "1.6";
 
-    private Properties settings = new Properties();
+    /** Value for automatic source/target version setting. */
+    private static final String AUTOMATIC_VERSION = "auto";
+
+    private final Map<String, String> settings = new TreeMap<String, String>();
 
     /**
      * Should Ant fork its java compiles of JSP pages.
@@ -149,14 +153,16 @@ public class JspServletOptions implements Options {
      */
     private boolean displaySourceFragments = false;
 
-    public String getProperty(String name) {
-        return this.settings.getProperty(name);
+    private String getProperty(final String name) {
+        return this.settings.get(name);
     }
 
-    public void setProperty(String name, String value) {
-        if (name != null && value != null) {
-            this.settings.setProperty(name, value);
-        }
+    private void setProperty(final String name, final String value) {
+        this.settings.put(name, value);
+    }
+
+    public Map<String, String> getProperties() {
+        return this.settings;
     }
 
     /**
@@ -316,10 +322,12 @@ public class JspServletOptions implements Options {
         while (enumeration.hasMoreElements()) {
             String key = (String) enumeration.nextElement();
             if (key.startsWith("jasper.")) {
-                Object value = config.get(key);
+                final Object value = config.get(key);
                 if (value != null) {
-                    setProperty(key.substring("jasper.".length()),
-                        value.toString());
+                    final String strValue = String.valueOf(value).trim();
+                    if ( strValue.length() > 0 ) {
+                        setProperty(key.substring("jasper.".length()), strValue);
+                    }
                 }
             }
 
@@ -478,13 +486,19 @@ public class JspServletOptions implements Options {
         }
 
         String compilerTargetVM = getProperty("compilerTargetVM");
-        if (compilerTargetVM != null && compilerTargetVM.trim().length() > 0 ) {
-            this.compilerTargetVM = compilerTargetVM.trim();
+        if (compilerTargetVM != null ) {
+            if ( AUTOMATIC_VERSION.equalsIgnoreCase(compilerTargetVM) ) {
+                compilerTargetVM = System.getProperty("java.vm.specification.version");
+            }
+            this.compilerTargetVM = compilerTargetVM;
         }
 
         String compilerSourceVM = getProperty("compilerSourceVM");
-        if (compilerSourceVM != null && compilerSourceVM.trim().length() > 0) {
-            this.compilerSourceVM = compilerSourceVM.trim();
+        if (compilerSourceVM != null ) {
+            if ( AUTOMATIC_VERSION.equalsIgnoreCase(compilerSourceVM) ) {
+                compilerSourceVM = System.getProperty("java.vm.specification.version");
+            }
+            this.compilerSourceVM = compilerSourceVM;
         }
 
         String javaEncoding = getProperty("javaEncoding");

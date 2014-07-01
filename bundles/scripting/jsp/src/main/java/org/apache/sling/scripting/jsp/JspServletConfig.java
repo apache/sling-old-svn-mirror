@@ -19,10 +19,8 @@
 package org.apache.sling.scripting.jsp;
 
 import java.util.Collections;
-import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Map;
-import java.util.TreeMap;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -35,26 +33,18 @@ class JspServletConfig implements ServletConfig {
 
     private String servletName;
 
-    private Map<String, String> properties;
+    private final Map<String, String> properties;
 
-    JspServletConfig(ServletContext servletContext, Dictionary<?, ?> config) {
+    JspServletConfig(final ServletContext servletContext, final Map<String, String> config) {
         this.servletContext = servletContext;
 
         // set the servlet name
-        servletName = (String) config.get(Constants.SERVICE_DESCRIPTION);
+        servletName = config.get(Constants.SERVICE_DESCRIPTION);
         if (servletName == null) {
             servletName = "JSP Script Handler";
         }
 
-        // copy the "jasper." properties
-        properties = new TreeMap<String, String>();
-        for (Enumeration<?> ke = config.keys(); ke.hasMoreElements();) {
-            String key = (String) ke.nextElement();
-            if (key.startsWith("jasper.")) {
-                properties.put(key.substring("jasper.".length()),
-                    String.valueOf(config.get(key)));
-            }
-        }
+        properties = config;
     }
 
     public String getInitParameter(String name) {

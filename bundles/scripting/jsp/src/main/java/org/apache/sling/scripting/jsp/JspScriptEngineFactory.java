@@ -60,7 +60,6 @@ import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
-import org.apache.sling.scripting.jsp.jasper.Options;
 import org.apache.sling.scripting.jsp.jasper.compiler.JspRuntimeContext;
 import org.apache.sling.scripting.jsp.jasper.compiler.JspRuntimeContext.JspFactoryHandler;
 import org.apache.sling.scripting.jsp.jasper.runtime.AnnotationProcessor;
@@ -131,7 +130,7 @@ public class JspScriptEngineFactory
 
     private JspRuntimeContext jspRuntimeContext;
 
-    private Options options;
+    private JspServletOptions options;
 
     private JspServletContext jspServletContext;
 
@@ -343,8 +342,7 @@ public class JspScriptEngineFactory
             jspServletContext = new JspServletContext(ioProvider,
                 slingServletContext, tldLocationsCache);
 
-            servletConfig = new JspServletConfig(jspServletContext,
-                properties);
+            servletConfig = new JspServletConfig(jspServletContext, options.getProperties());
 
         } finally {
             // make sure the context loader is reset after setting up the
