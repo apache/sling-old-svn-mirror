@@ -199,7 +199,7 @@ public class JspServletOptions implements Options {
     }
 
     /**
-     * Is the generation of SMAP info for JSR45 debuggin suppressed?
+     * Is the generation of SMAP info for JSR45 debugging suppressed?
      */
     public boolean isSmapSuppressed() {
         return this.isSmapSuppressed;
@@ -478,13 +478,13 @@ public class JspServletOptions implements Options {
         }
 
         String compilerTargetVM = getProperty("compilerTargetVM");
-        if (compilerTargetVM != null) {
-            this.compilerTargetVM = compilerTargetVM;
+        if (compilerTargetVM != null && compilerTargetVM.trim().length() > 0 ) {
+            this.compilerTargetVM = compilerTargetVM.trim();
         }
 
         String compilerSourceVM = getProperty("compilerSourceVM");
-        if (compilerSourceVM != null) {
-            this.compilerSourceVM = compilerSourceVM;
+        if (compilerSourceVM != null && compilerSourceVM.trim().length() > 0) {
+            this.compilerSourceVM = compilerSourceVM.trim();
         }
 
         String javaEncoding = getProperty("javaEncoding");
