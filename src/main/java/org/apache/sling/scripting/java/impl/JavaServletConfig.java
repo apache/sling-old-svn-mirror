@@ -56,10 +56,15 @@ public class JavaServletConfig implements ServletConfig {
         // copy the "java." properties
         initParams = new HashMap<String, String>();
         for (Enumeration<?> ke = config.keys(); ke.hasMoreElements();) {
-            String key = (String) ke.nextElement();
+            final String key = (String) ke.nextElement();
             if (key.startsWith("java.")) {
-                initParams.put(key.substring("java.".length()),
-                    String.valueOf(config.get(key)));
+                final Object value = config.get(key);
+                if ( value != null ) {
+                    final String strValue = String.valueOf(value).trim();
+                    if ( strValue.length() > 0 ) {
+                        initParams.put(key.substring("java.".length()), strValue);
+                    }
+                }
             }
         }
     }
