@@ -85,6 +85,8 @@ import org.slf4j.LoggerFactory;
 @Properties({
    @Property(name="service.description",value="JSP Script Handler"),
    @Property(name="service.vendor",value="The Apache Software Foundation"),
+   @Property(name="jasper.compilerTargetVM"),
+   @Property(name="jasper.compilerSourceVM"),
    @Property(name="jasper.classdebuginfo",boolValue=true),
    @Property(name="jasper.enablePooling",boolValue=true),
    @Property(name="jasper.ieClassId",value="clsid:8AD9C840-044E-11D1-B3E9-00805F499D93"),
