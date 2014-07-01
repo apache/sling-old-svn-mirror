@@ -80,8 +80,8 @@ public class JavaScriptEngineFactory
 
     public static final String PROPERTY_ENCODING = "java.javaEncoding";
 
-    /** Default source and target VM version (value is "1.5"). */
-    public static final String DEFAULT_VM_VERSION = "1.5";
+    /** Default source and target VM version (value is "1.6"). */
+    public static final String DEFAULT_VM_VERSION = "1.6";
 
     @Reference
     private JavaCompiler javaCompiler;
@@ -130,6 +130,7 @@ public class JavaScriptEngineFactory
     /**
      * @see javax.script.ScriptEngineFactory#getParameter(String)
      */
+    @Override
     public Object getParameter(String name) {
         if ("THREADING".equals(name)) {
             return "STATELESS";

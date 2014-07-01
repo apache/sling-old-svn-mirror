@@ -26,6 +26,8 @@ public class CompilerOptions extends Options {
 
     private String encoding;
 
+    private static final String VERSION_AUTO = "auto";
+
     /**
      * Create an compiler options object using data available from
      * the component configuration.
@@ -37,10 +39,16 @@ public class CompilerOptions extends Options {
         opts.put(Options.KEY_GENERATE_DEBUG_INFO, classDebugInfo != null ? classDebugInfo : true);
 
         final String sourceVM = (String) props.get(JavaScriptEngineFactory.PROPERTY_COMPILER_SOURCE_V_M);
-        opts.put(Options.KEY_SOURCE_VERSION, sourceVM != null && sourceVM.length() > 0 ? sourceVM : JavaScriptEngineFactory.DEFAULT_VM_VERSION);
+        opts.put(Options.KEY_SOURCE_VERSION, sourceVM != null && sourceVM.trim().length() > 0 ? sourceVM.trim() : JavaScriptEngineFactory.DEFAULT_VM_VERSION);
+        if ( VERSION_AUTO.equalsIgnoreCase((String)opts.get(Options.KEY_SOURCE_VERSION)) ) {
+            opts.put(Options.KEY_SOURCE_VERSION, System.getProperty("java.vm.specification.version"));
+        }
 
         final String targetVM = (String) props.get(JavaScriptEngineFactory.PROPERTY_COMPILER_TARGET_V_M);
-        opts.put(Options.KEY_TARGET_VERSION, targetVM != null && targetVM.length() > 0 ? targetVM : JavaScriptEngineFactory.DEFAULT_VM_VERSION);
+        opts.put(Options.KEY_TARGET_VERSION, targetVM != null && targetVM.trim().length() > 0 ? targetVM.trim() : JavaScriptEngineFactory.DEFAULT_VM_VERSION);
+        if ( VERSION_AUTO.equalsIgnoreCase((String)opts.get(Options.KEY_TARGET_VERSION)) ) {
+            opts.put(Options.KEY_TARGET_VERSION, System.getProperty("java.vm.specification.version"));
+        }
 
         final String encoding = (String) props.get(JavaScriptEngineFactory.PROPERTY_ENCODING);
         opts.encoding = encoding != null && encoding.length() > 0 ? encoding : "UTF-8";
