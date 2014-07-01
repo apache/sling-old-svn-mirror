@@ -16,24 +16,19 @@
  */
 package org.apache.sling.crankstart.extensions.sling;
 
-import java.io.InputStream;
-import java.net.URL;
+import java.util.LinkedList;
+import java.util.List;
 
-import org.apache.commons.io.input.AutoCloseInputStream;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.crankstart.api.CrankstartCommand;
 import org.apache.sling.crankstart.api.CrankstartCommandLine;
 import org.apache.sling.crankstart.api.CrankstartContext;
 import org.apache.sling.crankstart.api.CrankstartException;
-import org.apache.sling.installer.api.InstallableResource;
-import org.apache.sling.installer.api.OsgiInstaller;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** CrankstartCommand that registers a resource with the Sling installer */
+/** CrankstartCommand that prepares resources for registration with the Sling installer */
 @Component
 @Service
 public class InstallerResourceCommand implements CrankstartCommand {
@@ -46,27 +41,23 @@ public class InstallerResourceCommand implements CrankstartCommand {
     }
     
     public String getDescription() {
-        return I_INSTALLER_RESOURCE + ": register a resource with the Sling installer";
+        return I_INSTALLER_RESOURCE + ": prepares a resource for registration with the Sling installer";
     }
 
     public void execute(CrankstartContext crankstartContext, CrankstartCommandLine commandLine) throws Exception {
         final String resourceRef = commandLine.getQualifier();
-        final URL url = new URL(resourceRef);
-        final BundleContext ctx = crankstartContext.getOsgiFramework().getBundleContext();
-        final String serviceClass = OsgiInstaller.class.getName();
-        final ServiceReference ref = ctx.getServiceReference(serviceClass);
-        if(ref == null) {
-            throw new CrankstartException("Installer service not available, cannot register resource (" + serviceClass + ")");
+        if(resourceRef == null || resourceRef.length() == 0) {
+            throw new CrankstartException("Missing command qualifier, required to specifiy the resource to register");
         }
-        final OsgiInstaller installer = (OsgiInstaller)ctx.getService(ref);
-        try {
-            final InputStream stream = new AutoCloseInputStream(url.openStream());
-            final String digest = resourceRef;
-            final InstallableResource r = new InstallableResource(resourceRef, stream, null, digest, "file", 100);
-            installer.registerResources("crankstart", new InstallableResource[] { r });
-            log.info("Resource registered with Sling installer: {}", resourceRef);
-        } finally {
-            ctx.ungetService(ref);
+        
+        @SuppressWarnings("unchecked")
+        List<String> resources = (List<String>)crankstartContext.getAttribute(InstallerRegisterCommand.CONTEXT_ATTRIBUTE_NAME);
+        if(resources == null) {
+            resources = new LinkedList<String>();
+            crankstartContext.setAttribute(InstallerRegisterCommand.CONTEXT_ATTRIBUTE_NAME, resources);
         }
+        
+        resources.add(resourceRef);
+        log.info("Installer resource prepared: {}", resourceRef);
     }
 }
