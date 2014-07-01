@@ -193,6 +193,29 @@ public class CrankstartBootstrapTest {
     
     @Test
     @Retry(timeoutMsec=10000, intervalMsec=250)
+    public void testAdditionalBundles() throws Exception {
+        setAdminCredentials();
+        final String basePath = "/system/console/bundles/";
+        final String [] addBundles = {
+                "org.apache.sling.commons.mime",
+                "org.apache.sling.settings"
+        };
+        
+        for(String name : addBundles) {
+            final String path = basePath + name;
+            final HttpUriRequest get = new HttpGet(baseUrl + path);
+            HttpResponse response = null;
+            try {
+                response = client.execute(get);
+                assertEquals("Expecting additional bundle to be present at " + get.getURI(), 200, response.getStatusLine().getStatusCode());
+            } finally {
+                closeConnection(response);
+            }
+        }
+    }
+    
+    @Test
+    @Retry(timeoutMsec=10000, intervalMsec=250)
     public void testFelixFormatConfig() throws Exception {
         setAdminCredentials();
         final String path = "/system/console/config/configuration-status-20140606-1347+0200.txt";
