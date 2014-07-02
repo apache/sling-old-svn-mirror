@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Slingclipse-WST-plugin
 Bundle-SymbolicName: org.apache.sling.ide.eclipse-ui;singleton:=true
 Bundle-Activator: org.apache.sling.ide.eclipse.ui.internal.Activator
-Bundle-Version: 1.0.0
+Bundle-Version: 1.0.1.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
  lib/decentxml-1.4.jar

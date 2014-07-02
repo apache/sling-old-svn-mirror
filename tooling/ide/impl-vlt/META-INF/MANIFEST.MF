@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.apache.sling.ide.impl-vlt;singleton:=true
-Bundle-Version: 1.0.0
+Bundle-Version: 1.0.1.qualifier
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Require-Bundle: org.eclipse.equinox.ds;bundle-version="1.2.1",
