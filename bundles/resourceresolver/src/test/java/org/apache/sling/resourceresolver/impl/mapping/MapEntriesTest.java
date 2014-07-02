@@ -637,6 +637,32 @@ public class MapEntriesTest {
     
     //SLING-3727
     @Test
+    public void test_doUpdateAttributesWithDisableAliasOptimization() throws Exception {
+        Method method = MapEntries.class.getDeclaredMethod("doUpdateAttributes", String.class, String[].class, boolean.class);
+        method.setAccessible(true);
+        
+        when(resourceResolverFactory.isOptimizeAliasResolutionEnabled()).thenReturn(false);
+        mapEntries = new MapEntries(resourceResolverFactory, bundleContext, eventAdmin);
+        
+        Resource parent = mock(Resource.class);
+        when(parent.getPath()).thenReturn("/parent");
+
+        final Resource result = mock(Resource.class);
+        when(resourceResolver.getResource("/parent/child")).thenReturn(result);
+        when(result.getParent()).thenReturn(parent);
+        when(result.getPath()).thenReturn("/parent/child");
+        when(result.getName()).thenReturn("child");
+        when(result.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "alias"));
+        
+        method.invoke(mapEntries, "/parent/child",
+                new String[] { "sling:alias" }, false);
+        
+        Map<String, String> aliasMap = mapEntries.getAliasMap("/parent");
+        assertNull(aliasMap);
+    }
+    
+    //SLING-3727
+    @Test
     public void test_doRemoveAttributessWithDisableAliasOptimization() throws Exception {
         Method method = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, String[].class, boolean.class, boolean.class);
         method.setAccessible(true);
@@ -659,12 +685,5 @@ public class MapEntriesTest {
         
         Map<String, String> aliasMap = mapEntries.getAliasMap("/parent");
         assertNull(aliasMap);
-    }
-    
-    //SLING-3727
-    @Test
-    public void test_doUpdateAttributesWithDisableAliasOptimization() throws Exception {
-        
-    }
-    
+    }    
 }
