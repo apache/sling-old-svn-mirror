@@ -58,7 +58,6 @@ import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.impl.EnvironmentComponent;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
-import org.apache.sling.event.impl.jobs.config.MainQueueConfiguration;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
 import org.apache.sling.event.impl.jobs.jmx.QueueStatusEvent;
@@ -1038,10 +1037,15 @@ public class JobManagerImpl
             }
 
             if ( templates != null && templates.length > 0 ) {
-                buf.append(" and (");
                 int index = 0;
                 for (final Map<String,Object> template : templates) {
-                    if ( index > 0 ) {
+                    // skip empty templates
+                    if ( template.size() == 0 ) {
+                        continue;
+                    }
+                    if ( index == 0 ) {
+                        buf.append(" and (");
+                    } else {
                         buf.append(" or ");
                     }
                     buf.append('(');
@@ -1064,7 +1068,9 @@ public class JobManagerImpl
                     buf.append(')');
                     index++;
                 }
-                buf.append(')');
+                if ( index > 0 ) {
+                    buf.append(')');
+                }
             }
             buf.append("] order by @");
             if ( isHistoryQuery ) {
