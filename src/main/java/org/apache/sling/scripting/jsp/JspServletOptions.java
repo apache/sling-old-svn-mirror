@@ -41,11 +41,8 @@ public class JspServletOptions implements Options {
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(JspServletOptions.class);
 
-    /** Default source and target VM version (value is "1.6"). */
-    private static final String DEFAULT_VM_VERSION = "1.6";
-
     /** Value for automatic source/target version setting. */
-    private static final String AUTOMATIC_VERSION = "auto";
+    public static final String AUTOMATIC_VERSION = "auto";
 
     private final Map<String, String> settings = new TreeMap<String, String>();
 
@@ -115,12 +112,12 @@ public class JspServletOptions implements Options {
     /**
      * Compiler target VM.
      */
-    private String compilerTargetVM = DEFAULT_VM_VERSION;
+    private String compilerTargetVM;
 
     /**
      * The compiler source VM.
      */
-    private String compilerSourceVM = DEFAULT_VM_VERSION;
+    private String compilerSourceVM;
 
     /**
      * Cache for the TLD locations
@@ -313,9 +310,9 @@ public class JspServletOptions implements Options {
             IOProvider ioProvider, ComponentContext componentContext,
             TldLocationsCache tldLocationsCache) {
 
-        // JVM version numbers default to 1.6
-        this.compilerSourceVM = DEFAULT_VM_VERSION;
-        this.compilerTargetVM = DEFAULT_VM_VERSION;
+        // JVM version numbers default to current vm version
+        this.compilerSourceVM = System.getProperty("java.vm.specification.version");
+        this.compilerTargetVM = System.getProperty("java.vm.specification.version");
 
         Dictionary<?, ?> config = componentContext.getProperties();
         Enumeration<?> enumeration = config.keys();
@@ -485,23 +482,17 @@ public class JspServletOptions implements Options {
             this.ieClassId = ieClassId;
         }
 
-        String compilerTargetVM = getProperty("compilerTargetVM");
-        if (compilerTargetVM != null ) {
-            if ( AUTOMATIC_VERSION.equalsIgnoreCase(compilerTargetVM) ) {
-                compilerTargetVM = System.getProperty("java.vm.specification.version");
-                this.setProperty("compilerTargetVM", compilerTargetVM);
-            }
-            this.compilerTargetVM = compilerTargetVM;
+        final String targetVM = getProperty("compilerTargetVM");
+        if (targetVM != null && !AUTOMATIC_VERSION.equalsIgnoreCase(targetVM) ) {
+            this.compilerTargetVM = targetVM;
         }
+        this.setProperty("compilerTargetVM", this.compilerTargetVM);
 
-        String compilerSourceVM = getProperty("compilerSourceVM");
-        if (compilerSourceVM != null ) {
-            if ( AUTOMATIC_VERSION.equalsIgnoreCase(compilerSourceVM) ) {
-                compilerSourceVM = System.getProperty("java.vm.specification.version");
-                this.setProperty("compilerSourceVM", compilerSourceVM);
-            }
-            this.compilerSourceVM = compilerSourceVM;
+        final String sourceVM = getProperty("compilerSourceVM");
+        if (sourceVM != null && !AUTOMATIC_VERSION.equalsIgnoreCase(sourceVM) ) {
+            this.compilerSourceVM = sourceVM;
         }
+        this.setProperty("compilerSourceVM", this.compilerSourceVM);
 
         String javaEncoding = getProperty("javaEncoding");
         if (javaEncoding != null) {
