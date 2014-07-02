@@ -65,8 +65,8 @@ import org.slf4j.LoggerFactory;
 @Properties({
     @Property(name="service.vendor", value="The Apache Software Foundation"),
     @Property(name="service.description", value="Java Servlet Script Handler"),
-    @Property(name=JavaScriptEngineFactory.PROPERTY_COMPILER_SOURCE_V_M, value=JavaScriptEngineFactory.DEFAULT_VM_VERSION),
-    @Property(name=JavaScriptEngineFactory.PROPERTY_COMPILER_TARGET_V_M, value=JavaScriptEngineFactory.DEFAULT_VM_VERSION),
+    @Property(name=JavaScriptEngineFactory.PROPERTY_COMPILER_SOURCE_V_M, value=JavaScriptEngineFactory.VERSION_AUTO),
+    @Property(name=JavaScriptEngineFactory.PROPERTY_COMPILER_TARGET_V_M, value=JavaScriptEngineFactory.VERSION_AUTO),
     @Property(name=JavaScriptEngineFactory.PROPERTY_CLASSDEBUGINFO, boolValue=true),
     @Property(name=JavaScriptEngineFactory.PROPERTY_ENCODING, value="UTF-8")
 })
@@ -84,8 +84,7 @@ public class JavaScriptEngineFactory
 
     public static final String PROPERTY_ENCODING = "java.javaEncoding";
 
-    /** Default source and target VM version (value is "1.6"). */
-    public static final String DEFAULT_VM_VERSION = "1.6";
+    public static final String VERSION_AUTO = "auto";
 
     @Reference
     private JavaCompiler javaCompiler;
