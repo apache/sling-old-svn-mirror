@@ -319,7 +319,7 @@ public class JspScriptEngineFactory
      * Activate this component
      */
     protected void activate(final ComponentContext componentContext) {
-        Dictionary<?, ?> properties = componentContext.getProperties();
+        final Dictionary<?, ?> properties = componentContext.getProperties();
         this.defaultIsSession = PropertiesUtil.toBoolean(properties.get(PROP_DEFAULT_IS_SESSION), true);
 
         // set the current class loader as the thread context loader for
@@ -353,6 +353,7 @@ public class JspScriptEngineFactory
         // check for changes in jasper config
         this.checkJasperConfig();
 
+        logger.info("Activating Apache Sling Script Engine for JSP with options {}", options.getProperties());
         logger.debug("IMPORTANT: Do not modify the generated servlet classes directly");
     }
 
@@ -360,7 +361,7 @@ public class JspScriptEngineFactory
      * Activate this component
      */
     protected void deactivate(final ComponentContext componentContext) {
-        logger.debug("JspScriptEngine.deactivate()");
+        logger.info("Deactivating Apache Sling Script Engine for JSP");
 
         if ( this.tldLocationsCache != null ) {
             this.tldLocationsCache.deactivate(componentContext.getBundleContext());
