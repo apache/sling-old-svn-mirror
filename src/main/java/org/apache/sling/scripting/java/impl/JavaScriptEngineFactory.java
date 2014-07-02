@@ -53,6 +53,8 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The Java engine
@@ -71,6 +73,8 @@ import org.osgi.service.event.EventHandler;
 public class JavaScriptEngineFactory
     extends AbstractScriptEngineFactory
     implements EventHandler {
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public static final String PROPERTY_COMPILER_SOURCE_V_M = "java.compilerSourceVM";
 
@@ -146,8 +150,8 @@ public class JavaScriptEngineFactory
      */
     @SuppressWarnings("unchecked")
     protected void activate(final ComponentContext componentContext) {
-        this.ioProvider = new SlingIOProvider(this.javaCompiler,
-                                              CompilerOptions.createOptions(componentContext.getProperties()));
+        final CompilerOptions opts = CompilerOptions.createOptions(componentContext.getProperties());
+        this.ioProvider = new SlingIOProvider(this.javaCompiler, opts);
         this.javaServletContext = new JavaServletContext(ioProvider,
             slingServletContext);
 
@@ -162,6 +166,7 @@ public class JavaScriptEngineFactory
 
         this.eventHandlerRegistration = componentContext.getBundleContext()
                   .registerService(EventHandler.class.getName(), this, props);
+        logger.info("Activating Apache Sling Script Engine for Java with options {}", opts);
     }
 
     /**
@@ -179,6 +184,7 @@ public class JavaScriptEngineFactory
         }
         javaServletContext = null;
         servletConfig = null;
+        logger.info("Deactivating Apache Sling Script Engine for Java");
     }
 
     /**
