@@ -489,6 +489,7 @@ public class JspServletOptions implements Options {
         if (compilerTargetVM != null ) {
             if ( AUTOMATIC_VERSION.equalsIgnoreCase(compilerTargetVM) ) {
                 compilerTargetVM = System.getProperty("java.vm.specification.version");
+                this.setProperty("compilerTargetVM", compilerTargetVM);
             }
             this.compilerTargetVM = compilerTargetVM;
         }
@@ -497,6 +498,7 @@ public class JspServletOptions implements Options {
         if (compilerSourceVM != null ) {
             if ( AUTOMATIC_VERSION.equalsIgnoreCase(compilerSourceVM) ) {
                 compilerSourceVM = System.getProperty("java.vm.specification.version");
+                this.setProperty("compilerSourceVM", compilerSourceVM);
             }
             this.compilerSourceVM = compilerSourceVM;
         }
