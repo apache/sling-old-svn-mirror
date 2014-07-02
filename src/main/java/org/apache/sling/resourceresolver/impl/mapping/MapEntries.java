@@ -215,7 +215,9 @@ public class MapEntries implements EventHandler {
                 } else if ("sling:vanityOrder".equals(changedAttribute)) {
                     doUpdateVanityOrder(path, false);
                 } else if ("sling:alias".equals(changedAttribute)) {
-                    doAddAlias(path);
+                    if (enableOptimizeAliasResolution) {
+                       doAddAlias(path);
+                    }
                 } else {
                     configurationUpdate = true;
                 }
@@ -245,7 +247,9 @@ public class MapEntries implements EventHandler {
                 } else if ("sling:vanityOrder".equals(changedAttribute)) {
                     doUpdateVanityOrder(path, false);
                 } else if ("sling:alias".equals(changedAttribute)) {
-                    doUpdateAlias(path);
+                    if (enableOptimizeAliasResolution) {
+                        doUpdateAlias(path);
+                     }                    
                 } else {
                     configurationUpdate = true;
                 }
@@ -275,7 +279,9 @@ public class MapEntries implements EventHandler {
                 } else if ("sling:vanityOrder".equals(changedAttribute)) {
                     doUpdateVanityOrder(path, true);
                 } else if ("sling:alias".equals(changedAttribute)) {
-                    doRemoveAlias(path, nodeDeletion);
+                    if (enableOptimizeAliasResolution) {
+                        doRemoveAlias(path, nodeDeletion);
+                    }
                 } else {
                     configurationUpdate = true;
                 }
