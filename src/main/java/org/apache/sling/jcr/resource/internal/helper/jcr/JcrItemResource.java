@@ -56,7 +56,6 @@ abstract class JcrItemResource // this should be package private, see SLING-1414
         this.path = path;
 
         metadata = new ResourceMetadata();
-        metadata.setResolutionPath(path);
     }
 
     public ResourceResolver getResourceResolver() {
