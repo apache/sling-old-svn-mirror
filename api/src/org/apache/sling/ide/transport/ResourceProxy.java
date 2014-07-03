@@ -117,6 +117,20 @@ public class ResourceProxy {
         return false;
     }
 
+    // TODO - unit test
+    public ResourceProxy getChild(String path) {
+        for (ResourceProxy child : getChildren()) {
+            if (child.getPath().equals(path)) {
+                return child;
+            } else if (path.startsWith(child.getPath())) {
+                return child.getChild(path);
+            }
+        }
+
+        return null;
+    }
+
+
     @Override
     public String toString() {
         StringBuilder out = new StringBuilder();
@@ -129,4 +143,5 @@ public class ResourceProxy {
 
         return out.toString();
     }
+
 }

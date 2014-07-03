@@ -17,6 +17,7 @@
 package org.apache.sling.ide.transport;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
@@ -27,9 +28,7 @@ public class ResourceProxyTest {
     public void coveredChildren_firstLevel() {
 
         ResourceProxy r = new ResourceProxy("/content");
-        ResourceProxy child = new ResourceProxy("/content/test");
-        child.addProperty("jcr:primaryType", "nt:unstructured");
-        r.addChild(child);
+        r.addChild(newResource("/content/test", "nt:unstructured"));
 
         assertThat(r.covers("/content/test"), is(true));
     }
@@ -38,13 +37,10 @@ public class ResourceProxyTest {
     public void coveredChildren_secondLevel() {
 
         ResourceProxy r = new ResourceProxy("/content");
-        ResourceProxy child = new ResourceProxy("/content/test");
-        child.addProperty("jcr:primaryType", "nt:unstructured");
+        ResourceProxy child = newResource("/content/test", "nt:unstructured");
         r.addChild(child);
 
-        ResourceProxy grandChild = new ResourceProxy("/content/test/en");
-        grandChild.addProperty("jcr:primaryType", "nt:unstructured");
-        child.addChild(grandChild);
+        child.addChild(newResource("/content/test/en", "nt:unstructured"));
 
         assertThat(r.covers("/content/test/en"), is(true));
     }
@@ -62,13 +58,34 @@ public class ResourceProxyTest {
     public void coveredChildren_notCoveredSecondLevel() {
 
         ResourceProxy r = new ResourceProxy("/content");
-        ResourceProxy child = new ResourceProxy("/content/test");
-        child.addProperty("jcr:primaryType", "nt:unstructured");
+        ResourceProxy child = newResource("/content/test", "nt:unstructured");
+        r.addChild(child);
+
+        child.addChild(new ResourceProxy("/content/test/en"));
+
+        assertThat(r.covers("/content/test/en"), is(false));
+    }
+
+    @Test
+    public void getChild() {
+
+        ResourceProxy r = new ResourceProxy("/content");
+        ResourceProxy child = newResource("/content/test", "nt:unstructured");
         r.addChild(child);
 
         ResourceProxy grandChild = new ResourceProxy("/content/test/en");
+        grandChild.addProperty("jcr:primaryType", "nt:unstructured");
         child.addChild(grandChild);
 
-        assertThat(r.covers("/content/test/en"), is(false));
+        assertThat(r.getChild("/content/test"), is(child));
+        assertThat(r.getChild("/content/test/en"), is(grandChild));
+        assertThat(r.getChild("/content/test/en2"), is(nullValue()));
+    }
+
+    private ResourceProxy newResource(String path, String primaryType) {
+
+        ResourceProxy child = new ResourceProxy(path);
+        child.addProperty("jcr:primaryType", primaryType);
+        return child;
     }
 }
