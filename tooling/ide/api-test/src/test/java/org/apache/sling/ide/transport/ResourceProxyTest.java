@@ -88,4 +88,29 @@ public class ResourceProxyTest {
         child.addProperty("jcr:primaryType", primaryType);
         return child;
     }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void addChild_IllegalChildRejected() {
+
+        new ResourceProxy("/content").addChild(new ResourceProxy("/var"));
+    }
+
+    @Test
+    public void addChild_childOfRootNode() {
+
+        new ResourceProxy("/").addChild(new ResourceProxy("/var"));
+    }
+
+    @Test
+    public void addChild_childOfRegularNode() {
+
+        new ResourceProxy("/content").addChild(new ResourceProxy("/content/test"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void addChild_deeplyNested() {
+
+        new ResourceProxy("/content").addChild(new ResourceProxy("/content/test/en"));
+    }
+
 }
