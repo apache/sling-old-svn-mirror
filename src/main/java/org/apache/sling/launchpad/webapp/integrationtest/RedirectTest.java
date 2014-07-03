@@ -41,23 +41,16 @@ public class RedirectTest extends HttpTestBase {
             + System.currentTimeMillis()
             + SlingPostConstants.DEFAULT_CREATE_SUFFIX;
     }
-
-    /** test 302 response with existing sling:target */
-    public void testRedirect302() throws IOException {
-
-        // create a node redirecting to /index
-        Map<String, String> props = new HashMap<String, String>();
-        props.put("sling:resourceType", "sling:redirect");
-        props.put("sling:target", "/index.html");
-        String redirNodeUrl = testClient.createNode(postUrl, props);
+    
+    private void testRedirectToIndexHtml(String redirNodeUrl, int statusCode) throws IOException {
 
         // get the created node without following redirects
         GetMethod get = new GetMethod(redirNodeUrl);
         get.setFollowRedirects(false);
         int status = httpClient.executeMethod(get);
 
-        // expect temporary redirect ...
-        assertEquals(302, status);
+        // expect redirect ...
+        assertEquals(statusCode, status);
 
         // ... to */index.html
         String location = get.getResponseHeader("Location").getValue();
@@ -69,8 +62,8 @@ public class RedirectTest extends HttpTestBase {
         get.setFollowRedirects(false);
         status = httpClient.executeMethod(get);
 
-        // expect temporary redirect ...
-        assertEquals(302, status);
+        // expect redirect ...
+        assertEquals(statusCode, status);
 
         // ... to */index.html
         location = get.getResponseHeader("Location").getValue();
@@ -82,8 +75,8 @@ public class RedirectTest extends HttpTestBase {
         get.setFollowRedirects(false);
         status = httpClient.executeMethod(get);
 
-        // expect temporary redirect ...
-        assertEquals(302, status);
+        // expect redirect ...
+        assertEquals(statusCode, status);
 
         // ... to */index.html
         location = get.getResponseHeader("Location").getValue();
@@ -91,6 +84,31 @@ public class RedirectTest extends HttpTestBase {
         assertTrue(location.endsWith("/index.html?param=value"));
     }
 
+    /** test 302 as the default redirect */
+    public void testRedirect302() throws IOException {
+
+        // create a node redirecting to /index with default status code
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("sling:resourceType", "sling:redirect");
+        props.put("sling:target", "/index.html");
+        String redirNodeUrl = testClient.createNode(postUrl, props);
+        
+        testRedirectToIndexHtml(redirNodeUrl, 302);
+    }
+
+    /** test 301 specified by sling:status */
+    public void testRedirect301() throws IOException {
+
+        // create a node redirecting to /index with default status code
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("sling:resourceType", "sling:redirect");
+        props.put("sling:target", "/index.html");
+        props.put("sling:status", "301");
+        String redirNodeUrl = testClient.createNode(postUrl, props);
+        
+        testRedirectToIndexHtml(redirNodeUrl, 301);
+    }
+    
     /** test 302 response with existing sling:target */
     public void testRedirect302_absolute() throws IOException {
 
