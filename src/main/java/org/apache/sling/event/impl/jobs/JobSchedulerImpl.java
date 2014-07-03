@@ -148,7 +148,7 @@ public class JobSchedulerImpl
 
     private void stopScheduling() {
         if ( this.active ) {
-            final Collection<ScheduledJobInfo> jobs = this.getScheduledJobs();
+            final Collection<ScheduledJobInfo> jobs = this.getScheduledJobs(null, -1, (Map<String, Object>[])null);
             for(final ScheduledJobInfo info : jobs) {
                 this.stopScheduledJob((ScheduledJobInfoImpl)info);
             }
@@ -157,7 +157,7 @@ public class JobSchedulerImpl
 
     private void startScheduling() {
         if ( this.active ) {
-            final Collection<ScheduledJobInfo> jobs = this.getScheduledJobs();
+            final Collection<ScheduledJobInfo> jobs = this.getScheduledJobs(null, -1, (Map<String, Object>[])null);
             for(final ScheduledJobInfo info : jobs) {
                 this.startScheduledJob(((ScheduledJobInfoImpl)info));
             }
@@ -624,14 +624,108 @@ public class JobSchedulerImpl
         return (info.isSuspended() ? sb.suspend() : sb);
     }
 
+    private enum Operation {
+        LESS,
+        LESS_OR_EQUALS,
+        EQUALS,
+        GREATER_OR_EQUALS,
+        GREATER
+    }
+
+    /**
+     * Check if the job matches the template
+     */
+    private boolean match(final ScheduledJobInfoImpl job, final Map<String, Object> template) {
+        if ( template != null ) {
+            for(final Map.Entry<String, Object> current : template.entrySet()) {
+                final String key = current.getKey();
+                final char firstChar = key.length() > 0 ? key.charAt(0) : 0;
+                final String propName;
+                final Operation op;
+                if ( firstChar == '=' ) {
+                    propName = key.substring(1);
+                    op  = Operation.EQUALS;
+                } else if ( firstChar == '<' ) {
+                    final char secondChar = key.length() > 1 ? key.charAt(1) : 0;
+                    if ( secondChar == '=' ) {
+                        op = Operation.LESS_OR_EQUALS;
+                        propName = key.substring(2);
+                    } else {
+                        op = Operation.LESS;
+                        propName = key.substring(1);
+                    }
+                } else if ( firstChar == '>' ) {
+                    final char secondChar = key.length() > 1 ? key.charAt(1) : 0;
+                    if ( secondChar == '=' ) {
+                        op = Operation.GREATER_OR_EQUALS;
+                        propName = key.substring(2);
+                    } else {
+                        op = Operation.GREATER;
+                        propName = key.substring(1);
+                    }
+                } else {
+                    propName = key;
+                    op  = Operation.EQUALS;
+                }
+                final Object value = current.getValue();
+
+                if ( op == Operation.EQUALS ) {
+                    if ( !value.equals(job.getJobProperties().get(propName)) ) {
+                        return false;
+                    }
+                } else {
+                    if ( value instanceof Comparable ) {
+                        @SuppressWarnings({ "unchecked", "rawtypes" })
+                        final int result = ((Comparable)value).compareTo(job.getJobProperties().get(propName));
+                        if ( op == Operation.LESS && result != -1 ) {
+                            return false;
+                        } else if ( op == Operation.LESS_OR_EQUALS && result == 1 ) {
+                            return false;
+                        } else if ( op == Operation.GREATER_OR_EQUALS && result == -1 ) {
+                            return false;
+                        } else if ( op == Operation.GREATER && result != 1 ) {
+                            return false;
+                        }
+                    } else {
+                        // if the value is not comparable we simply don't match
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
     /**
      * Get all scheduled jobs
      */
-    public Collection<ScheduledJobInfo> getScheduledJobs() {
+    public Collection<ScheduledJobInfo> getScheduledJobs(final String topic,
+            final long limit,
+            final Map<String, Object>... templates) {
         final List<ScheduledJobInfo> jobs = new ArrayList<ScheduledJobInfo>();
+        long count = 0;
         synchronized ( this.scheduledJobs ) {
             for(final ScheduledJobInfoImpl job : this.scheduledJobs.values() ) {
-                jobs.add(job);
+                boolean add = true;
+                if ( topic != null && !topic.equals(job.getJobTopic()) ) {
+                    add = false;
+                }
+                if ( add && templates != null && templates.length != 0 ) {
+                    add = false;
+                    for (Map<String,Object> template : templates) {
+                        add = this.match(job, template);
+                        if ( add ) {
+                            break;
+                        }
+                    }
+                }
+                if ( add ) {
+                    jobs.add(job);
+                    count++;
+                    if ( limit > 0 && count == limit ) {
+                        break;
+                    }
+                }
             }
         }
         return jobs;
