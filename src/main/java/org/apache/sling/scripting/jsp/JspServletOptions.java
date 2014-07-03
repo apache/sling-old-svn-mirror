@@ -311,8 +311,8 @@ public class JspServletOptions implements Options {
             TldLocationsCache tldLocationsCache) {
 
         // JVM version numbers default to current vm version
-        this.compilerSourceVM = System.getProperty("java.vm.specification.version");
-        this.compilerTargetVM = System.getProperty("java.vm.specification.version");
+        this.compilerSourceVM = System.getProperty("java.specification.version");
+        this.compilerTargetVM = this.compilerSourceVM;
 
         Dictionary<?, ?> config = componentContext.getProperties();
         Enumeration<?> enumeration = config.keys();
