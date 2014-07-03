@@ -402,6 +402,15 @@
             adaptable="true"
             id="org.apache.sling.ide.eclipse.ui.pluginDomNodeToolSet"
             objectClass="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
+	     <!-- explicitly adding the 'New' / common.new.menu as this does not show up for JcrNodes otherwise-->
+         <menu
+               id="common.new.menu"
+               label="New"
+               path="group.new">
+            <separator
+                  name="jcr">
+            </separator>
+         </menu>
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeExportContentAction"
                icon="icons/obj16/sling_misc.gif"
@@ -420,8 +429,8 @@
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNewNodeAction"
                icon="icons/obj16/sling_misc.gif"
                id="org.apache.sling.ide.eclipse.ui.nav.NewJcrNodeAction"
-               label="&amp;New Node..."
-               menubarPath="jcr">
+               label="&amp;Node..."
+               menubarPath="common.new.menu/jcr">
          </action>
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameAction"
