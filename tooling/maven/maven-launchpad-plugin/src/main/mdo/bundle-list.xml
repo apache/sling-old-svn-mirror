@@ -19,7 +19,7 @@
 -->
 <model xmlns="http://modello.codehaus.org/MODELLO/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xsi:schemaLocation="http://modello.codehaus.org/MODELLO/1.0.0 http://modello.codehaus.org/xsd/modello-1.0.0.xsd"
- xsd.namespace="http://sling.apache.org/maven/1.0.0">
+ xsd.namespace="http://sling.apache.org/bundles/1.0.0">
     <id>bundle-list</id>
     <name>BundleList</name>
     <description>
