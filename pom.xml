@@ -28,16 +28,16 @@
     </parent>
 
     <artifactId>org.apache.sling.scripting.java</artifactId>
-    <version>2.0.9-SNAPSHOT</version>
+    <version>2.0.10</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Scripting Java Support</name>
     <description>Support for scripting Java</description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/scripting/java</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/scripting/java</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/scripting/java</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.java-2.0.10</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.scripting.java-2.0.10</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.scripting.java-2.0.10</url>
     </scm>
 
     <build>
