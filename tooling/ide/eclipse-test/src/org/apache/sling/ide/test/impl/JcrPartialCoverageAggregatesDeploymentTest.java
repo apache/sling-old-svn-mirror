@@ -44,6 +44,7 @@ import org.eclipse.core.runtime.Path;
 import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -231,6 +232,72 @@ public class JcrPartialCoverageAggregatesDeploymentTest {
 
             }
         }, postConditions);
+    }
+    
+    @Test
+    @Ignore("SLING-3170")
+    public void deployNodeWithContentXmlInParentFolder() throws Exception {
+        
+        wstServer.waitForServerToStart();
+
+        // create faceted project
+        IProject contentProject = projectRule.getProject();
+
+        ProjectAdapter project = new ProjectAdapter(contentProject);
+        project.addNatures("org.eclipse.wst.common.project.facet.core.nature");
+
+        // install content facet
+        project.installFacet("sling.content", "1.0");
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
+
+        // the expected repository structure is
+        // mapping [sling:Mapping]
+        // \- jcr:content [nt:unstructured]
+        //  \- par [nt:unstructured]
+        //   \- folder [sling:Folder] 
+        
+        // first create the local structure where the content is completely serialized inside the .content.xml file
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/mapping/.content.xml"),
+                getClass().getResourceAsStream("sling-mapping-with-folder-child.xml"));
+
+        final RepositoryAccessor repo = new RepositoryAccessor(config);
+        Poller poller = new Poller();
+
+        // wait until the structure is published
+        poller.pollUntil(new Callable<Node>() {
+            @Override
+            public Node call() throws RepositoryException {
+                return repo.getNode("/content/test-root/mapping/jcr:content/par");
+
+            }
+        }, hasPrimaryType("nt:unstructured"));
+
+        // now create the folder and its associated .content.xml file ; this will cause
+        // intermediate folders to be created whose serialization data is present in the
+        // parent's .content.xml file
+        project.createOrUpdateFile(
+                Path.fromPortableString("jcr_root/content/test-root/mapping/_jcr_content/par/folder/.content.xml"),
+                getClass().getResourceAsStream("sling-folder-nodetype.xml"));
+
+        // first wait until the sling:Folder child node is created, to ensure that all changes are processed
+        poller.pollUntil(new Callable<Node>() {
+            @Override
+            public Node call() throws RepositoryException {
+                return repo.getNode("/content/test-root/mapping/jcr:content/par/folder");
+
+            }
+        }, hasPrimaryType("sling:Folder"));
+
+        // then, verify that the nt:unstructured node is correctly written
+        poller.pollUntil(new Callable<Node>() {
+            @Override
+            public Node call() throws RepositoryException {
+                return repo.getNode("/content/test-root/mapping/jcr:content/par");
+
+            }
+        }, hasPrimaryType("nt:unstructured"));
     }
 
     @Before
