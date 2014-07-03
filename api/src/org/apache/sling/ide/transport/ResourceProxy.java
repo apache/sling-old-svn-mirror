@@ -57,6 +57,12 @@ public class ResourceProxy {
 
     public void addChild(ResourceProxy child) {
 
+        // TODO - should validate for direct parent
+        if (!isParent(path, child.getPath())) {
+            throw new IllegalArgumentException("Resource at path " + child.getPath() + " is not a direct child of "
+                    + path);
+        }
+
         this.children.add(child);
     }
 
@@ -109,7 +115,7 @@ public class ResourceProxy {
         for (ResourceProxy child : getCoveredChildren()) {
             if (child.getPath().equals(path)) {
                 return true;
-            } else if (path.startsWith(child.getPath())) {
+            } else if (isParent(child.getPath(), path)) {
                 return child.covers(path);
             }
         }
@@ -117,12 +123,35 @@ public class ResourceProxy {
         return false;
     }
 
-    // TODO - unit test
+    private boolean isParent(String parentPath, String childPath) {
+
+        boolean isDescendent;
+
+        if (parentPath.equals("/")) {
+            isDescendent = childPath.length() > 1;
+        } else {
+            isDescendent = parentPath.length() < childPath.length() && childPath.charAt(parentPath.length()) == '/'
+                    && childPath.startsWith(parentPath);
+        }
+
+        if (!isDescendent) {
+            return false;
+        }
+
+        for (int i = parentPath.length() + 1; i < childPath.length(); i++) {
+            if (childPath.charAt(i) == '/') {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public ResourceProxy getChild(String path) {
         for (ResourceProxy child : getChildren()) {
             if (child.getPath().equals(path)) {
                 return child;
-            } else if (path.startsWith(child.getPath())) {
+            } else if (isParent(child.getPath(), path)) {
                 return child.getChild(path);
             }
         }
