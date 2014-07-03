@@ -349,6 +349,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             // used for further request processing.
             final int index = resourcePath.indexOf('.');
             if (index != -1) {
+                res.getResourceMetadata().setResolutionPath(resourcePath.substring(0, index));
                 res.getResourceMetadata().setResolutionPathInfo(resourcePath.substring(index));
             }
         } else {
@@ -816,6 +817,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         if (resource != null) {
 
             final String rpi = absPath.substring(curPath.length());
+            resource.getResourceMetadata().setResolutionPath(absPath.substring(0, curPath.length()));
             resource.getResourceMetadata().setResolutionPathInfo(rpi);
 
             logger.debug("resolveInternal: Found resource {} with path info {} for {}", new Object[] { resource, rpi, absPath });
