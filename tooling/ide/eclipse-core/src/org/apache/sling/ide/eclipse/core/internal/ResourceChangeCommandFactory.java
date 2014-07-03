@@ -217,9 +217,56 @@ public class ResourceChangeCommandFactory {
 
         String resourceLocation = '/' + changedResource.getFullPath().makeRelativeTo(syncDirectory.getFullPath())
                 .toPortableString();
-        String serializationFilePath = serializationManager.getSerializationFilePath(resourceLocation,
-                serializationKind);
+        IPath serializationFilePath = Path.fromPortableString(serializationManager.getSerializationFilePath(
+                resourceLocation,
+                serializationKind));
         IResource serializationResource = syncDirectory.findMember(serializationFilePath);
+
+        // if the serialization resource is null, it's valid to look for a serialization resource
+        // higher in the filesystem, given that the found serialization resource covers this resource
+        // TODO - this too should be abstracted in the service layer, rather than in the Eclipse-specific code
+        if (serializationResource == null && changedResource.getType() == IResource.FOLDER) {
+            while (!serializationFilePath.isRoot()) {
+                serializationFilePath = serializationFilePath.removeLastSegments(1);
+                IFolder folderWithPossibleSerializationFile = (IFolder) syncDirectory.findMember(serializationFilePath);
+                if (folderWithPossibleSerializationFile == null) {
+                    continue;
+                }
+
+                // it's safe to use a specific SerializationKind since this scenario is only valid for METADATA_PARTIAL
+                // coverage
+                String possibleSerializationFilePath = serializationManager.getSerializationFilePath(
+                        ((IFolder) folderWithPossibleSerializationFile).getLocation().toOSString(),
+                        SerializationKind.METADATA_PARTIAL);
+
+                if (serializationManager.isSerializationFile(possibleSerializationFilePath)) {
+
+                    IPath parentSerializationFilePath = Path.fromOSString(possibleSerializationFilePath).makeRelativeTo(
+                            syncDirectory.getLocation());
+                    IFile possibleSerializationFile = syncDirectory.getFile(parentSerializationFilePath);
+                    if (!possibleSerializationFile.exists()) {
+                        continue;
+                    }
+
+                    InputStream contents = possibleSerializationFile.getContents();
+                    ResourceProxy serializationData;
+                    try {
+                        serializationData = serializationManager.readSerializationData(
+                                parentSerializationFilePath.toPortableString(), contents);
+                    } finally {
+                        IOUtils.closeQuietly(contents);
+                    }
+
+                    boolean covered = serializationData
+                            .covers(serializationManager.getRepositoryPath(resourceLocation));
+                    if (covered) {
+                        return serializationData.getChild(serializationManager.getRepositoryPath(resourceLocation));
+                    }
+
+                    break;
+                }
+            }
+        }
         return buildResourceProxy(resourceLocation, serializationResource, syncDirectory, fallbackNodeType);
     }
 
@@ -232,7 +279,8 @@ public class ResourceChangeCommandFactory {
                 contents = serializationFile.getContents();
                 String serializationFilePath = serializationResource.getFullPath()
                         .makeRelativeTo(syncDirectory.getFullPath()).toPortableString();
-                return serializationManager.readSerializationData(serializationFilePath, contents);
+                ResourceProxy resourceProxy = serializationManager.readSerializationData(serializationFilePath, contents);
+                return resourceProxy;
             } finally {
                 IOUtils.closeQuietly(contents);
             }

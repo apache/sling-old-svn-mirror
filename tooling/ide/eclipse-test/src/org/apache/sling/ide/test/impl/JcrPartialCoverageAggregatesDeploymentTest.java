@@ -44,7 +44,6 @@ import org.eclipse.core.runtime.Path;
 import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -235,7 +234,6 @@ public class JcrPartialCoverageAggregatesDeploymentTest {
     }
     
     @Test
-    @Ignore("SLING-3170")
     public void deployNodeWithContentXmlInParentFolder() throws Exception {
         
         wstServer.waitForServerToStart();
