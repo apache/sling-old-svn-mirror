@@ -109,6 +109,8 @@ public class ResourceProxy {
         for (ResourceProxy child : getCoveredChildren()) {
             if (child.getPath().equals(path)) {
                 return true;
+            } else if (path.startsWith(child.getPath())) {
+                return child.covers(path);
             }
         }
 
