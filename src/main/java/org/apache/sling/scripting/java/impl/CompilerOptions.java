@@ -31,6 +31,7 @@ public class CompilerOptions extends Options {
      * the component configuration.
      */
     public static CompilerOptions createOptions(final Dictionary<String, Object> props) {
+        final String currentVersion = System.getProperty("java.specification.version");
         final CompilerOptions opts = new CompilerOptions();
 
         final Boolean classDebugInfo = (Boolean)props.get(JavaScriptEngineFactory.PROPERTY_CLASSDEBUGINFO);
@@ -39,13 +40,13 @@ public class CompilerOptions extends Options {
         final String sourceVM = (String) props.get(JavaScriptEngineFactory.PROPERTY_COMPILER_SOURCE_V_M);
         opts.put(Options.KEY_SOURCE_VERSION, sourceVM != null && sourceVM.trim().length() > 0 ? sourceVM.trim() : JavaScriptEngineFactory.VERSION_AUTO);
         if ( JavaScriptEngineFactory.VERSION_AUTO.equalsIgnoreCase((String)opts.get(Options.KEY_SOURCE_VERSION)) ) {
-            opts.put(Options.KEY_SOURCE_VERSION, System.getProperty("java.vm.specification.version"));
+            opts.put(Options.KEY_SOURCE_VERSION, currentVersion);
         }
 
         final String targetVM = (String) props.get(JavaScriptEngineFactory.PROPERTY_COMPILER_TARGET_V_M);
         opts.put(Options.KEY_TARGET_VERSION, targetVM != null && targetVM.trim().length() > 0 ? targetVM.trim() : JavaScriptEngineFactory.VERSION_AUTO);
         if ( JavaScriptEngineFactory.VERSION_AUTO.equalsIgnoreCase((String)opts.get(Options.KEY_TARGET_VERSION)) ) {
-            opts.put(Options.KEY_TARGET_VERSION, System.getProperty("java.vm.specification.version"));
+            opts.put(Options.KEY_TARGET_VERSION, currentVersion);
         }
 
         final String encoding = (String) props.get(JavaScriptEngineFactory.PROPERTY_ENCODING);
