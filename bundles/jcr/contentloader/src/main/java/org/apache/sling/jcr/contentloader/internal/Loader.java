@@ -146,7 +146,7 @@ public class Loader extends BaseImportLoader {
                 if (!isUpdate && !isBundleUpdated && contentAlreadyLoaded) {
                     log.info("Content of bundle already loaded {}.", bundle.getSymbolicName());
                 } else {
-                    createdNodes = installContent(metadataSession, bundle, pathIter, contentAlreadyLoaded);
+                    createdNodes = installContent(metadataSession, bundle, pathIter, contentAlreadyLoaded && !isBundleUpdated);
                     if (isRetry) {
                         // log success of retry
                         log.info("Retrying to load initial content for bundle {} succeeded.", bundle.getSymbolicName());
