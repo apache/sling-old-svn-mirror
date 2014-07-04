@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.sling.launchpad.api.StartupHandler;
 import org.apache.sling.launchpad.api.StartupMode;
 import org.apache.sling.settings.SlingSettingsService;
@@ -147,7 +148,7 @@ public class SlingSettingsServiceImpl
         }
     }
 
-    private static final class Options implements Serializable {
+    protected static final class Options implements Serializable {
         private static final long serialVersionUID = 1L;
         String[] modes;
         String   selected;
@@ -263,7 +264,7 @@ public class SlingSettingsServiceImpl
         return optionsList;
     }
 
-    private void writeOptions(final BundleContext context, final List<Options> optionsList) {
+    protected void writeOptions(final BundleContext context, final List<Options> optionsList) {
         final File file = context.getDataFile(OPTIONS_FILE);
         FileOutputStream fos = null;
         ObjectOutputStream oos = null;
@@ -286,13 +287,12 @@ public class SlingSettingsServiceImpl
     /**
      * Read the id from a file.
      */
-    private String readSlingId(final File idFile) {
+    protected String readSlingId(final File idFile) {
         if (idFile.exists() && idFile.length() >= 36) {
             FileInputStream fin = null;
             try {
-                fin = new FileInputStream(idFile);
-                final byte[] rawBytes = new byte[36];
-                if (fin.read(rawBytes) == 36) {
+                final byte[] rawBytes = FileUtils.readFileToByteArray(idFile);
+                if (rawBytes.length == 36) {
                     final String rawString = new String(rawBytes, "ISO-8859-1");
 
                     // roundtrip to ensure correct format of UUID value
@@ -319,13 +319,13 @@ public class SlingSettingsServiceImpl
     /**
      * Write the sling id file.
      */
-    private void writeSlingId(final File idFile, final String id) {
+    protected void writeSlingId(final File idFile, final String id) {
         idFile.delete();
         idFile.getParentFile().mkdirs();
         FileOutputStream fout = null;
         try {
             fout = new FileOutputStream(idFile);
-            fout.write(slingId.getBytes("ISO-8859-1"));
+            fout.write(id.getBytes("ISO-8859-1"));
             fout.flush();
         } catch (final Throwable t) {
             logger.error("Failed writing UUID to id file " + idFile, t);
