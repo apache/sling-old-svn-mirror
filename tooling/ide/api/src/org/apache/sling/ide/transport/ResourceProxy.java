@@ -115,7 +115,7 @@ public class ResourceProxy {
         for (ResourceProxy child : getCoveredChildren()) {
             if (child.getPath().equals(path)) {
                 return true;
-            } else if (isParent(child.getPath(), path)) {
+            } else if (isDescendent(child.getPath(), path)) {
                 return child.covers(path);
             }
         }
@@ -125,16 +125,7 @@ public class ResourceProxy {
 
     private boolean isParent(String parentPath, String childPath) {
 
-        boolean isDescendent;
-
-        if (parentPath.equals("/")) {
-            isDescendent = childPath.length() > 1;
-        } else {
-            isDescendent = parentPath.length() < childPath.length() && childPath.charAt(parentPath.length()) == '/'
-                    && childPath.startsWith(parentPath);
-        }
-
-        if (!isDescendent) {
+        if (!isDescendent(parentPath, childPath)) {
             return false;
         }
 
@@ -147,11 +138,20 @@ public class ResourceProxy {
         return true;
     }
 
+    private boolean isDescendent(String parentPath, String childPath) {
+        if (parentPath.equals("/")) {
+            return childPath.length() > 1;
+        }
+
+        return parentPath.length() < childPath.length() && childPath.charAt(parentPath.length()) == '/'
+                    && childPath.startsWith(parentPath);
+    }
+
     public ResourceProxy getChild(String path) {
         for (ResourceProxy child : getChildren()) {
             if (child.getPath().equals(path)) {
                 return child;
-            } else if (isParent(child.getPath(), path)) {
+            } else if (isDescendent(child.getPath(), path)) {
                 return child.getChild(path);
             }
         }
@@ -162,13 +162,20 @@ public class ResourceProxy {
 
     @Override
     public String toString() {
+        return toString0(1);
+    }
+
+    private String toString0(int padding) {
         StringBuilder out = new StringBuilder();
-        out.append('[').append(getClass().getSimpleName()).append(": path=").append(path).append(", properties=")
+        out.append(getClass().getSimpleName()).append(": path=").append(path).append(", properties=")
                 .append(properties);
         for (ResourceProxy child : children) {
-            out.append("\n- ").append(child);
+            out.append("\n");
+            for (int i = 0; i < padding * 2; i++) {
+                out.append(' ');
+            }
+            out.append(child.toString0(padding + 1));
         }
-        out.append("\n]");
 
         return out.toString();
     }

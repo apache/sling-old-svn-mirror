@@ -46,6 +46,22 @@ public class ResourceProxyTest {
     }
 
     @Test
+    public void coveredChildren_thirdLevel() {
+
+        ResourceProxy r = new ResourceProxy("/content");
+
+        ResourceProxy child = newResource("/content/test", "nt:unstructured");
+        r.addChild(child);
+
+        ResourceProxy grandChild = newResource("/content/test/en", "nt:unstructured");
+        child.addChild(grandChild);
+
+        grandChild.addChild(newResource("/content/test/en/welcome", "nt:unstructured"));
+
+        assertThat(r.covers("/content/test/en/welcome"), is(true));
+    }
+
+    @Test
     public void coveredChildren_notCoveredFirstLevel() {
 
         ResourceProxy r = new ResourceProxy("/content");
@@ -73,12 +89,15 @@ public class ResourceProxyTest {
         ResourceProxy child = newResource("/content/test", "nt:unstructured");
         r.addChild(child);
 
-        ResourceProxy grandChild = new ResourceProxy("/content/test/en");
-        grandChild.addProperty("jcr:primaryType", "nt:unstructured");
+        ResourceProxy grandChild = newResource("/content/test/en", "nt:unstructured");
         child.addChild(grandChild);
+
+        ResourceProxy grandGrandChild = newResource("/content/test/en/welcome", "nt:unstructured");
+        grandChild.addChild(grandGrandChild);
 
         assertThat(r.getChild("/content/test"), is(child));
         assertThat(r.getChild("/content/test/en"), is(grandChild));
+        assertThat(r.getChild("/content/test/en/welcome"), is(grandGrandChild));
         assertThat(r.getChild("/content/test/en2"), is(nullValue()));
     }
 
