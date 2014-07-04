@@ -82,6 +82,9 @@
 
     <!-- List modules to be included in the build here ! -->
     <modules>
+          <module>auth/org.apache.sling.auth.xing.api</module>
+          <module>auth/org.apache.sling.auth.xing.login</module>
+          <module>auth/org.apache.sling.auth.xing.oauth</module>
           <module>commons/fsclassloader</module>
           <module>commons/html</module>
           <module>extensions/apt/parser</module>
@@ -131,7 +134,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <modules>
-                <module>launchpad/testing</module> 
+                <module>launchpad/testing</module>
             </modules>
         </profile>
         <profile>
