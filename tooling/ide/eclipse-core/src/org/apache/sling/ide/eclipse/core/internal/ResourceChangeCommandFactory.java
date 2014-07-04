@@ -26,6 +26,7 @@ import java.util.Set;
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.ResourceUtil;
+import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterResult;
 import org.apache.sling.ide.serialization.SerializationException;
@@ -226,10 +227,14 @@ public class ResourceChangeCommandFactory {
         // higher in the filesystem, given that the found serialization resource covers this resource
         // TODO - this too should be abstracted in the service layer, rather than in the Eclipse-specific code
         if (serializationResource == null && changedResource.getType() == IResource.FOLDER) {
+            PluginLogger logger = Activator.getDefault().getPluginLogger();
+            logger.trace("Found plain nt:folder candidate at {0}, trying to find a covering resource for it",
+                    changedResource.getProjectRelativePath());
             while (!serializationFilePath.isRoot()) {
                 serializationFilePath = serializationFilePath.removeLastSegments(1);
                 IFolder folderWithPossibleSerializationFile = (IFolder) syncDirectory.findMember(serializationFilePath);
                 if (folderWithPossibleSerializationFile == null) {
+                    logger.trace("No folder found at {0}, moving up to the next level", serializationFilePath);
                     continue;
                 }
 
@@ -239,12 +244,17 @@ public class ResourceChangeCommandFactory {
                         ((IFolder) folderWithPossibleSerializationFile).getLocation().toOSString(),
                         SerializationKind.METADATA_PARTIAL);
 
+                logger.trace("Looking for serialization data in {0}", possibleSerializationFilePath);
+
                 if (serializationManager.isSerializationFile(possibleSerializationFilePath)) {
 
                     IPath parentSerializationFilePath = Path.fromOSString(possibleSerializationFilePath).makeRelativeTo(
                             syncDirectory.getLocation());
                     IFile possibleSerializationFile = syncDirectory.getFile(parentSerializationFilePath);
                     if (!possibleSerializationFile.exists()) {
+                        logger.trace(
+                                "Potential serialization data file {0} does not exist, moving up to the next level",
+                                possibleSerializationFile.getFullPath());
                         continue;
                     }
 
@@ -257,10 +267,16 @@ public class ResourceChangeCommandFactory {
                         IOUtils.closeQuietly(contents);
                     }
 
+                    String repositoryPath = serializationManager.getRepositoryPath(resourceLocation);
+                    String potentialPath = serializationData.getPath();
                     boolean covered = serializationData
-                            .covers(serializationManager.getRepositoryPath(resourceLocation));
+                            .covers(repositoryPath);
+
+                    logger.trace(
+                            "Found possible serialization data at {0}. Resource :{1} ; our resource: {2}. Covered: {3}",
+                            parentSerializationFilePath, potentialPath, repositoryPath, covered);
                     if (covered) {
-                        return serializationData.getChild(serializationManager.getRepositoryPath(resourceLocation));
+                        return serializationData.getChild(repositoryPath);
                     }
 
                     break;
