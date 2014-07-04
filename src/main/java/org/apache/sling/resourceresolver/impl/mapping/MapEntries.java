@@ -248,7 +248,9 @@ public class MapEntries implements EventHandler {
                     doUpdateVanityOrder(path, false);
                 } else if ("sling:alias".equals(changedAttribute)) {
                     if (enableOptimizeAliasResolution) {
-                        doUpdateAlias(path);
+                        doRemoveAlias(path, false);
+                        doAddAlias(path);
+                        doUpdateAlias(path, false);
                      }                    
                 } else {
                     configurationUpdate = true;
@@ -280,7 +282,8 @@ public class MapEntries implements EventHandler {
                     doUpdateVanityOrder(path, true);
                 } else if ("sling:alias".equals(changedAttribute)) {
                     if (enableOptimizeAliasResolution) {
-                        doRemoveAlias(path, nodeDeletion);
+                        doRemoveAlias(path, nodeDeletion); 
+                        doUpdateAlias(path, nodeDeletion);                        
                     }
                 } else {
                     configurationUpdate = true;
@@ -336,7 +339,6 @@ public class MapEntries implements EventHandler {
                         }
                     }
                 }
-                entries = this.resolveMapsMap.get(s);
                 if (entries!= null && entries.isEmpty()) {
                     this.resolveMapsMap.remove(s);
                 }     
@@ -381,21 +383,76 @@ public class MapEntries implements EventHandler {
         loadAlias(resource, this.aliasMap);
     }
 
-    private void doUpdateAlias(String path) {
-        doRemoveAlias(path, false);
-        doAddAlias(path);
+    private void doUpdateAlias(String path, boolean nodeDeletion) {
+        if (nodeDeletion){
+            if (path.endsWith("/jcr:content")) {
+                path =  path.substring(0, path.length() - "/jcr:content".length());
+                final Resource resource = resolver.getResource(path);  
+                if (resource != null) {
+                    path =  resource.getPath();            
+                    final ValueMap props = resource.adaptTo(ValueMap.class);
+                    if (props.get(ResourceResolverImpl.PROP_ALIAS, String[].class) != null) {
+                        doAddAlias(path);
+                    }
+                }
+            }  
+        } else {
+            final Resource resource = resolver.getResource(path);  
+            if (resource != null) {
+                if (resource.getName().equals("jcr:content")) {  
+                    final Resource parent = resource.getParent();
+                    path =  parent.getPath();            
+                    final ValueMap props = parent.adaptTo(ValueMap.class);
+                    if (props.get(ResourceResolverImpl.PROP_ALIAS, String[].class) != null) {
+                        doAddAlias(path);
+                    }
+                } else if (resource.getChild("jcr:content") != null) {
+                    Resource jcrContent = resource.getChild("jcr:content");
+                    path =  jcrContent.getPath();         
+                    final ValueMap props = jcrContent.adaptTo(ValueMap.class);
+                    if (props.get(ResourceResolverImpl.PROP_ALIAS, String[].class) != null) {
+                        doAddAlias(path);
+                    }
+                } 
+            }
+        }
     }
 
     private void doRemoveAlias(String path, boolean nodeDeletion) {
+        String resourceName = null;
         if (nodeDeletion) { 
             if (!"/".equals(path)){
+                if (path.endsWith("/jcr:content")) {
+                    path =  path.substring(0, path.length() - "/jcr:content".length());
+                }  
+                resourceName = path.substring(path.lastIndexOf("/")+1);
                 path = path.substring(0, path.lastIndexOf("/"));
+            } else {
+                resourceName = "";
             }
         } else {
-            Resource resource = resolver.getResource(path); 
-            path = resource.getParent().getPath();
+            final Resource resource = resolver.getResource(path); 
+            if (resource.getName().equals("jcr:content")) {
+                final Resource containingResource = resource.getParent();
+                path = containingResource.getParent().getPath();   
+                resourceName = containingResource.getName();
+            } else {
+                path =  resource.getParent().getPath();
+                resourceName = resource.getName();
+            }            
         }
-        this.aliasMap.remove(path); 
+        Map<String, String> aliasMapEntry = aliasMap.get(path);
+        if (aliasMapEntry != null) {
+            for (Iterator<String> iterator =aliasMapEntry.keySet().iterator(); iterator.hasNext(); ) {
+                String key = iterator.next();
+                if (resourceName.equals(aliasMapEntry.get(key))){
+                    iterator.remove();
+                }
+            }
+        }
+        if (aliasMapEntry != null && aliasMapEntry.isEmpty()) {
+            this.aliasMap.remove(path);
+        }
     }
 
     public boolean isOptimizeAliasResolutionEnabled() {
