@@ -37,7 +37,6 @@ import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
-import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jackrabbit.usermanager.ChangeUserPassword;
 import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourceProvider;
@@ -91,7 +90,7 @@ import org.slf4j.LoggerFactory;
 @Service (value={
 	Servlet.class,
 	ChangeUserPassword.class
-})		
+})
 @Properties ({
 	@Property (name="sling.servlet.resourceTypes",
 			value="sling/user"),
@@ -114,9 +113,9 @@ public class ChangeUserPasswordServlet extends AbstractUserPostServlet implement
      * @see #PAR_USER_ADMIN_GROUP_NAME
      */
     private static final String DEFAULT_USER_ADMIN_GROUP_NAME = "UserAdmin";
- 
+
     /**
-     * The name of the configuration parameter providing the 
+     * The name of the configuration parameter providing the
      * name of the group whose members are allowed to reset the password
      * of a user without the 'oldPwd' value.
      */
@@ -124,7 +123,7 @@ public class ChangeUserPasswordServlet extends AbstractUserPostServlet implement
     private static final String PAR_USER_ADMIN_GROUP_NAME = "user.admin.group.name";
 
     private String userAdminGroupName = DEFAULT_USER_ADMIN_GROUP_NAME;
-    
+
     // ---------- SCR integration ---------------------------------------------
 
     /**
@@ -136,12 +135,12 @@ public class ChangeUserPasswordServlet extends AbstractUserPostServlet implement
     protected void activate(ComponentContext componentContext) {
         super.activate(componentContext);
         Dictionary<?, ?> props = componentContext.getProperties();
-        
+
         this.userAdminGroupName = OsgiUtil.toString(props.get(PAR_USER_ADMIN_GROUP_NAME),
                 DEFAULT_USER_ADMIN_GROUP_NAME);
         log.info("User Admin Group Name {}", this.userAdminGroupName);
     }
-    
+
     /*
      * (non-Javadoc)
      * @see
@@ -153,33 +152,33 @@ public class ChangeUserPasswordServlet extends AbstractUserPostServlet implement
     protected void handleOperation(SlingHttpServletRequest request,
     		AbstractPostResponse response, List<Modification> changes)
             throws RepositoryException {
-        
+
         Resource resource = request.getResource();
         Session session = request.getResourceResolver().adaptTo(Session.class);
-        changePassword(session, 
-                resource.getName(), 
-                request.getParameter("oldPwd"), 
-                request.getParameter("newPwd"), 
-                request.getParameter("newPwdConfirm"), 
+        changePassword(session,
+                resource.getName(),
+                request.getParameter("oldPwd"),
+                request.getParameter("newPwd"),
+                request.getParameter("newPwdConfirm"),
                 changes);
     }
-    
+
     /* (non-Javadoc)
      * @see org.apache.sling.jackrabbit.usermanager.ChangeUserPassword#changePassword(javax.jcr.Session, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.util.List)
      */
-    public User changePassword(Session jcrSession, 
+    public User changePassword(Session jcrSession,
                                 String name,
-                                String oldPassword, 
-                                String newPassword, 
+                                String oldPassword,
+                                String newPassword,
                                 String newPasswordConfirm,
-                                List<Modification> changes) 
+                                List<Modification> changes)
                 throws RepositoryException {
-        
+
         if ("anonymous".equals(name)) {
             throw new RepositoryException(
                 "Can not change the password of the anonymous user.");
         }
-        
+
         User user;
         UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
         Authorizable authorizable = userManager.getAuthorizable(name);
@@ -189,7 +188,7 @@ public class ChangeUserPasswordServlet extends AbstractUserPostServlet implement
             throw new ResourceNotFoundException(
                 "User to update could not be determined");
         }
-        
+
         //SLING-2069: if the current user is an administrator, then a missing oldPwd is ok,
         // otherwise the oldPwd must be supplied.
         boolean administrator = false;
@@ -200,7 +199,7 @@ public class ChangeUserPasswordServlet extends AbstractUserPostServlet implement
                 UserManager um = AccessControlUtil.getUserManager(jcrSession);
                 User currentUser = (User) um.getAuthorizable(jcrSession.getUserID());
                 administrator = currentUser.isAdmin();
-                
+
                 if (!administrator) {
                     //check if the user is a member of the 'User administrator' group
                     Authorizable userAdmin = um.getAuthorizable(this.userAdminGroupName);
@@ -210,7 +209,7 @@ public class ChangeUserPasswordServlet extends AbstractUserPostServlet implement
                             administrator = true;
                         }
                     }
-                    
+
                 }
             } catch ( Exception ex ) {
                 log.warn("Failed to determine if the user is an admin, assuming not. Cause: "+ex.getMessage());
@@ -244,10 +243,10 @@ public class ChangeUserPasswordServlet extends AbstractUserPostServlet implement
         } catch (RepositoryException re) {
             throw new RepositoryException("Failed to change user password.", re);
         }
-        
+
         return user;
     }
-    
+
 
     private void checkPassword(Authorizable authorizable, String oldPassword)
             throws RepositoryException {
