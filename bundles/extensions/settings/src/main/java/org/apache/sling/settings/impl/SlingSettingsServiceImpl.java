@@ -289,7 +289,6 @@ public class SlingSettingsServiceImpl
      */
     protected String readSlingId(final File idFile) {
         if (idFile.exists() && idFile.length() >= 36) {
-            FileInputStream fin = null;
             try {
                 final byte[] rawBytes = FileUtils.readFileToByteArray(idFile);
                 if (rawBytes.length == 36) {
@@ -304,13 +303,6 @@ public class SlingSettingsServiceImpl
             } catch (final Throwable t) {
                 logger.error("Failed reading UUID from id file " + idFile
                         + ", creating new id", t);
-            } finally {
-                if (fin != null) {
-                    try {
-                        fin.close();
-                    } catch (IOException ignore) {
-                    }
-                }
             }
         }
         return null;
