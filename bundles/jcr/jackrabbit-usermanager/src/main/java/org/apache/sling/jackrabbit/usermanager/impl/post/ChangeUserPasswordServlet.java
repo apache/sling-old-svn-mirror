@@ -233,13 +233,11 @@ public class ChangeUserPasswordServlet extends AbstractUserPostServlet implement
         }
 
         try {
-            ((User) authorizable).changePassword(newPassword);
+            user.changePassword(newPassword);
 
-            String userPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
-                + user.getID();
+            final String passwordPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PREFIX + user.getID() + "/rep:password";
 
-            changes.add(Modification.onModified(userPath
-                + "/rep:password"));
+            changes.add(Modification.onModified(passwordPath));
         } catch (RepositoryException re) {
             throw new RepositoryException("Failed to change user password.", re);
         }
