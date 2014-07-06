@@ -147,6 +147,8 @@ public class XingOauthAuthenticationHandler extends DefaultAuthenticationFeedbac
 
         if (!StringUtils.isEmpty(consumerKey) && !StringUtils.isEmpty(consumerSecret) && !StringUtils.isEmpty(callbackUrl)) {
             oAuthService = new ServiceBuilder().provider(XingApi.class).apiKey(consumerKey).apiSecret(consumerSecret).callback(callbackUrl).build();
+        } else {
+            oAuthService = null;
         }
 
         logger.info("configured with consumer key '{}', callback url '{}' and users me url '{}'", consumerKey, callbackUrl, usersMeUrl);
@@ -156,6 +158,11 @@ public class XingOauthAuthenticationHandler extends DefaultAuthenticationFeedbac
     @Override
     public AuthenticationInfo extractCredentials(final HttpServletRequest request, final HttpServletResponse response) {
         logger.debug("extract credentials");
+
+        if (oAuthService == null) {
+            logger.error("OAuthService is null, check configuration");
+            return null;
+        }
 
         try {
             final HttpSession httpSession = request.getSession(true);
@@ -195,6 +202,12 @@ public class XingOauthAuthenticationHandler extends DefaultAuthenticationFeedbac
     @Override
     public boolean requestCredentials(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
         logger.debug("request credentials");
+
+        if (oAuthService == null) {
+            logger.error("OAuthService is null, check configuration");
+            return false;
+        }
+
         try {
             final Token requestToken = oAuthService.getRequestToken();
             logger.debug("received request token: '{}'", requestToken);
