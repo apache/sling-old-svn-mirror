@@ -171,13 +171,13 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
         List<IModule> modules = new LinkedList<IModule>();
         for (IProject project : projects.getBundleProjects()) {
             IModule module = ServerUtil.getModule(project);
-            if (module != null) {
+            if (module != null && shouldDeploy(module)) {
                 modules.add(module);
             }
         }
         for (IProject project : projects.getContentProjects()) {
             IModule module = ServerUtil.getModule(project);
-            if (module != null) {
+            if (module != null && shouldDeploy(module)) {
                 modules.add(module);
             }
         }
@@ -187,6 +187,11 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
         advance(monitor, 2);
 
         monitor.done();
+    }
+
+    protected boolean shouldDeploy(IModule module) {
+        // by default, deploy all applicable modules - subclasses may decide otherwise
+        return true;
     }
 
     protected void publishModules(final List<IProject> createdProjects, IProgressMonitor monitor) throws CoreException {
