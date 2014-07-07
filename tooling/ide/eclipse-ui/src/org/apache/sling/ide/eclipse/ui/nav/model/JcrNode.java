@@ -1308,12 +1308,68 @@ public class JcrNode implements IAdaptable {
                 createVaultFile((IFolder) resource, ".content.xml", newPrimaryType);
             } else {
                 
-                //TODO: revert above creation of pointer + folder + .content.xml
-                //      but this might be rather very trick and something for later
-                properties.doSetPropertyValue("jcr:primaryType", newPrimaryType);
+                // set the "pointer"'s jcr:primaryType
+                if (domElement.getAttributeMap().containsKey("jcr:primaryType")) {
+                    domElement.setAttribute("jcr:primaryType", newPrimaryType);
+                } else {
+                    domElement.addAttribute("jcr:primaryType", newPrimaryType);
+                }
+                
+                // then copy all the other attributes - plus children if there are nay
+                Element propDomElement = properties.getDomElement();
+                if (propDomElement!=null) {
+                    List<Attribute> attributes = propDomElement.getAttributes();
+                    for (Iterator it = attributes.iterator(); it
+                            .hasNext();) {
+                        Attribute anAttribute = (Attribute) it.next();
+                        if (anAttribute.getName().startsWith("xmlns:")) {
+                            continue;
+                        }
+                        if (anAttribute.getName().equals("jcr:primaryType")) {
+                            continue;
+                        }
+                        if (domElement.getAttributeMap().containsKey(anAttribute.getName())) {
+                            domElement.setAttribute(anAttribute.getName(), anAttribute.getValue());
+                        } else {
+                            domElement.addAttribute(anAttribute);
+                        }
+                    }
+                    List<Element> c2 = propDomElement.getChildren();
+                    if (c2!=null && c2.size()!=0) {
+                        domElement.addNodes(c2);
+                    }
+                }
+                
+                if (properties.getUnderlying()!=null && properties.getUnderlying().file!=null) {
+                    try {
+                        properties.getUnderlying().file.delete(true, new NullProgressMonitor());
+                        // prune empty directories:
+                        prune(properties.getUnderlying().file.getParent());
+                    } catch (CoreException e) {
+                        MessageDialog.openError(null, "Unable to change primary type",
+                                "Could not delete vault file "+properties.getUnderlying().file+": "+e);
+                        Activator.getDefault().getPluginLogger().error("Error changing jcr:primaryType. Could not delete vault file "+properties.getUnderlying().file+": "+e.getMessage(), e);
+                        return;
+                    }
+                }
+                
+                underlying.save();
             }
         }
         
+    }
+
+    private void prune(IContainer folder) throws CoreException {
+        if (folder==null || !(folder instanceof IFolder)) {
+            return;
+        }
+        IFolder f = (IFolder)folder;
+        IResource[] members = f.members();
+        if (members!=null && members.length!=0) {
+            return;
+        }
+        f.delete(true, new NullProgressMonitor());
+        prune(folder.getParent());
     }
 
     private boolean verifyNodeTypeChange(NodeTypeRegistry ntManager,
