@@ -610,12 +610,12 @@ public class JcrNode implements IAdaptable {
 
 				@Override
 				public String getContributorId() {
-					return "org.apache.sling.ide.eclipse-ui.propertyContributor1";
+					return "org.eclipse.ui.navigator.ProjectExplorer";
 				}
 				
 			};
 		} else if (adapter==IPropertySource.class) {
-			return properties;
+			return null;//properties;
 		} else if (adapter == IFile.class) {
 			if (resource instanceof IFile) {
 				return (IFile)resource;
