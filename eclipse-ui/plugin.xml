@@ -309,45 +309,6 @@
       </factory>
    </extension>
    <extension
-         point="org.eclipse.ui.views.properties.tabbed.propertyContributor">
-      <propertyContributor
-            contributorId="org.apache.sling.ide.eclipse-ui.propertyContributor1"
-            labelProvider="org.apache.sling.ide.eclipse.ui.properties.TabbedPropertiesLabelProvider"
-            overridableTabListContentProvider="false"
-            sectionDescriptorProvider="org.apache.sling.ide.eclipse.ui.properties.TabbedPropertiesSectionDescriptor"
-            tabDescriptorProvider="org.apache.sling.ide.eclipse.ui.properties.TabbedPropertiesTabDescriptor">
-         <propertyCategory
-               category="mycategory">
-         </propertyCategory>
-      </propertyContributor>
-   </extension>
-   <extension
-         point="org.eclipse.ui.views.properties.tabbed.propertyTabs">
-      <propertyTabs
-            contributorId="org.apache.sling.ide.eclipse-ui.propertyContributor1">
-         <propertyTab
-               category="mycategory"
-               id="org.apache.sling.ide.eclipse-ui.propertyTab1"
-               label="these are jcr properties">
-         </propertyTab>
-      </propertyTabs>
-   </extension>
-   <extension
-         point="org.eclipse.ui.views.properties.tabbed.propertySections">
-      <propertySections
-            contributorId="org.apache.sling.ide.eclipse-ui.propertyContributor1">
-         <propertySection
-               class="abstractpropertysection.AbstractPropertySection1"
-               enablesFor="1"
-               id="org.apache.sling.ide.eclipse-ui.propertySection1"
-               tab="org.apache.sling.ide.eclipse-ui.propertyTab1">
-            <input
-                  type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
-            </input>
-         </propertySection>
-      </propertySections>
-   </extension>
-   <extension
          point="org.eclipse.ui.viewActions">
       <viewContribution
             id="org.apache.sling.ide.eclipse-ui.viewContribution1"
@@ -646,5 +607,40 @@
                 relative="org.eclipse.ui.views.ProblemView">
           </view>
        </perspectiveExtension>
+    </extension>
+     <extension
+          point="org.eclipse.ui.views.properties.tabbed.propertyContributor">
+       <propertyContributor
+             contributorId="org.eclipse.ui.navigator.ProjectExplorer">
+          <propertyCategory
+                category="tabGroup1"></propertyCategory>
+       </propertyContributor>
+    </extension>
+    <extension
+          point="org.eclipse.ui.views.properties.tabbed.propertyTabs">
+       <propertyTabs
+             contributorId="org.eclipse.ui.navigator.ProjectExplorer">
+          <propertyTab
+                afterTab="CommonNavigator.tab.Resource"
+                category="tabGroup1"
+                id="jcrProperties.tab1"
+                label="JCR Properties">
+          </propertyTab>
+       </propertyTabs>
+    </extension>
+    <extension
+          point="org.eclipse.ui.views.properties.tabbed.propertySections">
+       <propertySections
+             contributorId="org.eclipse.ui.navigator.ProjectExplorer">
+          <propertySection
+                class="org.apache.sling.ide.eclipse.ui.properties.JcrPropertiesSection"
+                enablesFor="1"
+                id="jcrProperties.section1"
+                tab="jcrProperties.tab1">
+             <input
+                   type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
+             </input>
+          </propertySection>
+       </propertySections>
     </extension>
 </plugin>    
