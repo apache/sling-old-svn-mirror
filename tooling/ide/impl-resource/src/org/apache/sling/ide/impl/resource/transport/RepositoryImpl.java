@@ -42,8 +42,8 @@ public class RepositoryImpl implements Repository {
     }
 
 	@Override
-	public Command<Void> newDeleteNodeCommand(final ResourceProxy resource) {
-        return wrap(new DeleteNodeCommand(resource, repositoryInfo, httpClient));
+    public Command<Void> newDeleteNodeCommand(final String path) {
+        return wrap(new DeleteNodeCommand(path, repositoryInfo, httpClient));
 	}
 	
 	@Override

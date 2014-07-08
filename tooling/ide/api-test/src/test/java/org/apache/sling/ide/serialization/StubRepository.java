@@ -20,10 +20,8 @@ import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.NodeTypeRegistry;
 import org.apache.sling.ide.transport.Repository;
-import org.apache.sling.ide.transport.RepositoryException;
 import org.apache.sling.ide.transport.RepositoryInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
-import org.apache.sling.ide.transport.Result;
 
 public class StubRepository implements Repository {
 
@@ -43,7 +41,7 @@ public class StubRepository implements Repository {
     }
 
     @Override
-    public Command<Void> newDeleteNodeCommand(ResourceProxy resource) {
+    public Command<Void> newDeleteNodeCommand(String path) {
         return null;
     }
 

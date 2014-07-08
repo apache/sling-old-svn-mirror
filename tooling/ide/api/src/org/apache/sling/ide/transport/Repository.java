@@ -79,7 +79,7 @@ public interface Repository {
 
     Command<Void> newAddOrUpdateNodeCommand(FileInfo fileInfo, ResourceProxy resourceProxy);
 	
-	Command<Void> newDeleteNodeCommand(ResourceProxy resourceProxy);
+    Command<Void> newDeleteNodeCommand(String path);
  
     /**
      * Retrieves information about the resource located at <tt>path</tt> and its direct descendants
