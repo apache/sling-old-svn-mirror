@@ -87,8 +87,8 @@ public class VltRepository implements Repository {
     }
 
     @Override
-    public Command<Void> newDeleteNodeCommand(ResourceProxy resource) {
-        return TracingCommand.wrap(new DeleteNodeCommand(jcrRepo, credentials, resource), eventAdmin);
+    public Command<Void> newDeleteNodeCommand(String path) {
+        return TracingCommand.wrap(new DeleteNodeCommand(jcrRepo, credentials, path), eventAdmin);
     }
 
     @Override

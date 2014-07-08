@@ -345,6 +345,6 @@ public class ResourceChangeCommandFactory {
 
         ResourceProxy resourceProxy = buildResourceProxyForPlainFileOrFolder(resource, syncDirectory);
         
-        return repository.newDeleteNodeCommand(resourceProxy);
+        return repository.newDeleteNodeCommand(resourceProxy.getPath());
     }
 }
