@@ -18,6 +18,8 @@
  */
 package org.apache.sling.settings.impl;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -291,27 +293,25 @@ public class SlingSettingsServiceImpl
      */
     String readSlingId(final File idFile, int maxLength) {
         if (idFile.exists() && idFile.length() >= maxLength) {
-            FileInputStream fin = null;
+            DataInputStream dis = null;
             try {
-                fin = new FileInputStream(idFile);
                 final byte[] rawBytes = new byte[maxLength];
-                int read = IoUtil.fill(fin, rawBytes);
-                if (read == maxLength) {
-                    final String rawString = new String(rawBytes, "ISO-8859-1");
+                dis = new DataInputStream(new FileInputStream(idFile));
+                dis.readFully(rawBytes);
+                final String rawString = new String(rawBytes, "ISO-8859-1");
 
-                    // roundtrip to ensure correct format of UUID value
-                    final String id = UUID.fromString(rawString).toString();
-                    logger.debug("Got Sling ID {} from file {}", id, idFile);
+                // roundtrip to ensure correct format of UUID value
+                final String id = UUID.fromString(rawString).toString();
+                logger.debug("Got Sling ID {} from file {}", id, idFile);
 
-                    return id;
-                }
+                return id;
             } catch (final Throwable t) {
                 logger.error("Failed reading UUID from id file " + idFile
                         + ", creating new id", t);
             } finally {
-                if (fin != null) {
+                if (dis != null) {
                     try {
-                        fin.close();
+                        dis.close();
                     } catch (IOException ignore){}
                 }
             }
@@ -325,19 +325,19 @@ public class SlingSettingsServiceImpl
     void writeSlingId(final File idFile, final String id) {
         idFile.delete();
         idFile.getParentFile().mkdirs();
-        FileOutputStream fout = null;
+        DataOutputStream dos = null;
         try {
-            fout = new FileOutputStream(idFile);
-            fout.write(id.getBytes("ISO-8859-1"));
-            fout.flush();
+            final byte[] rawBytes = id.getBytes("ISO-8859-1");
+            dos = new DataOutputStream(new FileOutputStream(idFile));
+            dos.write(rawBytes, 0, rawBytes.length);
+            dos.flush();
         } catch (final Throwable t) {
             logger.error("Failed writing UUID to id file " + idFile, t);
         } finally {
-            if (fout != null) {
+            if (dos != null) {
                 try {
-                    fout.close();
-                } catch (IOException ignore) {
-                }
+                    dos.close();
+                } catch (IOException ignore) {}
             }
         }
     }
