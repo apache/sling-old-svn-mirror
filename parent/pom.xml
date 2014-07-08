@@ -749,6 +749,8 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                                 <exclude>velocity.log</exclude>
                                 <!-- don't check anything in target -->
                                 <exclude>target/*</exclude>
+                                <!-- README files in markdown format -->
+                                <exclude>README.md</exclude>
                             </excludes>
                         </configuration>
                         <executions>
