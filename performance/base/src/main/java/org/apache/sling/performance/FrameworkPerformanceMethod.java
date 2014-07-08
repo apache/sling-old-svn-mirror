@@ -39,6 +39,7 @@ class FrameworkPerformanceMethod extends FrameworkMethod {
 	private PerformanceSuiteState performanceSuiteState;
 	private PerformanceRunner.ReportLevel reportLevel = PerformanceRunner.ReportLevel.ClassLevel;
     private String testCaseName = "";
+    private String className;
 
 	public FrameworkPerformanceMethod(Method method, Object target,
 			PerformanceSuiteState performanceSuiteState, PerformanceRunner.ReportLevel reportLevel) {
@@ -48,7 +49,16 @@ class FrameworkPerformanceMethod extends FrameworkMethod {
 		this.reportLevel = reportLevel;
         if (target instanceof IdentifiableTestCase) {
             this.testCaseName = ((IdentifiableTestCase) target).testCaseName();
-	}
+	    }
+
+        // Name of the test class, as the report logger needs it
+        // This can be overwritten by tests by implementing IdentifiableTestClass
+        String longClassName = this.target.getClass().getName();
+        className = longClassName.substring(longClassName.lastIndexOf(".") + 1);
+        if (target instanceof IdentifiableTestClass) {
+            this.className = ((IdentifiableTestClass) target).testClassName();
+        }
+
     }
 
 	@Override
@@ -76,11 +86,9 @@ class FrameworkPerformanceMethod extends FrameworkMethod {
 		// in case we don't have to deal with a PerformanceSuite just skip this
 		// as JUnit will run the methods itself
 		if ((performanceSuiteState != null)
-				&& !performanceSuiteState.testSuiteName
-						.equals(ParameterizedTestList.TEST_CASE_ONLY)) {
+				&& !performanceSuiteState.testSuiteName.equals(ParameterizedTestList.TEST_CASE_ONLY)) {
 
-			recursiveCallSpecificMethod(this.target.getClass(), this.target,
-					Before.class);
+			recursiveCallSpecificMethod(this.target.getClass(), this.target, Before.class);
 		}
 
 		// Need to count the number of tests run from the PerformanceSuite
@@ -104,16 +112,12 @@ class FrameworkPerformanceMethod extends FrameworkMethod {
 
 		DescriptiveStatistics statistics = new DescriptiveStatistics();
 
-		// System.out.println("Warmup started - test :" +
-		// testMethodToInvoke.getName());
-
 		if (warmupinvocations != 0) {
 			// Run the number of invocation specified in the annotation
 			// for warming up the system
 			for (int invocationIndex = 0; invocationIndex < warmupinvocations; invocationIndex++) {
 
-				recursiveCallSpecificMethod(this.target.getClass(),
-						this.target, BeforeMethodInvocation.class);
+				recursiveCallSpecificMethod(this.target.getClass(), this.target, BeforeMethodInvocation.class);
 
 				// TODO: implement the method to run a before a specific test
 				// method
@@ -177,8 +181,8 @@ class FrameworkPerformanceMethod extends FrameworkMethod {
 		}
 
 		if (statistics.getN() > 0) {
-		    ReportLogger.writeReport(this.performanceSuiteState.testSuiteName, testCaseName, ((String )this.target.getClass().getMethod("toString", null).invoke(this.target, null)),
-                    getMethod().getName(), statistics, ReportLogger.ReportType.TXT, reportLevel);
+		    ReportLogger.writeReport(this.performanceSuiteState.testSuiteName, testCaseName, className, getMethod().getName(),
+                    statistics, ReportLogger.ReportType.TXT, reportLevel);
 		}
 
 		// In case of a PerformanceSuite we need to run the methods annotated
@@ -187,11 +191,9 @@ class FrameworkPerformanceMethod extends FrameworkMethod {
 		// with a PerformanceSuite
 		// just skip this as JUnit will run the methods itself
 		if ((performanceSuiteState != null)
-				&& !performanceSuiteState.testSuiteName
-						.equals(ParameterizedTestList.TEST_CASE_ONLY)) {
+				&& !performanceSuiteState.testSuiteName.equals(ParameterizedTestList.TEST_CASE_ONLY)) {
 
-			recursiveCallSpecificMethod(this.target.getClass(), this.target,
-					After.class);
+			recursiveCallSpecificMethod(this.target.getClass(), this.target, After.class);
 		}
 
 		// Check if this is the last test running from a PerformanceSuite
@@ -199,13 +201,9 @@ class FrameworkPerformanceMethod extends FrameworkMethod {
 		if ((performanceSuiteState != null)
 				&& (performanceSuiteState.getAfterSuiteMethod() != null)
 				&& (performanceSuiteState.getTargetObjectSuite() != null)
-				&& (performanceSuiteState.getNumberOfExecutedMethods() == performanceSuiteState
-						.getNumberOfMethodsInSuite())
-				&& !performanceSuiteState.testSuiteName
-						.equals(ParameterizedTestList.TEST_CASE_ONLY)) {
-			performanceSuiteState.getAfterSuiteMethod().invoke(
-					performanceSuiteState.getTargetObjectSuite());
-
+				&& (performanceSuiteState.getNumberOfExecutedMethods() == performanceSuiteState.getNumberOfMethodsInSuite())
+				&& !performanceSuiteState.testSuiteName.equals(ParameterizedTestList.TEST_CASE_ONLY)) {
+			performanceSuiteState.getAfterSuiteMethod().invoke(performanceSuiteState.getTargetObjectSuite());
 		}
 
 		return response;
@@ -240,8 +238,7 @@ class FrameworkPerformanceMethod extends FrameworkMethod {
 		// System.out.println("Start test: " + testMethodToInvoke.getName());
 		long start = System.nanoTime();
 		response = super.invokeExplosively(this.target, params);
-		long timeMilliseconds = TimeUnit.MILLISECONDS.convert(System.nanoTime()
-				- start, TimeUnit.NANOSECONDS);
+		long timeMilliseconds = TimeUnit.MILLISECONDS.convert(System.nanoTime() - start, TimeUnit.NANOSECONDS);
 		statistics.addValue(timeMilliseconds);
 
 		// System.out.println("End test: " + testMethodToInvoke.getName());
@@ -252,8 +249,7 @@ class FrameworkPerformanceMethod extends FrameworkMethod {
 		// recursiveCallSpecificMethod(this.target.getClass(), this.target,
 		// AfterSpecificTest.class);
 
-		recursiveCallSpecificMethod(this.target.getClass(), this.target,
-				AfterMethodInvocation.class);
+		recursiveCallSpecificMethod(this.target.getClass(), this.target, AfterMethodInvocation.class);
 
 		return response;
 	}
@@ -309,14 +305,12 @@ class FrameworkPerformanceMethod extends FrameworkMethod {
 			throws InvalidAttributesException, IllegalAccessException,
 			InstantiationException {
 
-		Method[] methodsToReturn = getSpecificMethods(testClass,
-				methodAnnotation);
+		Method[] methodsToReturn = getSpecificMethods(testClass, methodAnnotation);
 		Method methodToReturn = null;
 		if (methodsToReturn.length == 1) {
 			methodToReturn = methodsToReturn[0];
 		} else if (methodsToReturn.length > 1) {
-			throw new InvalidAttributesException(
-					"Only 1 non parameterized before method accepted");
+			throw new InvalidAttributesException("Only 1 non parameterized before method accepted");
 		}
 
 		return methodToReturn;

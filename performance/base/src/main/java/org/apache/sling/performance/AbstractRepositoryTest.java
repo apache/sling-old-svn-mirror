@@ -26,7 +26,7 @@ import org.apache.sling.jcr.api.SlingRepository;
 
 
   
-public abstract class AbstractRepositoryTest {
+public abstract class AbstractRepositoryTest implements IdentifiableTestClass{
 
     protected String testInstanceName;
 
@@ -87,9 +87,8 @@ public abstract class AbstractRepositoryTest {
         }
         return testRoot;
     }
-    
-    public String toString(){
-    	return testInstanceName;
-    }
 
+    public String testClassName() {
+        return testInstanceName;
+    }
 }
