@@ -297,6 +297,68 @@ public class JcrPartialCoverageAggregatesDeploymentTest {
             }
         }, hasPrimaryType("nt:unstructured"));
     }
+    
+    @Test
+    public void deployNodeWithContentXmlInParentFolder_reverse() throws Exception {
+        
+        wstServer.waitForServerToStart();
+
+        // create faceted project
+        IProject contentProject = projectRule.getProject();
+
+        ProjectAdapter project = new ProjectAdapter(contentProject);
+        project.addNatures("org.eclipse.wst.common.project.facet.core.nature");
+
+        // install content facet
+        project.installFacet("sling.content", "1.0");
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
+
+        // the expected repository structure is
+        // mapping [sling:Mapping]
+        // \- jcr:content [nt:unstructured]
+        //  \- par [nt:unstructured]
+        //   \- folder [sling:Folder] 
+        
+        // first create the local structure where the content is completely serialized inside the .content.xml file
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/mapping/.content.xml"),
+                getClass().getResourceAsStream("sling-mapping-with-folder-child.xml"));
+        // now create the folder and its associated .content.xml file ; this will cause
+        // intermediate folders to be created whose serialization data is present in the
+        // parent's .content.xml file
+        project.createOrUpdateFile(
+                Path.fromPortableString("jcr_root/content/test-root/mapping/_jcr_content/par/folder/.content.xml"),
+                getClass().getResourceAsStream("sling-folder-nodetype.xml"));        
+
+        final RepositoryAccessor repo = new RepositoryAccessor(config);
+        Poller poller = new Poller();
+
+        // wait until the structure is published
+        poller.pollUntil(new Callable<Node>() {
+            @Override
+            public Node call() throws RepositoryException {
+                return repo.getNode("/content/test-root/mapping/jcr:content/par/folder");
+
+            }
+        }, hasPrimaryType("sling:Folder"));
+
+        // change the folder's node type to nt:unstructured and make sure it's covered by the parent
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/mapping/.content.xml"),
+                getClass().getResourceAsStream("sling-mapping-with-unstructured-child.xml"));
+        // delete the sling folder node type since the serialization is now completely covered by
+        // the parent node
+        project.deleteMember(Path.fromPortableString("jcr_root/content/test-root/mapping/_jcr_content"));
+
+        // first wait until the sling:Folder child node is created, to ensure that all changes are processed
+        poller.pollUntil(new Callable<Node>() {
+            @Override
+            public Node call() throws RepositoryException {
+                return repo.getNode("/content/test-root/mapping/jcr:content/par/folder");
+
+            }
+        }, hasPrimaryType("nt:unstructured"));
+    }    
 
     @Before
     public void ensureCleanState() throws Exception {

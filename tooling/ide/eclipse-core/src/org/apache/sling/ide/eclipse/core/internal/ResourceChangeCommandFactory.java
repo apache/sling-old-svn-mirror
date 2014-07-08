@@ -219,71 +219,95 @@ public class ResourceChangeCommandFactory {
         String resourceLocation = '/' + changedResource.getFullPath().makeRelativeTo(syncDirectory.getFullPath())
                 .toPortableString();
         IPath serializationFilePath = Path.fromPortableString(serializationManager.getSerializationFilePath(
-                resourceLocation,
-                serializationKind));
+                resourceLocation, serializationKind));
         IResource serializationResource = syncDirectory.findMember(serializationFilePath);
 
-        // if the serialization resource is null, it's valid to look for a serialization resource
-        // higher in the filesystem, given that the found serialization resource covers this resource
-        // TODO - this too should be abstracted in the service layer, rather than in the Eclipse-specific code
         if (serializationResource == null && changedResource.getType() == IResource.FOLDER) {
-            PluginLogger logger = Activator.getDefault().getPluginLogger();
-            logger.trace("Found plain nt:folder candidate at {0}, trying to find a covering resource for it",
-                    changedResource.getProjectRelativePath());
-            while (!serializationFilePath.isRoot()) {
-                serializationFilePath = serializationFilePath.removeLastSegments(1);
-                IFolder folderWithPossibleSerializationFile = (IFolder) syncDirectory.findMember(serializationFilePath);
-                if (folderWithPossibleSerializationFile == null) {
-                    logger.trace("No folder found at {0}, moving up to the next level", serializationFilePath);
-                    continue;
-                }
+            ResourceProxy dataFromCoveringParent = findSerializationDataFromCoveringParent(changedResource,
+                    syncDirectory, resourceLocation, serializationFilePath);
 
-                // it's safe to use a specific SerializationKind since this scenario is only valid for METADATA_PARTIAL
-                // coverage
-                String possibleSerializationFilePath = serializationManager.getSerializationFilePath(
-                        ((IFolder) folderWithPossibleSerializationFile).getLocation().toOSString(),
-                        SerializationKind.METADATA_PARTIAL);
-
-                logger.trace("Looking for serialization data in {0}", possibleSerializationFilePath);
-
-                if (serializationManager.isSerializationFile(possibleSerializationFilePath)) {
-
-                    IPath parentSerializationFilePath = Path.fromOSString(possibleSerializationFilePath).makeRelativeTo(
-                            syncDirectory.getLocation());
-                    IFile possibleSerializationFile = syncDirectory.getFile(parentSerializationFilePath);
-                    if (!possibleSerializationFile.exists()) {
-                        logger.trace(
-                                "Potential serialization data file {0} does not exist, moving up to the next level",
-                                possibleSerializationFile.getFullPath());
-                        continue;
-                    }
-
-                    InputStream contents = possibleSerializationFile.getContents();
-                    ResourceProxy serializationData;
-                    try {
-                        serializationData = serializationManager.readSerializationData(
-                                parentSerializationFilePath.toPortableString(), contents);
-                    } finally {
-                        IOUtils.closeQuietly(contents);
-                    }
-
-                    String repositoryPath = serializationManager.getRepositoryPath(resourceLocation);
-                    String potentialPath = serializationData.getPath();
-                    boolean covered = serializationData
-                            .covers(repositoryPath);
-
-                    logger.trace(
-                            "Found possible serialization data at {0}. Resource :{1} ; our resource: {2}. Covered: {3}",
-                            parentSerializationFilePath, potentialPath, repositoryPath, covered);
-                    if (covered) {
-                        return serializationData.getChild(repositoryPath);
-                    }
-
-                    break;
-                }
+            if (dataFromCoveringParent != null) {
+                return dataFromCoveringParent;
             }
         }
         return buildResourceProxy(resourceLocation, serializationResource, syncDirectory, fallbackNodeType);
+    }
+
+    /**
+     * Tries to find serialization data from a resource in a covering parent
+     * 
+     * <p>
+     * If the serialization resource is null, it's valid to look for a serialization resource higher in the filesystem,
+     * given that the found serialization resource covers this resource
+     * 
+     * @param changedResource the resource which has changed
+     * @param syncDirectory the content sync directory for the resource's project
+     * @param resourceLocation the resource location relative to the sync directory
+     * @param serializationFilePath the location
+     * @return a <tt>ResourceProxy</tt> if there is a covering parent, or null is there is not
+     * @throws CoreException
+     * @throws IOException
+     */
+    private ResourceProxy findSerializationDataFromCoveringParent(IResource changedResource, IFolder syncDirectory,
+            String resourceLocation, IPath serializationFilePath) throws CoreException, IOException {
+
+        // TODO - this too should be abstracted in the service layer, rather than in the Eclipse-specific code
+
+        PluginLogger logger = Activator.getDefault().getPluginLogger();
+        logger.trace("Found plain nt:folder candidate at {0}, trying to find a covering resource for it",
+                changedResource.getProjectRelativePath());
+        while (!serializationFilePath.isRoot()) {
+            serializationFilePath = serializationFilePath.removeLastSegments(1);
+            IFolder folderWithPossibleSerializationFile = (IFolder) syncDirectory.findMember(serializationFilePath);
+            if (folderWithPossibleSerializationFile == null) {
+                logger.trace("No folder found at {0}, moving up to the next level", serializationFilePath);
+                continue;
+            }
+
+            // it's safe to use a specific SerializationKind since this scenario is only valid for METADATA_PARTIAL
+            // coverage
+            String possibleSerializationFilePath = serializationManager.getSerializationFilePath(
+                    ((IFolder) folderWithPossibleSerializationFile).getLocation().toOSString(),
+                    SerializationKind.METADATA_PARTIAL);
+
+            logger.trace("Looking for serialization data in {0}", possibleSerializationFilePath);
+
+            if (serializationManager.isSerializationFile(possibleSerializationFilePath)) {
+
+                IPath parentSerializationFilePath = Path.fromOSString(possibleSerializationFilePath).makeRelativeTo(
+                        syncDirectory.getLocation());
+                IFile possibleSerializationFile = syncDirectory.getFile(parentSerializationFilePath);
+                if (!possibleSerializationFile.exists()) {
+                    logger.trace("Potential serialization data file {0} does not exist, moving up to the next level",
+                            possibleSerializationFile.getFullPath());
+                    continue;
+                }
+
+                InputStream contents = possibleSerializationFile.getContents();
+                ResourceProxy serializationData;
+                try {
+                    serializationData = serializationManager.readSerializationData(
+                            parentSerializationFilePath.toPortableString(), contents);
+                } finally {
+                    IOUtils.closeQuietly(contents);
+                }
+
+                String repositoryPath = serializationManager.getRepositoryPath(resourceLocation);
+                String potentialPath = serializationData.getPath();
+                boolean covered = serializationData.covers(repositoryPath);
+
+                logger.trace(
+                        "Found possible serialization data at {0}. Resource :{1} ; our resource: {2}. Covered: {3}",
+                        parentSerializationFilePath, potentialPath, repositoryPath, covered);
+                if (covered) {
+                    return serializationData.getChild(repositoryPath);
+                }
+
+                break;
+            }
+        }
+
+        return null;
     }
 
     private ResourceProxy buildResourceProxy(String resourceLocation, IResource serializationResource,
@@ -342,9 +366,29 @@ public class ResourceChangeCommandFactory {
                 return null;
             }
         }
-
-        ResourceProxy resourceProxy = buildResourceProxyForPlainFileOrFolder(resource, syncDirectory);
         
-        return repository.newDeleteNodeCommand(resourceProxy.getPath());
+        String resourceLocation = '/' + resource.getFullPath().makeRelativeTo(syncDirectory.getFullPath())
+                .toPortableString();
+        
+        // make sure that a 'plain' folder being deleted does not signal that the content structure
+        // was rearranged under a covering parent aggregate
+        if (resource.getType() == IResource.FOLDER) {
+            IPath serializationFilePath = Path.fromPortableString(serializationManager.getSerializationFilePath(
+                    resourceLocation, SerializationKind.FOLDER));
+
+            ResourceProxy coveringParentData = findSerializationDataFromCoveringParent(resource, syncDirectory,
+                    resourceLocation, serializationFilePath);
+            if (coveringParentData != null) {
+                Activator
+                        .getDefault()
+                        .getPluginLogger()
+                        .trace("Found covering resource data for resource at {0},  skipping deletion and performing an update instead",
+                                resource.getFullPath());
+                FileInfo info = createFileInfo(resource, repository);
+                return repository.newAddOrUpdateNodeCommand(info, coveringParentData);
+            }
+        }
+        
+        return repository.newDeleteNodeCommand(serializationManager.getRepositoryPath(resourceLocation));
     }
 }
