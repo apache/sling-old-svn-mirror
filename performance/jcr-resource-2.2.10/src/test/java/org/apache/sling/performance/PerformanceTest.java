@@ -40,6 +40,7 @@ import org.apache.sling.performance.annotation.PerformanceTestSuite;
 import org.apache.sling.performance.tests.ResolveNonExistingWithManyAliasTest;
 import org.apache.sling.performance.tests.ResolveNonExistingWithManyVanityPathTest;
 import org.apache.sling.performance.tests.StartupWithManyAliasTest;
+import org.apache.sling.performance.tests.StartupWithManyVanityTest;
 import org.apache.sling.resourceresolver.impl.CommonResourceResolverFactoryImpl;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryActivator;
@@ -135,7 +136,12 @@ public class PerformanceTest {
         testCenter.addTestObject(new ResolveNonExistingWithManyAliasTest("ResolveNonExistingWith10000AliasTest",helper, 10000));
         
         testCenter.addTestObject(new StartupWithManyAliasTest("StartupWithManyAliasTest",helper, 10000));
-      
+        testCenter.addTestObject(new StartupWithManyVanityTest("StartupWith10VanityTest",helper, 1, 10));
+        testCenter.addTestObject(new StartupWithManyVanityTest("StartupWith100ManyVanityTest",helper, 10, 10));
+        testCenter.addTestObject(new StartupWithManyVanityTest("StartupWith1000ManyVanityTest",helper, 10, 100));
+        testCenter.addTestObject(new StartupWithManyVanityTest("StartupWith10000ManyVanityTest",helper, 100, 100));
+        
+        
         return testCenter;
     }
 }
