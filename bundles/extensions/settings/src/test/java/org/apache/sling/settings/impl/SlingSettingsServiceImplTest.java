@@ -25,8 +25,11 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.RandomStringUtils;
+import org.junit.After;
 import org.junit.Assert;
 import org.apache.sling.launchpad.api.StartupHandler;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.osgi.framework.BundleContext;
@@ -39,38 +42,87 @@ public class SlingSettingsServiceImplTest {
 
     private static final String SLING_ID = "097bae9b-bf60-45a2-ad8c-ccdd374dd9b0";
 
-    @Test
-    public void testGetSlingId() throws Exception {
-        Assert.assertEquals(36, SLING_ID.length());
-        setGetSlignId(SLING_ID);
+    private File slingIdFile = null;
+
+    private File optionsFile = null;
+
+    @Before
+    public void before() throws IOException {
+        slingIdFile = File.createTempFile(
+                SLING_ID_FILE_NAME, "");
+        optionsFile = File.createTempFile(
+                OPTIONS_FILE_NAME, "");
     }
 
-    private void setGetSlignId(String id)
-            throws IOException {
-        File slingIdFile = null, optionsFile = null;
-        try {
-            slingIdFile = File.createTempFile(SLING_ID_FILE_NAME, "");
-            optionsFile = File.createTempFile(OPTIONS_FILE_NAME, "");
-            SlingSettingsServiceImpl settings = getSlingSettings(slingIdFile, optionsFile);
-            settings.writeSlingId(slingIdFile, id);
-            String slingId = settings.readSlingId(slingIdFile);
-            Assert.assertNotNull(slingId);
-            Assert.assertEquals(SLING_ID, slingId);
-        } finally {
-            if (slingIdFile != null ) {
-                slingIdFile.delete();
-            }
-            if (optionsFile != null) {
-                optionsFile.delete();
-            }
+    @After
+    public void after() throws IOException {
+        if (slingIdFile != null ) {
+            slingIdFile.delete();
+            slingIdFile = null;
+        }
+        if (optionsFile != null) {
+            optionsFile.delete();
+            optionsFile = null;
         }
     }
 
-    private SlingSettingsServiceImpl getSlingSettings(File slingIdFile, File optionsFile) throws IOException {
+    @Test
+    public void testGenerateSlingId()
+            throws IOException {
+        String slingId =  readSlingId(slingIdFile, optionsFile, SLING_ID.length());
+        Assert.assertNotNull(slingId);
+    }
+
+    @Test
+    public void testGetSlingId()
+            throws IOException {
+        writeSlingId(slingIdFile, optionsFile, SLING_ID);
+        String generated =  readSlingId(slingIdFile, optionsFile, SLING_ID.length());
+        Assert.assertNotNull(generated);
+        Assert.assertEquals(SLING_ID, generated);
+        String slingId = readSlingId(slingIdFile, optionsFile, SLING_ID.length());
+        Assert.assertNotNull(slingId);
+        Assert.assertEquals(generated, slingId);
+    }
+
+    @Test
+    public void testGetLongSlingIdFromTooLargeData()
+            throws IOException {
+        String data = SLING_ID + RandomStringUtils.randomAscii(1024 * 1024); // 1MB long random String
+        writeSlingId(slingIdFile, optionsFile, data);
+        String slingId =  readSlingId(slingIdFile, optionsFile, SLING_ID.length());
+        Assert.assertNotNull(slingId);
+        Assert.assertEquals(SLING_ID, slingId);
+    }
+
+    @Test
+    public void testGetSlingIdFromTooShortData()
+            throws IOException {
+        String data = RandomStringUtils.randomAscii(8); // 8 byte long string
+        writeSlingId(slingIdFile, optionsFile, data);
+        String slingId =  readSlingId(slingIdFile, optionsFile, SLING_ID.length());
+        Assert.assertNotNull(slingId);
+        Assert.assertNotEquals(SLING_ID, slingId);
+    }
+
+    private String readSlingId(File slingIdFile, File optionsFile, int maxLength)
+            throws IOException {
+        SlingSettingsServiceImpl settings = getSlingSettings(slingIdFile, optionsFile);
+        return settings.readSlingId(slingIdFile, maxLength);
+    }
+
+    private void writeSlingId(File slingIdFile, File optionsFile, String slingId)
+            throws IOException {
+        SlingSettingsServiceImpl settings = getSlingSettings(slingIdFile, optionsFile);
+        settings.writeSlingId(slingIdFile, slingId);
+    }
+
+    private SlingSettingsServiceImpl getSlingSettings(File slingIdFile, File optionsFile)
+            throws IOException {
         BundleContext context = Mockito.mock(BundleContext.class);
-        Mockito.when(context.getDataFile("sling.id.file"))
+        Mockito.when(context.getDataFile(SLING_ID_FILE_NAME))
                 .thenReturn(slingIdFile);
-        Mockito.when(context.getDataFile("sling.options.file"))
+        Mockito.when(context.getDataFile(OPTIONS_FILE_NAME))
                 .thenReturn(optionsFile);
         StartupHandler handler = Mockito.mock(StartupHandler.class);
         // write options

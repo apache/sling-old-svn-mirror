@@ -37,7 +37,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.sling.launchpad.api.StartupHandler;
 import org.apache.sling.launchpad.api.StartupMode;
 import org.apache.sling.settings.SlingSettingsService;
@@ -77,6 +76,9 @@ public class SlingSettingsServiceImpl
 
     /** The name of the data file holding install run mode options */
     private static final String OPTIONS_FILE = "sling.options.file";
+
+    /** The length in bytes of a sling identifier */
+    private static final int SLING_ID_LENGTH = 36;
 
     /** The properties for name, description. */
     private final Map<String, String> slingProps = new HashMap<String, String>();
@@ -125,7 +127,7 @@ public class SlingSettingsServiceImpl
             // the osgi framework does not support storing something in the file system
             throw new RuntimeException("Unable to read from bundle data file.");
         }
-        this.slingId = this.readSlingId(idFile);
+        this.slingId = this.readSlingId(idFile, SLING_ID_LENGTH);
 
         // no sling id yet or failure to read file: create an id and store
         if (slingId == null) {
@@ -148,7 +150,7 @@ public class SlingSettingsServiceImpl
         }
     }
 
-    protected static final class Options implements Serializable {
+    static final class Options implements Serializable {
         private static final long serialVersionUID = 1L;
         String[] modes;
         String   selected;
@@ -264,7 +266,7 @@ public class SlingSettingsServiceImpl
         return optionsList;
     }
 
-    protected void writeOptions(final BundleContext context, final List<Options> optionsList) {
+    void writeOptions(final BundleContext context, final List<Options> optionsList) {
         final File file = context.getDataFile(OPTIONS_FILE);
         FileOutputStream fos = null;
         ObjectOutputStream oos = null;
@@ -287,11 +289,14 @@ public class SlingSettingsServiceImpl
     /**
      * Read the id from a file.
      */
-    protected String readSlingId(final File idFile) {
-        if (idFile.exists() && idFile.length() >= 36) {
+    String readSlingId(final File idFile, int maxLength) {
+        if (idFile.exists() && idFile.length() >= maxLength) {
+            FileInputStream fin = null;
             try {
-                final byte[] rawBytes = FileUtils.readFileToByteArray(idFile);
-                if (rawBytes.length == 36) {
+                fin = new FileInputStream(idFile);
+                final byte[] rawBytes = new byte[maxLength];
+                int read = IoUtil.fill(fin, rawBytes);
+                if (read == maxLength) {
                     final String rawString = new String(rawBytes, "ISO-8859-1");
 
                     // roundtrip to ensure correct format of UUID value
@@ -303,6 +308,12 @@ public class SlingSettingsServiceImpl
             } catch (final Throwable t) {
                 logger.error("Failed reading UUID from id file " + idFile
                         + ", creating new id", t);
+            } finally {
+                if (fin != null) {
+                    try {
+                        fin.close();
+                    } catch (IOException ignore){}
+                }
             }
         }
         return null;
@@ -311,7 +322,7 @@ public class SlingSettingsServiceImpl
     /**
      * Write the sling id file.
      */
-    protected void writeSlingId(final File idFile, final String id) {
+    void writeSlingId(final File idFile, final String id) {
         idFile.delete();
         idFile.getParentFile().mkdirs();
         FileOutputStream fout = null;
