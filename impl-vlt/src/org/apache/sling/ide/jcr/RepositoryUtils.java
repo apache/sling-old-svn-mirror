@@ -68,7 +68,15 @@ public abstract class RepositoryUtils {
                                     + ", since the scheme is unsupported. Only schemes '" + supportedSchemes
                                     + "' are supported");
                         }
-                        repository = FACTORY.createRepository(address);
+
+                        // SLING-3739: ensure that a well-known ClassLoader is used
+                        ClassLoader old = Thread.currentThread().getContextClassLoader();
+                        Thread.currentThread().setContextClassLoader(Repository.class.getClassLoader());
+                        try {
+                            repository = FACTORY.createRepository(address);
+                        } finally {
+                            Thread.currentThread().setContextClassLoader(old);
+                        }
                         REGISTERED_REPOSITORIES.put(address, repository);
                     }
                 }
