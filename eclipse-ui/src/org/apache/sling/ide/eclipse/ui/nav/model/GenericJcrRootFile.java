@@ -58,17 +58,8 @@ public class GenericJcrRootFile extends JcrNode {
 		this.parent = parent;
 		this.domElement = null;
 		
-		XMLParser parser = new XMLParser () {
-			@Override
-			protected XMLTokenizer createTokenizer(XMLSource source) {
-				XMLTokenizer tolerantTokenizerIgnoringEntities = new TolerantXMLTokenizer(source, file);
-				tolerantTokenizerIgnoringEntities.setTreatEntitiesAsText (this.isTreatEntitiesAsText());
-		        return tolerantTokenizerIgnoringEntities;
-			}
-		};
-		InputStream in = file.getContents();
-		String xml = IOUtils.toString(in);
-		this.document = parser.parse (new XMLStringSource (xml));	
+        InputStream in = file.getContents();
+        this.document = TolerantXMLParser.parse(in, file.getFullPath().toOSString());
 		handleJcrRoot(this.document.getRootElement());
 	}
 	
