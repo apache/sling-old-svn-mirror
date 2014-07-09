@@ -23,9 +23,14 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
 
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+
 import org.apache.sling.installer.api.OsgiInstaller;
 import org.apache.sling.installer.api.ResourceChangeListener;
+import org.apache.sling.installer.api.event.InstallationListener;
 import org.apache.sling.installer.api.info.InfoProvider;
+import org.apache.sling.installer.api.jmx.InstallerMBean;
 import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.ResourceTransformer;
 import org.apache.sling.installer.api.tasks.RetryHandler;
@@ -73,6 +78,8 @@ public class Activator implements BundleActivator {
                 RetryHandler.class.getName()
         };
         osgiControllerServiceReg = context.registerService(serviceInterfaces, osgiControllerService, props);
+
+        registerJmxBean(context);
     }
 
     /**
@@ -98,6 +105,20 @@ public class Activator implements BundleActivator {
             service.deactivate();
         }
         this.services.clear();
+    }
+
+    private void registerJmxBean(BundleContext context) throws MalformedObjectNameException {
+        Hashtable<String, String> jmxProps = new Hashtable<String, String>();
+        jmxProps.put("type", "Installer");
+        jmxProps.put("name", "Sling OSGi Installer");
+
+        final Hashtable<String, Object> mbeanProps = new Hashtable<String, Object>();
+        mbeanProps.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Installer Controller Service");
+        mbeanProps.put(Constants.SERVICE_VENDOR, VENDOR);
+        mbeanProps.put("jmx.objectname", new ObjectName("org.apache.sling.installer", jmxProps));
+        ServiceRegistration mbeanReg = context.registerService(new String[] {InstallerMBean.class.getName(),
+                InstallationListener.class.getName()}, new InstallerMBeanImpl(osgiControllerService), mbeanProps);
+        registrations.add(mbeanReg);
     }
 
     /**

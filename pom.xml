@@ -61,7 +61,8 @@
                             org.apache.sling.installer.api;version=3.1.0,
                             org.apache.sling.installer.api.info;version=1.0.0,
                             org.apache.sling.installer.api.event;version=1.0.0,
-                            org.apache.sling.installer.api.tasks;version=1.3.0
+                            org.apache.sling.installer.api.tasks;version=1.3.0,
+                            org.apache.sling.installer.api.jmx;version=1.0.0
                         </Export-Package>
 				     <!-- 
 				        As we make use of optional features from 4.3 if they
