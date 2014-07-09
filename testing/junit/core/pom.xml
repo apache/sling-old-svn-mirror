@@ -35,7 +35,8 @@
     <description>Runs JUnit tests in an OSGi framework and provides the JUnit libraries</description>
     
     <properties>
-        <junit.version>4.8.2</junit.version>
+        <junit.version>4.11</junit.version>
+        <hamcrest.version>1.3</hamcrest.version>
         <jacoco.version>0.6.2.201302030002</jacoco.version>
     </properties>
 
@@ -60,6 +61,7 @@
                         <Bundle-Activator>org.apache.sling.junit.Activator</Bundle-Activator>
                         <Export-Package>
                             org.apache.sling.junit;version=1.2.0,
+                            org.apache.sling.junit.rules;version=1.0.10,
                             org.apache.sling.junit.annotations;version=1.0.8,
                         </Export-Package>
                         <_exportcontents>
@@ -68,10 +70,16 @@
                             org.junit.matchers.*;version=${junit.version},
                             org.junit.rules.*;version=${junit.version},
                             org.junit.runner.*;version=${junit.version},
-                            org.junit.runners.*;version=${junit.version}
+                            org.junit.runners.*;version=${junit.version},
+                            org.hamcrest.*;version=${hamcrest.version},
+                            org.hamcrest.core.*;version=${hamcrest.version}
                         </_exportcontents>
                         <Private-Package>org.apache.sling.junit.impl.*</Private-Package>
-                        <Embed-Dependency>org.jacoco.agent;classifier=runtime;inline=org/jacoco/agent/rt/IAgent.class,*;artifactId=junit</Embed-Dependency>
+                        <Embed-Dependency>
+                            org.jacoco.agent;classifier=runtime;inline=org/jacoco/agent/rt/IAgent.class,
+                            *;artifactId=junit,
+                            *;artifactId=hamcrest-core
+                        </Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
@@ -152,6 +160,11 @@
             <version>${jacoco.version}</version>
             <scope>provided</scope>
         </dependency>
-
+ 		<dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-core</artifactId>
+            <version>${hamcrest.version}</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>
