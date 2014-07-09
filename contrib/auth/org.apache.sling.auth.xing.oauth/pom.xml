@@ -93,7 +93,7 @@
     <dependency>
       <groupId>org.apache.sling</groupId>
       <artifactId>org.apache.sling.auth.xing.api</artifactId>
-      <version>0.0.2</version>
+      <version>0.0.3-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
