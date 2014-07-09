@@ -190,7 +190,9 @@ public class JcrNode implements IAdaptable {
 				if (domElement==null) {
 					return toString().hashCode();
 				} else {
-					return domElement.toString().hashCode() + parent.hashCode();
+				    Element domElementCopy = domElement.copy();
+				    domElementCopy.clearChildren();
+					return domElementCopy.toString().hashCode() + parent.hashCode();
 				}
 			} else {
 				return resource.getFullPath().hashCode();
@@ -199,7 +201,9 @@ public class JcrNode implements IAdaptable {
 			if (domElement==null) {
 				return underlying.hashCode();
 			}
-			return underlying.hashCode() + domElement.toString().hashCode();
+            Element domElementCopy = domElement.copy();
+            domElementCopy.clearChildren();
+			return underlying.hashCode() + domElementCopy.toString().hashCode();
 		}
 	}
 	
@@ -235,7 +239,11 @@ public class JcrNode implements IAdaptable {
 			if (!parent.equals(other.parent)) {
 				return false;
 			}
-			return domElement.toString().equals(other.domElement.toString());
+			Element domElementCopy = domElement.copy();
+			domElementCopy.clearChildren();
+			Element otherDomElementCopy = other.domElement.copy();
+			otherDomElementCopy.clearChildren();
+			return domElementCopy.toString().equals(otherDomElementCopy.toString());
 		}
 		return toString().equals(obj.toString());
 	}
