@@ -65,7 +65,7 @@ public class PythonScriptEngine extends AbstractSlingScriptEngine {
 		}
 
 		// ensure GET request
-		if (!"GET".equals(helper.getRequest().getMethod())) {
+		if (helper.getRequest() != null && !"GET".equals(helper.getRequest().getMethod())) {
 			throw new ScriptException(
 					"Python scripting only supports GET requests");
 		}
