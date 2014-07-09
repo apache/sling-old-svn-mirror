@@ -135,7 +135,7 @@ public class SlingMainServlet extends GenericServlet {
     /**
      * The product information part of the {@link #serverInfo} returns from the
      * <code>ServletContext.getServerInfo()</code> method. This field defaults
-     * to {@link #PRODUCT_NAME} and is ammended with the major and minor version
+     * to {@link #PRODUCT_NAME} and is amended with the major and minor version
      * of the Sling Engine bundle while this component is being
      * {@link #activate(BundleContext, Map)} activated}.
      */
