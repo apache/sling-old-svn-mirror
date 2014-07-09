@@ -292,6 +292,11 @@
            </or>
         </parentExpression>
      </commonSorter>
+     <dropAssistant
+           class="org.apache.sling.ide.eclipse.ui.dnd.assistant.JcrDropAdapterAssistant"
+           id="org.apache.sling.ide.eclipse.ui.dnd.assistant">
+        <possibleDropTargets></possibleDropTargets>
+     </dropAssistant>
         
       </navigatorContent>
    </extension>
@@ -395,19 +400,34 @@
          </action>
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameAction"
-               icon="icons/obj16/sling_misc.gif"
                id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameAction"
                definitionId="org.eclipse.ui.edit.rename"
                label="&amp;Rename..."
-               menubarPath="jcr">
+               menubarPath="group.edit">
          </action>
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteAction"
-               icon="icons/obj16/sling_misc.gif"
-               id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteAction"
                definitionId="org.eclipse.ui.edit.delete"
+               icon="icons/ovr16/delete_obj.gif"
+               id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteAction"
                label="&amp;Delete..."
-               menubarPath="jcr">
+               menubarPath="group.edit">
+         </action>
+         <action
+               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodePasteAction"
+               definitionId="org.eclipse.ui.edit.paste"
+               icon="icons/ovr16/paste_edit.gif"
+               id="org.apache.sling.ide.eclipse.ui.actions.JcrNodePasteAction"
+               label="&amp;Paste..."
+               menubarPath="group.edit">
+         </action>
+         <action
+               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeCopyAction"
+               icon="icons/ovr16/copy.gif"
+               id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeCopyAction"
+               definitionId="org.eclipse.ui.edit.copy"
+               label="&amp;Copy..."
+               menubarPath="group.edit">
          </action>
          <visibility>
                <objectState
@@ -470,18 +490,37 @@
          </action>
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameAction"
-               icon="icons/obj16/sling_misc.gif"
+               definitionId="org.eclipse.ui.edit.rename"
                id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameAction"
                label="&amp;Rename..."
-               definitionId="org.eclipse.ui.edit.rename"
+               menubarPath="group.edit"
                toolbarPath="common.new.menu/jcr">
          </action>
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteAction"
-               icon="icons/obj16/sling_misc.gif"
+               definitionId="org.eclipse.ui.edit.delete"
+               icon="icons/ovr16/delete_obj.gif"
                id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteAction"
                label="&amp;Delete..."
-               definitionId="org.eclipse.ui.edit.delete"
+               menubarPath="group.edit"
+               toolbarPath="common.new.menu/jcr">
+         </action>
+         <action
+               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodePasteAction"
+               definitionId="org.eclipse.ui.edit.paste"
+               icon="icons/ovr16/paste_edit.gif"
+               id="org.apache.sling.ide.eclipse.ui.actions.JcrNodePasteAction"
+               label="&amp;Paste..."
+               menubarPath="group.edit"
+               toolbarPath="common.new.menu/jcr">
+         </action>
+         <action
+               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeCopyAction"
+               definitionId="org.eclipse.ui.edit.copy"
+               icon="icons/ovr16/copy.gif"
+               id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeCopyAction"
+               label="&amp;Copy..."
+               menubarPath="group.edit"
                toolbarPath="common.new.menu/jcr">
          </action>
          <action

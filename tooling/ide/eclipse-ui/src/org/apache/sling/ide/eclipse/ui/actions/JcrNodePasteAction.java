@@ -21,23 +21,36 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
-/** Testing action which renames a jcr node **/
-public class JcrNodeDeleteAction implements IObjectActionDelegate {
+/** 'Paste JCR node' action **/
+public class JcrNodePasteAction implements IObjectActionDelegate {
 
 	private ISelection selection;
 	private JcrNode node;
 	private Shell shell;
+    private Clipboard clipboard;
 
 	/**
 	 * The constructor.
 	 */
-	public JcrNodeDeleteAction() {
+	public JcrNodePasteAction() {
+        clipboard = new Clipboard(Display.getDefault());
 	}
+
+    @Override
+    protected void finalize() throws Throwable {
+        if (clipboard!=null) {
+            clipboard.dispose();
+            clipboard = null;
+        }
+        super.finalize();
+    }
 
 	/**
 	 * The action has been activated. The argument of the
@@ -49,10 +62,8 @@ public class JcrNodeDeleteAction implements IObjectActionDelegate {
 		if (this.node==null) {
 			return;
 		}
-        if (!MessageDialog.openConfirm(shell, "Delete Node", "Do you really want to delete '" + node.getLabel() + "'?")) {
-			return;
-		}
-		node.delete();
+		
+		node.pasteFromClipboard(clipboard);
 	}
 
 	/**
@@ -69,7 +80,7 @@ public class JcrNodeDeleteAction implements IObjectActionDelegate {
     			Object element = iss.getFirstElement();
     			if (element instanceof JcrNode) {
     				final JcrNode n = (JcrNode)element;
-    				if (n.canBeDeleted()) {
+    				if (n.canBePastedTo(clipboard)) {
     					action.setEnabled(true);
     					this.node = n;
     					return;

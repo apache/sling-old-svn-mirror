@@ -78,15 +78,17 @@ public class JcrNodeRenameAction implements IObjectActionDelegate {
 	public void selectionChanged(IAction action, ISelection selection) {
 		if (selection instanceof IStructuredSelection) {
 			IStructuredSelection iss = (IStructuredSelection) selection;
-			Object element = iss.getFirstElement();
-			if (element instanceof JcrNode) {
-				final JcrNode n = (JcrNode)element;
-				if (n.canBeRenamed()) {
-					action.setEnabled(true);
-					this.node = n;
-					return;
-				}
-			}
+            if (iss.size()==1) {
+    			Object element = iss.getFirstElement();
+    			if (element instanceof JcrNode) {
+    				final JcrNode n = (JcrNode)element;
+    				if (n.canBeRenamed()) {
+    					action.setEnabled(true);
+    					this.node = n;
+    					return;
+    				}
+    			}
+            }
 		}
 		action.setEnabled(false);
 		this.node = null;

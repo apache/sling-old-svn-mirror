@@ -72,12 +72,21 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.DND;
+import org.eclipse.swt.dnd.FileTransfer;
+import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IActionFilter;
 import org.eclipse.ui.IContributorResourceAdapter;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.actions.CopyFilesAndFoldersOperation;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
+import org.eclipse.ui.part.ResourceTransfer;
 import org.eclipse.ui.views.properties.IPropertySource;
 import org.eclipse.ui.views.properties.tabbed.ITabbedPropertySheetPageContributor;
 import org.eclipse.wst.server.core.IServer;
@@ -92,10 +101,6 @@ import de.pdark.decentxml.Element;
 import de.pdark.decentxml.Namespace;
 import de.pdark.decentxml.Node;
 import de.pdark.decentxml.Text;
-import de.pdark.decentxml.XMLParser;
-import de.pdark.decentxml.XMLSource;
-import de.pdark.decentxml.XMLStringSource;
-import de.pdark.decentxml.XMLTokenizer;
 import de.pdark.decentxml.XMLTokenizer.Type;
 
 /** WIP: model object for a jcr node shown in the content package view in project explorer **/
@@ -945,15 +950,7 @@ public class JcrNode implements IAdaptable {
         final IFile file = parent.getFile(filename);
         try {
             if (content!=null) {
-                XMLParser parser = new XMLParser () {
-                    @Override
-                    protected XMLTokenizer createTokenizer(XMLSource source) {
-                        XMLTokenizer tolerantTokenizerIgnoringEntities = new TolerantXMLTokenizer(source, file);
-                        tolerantTokenizerIgnoringEntities.setTreatEntitiesAsText (this.isTreatEntitiesAsText());
-                        return tolerantTokenizerIgnoringEntities;
-                    }
-                };
-                Document document = parser.parse (new XMLStringSource (xml));
+                Document document = TolerantXMLParser.parse(xml, file.getFullPath().toOSString());
                 // add the attributes of content
                 List<Attribute> attributes = content.getAttributes();
                 for (Iterator it = attributes.iterator(); it.hasNext();) {
@@ -1591,6 +1588,252 @@ public class JcrNode implements IAdaptable {
         }
         
         return folder;
+    }
+
+    public IStatus validateDrop(int operation, TransferData transferType) {
+        Repository repository = ServerUtil.getDefaultRepository(getProject());
+        NodeTypeRegistry ntManager = (repository==null) ? null : repository.getNodeTypeRegistry();
+        if (ntManager == null) {
+            return new Status(IStatus.CANCEL, Activator.PLUGIN_ID, 1, "Cannot drop element here because corresponding server is not started! (Needed to determine node types)", null);
+        }
+        // let's support plain files first
+        try {
+            if (getPrimaryType().equals("nt:file")) {
+                // hard-code the most prominent case: cannot drop onto a file
+                return new Status(IStatus.CANCEL, Activator.PLUGIN_ID, 1, "Cannot drop element onto nt:file", null);
+            }
+            if (ntManager.isAllowedPrimaryChildNodeType(getPrimaryType(), "nt:file")) {
+                return Status.OK_STATUS;
+            } else {
+                return Status.CANCEL_STATUS;
+            }
+        } catch (RepositoryException e) {
+            Activator.getDefault().getPluginLogger().error("validateDrop: Got Exception while "
+                    + "verifying nodeType: "+e, e);
+            return Status.CANCEL_STATUS;
+        }
+    }
+
+    public IStatus handleDrop(Object data, int detail) throws CoreException {
+        IFolder folder = (IFolder)this.resource;
+        if (data instanceof IStructuredSelection) {
+            IStructuredSelection sel = (IStructuredSelection)data;
+            Object firstElem = sel.getFirstElement();
+            if (firstElem instanceof IResource) {
+                IResource resource = (IResource)firstElem;
+                return handleDropResource(folder, resource, detail);
+            } else if (firstElem instanceof JcrNode) {
+                JcrNode node = (JcrNode)firstElem;
+                return handleDropNode(folder, node, detail);
+            } else {
+                return new Status(IStatus.CANCEL, Activator.PLUGIN_ID, 1, "Cannot drop on this type of element (yet) [1]", null);
+            }
+        } else {
+            return new Status(IStatus.CANCEL, Activator.PLUGIN_ID, 1, "Cannot drop this type of selection", null);            
+        }
+    }
+
+    private IStatus handleDropNode(IFolder targetFolder, JcrNode droppedNode, int dropDetail) throws CoreException {
+        if (domElement!=null && droppedNode.domElement!=null && droppedNode.resource==null) {
+            // then this is the case of moving/copying a dom tree
+            domElement.addNodes(droppedNode.domElement.copy());
+            underlying.save();
+            if (dropDetail==DND.DROP_MOVE) {
+                // then delete the original
+                droppedNode.delete();
+            }
+            return Status.OK_STATUS;
+        }
+        
+        if (droppedNode.resource!=null && droppedNode.domElement==null) {
+            // this is a pure file/folder based d'n'd
+            IStatus status = handleDropResource(targetFolder, droppedNode.resource, dropDetail);
+            if (!status.isOK()) {
+                return status;
+            }
+            if (droppedNode.dirSibling!=null) {
+                return handleDropResource(targetFolder, droppedNode.dirSibling.getResource(), dropDetail);
+            }
+            return Status.OK_STATUS;
+        }
+        //TODO mixed cases are more advanced and not yet supported
+        return new Status(IStatus.CANCEL, Activator.PLUGIN_ID, 1, "Cannot drop on this (mixed) type of element (yet) [2]", null);
+    }
+
+    private IStatus handleDropResource(IFolder targetFolder,
+            IResource droppedResourceRoot, int detail) throws CoreException {
+        if (targetFolder==null) {
+            return new Status(IStatus.CANCEL, Activator.PLUGIN_ID, 1, "Cannot drop on this type of element (yet)", null);
+        }
+        if (droppedResourceRoot==null) {
+            throw new IllegalArgumentException("droppedResourceRoot must not be null");
+        }
+        IFile copyToFile = targetFolder.getFile(droppedResourceRoot.getName());
+        IPath copyToPath = copyToFile.getFullPath();
+        switch (detail) {
+        case DND.DROP_COPY: {
+            droppedResourceRoot.copy(copyToPath, true,
+                    new NullProgressMonitor());
+            break;
+        }
+        case DND.DROP_MOVE: {
+            droppedResourceRoot.move(copyToPath, true,
+                    new NullProgressMonitor());
+            break;
+        }
+        default: {
+            throw new IllegalStateException("Unknown drop action (detail: "
+                    + detail + ")");
+        }
+        }
+        return Status.OK_STATUS;
+    }
+
+    public IContainer getDropContainer() {
+        if (resource instanceof IContainer) {
+            return (IContainer) resource;
+        } else {
+            return null;
+        }
+    }
+
+    public boolean canBeCopiedToClipboard() {
+        if (getPrimaryType().equals("nt:file")) {
+            return true;
+        } else if (domElement!=null && resource==null) {
+            // plain dom node/sub-tree - which we support via XML
+            return true;
+        } else {
+            // everything else: not yet supported
+            return false;
+        }
+    }
+    
+    public void copyToClipboard(Clipboard clipboard) {
+        if (!canBeCopiedToClipboard()) {
+            MessageDialog.openWarning(null, "Cannot copy", "Cannot copy this type of node (yet)");
+            return;
+        }
+        if (getPrimaryType().equals("nt:file")) {
+            copyFileToClipboard(clipboard);
+        } else if (domElement!=null && resource==null) {
+            copyDomToClipboard(clipboard);
+        }
+    }
+
+    private void copyDomToClipboard(Clipboard clipboard) {
+        String text = domElement.toXML();
+        clipboard.setContents(new Object[] {text}, new Transfer[] {TextTransfer.getInstance()});
+    }
+
+    private void copyFileToClipboard(Clipboard clipboard) {
+        final IResource[] resources;
+        final String[] fileNames;
+        if (dirSibling==null) {
+            resources = new IResource[] {resource};
+            final IPath location = resource.getLocation();
+            fileNames = (location==null) ? null : new String[] {location.toOSString()};
+        } else {
+            resources = new IResource[] {resource, dirSibling.getResource()};
+            final IPath resLocation = resource.getLocation();
+            final IPath siblLocation = dirSibling.getResource().getLocation();
+            fileNames = (resLocation==null || siblLocation==null) ? null : new String[] {resLocation.toOSString(), siblLocation.toOSString()};
+        }
+        if (fileNames!=null) {
+            clipboard.setContents(new Object[] { resources, fileNames },
+                    new Transfer[] { ResourceTransfer.getInstance(),
+                            FileTransfer.getInstance()});
+        } else {
+            clipboard.setContents(new Object[] { resources }, 
+                    new Transfer[] { ResourceTransfer.getInstance() });
+        }
+    }
+
+    public boolean canBePastedTo(Clipboard clipboard) {
+        Repository repository = ServerUtil.getDefaultRepository(getProject());
+        NodeTypeRegistry ntManager = (repository==null) ? null : repository.getNodeTypeRegistry();
+        
+        IResource[] resourceData = (IResource[]) clipboard
+                .getContents(ResourceTransfer.getInstance());
+        if (resourceData!=null) {
+            IContainer container = getDropContainer();
+            return container!=null;
+        }
+        
+        String[] fileData = (String[]) clipboard.getContents(FileTransfer.getInstance());
+        if (fileData!=null) {
+            IContainer container = getDropContainer();
+            return container!=null;
+        }
+        
+        String text = (String) clipboard.getContents(TextTransfer.getInstance());
+        if (text!=null) {
+            return (domElement!=null);
+        }
+        
+        return false;
+    }
+
+    /**
+     * Paste from the clipboard to this (container) node.
+     * <p>
+     * Copyright Note: The code of this method was ported from eclipse'
+     * PasteAction, which due to visibility restrictions was not reusable.
+     * <p>
+     * @param clipboard
+     */
+    public void pasteFromClipboard(Clipboard clipboard) {
+        if (!canBePastedTo(clipboard)) {
+            // should not occur due to 'canBePastedTo' check done by 
+            // corresponding action - checking here nevertheless
+            MessageDialog.openInformation(null, "Cannot paste",
+                    "No applicable node (type) for pasting found.");
+            return;
+        }
+        Repository repository = ServerUtil.getDefaultRepository(getProject());
+        NodeTypeRegistry ntManager = (repository==null) ? null : repository.getNodeTypeRegistry();
+        if (ntManager == null) {
+            MessageDialog.openWarning(null, "Cannot paste", "Cannot paste if corresponding server is not started");
+            return;
+        }
+        
+        // try the resource transfer
+        IResource[] resourceData = (IResource[]) clipboard.getContents(ResourceTransfer.getInstance());
+
+        if (resourceData != null && resourceData.length > 0) {
+            if (resourceData[0].getType() == IResource.PROJECT) {
+                // do not support project pasting onto a jcr node
+                MessageDialog.openInformation(null, "Cannot paste project(s)",
+                        "Pasting of a project onto a (JCR) node is not possible");
+                return;
+            } else {
+                CopyFilesAndFoldersOperation operation = new CopyFilesAndFoldersOperation(null);
+                operation.copyResources(resourceData, getDropContainer());
+            }
+            return;
+        }
+
+        // try the file transfer
+        String[] fileData = (String[]) clipboard.getContents(FileTransfer.getInstance());
+        if (fileData != null) {
+            CopyFilesAndFoldersOperation operation = new CopyFilesAndFoldersOperation(null);
+            operation.copyFiles(fileData, getDropContainer());
+            return;
+        }
+        
+        // then try the text transfer
+        String text = (String) clipboard.getContents(TextTransfer.getInstance());
+        if ((text!=null) && (this.domElement!=null)) {
+            try {
+                Document document = TolerantXMLParser.parse(text, "pasted from clipboard");
+                this.domElement.addNode(document.getRootElement());
+                this.underlying.save();
+            } catch (IOException e) {
+                MessageDialog.openError(null, "Could not paste from clipboard",
+                        "Exception encountered while pasting from clipboard: "+e);
+                Activator.getDefault().getPluginLogger().error("Error pasting from clipboard: "+e, e);
+            }
+        }
     }
 
 }

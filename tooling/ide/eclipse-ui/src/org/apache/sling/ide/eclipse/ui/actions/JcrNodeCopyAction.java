@@ -21,22 +21,36 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
-/** Testing action which renames a jcr node **/
-public class JcrNodeDeleteAction implements IObjectActionDelegate {
+/** 'Copy JCR node' action **/
+public class JcrNodeCopyAction implements IObjectActionDelegate {
 
 	private ISelection selection;
 	private JcrNode node;
 	private Shell shell;
+    private Clipboard clipboard;
 
 	/**
 	 * The constructor.
 	 */
-	public JcrNodeDeleteAction() {
+	public JcrNodeCopyAction() {
+	    clipboard = new Clipboard(Display.getDefault());
+	}
+	
+	@Override
+	protected void finalize() throws Throwable {
+	    if (clipboard!=null) {
+	        clipboard.dispose();
+	        clipboard = null;
+	    }
+	    super.finalize();
 	}
 
 	/**
@@ -49,10 +63,8 @@ public class JcrNodeDeleteAction implements IObjectActionDelegate {
 		if (this.node==null) {
 			return;
 		}
-        if (!MessageDialog.openConfirm(shell, "Delete Node", "Do you really want to delete '" + node.getLabel() + "'?")) {
-			return;
-		}
-		node.delete();
+		
+		node.copyToClipboard(clipboard);
 	}
 
 	/**
@@ -65,17 +77,17 @@ public class JcrNodeDeleteAction implements IObjectActionDelegate {
 	public void selectionChanged(IAction action, ISelection selection) {
 		if (selection instanceof IStructuredSelection) {
 			IStructuredSelection iss = (IStructuredSelection) selection;
-            if (iss.size()==1) {
+			if (iss.size()==1) {
     			Object element = iss.getFirstElement();
     			if (element instanceof JcrNode) {
     				final JcrNode n = (JcrNode)element;
-    				if (n.canBeDeleted()) {
+    				if (n.canBeCopiedToClipboard()) {
     					action.setEnabled(true);
     					this.node = n;
     					return;
     				}
     			}
-            }
+			}
 		}
 		action.setEnabled(false);
 		this.node = null;
