@@ -164,7 +164,6 @@ public class ServiceUserMapperImplTest {
         final Map<String, Object> mca1Config = new HashMap<String, Object>() {
             {
                 put("user.mapping", new String [] {BUNDLE_SYMBOLIC2 + "=" + ANOTHER});
-                put(Constants.SERVICE_ID, 1L);
                 put(Constants.SERVICE_RANKING, 100);
             }
         };
@@ -174,7 +173,6 @@ public class ServiceUserMapperImplTest {
         final Map<String, Object> mca2Config = new HashMap<String, Object>() {
             {
                 put("user.mapping", new String [] {BUNDLE_SYMBOLIC2 + "=" + ANOTHER_SUB});
-                put(Constants.SERVICE_ID, 2L);
                 put(Constants.SERVICE_RANKING, 200);
             }
         };
