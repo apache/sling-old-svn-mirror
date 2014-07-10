@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.sling.serviceusermapper</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.4</version>
+    <version>1.0.5-SNAPSHOT</version>
 
     <name>Apache Sling Service User Mapper</name>
     <description>
@@ -39,9 +39,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.serviceusermapper-1.0.4</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.serviceusermapper-1.0.4</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.serviceusermapper-1.0.4</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/serviceusermapper</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/serviceusermapper</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/serviceusermapper</url>
     </scm>
 
     <build>
