@@ -29,7 +29,6 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.commons.osgi.ServiceUtil;
 import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +62,7 @@ public class MappingConfigAmendment implements Comparable<MappingConfigAmendment
 
     private Mapping[] serviceUserMappings;
 
-    private Comparable<Object> comparable;
+    private int serviceRanking;
 
     @Activate
     @Modified
@@ -71,7 +70,7 @@ public class MappingConfigAmendment implements Comparable<MappingConfigAmendment
         final String[] props = PropertiesUtil.toStringArray(config.get(PROP_SERVICE2USER_MAPPING),
             PROP_SERVICE2USER_MAPPING_DEFAULT);
 
-        ArrayList<Mapping> mappings = new ArrayList<Mapping>(props.length);
+        final ArrayList<Mapping> mappings = new ArrayList<Mapping>(props.length);
         for (final String prop : props) {
             if (prop != null && prop.trim().length() > 0 ) {
                 try {
@@ -84,7 +83,7 @@ public class MappingConfigAmendment implements Comparable<MappingConfigAmendment
         }
 
         this.serviceUserMappings = mappings.toArray(new Mapping[mappings.size()]);
-        this.comparable = ServiceUtil.getComparableForServiceRanking(config);
+        this.serviceRanking = PropertiesUtil.toInteger(config.get(Constants.SERVICE_RANKING), 0);
     }
 
     public Mapping[] getServiceUserMappings() {
@@ -92,6 +91,14 @@ public class MappingConfigAmendment implements Comparable<MappingConfigAmendment
     }
 
     public int compareTo(final MappingConfigAmendment o) {
-        return -this.comparable.compareTo(o.comparable);
+        // Sort by rank in descending order.
+        if ( this.serviceRanking > o.serviceRanking ) {
+            return -1; // lower rank
+        } else if (this.serviceRanking < o.serviceRanking) {
+            return 1; // higher rank
+        }
+
+        // If ranks are equal, then sort by hash code
+        return this.hashCode() < o.hashCode() ? -1 : 1;
     }
 }

@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
            referenceInterface=MappingConfigAmendment.class,
            cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
            policy=ReferencePolicy.DYNAMIC,
-           updated="update")
+           updated="updateAmendment")
 public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     @Property(
