@@ -579,14 +579,16 @@ public class MapEntries implements EventHandler {
             final String actualContentPath = getActualContentPath(path);
             for (final String target : this.vanityTargets.keySet()) {
                 if (target.startsWith(actualContentPath)) {
-                    wasResolverRefreshed = doRemoveAttributes(actualContentPath, new String [] {"sling:vanityPath"}, true, wasResolverRefreshed);
+                    wasResolverRefreshed = doRemoveAttributes(path, new String [] {"sling:vanityPath"}, true, wasResolverRefreshed);
                 }
             }
             for (final String target : this.aliasMap.keySet()) {
                 if (actualContentPath.startsWith(target)) {
-                    wasResolverRefreshed = doRemoveAttributes(actualContentPath, new String [] {"sling:alias"}, true, wasResolverRefreshed);
+                    wasResolverRefreshed = doRemoveAttributes(path, new String [] {"sling:alias"}, true, wasResolverRefreshed);
                 }
             }
+            //need to update the configuration
+            doUpdateConfiguration();
         } else {
             String [] addedAttributes = (String []) event.getProperty(SlingConstants.PROPERTY_ADDED_ATTRIBUTES);
             if (addedAttributes != null) {
