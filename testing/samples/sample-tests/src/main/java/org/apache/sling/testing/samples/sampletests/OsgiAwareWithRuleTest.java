@@ -22,8 +22,6 @@ import org.apache.sling.junit.annotations.SlingAnnotationsTestRunner;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.apache.sling.junit.rules.Service;
 
