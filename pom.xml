@@ -227,7 +227,7 @@
                                 </webResource>
                                 <!-- ensure the Felix HttpService bundle is in the war -->
                                 <webResource>
-                                    <targetPath>/WEB-INF/resources/bundles/0</targetPath>
+                                    <targetPath>/WEB-INF/resources/bundles/1</targetPath>
                                     <filtering>false</filtering>
                                     <directory>${project.build.directory}/felix-bridge</directory>
                                 </webResource>
