@@ -298,6 +298,22 @@ public class MapEntries implements EventHandler {
         }
         return newRefreshed;
     }
+    
+    private boolean doUpdateConfiguration(boolean refreshed){
+        this.initializing.lock();
+        boolean newRefreshed = refreshed;
+        if (!newRefreshed) {
+            resolver.refresh();
+            newRefreshed = true;
+        }
+        try {
+            doUpdateConfiguration();
+            sendChangeEvent();
+        } finally {
+            this.initializing.unlock();
+        }
+        return newRefreshed;
+    }
 
     private void doUpdateConfiguration(){
         final List<MapEntry> globalResolveMap = new ArrayList<MapEntry>();
@@ -588,7 +604,7 @@ public class MapEntries implements EventHandler {
                 }
             }
             //need to update the configuration
-            doUpdateConfiguration();
+            doUpdateConfiguration(wasResolverRefreshed);
         } else {
             String [] addedAttributes = (String []) event.getProperty(SlingConstants.PROPERTY_ADDED_ATTRIBUTES);
             if (addedAttributes != null) {
