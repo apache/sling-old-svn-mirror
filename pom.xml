@@ -193,6 +193,7 @@
         <module>testing/junit/scriptable</module>
         <module>testing/junit/healthcheck</module>
         <module>testing/junit/remote</module>
+        <module>testing/junit/performance</module>
         <module>testing/resourceresolver-mock</module>
         <module>testing/sling-pax-util</module>
         
