@@ -603,8 +603,10 @@ public class MapEntries implements EventHandler {
                     wasResolverRefreshed = doRemoveAttributes(path, new String [] {"sling:alias"}, true, wasResolverRefreshed);
                 }
             }
-            //need to update the configuration
-            wasResolverRefreshed = doUpdateConfiguration(wasResolverRefreshed);
+            if (path.startsWith(this.mapRoot)) {
+                //need to update the configuration
+                wasResolverRefreshed = doUpdateConfiguration(wasResolverRefreshed);
+            }
         } else {
             String [] addedAttributes = (String []) event.getProperty(SlingConstants.PROPERTY_ADDED_ATTRIBUTES);
             if (addedAttributes != null) {
