@@ -57,6 +57,7 @@ class ParserException extends RuntimeException {
 
 class CmdIterator implements Iterator<CrankstartCommandLine> {
 
+    private static final char ESCAPE = '$';
     private String line;
     private final BufferedReader input;
     private final CrankstartParserImpl parser;
@@ -84,7 +85,11 @@ class CmdIterator implements Iterator<CrankstartCommandLine> {
         final StringBuffer b = new StringBuffer();
         final Matcher m = varPattern.matcher(line);
         while(m.find()) {
-            m.appendReplacement(b, getValue(m.group(1)));
+            if (m.start() > 0 && line.charAt(m.start() - 1) != ESCAPE) {
+                m.appendReplacement(b, Matcher.quoteReplacement(getValue(m.group(1))));
+            } else {
+                m.appendReplacement(b, m.group().substring(1));
+            }
         }
         m.appendTail(b);
         return b.toString();
