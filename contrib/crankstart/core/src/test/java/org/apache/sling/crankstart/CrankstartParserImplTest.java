@@ -100,6 +100,10 @@ public class CrankstartParserImplTest {
         assertCommand("var2", "and now OK.VAR2_7 here", it.next());
         assertCommand("var3", "using underscores in OK.UNDER_SCORE_14 variable", it.next());
         
+        assertCommand("esc1", "this ${ok.esc} is escaped", it.next());
+        assertCommand("esc2", "this OK.ESC_6 is not escaped", it.next());
+        assertCommand("esc3", "this $${ok.esc} is triple-escaped", it.next());
+        
         assertFalse("Expecting no more commands", it.hasNext());
     }
 }
