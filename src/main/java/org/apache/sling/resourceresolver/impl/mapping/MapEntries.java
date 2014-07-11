@@ -604,7 +604,7 @@ public class MapEntries implements EventHandler {
                 }
             }
             //need to update the configuration
-            doUpdateConfiguration(wasResolverRefreshed);
+            wasResolverRefreshed = doUpdateConfiguration(wasResolverRefreshed);
         } else {
             String [] addedAttributes = (String []) event.getProperty(SlingConstants.PROPERTY_ADDED_ATTRIBUTES);
             if (addedAttributes != null) {
