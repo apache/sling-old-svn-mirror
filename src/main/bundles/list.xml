@@ -30,8 +30,8 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.settings</artifactId>
-            <version>1.3.2/version>
-        </bundle>
+            <version>1.3.2</version>
+            </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.fragment.xml</artifactId>
