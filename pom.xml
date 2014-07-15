@@ -311,7 +311,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad.base</artifactId>
-            <version>4.4.0-2.5.1-SNAPSHOT</version>
+            <version>4.4.1-2.5.1-SNAPSHOT</version>
             <classifier>webapp</classifier>
             <type>war</type>
             <scope>runtime</scope>
@@ -319,7 +319,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad.base</artifactId>
-            <version>4.4.0-2.5.1-SNAPSHOT</version>
+            <version>4.4.1-2.5.1-SNAPSHOT</version>
             <classifier>app</classifier>
             <scope>provided</scope>
         </dependency>
