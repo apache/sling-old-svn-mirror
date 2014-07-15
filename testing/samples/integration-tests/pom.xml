@@ -239,6 +239,7 @@
                         <sling.additional.bundle.6>org.apache.sling.testing.tools</sling.additional.bundle.6>
                         <sling.additional.bundle.7>httpclient-osgi</sling.additional.bundle.7>
                         <sling.additional.bundle.8>httpcore-osgi</sling.additional.bundle.8>
+                        <sling.additional.bundle.9>org.apache.sling.junit.performance</sling.additional.bundle.9>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
@@ -257,6 +258,12 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.junit.scriptable</artifactId>
             <version>1.0.8</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.junit.performance</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
