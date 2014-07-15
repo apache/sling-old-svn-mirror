@@ -23,16 +23,20 @@ import java.util.List;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.junit.TestsProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Bridge Health Checks into the Sling JUnit server-side test
  *  framework, based on their tags.
  */
-@Component
+@Component(metatype=true)
 @Service
 public class HealthCheckTestsProvider implements TestsProvider {
 
@@ -40,20 +44,26 @@ public class HealthCheckTestsProvider implements TestsProvider {
     private long lastModified;
     private BundleContext bundleContext;
     
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     public static final String TEST_NAME_PREFIX = "HealthChecks(";
     public static final String TEST_NAME_SUFFIX = ")";
 
-    // TODO configurable
-    private String [] tags = { 
-        "script",
-        "sling",
-        "bundles,script",
-        "bundles,-script"
-    };
+    @Property(cardinality=2147483647, 
+            label="Health Check Tags",
+            description="Groups of health check tags to execute as JUnit tests. Use the standard Health Checks 'includeThis,-omitThat' syntax")
+    public static final String PROP_TAG_GROUPS = "health.check.tag.groups";
+    
+    private String [] tagGroups;
     
     @Activate
     protected void activate(ComponentContext ctx) {
         bundleContext = ctx.getBundleContext();
+        tagGroups = PropertiesUtil.toStringArray(ctx.getProperties().get(PROP_TAG_GROUPS));
+        if(tagGroups == null) {
+            tagGroups = new String[]{};
+            log.warn("No tag groups configured via {}, Health Checks won't be available as JUnit tests", PROP_TAG_GROUPS);
+        }
         servicePid = (String)ctx.getProperties().get(Constants.SERVICE_PID);
         lastModified = System.currentTimeMillis();
     }
@@ -89,7 +99,7 @@ public class HealthCheckTestsProvider implements TestsProvider {
     @Override
     public List<String> getTestNames() {
         final List<String> result = new ArrayList<String>();
-        for(String t : tags) {
+        for(String t : tagGroups) {
             result.add(TEST_NAME_PREFIX + t + TEST_NAME_SUFFIX);
         }
         return result;
