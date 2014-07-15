@@ -69,7 +69,7 @@ public class HealthCheckTestsProvider implements TestsProvider {
     public Class<?> createTestClass(String testName) throws ClassNotFoundException {
         // The test name is like "Health Checks(foo,bar)" and we need just 'foo,bar'
         final String tagString = testName.substring(0, testName.length() - TEST_NAME_SUFFIX.length()).substring(TEST_NAME_PREFIX.length()); 
-        JUnitTestBridge.setContext(new TestBridgeContext(bundleContext, splitTags(tagString)));
+        JUnitTestBridge.setThreadContext(new TestBridgeContext(bundleContext, splitTags(tagString)));
         return JUnitTestBridge.class;
     }
     

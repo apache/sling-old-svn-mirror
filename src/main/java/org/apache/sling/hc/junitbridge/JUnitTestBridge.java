@@ -28,7 +28,7 @@ import org.osgi.framework.ServiceReference;
 public class JUnitTestBridge {
     private static ThreadLocal<TestBridgeContext> testContext = new ThreadLocal<TestBridgeContext>();
     
-    static void setContext(TestBridgeContext c) {
+    static void setThreadContext(TestBridgeContext c) {
         testContext.set(c);
     }
     
