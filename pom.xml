@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.sling.testing.tools</artifactId>
-    <version>1.0.7-SNAPSHOT</version>
+    <version>1.0.8</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Test Tools</name>
@@ -37,9 +37,9 @@
     </description>
     
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/tools</connection>
-        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/tools</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/testing/tools</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.testing.tools-1.0.8</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.testing.tools-1.0.8</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.testing.tools-1.0.8</url>
     </scm>
     
     <build>
