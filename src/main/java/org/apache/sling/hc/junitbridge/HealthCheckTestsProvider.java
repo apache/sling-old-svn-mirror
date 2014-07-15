@@ -22,9 +22,10 @@ import java.util.List;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.hc.util.HealthCheckFilter;
 import org.apache.sling.junit.TestsProvider;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 
@@ -36,21 +37,48 @@ import org.osgi.service.component.ComponentContext;
 public class HealthCheckTestsProvider implements TestsProvider {
 
     private String servicePid;
+    private long lastModified;
+    private BundleContext bundleContext;
+    
+    public static final String TEST_NAME_PREFIX = "HealthChecks(";
+    public static final String TEST_NAME_SUFFIX = ")";
 
     // TODO configurable
-    private String [] tags = { "script" };
-    private HealthCheckFilter filter;
+    private String [] tags = { 
+        "script",
+        "sling",
+        "bundles,script",
+        "bundles,-script"
+    };
     
     @Activate
     protected void activate(ComponentContext ctx) {
+        bundleContext = ctx.getBundleContext();
         servicePid = (String)ctx.getProperties().get(Constants.SERVICE_PID);
-        filter = new HealthCheckFilter(ctx.getBundleContext());
+        lastModified = System.currentTimeMillis();
+    }
+    
+    @Deactivate
+    protected void deactivate() {
+        bundleContext = null;
+        servicePid = null;
+        lastModified = -1;
     }
     
     @Override
     public Class<?> createTestClass(String testName) throws ClassNotFoundException {
-        JUnitTestBridge.setContext(new TestBridgeContext(filter, tags));
+        // The test name is like "Health Checks(foo,bar)" and we need just 'foo,bar'
+        final String tagString = testName.substring(0, testName.length() - TEST_NAME_SUFFIX.length()).substring(TEST_NAME_PREFIX.length()); 
+        JUnitTestBridge.setContext(new TestBridgeContext(bundleContext, splitTags(tagString)));
         return JUnitTestBridge.class;
+    }
+    
+    private String [] splitTags(String tags) {
+        final List<String> result = new ArrayList<String>();
+        for(String tag: tags.split(",")) {
+            result.add(tag.trim());
+        }
+        return result.toArray(new String[]{});
     }
 
     @Override
@@ -61,13 +89,14 @@ public class HealthCheckTestsProvider implements TestsProvider {
     @Override
     public List<String> getTestNames() {
         final List<String> result = new ArrayList<String>();
-        // TODO use a configurable name?
-        result.add("HealthChecks(sling,slow)");
+        for(String t : tags) {
+            result.add(TEST_NAME_PREFIX + t + TEST_NAME_SUFFIX);
+        }
         return result;
     }
 
     @Override
     public long lastModified() {
-        return 0;
+        return lastModified;
     }
 }

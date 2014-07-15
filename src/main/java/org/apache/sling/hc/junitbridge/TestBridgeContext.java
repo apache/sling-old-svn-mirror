@@ -18,14 +18,17 @@
 package org.apache.sling.hc.junitbridge;
 
 import org.apache.sling.hc.util.HealthCheckFilter;
+import org.osgi.framework.BundleContext;
 
 class TestBridgeContext {
     private final String [] tags;
     private final HealthCheckFilter filter;
+    private final BundleContext bundleContext;
         
-    TestBridgeContext(HealthCheckFilter filter, String [] tags) {
+    TestBridgeContext(BundleContext bundleContext, String [] tags) {
+        this.bundleContext = bundleContext;
         this.tags = tags;
-        this.filter = filter;
+        this.filter = new HealthCheckFilter(bundleContext);
     }
     
     String [] getTags() {
@@ -34,5 +37,9 @@ class TestBridgeContext {
     
     HealthCheckFilter getFilter() {
         return filter;
+    }
+    
+    BundleContext getBundleContext() {
+        return bundleContext;
     }
 }

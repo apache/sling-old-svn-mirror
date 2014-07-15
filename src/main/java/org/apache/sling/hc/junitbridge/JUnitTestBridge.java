@@ -20,9 +20,9 @@ package org.apache.sling.hc.junitbridge;
 import static org.junit.Assert.assertNotNull;
 import junit.framework.TestSuite;
 
-import org.apache.sling.hc.api.HealthCheck;
 import org.junit.runner.RunWith;
 import org.junit.runners.AllTests;
+import org.osgi.framework.ServiceReference;
 
 @RunWith(AllTests.class)
 public class JUnitTestBridge {
@@ -36,8 +36,8 @@ public class JUnitTestBridge {
         final TestBridgeContext context = testContext.get();
         assertNotNull("Expecting non-null TestBridgeContext, via ThreadLocal", context);
         TestSuite suite = new TestSuite();
-        for(HealthCheck hc : context.getFilter().getTaggedHealthChecks(context.getTags())) {
-            suite.addTest(new HealthCheckTest(hc));
+        for(ServiceReference ref : context.getFilter().getTaggedHealthCheckServiceReferences(context.getTags())) {
+            suite.addTest(new HealthCheckTest(context, ref));
         }
         return suite;
     }

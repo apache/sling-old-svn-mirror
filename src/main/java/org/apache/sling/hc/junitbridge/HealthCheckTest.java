@@ -22,45 +22,55 @@ import junit.framework.TestCase;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
+import org.apache.sling.hc.util.HealthCheckMetadata;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
 public class HealthCheckTest extends TestCase {
     private final HealthCheck hc;
-    private final String name;
+    private final HealthCheckMetadata metadata;
+    private final BundleContext bundleContext;
+    private final ServiceReference serviceRef;
         
-    HealthCheckTest(HealthCheck hc) {
+    HealthCheckTest(TestBridgeContext context, ServiceReference ref) {
         super("testHealthCheck");
-        this.hc = hc;
-        
-        // TODO HC name? see webconsole
-        name = hc.getClass().getName();
+        bundleContext = context.getBundleContext();
+        serviceRef = ref;
+        this.hc = (HealthCheck)bundleContext.getService(ref);
+        this.metadata = new HealthCheckMetadata(ref);
     }
     
     @Override
     public String getName() {
-        return name;
+        return metadata.getName();
     }
 
     /** Execute our health check and dump its log
      *  messages > INFO if it fails */
     public void testHealthCheck() {
-        final Result r = hc.execute(); 
-        final StringBuilder failMsg = new StringBuilder();
-        if(!r.isOk()) {
-            failMsg.append(name);
-            failMsg.append("\n");
-            for(ResultLog.Entry log : r) {
-                if(failMsg.length() > 0) {
-                    failMsg.append("\n");
-                }
-                if(log.getStatus().compareTo(Result.Status.INFO) > 0) {
-                    failMsg.append(log.getStatus().toString());
-                    failMsg.append(" - ");
-                    failMsg.append(log.getMessage());
+        try {
+            final Result r = hc.execute();
+            final StringBuilder failMsg = new StringBuilder();
+            if(!r.isOk()) {
+                failMsg.append(metadata.getName());
+                failMsg.append("\n");
+                for(ResultLog.Entry log : r) {
+                    if(log.getStatus().compareTo(Result.Status.INFO) > 0) {
+                        if(failMsg.length() > 0) {
+                            failMsg.append("\n");
+                        }
+                        failMsg.append(log.getStatus().toString());
+                        failMsg.append(" - ");
+                        failMsg.append(log.getMessage());
+                    }
                 }
             }
-        }
-        if(failMsg.length() > 0) {
-            fail("Health Check failed: " + failMsg.toString());
+            if(failMsg.length() > 0) {
+                fail("Health Check failed: " + failMsg.toString());
+            }
+        } finally {
+            // TODO is that ok? service not used anymore after this?
+            bundleContext.ungetService(serviceRef);
         }
     }
 }
