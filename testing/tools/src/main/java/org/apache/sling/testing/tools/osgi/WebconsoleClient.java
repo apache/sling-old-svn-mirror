@@ -40,6 +40,8 @@ public class WebconsoleClient {
     private final String username;
     private final String password;
     
+    public static final String JSON_KEY_ID = "id";
+    public static final String JSON_KEY_VERSION = "version";
     public static final String JSON_KEY_DATA = "data";
     public static final String JSON_KEY_STATE = "state";
     public static final String CONSOLE_BUNDLES_PATH = "/system/console/bundles";
@@ -49,6 +51,18 @@ public class WebconsoleClient {
         this.executor = new RequestExecutor(new DefaultHttpClient());
         this.username = username;
         this.password = password;
+    }
+    
+    public void uninstallBundle(String symbolicName, File f) throws Exception {
+        final long bundleId = getBundleId(symbolicName);
+        
+        final MultipartEntity entity = new MultipartEntity();
+        entity.addPart("action",new StringBody("uninstall"));
+        executor.execute(
+                builder.buildPostRequest(CONSOLE_BUNDLES_PATH+"/"+bundleId)
+                .withCredentials(username, password)
+                .withEntity(entity)
+        ).assertStatus(200);
     }
     
     /** Install a bundle using the Felix webconsole HTTP interface, with a specific start level */
@@ -92,8 +106,7 @@ public class WebconsoleClient {
         new RetryingContentChecker(executor, builder).check(path, 200, timeoutSeconds, 500);
     }
     
-    /** Get specified bundle state */
-    public String getBundleState(String symbolicName) throws Exception {
+    private JSONObject getBundleData(String symbolicName) throws Exception {
         // This returns a data structure like
         // {"status":"Bundle information: 173 bundles in total - all 173 bundles active.","s":[173,171,2,0,0],"data":
         //  [
@@ -118,6 +131,24 @@ public class WebconsoleClient {
         if(!bundle.has(JSON_KEY_STATE)) {
             fail(path + ".data[0].state missing, JSON content=" + content);
         }
+        return bundle;
+    }
+
+    /** Get bundle id */
+    public long getBundleId(String symbolicName) throws Exception {
+        final JSONObject bundle = getBundleData(symbolicName);
+        return bundle.getLong(JSON_KEY_ID);
+    }
+    
+    /** Get bundle version **/
+    public String getBundleVersion(String symbolicName) throws Exception {
+        final JSONObject bundle = getBundleData(symbolicName);
+        return bundle.getString(JSON_KEY_VERSION);
+    }
+    
+    /** Get specified bundle state */
+    public String getBundleState(String symbolicName) throws Exception {
+        final JSONObject bundle = getBundleData(symbolicName);
         return bundle.getString(JSON_KEY_STATE);
     }
     
