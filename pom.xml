@@ -32,7 +32,7 @@
        This version is a concatenation of the framework version and a version for the launchpad base itself.
        For a release only the qualifier (launchpad base version) is increased.
      -->
-    <version>4.4.0-2.5.1-SNAPSHOT</version>
+    <version>4.4.1-2.5.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Launchpad Base</name>
@@ -257,7 +257,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <version>4.4.0</version>
+            <version>4.4.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
