@@ -19,11 +19,10 @@ package org.apache.sling.junit.performance.impl;
 
 import org.apache.sling.junit.performance.runner.Listener;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Listeners {
-
-    private boolean isWarmUp;
 
     private final List<Listener> listeners;
 
@@ -37,17 +36,22 @@ public class Listeners {
 
     }
 
-    private void invoke(Invoker invoker) throws Exception {
+    private List<Throwable> invoke(Invoker invoker) {
+        List<Throwable> errors = new ArrayList<Throwable>();
+
         for (Listener listener : listeners) {
-            invoker.invoke(listener);
+            try {
+                invoker.invoke(listener);
+            } catch (Throwable t) {
+                errors.add(t);
+            }
         }
 
+        return errors;
     }
 
-    public void warmUpStarted(final String className, final String testName) throws Exception {
-        isWarmUp = true;
-
-        invoke(new Invoker() {
+    public List<Throwable> warmUpStarted(final String className, final String testName) {
+        return invoke(new Invoker() {
 
             public void invoke(Listener listener) throws Exception {
                 listener.warmUpStarted(className, testName);
@@ -56,10 +60,8 @@ public class Listeners {
         });
     }
 
-    public void warmUpFinished(final String className, final String testName) throws Exception {
-        isWarmUp = false;
-
-        invoke(new Invoker() {
+    public List<Throwable> warmUpFinished(final String className, final String testName) {
+        return invoke(new Invoker() {
 
             public void invoke(Listener listener) throws Exception {
                 listener.warmUpFinished(className, testName);
@@ -68,8 +70,8 @@ public class Listeners {
         });
     }
 
-    public void executionStarted(final String className, final String testName) throws Exception {
-        invoke(new Invoker() {
+    public List<Throwable> executionStarted(final String className, final String testName) {
+        return invoke(new Invoker() {
 
             public void invoke(Listener listener) throws Exception {
                 listener.executionStarted(className, testName);
@@ -78,8 +80,8 @@ public class Listeners {
         });
     }
 
-    public void executionFinished(final String className, final String testName) throws Exception {
-        invoke(new Invoker() {
+    public List<Throwable> executionFinished(final String className, final String testName) {
+        return invoke(new Invoker() {
 
             public void invoke(Listener listener) throws Exception {
                 listener.executionFinished(className, testName);
@@ -88,29 +90,41 @@ public class Listeners {
         });
     }
 
-    public void iterationStarted(final String className, final String testName) throws Exception {
-        invoke(new Invoker() {
+    public List<Throwable> warmUpIterationStarted(final String className, final String testName) {
+        return invoke(new Invoker() {
 
             public void invoke(Listener listener) throws Exception {
-                if (isWarmUp) {
-                    listener.warmUpIterationStarted(className, testName);
-                } else {
-                    listener.executionIterationStarted(className, testName);
-                }
+                listener.warmUpIterationStarted(className, testName);
             }
 
         });
     }
 
-    public void iterationFinished(final String className, final String testName) throws Exception {
-        invoke(new Invoker() {
+    public List<Throwable> warmUpIterationFinished(final String className, final String testName) {
+        return invoke(new Invoker() {
 
             public void invoke(Listener listener) throws Exception {
-                if (isWarmUp) {
-                    listener.warmUpIterationFinished(className, testName);
-                } else {
-                    listener.executionIterationFinished(className, testName);
-                }
+                listener.warmUpIterationFinished(className, testName);
+            }
+
+        });
+    }
+
+    public List<Throwable> executionIterationStarted(final String className, final String testName) {
+        return invoke(new Invoker() {
+
+            public void invoke(Listener listener) throws Exception {
+                listener.executionIterationStarted(className, testName);
+            }
+
+        });
+    }
+
+    public List<Throwable> executionIterationFinished(final String className, final String testName) {
+        return invoke(new Invoker() {
+
+            public void invoke(Listener listener) throws Exception {
+                listener.executionIterationFinished(className, testName);
             }
 
         });

@@ -48,7 +48,7 @@ public class PerformanceRunnerTest {
         @Listen
         private static Listener listener = new Listener();
 
-        @PerformanceTest
+        @PerformanceTest(warmUpInvocations = 1, runInvocations = 1)
         public void test() {
 
         }
@@ -57,7 +57,7 @@ public class PerformanceRunnerTest {
 
     @Test
     public void testPrivateListenerField() {
-        assertTestFails(PrivateListenerField.class, "a @Listen field must be public");
+        assertTestFails(PrivateListenerField.class, "Field listener should be public");
     }
 
     @RunWith(PerformanceRunner.class)
@@ -66,7 +66,7 @@ public class PerformanceRunnerTest {
         @Listen
         public Listener listener = new Listener();
 
-        @PerformanceTest
+        @PerformanceTest(warmUpInvocations = 1, runInvocations = 1)
         public void test() {
 
         }
@@ -75,7 +75,7 @@ public class PerformanceRunnerTest {
 
     @Test
     public void testInstanceListenerField() {
-        assertTestFails(InstanceListenerField.class, "a @Listen field must be static");
+        assertTestFails(InstanceListenerField.class, "Field listener should be static");
     }
 
     @RunWith(PerformanceRunner.class)
@@ -84,7 +84,7 @@ public class PerformanceRunnerTest {
         @Listen
         public static Integer listener = 42;
 
-        @PerformanceTest
+        @PerformanceTest(warmUpInvocations = 1, runInvocations = 1)
         public void test() {
 
         }
@@ -93,7 +93,7 @@ public class PerformanceRunnerTest {
 
     @Test
     public void testWrongTypeListenerField() {
-        assertTestFails(WrongTypeListenerField.class, "a @Listen field must be of type Listener");
+        assertTestFails(WrongTypeListenerField.class, "Field listener should be of type Listener");
     }
 
     @RunWith(PerformanceRunner.class)
@@ -102,7 +102,7 @@ public class PerformanceRunnerTest {
         @Listen
         public static Listener listener = null;
 
-        @PerformanceTest
+        @PerformanceTest(warmUpInvocations = 1, runInvocations = 1)
         public void test() {
 
         }
@@ -111,7 +111,7 @@ public class PerformanceRunnerTest {
 
     @Test
     public void testNullListenerField() {
-        assertTestFails(NullListenerField.class, "a @Listen field must not be null");
+        assertTestFails(NullListenerField.class, "Field listener should not be null");
     }
 
     @RunWith(PerformanceRunner.class)
@@ -122,7 +122,7 @@ public class PerformanceRunnerTest {
             return new Listener();
         }
 
-        @PerformanceTest
+        @PerformanceTest(warmUpInvocations = 1, runInvocations = 1)
         public void test() {
 
         }
@@ -131,7 +131,7 @@ public class PerformanceRunnerTest {
 
     @Test
     public void testPrivateListenerMethod() {
-        assertTestFails(PrivateListenerMethod.class, "a @Listen method must be public");
+        assertTestFails(PrivateListenerMethod.class, "Method listener() should be public");
     }
 
     @RunWith(PerformanceRunner.class)
@@ -142,7 +142,7 @@ public class PerformanceRunnerTest {
             return new Listener();
         }
 
-        @PerformanceTest
+        @PerformanceTest(warmUpInvocations = 1, runInvocations = 1)
         public void test() {
 
         }
@@ -151,7 +151,7 @@ public class PerformanceRunnerTest {
 
     @Test
     public void testInstanceListenerMethod() {
-        assertTestFails(InstanceListenerMethod.class, "a @Listen method must be static");
+        assertTestFails(InstanceListenerMethod.class, "Method listener() should be static");
     }
 
     @RunWith(PerformanceRunner.class)
@@ -162,7 +162,7 @@ public class PerformanceRunnerTest {
             return 42;
         }
 
-        @PerformanceTest
+        @PerformanceTest(warmUpInvocations = 1, runInvocations = 1)
         public void test() {
 
         }
@@ -171,7 +171,7 @@ public class PerformanceRunnerTest {
 
     @Test
     public void testWrongTypeListenerMethod() {
-        assertTestFails(WrongTypeListenerMethod.class, "a @Listen method must be of type Listener");
+        assertTestFails(WrongTypeListenerMethod.class, "Method listener() should return an object of type Listener");
     }
 
     @RunWith(PerformanceRunner.class)
@@ -179,10 +179,10 @@ public class PerformanceRunnerTest {
 
         @Listen
         public static Listener listener() {
-            throw new RuntimeException();
+            throw new RuntimeException("error message");
         }
 
-        @PerformanceTest
+        @PerformanceTest(warmUpInvocations = 1, runInvocations = 1)
         public void test() {
 
         }
@@ -191,7 +191,7 @@ public class PerformanceRunnerTest {
 
     @Test
     public void testBuggyListenerMethod() {
-        assertTestFails(BuggyListenerMethod.class, "error while invoking the @Listen method");
+        assertTestFails(BuggyListenerMethod.class, "error message");
     }
 
     @RunWith(PerformanceRunner.class)
@@ -202,7 +202,7 @@ public class PerformanceRunnerTest {
             return null;
         }
 
-        @PerformanceTest
+        @PerformanceTest(warmUpInvocations = 1, runInvocations = 1)
         public void test() {
 
         }
@@ -211,7 +211,7 @@ public class PerformanceRunnerTest {
 
     @Test
     public void testNullListenerMethod() {
-        assertTestFails(NullListenerMethod.class, "a @Listen method must return a non-null value");
+        assertTestFails(NullListenerMethod.class, "Method listener() should not return null");
     }
 
     @RunWith(PerformanceRunner.class)
@@ -226,7 +226,7 @@ public class PerformanceRunnerTest {
 
     @Test
     public void testExecutionStrategyNotSpecified() {
-        assertTestFails(ExecutionStrategyNotSpecified.class, "no time or number of invocations specified");
+        assertTestFails(ExecutionStrategyNotSpecified.class, "Method test() should provide a valid runInvocations or runTime");
     }
 
     @RunWith(PerformanceRunner.class)
@@ -241,7 +241,7 @@ public class PerformanceRunnerTest {
 
     @Test
     public void testWarmUpStrategyNotSpecified() {
-        assertTestFails(WarmUpStrategyNotSpecified.class, "no time or number of invocations specified");
+        assertTestFails(WarmUpStrategyNotSpecified.class, "Method test() should provide a valid warmUpInvocations or warmUpTime");
     }
 
 }

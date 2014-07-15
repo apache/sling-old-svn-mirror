@@ -18,31 +18,34 @@
 package org.apache.sling.junit.performance.impl;
 
 import org.junit.runners.model.FrameworkMethod;
+import org.junit.runners.model.MultipleFailureException;
 import org.junit.runners.model.Statement;
 import org.junit.runners.model.TestClass;
 
-public class InvokePerformanceMethod extends Statement {
+import java.util.List;
 
-    private final TestClass testClass;
-
-    private final PerformanceMethod method;
-
-    private final Statement inner;
+public class RunWarmUpStartedEvents extends Statement {
 
     private final Listeners listeners;
 
-    public InvokePerformanceMethod(TestClass testClass, FrameworkMethod method, Statement inner, Listeners listeners) {
-        this.testClass = testClass;
-        this.method = new PerformanceMethod(method);
-        this.inner = inner;
+    private final TestClass test;
+
+    private final FrameworkMethod method;
+
+    private final Statement statement;
+
+    public RunWarmUpStartedEvents(Listeners listeners, TestClass test, FrameworkMethod method, Statement statement) {
         this.listeners = listeners;
+        this.test = test;
+        this.method = method;
+        this.statement = statement;
     }
 
     @Override
     public void evaluate() throws Throwable {
-        listeners.iterationStarted(testClass.getName(), method.getName());
-        inner.evaluate();
-        listeners.iterationFinished(testClass.getName(), method.getName());
+        List<Throwable> errors = listeners.warmUpStarted(test.getName(), method.getName());
+        MultipleFailureException.assertEmpty(errors);
+        statement.evaluate();
     }
 
 }
