@@ -256,7 +256,8 @@ public class ResourceChangeCommandFactory {
         PluginLogger logger = Activator.getDefault().getPluginLogger();
         logger.trace("Found plain nt:folder candidate at {0}, trying to find a covering resource for it",
                 changedResource.getProjectRelativePath());
-        while (!serializationFilePath.isRoot()) {
+        // don't use isRoot() to prevent infinite loop when the final path is '//'
+        while (serializationFilePath.segmentCount() != 0) {
             serializationFilePath = serializationFilePath.removeLastSegments(1);
             IFolder folderWithPossibleSerializationFile = (IFolder) syncDirectory.findMember(serializationFilePath);
             if (folderWithPossibleSerializationFile == null) {
