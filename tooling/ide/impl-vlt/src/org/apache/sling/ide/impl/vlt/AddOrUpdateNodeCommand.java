@@ -283,7 +283,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
     private void updateNode(Node node, ResourceProxy resource) throws RepositoryException, IOException {
 
-        if (node.getPath().equals(getPath())) {
+        if (node.getPath().equals(getPath()) && fileInfo != null) {
             updateFileLikeNodeTypes(node);
         }
 
