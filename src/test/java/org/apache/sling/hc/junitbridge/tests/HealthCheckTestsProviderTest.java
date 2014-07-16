@@ -190,4 +190,9 @@ public class HealthCheckTestsProviderTest {
         assertEquals(2, r.getFailureCount());
         assertEquals(4, r.getRunCount());
     }
+
+    @Test(expected=RuntimeException.class)
+    public void testInvalidTestName() throws ClassNotFoundException {
+        provider.createTestClass("foo");
+    }
 }
