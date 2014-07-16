@@ -96,14 +96,13 @@ public class ResourceChangeCommandFactory {
 
         FileInfo info = createFileInfo(resource, repository);
         Activator.getDefault().getPluginLogger().trace("For {0} built fileInfo {1}", resource, info);
-        if (info == null) {
-            return null;
-        }
 
         File syncDirectoryAsFile = ProjectUtil.getSyncDirectoryFullPath(resource.getProject()).toFile();
         IFolder syncDirectory = ProjectUtil.getSyncDirectory(resource.getProject());
 
-        if (serializationManager.isSerializationFile(info.getLocation())) {
+        Filter filter = ProjectUtil.loadFilter(resource.getProject());
+
+        if (serializationManager.isSerializationFile(resource.getLocation().toOSString())) {
             InputStream contents = null;
             try {
                 IFile file = (IFile) resource;
@@ -114,7 +113,7 @@ public class ResourceChangeCommandFactory {
                 // TODO - not sure if this 100% correct, but we definitely should not refer to the FileInfo as the
                 // .serialization file, since for nt:file/nt:resource nodes this will overwrite the file contents
                 String primaryType = (String) resourceProxy.getProperties().get(Repository.JCR_PRIMARY_TYPE);
-                if (Repository.NT_FILE.equals(primaryType) || Repository.NT_RESOURCE.equals(primaryType)) {
+                if (Repository.NT_FILE.equals(primaryType)) {
                     // TODO move logic to serializationManager
                     File locationFile = new File(info.getLocation());
                     String locationFileParent = locationFile.getParent();
@@ -128,6 +127,11 @@ public class ResourceChangeCommandFactory {
 
                     Activator.getDefault().getPluginLogger()
                             .trace("Adjusted original location from {0} to {1}", resourceLocation, newLocation);
+
+                }
+
+                if (isFiltered(filter, resourceProxy, repository, resource)) {
+                    return null;
                 }
 
                 return repository.newAddOrUpdateNodeCommand(info, resourceProxy);
@@ -153,6 +157,10 @@ public class ResourceChangeCommandFactory {
 
             ResourceProxy resourceProxy = buildResourceProxyForPlainFileOrFolder(resource, syncDirectory);
 
+            if (isFiltered(filter, resourceProxy, repository, resource)) {
+                return null;
+            }
+
             return repository.newAddOrUpdateNodeCommand(info, resourceProxy);
         }
     }
@@ -160,22 +168,13 @@ public class ResourceChangeCommandFactory {
     private FileInfo createFileInfo(IResource resource, Repository repository) throws SerializationException,
             CoreException {
 
+        if (resource.getType() != IResource.FILE) {
+            return null;
+        }
+
         IProject project = resource.getProject();
 
         IFolder syncFolder = project.getFolder(ProjectUtil.getSyncDirectoryValue(project));
-        final IFolder syncFolder1 = syncFolder;
-        Filter filter = ProjectUtil.loadFilter(syncFolder1.getProject());
-
-        if (filter != null) {
-            FilterResult filterResult = getFilterResult(resource, filter, ProjectUtil.getSyncDirectoryFile(project),
-                    syncFolder, repository);
-
-            Activator.getDefault().getPluginLogger().trace("FilterResult for {0} is {1}", resource, filterResult);
-
-            if (filterResult == FilterResult.DENY || filterResult == FilterResult.PREREQUISITE) {
-                return null;
-            }
-        }
 
         IPath relativePath = resource.getFullPath().makeRelativeTo(syncFolder.getFullPath());
 
@@ -201,6 +200,20 @@ public class ResourceChangeCommandFactory {
         Activator.getDefault().getPluginLogger().trace("Filtering by {0} for {1}", repositoryPath, resource);
 
         return filter.filter(contentSyncRoot, repositoryPath, repository.getRepositoryInfo());
+    }
+
+    private boolean isFiltered(Filter filter, ResourceProxy resourceProxy, Repository repository,
+            IResource resource) {
+
+        if (filter == null) {
+            return false;
+        }
+
+        FilterResult filterResult = filter.filter(ProjectUtil.getSyncDirectoryFile(resource.getProject()),
+                resourceProxy.getPath(), repository.getRepositoryInfo());
+        Activator.getDefault().getPluginLogger().trace("FilterResult for {0} is {1}", resource, filterResult);
+
+        return filterResult == FilterResult.DENY || filterResult == FilterResult.PREREQUISITE;
     }
 
     private ResourceProxy buildResourceProxyForPlainFileOrFolder(IResource changedResource, IFolder syncDirectory)
