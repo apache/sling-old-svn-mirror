@@ -78,7 +78,13 @@ public class HealthCheckTestsProvider implements TestsProvider {
     @Override
     public Class<?> createTestClass(String testName) throws ClassNotFoundException {
         // The test name is like "Health Checks(foo,bar)" and we need just 'foo,bar'
-        final String tagString = testName.substring(0, testName.length() - TEST_NAME_SUFFIX.length()).substring(TEST_NAME_PREFIX.length()); 
+        String tagString = null;
+        try {
+            tagString = testName.substring(0, testName.length() - TEST_NAME_SUFFIX.length()).substring(TEST_NAME_PREFIX.length()); 
+        } catch(Exception e) {
+            throw new RuntimeException("Invalid test name:" + testName);
+        }
+         
         JUnitTestBridge.setThreadContext(new TestBridgeContext(bundleContext, splitTags(tagString)));
         return JUnitTestBridge.class;
     }
