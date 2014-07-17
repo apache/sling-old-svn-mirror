@@ -56,6 +56,13 @@ public class ReorderChildNodesCommandTest {
         doReorderingTest(asList("first", "second", "third"), asList("first", "third", "second"));
     }
 
+    @Test
+    public void reorderingSkippedDueToDifferentChildren() throws Exception {
+
+        doReorderingTest(asList("first", "second", "third"), asList("first", "fourth", "second"),
+                asList("first", "second", "third"));
+    }
+
     private void doReorderingTest(List<String> nodeNames, List<String> resourceNames) throws Exception {
 
         doReorderingTest(nodeNames, resourceNames, null);

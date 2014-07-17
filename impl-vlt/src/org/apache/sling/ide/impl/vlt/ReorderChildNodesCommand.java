@@ -102,10 +102,11 @@ public class ReorderChildNodesCommand extends JcrCommand<Void> {
 
         traceResourcesAndNodes(children, nodeChildren);
 
-        if (children.size() != nodeChildren.size()) {
+        if (! resourceChildNames.equals(nodeChildNames)) {
             getLogger().warn(
-                    "Different number of children between the local workspace and the repository for path "
-                            + resourceToReorder.getPath() + ". Reordering will not be performed");
+                    "Different child names between the local workspace ( " + resourceChildNames
+                            + ") and the repository (" + nodeChildNames + ") for path " + resource.getPath()
+                            + ". Reordering will not be performed");
             return;
         }
 
