@@ -51,6 +51,11 @@ public class StubRepository implements Repository {
     }
 
     @Override
+    public Command<Void> newReorderChildNodesCommand(ResourceProxy resourceProxy) {
+        return null;
+    }
+
+    @Override
     public RepositoryInfo getRepositoryInfo() {
         return null;
     }

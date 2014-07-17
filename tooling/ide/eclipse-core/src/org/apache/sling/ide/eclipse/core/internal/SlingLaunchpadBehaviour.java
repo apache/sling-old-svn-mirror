@@ -19,7 +19,9 @@ package org.apache.sling.ide.eclipse.core.internal;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
@@ -339,6 +341,8 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
         // the behaviour for resources being filtered out is deletion, and that
         // would be an incorrect ( or at least suprising ) behaviour at development time
 
+        List<IModuleResource> addedOrUpdatedResources = new ArrayList<IModuleResource>();
+
         switch (deltaKind) {
             case ServerBehaviourDelegate.CHANGED:
                 for (IModuleResourceDelta resourceDelta : getPublishedResourceDelta(module)) {
@@ -372,6 +376,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                         case IModuleResourceDelta.CHANGED:
                         case IModuleResourceDelta.NO_CHANGE: // TODO is this needed?
                             execute(addFileCommand(repository, resourceDelta.getModuleResource()));
+                            addedOrUpdatedResources.add(resourceDelta.getModuleResource());
                             break;
                         case IModuleResourceDelta.REMOVED:
                             execute(removeFileCommand(repository, resourceDelta.getModuleResource()));
@@ -384,14 +389,19 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
             case ServerBehaviourDelegate.NO_CHANGE: // TODO is this correct ?
                 for (IModuleResource resource : getResources(module)) {
                     execute(addFileCommand(repository, resource));
+                    addedOrUpdatedResources.add(resource);
                 }
                 break;
             case ServerBehaviourDelegate.REMOVED:
-                IModuleResource[] moduleResources2 = getResources(module);
-                for (IModuleResource resource : moduleResources2) {
+                for (IModuleResource resource : getResources(module)) {
                     execute(removeFileCommand(repository, resource));
                 }
                 break;
+        }
+
+        // reorder the child nodes at the end, when all create/update/deletes have been processed
+        for (IModuleResource resource : addedOrUpdatedResources) {
+            execute(reorderChildNodesCommand(repository, resource));
         }
 
 
@@ -427,6 +437,18 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
         return commandFactory.newCommandForAddedOrUpdated(repository, res);
     }
 
+    private Command<?> reorderChildNodesCommand(Repository repository, IModuleResource resource) throws CoreException,
+            SerializationException, IOException {
+
+        IResource res = getResource(resource);
+
+        if (res == null) {
+            return null;
+        }
+
+        return commandFactory.newReorderChildNodesCommand(repository, res);
+    }
+
     private IResource getResource(IModuleResource resource) {
 
         IResource file = (IFile) resource.getAdapter(IFile.class);
@@ -447,7 +469,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
 
     private Command<?> removeFileCommand(Repository repository, IModuleResource resource)
             throws SerializationException, IOException, CoreException {
-    	
+
         IResource deletedResource = getResource(resource);
 
         if (deletedResource == null) {

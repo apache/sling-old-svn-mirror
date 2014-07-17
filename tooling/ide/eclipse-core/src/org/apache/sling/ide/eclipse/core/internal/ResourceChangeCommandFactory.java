@@ -79,6 +79,17 @@ public class ResourceChangeCommandFactory {
     private Command<?> addFileCommand(Repository repository, IResource resource) throws SerializationException,
             CoreException, IOException {
 
+        ResourceAndInfo rai = buildResourceAndInfo(repository, resource);
+        
+        if ( rai == null ) {
+            return null;
+        }
+
+        return repository.newAddOrUpdateNodeCommand(rai.getInfo(), rai.getResource());
+    }
+
+    private ResourceAndInfo buildResourceAndInfo(Repository repository, IResource resource) throws CoreException,
+            SerializationException, IOException {
         if (ignoredFileNames.contains(resource.getName())) {
             return null;
         }
@@ -102,6 +113,8 @@ public class ResourceChangeCommandFactory {
 
         Filter filter = ProjectUtil.loadFilter(resource.getProject());
 
+        ResourceProxy resourceProxy = null;
+
         if (serializationManager.isSerializationFile(resource.getLocation().toOSString())) {
             InputStream contents = null;
             try {
@@ -109,7 +122,7 @@ public class ResourceChangeCommandFactory {
                 contents = file.getContents();
                 String resourceLocation = file.getFullPath().makeRelativeTo(syncDirectory.getFullPath())
                         .toPortableString();
-                ResourceProxy resourceProxy = serializationManager.readSerializationData(resourceLocation, contents);
+                resourceProxy = serializationManager.readSerializationData(resourceLocation, contents);
                 // TODO - not sure if this 100% correct, but we definitely should not refer to the FileInfo as the
                 // .serialization file, since for nt:file/nt:resource nodes this will overwrite the file contents
                 String primaryType = (String) resourceProxy.getProperties().get(Repository.JCR_PRIMARY_TYPE);
@@ -130,11 +143,6 @@ public class ResourceChangeCommandFactory {
 
                 }
 
-                if (isFiltered(filter, resourceProxy, repository, resource)) {
-                    return null;
-                }
-
-                return repository.newAddOrUpdateNodeCommand(info, resourceProxy);
             } catch (IOException e) {
                 Activator.getDefault().getPluginLogger().warn(e.getMessage(), e);
                 return null;
@@ -155,14 +163,14 @@ public class ResourceChangeCommandFactory {
                 }
             }
 
-            ResourceProxy resourceProxy = buildResourceProxyForPlainFileOrFolder(resource, syncDirectory);
-
-            if (isFiltered(filter, resourceProxy, repository, resource)) {
-                return null;
-            }
-
-            return repository.newAddOrUpdateNodeCommand(info, resourceProxy);
+            resourceProxy = buildResourceProxyForPlainFileOrFolder(resource, syncDirectory);
         }
+
+        if (isFiltered(filter, resourceProxy, repository, resource)) {
+            return null;
+        }
+
+        return new ResourceAndInfo(resourceProxy, info);
     }
 
     private FileInfo createFileInfo(IResource resource, Repository repository) throws SerializationException,
@@ -404,5 +412,42 @@ public class ResourceChangeCommandFactory {
         }
         
         return repository.newDeleteNodeCommand(serializationManager.getRepositoryPath(resourceLocation));
+    }
+
+    public Command<Void> newReorderChildNodesCommand(Repository repository, IResource res) throws CoreException {
+
+        try {
+            ResourceAndInfo rai = buildResourceAndInfo(repository, res);
+
+            if (rai == null) {
+                return null;
+            }
+
+            return repository.newReorderChildNodesCommand(rai.getResource());
+        } catch (SerializationException e) {
+            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, "Failed reordering child nodes for "
+                    + res, e));
+        } catch (IOException e) {
+            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, "Failed reordering child nodes for "
+                    + res, e));
+        }
+    }
+
+    private static class ResourceAndInfo {
+        private final ResourceProxy resource;
+        private final FileInfo info;
+
+        public ResourceAndInfo(ResourceProxy resource, FileInfo info) {
+            this.resource = resource;
+            this.info = info;
+        }
+
+        public ResourceProxy getResource() {
+            return resource;
+        }
+
+        public FileInfo getInfo() {
+            return info;
+        }
     }
 }
