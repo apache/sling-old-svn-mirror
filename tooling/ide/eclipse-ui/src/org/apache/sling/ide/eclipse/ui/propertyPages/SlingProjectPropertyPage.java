@@ -19,9 +19,12 @@ package org.apache.sling.ide.eclipse.ui.propertyPages;
 import java.util.List;
 
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
+import org.apache.sling.ide.eclipse.core.internal.Activator;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.IPreferenceNode;
@@ -163,7 +166,17 @@ public class SlingProjectPropertyPage extends PropertyPage {
     @Override
     public boolean performOk() {
 
-        ProjectUtil.setSyncDirectoryPath(getProject(), new Path(folderText.getText()));
+        try {
+            ProjectUtil.setSyncDirectoryPath(getProject(), new Path(folderText.getText()));
+            getProject().refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor());
+        } catch (Exception e) {
+            setErrorMessage("Could not refresh project "+getProject()+", "+e);
+            return false;
+        } catch(Error er) {
+            Activator.getDefault().getPluginLogger().error("Error occurred: "+er, er);
+            // rethrow though
+            throw er;
+        }
 
         return super.performOk();
     }
