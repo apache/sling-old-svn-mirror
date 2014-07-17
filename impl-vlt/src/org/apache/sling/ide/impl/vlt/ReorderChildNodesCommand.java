@@ -32,6 +32,7 @@ import javax.jcr.Session;
 import javax.jcr.nodetype.NodeType;
 
 import org.apache.jackrabbit.vault.util.Text;
+import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.transport.ResourceProxy;
 
 /**
@@ -42,8 +43,9 @@ public class ReorderChildNodesCommand extends JcrCommand<Void> {
 
     private final ResourceProxy resource;
 
-    public ReorderChildNodesCommand(Repository repository, Credentials credentials, ResourceProxy resource) {
-        super(repository, credentials, resource.getPath());
+    public ReorderChildNodesCommand(Repository repository, Credentials credentials, ResourceProxy resource,
+            Logger logger) {
+        super(repository, credentials, resource.getPath(), logger);
 
         this.resource = resource;
     }
@@ -74,10 +76,7 @@ public class ReorderChildNodesCommand extends JcrCommand<Void> {
 
         // do not process
         if (!childrenIterator.hasNext()) {
-            Activator
-                    .getDefault()
-                    .getPluginLogger()
-                    .trace("Resource at {0} has no children, skipping child node reordering",
+            getLogger().trace("Resource at {0} has no children, skipping child node reordering",
                             resourceToReorder.getPath());
             return;
         }
@@ -106,10 +105,8 @@ public class ReorderChildNodesCommand extends JcrCommand<Void> {
         traceResourcesAndNodes(children, nodeChildren);
 
         if (children.size() != nodeChildren.size()) {
-            Activator
-                    .getDefault()
-                    .getPluginLogger()
-                    .warn("Different number of children between the local workspace and the repository for path "
+            getLogger().warn(
+                    "Different number of children between the local workspace and the repository for path "
                             + resourceToReorder.getPath() + ". Reordering will not be performed");
             return;
         }
@@ -130,11 +127,8 @@ public class ReorderChildNodesCommand extends JcrCommand<Void> {
 
             // don't perform any reordering if this particular node does not have reorderable children
             if (!nodeToReorder.getPrimaryNodeType().hasOrderableChildNodes()) {
-                Activator
-                        .getDefault()
-                        .getPluginLogger()
-                        .trace("Node at {0} does not have orderable child nodes, skipping reordering of {1}",
-                                nodeToReorder.getPath(), childResource.getPath());
+                getLogger().trace("Node at {0} does not have orderable child nodes, skipping reordering of {1}",
+                        nodeToReorder.getPath(), childResource.getPath());
                 continue;
             }
 
@@ -146,11 +140,8 @@ public class ReorderChildNodesCommand extends JcrCommand<Void> {
                 expectedParentName = null;
             }
 
-            Activator
-                    .getDefault()
-                    .getPluginLogger()
-                    .trace("For node at {0} ordering {1} before {2}", nodeToReorder.getPath(),
-                            Text.getName(childResource.getPath()), expectedParentName);
+            getLogger().trace("For node at {0} ordering {1} before {2}", nodeToReorder.getPath(),
+                    Text.getName(childResource.getPath()), expectedParentName);
 
             nodeToReorder.orderBefore(Text.getName(childResource.getPath()), expectedParentName);
             changed = true;
@@ -181,7 +172,7 @@ public class ReorderChildNodesCommand extends JcrCommand<Void> {
             out.append(String.format("%3d. %s%n", i, nodeChildren.get(i).getPath()));
         }
 
-        Activator.getDefault().getPluginLogger().trace(out.toString());
+        getLogger().trace(out.toString());
     }
 
 }

@@ -54,6 +54,7 @@ import javax.jcr.nodetype.NodeType;
 
 import org.apache.jackrabbit.vault.util.JcrConstants;
 import org.apache.jackrabbit.vault.util.Text;
+import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.util.PathUtil;
@@ -64,9 +65,10 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
     private FileInfo fileInfo;
     private boolean primaryTypeHasChanged;
 
-    public AddOrUpdateNodeCommand(Repository jcrRepo, Credentials credentials, FileInfo fileInfo, ResourceProxy resource) {
+    public AddOrUpdateNodeCommand(Repository jcrRepo, Credentials credentials, FileInfo fileInfo,
+            ResourceProxy resource, Logger logger) {
 
-        super(jcrRepo, credentials, resource.getPath());
+        super(jcrRepo, credentials, resource.getPath(), logger);
 
         this.fileInfo = fileInfo;
         this.resource = resource;
@@ -87,14 +89,11 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         Node node;
         if (nodeExists) {
             node = session.getNode(path);
-            Activator
-                    .getDefault()
-                    .getPluginLogger()
-                    .trace("Found existing node at {0} with primaryType {1}", path, node.getPrimaryNodeType().getName());
+            getLogger().trace("Found existing node at {0} with primaryType {1}", path,
+                    node.getPrimaryNodeType().getName());
         } else {
             node = createNode(resource, session);
-            Activator.getDefault().getPluginLogger()
-                    .trace("Created node at {0} with primaryType {1}", path, node.getPrimaryNodeType().getName());
+            getLogger().trace("Created node at {0} with primaryType {1}", path, node.getPrimaryNodeType().getName());
         }
 
         updateNode(node, resource);
@@ -118,7 +117,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
         List<ResourceProxy> resourceChildren = resource2.getChildren();
         if (resourceChildren.size() == 0) {
-            Activator.getDefault().getPluginLogger()
+            getLogger()
                     .trace("Resource at {0} has no children, skipping deleted nodes processing",
                             resource2.getPath());
             return;
@@ -143,7 +142,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
                 continue;
             }
 
-            Activator.getDefault().getPluginLogger()
+            getLogger()
                     .trace("Deleting node {0} as it is no longer present in the local checkout", child.getPath());
             child.remove();
         }
@@ -203,8 +202,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         if (!node.getPrimaryNodeType().getName().equals(primaryType)) {
             node.setPrimaryType(primaryType);
             primaryTypeHasChanged = true;
-            Activator.getDefault().getPluginLogger()
-                    .trace("Set new primary type {0} for node at {1}", primaryType, node.getPath());
+            getLogger().trace("Set new primary type {0} for node at {1}", primaryType, node.getPath());
         }
 
         // TODO - review for completeness and filevault compatibility
@@ -297,18 +295,14 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
             if (value != null) {
                 Object[] arguments = { propertyName, value, propertyValue, node.getPath() };
-                Activator.getDefault().getPluginLogger()
-                        .trace("Setting property {0} with value {1} (raw =  {2}) on node at {3}", arguments);
+                getLogger().trace("Setting property {0} with value {1} (raw =  {2}) on node at {3}", arguments);
                 node.setProperty(propertyName, value);
-                Activator.getDefault().getPluginLogger()
-                        .trace("Set property {0} with value {1} (raw =  {2}) on node at {3}", arguments);
+                getLogger().trace("Set property {0} with value {1} (raw =  {2}) on node at {3}", arguments);
             } else if (values != null) {
                 Object[] arguments = { propertyName, values, propertyValue, node.getPath() };
-                Activator.getDefault().getPluginLogger()
-                        .trace("Setting property {0} with values {1} (raw =  {2}) on node at {3}", arguments);
+                getLogger().trace("Setting property {0} with values {1} (raw =  {2}) on node at {3}", arguments);
                 node.setProperty(propertyName, values);
-                Activator.getDefault().getPluginLogger()
-                        .trace("Set property {0} with values {1} (raw =  {2}) on node at {3}", arguments);
+                getLogger().trace("Set property {0} with values {1} (raw =  {2}) on node at {3}", arguments);
             } else {
                 throw new IllegalArgumentException("Unable to extract a value or a value array for property '"
                         + propertyName + "' with value '" + propertyValue + "'");
@@ -317,8 +311,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
         for (String propertyToRemove : propertiesToRemove) {
             node.getProperty(propertyToRemove).remove();
-            Activator.getDefault().getPluginLogger()
-                    .trace("Removed property {0} from node at {1}", propertyToRemove, node.getPath());
+            getLogger().trace("Removed property {0} from node at {1}", propertyToRemove, node.getPath());
         }
 
     }
@@ -345,13 +338,13 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
         for (String mixinToAdd : mixinsToAdd) {
             node.addMixin(mixinToAdd);
-            Activator.getDefault().getPluginLogger()
+            getLogger()
                     .trace("Added new mixin {0} to node at path {1}", mixinToAdd, node.getPath());
         }
 
         for (String mixinToRemove : mixinsToRemove) {
             node.removeMixin(mixinToRemove);
-            Activator.getDefault().getPluginLogger()
+            getLogger()
                     .trace("Removed mixin {0} from node at path {1}", mixinToRemove, node.getPath());
         }
     }
@@ -377,8 +370,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
             }
         }
 
-        Activator.getDefault().getPluginLogger()
-                .trace("Updating {0} property on node at {1} ", JCR_DATA, contentNode.getPath());
+        getLogger().trace("Updating {0} property on node at {1} ", JCR_DATA, contentNode.getPath());
 
         FileInputStream inputStream = new FileInputStream(file);
         try {

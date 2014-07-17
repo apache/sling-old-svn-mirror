@@ -20,6 +20,7 @@ import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 
 import org.apache.sling.ide.jcr.RepositoryUtils;
+import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.NodeTypeRegistry;
@@ -42,10 +43,13 @@ public class VltRepository implements Repository {
     private javax.jcr.Repository jcrRepo;
     private Credentials credentials;
     private boolean disconnected = false;
+    private final Logger logger;
 
     public VltRepository(RepositoryInfo repositoryInfo, EventAdmin eventAdmin) {
         this.repositoryInfo = repositoryInfo;
         this.eventAdmin = eventAdmin;
+        // TODO - this should be injected here as well
+        this.logger = Activator.getDefault().getPluginLogger();
     }
 
     public synchronized void disconnected() {
@@ -82,36 +86,36 @@ public class VltRepository implements Repository {
 
     @Override
     public Command<Void> newAddOrUpdateNodeCommand(FileInfo fileInfo, ResourceProxy resource) {
-        return TracingCommand.wrap(new AddOrUpdateNodeCommand(jcrRepo, credentials, fileInfo, resource),
+        return TracingCommand.wrap(new AddOrUpdateNodeCommand(jcrRepo, credentials, fileInfo, resource, logger),
                 eventAdmin);
     }
 
     @Override
     public Command<Void> newReorderChildNodesCommand(ResourceProxy resource) {
-        return TracingCommand.wrap(new ReorderChildNodesCommand(jcrRepo, credentials, resource), eventAdmin);
+        return TracingCommand.wrap(new ReorderChildNodesCommand(jcrRepo, credentials, resource, logger), eventAdmin);
     }
 
     @Override
     public Command<Void> newDeleteNodeCommand(String path) {
-        return TracingCommand.wrap(new DeleteNodeCommand(jcrRepo, credentials, path), eventAdmin);
+        return TracingCommand.wrap(new DeleteNodeCommand(jcrRepo, credentials, path, logger), eventAdmin);
     }
 
     @Override
     public Command<ResourceProxy> newListChildrenNodeCommand(String path) {
 
-        return TracingCommand.wrap(new ListChildrenCommand(jcrRepo, credentials, path), eventAdmin);
+        return TracingCommand.wrap(new ListChildrenCommand(jcrRepo, credentials, path, logger), eventAdmin);
     }
 
     @Override
     public Command<ResourceProxy> newGetNodeContentCommand(String path) {
 
-        return TracingCommand.wrap(new GetNodeContentCommand(jcrRepo, credentials, path), eventAdmin);
+        return TracingCommand.wrap(new GetNodeContentCommand(jcrRepo, credentials, path, logger), eventAdmin);
     }
 
     @Override
     public Command<byte[]> newGetNodeCommand(String path) {
 
-        return TracingCommand.wrap(new GetNodeCommand(jcrRepo, credentials, path), eventAdmin);
+        return TracingCommand.wrap(new GetNodeCommand(jcrRepo, credentials, path, logger), eventAdmin);
     }
 
     protected void bindEventAdmin(EventAdmin eventAdmin) {
@@ -126,7 +130,8 @@ public class VltRepository implements Repository {
     
     Command<ResourceProxy> newListTreeNodeCommand(String path, int levels) {
 
-        return TracingCommand.wrap(new ListTreeCommand(jcrRepo, credentials, path, levels, eventAdmin), eventAdmin);
+        return TracingCommand.wrap(new ListTreeCommand(jcrRepo, credentials, path, levels, eventAdmin, logger),
+                eventAdmin);
     }
     
     @Override
