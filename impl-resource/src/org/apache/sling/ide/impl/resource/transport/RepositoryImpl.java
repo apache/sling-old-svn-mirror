@@ -23,6 +23,7 @@ import org.apache.sling.ide.transport.NodeTypeRegistry;
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
+import org.apache.sling.ide.transport.Result;
 import org.apache.sling.ide.transport.TracingCommand;
 import org.osgi.service.event.EventAdmin;
 
@@ -68,6 +69,17 @@ public class RepositoryImpl implements Repository {
         return wrap(new UpdateContentCommand(repositoryInfo, httpClient, fileInfo.getRelativeLocation(),
                 resource.getProperties(), fileInfo));
 	}
+
+    @Override
+    public Command<Void> newReorderChildNodesCommand(ResourceProxy resourceProxy) {
+        return wrap(new AbstractCommand<Void>(repositoryInfo, httpClient, resourceProxy.getPath()) {
+            @Override
+            public Result<Void> execute() {
+                // TODO - this is a no-op
+                return null;
+            }
+        });
+    }
 
     @Override
     public RepositoryInfo getRepositoryInfo() {
