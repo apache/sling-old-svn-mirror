@@ -26,6 +26,7 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.transport.CommandExecutionProperties;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.osgi.service.event.Event;
@@ -36,8 +37,9 @@ public class ListTreeCommand extends JcrCommand<ResourceProxy> {
     private final int levels;
     private final EventAdmin eventAdmin;
 
-    public ListTreeCommand(Repository repository, Credentials credentials, String path, int levels, EventAdmin eventAdmin) {
-        super(repository, credentials, path);
+    public ListTreeCommand(Repository repository, Credentials credentials, String path, int levels,
+            EventAdmin eventAdmin, Logger logger) {
+        super(repository, credentials, path, logger);
         this.levels = Math.max(1,levels);
         this.eventAdmin = eventAdmin;
     }

@@ -27,6 +27,7 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.Result;
@@ -36,12 +37,14 @@ public abstract class JcrCommand<T> implements Command<T> {
     private final Credentials credentials;
     private final Repository repository;
     private final String path;
+    private final Logger logger;
 
-    public JcrCommand(Repository repository, Credentials credentials, String path) {
+    public JcrCommand(Repository repository, Credentials credentials, String path, Logger logger) {
 
         this.repository = repository;
         this.credentials = credentials;
         this.path = path;
+        this.logger = logger;
     }
 
     @Override
@@ -74,6 +77,9 @@ public abstract class JcrCommand<T> implements Command<T> {
         return path;
     }
 
+    protected Logger getLogger() {
+        return logger;
+    }
 
     protected ResourceProxy nodeToResource(Node node) throws RepositoryException {
     

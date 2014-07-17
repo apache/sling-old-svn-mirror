@@ -23,10 +23,12 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.sling.ide.log.Logger;
+
 public class NoOpCommand<T> extends JcrCommand<T> {
 
-    public NoOpCommand(Repository repository, Credentials credentials) {
-        super(repository, credentials, null);
+    public NoOpCommand(Repository repository, Credentials credentials, Logger logger) {
+        super(repository, credentials, null, logger);
     }
 
     @Override

@@ -29,10 +29,12 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.sling.ide.log.Logger;
+
 public class GetNodeCommand extends JcrCommand<byte[]> {
     
-    public GetNodeCommand(Repository repository, Credentials credentials, String path) {
-        super(repository, credentials, path);
+    public GetNodeCommand(Repository repository, Credentials credentials, String path, Logger logger) {
+        super(repository, credentials, path, logger);
     }
 
     @Override
