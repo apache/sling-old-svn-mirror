@@ -18,9 +18,9 @@ package org.apache.sling.ide.eclipse.ui.internal;
 
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.core.ServiceUtil;
-import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
 import org.apache.sling.ide.eclipse.core.debug.PluginLoggerRegistrar;
 import org.apache.sling.ide.filter.FilterLocator;
+import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.osgi.OsgiClientFactory;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
@@ -114,7 +114,7 @@ public class Activator extends AbstractUIPlugin {
         return ServiceUtil.getNotNull(osgiClientFactory);
     }
 
-    public PluginLogger getPluginLogger() {
-        return (PluginLogger) ServiceUtil.getNotNull(tracer);
+    public Logger getPluginLogger() {
+        return (Logger) ServiceUtil.getNotNull(tracer);
     }
 }

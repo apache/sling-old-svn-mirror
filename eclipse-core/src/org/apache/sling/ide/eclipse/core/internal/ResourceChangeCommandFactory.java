@@ -26,9 +26,9 @@ import java.util.Set;
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.ResourceUtil;
-import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterResult;
+import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.serialization.SerializationException;
 import org.apache.sling.ide.serialization.SerializationKind;
 import org.apache.sling.ide.serialization.SerializationManager;
@@ -274,7 +274,7 @@ public class ResourceChangeCommandFactory {
 
         // TODO - this too should be abstracted in the service layer, rather than in the Eclipse-specific code
 
-        PluginLogger logger = Activator.getDefault().getPluginLogger();
+        Logger logger = Activator.getDefault().getPluginLogger();
         logger.trace("Found plain nt:folder candidate at {0}, trying to find a covering resource for it",
                 changedResource.getProjectRelativePath());
         // don't use isRoot() to prevent infinite loop when the final path is '//'

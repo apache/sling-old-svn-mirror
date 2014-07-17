@@ -20,6 +20,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.sling.ide.eclipse.core.debug.impl.Tracer;
+import org.apache.sling.ide.log.Logger;
 import org.eclipse.core.runtime.Plugin;
 import org.eclipse.osgi.service.debug.DebugOptions;
 import org.eclipse.osgi.service.debug.DebugOptionsListener;
@@ -27,7 +28,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 /**
- * The <tt>PluginLoggerRegistrar</tt> registers {@link PluginLogger} implementations for use for specific plugins
+ * The <tt>PluginLoggerRegistrar</tt> registers {@link Logger} implementations for use for specific plugins
  *
  */
 public class PluginLoggerRegistrar {
@@ -43,7 +44,7 @@ public class PluginLoggerRegistrar {
         Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(DebugOptions.LISTENER_SYMBOLICNAME, plugin.getBundle().getSymbolicName());
         BundleContext ctx = plugin.getBundle().getBundleContext();
-        return ctx.registerService(new String[] { DebugOptionsListener.class.getName(), PluginLogger.class.getName() },
+        return ctx.registerService(new String[] { DebugOptionsListener.class.getName(), Logger.class.getName() },
                 new Tracer(plugin), props);
     }
 }

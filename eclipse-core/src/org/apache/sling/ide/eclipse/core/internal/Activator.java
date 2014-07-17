@@ -20,9 +20,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.ide.eclipse.core.ServiceUtil;
-import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
 import org.apache.sling.ide.eclipse.core.debug.PluginLoggerRegistrar;
 import org.apache.sling.ide.filter.FilterLocator;
+import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.osgi.OsgiClientFactory;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.CommandExecutionProperties;
@@ -135,8 +135,8 @@ public class Activator extends Plugin {
         return ServiceUtil.getNotNull(osgiClientFactory);
     }
 
-    public PluginLogger getPluginLogger() {
-        return (PluginLogger) ServiceUtil.getNotNull(tracer);
+    public Logger getPluginLogger() {
+        return (Logger) ServiceUtil.getNotNull(tracer);
     }
     
     public void issueConsoleLog(String actionType, String path, String message) {

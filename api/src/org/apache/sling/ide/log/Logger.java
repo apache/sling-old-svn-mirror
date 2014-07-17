@@ -14,25 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.eclipse.core.debug;
-
-import org.eclipse.osgi.util.NLS;
+package org.apache.sling.ide.log;
 
 /**
- * The <tt>PluginLogger</tt> is a simple helper class which assists with logging from Eclipse plugins
+ * The <tt>Logger</tt> is a simple helper class which assists with logging
  *
  */
-public interface PluginLogger {
+public interface Logger {
 
     /**
-     * Logs an error message using the platform log facility
+     * Logs an error message
      * 
      * @param message message to log
      */
     void error(String message);
 
     /**
-     * Logs an error message using the platform log facility
+     * Logs an error message
      * 
      * @param message message to log
      * @param cause the cause
@@ -40,14 +38,14 @@ public interface PluginLogger {
     void error(String message, Throwable cause);
 
     /**
-     * Logs a warning message using the platform log facility
+     * Logs a warning message
      * 
      * @param message message to log
      */
     void warn(String message);
 
     /**
-     * Logs an warning message using the platform log facility
+     * Logs an warning message
      * 
      * @param message message to log
      * @param cause the cause
@@ -55,11 +53,7 @@ public interface PluginLogger {
     void warn(String message, Throwable cause);
 
     /**
-     * Sends a trace message using the platform debug facility
-     * 
-     * <p>
-     * By default these trace messages are ignored, and are only logged if debugging is enabled for a specific plug-in.
-     * </p>
+     * Sends a trace message
      * 
      * <p>
      * Usage guide:
@@ -70,20 +64,14 @@ public interface PluginLogger {
      * a.join(b);
      * </pre>
      * 
-     * @param message A message, using the syntax from {@link NLS#bind(String, Object[])}
+     * @param message A message, using positional argument syntax
      * @param arguments an optional array of arguments
      * 
-     * @see <a href="https://wiki.eclipse.org/FAQ_How_do_I_use_the_platform_debug_tracing_facility%3F">How do I use the
-     *      platform debug tracing facility?</a>
      */
     void trace(String message, Object... arguments);
 
     /**
-     * Sends a trace message using the platform debug facility
-     * 
-     * <p>
-     * By default these trace messages are ignored, and are only logged if debugging is enabled for a specific plug-in.
-     * </p>
+     * Sends a trace message
      * 
      * <p>
      * Usage guide:
@@ -99,9 +87,6 @@ public interface PluginLogger {
      * 
      * @param message A string message
      * @param error the error that occured
-     * 
-     * @see <a href="https://wiki.eclipse.org/FAQ_How_do_I_use_the_platform_debug_tracing_facility%3F">How do I use the
-     *      platform debug tracing facility?</a>
      */
     void trace(String message, Throwable error);
 }

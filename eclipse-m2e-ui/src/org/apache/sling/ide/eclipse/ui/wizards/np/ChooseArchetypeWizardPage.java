@@ -25,8 +25,8 @@ import java.util.Set;
 
 import org.apache.maven.archetype.catalog.Archetype;
 import org.apache.maven.archetype.catalog.ArchetypeCatalog;
-import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
 import org.apache.sling.ide.eclipse.m2e.internal.Activator;
+import org.apache.sling.ide.log.Logger;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -293,7 +293,7 @@ public class ChooseArchetypeWizardPage extends WizardPage implements IndexListen
         @Override
         public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 
-            PluginLogger logger = Activator.getDefault().getPluginLogger();
+            Logger logger = Activator.getDefault().getPluginLogger();
 
             monitor.beginTask("Discovering archetypes...", 5);
             ArchetypeManager manager = MavenPluginActivator.getDefault().getArchetypeManager();
