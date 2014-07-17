@@ -91,6 +91,11 @@
           <scope>test</scope>
       </dependency>
       <dependency>
+          <groupId>org.apache.jackrabbit</groupId>
+          <artifactId>jackrabbit-core</artifactId>
+          <version>${jackrabbit.version}</version>
+      </dependency>
+      <dependency>
          <groupId>org.apache.jackrabbit.vault</groupId>
           <artifactId>org.apache.jackrabbit.vault</artifactId>
           <version>3.0.0</version>

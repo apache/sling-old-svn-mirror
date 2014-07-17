@@ -97,10 +97,8 @@ public class ReorderChildNodesCommand extends JcrCommand<Void> {
         }
         ListIterator<Node> nodeChildrenListIt = nodeChildren.listIterator();
 
-        // it is possible for the repository and the local workspace to have a different types of elements
-        // for instance if the repository has been changed independently of the local workspace modifications
-        // therefore allow for the
-        boolean changed = false;
+        // the sorting is conditioned on the local workspace and the repository having the same child names
+        // if that precondition is not met abort processing since there can be no meaningful result
 
         traceResourcesAndNodes(children, nodeChildren);
 
@@ -144,16 +142,7 @@ public class ReorderChildNodesCommand extends JcrCommand<Void> {
                     Text.getName(childResource.getPath()), expectedParentName);
 
             nodeToReorder.orderBefore(Text.getName(childResource.getPath()), expectedParentName);
-            changed = true;
-            break;
         }
-
-        // re-read the data and run the ordering again
-        // this makes sure that we don't have inconsistent data in the node list
-        if (changed) {
-            reorderChildNodes(nodeToReorder, resourceToReorder);
-        }
-
     }
 
     private void traceResourcesAndNodes(List<ResourceProxy> children, List<Node> nodeChildren)
