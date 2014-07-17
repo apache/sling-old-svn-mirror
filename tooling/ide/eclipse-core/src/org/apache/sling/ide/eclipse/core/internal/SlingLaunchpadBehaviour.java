@@ -26,7 +26,7 @@ import java.util.List;
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
-import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
+import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.osgi.OsgiClient;
 import org.apache.sling.ide.osgi.OsgiClientException;
 import org.apache.sling.ide.serialization.SerializationException;
@@ -142,7 +142,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
     protected void publishModule(int kind, int deltaKind, IModule[] module, IProgressMonitor monitor)
             throws CoreException {
 
-        PluginLogger logger = Activator.getDefault().getPluginLogger();
+        Logger logger = Activator.getDefault().getPluginLogger();
         
         if (commandFactory == null) {
             commandFactory = new ResourceChangeCommandFactory(Activator.getDefault().getSerializationManager());
@@ -332,7 +332,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
     private void publishContentModule(int kind, int deltaKind, IModule[] module, IProgressMonitor monitor)
             throws CoreException, SerializationException, IOException {
 
-        PluginLogger logger = Activator.getDefault().getPluginLogger();
+        Logger logger = Activator.getDefault().getPluginLogger();
 
 		Repository repository = ServerUtil.getConnectedRepository(getServer(), monitor);
         

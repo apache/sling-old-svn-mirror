@@ -24,9 +24,9 @@ import java.util.List;
 import java.util.jar.Manifest;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
 import org.apache.sling.ide.eclipse.core.internal.Activator;
 import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
+import org.apache.sling.ide.log.Logger;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -52,7 +52,7 @@ public class ServiceComponentHeaderValidator {
 
         IProject project = manifest.getProject();
 
-        PluginLogger pluginLogger = Activator.getDefault().getPluginLogger();
+        Logger pluginLogger = Activator.getDefault().getPluginLogger();
 
         IJavaProject javaProject = ProjectHelper.asJavaProject(project);
 

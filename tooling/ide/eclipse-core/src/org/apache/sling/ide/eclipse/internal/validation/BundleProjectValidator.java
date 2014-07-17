@@ -16,8 +16,8 @@
  */
 package org.apache.sling.ide.eclipse.internal.validation;
 
-import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
 import org.apache.sling.ide.eclipse.core.internal.Activator;
+import org.apache.sling.ide.log.Logger;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
@@ -46,7 +46,7 @@ public class BundleProjectValidator extends AbstractValidator {
 
         IFile m = (IFile) resource;
 
-        PluginLogger pluginLogger = Activator.getDefault() .getPluginLogger();
+        Logger pluginLogger = Activator.getDefault() .getPluginLogger();
 
         try {
 

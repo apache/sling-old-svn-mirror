@@ -31,11 +31,11 @@ import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.ResourceUtil;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
-import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
 import org.apache.sling.ide.eclipse.core.progress.ProgressUtils;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterResult;
 import org.apache.sling.ide.filter.IgnoredResources;
+import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.serialization.SerializationData;
 import org.apache.sling.ide.serialization.SerializationDataBuilder;
 import org.apache.sling.ide.serialization.SerializationException;
@@ -64,7 +64,7 @@ public class ImportRepositoryContentAction {
     private final IServer server;
     private final IPath projectRelativePath;
     private final IProject project;
-    private final PluginLogger logger;
+    private final Logger logger;
 
     private SerializationManager serializationManager;
 	private SerializationDataBuilder builder;

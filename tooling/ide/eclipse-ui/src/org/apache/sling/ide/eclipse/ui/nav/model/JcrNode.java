@@ -41,12 +41,12 @@ import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
-import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
 import org.apache.sling.ide.eclipse.core.internal.Activator;
 import org.apache.sling.ide.eclipse.ui.WhitelabelSupport;
 import org.apache.sling.ide.eclipse.ui.views.PropertyTypeSupport;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterResult;
+import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.serialization.SerializationKind;
 import org.apache.sling.ide.serialization.SerializationKindManager;
 import org.apache.sling.ide.transport.NodeTypeRegistry;
@@ -1145,7 +1145,7 @@ public class JcrNode implements IAdaptable {
                 return result==FilterResult.ALLOW;
             }
         } catch (CoreException e) {
-            PluginLogger logger = Activator.getDefault().getPluginLogger();
+            Logger logger = Activator.getDefault().getPluginLogger();
             logger.error("Could not verify child node allowance: "+this, e);
             return false;
         }
@@ -1240,7 +1240,7 @@ public class JcrNode implements IAdaptable {
                         try {
                             contentXml.delete(true, new NullProgressMonitor());
                         } catch (CoreException e) {
-                            PluginLogger logger = Activator.getDefault().getPluginLogger();
+                            Logger logger = Activator.getDefault().getPluginLogger();
                             logger.error("Could not delete "+contentXml.getFullPath()+", e="+e, e);
                             MessageDialog.openError(null, "Could not delete file",
                                     "Could not delete "+contentXml.getFullPath()+", "+e);
@@ -1299,7 +1299,7 @@ public class JcrNode implements IAdaptable {
                 return;
             } catch (CoreException e) {
                 MessageDialog.openWarning(null, "Unable to change primaryType", "Exception occurred: "+e);
-                PluginLogger logger = Activator.getDefault().getPluginLogger();
+                Logger logger = Activator.getDefault().getPluginLogger();
                 logger.error("Exception occurred", e);
                 return;
             }
@@ -1389,7 +1389,7 @@ public class JcrNode implements IAdaptable {
                     return false;
                 }
             } catch (RepositoryException e) {
-                PluginLogger logger = Activator.getDefault().getPluginLogger();
+                Logger logger = Activator.getDefault().getPluginLogger();
                 logger.error("Could not determine allowed primary child node types", e);
             }
         }

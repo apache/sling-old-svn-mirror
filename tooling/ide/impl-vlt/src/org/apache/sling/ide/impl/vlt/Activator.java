@@ -17,8 +17,8 @@
 package org.apache.sling.ide.impl.vlt;
 
 import org.apache.sling.ide.eclipse.core.ServiceUtil;
-import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
 import org.apache.sling.ide.eclipse.core.debug.PluginLoggerRegistrar;
+import org.apache.sling.ide.log.Logger;
 import org.eclipse.core.runtime.Plugin;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -80,7 +80,7 @@ public class Activator extends Plugin {
 		return plugin;
 	}
 
-    public PluginLogger getPluginLogger() {
-        return (PluginLogger) ServiceUtil.getNotNull(tracer);
+    public Logger getPluginLogger() {
+        return (Logger) ServiceUtil.getNotNull(tracer);
     }
 }
