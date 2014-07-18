@@ -119,6 +119,8 @@
                         
                         <!-- prevent failures when eclipse-test is not activated as a submodule -->
                         <exclude>eclipse-test/**</exclude>
+                        <!-- exclude target file from the source-bundle project since it is not a module -->
+                        <exclude>source-bundle/target/**</exclude>
                     </excludes>
                 </configuration>
                 <executions>
