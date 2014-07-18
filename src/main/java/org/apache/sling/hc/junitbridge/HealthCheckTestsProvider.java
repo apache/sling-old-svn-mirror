@@ -30,8 +30,6 @@ import org.apache.sling.junit.TestsProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** Bridge Health Checks into the Sling JUnit server-side test
  *  framework, based on their tags.
@@ -44,10 +42,12 @@ public class HealthCheckTestsProvider implements TestsProvider {
     private long lastModified;
     private BundleContext bundleContext;
     
-    private final Logger log = LoggerFactory.getLogger(getClass());
-    
     public static final String TEST_NAME_PREFIX = "HealthChecks(";
     public static final String TEST_NAME_SUFFIX = ")";
+    
+    public static final String [] DEFAULT_TAG_GROUPS = {
+        "No tag groups configured"
+    };
 
     @Property(cardinality=2147483647, 
             label="Health Check Tags",
@@ -59,11 +59,7 @@ public class HealthCheckTestsProvider implements TestsProvider {
     @Activate
     protected void activate(ComponentContext ctx) {
         bundleContext = ctx.getBundleContext();
-        tagGroups = PropertiesUtil.toStringArray(ctx.getProperties().get(PROP_TAG_GROUPS));
-        if(tagGroups == null) {
-            tagGroups = new String[]{};
-            log.warn("No tag groups configured via {}, Health Checks won't be available as JUnit tests", PROP_TAG_GROUPS);
-        }
+        tagGroups = PropertiesUtil.toStringArray(ctx.getProperties().get(PROP_TAG_GROUPS), DEFAULT_TAG_GROUPS);
         servicePid = (String)ctx.getProperties().get(Constants.SERVICE_PID);
         lastModified = System.currentTimeMillis();
     }
