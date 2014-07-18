@@ -19,6 +19,7 @@ package org.apache.sling.ide.eclipse.core.internal;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.core.ServiceUtil;
 import org.apache.sling.ide.eclipse.core.debug.PluginLoggerRegistrar;
 import org.apache.sling.ide.filter.FilterLocator;
@@ -56,6 +57,7 @@ public class Activator extends Plugin {
     private ServiceTracker<SerializationManager, SerializationManager> serializationManager;
     private ServiceTracker<FilterLocator, FilterLocator> filterLocator;
     private ServiceTracker<OsgiClientFactory, OsgiClientFactory> osgiClientFactory;
+    private ServiceTracker<EmbeddedArtifactLocator, EmbeddedArtifactLocator> artifactLocator;
     private ServiceTracker<?, ?> tracer;
 
     private ServiceRegistration<?> tracerRegistration;
@@ -85,6 +87,10 @@ public class Activator extends Plugin {
                 null);
         osgiClientFactory.open();
 
+        artifactLocator = new ServiceTracker<EmbeddedArtifactLocator, EmbeddedArtifactLocator>(context,
+                EmbeddedArtifactLocator.class, null);
+        artifactLocator.open();
+
         // ugh
         ServiceReference<Object> reference = (ServiceReference<Object>) tracerRegistration.getReference();
         tracer = new ServiceTracker<Object, Object>(context, reference, null);
@@ -103,6 +109,7 @@ public class Activator extends Plugin {
         serializationManager.close();
         filterLocator.close();
         osgiClientFactory.close();
+        artifactLocator.close();
         tracer.close();
 
         plugin = null;
@@ -133,6 +140,11 @@ public class Activator extends Plugin {
 
     public OsgiClientFactory getOsgiClientFactory() {
         return ServiceUtil.getNotNull(osgiClientFactory);
+    }
+
+    public EmbeddedArtifactLocator getArtifactLocator() {
+
+        return ServiceUtil.getNotNull(artifactLocator);
     }
 
     public Logger getPluginLogger() {
