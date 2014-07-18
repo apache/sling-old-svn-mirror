@@ -17,7 +17,11 @@
  */
 package org.apache.sling.hc.junitbridge;
 
+import static org.junit.Assert.fail;
 import static org.junit.Assert.assertNotNull;
+
+import java.util.Arrays;
+
 import junit.framework.TestSuite;
 
 import org.junit.runner.RunWith;
@@ -38,6 +42,9 @@ public class JUnitTestBridge {
         TestSuite suite = new TestSuite();
         for(ServiceReference ref : context.getFilter().getTaggedHealthCheckServiceReferences(context.getTags())) {
             suite.addTest(new HealthCheckTest(context, ref));
+        }
+        if(suite.countTestCases() == 0) {
+            fail("No Health Checks found with tags " + Arrays.asList(context.getTags()));
         }
         return suite;
     }
