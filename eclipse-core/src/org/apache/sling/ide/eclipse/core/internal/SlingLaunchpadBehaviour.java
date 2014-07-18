@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.sling.ide.artifacts.EmbeddedArtifact;
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
@@ -100,13 +102,31 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
             try {
                 repositoryInfo = ServerUtil.getRepositoryInfo(getServer(), monitor);
                 OsgiClient client = Activator.getDefault().getOsgiClientFactory().createOsgiClient(repositoryInfo);
-                Version bundleVersion = client.getBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME);
+                EmbeddedArtifactLocator artifactLocator = Activator.getDefault().getArtifactLocator();
+                Version remoteVersion = client.getBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME);
+                final EmbeddedArtifact supportBundle = artifactLocator.loadToolingSupportBundle();
+
+                final Version embeddedVersion = new Version(supportBundle.getVersion());
                 
                 ISlingLaunchpadServer launchpadServer = (ISlingLaunchpadServer) getServer().loadAdapter(SlingLaunchpadServer.class,
                         monitor);
-                launchpadServer.setBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME, bundleVersion,
+                if (remoteVersion == null || remoteVersion.compareTo(embeddedVersion) < 0) {
+                    InputStream contents = null;
+                    try {
+                        contents = supportBundle.openInputStream();
+                        client.installBundle(contents, supportBundle.getName());
+                    } finally {
+                        IOUtils.closeQuietly(contents);
+                    }
+                    remoteVersion = embeddedVersion;
+
+                }
+                launchpadServer.setBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME, remoteVersion,
                         monitor);
                 
+            } catch ( IOException e) {
+                Activator.getDefault().getPluginLogger()
+                    .warn("Failed reading the installation support bundle", e);
             } catch (URISyntaxException e) {
                 Activator.getDefault().getPluginLogger()
                         .warn("Failed retrieving information about the installation support bundle", e);
