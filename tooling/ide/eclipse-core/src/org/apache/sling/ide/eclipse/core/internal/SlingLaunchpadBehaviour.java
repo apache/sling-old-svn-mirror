@@ -78,73 +78,90 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
 
     public void start(IProgressMonitor monitor) throws CoreException {
 
+        
+        
         boolean success = false;
         Result<ResourceProxy> result = null;
+        monitor.beginTask("Starting server", 5);
+        
+        try {
+            if (getServer().getMode().equals(ILaunchManager.DEBUG_MODE)) {
+                debuggerConnection = new JVMDebuggerConnection();
+                success = debuggerConnection.connectInDebugMode(launch, getServer(), monitor);
 
-        if (getServer().getMode().equals(ILaunchManager.DEBUG_MODE)) {
-            debuggerConnection = new JVMDebuggerConnection();
-            success = debuggerConnection.connectInDebugMode(launch, getServer(), monitor);
+            } else {
 
-        } else {
-
-            Repository repository;
-            try {
-                repository = ServerUtil.connectRepository(getServer(), monitor);
-            } catch (CoreException e) {
-                setServerState(IServer.STATE_STOPPED);
-                throw e;
-            }
-            Command<ResourceProxy> command = repository.newListChildrenNodeCommand("/");
-            result = command.execute();
-            success = result.isSuccess();
-            
-            RepositoryInfo repositoryInfo;
-            try {
-                repositoryInfo = ServerUtil.getRepositoryInfo(getServer(), monitor);
-                OsgiClient client = Activator.getDefault().getOsgiClientFactory().createOsgiClient(repositoryInfo);
-                EmbeddedArtifactLocator artifactLocator = Activator.getDefault().getArtifactLocator();
-                Version remoteVersion = client.getBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME);
-                final EmbeddedArtifact supportBundle = artifactLocator.loadToolingSupportBundle();
-
-                final Version embeddedVersion = new Version(supportBundle.getVersion());
-                
-                ISlingLaunchpadServer launchpadServer = (ISlingLaunchpadServer) getServer().loadAdapter(SlingLaunchpadServer.class,
-                        monitor);
-                if (remoteVersion == null || remoteVersion.compareTo(embeddedVersion) < 0) {
-                    InputStream contents = null;
-                    try {
-                        contents = supportBundle.openInputStream();
-                        client.installBundle(contents, supportBundle.getName());
-                    } finally {
-                        IOUtils.closeQuietly(contents);
-                    }
-                    remoteVersion = embeddedVersion;
-
+                Repository repository;
+                try {
+                    repository = ServerUtil.connectRepository(getServer(), monitor);
+                } catch (CoreException e) {
+                    setServerState(IServer.STATE_STOPPED);
+                    throw e;
                 }
-                launchpadServer.setBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME, remoteVersion,
-                        monitor);
                 
-            } catch ( IOException e) {
-                Activator.getDefault().getPluginLogger()
-                    .warn("Failed reading the installation support bundle", e);
-            } catch (URISyntaxException e) {
-                Activator.getDefault().getPluginLogger()
-                        .warn("Failed retrieving information about the installation support bundle", e);
-            } catch (OsgiClientException e) {
-                Activator.getDefault().getPluginLogger()
-                        .warn("Failed retrieving information about the installation support bundle", e);
-            }
-        }
+                monitor.worked(2); // 2/5 done
+                
+                Command<ResourceProxy> command = repository.newListChildrenNodeCommand("/");
+                result = command.execute();
+                success = result.isSuccess();
+                
+                monitor.worked(1); // 3/5 done
+                
+                RepositoryInfo repositoryInfo;
+                try {
+                    repositoryInfo = ServerUtil.getRepositoryInfo(getServer(), monitor);
+                    OsgiClient client = Activator.getDefault().getOsgiClientFactory().createOsgiClient(repositoryInfo);
+                    EmbeddedArtifactLocator artifactLocator = Activator.getDefault().getArtifactLocator();
+                    Version remoteVersion = client.getBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME);
+                    
+                    monitor.worked(1); // 4/5 done
+                    
+                    final EmbeddedArtifact supportBundle = artifactLocator.loadToolingSupportBundle();
 
-        if (success) {
-            setServerState(IServer.STATE_STARTED);
-        } else {
-            setServerState(IServer.STATE_STOPPED);
-            String message = "Unable to connect to the Server. Please make sure a server instance is running ";
-            if (result != null) {
-                message += " (" + result.toString() + ")";
+                    final Version embeddedVersion = new Version(supportBundle.getVersion());
+                    
+                    ISlingLaunchpadServer launchpadServer = (ISlingLaunchpadServer) getServer().loadAdapter(SlingLaunchpadServer.class,
+                            monitor);
+                    if (remoteVersion == null || remoteVersion.compareTo(embeddedVersion) < 0) {
+                        InputStream contents = null;
+                        try {
+                            contents = supportBundle.openInputStream();
+                            client.installBundle(contents, supportBundle.getName());
+                        } finally {
+                            IOUtils.closeQuietly(contents);
+                        }
+                        remoteVersion = embeddedVersion;
+
+                    }
+                    launchpadServer.setBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME, remoteVersion,
+                            monitor);
+                    
+                    monitor.worked(1); // 5/5 done
+                    
+                } catch ( IOException e) {
+                    Activator.getDefault().getPluginLogger()
+                        .warn("Failed reading the installation support bundle", e);
+                } catch (URISyntaxException e) {
+                    Activator.getDefault().getPluginLogger()
+                            .warn("Failed retrieving information about the installation support bundle", e);
+                } catch (OsgiClientException e) {
+                    Activator.getDefault().getPluginLogger()
+                            .warn("Failed retrieving information about the installation support bundle", e);
+                }
             }
-            throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, message));
+
+            if (success) {
+                setServerState(IServer.STATE_STARTED);
+            } else {
+                setServerState(IServer.STATE_STOPPED);
+                String message = "Unable to connect to the Server. Please make sure a server instance is running ";
+                if (result != null) {
+                    message += " (" + result.toString() + ")";
+                }
+                throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, message));
+            }
+        } finally {
+            monitor.done();
         }
     }
 
