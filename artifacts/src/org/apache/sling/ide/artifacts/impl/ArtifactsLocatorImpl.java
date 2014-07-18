@@ -40,7 +40,7 @@ public class ArtifactsLocatorImpl implements EmbeddedArtifactLocator {
 
         BundleContext bundleContext = context.getBundleContext();
 
-        String version = "0.0.1.SNAPSHOT"; // TODO - remove version hardcoding
+        String version = "1.0.0"; // TODO - remove version hardcoding
         String artifactId = "org.apache.sling.tooling.support.install";
         String extension = "jar";
 
