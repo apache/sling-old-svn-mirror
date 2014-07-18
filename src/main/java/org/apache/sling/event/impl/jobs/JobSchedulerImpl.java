@@ -57,6 +57,7 @@ import org.apache.sling.event.impl.support.ScheduleInfoImpl;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobBuilder;
 import org.apache.sling.event.jobs.ScheduleInfo;
+import org.apache.sling.event.jobs.ScheduleInfo.ScheduleType;
 import org.apache.sling.event.jobs.ScheduledJobInfo;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventHandler;
@@ -74,6 +75,8 @@ public class JobSchedulerImpl
     private static final String TOPIC_READ_JOB = "org/apache/sling/event/impl/jobs/READSCHEDULEDJOB";
 
     private static final String PROPERTY_READ_JOB = "properties";
+
+    private static final String PROPERTY_SCHEDULE_INDEX = "index";
 
     /** Default logger */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -262,10 +265,6 @@ public class JobSchedulerImpl
 
     private void startScheduledJob(final ScheduledJobInfoImpl info) {
         if ( !info.isSuspended() ) {
-            // Create configuration for scheduled job
-            final Map<String, Serializable> config = new HashMap<String, Serializable>();
-            config.put(PROPERTY_READ_JOB, info);
-
             logger.debug("Adding scheduled job: {}", info.getName());
             int index = 0;
             for(final ScheduleInfo si : info.getSchedules()) {
@@ -285,6 +284,10 @@ public class JobSchedulerImpl
                         options = this.scheduler.AT(((ScheduleInfoImpl)si).getNextScheduledExecution());
                         break;
                 }
+                // Create configuration for scheduled job
+                final Map<String, Serializable> config = new HashMap<String, Serializable>();
+                config.put(PROPERTY_READ_JOB, info);
+                config.put(PROPERTY_SCHEDULE_INDEX, index);
                 this.scheduler.schedule(this, options.name(name).config(config).canRunConcurrently(false));
                 index++;
             }
@@ -307,6 +310,34 @@ public class JobSchedulerImpl
         final ScheduledJobInfoImpl info = (ScheduledJobInfoImpl) context.getConfiguration().get(PROPERTY_READ_JOB);
 
         this.jobManager.addJob(info.getJobTopic(), info.getJobProperties());
+        int index = (Integer)context.getConfiguration().get(PROPERTY_SCHEDULE_INDEX);
+        final Iterator<ScheduleInfo> iter = info.getSchedules().iterator();
+        ScheduleInfo si = iter.next();
+        for(int i=0; i<index; i++) {
+            si = iter.next();
+        }
+        // if scheduled once (DATE), remove from schedule
+        if ( si.getType() == ScheduleType.DATE ) {
+            if ( index == 0 && info.getSchedules().size() == 1 ) {
+                // remove
+                unschedule(info);
+            } else {
+                // update schedule list
+                final List<ScheduleInfoImpl> infos = new ArrayList<ScheduleInfoImpl>();
+                for(final ScheduleInfo i : info.getSchedules() ) {
+                    if ( i != si ) { // no need to use equals
+                        infos.add((ScheduleInfoImpl)i);
+                    }
+                }
+                try {
+                    // no need to pass job name, it's in the job properties already
+                    this.writeJob(info.getJobTopic(), null,
+                            info.getJobProperties(), info.getName(), info.isSuspended(), infos);
+                } catch ( final PersistenceException pe) {
+                    logger.warn("Unable to update scheduled job", pe);
+                }
+            }
+        }
     }
 
     public void unschedule(final ScheduledJobInfoImpl info) {

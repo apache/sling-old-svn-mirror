@@ -83,10 +83,11 @@ public class TimedJobsTest extends AbstractJobHandlingTest {
             while ( counter.get() == 0 ) {
                 this.sleep(1000);
             }
-            assertEquals(1, this.getJobManager().getScheduledJobs().size()); // job is still scheduled
+            assertEquals(0, this.getJobManager().getScheduledJobs().size()); // job is not scheduled anymore
             info.unschedule();
         } finally {
             ehReg.unregister();
         }
     }
+
 }
