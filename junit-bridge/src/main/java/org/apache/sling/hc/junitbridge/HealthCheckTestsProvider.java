@@ -34,7 +34,11 @@ import org.osgi.service.component.ComponentContext;
 /** Bridge Health Checks into the Sling JUnit server-side test
  *  framework, based on their tags.
  */
-@Component(metatype=true)
+@Component(
+    metatype=true,
+    label="Apache Sling Health Checks/JUnit bridge",
+    description="Makes Health Checks available as server-side JUnit tests"
+)
 @Service
 public class HealthCheckTestsProvider implements TestsProvider {
 
@@ -51,7 +55,7 @@ public class HealthCheckTestsProvider implements TestsProvider {
 
     @Property(cardinality=2147483647, 
             label="Health Check Tags",
-            description="Groups of health check tags to execute as JUnit tests. Use the standard Health Checks 'includeThis,-omitThat' syntax")
+            description="Groups of health check tags to execute as JUnit tests. Use the standard Health Checks 'includeThisTag,-omitThatTag' syntax")
     public static final String PROP_TAG_GROUPS = "health.check.tag.groups";
     
     private String [] tagGroups;
