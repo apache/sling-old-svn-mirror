@@ -839,7 +839,7 @@ public class MapEntries implements EventHandler {
         // sling:VanityPath (uppercase V) is the mixin name
         // sling:vanityPath (lowercase) is the property name
         final Map <String, List<String>> targetPaths = new ConcurrentHashMap <String, List<String>>();
-        final String queryString = "SELECT sling:vanityPath, sling:redirect, sling:redirectStatus FROM sling:VanityPath WHERE sling:vanityPath IS NOT NULL ORDER BY sling:vanityOrder DESC";
+        final String queryString = "SELECT sling:vanityPath, sling:redirect, sling:redirectStatus FROM sling:VanityPath WHERE sling:vanityPath IS NOT NULL";
         final Iterator<Resource> i = resolver.findResources(queryString, "sql");
 
         while (i.hasNext()) {
