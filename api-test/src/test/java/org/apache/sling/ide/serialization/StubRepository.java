@@ -17,6 +17,7 @@
 package org.apache.sling.ide.serialization;
 
 import org.apache.sling.ide.transport.Command;
+import org.apache.sling.ide.transport.FallbackNodeTypeRegistry;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.NodeTypeRegistry;
 import org.apache.sling.ide.transport.Repository;
@@ -62,17 +63,7 @@ public class StubRepository implements Repository {
     
     @Override
     public NodeTypeRegistry getNodeTypeRegistry() {
-        final StubNodeTypeRegistry stubNodeTypeRegistry = new StubNodeTypeRegistry();
         
-        stubNodeTypeRegistry.addNodeType("nt:file", new String[] {"nt:hierarchyNode"});
-        stubNodeTypeRegistry.addNodeType("nt:folder", new String[] {"nt:hierarchyNode"});
-        stubNodeTypeRegistry.addNodeType("nt:hierarchyNode", new String[] {"mix:created", "nt:base"});
-        stubNodeTypeRegistry.addNodeType("nt:unstructured", new String[] {"nt:base"});
-        stubNodeTypeRegistry.addNodeType("nt:base", new String[] {});
-        stubNodeTypeRegistry.addNodeType("sling:OsgiConfig", new String[] {"nt:hierarchyNode", "nt:unstructured"});
-        stubNodeTypeRegistry.addNodeType("sling:Folder", new String[] {"nt:folder"});
-        stubNodeTypeRegistry.addNodeType("vlt:FullCoverage", new String[] {});
-
-        return stubNodeTypeRegistry;
+        return FallbackNodeTypeRegistry.createRegistryWithDefaultNodeTypes();
     }
 }
