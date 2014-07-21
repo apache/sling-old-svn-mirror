@@ -199,7 +199,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         }
 
         String primaryType = (String) resource.getProperties().get(JcrConstants.JCR_PRIMARYTYPE);
-        if (!node.getPrimaryNodeType().getName().equals(primaryType)) {
+        if (!node.getPrimaryNodeType().getName().equals(primaryType) && node.getDepth() != 0) {
             node.setPrimaryType(primaryType);
             primaryTypeHasChanged = true;
             getLogger().trace("Set new primary type {0} for node at {1}", primaryType, node.getPath());
