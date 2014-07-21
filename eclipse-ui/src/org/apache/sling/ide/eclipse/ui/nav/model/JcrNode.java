@@ -1189,9 +1189,10 @@ public class JcrNode implements IAdaptable {
         
         try {
             if (!ntManager.isAllowedPrimaryChildNodeType(getParent().getPrimaryType(), newPrimaryType)) {
-                MessageDialog.openWarning(null, "Unable to change primary type", "Parent (type '"+getParent().getPrimaryType()+"')"+
-                        " does not accept child with primary type '"+newPrimaryType+"'");
-                return;
+                if (!MessageDialog.openQuestion(null, "Unable to change primary type", "Parent (type '"+getParent().getPrimaryType()+"')"+
+                        " does not accept child with primary type '"+newPrimaryType+"'. Change anyway?")) {
+                    return;
+                }
             }
         } catch (RepositoryException e1) {
             MessageDialog.openWarning(null, "Unable to change primary type", "Exception occured while trying to "+
