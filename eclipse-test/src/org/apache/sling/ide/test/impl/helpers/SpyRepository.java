@@ -17,6 +17,7 @@
 package org.apache.sling.ide.test.impl.helpers;
 
 import org.apache.sling.ide.transport.Command;
+import org.apache.sling.ide.transport.FallbackNodeTypeRegistry;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.NodeTypeRegistry;
 import org.apache.sling.ide.transport.Repository;
@@ -68,6 +69,7 @@ public class SpyRepository implements Repository {
 
     @Override
     public NodeTypeRegistry getNodeTypeRegistry() {
-        throw new UnsupportedOperationException("Not implemented");
+
+        return FallbackNodeTypeRegistry.createRegistryWithDefaultNodeTypes();
     }
 }

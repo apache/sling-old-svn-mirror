@@ -19,8 +19,13 @@ package org.apache.sling.ide.eclipse.core.internal;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
@@ -29,19 +34,25 @@ import org.apache.sling.ide.eclipse.core.ResourceUtil;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterResult;
 import org.apache.sling.ide.log.Logger;
+import org.apache.sling.ide.serialization.SerializationDataBuilder;
 import org.apache.sling.ide.serialization.SerializationException;
 import org.apache.sling.ide.serialization.SerializationKind;
+import org.apache.sling.ide.serialization.SerializationKindManager;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.Repository;
+import org.apache.sling.ide.transport.RepositoryException;
 import org.apache.sling.ide.transport.ResourceProxy;
+import org.apache.sling.ide.util.PathUtil;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 
@@ -79,7 +90,7 @@ public class ResourceChangeCommandFactory {
     private Command<?> addFileCommand(Repository repository, IResource resource) throws SerializationException,
             CoreException, IOException {
 
-        ResourceAndInfo rai = buildResourceAndInfo(resource);
+        ResourceAndInfo rai = buildResourceAndInfo(resource, repository);
         
         if ( rai == null ) {
             return null;
@@ -88,7 +99,7 @@ public class ResourceChangeCommandFactory {
         return repository.newAddOrUpdateNodeCommand(rai.getInfo(), rai.getResource());
     }
 
-    private ResourceAndInfo buildResourceAndInfo(IResource resource) throws CoreException,
+    private ResourceAndInfo buildResourceAndInfo(IResource resource, Repository repository) throws CoreException,
             SerializationException, IOException {
         if (ignoredFileNames.contains(resource.getName())) {
             return null;
@@ -123,6 +134,9 @@ public class ResourceChangeCommandFactory {
                 String resourceLocation = file.getFullPath().makeRelativeTo(syncDirectory.getFullPath())
                         .toPortableString();
                 resourceProxy = serializationManager.readSerializationData(resourceLocation, contents);
+                normaliseResourceChildren(file, resourceProxy, syncDirectory, repository);
+
+
                 // TODO - not sure if this 100% correct, but we definitely should not refer to the FileInfo as the
                 // .serialization file, since for nt:file/nt:resource nodes this will overwrite the file contents
                 String primaryType = (String) resourceProxy.getProperties().get(Repository.JCR_PRIMARY_TYPE);
@@ -163,7 +177,7 @@ public class ResourceChangeCommandFactory {
                 }
             }
 
-            resourceProxy = buildResourceProxyForPlainFileOrFolder(resource, syncDirectory);
+            resourceProxy = buildResourceProxyForPlainFileOrFolder(resource, syncDirectory, repository);
         }
 
         if (isFiltered(filter, resourceProxy, resource)) {
@@ -222,7 +236,8 @@ public class ResourceChangeCommandFactory {
         return filterResult == FilterResult.DENY || filterResult == FilterResult.PREREQUISITE;
     }
 
-    private ResourceProxy buildResourceProxyForPlainFileOrFolder(IResource changedResource, IFolder syncDirectory)
+    private ResourceProxy buildResourceProxyForPlainFileOrFolder(IResource changedResource, IFolder syncDirectory,
+            Repository repository)
             throws CoreException, IOException {
 
         SerializationKind serializationKind;
@@ -249,7 +264,7 @@ public class ResourceChangeCommandFactory {
                 return dataFromCoveringParent;
             }
         }
-        return buildResourceProxy(resourceLocation, serializationResource, syncDirectory, fallbackNodeType);
+        return buildResourceProxy(resourceLocation, serializationResource, syncDirectory, fallbackNodeType, repository);
     }
 
     /**
@@ -319,6 +334,8 @@ public class ResourceChangeCommandFactory {
                 logger.trace(
                         "Found possible serialization data at {0}. Resource :{1} ; our resource: {2}. Covered: {3}",
                         parentSerializationFilePath, potentialPath, repositoryPath, covered);
+                // note what we don't need to normalize the children here since this resource's data is covered by
+                // another resource
                 if (covered) {
                     return serializationData.getChild(repositoryPath);
                 }
@@ -331,7 +348,7 @@ public class ResourceChangeCommandFactory {
     }
 
     private ResourceProxy buildResourceProxy(String resourceLocation, IResource serializationResource,
-            IFolder syncDirectory, String fallbackPrimaryType) throws CoreException, IOException {
+            IFolder syncDirectory, String fallbackPrimaryType, Repository repository) throws CoreException, IOException {
         if (serializationResource instanceof IFile) {
             IFile serializationFile = (IFile) serializationResource;
             InputStream contents = null;
@@ -340,6 +357,8 @@ public class ResourceChangeCommandFactory {
                 String serializationFilePath = serializationResource.getFullPath()
                         .makeRelativeTo(syncDirectory.getFullPath()).toPortableString();
                 ResourceProxy resourceProxy = serializationManager.readSerializationData(serializationFilePath, contents);
+                normaliseResourceChildren(serializationFile, resourceProxy, syncDirectory, repository);
+
                 return resourceProxy;
             } finally {
                 IOUtils.closeQuietly(contents);
@@ -348,6 +367,100 @@ public class ResourceChangeCommandFactory {
 
         return new ResourceProxy(serializationManager.getRepositoryPath(resourceLocation), Collections.singletonMap(
                 Repository.JCR_PRIMARY_TYPE, (Object) fallbackPrimaryType));
+    }
+
+    /**
+     * Normalises the of the specified <tt>resourceProxy</tt> by comparing the serialization data and the filesystem
+     * data
+     * 
+     * @param serializationFile the file which contains the serialization data
+     * @param resourceProxy the resource proxy
+     * @param syncDirectory the sync directory
+     * @param repository TODO
+     * @throws CoreException
+     */
+    private void normaliseResourceChildren(IFile serializationFile, ResourceProxy resourceProxy, IFolder syncDirectory,
+            Repository repository) throws CoreException {
+
+        // TODO - this logic should be moved to the serializationManager
+        try {
+            SerializationKindManager skm = new SerializationKindManager();
+            skm.init(repository);
+
+            String primaryType = (String) resourceProxy.getProperties().get(Repository.JCR_PRIMARY_TYPE);
+            List<String> mixinTypesList = getMixinTypes(resourceProxy);
+            SerializationKind serializationKind = skm.getSerializationKind(primaryType, mixinTypesList);
+
+            if (serializationKind == SerializationKind.METADATA_FULL) {
+                return;
+            }
+        } catch (RepositoryException e) {
+            throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Failed creating a "
+                    + SerializationDataBuilder.class.getName(), e));
+        }
+
+        IPath serializationDirectoryPath = serializationFile.getFullPath().removeLastSegments(1);
+
+        Iterator<ResourceProxy> childIterator = resourceProxy.getChildren().iterator();
+        Map<String, IResource> extraChildResources = new HashMap<String, IResource>();
+        for (IResource member : serializationFile.getParent().members()) {
+            if (member.equals(serializationFile)) {
+                continue;
+            }
+            extraChildResources.put(member.getName(), member);
+        }
+
+        while (childIterator.hasNext()) {
+            ResourceProxy child = childIterator.next();
+            String childName = PathUtil.getName(child.getPath());
+            String osPath = serializationManager.getOsPath(childName);
+
+            // covered children might have a FS representation, depending on their child nodes, so
+            // accept a directory which maps to their name
+            extraChildResources.remove(osPath);
+
+            // covered children do not need a filesystem representation
+            if (resourceProxy.covers(child.getPath())) {
+                continue;
+            }
+
+            IPath childPath = serializationDirectoryPath.append(osPath);
+
+            IResource childResource = ResourcesPlugin.getWorkspace().getRoot().findMember(childPath);
+            if (childResource == null) {
+
+                Activator.getDefault().getPluginLogger()
+                        .trace("For resource at with serialization data {0} the serialized child resource at {1} does not exist in the filesystem and will be ignored",
+                                serializationFile, childPath);
+                childIterator.remove();
+            }
+        }
+
+        for ( IResource extraChildResource : extraChildResources.values()) {
+            IPath extraChildResourcePath = extraChildResource.getFullPath()
+                    .makeRelativeTo(syncDirectory.getFullPath()).makeAbsolute();
+            resourceProxy.addChild(new ResourceProxy(serializationManager
+                    .getRepositoryPath(extraChildResourcePath.toPortableString())));
+            
+            Activator.getDefault().getPluginLogger()
+                .trace("For resource at with serialization data {0} the found a child resource at {1} which is not listed in the serialized child resources and will be added",
+                            serializationFile, extraChildResource);
+        }
+    }
+
+    private List<String> getMixinTypes(ResourceProxy resourceProxy) {
+
+        Object mixinTypesProp = resourceProxy.getProperties().get(Repository.JCR_MIXIN_TYPES);
+
+        if (mixinTypesProp == null) {
+            return Collections.emptyList();
+        }
+
+        if (mixinTypesProp instanceof String) {
+            return Collections.singletonList((String) mixinTypesProp);
+        }
+
+        return Arrays.asList((String[]) mixinTypesProp);
     }
 
     public Command<?> newCommandForRemovedResources(Repository repository, IResource removed) throws CoreException {
@@ -414,7 +527,7 @@ public class ResourceChangeCommandFactory {
     public Command<Void> newReorderChildNodesCommand(Repository repository, IResource res) throws CoreException {
 
         try {
-            ResourceAndInfo rai = buildResourceAndInfo(res);
+            ResourceAndInfo rai = buildResourceAndInfo(res, repository);
 
             if (rai == null) {
                 return null;
