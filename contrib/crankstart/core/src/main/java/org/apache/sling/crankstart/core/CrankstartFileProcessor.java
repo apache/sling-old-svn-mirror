@@ -19,8 +19,6 @@ package org.apache.sling.crankstart.core;
 import java.io.File;
 import java.io.FileReader;
 import java.io.Reader;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -50,14 +48,19 @@ import org.slf4j.LoggerFactory;
 
 /** Process a crankstart file */
 public class CrankstartFileProcessor implements Callable<Object> {
-    private final CrankstartContext crankstartContext = new CrankstartContext();
+    private final CrankstartContext crankstartContext;
     private final Logger log = LoggerFactory.getLogger(getClass());
     private Map<String, String> defaults = new HashMap<String, String>();
     
     private List<CrankstartCommand> builtinCommands = new ArrayList<CrankstartCommand>();
     private List<CrankstartCommand> extensionCommands = new ArrayList<CrankstartCommand>();
     
-    public CrankstartFileProcessor() {
+    CrankstartFileProcessor() {
+        this(new CrankstartContext());
+    }
+    
+    public CrankstartFileProcessor(CrankstartContext ctx) {
+        this.crankstartContext = ctx;
         builtinCommands.add(new InstallBundle());
         builtinCommands.add(new Log());
         builtinCommands.add(new SetOsgiFrameworkProperty());
