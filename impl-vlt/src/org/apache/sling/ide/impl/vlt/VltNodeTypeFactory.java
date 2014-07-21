@@ -19,6 +19,7 @@ package org.apache.sling.ide.impl.vlt;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -45,7 +46,7 @@ public class VltNodeTypeFactory {
     }
 
     void init(VltRepository repository) throws RepositoryException {
-        Result<ResourceProxy> jcrSystem = repository.newListTreeNodeCommand("/jcr:system/jcr:nodeTypes", 2).execute();
+        Result<ResourceProxy> jcrSystem = repository.newListTreeNodeCommand("/jcr:system/jcr:nodeTypes", 3).execute();
         // phase 1: create all node types
         for (ResourceProxy child : jcrSystem.get().getChildren()) {
             
@@ -102,10 +103,19 @@ public class VltNodeTypeFactory {
                 .hasNext();) {
             ResourceProxy ntChild = it.next();
             String ntChildName = PathUtil.getName(ntChild.getPath());
-            if (ntChildName.startsWith("rep:residualChildNodeDefinitions")
-                    || ntChildName.startsWith("jcr:childNodeDefinition")) {
+            if (ntChildName.startsWith("jcr:childNodeDefinition")) {
                 VltNodeDefinition nd = handleChildNodeDefinition(ntChild);
                 nds.add(nd);
+            } else if (ntChildName.startsWith("rep:residualChildNodeDefinitions")) {
+                // go through children
+                List<ResourceProxy> residualChildren = ntChild.getChildren();
+                for (Iterator it2 = residualChildren.iterator(); it2
+                        .hasNext();) {
+                    ResourceProxy residualChild = (ResourceProxy) it2
+                            .next();
+                    VltNodeDefinition nd = handleChildNodeDefinition(residualChild);
+                    nds.add(nd);
+                }
             }
         }
         nt.setDeclaredChildNodeDefinitions(nds.toArray(new NodeDefinition[0]));
