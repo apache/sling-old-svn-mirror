@@ -17,6 +17,9 @@
 package org.apache.sling.servlets.get.impl.helpers;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -28,6 +31,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
 import org.apache.sling.commons.json.sling.ResourceTraversor;
@@ -51,10 +55,78 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
 
     public static final String TIDY = "tidy";
 
+    public static final String ARRAY = "array";
+
+    public static final String CHILDREN_KEY = "_children";
+    public static final String CHILD_NAME_KEY = "_name";
+
     private long maximumResults;
 
     public JsonRendererServlet(long maximumResults) {
         this.maximumResults = maximumResults;
+    }
+
+    private String nestedOrderedJson(JSONObject jsonNode) {
+        return nestedOrderedJson(jsonNode, null);
+    }
+
+    private String nestedOrderedJson(JSONObject jsonNode, String nodeName) {
+        try {
+            Iterator<String> keys = jsonNode.keys();
+            StringBuffer sb = new StringBuffer("{");
+            Map<String, JSONObject> children = new LinkedHashMap<String, JSONObject>();
+
+            if (nodeName != null) {
+                sb.append(jsonNode.quote(CHILD_NAME_KEY));
+                sb.append(':');
+                sb.append(jsonNode.quote(nodeName));
+                sb.append(',');
+            }
+
+            while (keys.hasNext()) {
+                String o = keys.next();
+                Object v = jsonNode.opt(o);
+
+                if (v instanceof JSONObject) { // child node
+                    children.put(o, (JSONObject)v);
+                } else {
+                    sb.append(jsonNode.quote(o));
+                    sb.append(':');
+                    sb.append(jsonNode.valueToString(v));
+
+                    if (keys.hasNext()) {
+                        sb.append(',');
+                    }
+                }
+            }
+
+            if (!children.isEmpty()) {
+                Iterator childrenIterator = children.entrySet().iterator();
+
+                sb.append(jsonNode.quote(CHILDREN_KEY));
+                sb.append(':');
+                sb.append('[');
+
+                while (childrenIterator.hasNext()) {
+                    Map.Entry<String, JSONObject> entry = (Map.Entry) childrenIterator.next();
+                    String name = entry.getKey();
+                    JSONObject child = entry.getValue();
+
+                    sb.append(nestedOrderedJson(child, name));
+
+                    if (childrenIterator.hasNext()) {
+                        sb.append(',');
+                    }
+                }
+                sb.append(']');
+            }
+
+
+            sb.append('}');
+            return sb.toString();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override
@@ -72,7 +144,7 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         final String[] selectors = req.getRequestPathInfo().getSelectors();
         if (selectors != null && selectors.length > 0) {
             final String level = selectors[selectors.length - 1];
-            if(!TIDY.equals(level)) {
+            if(!TIDY.equals(level) && !ARRAY.equals(level)) {
                 if (INFINITY.equals(level)) {
                     maxRecursionLevels = -1;
                 } else {
@@ -99,6 +171,7 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         boolean allowDump = true;
         int allowedLevel = 0;
         final boolean tidy = isTidy(req);
+        final boolean array = isArray(req);
         ResourceTraversor traversor = null;
         try {
             traversor = new ResourceTraversor(maxRecursionLevels, maximumResults, r, tidy);
@@ -112,12 +185,14 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         try {
             // Check if we can dump the resource.
             if (allowDump) {
-                if (tidy) {
-                    resp.getWriter().write(traversor.getJSONObject().toString(2));
-                } else {
-                    resp.getWriter().write(traversor.getJSONObject().toString());
-                }
+                JSONObject jsonNode = traversor.getJSONObject();
 
+                if (array) {
+                    resp.getWriter().write(nestedOrderedJson(jsonNode));
+                } else {
+                    String jsonNodeString = tidy ? jsonNode.toString(2) : jsonNode.toString();
+                    resp.getWriter().write(jsonNodeString);
+                }
             } else {
                 // We are not allowed to do the dump.
                 // Send a 300
@@ -140,6 +215,16 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
     protected boolean isTidy(SlingHttpServletRequest req) {
         for(String selector : req.getRequestPathInfo().getSelectors()) {
             if(TIDY.equals(selector)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** True if our request wants the children as an ordered array rather than as sub-objects */
+    protected boolean isArray(SlingHttpServletRequest req) {
+        for(String selector : req.getRequestPathInfo().getSelectors()) {
+            if(ARRAY.equals(selector)) {
                 return true;
             }
         }
