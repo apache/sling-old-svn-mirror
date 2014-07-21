@@ -56,7 +56,7 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
     public static final String TIDY = "tidy";
     public static final int TIDY_INDENTION = 2;
 
-    public static final String ARRAY = "array";
+    public static final String ARRAY = "harray";
 
     public static final String CHILDREN_KEY = "_children";
     public static final String CHILD_NAME_KEY = "_name";
