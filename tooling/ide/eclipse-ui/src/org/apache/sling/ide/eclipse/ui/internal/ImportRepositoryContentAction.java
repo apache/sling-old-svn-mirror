@@ -288,8 +288,7 @@ public class ImportRepositoryContentAction {
             }
 
             if (filter != null) {
-                FilterResult filterResult = filter.filter(contentSyncRoot, child.getPath(),
-                        repository.getRepositoryInfo());
+                FilterResult filterResult = filter.filter(contentSyncRoot, child.getPath());
                 if (filterResult == FilterResult.DENY) {
                     continue;
                 }
