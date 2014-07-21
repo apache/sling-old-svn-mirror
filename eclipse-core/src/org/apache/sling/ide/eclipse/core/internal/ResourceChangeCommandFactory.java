@@ -79,7 +79,7 @@ public class ResourceChangeCommandFactory {
     private Command<?> addFileCommand(Repository repository, IResource resource) throws SerializationException,
             CoreException, IOException {
 
-        ResourceAndInfo rai = buildResourceAndInfo(repository, resource);
+        ResourceAndInfo rai = buildResourceAndInfo(resource);
         
         if ( rai == null ) {
             return null;
@@ -88,7 +88,7 @@ public class ResourceChangeCommandFactory {
         return repository.newAddOrUpdateNodeCommand(rai.getInfo(), rai.getResource());
     }
 
-    private ResourceAndInfo buildResourceAndInfo(Repository repository, IResource resource) throws CoreException,
+    private ResourceAndInfo buildResourceAndInfo(IResource resource) throws CoreException,
             SerializationException, IOException {
         if (ignoredFileNames.contains(resource.getName())) {
             return null;
@@ -105,7 +105,7 @@ public class ResourceChangeCommandFactory {
             return null;
         }
 
-        FileInfo info = createFileInfo(resource, repository);
+        FileInfo info = createFileInfo(resource);
         Activator.getDefault().getPluginLogger().trace("For {0} built fileInfo {1}", resource, info);
 
         File syncDirectoryAsFile = ProjectUtil.getSyncDirectoryFullPath(resource.getProject()).toFile();
@@ -166,14 +166,14 @@ public class ResourceChangeCommandFactory {
             resourceProxy = buildResourceProxyForPlainFileOrFolder(resource, syncDirectory);
         }
 
-        if (isFiltered(filter, resourceProxy, repository, resource)) {
+        if (isFiltered(filter, resourceProxy, resource)) {
             return null;
         }
 
         return new ResourceAndInfo(resourceProxy, info);
     }
 
-    private FileInfo createFileInfo(IResource resource, Repository repository) throws SerializationException,
+    private FileInfo createFileInfo(IResource resource) throws SerializationException,
             CoreException {
 
         if (resource.getType() != IResource.FILE) {
@@ -193,8 +193,7 @@ public class ResourceChangeCommandFactory {
         return info;
     }
 
-    private FilterResult getFilterResult(IResource resource, Filter filter, File contentSyncRoot, IFolder syncFolder,
-            Repository repository) throws SerializationException {
+    private FilterResult getFilterResult(IResource resource, Filter filter, File contentSyncRoot, IFolder syncFolder) throws SerializationException {
 
         IPath relativePath = resource.getFullPath().makeRelativeTo(syncFolder.getFullPath());
 
@@ -207,18 +206,17 @@ public class ResourceChangeCommandFactory {
 
         Activator.getDefault().getPluginLogger().trace("Filtering by {0} for {1}", repositoryPath, resource);
 
-        return filter.filter(contentSyncRoot, repositoryPath, repository.getRepositoryInfo());
+        return filter.filter(contentSyncRoot, repositoryPath);
     }
 
-    private boolean isFiltered(Filter filter, ResourceProxy resourceProxy, Repository repository,
-            IResource resource) {
+    private boolean isFiltered(Filter filter, ResourceProxy resourceProxy, IResource resource) {
 
         if (filter == null) {
             return false;
         }
 
         FilterResult filterResult = filter.filter(ProjectUtil.getSyncDirectoryFile(resource.getProject()),
-                resourceProxy.getPath(), repository.getRepositoryInfo());
+                resourceProxy.getPath());
         Activator.getDefault().getPluginLogger().trace("FilterResult for {0} is {1}", resource, filterResult);
 
         return filterResult == FilterResult.DENY || filterResult == FilterResult.PREREQUISITE;
@@ -382,8 +380,7 @@ public class ResourceChangeCommandFactory {
         Filter filter = ProjectUtil.loadFilter(syncFolder.getProject());
 
         if (filter != null) {
-            FilterResult filterResult = getFilterResult(resource, filter, syncDirectoryAsFile, syncDirectory,
-                    repository);
+            FilterResult filterResult = getFilterResult(resource, filter, syncDirectoryAsFile, syncDirectory);
             if (filterResult == FilterResult.DENY || filterResult == FilterResult.PREREQUISITE) {
                 return null;
             }
@@ -406,7 +403,7 @@ public class ResourceChangeCommandFactory {
                         .getPluginLogger()
                         .trace("Found covering resource data for resource at {0},  skipping deletion and performing an update instead",
                                 resource.getFullPath());
-                FileInfo info = createFileInfo(resource, repository);
+                FileInfo info = createFileInfo(resource);
                 return repository.newAddOrUpdateNodeCommand(info, coveringParentData);
             }
         }
@@ -417,7 +414,7 @@ public class ResourceChangeCommandFactory {
     public Command<Void> newReorderChildNodesCommand(Repository repository, IResource res) throws CoreException {
 
         try {
-            ResourceAndInfo rai = buildResourceAndInfo(repository, res);
+            ResourceAndInfo rai = buildResourceAndInfo(res);
 
             if (rai == null) {
                 return null;

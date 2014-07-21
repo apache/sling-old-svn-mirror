@@ -31,7 +31,7 @@ public class VltFilterTest {
     @Test
     public void defaultFilterExcludedVarClasses() throws IOException, ConfigurationException {
 
-        assertThat(newFilter("filter-default.xml").filter(null, "/var/classes", null), is(FilterResult.DENY));
+        assertThat(newFilter("filter-default.xml").filter(null, "/var/classes"), is(FilterResult.DENY));
         
     }
 
@@ -48,20 +48,20 @@ public class VltFilterTest {
 
         VltFilter filter = new VltFilter(null);
 
-        assertThat(filter.filter(null, "/var/classes", null), is(FilterResult.DENY));
+        assertThat(filter.filter(null, "/var/classes"), is(FilterResult.DENY));
 
     }
 
     @Test
     public void defaultFilterIncludesLibs() throws IOException, ConfigurationException {
 
-        assertThat(newFilter("filter-default.xml").filter(null, "/libs", null), is(FilterResult.ALLOW));
+        assertThat(newFilter("filter-default.xml").filter(null, "/libs"), is(FilterResult.ALLOW));
     }
 
     @Test
     public void pathMissingLeadingSlashIsCorrected() throws IOException, ConfigurationException {
 
-        assertThat(newFilter("filter-default.xml").filter(null, "libs", null), is(FilterResult.ALLOW));
+        assertThat(newFilter("filter-default.xml").filter(null, "libs"), is(FilterResult.ALLOW));
     }
 
     @Test
@@ -69,7 +69,7 @@ public class VltFilterTest {
 
         String[] parents = new String[] { "/libs", "/libs/sling", "/libs/sling/servlet" };
         for (String parent : parents) {
-            assertThat("Parent '" + parent + "'", newFilter("filter-deep.xml").filter(null, parent, null),
+            assertThat("Parent '" + parent + "'", newFilter("filter-deep.xml").filter(null, parent),
                     is(FilterResult.PREREQUISITE));
         }
     }
