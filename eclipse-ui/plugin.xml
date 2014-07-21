@@ -107,7 +107,7 @@
                class="org.apache.sling.ide.eclipse.ui.internal.ImportContentAction"
                id="org.apache.sling.ide.menu.importContentAction"
                definitionId="org.apache.sling.ide.commands.importContent"
-               label="Pull from server..."
+               label="Import from server..."
                menubarPath="org.apache.sling.ide.menu/sling"
                style="push">
          </action>
@@ -126,7 +126,7 @@
                class="org.apache.sling.ide.eclipse.ui.internal.ExportContentAction"
                id="org.apache.sling.ide.menu.exportContentAction"
                definitionId="org.apache.sling.ide.commands.exportContent"
-               label="Push to server..."
+               label="Export to server..."
                menubarPath="org.apache.sling.ide.menu/sling"
                style="push">
          </action>
@@ -160,13 +160,13 @@
          point="org.eclipse.ui.commands">
          <command
                id="org.apache.sling.ide.commands.importContent"
-               name="Pull content from server"
+               name="Import content from server"
                categoryId="org.eclipse.ui.category.window"
                defaultHandler="org.apache.sling.ide.eclipse.ui.internal.ImportContentAction">
          </command>
          <command
                id="org.apache.sling.ide.commands.exportContent"
-               name="Push content to server"
+               name="Export content to server"
                categoryId="org.eclipse.ui.category.window"
                defaultHandler="org.apache.sling.ide.eclipse.ui.internal.ExportContentAction">
          </command>         
@@ -381,14 +381,14 @@
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeExportContentAction"
                icon="icons/obj16/sling_misc.gif"
                id="org.apache.sling.ide.menu.exportContentAction"
-               label="Push to server..."
+               label="Export to server..."
                menubarPath="jcr">
          </action>
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeImportContentAction"
                id="org.apache.sling.ide.menu.importContentAction"
                icon="icons/obj16/sling_misc.gif"
-               label="Pull from server..."
+               label="Import from server..."
                menubarPath="jcr">
          </action>
          <action
@@ -478,14 +478,14 @@
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeExportContentAction"
                icon="icons/obj16/sling_misc.gif"
                id="org.apache.sling.ide.menu.exportContentAction"
-               label="Push to server..."
+               label="Export to server..."
                menubarPath="jcr">
          </action>
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeImportContentAction"
                id="org.apache.sling.ide.menu.importContentAction"
                icon="icons/obj16/sling_misc.gif"
-               label="Pull from server..."
+               label="Import from server..."
                menubarPath="jcr">
          </action>
          <action
