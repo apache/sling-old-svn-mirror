@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.ide.eclipse.core.internal.ResourceChangeCommandFactory;
@@ -31,8 +32,11 @@ import org.apache.sling.ide.test.impl.helpers.SpyCommand;
 import org.apache.sling.ide.test.impl.helpers.SpyRepository;
 import org.apache.sling.ide.test.impl.helpers.TemporaryProject;
 import org.apache.sling.ide.transport.Repository;
+import org.apache.sling.ide.transport.ResourceProxy;
+import org.apache.sling.ide.util.PathUtil;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.junit.Before;
 import org.junit.Rule;
@@ -104,5 +108,57 @@ public class ResourceChangeCommandFactoryTest {
         assertThat("command.resource.properties", command.getResourceProxy().getProperties(), equalTo(props));
         assertThat("command.fileinfo", command.getFileInfo(), nullValue());
         assertThat("command.kind", command.getKind(), equalTo(SpyCommand.Kind.ADD_OR_UPDATE));
+    }
+
+    @Test
+    public void commandForSlingOrderedFolder_children() throws CoreException {
+
+        // create a sling:OrderedFolder at /content/test-root
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/.content.xml"), getClass()
+                .getResourceAsStream("sling-ordered-folder-with-children.xml"));
+        // create the child folder listed in the .content.xml file
+        contentProject.getFolder("jcr_root/content/test-root/folder").create(true, true, new NullProgressMonitor());
+
+        SpyCommand<?> command = (SpyCommand<?>) factory.newCommandForAddedOrUpdated(spyRepo,
+                contentProject.findMember("jcr_root/content/test-root"));
+
+        List<ResourceProxy> children = command.getResourceProxy().getChildren();
+
+        assertThat("command.resource.children.size", children.size(), equalTo(2));
+    }
+
+    @Test
+    public void commandForSlingOrderedFolder_childrenMissingFromFilesystem() throws CoreException {
+
+        // create a sling:OrderedFolder at /content/test-root
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/.content.xml"), getClass()
+                .getResourceAsStream("sling-ordered-folder-with-children.xml"));
+
+        SpyCommand<?> command = (SpyCommand<?>) factory.newCommandForAddedOrUpdated(spyRepo,
+                contentProject.findMember("jcr_root/content/test-root"));
+
+        List<ResourceProxy> children = command.getResourceProxy().getChildren();
+
+        assertThat("command.resource.children.size", children.size(), equalTo(1));
+    }
+
+    @Test
+    public void commandForSlingOrderedFolder_extraChildrenInTheFilesystem() throws CoreException {
+
+        // create a sling:OrderedFolder at /content/test-root
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/.content.xml"), getClass()
+                .getResourceAsStream("sling-ordered-folder-with-children.xml"));
+        // create the child folder listed in the .content.xml file
+        contentProject.getFolder("jcr_root/content/test-root/folder").create(true, true, new NullProgressMonitor());
+        // create an extra folder not listed in the .content.xml file
+        contentProject.getFolder("jcr_root/content/test-root/folder2").create(true, true, new NullProgressMonitor());
+
+        SpyCommand<?> command = (SpyCommand<?>) factory.newCommandForAddedOrUpdated(spyRepo,
+                contentProject.findMember("jcr_root/content/test-root"));
+
+        List<ResourceProxy> children = command.getResourceProxy().getChildren();
+
+        assertThat("command.resource.children.size", children.size(), equalTo(3));
+        assertThat("command.resource.children[2].name", PathUtil.getName(children.get(2).getPath()), equalTo("folder2"));
     }
 }
