@@ -54,6 +54,7 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
     public static final String INFINITY = "infinity";
 
     public static final String TIDY = "tidy";
+    public static final int TIDY_INDENTION = 2;
 
     public static final String ARRAY = "array";
 
@@ -66,21 +67,39 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         this.maximumResults = maximumResults;
     }
 
-    private String nestedOrderedJson(JSONObject jsonNode) {
-        return nestedOrderedJson(jsonNode, null);
+    private void printIndent(StringBuffer sb, int indent, boolean tidy) {
+        if (indent > 0 && tidy) {
+            sb.append("\n");
+            for (int i = 0; i < indent; i++) {
+                sb.append(" ");
+            }
+        }
     }
 
-    private String nestedOrderedJson(JSONObject jsonNode, String nodeName) {
+    private void printKeyValue(StringBuffer sb, String key, String val, boolean tidy) {
+        sb.append(key);
+        sb.append(":" + (tidy ? " " : ""));
+        sb.append(val);
+    }
+
+    private String nestedOrderedJson(JSONObject jsonNode, boolean tidy) {
+        return nestedOrderedJson(jsonNode, null, 1, tidy);
+    }
+
+    private String nestedOrderedJson(JSONObject jsonNode, String nodeName, int level, boolean tidy) {
         try {
             Iterator<String> keys = jsonNode.keys();
             StringBuffer sb = new StringBuffer("{");
             Map<String, JSONObject> children = new LinkedHashMap<String, JSONObject>();
+            int curIndent = tidy ? level * TIDY_INDENTION : 0;
 
             if (nodeName != null) {
-                sb.append(jsonNode.quote(CHILD_NAME_KEY));
-                sb.append(':');
-                sb.append(jsonNode.quote(nodeName));
-                sb.append(',');
+                printIndent(sb, curIndent, tidy);
+                printKeyValue(sb, jsonNode.quote(CHILD_NAME_KEY), jsonNode.quote(nodeName), tidy);
+
+                if (keys.hasNext()) {
+                    sb.append(",");
+                }
             }
 
             while (keys.hasNext()) {
@@ -90,9 +109,9 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
                 if (v instanceof JSONObject) { // child node
                     children.put(o, (JSONObject)v);
                 } else {
-                    sb.append(jsonNode.quote(o));
-                    sb.append(':');
-                    sb.append(jsonNode.valueToString(v));
+                    printIndent(sb, curIndent, tidy);
+
+                    printKeyValue(sb, jsonNode.quote(o), tidy ? jsonNode.valueToString(v, TIDY_INDENTION, curIndent) : jsonNode.valueToString(v), tidy);
 
                     if (keys.hasNext()) {
                         sb.append(',');
@@ -103,26 +122,34 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
             if (!children.isEmpty()) {
                 Iterator childrenIterator = children.entrySet().iterator();
 
-                sb.append(jsonNode.quote(CHILDREN_KEY));
-                sb.append(':');
-                sb.append('[');
+                printIndent(sb, curIndent, tidy);
+                printKeyValue(sb, jsonNode.quote(CHILDREN_KEY), "[", tidy);
 
                 while (childrenIterator.hasNext()) {
                     Map.Entry<String, JSONObject> entry = (Map.Entry) childrenIterator.next();
                     String name = entry.getKey();
                     JSONObject child = entry.getValue();
 
-                    sb.append(nestedOrderedJson(child, name));
+                    printIndent(sb, curIndent + TIDY_INDENTION, tidy);
+                    sb.append(nestedOrderedJson(child, name, level + 2, tidy));
 
                     if (childrenIterator.hasNext()) {
                         sb.append(',');
                     }
                 }
+                printIndent(sb, curIndent, tidy);
                 sb.append(']');
             }
 
+            curIndent -= TIDY_INDENTION;
 
+            if (curIndent == 0) { // handle final closing curly bracket
+                sb.append("\n");
+            } else {
+                printIndent(sb, curIndent, tidy);
+            }
             sb.append('}');
+
             return sb.toString();
         } catch (Exception e) {
             return null;
@@ -188,9 +215,9 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
                 JSONObject jsonNode = traversor.getJSONObject();
 
                 if (array) {
-                    resp.getWriter().write(nestedOrderedJson(jsonNode));
+                    resp.getWriter().write(nestedOrderedJson(jsonNode, tidy));
                 } else {
-                    String jsonNodeString = tidy ? jsonNode.toString(2) : jsonNode.toString();
+                    String jsonNodeString = tidy ? jsonNode.toString(TIDY_INDENTION) : jsonNode.toString();
                     resp.getWriter().write(jsonNodeString);
                 }
             } else {

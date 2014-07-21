@@ -1192,7 +1192,7 @@ public class JSONObject {
      *  with <code>}</code>&nbsp;<small>(right brace)</small>.
      * @throws JSONException If the object contains an invalid number.
      */
-     static String valueToString(Object value, int indentFactor, int indent)
+     public static String valueToString(Object value, int indentFactor, int indent)
             throws JSONException {
         if (value == null || value.equals(null)) {
             return "null";
