@@ -243,6 +243,45 @@ public class JsonRenderingTest extends HttpTestBase {
     	
     	assertTrue("The .tidy selector should add at least 5 EOL chars to json output (delta=" + delta + ")", delta > min);
     }
+
+    public void testHarrayNonRecursive() throws IOException {
+        // Count end-of-line chars, there must be the same amount if .harray is used
+        int noHarrayCount = countOccurences(getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON), '\n');
+        int HarrayCount = countOccurences(getContent(createdNodeUrl + ".harray.json", CONTENT_TYPE_JSON), '\n');
+
+        assertTrue("The .harray selector should have the same amount of EOL chars to json output (count=" + noHarrayCount + ")", HarrayCount == noHarrayCount);
+    }
+
+    public void testHarrayTidyNonRecursive() throws IOException {
+        // Count end-of-line chars, there must be more in the tidy form
+        int noHarrayTidyCount = countOccurences(getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON), '\n');
+        int HarrayTidyCount = countOccurences(getContent(createdNodeUrl + ".harray.tidy.json", CONTENT_TYPE_JSON), '\n');
+        int delta = HarrayTidyCount - noHarrayTidyCount;
+
+        // Output contains two properties so at least two EOL chars
+        int min = 2;
+
+        assertTrue("The .harray.tidy selector should add at least 2 EOL chars to json output (delta=" + delta + ")", delta > min);
+    }
+
+    public void testHarrayRootNoRecursion() throws IOException {
+        final String json = getContent(HTTP_BASE_URL + "/.harray.json", CONTENT_TYPE_JSON);
+
+        assertJavascript("undefined", json, "out.print(typeof data['_children'])");
+    }
+
+    public void testHarrayRootWithRecursion() throws IOException {
+        final String json = getContent(HTTP_BASE_URL + "/.harray.1.json", CONTENT_TYPE_JSON);
+
+        assertJavascript("[object Array]", json, "out.print(Object.prototype.toString.call(data['_children']))");
+    }
+
+    public void testHarrayRootNameWithRecursion() throws IOException {
+        // test if _name is existing in child node
+        final String json = getContent(HTTP_BASE_URL + "/.harray.1.json", CONTENT_TYPE_JSON);
+
+        assertJavascript("true", json, "out.print(data['_children'][0]._name.length > 0)");
+    }
     
     public void testRootNoRecursion() throws IOException {
     	final String json = getContent(HTTP_BASE_URL + "/.json", CONTENT_TYPE_JSON);
