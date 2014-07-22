@@ -1,0 +1,125 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.sling.ide.impl.vlt;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
+
+import java.io.File;
+
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
+import javax.jcr.Value;
+import javax.jcr.nodetype.NodeType;
+
+import org.apache.jackrabbit.core.TransientRepository;
+import org.apache.sling.ide.log.Logger;
+import org.apache.sling.ide.transport.ResourceProxy;
+import org.junit.Test;
+
+public class AddOrUpdateNodeCommandTest {
+
+    private static final String PROP_NAME = "jcr:title";
+
+    private Logger logger = new Slf4jLogger();
+
+    @Test
+    public void setProperty() throws Exception {
+
+        doPropertyChangeTest(null, "Title");
+    }
+
+    private void doPropertyChangeTest(Object initialPropertyValues, Object newPropertyValues)
+            throws RepositoryException, org.apache.sling.ide.transport.RepositoryException {
+
+        File out = new File(new File("target"), "jackrabbit");
+        TransientRepository repo = new TransientRepository(new File(out, "repository.xml"), new File(out, "repository"));
+        SimpleCredentials credentials = new SimpleCredentials("admin", "admin".toCharArray());
+        Session session = repo.login(credentials);
+        try {
+            Node contentNode = session.getRootNode().addNode("content");
+            if (initialPropertyValues instanceof String) {
+                contentNode.setProperty(PROP_NAME, (String) initialPropertyValues);
+            } else if (initialPropertyValues instanceof String[]) {
+                contentNode.setProperty(PROP_NAME, (String[]) initialPropertyValues);
+            }
+
+            session.save();
+
+            ResourceProxy resource = newResource("/content", NodeType.NT_UNSTRUCTURED);
+            if (newPropertyValues != null) {
+                resource.addProperty(PROP_NAME, newPropertyValues);
+            }
+
+            AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo, credentials, null, resource, logger);
+            cmd.execute().get();
+
+            session.refresh(false);
+
+            if (newPropertyValues == null) {
+                assertThat(session.getNode("/content").hasProperty(PROP_NAME), equalTo(false));
+                return;
+            }
+
+            Property newProp = session.getNode("/content").getProperty(PROP_NAME);
+            if (newPropertyValues instanceof String) {
+                if (newProp.isMultiple()) {
+                    Value[] values = session.getNode("/content").getProperty(PROP_NAME).getValues();
+
+                    assertThat(values.length, equalTo(1));
+                    assertThat(values[0].getString(), equalTo(newPropertyValues));
+
+                } else {
+                    assertThat(newProp.getString(), equalTo((String) newPropertyValues));
+                }
+
+            } else {
+
+                String[] expectedValues = (String[]) newPropertyValues;
+
+                Value[] values = session.getNode("/content").getProperty(PROP_NAME).getValues();
+
+                assertThat(values.length, equalTo(expectedValues.length));
+                for (int i = 0; i < values.length; i++) {
+                    assertThat(values[i].getString(), equalTo(expectedValues[i]));
+                }
+
+            }
+
+        } finally {
+            session.removeItem("/content");
+            session.save();
+            session.logout();
+        }
+    }
+
+    @Test
+    public void removeProperty() throws Exception {
+
+        doPropertyChangeTest("Title", null);
+    }
+
+    private ResourceProxy newResource(String path, String primaryType) {
+
+        ResourceProxy resource = new ResourceProxy(path);
+        resource.addProperty("jcr:primaryType", primaryType);
+        return resource;
+    }
+}
