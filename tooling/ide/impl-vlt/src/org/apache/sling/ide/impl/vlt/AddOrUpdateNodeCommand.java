@@ -299,6 +299,11 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
                 node.setProperty(propertyName, value);
                 getLogger().trace("Set property {0} with value {1} (raw =  {2}) on node at {3}", arguments);
             } else if (values != null) {
+                if (node.hasProperty(propertyName) && !node.getProperty(propertyName).isMultiple()) {
+                    getLogger().trace("Removing single-valued property {0} since we need to set multiple values",
+                            propertyName);
+                    node.getProperty(propertyName).remove();
+                }
                 Object[] arguments = { propertyName, values, propertyValue, node.getPath() };
                 getLogger().trace("Setting property {0} with values {1} (raw =  {2}) on node at {3}", arguments);
                 node.setProperty(propertyName, values);
