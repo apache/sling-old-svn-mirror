@@ -184,20 +184,21 @@ public class NewNodeDialog extends InputDialog {
                 if (allChildNodeDefs==null) {
                     setErrorMessage("No child node definitions found for "+parentNodeType);
                 } else {
-                    boolean fail = false;
+                    boolean success = false;
                     for (int i = 0; i < allChildNodeDefs.length; i++) {
                         NodeDefinition aChildNodeDef = allChildNodeDefs[i];
                         if (aChildNodeDef.getName()!=null && aChildNodeDef.getName().length()>0) {
                             if (firstInput.equals(aChildNodeDef.getName())) {
                                 setErrorMessage(null);
                                 return;
-                            } else {
-                                // mark fail if no other child node definition matches
-                                fail = true;
                             }
+                        } else {
+                            // mark success if there's a child node definition without a name
+                            // (ie then it can be any name)
+                            success = true;
                         }
                     }
-                    if (!fail) {
+                    if (success) {
                         setErrorMessage(null);
                         return;
                     }
