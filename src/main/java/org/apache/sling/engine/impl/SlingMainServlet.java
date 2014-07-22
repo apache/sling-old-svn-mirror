@@ -50,7 +50,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.commons.mime.MimeTypeService;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.engine.impl.filter.ServletFilterManager;
 import org.apache.sling.engine.impl.helper.RequestListenerManager;
@@ -76,7 +76,6 @@ import org.slf4j.LoggerFactory;
 @Properties( {
     @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
     @Property(name = Constants.SERVICE_DESCRIPTION, value = "Sling Servlet")
-
 })
 @References( {
     @Reference(name = "ErrorHandler", referenceInterface = ErrorHandler.class, cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC, bind = "setErrorHandler", unbind = "unsetErrorHandler"),
@@ -108,6 +107,9 @@ public class SlingMainServlet extends GenericServlet {
     private static final String PROP_TRACK_PATTERNS_REQUESTS = "sling.store.pattern.requests";
 
     private static final String PROP_DEFAULT_PARAMETER_ENCODING = "sling.default.parameter.encoding";
+
+    @Property
+    private static final String PROP_SERVER_INFO = "sling.serverinfo";
 
     @Reference
     private HttpService httpService;
@@ -169,6 +171,8 @@ public class SlingMainServlet extends GenericServlet {
     private ServiceRegistration requestProcessorRegistration;
 
     private ServiceRegistration requestProcessorMBeanRegistration;
+
+    private String configuredServerInfo;
 
     // ---------- Servlet API -------------------------------------------------
 
@@ -278,7 +282,8 @@ public class SlingMainServlet extends GenericServlet {
      * filters deployed inside Sling. The {@link SlingRequestProcessor} instance
      * is also updated with the server information.
      * <p>
-     * This server information is made up of the following components:
+     * This server info is either configured through an OSGi configuration or
+     * it is made up of the following components:
      * <ol>
      * <li>The {@link #productInfo} field as the primary product information</li>
      * <li>The primary product information of the servlet container into which
@@ -294,28 +299,31 @@ public class SlingMainServlet extends GenericServlet {
      * </ol>
      */
     private void setServerInfo() {
-        final String containerProductInfo;
-        if (getServletConfig() == null || getServletContext() == null) {
-            containerProductInfo = "unregistered";
+        if ( this.configuredServerInfo != null ) {
+            this.serverInfo = this.configuredServerInfo;
         } else {
-            final String containerInfo = getServletContext().getServerInfo();
-            if (containerInfo != null && containerInfo.length() > 0) {
-                int lbrace = containerInfo.indexOf('(');
-                if (lbrace < 0) {
-                    lbrace = containerInfo.length();
-                }
-                containerProductInfo = containerInfo.substring(0, lbrace).trim();
+            final String containerProductInfo;
+            if (getServletConfig() == null || getServletContext() == null) {
+                containerProductInfo = "unregistered";
             } else {
-                containerProductInfo = "unknown";
+                final String containerInfo = getServletContext().getServerInfo();
+                if (containerInfo != null && containerInfo.length() > 0) {
+                    int lbrace = containerInfo.indexOf('(');
+                    if (lbrace < 0) {
+                        lbrace = containerInfo.length();
+                    }
+                    containerProductInfo = containerInfo.substring(0, lbrace).trim();
+                } else {
+                    containerProductInfo = "unknown";
+                }
             }
+
+            this.serverInfo = String.format("%s (%s, %s %s, %s %s %s)",
+                this.productInfo, containerProductInfo,
+                System.getProperty("java.vm.name"),
+                System.getProperty("java.version"), System.getProperty("os.name"),
+                System.getProperty("os.version"), System.getProperty("os.arch"));
         }
-
-        this.serverInfo = String.format("%s (%s, %s %s, %s %s %s)",
-            this.productInfo, containerProductInfo,
-            System.getProperty("java.vm.name"),
-            System.getProperty("java.version"), System.getProperty("os.name"),
-            System.getProperty("os.version"), System.getProperty("os.arch"));
-
         if (this.requestProcessor != null) {
             this.requestProcessor.setServerInfo(serverInfo);
         }
@@ -326,6 +334,7 @@ public class SlingMainServlet extends GenericServlet {
     @Activate
     protected void activate(final BundleContext bundleContext,
             final Map<String, Object> componentConfig) {
+        configuredServerInfo = PropertiesUtil.toString(componentConfig.get(PROP_SERVER_INFO), null);
 
         // setup server info
         setProductInfo(bundleContext);
@@ -340,14 +349,14 @@ public class SlingMainServlet extends GenericServlet {
         }
 
         // configure method filter
-        allowTrace = OsgiUtil.toBoolean(componentConfig.get(PROP_ALLOW_TRACE),
+        allowTrace = PropertiesUtil.toBoolean(componentConfig.get(PROP_ALLOW_TRACE),
                 DEFAULT_ALLOW_TRACE);
 
         // configure the request limits
-        RequestData.setMaxIncludeCounter(OsgiUtil.toInteger(
+        RequestData.setMaxIncludeCounter(PropertiesUtil.toInteger(
             componentConfig.get(PROP_MAX_INCLUSION_COUNTER),
             RequestData.DEFAULT_MAX_INCLUSION_COUNTER));
-        RequestData.setMaxCallCounter(OsgiUtil.toInteger(
+        RequestData.setMaxCallCounter(PropertiesUtil.toInteger(
             componentConfig.get(PROP_MAX_CALL_COUNTER),
             RequestData.DEFAULT_MAX_CALL_COUNTER));
         RequestData.setSlingMainServlet(this);
@@ -388,7 +397,7 @@ public class SlingMainServlet extends GenericServlet {
         // context to be required (see SLING-42)
         filterManager = new ServletFilterManager(bundleContext,
             slingServletContext,
-            OsgiUtil.toBoolean(componentConfig.get(PROP_FILTER_COMPAT_MODE), DEFAULT_FILTER_COMPAT_MODE));
+            PropertiesUtil.toBoolean(componentConfig.get(PROP_FILTER_COMPAT_MODE), DEFAULT_FILTER_COMPAT_MODE));
         filterManager.open();
         requestProcessor.setFilterManager(filterManager);
 
@@ -400,10 +409,10 @@ public class SlingMainServlet extends GenericServlet {
 
         // setup the request info recorder
         try {
-            int maxRequests = OsgiUtil.toInteger(
+            int maxRequests = PropertiesUtil.toInteger(
                 componentConfig.get(PROP_MAX_RECORD_REQUESTS),
                 RequestHistoryConsolePlugin.STORED_REQUESTS_COUNT);
-            String[] patterns = OsgiUtil.toStringArray(componentConfig.get(PROP_TRACK_PATTERNS_REQUESTS), new String[0]);
+            String[] patterns = PropertiesUtil.toStringArray(componentConfig.get(PROP_TRACK_PATTERNS_REQUESTS), new String[0]);
             List<Pattern> compiledPatterns = new ArrayList<Pattern>(patterns.length);
             for (String pattern : patterns) {
                 if(pattern != null && pattern.trim().length() > 0) {
