@@ -105,8 +105,11 @@ public class ExportWizard extends Wizard {
             });
 
             return true;
-        } catch (InvocationTargetException e) {
+        } catch (RuntimeException e) {
             exportPage.setErrorMessage(e.getMessage());
+            return false;
+        } catch (InvocationTargetException e) {
+            exportPage.setErrorMessage(e.getCause().getMessage());
             return false;
         } catch (InterruptedException e) {
             exportPage.setErrorMessage(e.getMessage());
