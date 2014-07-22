@@ -116,6 +116,18 @@ public class AddOrUpdateNodeCommandTest {
         doPropertyChangeTest("Title", null);
     }
 
+    @Test
+    public void singlePropertyToMultiValued() throws Exception {
+
+        doPropertyChangeTest("Title", new String[] { "Title", "Title 2" });
+    }
+
+    @Test
+    public void multiValuesPropertyToSingle() throws Exception {
+
+        doPropertyChangeTest(new String[] { "Title", "Title 2" }, "Title");
+    }
+
     private ResourceProxy newResource(String path, String primaryType) {
 
         ResourceProxy resource = new ResourceProxy(path);
