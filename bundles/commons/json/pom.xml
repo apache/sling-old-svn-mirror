@@ -41,9 +41,12 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-						<Export-Package>
-							org.apache.sling.commons.json.*;version=2.0.4
-						</Export-Package>
+						<DynamicImport-Package>
+							javax.jcr;version="[2.0,3)",
+							javax.jcr.nodetype;version="[2.0,3)",
+							org.apache.sling.api.request;version="[2.0,3)",
+							org.apache.sling.api.resource;version="[2.0,3)"
+						</DynamicImport-Package>
 					</instructions>
 				</configuration>
 			</plugin>
