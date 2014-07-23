@@ -24,11 +24,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+
+import org.apache.sling.commons.json.io.JSONRenderer;
 
 /**
  * A JSONArray is an ordered sequence of values. Its external text form is a
@@ -82,6 +83,8 @@ import java.util.Map;
  */
 public class JSONArray {
 
+    /** Default renderer */
+    private static final JSONRenderer renderer = new JSONRenderer();
 
     /**
      * The arrayList where the JSONArray's properties are kept.
@@ -320,24 +323,11 @@ public class JSONArray {
 
 
     /**
-     * Make a string from the contents of this JSONArray. The
-     * <code>separator</code> string is inserted between each element.
-     * Warning: This method assumes that the data structure is acyclical.
-     * @param separator A string that will be inserted between the elements.
-     * @return a string.
-     * @throws JSONException If the array contains an invalid number.
+     * Make a string from the contents of this JSONArray 
+     * using {@link JSONRenderer#join}
      */
     public String join(String separator) throws JSONException {
-        int len = length();
-        StringBuffer sb = new StringBuffer();
-
-        for (int i = 0; i < len; i += 1) {
-            if (i > 0) {
-                sb.append(separator);
-            }
-            sb.append(JSONObject.valueToString(this.myArrayList.get(i)));
-        }
-        return sb.toString();
+        return renderer.join(this, separator);
     }
 
 
@@ -774,24 +764,12 @@ public class JSONArray {
 
 
     /**
-     * Make a JSON text of this JSONArray. For compactness, no
-     * unnecessary whitespace is added. If it is not possible to produce a
-     * syntactically correct JSON text then null will be returned instead. This
-     * could occur if the array contains an invalid number.
-     * <p>
-     * Warning: This method assumes that the data structure is acyclical.
-     *
-     * @return a printable, displayable, transmittable
-     *  representation of the array.
+     * Make a JSON text of this JSONArray using 
+     * {@link JSONRenderer#toString(JSONArray)}
      */
     public String toString() {
-        try {
-            return '[' + join(",") + ']';
-        } catch (Exception e) {
-            return null;
-        }
+        return renderer.toString(this);
     }
-
 
     /**
      * Make a prettyprinted JSON text of this JSONArray.
@@ -820,72 +798,15 @@ public class JSONArray {
      * @throws JSONException
      */
     String toString(int indentFactor, int indent) throws JSONException {
-        int len = length();
-        if (len == 0) {
-            return "[]";
-        }
-        int i;
-        StringBuffer sb = new StringBuffer("[");
-        if (len == 1) {
-            sb.append(JSONObject.valueToString(this.myArrayList.get(0),
-                    indentFactor, indent));
-        } else {
-            int newindent = indent + indentFactor;
-            sb.append('\n');
-            for (i = 0; i < len; i += 1) {
-                if (i > 0) {
-                    sb.append(",\n");
-                }
-                for (int j = 0; j < newindent; j += 1) {
-                    sb.append(' ');
-                }
-                sb.append(JSONObject.valueToString(this.myArrayList.get(i),
-                        indentFactor, newindent));
-            }
-            sb.append('\n');
-            for (i = 0; i < indent; i += 1) {
-                sb.append(' ');
-            }
-        }
-        sb.append(']');
-        return sb.toString();
+        return renderer.prettyPrint(this, 
+                renderer.options().withIndent(indentFactor).withInitialIndent(indent));
     }
 
-
     /**
-     * Write the contents of the JSONArray as JSON text to a writer.
-     * For compactness, no whitespace is added.
-     * <p>
-     * Warning: This method assumes that the data structure is acyclical.
-     *
-     * @return The writer.
-     * @throws JSONException
+     * Write the contents of the JSONObject as JSON text to a writer
+     * using {@link JSONRenderer#write(JSONArray)}
      */
     public Writer write(Writer writer) throws JSONException {
-        try {
-            boolean b = false;
-            int     len = length();
-
-            writer.write('[');
-
-            for (int i = 0; i < len; i += 1) {
-                if (b) {
-                    writer.write(',');
-                }
-                Object v = this.myArrayList.get(i);
-                if (v instanceof JSONObject) {
-                    ((JSONObject)v).write(writer);
-                } else if (v instanceof JSONArray) {
-                    ((JSONArray)v).write(writer);
-                } else {
-                    writer.write(JSONObject.valueToString(v));
-                }
-                b = true;
-            }
-            writer.write(']');
-            return writer;
-        } catch (IOException e) {
-           throw new JSONException(e);
-        }
+        return renderer.write(writer, this);
     }
 }
