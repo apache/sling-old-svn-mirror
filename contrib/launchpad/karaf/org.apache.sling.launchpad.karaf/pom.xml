@@ -7,9 +7,9 @@
     to you under the Apache License, Version 2.0 (the
     "License"); you may not use this file except in compliance
     with the License.  You may obtain a copy of the License at
-    
+
     http://www.apache.org/licenses/LICENSE-2.0
-    
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on an
     "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -72,15 +72,6 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <extensions>true</extensions>
-        <configuration>
-          <instructions>
-            <Bundle-Category>sling</Bundle-Category>
-            <Bundle-Description>${project.description}</Bundle-Description>
-            <Bundle-DocURL>http://sling.apache.org</Bundle-DocURL>
-            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-            <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
-          </instructions>
-        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.felix</groupId>
