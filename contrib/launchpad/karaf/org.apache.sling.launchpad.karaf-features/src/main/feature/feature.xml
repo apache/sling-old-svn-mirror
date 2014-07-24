@@ -105,7 +105,6 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.discovery.standalone/1.0.0</bundle>
   </feature>
   <feature name="sling-extension-event" version="${project.version}">
-    <!-- TODO java.lang.NoClassDefFoundError: org/apache/sling/commons/threads/ThreadPool -->
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-extension-discovery</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.event/3.3.10</bundle>
