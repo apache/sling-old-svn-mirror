@@ -131,15 +131,6 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <extensions>true</extensions>
-        <configuration>
-          <instructions>
-            <Bundle-Category>sling</Bundle-Category>
-            <Bundle-Description>${project.description}</Bundle-Description>
-            <Bundle-DocURL>http://sling.apache.org</Bundle-DocURL>
-            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-            <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
-          </instructions>
-        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -154,7 +145,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <!-- Version newer than the one declared in the parent pom -->
         <version>2.16</version>
         <executions>
           <execution>
