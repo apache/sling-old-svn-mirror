@@ -304,7 +304,6 @@ public class JSONRenderer {
      * @throws JSONException If the object contains an invalid number.
      */
     public String prettyPrint(JSONObject jo, Options opt) throws JSONException {
-        int i;
         int n = jo.length();
         if (n == 0) {
             return "{}";
