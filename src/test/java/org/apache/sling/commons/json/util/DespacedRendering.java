@@ -14,20 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.commons.json;
+package org.apache.sling.commons.json.util;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.JSONObject;
+
 /** Test the String formatting functionality of JSONObject */
-public class DespacedResult {
+public class DespacedRendering {
     private final String despaced;
     
     /** Simplify whitespace in str and replace quotes
      *  to make it easier to compare the output 
      *  @param spaceReplacement replaces spaces after the first one
      *  */ 
-    DespacedResult(String str, String spaceReplacement) throws JSONException {
+    public DespacedRendering(String str, String spaceReplacement) throws JSONException {
         
         boolean previousWasSpace = false;
         
@@ -58,24 +61,24 @@ public class DespacedResult {
         despaced = sb.toString();
     }
     
-    DespacedResult(String str) throws JSONException {
+    public DespacedRendering(String str) throws JSONException {
         this(str, null);
     }
     
 
-    DespacedResult expect(String ...expected) {
+    public DespacedRendering expect(String ...expected) {
         for(String e : expected) {
             assertTrue("Expecting " + e + " to be contained in " + despaced, despaced.contains(e));
         }
         return this;
     }
     
-    DespacedResult assertExactMatch(String expected) {
+    public DespacedRendering assertExactMatch(String expected) {
         assertEquals("Expecting an exact match with " + expected + " at " + despaced, expected, despaced);
         return this;
     }
     
-    DespacedResult expectLength(int n) {
+    public DespacedRendering expectLength(int n) {
         assertEquals("Expecting a String length of " + n + " for " + despaced, n, despaced.length());
         return this;
     }

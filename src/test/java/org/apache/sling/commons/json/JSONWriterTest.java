@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.StringWriter;
 
 import org.apache.sling.commons.json.io.JSONWriter;
+import org.apache.sling.commons.json.util.DespacedRendering;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,14 +37,14 @@ public class JSONWriterTest {
         w = new JSONWriter(output);
     }
     
-    private DespacedResult write() throws JSONException {
+    private DespacedRendering write() throws JSONException {
         w.object();
         w.key("foo").value("bar");
         w.key("array");
         w.array().value(1).value("two").value(3.0).value(false).endArray();
         w.key("last").value("one");
         w.endObject();
-        return new DespacedResult(output.toString());
+        return new DespacedRendering(output.toString());
     }
     
     @Test
@@ -55,7 +56,7 @@ public class JSONWriterTest {
     
     @Test
     public void testStandardWrite() throws JSONException {
-        final DespacedResult r = write();
+        final DespacedRendering r = write();
         r.expect(
                 "_foo_:_bar_", 
                 "_array_:[1,_two_,3,false]");
@@ -64,7 +65,7 @@ public class JSONWriterTest {
     @Test
     public void testTidyWrite() throws JSONException {
         w.setTidy(true);
-        final DespacedResult r = write();
+        final DespacedRendering r = write();
         r.expect(
                 "-nl-_foo_:_bar_", 
                 "-nl-_array_:[-nl-1,-nl-_two_,-nl-3,-nl-false-nl-]");
