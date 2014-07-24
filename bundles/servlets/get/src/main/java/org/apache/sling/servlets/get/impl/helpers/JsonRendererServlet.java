@@ -66,30 +66,12 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
             throw new ResourceNotFoundException("No data to render.");
         }
 
-        // SLING-167: the last selector, if present, gives the number of
-        // recursion levels, 0 being the default
         int maxRecursionLevels = 0;
-        final String[] selectors = req.getRequestPathInfo().getSelectors();
-        if (selectors != null && selectors.length > 0) {
-            final String level = selectors[selectors.length - 1];
-            if(!TIDY.equals(level)) {
-                if (INFINITY.equals(level)) {
-                    maxRecursionLevels = -1;
-                } else {
-                    try {
-                        maxRecursionLevels = Integer.parseInt(level);
-                    } catch (NumberFormatException nfe) {
-                    	//SLING-2324
-                    	if (StringUtils.isNumeric(level)){
-                    		maxRecursionLevels = -1;
-                    	}else{
-                    		resp.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                    				"Invalid recursion selector value '" + level + "'");
-                    		return;
-                    	}
-                    }
-                }
-            }
+        try {
+            maxRecursionLevels = getMaxRecursionLevel(req);
+        } catch(IllegalArgumentException iae) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, iae.getMessage());
+            return;
         }
 
         resp.setContentType(req.getResponseContentType());
@@ -135,15 +117,49 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
             reportException(je);
         }
     }
-
-    /** True if our request wants the "tidy" pretty-printed format */
-    protected boolean isTidy(SlingHttpServletRequest req) {
+    
+    /** Get recursion level from selectors. as per SLING-167: 
+     *  the last selector, if present, gives the recursion
+     *  level.
+     */
+    protected int getMaxRecursionLevel(SlingHttpServletRequest req) throws IllegalArgumentException {
+        int maxRecursionLevels = 0;
+        final String[] selectors = req.getRequestPathInfo().getSelectors();
+        if (selectors != null && selectors.length > 0) {
+            final String level = selectors[selectors.length - 1];
+            if(!TIDY.equals(level)) {
+                if (INFINITY.equals(level)) {
+                    maxRecursionLevels = -1;
+                } else {
+                    try {
+                        maxRecursionLevels = Integer.parseInt(level);
+                    } catch (NumberFormatException nfe) {
+                        //SLING-2324
+                        if (StringUtils.isNumeric(level)){
+                            maxRecursionLevels = -1;
+                        } else {
+                            throw new IllegalArgumentException("Invalid recursion selector value '" + level + "'"); 
+                        }
+                    }
+                }
+            }
+        }
+        return maxRecursionLevels;
+    }
+    
+    /** True if our request has the given selector */
+    protected boolean hasSelector(SlingHttpServletRequest req, String selectorToCheck) {
         for(String selector : req.getRequestPathInfo().getSelectors()) {
-            if(TIDY.equals(selector)) {
+            if(selectorToCheck.equals(selector)) {
                 return true;
             }
         }
         return false;
+    }
+
+    /** True if our request wants the "tidy" pretty-printed format */
+    protected boolean isTidy(SlingHttpServletRequest req) {
+        return hasSelector(req, TIDY);
     }
 
     /**
