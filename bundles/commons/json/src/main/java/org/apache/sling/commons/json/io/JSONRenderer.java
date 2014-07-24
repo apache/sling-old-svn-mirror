@@ -61,6 +61,13 @@ public class JSONRenderer {
         return new Options();
     }
 
+    /** Write N spaces to sb for indentation */
+    private void indent(StringBuilder sb, int howMuch) {
+        for (int i=0; i < howMuch; i++) {
+            sb.append(' ');
+        }
+    }
+
     /** Render the supplied JSONObject to a String, in
      *  the simplest possible way.
      */
@@ -303,7 +310,7 @@ public class JSONRenderer {
             return "{}";
         }
         Iterator<String> keys = jo.keys();
-        StringBuffer sb = new StringBuffer("{");
+        StringBuilder sb = new StringBuilder("{");
         int newindent = opt.initialIndent + opt.indent;
         String       o;
         if (n == 1) {
@@ -319,9 +326,7 @@ public class JSONRenderer {
                 } else {
                     sb.append('\n');
                 }
-                for (i = 0; i < newindent; i += 1) {
-                    sb.append(' ');
-                }
+                indent(sb, newindent);
                 sb.append(quote(o.toString()));
                 sb.append(": ");
                 sb.append(valueToString(jo.get(o), 
@@ -329,9 +334,7 @@ public class JSONRenderer {
             }
             if (sb.length() > 1) {
                 sb.append('\n');
-                for (i = 0; i < opt.indent; i += 1) {
-                    sb.append(' ');
-                }
+                indent(sb, opt.indent);
             }
         }
         sb.append('}');
@@ -344,7 +347,7 @@ public class JSONRenderer {
             return "[]";
         }
         int i;
-        StringBuffer sb = new StringBuffer("[");
+        StringBuilder sb = new StringBuilder("[");
         if (len == 1) {
             sb.append(valueToString(ja.get(0), opt));
         } else {
@@ -354,15 +357,11 @@ public class JSONRenderer {
                 if (i > 0) {
                     sb.append(",\n");
                 }
-                for (int j = 0; j < newindent; j += 1) {
-                    sb.append(' ');
-                }
+                indent(sb, newindent);
                 sb.append(valueToString(ja.get(i), opt));
             }
             sb.append('\n');
-            for (i = 0; i < opt.initialIndent; i += 1) {
-                sb.append(' ');
-            }
+            indent(sb, opt.initialIndent);
         }
         sb.append(']');
         return sb.toString();
