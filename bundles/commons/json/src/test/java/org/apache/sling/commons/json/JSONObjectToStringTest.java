@@ -23,8 +23,9 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.math.BigInteger;
 
+import org.apache.sling.commons.json.util.DespacedRendering;
+import org.apache.sling.commons.json.util.TestJSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -48,38 +49,12 @@ public class JSONObjectToStringTest {
     
     @Before
     public void setup() throws JSONException {
-        j = new JSONObject();
-        j.put("string", "this string");
-        j.put("int", 12);
-        j.put("long", 42L);
-        j.put("boolean", true);
-        j.put("float", 12.34f);
-        j.put("double", 45.67d);
-        
-        final JSONString js = new JSONString() {
-            public String toJSONString() {
-                return "json.string here";
-            }
-            
-        };
-        j.put("JSONString", js);
-        
-        for(int i=0; i<2; i++) {
-            final JSONObject k = new JSONObject();
-            final String name = "k" + i;
-            k.put("name", name);
-            k.put("this is", name);
-            j.put(name,  k);
-        }
-        
-        final JSONArray a = new JSONArray();
-        a.put(true).put("hello").put(52.0).put(new BigInteger("212"));
-        j.put("array", a);
+        j = new TestJSONObject();
     }
 
     @Test
     public void testToString() throws JSONException {
-        final DespacedResult r = new DespacedResult(j.toString());
+        final DespacedRendering r = new DespacedRendering(j.toString());
         r.expect(
                 "_long_:42", 
                 "_string_:_thisstring_",
@@ -100,7 +75,7 @@ public class JSONObjectToStringTest {
     
     @Test
     public void testToStringWithIndents() throws JSONException {
-        final DespacedResult r = new DespacedResult(j.toString(2));
+        final DespacedRendering r = new DespacedRendering(j.toString(2));
         r.expect(
                 "_long_:42,-nl-", 
                 "_string_:_thisstring_,-nl-",
@@ -121,7 +96,7 @@ public class JSONObjectToStringTest {
     
     @Test
     public void testToStringWithInitialIndent() throws JSONException {
-        final DespacedResult r = new DespacedResult(j.toString(2, 3), "S_");
+        final DespacedRendering r = new DespacedRendering(j.toString(2, 3), "S_");
         r.expect(
                 "{-nl-S_S_S_S_S_",
                 "_long_:42,-nl-", 
@@ -139,7 +114,7 @@ public class JSONObjectToStringTest {
     
     @Test
     public void testToStringEmpty() throws JSONException {
-        final DespacedResult r = new DespacedResult(new JSONObject().toString(2));
+        final DespacedRendering r = new DespacedRendering(new JSONObject().toString(2));
         r.assertExactMatch("{}");
     }
     
@@ -147,7 +122,7 @@ public class JSONObjectToStringTest {
     public void testToStringSingle() throws JSONException {
         j = new JSONObject();
         j.put("foo", "bar");
-        final DespacedResult r = new DespacedResult(j.toString(2));
+        final DespacedRendering r = new DespacedRendering(j.toString(2));
         r.assertExactMatch("{_foo_:_bar_}");
     }
     
@@ -193,7 +168,7 @@ public class JSONObjectToStringTest {
     
     @Test
     public void testToJsonArray() throws JSONException {
-        final DespacedResult r = new DespacedResult("{array:" + j.toJSONArray(j.names()).toString() + "}");
+        final DespacedRendering r = new DespacedRendering("{array:" + j.toJSONArray(j.names()).toString() + "}");
         r.expect("_thisstring_","12","42","true","json.stringhere");
     }
     
@@ -202,7 +177,7 @@ public class JSONObjectToStringTest {
         final JSONArray a = j.toJSONArray(j.names());
         final StringWriter w = new StringWriter();
         a.write(w);
-        final DespacedResult r = new DespacedResult("{array:" + w.toString() + "}");
+        final DespacedRendering r = new DespacedRendering("{array:" + w.toString() + "}");
         r.expect("_thisstring_","12","42","true","json.stringhere");
     }
     
@@ -216,7 +191,7 @@ public class JSONObjectToStringTest {
     public void testWrite() throws JSONException {
         final StringWriter w = new StringWriter();
         j.write(w);
-        final DespacedResult r = new DespacedResult(w.toString());
+        final DespacedRendering r = new DespacedRendering(w.toString());
         r.expect(
                 "_long_:42", 
                 "_string_:_thisstring_",

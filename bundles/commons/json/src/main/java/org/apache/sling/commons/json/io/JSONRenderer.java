@@ -19,7 +19,9 @@ package org.apache.sling.commons.json.io;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
@@ -39,7 +41,15 @@ public class JSONRenderer {
     /** Rendering options */
     static public class Options {
         int indent;
+        private boolean indentIsPositive;
         int initialIndent;
+        boolean arraysForChildren;
+        
+        public static final String DEFAULT_CHILDREN_KEY = "__children__";
+        public static final String DEFAULT_CHILD_NAME_KEY = "__name__";
+        
+        String childrenKey = DEFAULT_CHILDREN_KEY;
+        String childNameKey = DEFAULT_CHILD_NAME_KEY;
         
         /** Clients use JSONRenderer.options() to create objects */
         private Options() {
@@ -47,12 +57,72 @@ public class JSONRenderer {
         
         public Options withIndent(int n) {
             indent = n;
+            indentIsPositive = indent > 0;
             return this;
         }
         
         public Options withInitialIndent(int n) {
             initialIndent = n;
             return this;
+        }
+        
+        public Options withArraysForChildren(boolean b) {
+            arraysForChildren = b;
+            return this;
+        }
+        
+        public Options withChildNameKey(String key) {
+            childNameKey = key;
+            return this;
+        }
+        
+        public Options withChildrenKey(String key) {
+            childrenKey = key;
+            return this;
+        }
+        
+        boolean hasIndent() {
+            return indentIsPositive;
+        }
+    }
+    
+    /** JSONObject that has a name - overrides just what we
+     *  need for our rendering purposes.
+     */
+    static private class NamedJSONObject extends JSONObject {
+        final String name;
+        final JSONObject jsonObject;
+        final String nameKey;
+        final List<String> keysWithName;
+        
+        NamedJSONObject(String name, JSONObject jsonObject, Options opt) {
+            this.name = name;
+            this.jsonObject = jsonObject;
+            this.nameKey = opt.childNameKey;
+            keysWithName = new ArrayList<String>();
+            keysWithName.add(nameKey);
+            final Iterator<String> it = jsonObject.keys();
+            while(it.hasNext()) {
+                keysWithName.add(it.next());
+            }
+        }
+        
+        @Override
+        public int length() {
+            return keysWithName.size();
+        }
+
+        @Override
+        public Object get(String key) throws JSONException {
+            if(key.equals(nameKey)) {
+                return name;
+            }
+            return jsonObject.get(key);
+        }
+
+        @Override
+        public Iterator<String> keys() {
+            return keysWithName.iterator();
         }
     }
 
@@ -290,6 +360,15 @@ public class JSONRenderer {
         return s;
     }
     
+    /** Decide whether o must be skipped and added to a, when rendering a JSONObject */
+    private boolean skipChildObject(JSONArray a, Options  opt, String key, Object value) {
+        if(opt.arraysForChildren && (value instanceof JSONObject)) {
+            a.put(new NamedJSONObject(key, (JSONObject)value, opt));
+            return true;
+        }
+        return false;
+    }
+    
     /**
      * Make a prettyprinted JSON text of this JSONObject.
      * <p>
@@ -308,18 +387,26 @@ public class JSONRenderer {
         if (n == 0) {
             return "{}";
         }
+        final JSONArray children = new JSONArray();
         Iterator<String> keys = jo.keys();
         StringBuilder sb = new StringBuilder("{");
         int newindent = opt.initialIndent + opt.indent;
-        String       o;
+        String o;
         if (n == 1) {
             o = keys.next();
-            sb.append(quote(o));
-            sb.append(": ");
-            sb.append(valueToString(jo.get(o), opt));
+            final Object v = jo.get(o);
+            if(!skipChildObject(children, opt, o, v)) {
+                sb.append(quote(o));
+                sb.append(": ");
+                sb.append(valueToString(v, opt));
+            }
         } else {
             while (keys.hasNext()) {
                 o = keys.next();
+                final Object v = jo.get(o);
+                if(skipChildObject(children, opt, o, v)) {
+                    continue;
+                }
                 if (sb.length() > 1) {
                     sb.append(",\n");
                 } else {
@@ -328,7 +415,7 @@ public class JSONRenderer {
                 indent(sb, newindent);
                 sb.append(quote(o.toString()));
                 sb.append(": ");
-                sb.append(valueToString(jo.get(o), 
+                sb.append(valueToString(v, 
                         options().withIndent(opt.indent).withInitialIndent(newindent)));
             }
             if (sb.length() > 1) {
@@ -336,10 +423,23 @@ public class JSONRenderer {
                 indent(sb, opt.indent);
             }
         }
+        
+        /** Render children if any were skipped (in "children in arrays" mode) */ 
+        if(children.length() > 0) {
+            if (sb.length() > 1) {
+                sb.append(",\n");
+            } else {
+                sb.append('\n');
+            }
+            sb.append(quote(opt.childrenKey)).append(":");
+            sb.append(prettyPrint(children, opt));
+        }
+        
         sb.append('}');
         return sb.toString();
     }
 
+    /** Pretty-print a JSONArray */
     public String prettyPrint(JSONArray ja, Options opt) throws JSONException {
         int len = ja.length();
         if (len == 0) {
@@ -351,15 +451,22 @@ public class JSONRenderer {
             sb.append(valueToString(ja.get(0), opt));
         } else {
             final int newindent = opt.initialIndent + opt.indent;
-            sb.append('\n');
+            if(opt.hasIndent()) {
+                sb.append('\n');
+            }
             for (i = 0; i < len; i += 1) {
                 if (i > 0) {
-                    sb.append(",\n");
+                    sb.append(',');
+                    if(opt.hasIndent()) {
+                        sb.append('\n');
+                    }
                 }
                 indent(sb, newindent);
                 sb.append(valueToString(ja.get(i), opt));
             }
-            sb.append('\n');
+            if(opt.hasIndent()) {
+                sb.append('\n');
+            }
             indent(sb, opt.initialIndent);
         }
         sb.append(']');

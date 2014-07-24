@@ -18,6 +18,7 @@ package org.apache.sling.commons.json;
 
 import static org.junit.Assert.assertEquals;
 
+import org.apache.sling.commons.json.util.DespacedRendering;
 import org.junit.Test;
 
 /** Test the String formatting functionality of JSONObject */
@@ -33,7 +34,7 @@ public class JSONArrayToStringTest {
     public void testJsonArrayTwo() throws JSONException {
         final JSONArray a = new JSONArray();
         a.put("foo").put(42);
-        final DespacedResult r = new DespacedResult("{array:" + a.toString(2) + "}");
+        final DespacedRendering r = new DespacedRendering("{array:" + a.toString(2) + "}");
         r.expect("[-nl-_foo_,-nl-42-nl-]");
     }
     
