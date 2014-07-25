@@ -94,7 +94,9 @@ public class MapEntriesTest {
                 Collections.<Resource> emptySet().iterator());
 
         mapEntries = new MapEntries(resourceResolverFactory, bundleContext, eventAdmin);
-
+        Field field0 = MapEntries.class.getDeclaredField("mapRoot");
+        field0.setAccessible(true);  
+        field0.set(mapEntries, MapEntries.DEFAULT_MAP_ROOT);
     }
 
     @Test
@@ -617,6 +619,9 @@ public class MapEntriesTest {
         
         when(resourceResolverFactory.isOptimizeAliasResolutionEnabled()).thenReturn(false);
         mapEntries = new MapEntries(resourceResolverFactory, bundleContext, eventAdmin);
+        Field field0 = MapEntries.class.getDeclaredField("mapRoot");
+        field0.setAccessible(true);  
+        field0.set(mapEntries, MapEntries.DEFAULT_MAP_ROOT);
         
         Resource parent = mock(Resource.class);
         when(parent.getPath()).thenReturn("/parent");
@@ -643,6 +648,9 @@ public class MapEntriesTest {
         
         when(resourceResolverFactory.isOptimizeAliasResolutionEnabled()).thenReturn(false);
         mapEntries = new MapEntries(resourceResolverFactory, bundleContext, eventAdmin);
+        Field field0 = MapEntries.class.getDeclaredField("mapRoot");
+        field0.setAccessible(true);  
+        field0.set(mapEntries, MapEntries.DEFAULT_MAP_ROOT);
         
         Resource parent = mock(Resource.class);
         when(parent.getPath()).thenReturn("/parent");
@@ -669,6 +677,9 @@ public class MapEntriesTest {
         
         when(resourceResolverFactory.isOptimizeAliasResolutionEnabled()).thenReturn(false);
         mapEntries = new MapEntries(resourceResolverFactory, bundleContext, eventAdmin);
+        Field field0 = MapEntries.class.getDeclaredField("mapRoot");
+        field0.setAccessible(true);  
+        field0.set(mapEntries, MapEntries.DEFAULT_MAP_ROOT);
         
         Resource parent = mock(Resource.class);
         when(parent.getPath()).thenReturn("/parent");
