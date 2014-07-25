@@ -200,6 +200,32 @@ public class MapEntries implements EventHandler {
         }
     }
 
+    private boolean doNodeAdded(String path, boolean refreshed) {
+        this.initializing.lock();
+        boolean newRefreshed = refreshed;
+        if (!newRefreshed) {
+            resolver.refresh();
+            newRefreshed = true;
+        }
+        try {
+            Resource resource = resolver.getResource(path);
+            final ValueMap props = resource.adaptTo(ValueMap.class);
+            if (props.containsKey("sling:vanityPath")) {
+                doAddVanity(path);
+            }
+            if (props.containsKey("sling:alias")) {
+                doAddAlias(path);
+            }
+            if (path.startsWith(this.mapRoot)) {
+                doUpdateConfiguration();
+            }
+            sendChangeEvent();
+        } finally {
+            this.initializing.unlock();
+        }
+        return newRefreshed;
+    }
+    
     private boolean doAddAttributes(String path, String[] addedAttributes, boolean refreshed) {
         this.initializing.lock();
         boolean newRefreshed = refreshed;
@@ -598,6 +624,9 @@ public class MapEntries implements EventHandler {
                 //need to update the configuration
                 wasResolverRefreshed = doUpdateConfiguration(wasResolverRefreshed);
             }
+        //session.move() is handled differently see also SLING-3713 and    
+        } else if (SlingConstants.TOPIC_RESOURCE_ADDED.equals(event.getTopic()) && event.getProperty(SlingConstants.PROPERTY_ADDED_ATTRIBUTES) == null) {
+            wasResolverRefreshed = doNodeAdded(path, wasResolverRefreshed);
         } else {
             String [] addedAttributes = (String []) event.getProperty(SlingConstants.PROPERTY_ADDED_ATTRIBUTES);
             if (addedAttributes != null) {
@@ -1108,6 +1137,7 @@ public class MapEntries implements EventHandler {
             filter.append(")");
         }
         filter.append("(").append(EventConstants.EVENT_TOPIC).append("=").append(SlingConstants.TOPIC_RESOURCE_REMOVED).append(")");
+        filter.append("(").append(EventConstants.EVENT_TOPIC).append("=").append(SlingConstants.TOPIC_RESOURCE_ADDED).append(")");
         filter.append(")");
 
         return filter.toString();
