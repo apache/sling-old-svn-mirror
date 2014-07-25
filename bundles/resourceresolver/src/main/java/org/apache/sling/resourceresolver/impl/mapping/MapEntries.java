@@ -208,7 +208,6 @@ public class MapEntries implements EventHandler {
             newRefreshed = true;
         }
         try {
-            boolean configurationUpdate = false;
             for (String changedAttribute:addedAttributes){
                 if ("sling:vanityPath".equals(changedAttribute)) {
                     doAddVanity(path); 
@@ -218,11 +217,9 @@ public class MapEntries implements EventHandler {
                     if (enableOptimizeAliasResolution) {
                        doAddAlias(path);
                     }
-                } else {
-                    configurationUpdate = true;
                 }
             }
-            if (configurationUpdate) {
+            if (path.startsWith(this.mapRoot)) {
                 doUpdateConfiguration();
             }
             sendChangeEvent();
@@ -240,7 +237,6 @@ public class MapEntries implements EventHandler {
             newRefreshed = true;
         }
         try {
-            boolean configurationUpdate = false;
             for (String changedAttribute:changedAttributes){
                 if ("sling:vanityPath".equals(changedAttribute)) {
                     doUpdateVanity(path);
@@ -252,11 +248,9 @@ public class MapEntries implements EventHandler {
                         doAddAlias(path);
                         doUpdateAlias(path, false);
                      }                    
-                } else {
-                    configurationUpdate = true;
                 }
             }
-            if (configurationUpdate) {
+            if (path.startsWith(this.mapRoot)) {
                 doUpdateConfiguration();
             }
             sendChangeEvent();
@@ -274,7 +268,6 @@ public class MapEntries implements EventHandler {
             newRefreshed = true;
         }
         try {
-            boolean configurationUpdate = false;
             for (String changedAttribute:removedAttributes){
                 if ("sling:vanityPath".equals(changedAttribute)){
                     doRemoveVanity(path);
@@ -285,11 +278,9 @@ public class MapEntries implements EventHandler {
                         doRemoveAlias(path, nodeDeletion); 
                         doUpdateAlias(path, nodeDeletion);                        
                     }
-                } else {
-                    configurationUpdate = true;
                 }
             }
-            if (configurationUpdate) {
+            if (path.startsWith(this.mapRoot)) {
                 doUpdateConfiguration();
             }
             sendChangeEvent();
