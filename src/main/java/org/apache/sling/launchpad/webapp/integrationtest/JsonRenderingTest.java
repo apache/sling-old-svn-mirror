@@ -181,9 +181,7 @@ public class JsonRenderingTest extends HttpTestBase {
         final String location = testClient.createNode(postUrl, props);
         final String json = getContent(location + ".json", CONTENT_TYPE_JSON);
 
-        int counter = 0;
         for (String key : props.keySet()) {
-            counter++;
             assertJavascript(props.get(key), json, "out.println(data." + key
                 + ")");
         }
@@ -242,6 +240,28 @@ public class JsonRenderingTest extends HttpTestBase {
     	int min = 5;
     	
     	assertTrue("The .tidy selector should add at least 5 EOL chars to json output (delta=" + delta + ")", delta > min);
+    }
+    
+    public void testHarrayWithAndWithoutTidy() throws IOException {
+        final int withoutTidy = countOccurences(getContent(HTTP_BASE_URL + "/.harray.1.json", CONTENT_TYPE_JSON), '\n');
+        final int withTidy = countOccurences(getContent(HTTP_BASE_URL + "/.harray.tidy.1.json", CONTENT_TYPE_JSON), '\n');
+        assertTrue("Expecting more EOL chars in tidy output", withTidy > withoutTidy);
+    }
+
+    public void testHarrayRootNoRecursion() throws IOException {
+        final String json = getContent(HTTP_BASE_URL + "/.harray.json", CONTENT_TYPE_JSON);
+        assertJavascript("undefined", json, "out.print(typeof data['__children__'])");
+    }
+
+    public void testHarrayRootWithRecursion() throws IOException {
+        final String json = getContent(HTTP_BASE_URL + "/.harray.1.json", CONTENT_TYPE_JSON);
+        assertJavascript("[object Array]", json, "out.print(Object.prototype.toString.call(data['__children__']))");
+    }
+
+    public void testHarrayRootNameWithRecursion() throws IOException {
+        // test if _name is existing in child node
+        final String json = getContent(HTTP_BASE_URL + "/.harray.1.json", CONTENT_TYPE_JSON);
+        assertJavascript("true", json, "out.print(data['__children__'][0].__name__.length > 0)");
     }
     
     public void testRootNoRecursion() throws IOException {
