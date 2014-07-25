@@ -29,6 +29,7 @@ import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.io.JSONRenderer;
 import org.apache.sling.commons.json.io.JSONWriter;
 import org.apache.sling.commons.json.sling.ResourceTraversor;
 import org.slf4j.Logger;
@@ -49,9 +50,20 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
     /** Recursion level selector that means "all levels" */
     public static final String INFINITY = "infinity";
 
+    /** Selector that means "pretty-print the output */
     public static final String TIDY = "tidy";
+    
+    /** Selector that causes hierarchy to be rendered as arrays 
+     *  instead of child objects - useful to preserve the order of those 
+     *  child objects */ 
+    public static final String HARRAY = "harray";
+    
+    /** How much to indent in tidy mode */
+    public static final int INDENT_SPACES = 2;
 
     private long maximumResults;
+    
+    private final JSONRenderer renderer = new JSONRenderer();
 
     public JsonRendererServlet(long maximumResults) {
         this.maximumResults = maximumResults;
@@ -81,6 +93,7 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         boolean allowDump = true;
         int allowedLevel = 0;
         final boolean tidy = isTidy(req);
+        final boolean harray = hasSelector(req, HARRAY);
         ResourceTraversor traversor = null;
         try {
             traversor = new ResourceTraversor(maxRecursionLevels, maximumResults, r, tidy);
@@ -92,11 +105,17 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
             reportException(e);
         }
         try {
-            // Check if we can dump the resource.
+            // Dump the resource if we can
             if (allowDump) {
-                if (tidy) {
-                    resp.getWriter().write(traversor.getJSONObject().toString(2));
+                if (tidy || harray) {
+                    final JSONRenderer.Options opt = renderer.options()
+                            .withIndent(tidy ? INDENT_SPACES : 0)
+                            .withArraysForChildren(harray);
+                    resp.getWriter().write(renderer.prettyPrint(traversor.getJSONObject(), opt));
                 } else {
+                    // If no rendering options, use the plain toString() method, for
+                    // backwards compatibility. Output might be slightly different
+                    // with prettyPrint and no options
                     resp.getWriter().write(traversor.getJSONObject().toString());
                 }
 
@@ -127,7 +146,7 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         final String[] selectors = req.getRequestPathInfo().getSelectors();
         if (selectors != null && selectors.length > 0) {
             final String level = selectors[selectors.length - 1];
-            if(!TIDY.equals(level)) {
+            if(!TIDY.equals(level) && !HARRAY.equals(level)) {
                 if (INFINITY.equals(level)) {
                     maxRecursionLevels = -1;
                 } else {
