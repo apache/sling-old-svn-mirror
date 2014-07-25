@@ -55,6 +55,13 @@ public class JSONRenderer {
         private Options() {
         }
         
+        Options(Options opt) {
+            this.indent = opt.indent;
+            this.indentIsPositive = opt.indentIsPositive;
+            this.initialIndent = opt.initialIndent;
+            this.arraysForChildren = opt.arraysForChildren;
+        }
+        
         public Options withIndent(int n) {
             indent = n;
             indentIsPositive = indent > 0;
@@ -420,7 +427,7 @@ public class JSONRenderer {
             }
             if (sb.length() > 1) {
                 sb.append('\n');
-                indent(sb, opt.indent);
+                indent(sb, newindent);
             }
         }
         
@@ -431,8 +438,11 @@ public class JSONRenderer {
             } else {
                 sb.append('\n');
             }
+            final Options childOpt = new Options(opt);
+            childOpt.withInitialIndent(childOpt.initialIndent + newindent);
+            indent(sb, childOpt.initialIndent);
             sb.append(quote(opt.childrenKey)).append(":");
-            sb.append(prettyPrint(children, opt));
+            sb.append(prettyPrint(children, childOpt));
         }
         
         sb.append('}');
