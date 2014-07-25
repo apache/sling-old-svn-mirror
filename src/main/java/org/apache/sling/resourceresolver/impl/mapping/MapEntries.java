@@ -70,6 +70,10 @@ public class MapEntries implements EventHandler {
     public static final String PROP_REDIRECT_EXTERNAL_STATUS = "sling:status";
 
     public static final String PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS = "sling:redirectStatus";
+    
+    public static final String PROP_VANITY_PATH = "sling:vanityPath";
+    
+    public static final String PROP_VANITY_ORDER = "sling:vanityOrder";
 
     /** Key for the global list. */
     private static final String GLOBAL_LIST_KEY = "*";
@@ -210,10 +214,10 @@ public class MapEntries implements EventHandler {
         try {
             Resource resource = resolver.getResource(path);
             final ValueMap props = resource.adaptTo(ValueMap.class);
-            if (props.containsKey("sling:vanityPath")) {
+            if (props.containsKey(PROP_VANITY_PATH)) {
                 doAddVanity(path);
             }
-            if (props.containsKey("sling:alias")) {
+            if (props.containsKey(ResourceResolverImpl.PROP_ALIAS)) {
                 doAddAlias(path);
             }
             if (path.startsWith(this.mapRoot)) {
@@ -235,11 +239,11 @@ public class MapEntries implements EventHandler {
         }
         try {
             for (String changedAttribute:addedAttributes){
-                if ("sling:vanityPath".equals(changedAttribute)) {
+                if (PROP_VANITY_PATH.equals(changedAttribute)) {
                     doAddVanity(path); 
-                } else if ("sling:vanityOrder".equals(changedAttribute)) {
+                } else if (PROP_VANITY_ORDER.equals(changedAttribute)) {
                     doUpdateVanityOrder(path, false);
-                } else if ("sling:alias".equals(changedAttribute)) {
+                } else if (ResourceResolverImpl.PROP_ALIAS.equals(changedAttribute)) {
                     if (enableOptimizeAliasResolution) {
                        doAddAlias(path);
                     }
@@ -264,11 +268,11 @@ public class MapEntries implements EventHandler {
         }
         try {
             for (String changedAttribute:changedAttributes){
-                if ("sling:vanityPath".equals(changedAttribute)) {
+                if (PROP_VANITY_PATH.equals(changedAttribute)) {
                     doUpdateVanity(path);
-                } else if ("sling:vanityOrder".equals(changedAttribute)) {
+                } else if (PROP_VANITY_ORDER.equals(changedAttribute)) {
                     doUpdateVanityOrder(path, false);
-                } else if ("sling:alias".equals(changedAttribute)) {
+                } else if (ResourceResolverImpl.PROP_ALIAS.equals(changedAttribute)) {
                     if (enableOptimizeAliasResolution) {
                         doRemoveAlias(path, false);
                         doAddAlias(path);
@@ -295,11 +299,11 @@ public class MapEntries implements EventHandler {
         }
         try {
             for (String changedAttribute:removedAttributes){
-                if ("sling:vanityPath".equals(changedAttribute)){
+                if (PROP_VANITY_PATH.equals(changedAttribute)){
                     doRemoveVanity(path);
-                } else if ("sling:vanityOrder".equals(changedAttribute)) {
+                } else if (PROP_VANITY_ORDER.equals(changedAttribute)) {
                     doUpdateVanityOrder(path, true);
-                } else if ("sling:alias".equals(changedAttribute)) {
+                } else if (ResourceResolverImpl.PROP_ALIAS.equals(changedAttribute)) {
                     if (enableOptimizeAliasResolution) {
                         doRemoveAlias(path, nodeDeletion); 
                         doUpdateAlias(path, nodeDeletion);                        
@@ -388,7 +392,7 @@ public class MapEntries implements EventHandler {
         if (deletion) {
             vanityOrder = 0;
         } else {
-            vanityOrder = props.get("sling:vanityOrder", Long.class);
+            vanityOrder = props.get(PROP_VANITY_ORDER, Long.class);
         }
 
         String actualContentPath = getActualContentPath(path);
@@ -612,12 +616,12 @@ public class MapEntries implements EventHandler {
             final String actualContentPath = getActualContentPath(path);
             for (final String target : this.vanityTargets.keySet()) {
                 if (target.startsWith(actualContentPath)) {
-                    wasResolverRefreshed = doRemoveAttributes(path, new String [] {"sling:vanityPath"}, true, wasResolverRefreshed);
+                    wasResolverRefreshed = doRemoveAttributes(path, new String [] {PROP_VANITY_PATH}, true, wasResolverRefreshed);
                 }
             }
             for (final String target : this.aliasMap.keySet()) {
                 if (actualContentPath.startsWith(target)) {
-                    wasResolverRefreshed = doRemoveAttributes(path, new String [] {"sling:alias"}, true, wasResolverRefreshed);
+                    wasResolverRefreshed = doRemoveAttributes(path, new String [] {ResourceResolverImpl.PROP_ALIAS}, true, wasResolverRefreshed);
                 }
             }
             if (path.startsWith(this.mapRoot)) {
@@ -902,13 +906,13 @@ public class MapEntries implements EventHandler {
         }
 
         long vanityOrder = 0;
-        if (props.containsKey("sling:vanityOrder")) {
-            vanityOrder = props.get("sling:vanityOrder", Long.class);
+        if (props.containsKey(PROP_VANITY_ORDER)) {
+            vanityOrder = props.get(PROP_VANITY_ORDER, Long.class);
         }   
 
         // url is ignoring scheme and host.port and the path is
         // what is stored in the sling:vanityPath property
-        final String[] pVanityPaths = props.get("sling:vanityPath", new String[0]);
+        final String[] pVanityPaths = props.get(PROP_VANITY_PATH, new String[0]);
         for (final String pVanityPath : pVanityPaths) {
             final String[] result = this.getVanityPathDefinition(pVanityPath);
             if (result != null) {
@@ -1128,8 +1132,8 @@ public class MapEntries implements EventHandler {
         for (final String eventProp : eventProps) {
             filter.append("(|");
             if (  vanityPathEnabled ) {
-                filter.append('(').append(eventProp).append('=').append("sling:vanityPath").append(')');
-                filter.append('(').append(eventProp).append('=').append("sling:vanityOrder").append(')');
+                filter.append('(').append(eventProp).append('=').append(PROP_VANITY_PATH).append(')');
+                filter.append('(').append(eventProp).append('=').append(PROP_VANITY_ORDER).append(')');
             }
             for (final String nodeProp : nodeProps) {
                 filter.append('(').append(eventProp).append('=').append(nodeProp).append(')');
