@@ -1,0 +1,439 @@
+{
+  "jcr:createdBy": "admin",
+  "jcr:created": "Wed Nov 20 2013 11:01:57 GMT+0100",
+  "jcr:primaryType": "cq:Page",
+  "jcr:content": {
+    "redirectTarget": "/content/cqc-demo/home",
+    "sling:resourceType": "demo/core/renderers/redirectRenderer",
+    "cq:allowedTemplates": [
+      "/apps/demo/.*/templates(.*)?",
+      "/apps/cq-commons(.*)?"
+    ],
+    "jcr:title": "CQ Commons demo",
+    "cq:designPath": "/etc/designs/demo",
+    "jcr:createdBy": "admin",
+    "jcr:created": "Wed Nov 20 2013 11:01:57 GMT+0100",
+    "jcr:primaryType": "cq:PageContent",
+    "cq:template": "/apps/demo/core/templates/redirectTemplate"
+  },
+  "application": {
+    "jcr:createdBy": "admin",
+    "jcr:created": "Wed Nov 20 2013 11:04:42 GMT+0100",
+    "jcr:primaryType": "cq:Page",
+    "jcr:content": {
+      "redirectTarget": "/content/cqc-demo/home",
+      "sling:resourceType": "demo/core/renderers/redirectRenderer",
+      "jcr:title": "Application",
+      "jcr:createdBy": "admin",
+      "cq:allowedTemplates": [
+        "/apps/demo/core/templates/configuration(.*)?",
+        "/apps/cq-commons(.*)?"
+      ],
+      "cq:designPath": "/etc/designs/demo",
+      "jcr:created": "Wed Nov 20 2013 11:04:42 GMT+0100",
+      "jcr:primaryType": "cq:PageContent",
+      "cq:template": "/apps/demo/core/templates/redirectTemplate"
+    },
+    "configuration": {
+      "jcr:createdBy": "admin",
+      "jcr:created": "Wed Nov 20 2013 11:04:42 GMT+0100",
+      "jcr:primaryType": "cq:Page",
+      "jcr:content": {
+        "redirectTarget": "/content/cqc-demo/home",
+        "sling:resourceType": "demo/core/renderers/redirectRenderer",
+        "jcr:createdBy": "admin",
+        "cq:designPath": "/etc/designs/demo",
+        "cq:allowedTemplates": [
+          "/apps/demo/core/templates/configuration(.*)?",
+          "/apps/cq-commons(.*)?"
+        ],
+        "jcr:title": "Configuration",
+        "jcr:created": "Wed Nov 20 2013 11:04:42 GMT+0100",
+        "jcr:primaryType": "cq:PageContent",
+        "cq:template": "/apps/demo/core/templates/redirectTemplate"
+      },
+      "labels": {
+        "jcr:createdBy": "admin",
+        "jcr:created": "Wed Nov 20 2013 11:04:42 GMT+0100",
+        "jcr:primaryType": "cq:Page",
+        "jcr:content": {
+          "sling:resourceType": "cq-commons/config/renderers/configPageRenderer",
+          "jcr:title": "Labels",
+          "jcr:createdBy": "admin",
+          "cq:designPath": "/etc/designs/cq-commons",
+          "jcr:created": "Wed Nov 20 2013 11:04:42 GMT+0100",
+          "jcr:primaryType": "cq:PageContent",
+          "cq:template": "/apps/cq-commons/config/templates/configPageTemplate",
+          "configParsys": {
+            "sling:resourceType": "cq-commons/config/components/configParsys",
+            "jcr:primaryType": "nt:unstructured",
+            "tab": {
+              "tabName": "First tab",
+              "sling:resourceType": "cq-commons/config/components/tab",
+              "jcr:primaryType": "nt:unstructured",
+              "items": {
+                "sling:resourceType": "foundation/components/parsys",
+                "jcr:primaryType": "nt:unstructured",
+                "localizedtext": {
+                  "key": "helloWorld",
+                  "title": "The greeting",
+                  "sling:resourceType": "cq-commons/config/components/localizedText",
+                  "jcr:primaryType": "nt:unstructured",
+                  "lang": {
+                    "en_US": "Hello world",
+                    "jcr:primaryType": "nt:unstructured"
+                  }
+                },
+                "text": {
+                  "key": "otherLabel",
+                  "title": "Some other field",
+                  "sling:resourceType": "cq-commons/config/components/text",
+                  "value": "random text",
+                  "jcr:primaryType": "nt:unstructured"
+                }
+              }
+            },
+            "tab_0": {
+              "tabName": "Second tab",
+              "sling:resourceType": "cq-commons/config/components/tab",
+              "jcr:primaryType": "nt:unstructured",
+              "items": {
+                "sling:resourceType": "foundation/components/parsys",
+                "jcr:primaryType": "nt:unstructured",
+                "text_0": {
+                  "key": "theAnswer",
+                  "title": "The Answer",
+                  "sling:resourceType": "cq-commons/config/components/number",
+                  "value": "42",
+                  "jcr:primaryType": "nt:unstructured"
+                },
+                "text": {
+                  "key": "thisCmsName",
+                  "title": "CMS name",
+                  "sling:resourceType": "cq-commons/config/components/text",
+                  "value": "Adobe CQ",
+                  "jcr:primaryType": "nt:unstructured"
+                }
+              }
+            }
+          }
+        }
+      },
+      "sample-email": {
+        "jcr:createdBy": "admin",
+        "jcr:created": "Tue Dec 03 2013 12:24:00 GMT+0100",
+        "jcr:primaryType": "cq:Page",
+        "jcr:content": {
+          "sling:resourceType": "cq-commons/email/renderers/emailRenderer",
+          "cq:designPath": "/etc/designs/cq-commons",
+          "jcr:title": "Sample email",
+          "jcr:createdBy": "admin",
+          "cq:lastModified": "Tue Dec 03 2013 10:04:16 GMT+0100",
+          "jcr:created": "Tue Dec 03 2013 12:24:00 GMT+0100",
+          "jcr:primaryType": "cq:PageContent",
+          "cq:template": "/apps/cq-commons/email/templates/emailTemplate",
+          "cq:lastModifiedBy": "admin",
+          "email": {
+            "jcr:lastModifiedBy": "admin",
+            "sling:resourceType": "cq-commons/email/components/emailConfig",
+            "type": "combined",
+            "subject": "CQ Commons ${subjectPlaceholder}",
+            "fromEmail": "noreply@example.com",
+            "fromName": "CQ Commons",
+            "jcr:lastModified": "Tue Dec 03 2013 10:04:16 GMT+0100",
+            "jcr:primaryType": "nt:unstructured",
+            "richText1": {
+              "jcr:lastModifiedBy": "admin",
+              "sling:resourceType": "cq-commons/email/components/richtext",
+              "jcr:lastModified": "Tue Dec 03 2013 10:03:59 GMT+0100",
+              "jcr:primaryType": "nt:unstructured"
+            },
+            "images": {
+              "jcr:primaryType": "nt:unstructured",
+              "item_1": {
+                "id": "coglogo",
+                "path": "/content/dam/cqc-demo/slogan.png",
+                "jcr:primaryType": "nt:unstructured"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "home": {
+    "jcr:createdBy": "admin",
+    "jcr:created": "Wed Nov 20 2013 11:04:42 GMT+0100",
+    "jcr:primaryType": "cq:Page",
+    "jcr:content": {
+      "sling:resourceType": "demo/core/renderers/basicRenderer",
+      "jcr:createdBy": "admin",
+      "jcr:title": "Home",
+      "cq:designPath": "/etc/designs/demo",
+      "jcr:created": "Wed Nov 20 2013 11:04:42 GMT+0100",
+      "jcr:primaryType": "cq:PageContent",
+      "cq:template": "/apps/demo/core/templates/basicTemplate",
+      "par": {
+        "sling:resourceType": "foundation/components/parsys",
+        "jcr:primaryType": "nt:unstructured",
+        "richtext": {
+          "sling:resourceType": "demo/core/components/richtext",
+          "jcr:primaryType": "nt:unstructured"
+        }
+      }
+    },
+    "java": {
+      "jcr:createdBy": "admin",
+      "jcr:created": "Wed Nov 20 2013 14:03:23 GMT+0100",
+      "jcr:primaryType": "cq:Page",
+      "jcr:content": {
+        "redirectTarget": "/content/cqc-demo/home",
+        "sling:resourceType": "demo/core/renderers/redirectRenderer",
+        "cq:allowedTemplates": [
+          "/apps/demo/.*/templates(.*)?",
+          "/apps/cq-commons(.*)?"
+        ],
+        "cq:designPath": "/etc/designs/demo",
+        "jcr:createdBy": "admin",
+        "jcr:title": "Java",
+        "jcr:created": "Wed Nov 20 2013 14:03:23 GMT+0100",
+        "jcr:primaryType": "cq:PageContent",
+        "cq:template": "/apps/demo/core/templates/redirectTemplate"
+      },
+      "email": {
+        "jcr:createdBy": "admin",
+        "jcr:created": "Thu Nov 28 2013 18:53:32 GMT+0100",
+        "jcr:primaryType": "cq:Page",
+        "jcr:content": {
+          "sling:resourceType": "demo/core/renderers/basicRenderer",
+          "jcr:title": "E-mail",
+          "jcr:createdBy": "admin",
+          "cq:designPath": "/etc/designs/demo",
+          "cq:lastModified": "Tue Dec 03 2013 10:04:29 GMT+0100",
+          "jcr:created": "Thu Nov 28 2013 18:53:32 GMT+0100",
+          "jcr:primaryType": "cq:PageContent",
+          "cq:lastModifiedBy": "admin",
+          "cq:template": "/apps/demo/core/templates/basicTemplate",
+          "par": {
+            "sling:resourceType": "foundation/components/parsys",
+            "jcr:primaryType": "nt:unstructured",
+            "richtext": {
+              "sling:resourceType": "demo/core/components/richtext",
+              "jcr:primaryType": "nt:unstructured"
+            },
+            "email": {
+              "template": "/content/cqc-demo/application/configuration/sample-email",
+              "jcr:lastModifiedBy": "admin",
+              "sling:resourceType": "demo/core/components/email",
+              "jcr:lastModified": "Tue Dec 03 2013 10:04:29 GMT+0100",
+              "jcr:primaryType": "nt:unstructured",
+              "values": {
+                "jcr:primaryType": "nt:unstructured",
+                "item_1": {
+                  "key": "polishPangram",
+                  "value": "Pchnąć w tę łódź jeża lub ośm skrzyń fig.",
+                  "jcr:primaryType": "nt:unstructured"
+                },
+                "item_2": {
+                  "key": "englishPangram",
+                  "value": "The quick brown fox jumps over the lazy dog",
+                  "jcr:primaryType": "nt:unstructured"
+                },
+                "item_3": {
+                  "key": "subjectPlaceholder",
+                  "value": "sample e-mail",
+                  "jcr:primaryType": "nt:unstructured"
+                }
+              }
+            }
+          }
+        }
+      },
+      "labels": {
+        "jcr:createdBy": "admin",
+        "jcr:created": "Wed Nov 20 2013 14:03:23 GMT+0100",
+        "jcr:primaryType": "cq:Page",
+        "jcr:content": {
+          "sling:resourceType": "demo/core/renderers/basicRenderer",
+          "cq:designPath": "/etc/designs/demo",
+          "jcr:title": "Labels",
+          "jcr:createdBy": "admin",
+          "jcr:created": "Wed Nov 20 2013 14:03:23 GMT+0100",
+          "jcr:primaryType": "cq:PageContent",
+          "cq:template": "/apps/demo/core/templates/basicTemplate",
+          "par": {
+            "sling:resourceType": "foundation/components/parsys",
+            "jcr:primaryType": "nt:unstructured",
+            "richtext": {
+              "sling:resourceType": "demo/core/components/richtext",
+              "jcr:primaryType": "nt:unstructured"
+            },
+            "configvalue": {
+              "key": "helloWorld",
+              "description": "Greeting",
+              "sling:resourceType": "demo/core/components/configValue",
+              "jcr:primaryType": "nt:unstructured"
+            },
+            "configvalue_0": {
+              "key": "theAnswer",
+              "description": "The answer",
+              "sling:resourceType": "demo/core/components/configValue",
+              "jcr:primaryType": "nt:unstructured"
+            },
+            "configvalue_1": {
+              "key": "thisCmsName",
+              "description": "This CMS name",
+              "sling:resourceType": "demo/core/components/configValue",
+              "jcr:primaryType": "nt:unstructured"
+            },
+            "configvalue_2": {
+              "key": "unknownKey",
+              "description": "Some unknown key",
+              "sling:resourceType": "demo/core/components/configValue",
+              "jcr:primaryType": "nt:unstructured"
+            }
+          }
+        }
+      },
+      "navigation": {
+        "jcr:createdBy": "admin",
+        "jcr:created": "Thu Nov 21 2013 11:06:05 GMT+0100",
+        "jcr:primaryType": "cq:Page",
+        "jcr:content": {
+          "sling:resourceType": "demo/core/renderers/basicRenderer",
+          "cq:designPath": "/etc/designs/demo",
+          "jcr:title": "Navigation",
+          "jcr:createdBy": "admin",
+          "jcr:created": "Thu Nov 21 2013 11:06:05 GMT+0100",
+          "jcr:primaryType": "cq:PageContent",
+          "cq:template": "/apps/demo/core/templates/basicTemplate",
+          "par": {
+            "sling:resourceType": "foundation/components/parsys",
+            "jcr:primaryType": "nt:unstructured",
+            "richtext": {
+              "sling:resourceType": "demo/core/components/richtext",
+              "jcr:primaryType": "nt:unstructured"
+            },
+            "navigation": {
+              "mode": "parent",
+              "sling:resourceType": "demo/core/components/navigation",
+              "maxDepth": "0",
+              "root": "/content/cqc-demo/home",
+              "jcr:primaryType": "nt:unstructured"
+            }
+          }
+        }
+      }
+    },
+    "js": {
+      "jcr:createdBy": "admin",
+      "jcr:created": "Wed Nov 20 2013 14:03:23 GMT+0100",
+      "jcr:primaryType": "cq:Page",
+      "jcr:content": {
+        "redirectTarget": "/content/cqc-demo/home",
+        "sling:resourceType": "demo/core/renderers/redirectRenderer",
+        "cq:allowedTemplates": [
+          "/apps/demo/.*/templates(.*)?",
+          "/apps/cq-commons(.*)?"
+        ],
+        "jcr:title": "JS",
+        "jcr:createdBy": "admin",
+        "cq:designPath": "/etc/designs/demo",
+        "jcr:created": "Wed Nov 20 2013 14:03:23 GMT+0100",
+        "jcr:primaryType": "cq:PageContent",
+        "cq:template": "/apps/demo/core/templates/redirectTemplate"
+      }
+    },
+    "extjs": {
+      "jcr:createdBy": "admin",
+      "jcr:created": "Wed Nov 20 2013 14:03:23 GMT+0100",
+      "jcr:primaryType": "cq:Page",
+      "jcr:content": {
+        "redirectTarget": "/content/cqc-demo/home",
+        "sling:resourceType": "demo/core/renderers/redirectRenderer",
+        "cq:allowedTemplates": [
+          "/apps/demo/.*/templates(.*)?",
+          "/apps/cq-commons(.*)?"
+        ],
+        "jcr:createdBy": "admin",
+        "cq:designPath": "/etc/designs/demo",
+        "jcr:title": "ExtJS",
+        "jcr:created": "Wed Nov 20 2013 14:03:23 GMT+0100",
+        "jcr:primaryType": "cq:PageContent",
+        "cq:template": "/apps/demo/core/templates/redirectTemplate"
+      },
+      "complex-multifield": {
+        "jcr:createdBy": "admin",
+        "jcr:created": "Wed Nov 20 2013 14:26:51 GMT+0100",
+        "jcr:primaryType": "cq:Page",
+        "jcr:content": {
+          "sling:resourceType": "demo/core/renderers/basicRenderer",
+          "jcr:title": "Complex multifield",
+          "jcr:createdBy": "admin",
+          "cq:designPath": "/etc/designs/demo",
+          "jcr:created": "Wed Nov 20 2013 14:26:51 GMT+0100",
+          "jcr:primaryType": "cq:PageContent",
+          "cq:template": "/apps/demo/core/templates/basicTemplate",
+          "par": {
+            "sling:resourceType": "foundation/components/parsys",
+            "jcr:primaryType": "nt:unstructured",
+            "richtext": {
+              "sling:resourceType": "demo/core/components/richtext",
+              "jcr:primaryType": "nt:unstructured"
+            },
+            "complexMultiField": {
+              "sling:resourceType": "demo/core/components/complexMultiField",
+              "jcr:primaryType": "nt:unstructured",
+              "items": {
+                "jcr:primaryType": "nt:unstructured",
+                "item_1": {
+                  "secondSub": "Cognifide",
+                  "firstSub": "Company",
+                  "jcr:primaryType": "nt:unstructured"
+                },
+                "item_2": {
+                  "secondSub": "Poznań",
+                  "firstSub": "City",
+                  "jcr:primaryType": "nt:unstructured"
+                },
+                "item_3": {
+                  "secondSub": "Poland",
+                  "firstSub": "Country",
+                  "jcr:primaryType": "nt:unstructured"
+                }
+              }
+            }
+          }
+        }
+      },
+      "checkbox": {
+        "jcr:createdBy": "admin",
+        "jcr:created": "Fri Nov 22 2013 10:59:38 GMT+0100",
+        "jcr:primaryType": "cq:Page",
+        "jcr:content": {
+          "sling:resourceType": "demo/core/renderers/basicRenderer",
+          "jcr:createdBy": "admin",
+          "jcr:title": "Checkbox",
+          "cq:designPath": "/etc/designs/demo",
+          "jcr:created": "Fri Nov 22 2013 10:59:38 GMT+0100",
+          "jcr:primaryType": "cq:PageContent",
+          "cq:template": "/apps/demo/core/templates/basicTemplate",
+          "par": {
+            "sling:resourceType": "foundation/components/parsys",
+            "jcr:primaryType": "nt:unstructured",
+            "richtext": {
+              "sling:resourceType": "demo/core/components/richtext",
+              "jcr:primaryType": "nt:unstructured"
+            },
+            "checkbox": {
+              "sling:resourceType": "demo/core/components/checkbox",
+              "checkbox": "",
+              "jcr:primaryType": "nt:unstructured",
+              "cogcheckbox": "false"
+            }
+          }
+        }
+      }
+    }
+  }
+}
