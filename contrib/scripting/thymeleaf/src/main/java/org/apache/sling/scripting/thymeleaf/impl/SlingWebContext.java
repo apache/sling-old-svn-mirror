@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.thymeleaf;
+package org.apache.sling.scripting.thymeleaf.impl;
 
 import java.util.Calendar;
 import java.util.Locale;
@@ -28,6 +28,7 @@ import javax.servlet.http.HttpSession;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.scripting.thymeleaf.SlingContext;
 import org.thymeleaf.context.AbstractContext;
 import org.thymeleaf.context.IWebContext;
 import org.thymeleaf.context.VariablesMap;
