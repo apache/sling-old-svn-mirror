@@ -161,8 +161,6 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Bundle-Category>sling</Bundle-Category>
-            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Export-Package>
               org.apache.sling.scripting.thymeleaf
             </Export-Package>
