@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.launch.Framework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +49,7 @@ public class CrankstartContext {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                if(osgiFramework != null) {
+                if(osgiFramework != null && osgiFramework.getState() == Bundle.ACTIVE) {
                     try {
                         log.info("Stopping the OSGi framework");
                         osgiFramework.stop();
