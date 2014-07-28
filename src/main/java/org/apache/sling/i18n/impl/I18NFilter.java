@@ -62,7 +62,7 @@ import org.slf4j.LoggerFactory;
  * the resource bundle for the current request.
  */
 @SlingFilter(generateComponent = false, generateService = true, order = -700, scope = { SlingFilterScope.REQUEST, SlingFilterScope.ERROR })
-@Component(immediate = true, metatype = false, specVersion="1.2")
+@Component(immediate = true, specVersion="1.2")
 @Properties({
     @Property(name = "pattern", value="/.*"),
     @Property(name = Constants.SERVICE_DESCRIPTION, value = "Internationalization Support Filter"),
@@ -75,10 +75,10 @@ public class I18NFilter implements Filter {
     private final DefaultLocaleResolver DEFAULT_LOCALE_RESOLVER = new DefaultLocaleResolver();
 
     @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC, policyOption=ReferencePolicyOption.GREEDY)
-    private LocaleResolver localeResolver = DEFAULT_LOCALE_RESOLVER;
+    private volatile LocaleResolver localeResolver = DEFAULT_LOCALE_RESOLVER;
 
     @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC, policyOption=ReferencePolicyOption.GREEDY)
-    private RequestLocaleResolver requestLocaleResolver = DEFAULT_LOCALE_RESOLVER;
+    private volatile RequestLocaleResolver requestLocaleResolver = DEFAULT_LOCALE_RESOLVER;
 
     @Reference(name = "resourceBundleProvider",
                referenceInterface = ResourceBundleProvider.class,
@@ -96,6 +96,7 @@ public class I18NFilter implements Filter {
     /**
      * @see javax.servlet.Filter#init(javax.servlet.FilterConfig)
      */
+    @Override
     public void init(FilterConfig filterConfig) {
         synchronized(this) {
             initCount++;
@@ -105,6 +106,7 @@ public class I18NFilter implements Filter {
     /**
      * @see javax.servlet.Filter#doFilter(javax.servlet.ServletRequest, javax.servlet.ServletResponse, javax.servlet.FilterChain)
      */
+    @Override
     public void doFilter(ServletRequest request,
                          final ServletResponse response,
                          final FilterChain chain)
@@ -131,6 +133,7 @@ public class I18NFilter implements Filter {
     /**
      * @see javax.servlet.Filter#destroy()
      */
+    @Override
     public void destroy() {
         synchronized(this) {
             initCount--;
@@ -178,6 +181,7 @@ public class I18NFilter implements Filter {
     /** Provider that goes through a list of registered providers and takes the first non-null responses */
     private class CombinedBundleProvider implements ResourceBundleProvider {
 
+        @Override
         public Locale getDefaultLocale() {
             // ask all registered providers, use the first one that returns
             final ResourceBundleProvider[] providers = sortedProviders;
@@ -191,6 +195,7 @@ public class I18NFilter implements Filter {
             return null;
         }
 
+        @Override
         public ResourceBundle getResourceBundle(final Locale locale) {
             // ask all registered providers, use the first one that returns
             final ResourceBundleProvider[] providers = sortedProviders;
@@ -204,6 +209,7 @@ public class I18NFilter implements Filter {
             return null;
         }
 
+        @Override
         public ResourceBundle getResourceBundle(final String baseName, final Locale locale) {
             // ask all registered providers, use the first one that returns
             final ResourceBundleProvider[] providers = sortedProviders;
