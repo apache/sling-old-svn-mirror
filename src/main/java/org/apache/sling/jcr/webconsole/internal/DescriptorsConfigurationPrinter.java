@@ -43,7 +43,7 @@ public class DescriptorsConfigurationPrinter implements ConfigurationPrinter {
 
 
     @Reference(policy=ReferencePolicy.DYNAMIC)
-    private SlingRepository slingRepository;
+    private volatile SlingRepository slingRepository;
 
     /**
      * Get the title of the configuration status page.
