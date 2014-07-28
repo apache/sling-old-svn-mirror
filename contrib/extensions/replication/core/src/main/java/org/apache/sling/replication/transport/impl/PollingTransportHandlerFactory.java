@@ -20,6 +20,7 @@ package org.apache.sling.replication.transport.impl;
 
 import java.util.Dictionary;
 import java.util.Map;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -27,7 +28,6 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.http.client.fluent.Executor;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgentConfiguration;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
@@ -60,7 +60,7 @@ public class PollingTransportHandlerFactory extends AbstractTransportHandlerFact
 
     @Property(name = ReplicationAgentConfiguration.TRANSPORT_AUTHENTICATION_FACTORY, value = DEFAULT_AUTHENTICATION_FACTORY)
     @Reference(name = "TransportAuthenticationProviderFactory", target = DEFAULT_AUTHENTICATION_FACTORY, policy = ReferencePolicy.DYNAMIC)
-    private TransportAuthenticationProviderFactory transportAuthenticationProviderFactory;
+    private volatile TransportAuthenticationProviderFactory transportAuthenticationProviderFactory;
 
     @Property
     private static final String AUTHENTICATION_PROPERTIES = ReplicationAgentConfiguration.AUTHENTICATION_PROPERTIES;
@@ -69,6 +69,7 @@ public class PollingTransportHandlerFactory extends AbstractTransportHandlerFact
     private static final String POLL_ITEMS = "poll.items";
 
 
+    @Override
     protected TransportHandler createTransportHandler(Map<String, ?> config,
                                                       Dictionary<String, Object> props,
                                                       TransportAuthenticationProvider transportAuthenticationProvider,
@@ -79,7 +80,7 @@ public class PollingTransportHandlerFactory extends AbstractTransportHandlerFact
 
 
         return new PollingTransportHandler(pollItems,
-                (TransportAuthenticationProvider<Executor, Executor>) transportAuthenticationProvider,
+                transportAuthenticationProvider,
                 endpoints);
     }
 
@@ -88,11 +89,13 @@ public class PollingTransportHandlerFactory extends AbstractTransportHandlerFact
         return transportAuthenticationProviderFactory;
     }
 
+    @Override
     @Activate
     protected void activate(BundleContext context, Map<String, ?> config) throws Exception {
         super.activate(context, config);
     }
 
+    @Override
     @Deactivate
     protected void deactivate() {
         super.deactivate();

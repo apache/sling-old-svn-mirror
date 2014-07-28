@@ -18,8 +18,17 @@
  */
 package org.apache.sling.replication.transport.impl;
 
-import org.apache.felix.scr.annotations.*;
-import org.apache.http.client.fluent.Executor;
+import java.util.Dictionary;
+import java.util.Map;
+
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyOption;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgentConfiguration;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
@@ -28,9 +37,6 @@ import org.apache.sling.replication.transport.authentication.TransportAuthentica
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
 import org.apache.sling.replication.transport.authentication.impl.UserCredentialsTransportAuthenticationProviderFactory;
 import org.osgi.framework.BundleContext;
-
-import java.util.Dictionary;
-import java.util.Map;
 
 @Component(metatype = true,
         label = "Replication Transport Handler Factory - Http Push",
@@ -69,7 +75,7 @@ public class HttpTransportHandlerFactory extends AbstractTransportHandlerFactory
 
     @Property(name = ReplicationAgentConfiguration.TRANSPORT_AUTHENTICATION_FACTORY, value = DEFAULT_AUTHENTICATION_FACTORY)
     @Reference(name = "TransportAuthenticationProviderFactory", target = DEFAULT_AUTHENTICATION_FACTORY, policy = ReferencePolicy.DYNAMIC)
-    private TransportAuthenticationProviderFactory transportAuthenticationProviderFactory;
+    private volatile TransportAuthenticationProviderFactory transportAuthenticationProviderFactory;
 
     @Property
     private static final String AUTHENTICATION_PROPERTIES = ReplicationAgentConfiguration.AUTHENTICATION_PROPERTIES;
@@ -86,6 +92,7 @@ public class HttpTransportHandlerFactory extends AbstractTransportHandlerFactory
     @Property
     private static final String CUSTOM_BODY = "customBody";
 
+    @Override
     protected TransportHandler createTransportHandler(Map<String, ?> config,
                                                       Dictionary<String, Object> props,
                                                       TransportAuthenticationProvider transportAuthenticationProvider,
@@ -106,7 +113,7 @@ public class HttpTransportHandlerFactory extends AbstractTransportHandlerFactory
                 customHeaders,
                 useCustomBody,
                 customBody,
-                (TransportAuthenticationProvider<Executor, Executor>) transportAuthenticationProvider,
+                transportAuthenticationProvider,
                 endpoints,
                 endpointStrategyType);
     }
@@ -116,11 +123,13 @@ public class HttpTransportHandlerFactory extends AbstractTransportHandlerFactory
         return transportAuthenticationProviderFactory;
     }
 
+    @Override
     @Activate
     protected void activate(BundleContext context, Map<String, ?> config) throws Exception {
         super.activate(context, config);
     }
 
+    @Override
     @Deactivate
     protected void deactivate() {
         super.deactivate();

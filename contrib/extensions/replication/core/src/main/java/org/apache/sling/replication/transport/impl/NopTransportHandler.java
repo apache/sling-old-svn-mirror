@@ -29,7 +29,7 @@ import org.apache.sling.replication.transport.TransportHandler;
 /**
  * A no-operation {@link org.apache.sling.replication.transport.TransportHandler}
  */
-@Component(metatype = false, label = "Nop Transport Handler")
+@Component
 @Service(value = TransportHandler.class)
 @Property(name = "name", value = NopTransportHandler.NAME)
 public class NopTransportHandler implements TransportHandler {

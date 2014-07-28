@@ -18,7 +18,16 @@
  */
 package org.apache.sling.replication.transport.impl;
 
-import org.apache.felix.scr.annotations.*;
+import java.util.Dictionary;
+import java.util.Map;
+
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.agent.ReplicationAgentConfiguration;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
@@ -28,10 +37,6 @@ import org.apache.sling.replication.transport.authentication.TransportAuthentica
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
 import org.apache.sling.replication.transport.authentication.impl.RepositoryTransportAuthenticationProviderFactory;
 import org.osgi.framework.BundleContext;
-
-import javax.jcr.Session;
-import java.util.Dictionary;
-import java.util.Map;
 
 @Component(metatype = true,
         label = "Replication Transport Handler Factory - Repository",
@@ -57,7 +62,7 @@ public class RepositoryTransportHandlerFactory extends AbstractTransportHandlerF
 
     @Property(name = ReplicationAgentConfiguration.TRANSPORT_AUTHENTICATION_FACTORY, value = DEFAULT_AUTHENTICATION_FACTORY)
     @Reference(name = "TransportAuthenticationProviderFactory", target = DEFAULT_AUTHENTICATION_FACTORY, policy = ReferencePolicy.DYNAMIC)
-    private TransportAuthenticationProviderFactory transportAuthenticationProviderFactory;
+    private volatile TransportAuthenticationProviderFactory transportAuthenticationProviderFactory;
 
     @Property
     private static final String AUTHENTICATION_PROPERTIES = ReplicationAgentConfiguration.AUTHENTICATION_PROPERTIES;
@@ -78,7 +83,7 @@ public class RepositoryTransportHandlerFactory extends AbstractTransportHandlerF
 
         return new RepositoryTransportHandler(repository,
                 replicationEventFactory,
-                (TransportAuthenticationProvider<SlingRepository,Session>) transportAuthenticationProvider,
+                transportAuthenticationProvider,
                 endpoints);
     }
 
@@ -87,11 +92,13 @@ public class RepositoryTransportHandlerFactory extends AbstractTransportHandlerF
         return transportAuthenticationProviderFactory;
     }
 
+    @Override
     @Activate
     protected void activate(BundleContext context, Map<String, ?> config) throws Exception {
         super.activate(context, config);
     }
 
+    @Override
     @Deactivate
     protected void deactivate() {
         super.deactivate();

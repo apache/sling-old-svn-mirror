@@ -23,6 +23,7 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -102,19 +103,19 @@ public class ReplicationAgentServiceFactory {
 
     @Property(label = "Target TransportHandler", name = TRANSPORT, value = "(name=" + NopTransportHandler.NAME + ")")
     @Reference(name = "TransportHandler", target = "(name=" + NopTransportHandler.NAME + ")", policy = ReferencePolicy.DYNAMIC)
-    private TransportHandler transportHandler;
+    private volatile TransportHandler transportHandler;
 
     @Property(label = "Target ReplicationPackageBuilder", name = PACKAGING, value = DEFAULT_PACKAGING)
     @Reference(name = "ReplicationPackageBuilder", target = DEFAULT_PACKAGING, policy = ReferencePolicy.DYNAMIC)
-    private ReplicationPackageBuilder packageBuilder;
+    private volatile ReplicationPackageBuilder packageBuilder;
 
     @Property(label = "Target ReplicationQueueProvider", name = QUEUEPROVIDER, value = DEFAULT_QUEUEPROVIDER)
     @Reference(name = "ReplicationQueueProvider", target = DEFAULT_QUEUEPROVIDER, policy = ReferencePolicy.DYNAMIC)
-    private ReplicationQueueProvider queueProvider;
+    private volatile ReplicationQueueProvider queueProvider;
 
     @Property(label = "Target QueueDistributionStrategy", name = QUEUE_DISTRIBUTION, value = DEFAULT_DISTRIBUTION)
     @Reference(name = "ReplicationQueueDistributionStrategy", target = DEFAULT_DISTRIBUTION, policy = ReferencePolicy.DYNAMIC)
-    private ReplicationQueueDistributionStrategy queueDistributionStrategy;
+    private volatile ReplicationQueueDistributionStrategy queueDistributionStrategy;
 
     @Property(label = "Runmodes")
     private static final String RUNMODES = ReplicationAgentConfiguration.RUNMODES;
