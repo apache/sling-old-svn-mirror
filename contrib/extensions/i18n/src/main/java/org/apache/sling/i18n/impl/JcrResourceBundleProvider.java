@@ -90,7 +90,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
-    private ResourceResolverFactory resourceResolverFactory;
+    private volatile ResourceResolverFactory resourceResolverFactory;
 
     /**
      * The default Locale as configured with the <i>locale.default</i>
@@ -141,6 +141,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider {
      * fallback for {@link #getResourceBundle(Locale)} and also as the basis for
      * any messages requested from resource bundles.
      */
+    @Override
     public Locale getDefaultLocale() {
         return defaultLocale;
     }
@@ -156,10 +157,12 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider {
      * @throws MissingResourceException If the <code>ResourceResolver</code>
      *             is not available to access the resources.
      */
+    @Override
     public ResourceBundle getResourceBundle(Locale locale) {
         return getResourceBundle(null, locale);
     }
 
+    @Override
     public ResourceBundle getResourceBundle(String baseName, Locale locale) {
         if (locale == null) {
             locale = defaultLocale;
@@ -181,6 +184,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider {
      */
     private final EventListener messageChangeHandler = new EventListener() {
 
+        @Override
         public void onEvent(EventIterator events) {
             log.debug("onEvent: Resource changes, removing cached ResourceBundles");
             clearCache();
@@ -193,6 +197,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider {
      * In this case we check if the given language is already loaded and only then invalidate the cache.
      */
     private final EventListener languageChangeHandler = new EventListener() {
+        @Override
         public void onEvent(EventIterator events) {
             log.debug("onEvent: Resource changes. checking for cached bundle.");
             while (events.hasNext()) {
@@ -240,6 +245,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider {
         this.bundleServiceRegistrations = new ArrayList<ServiceRegistration>();
         if (this.resourceResolverFactory != null) {
             final Thread t = new Thread() {
+                @Override
                 public void run() {
                     preloadBundles();
                 }
