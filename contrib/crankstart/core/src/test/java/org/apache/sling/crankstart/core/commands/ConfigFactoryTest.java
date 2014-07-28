@@ -85,6 +85,7 @@ public class ConfigFactoryTest {
         final String verb = "config.factory";
         final String factoryName = UUID.randomUUID().toString();
         final Dictionary<String, Object> properties = new Hashtable<String, Object>();
+        properties.put(Configure.CRANKSTART_CONFIG_ID, UUID.randomUUID().toString());
         
         assertEquals("Expecting no configs initially", 0, count(factoryName));
         
@@ -92,8 +93,7 @@ public class ConfigFactoryTest {
         cmd.execute(ctx, commandLine);
         assertEquals("Expecting one config after first excute call", 1, count(factoryName));
         cmd.execute(ctx, commandLine);
-        //TODO this currently fails - two configs are created
-        //assertEquals("Expecting one config after second excute call", 1, count(factoryName));
+        assertEquals("Expecting only one config after second excute call", 1, count(factoryName));
     }
     
     private int count(String factoryPid) throws Exception {
