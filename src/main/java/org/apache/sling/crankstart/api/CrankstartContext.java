@@ -21,8 +21,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.osgi.framework.launch.Framework;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CrankstartContext {
+    private final Logger log = LoggerFactory.getLogger(getClass());
     private Framework osgiFramework;
     private final Map<String, String> osgiFrameworkProperties = new HashMap<String, String>();
     private final Map<String, Object> attributes = new HashMap<String, Object>();
@@ -40,6 +43,24 @@ public class CrankstartContext {
             throw new IllegalStateException("OSGi framework already set");
         }
         osgiFramework = f;
+        
+        // Shutdown the framework when the JVM exits
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                if(osgiFramework != null) {
+                    try {
+                        log.info("Stopping the OSGi framework");
+                        osgiFramework.stop();
+                        log.info("Waiting for the OSGi framework to exit");
+                        osgiFramework.waitForStop(0);
+                        log.info("OSGi framework stopped");
+                    } catch(Exception e) {
+                        log.error("Exception while stopping OSGi framework", e);
+                    }
+                }
+            }
+        });
     }
     
     public Framework getOsgiFramework() {
