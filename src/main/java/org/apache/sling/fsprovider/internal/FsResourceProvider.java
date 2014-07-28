@@ -97,7 +97,7 @@ public class FsResourceProvider implements ResourceProvider {
     private FileMonitor monitor;
 
     @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
-    private EventAdmin eventAdmin;
+    private volatile EventAdmin eventAdmin;
 
     /**
      * Same as {@link #getResource(ResourceResolver, String)}, i.e. the
