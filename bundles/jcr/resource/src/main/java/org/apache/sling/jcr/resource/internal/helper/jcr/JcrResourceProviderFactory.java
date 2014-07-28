@@ -92,7 +92,7 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
 
     /** The dynamic class loader */
     @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
-    private DynamicClassLoaderManager dynamicClassLoaderManager;
+    private volatile DynamicClassLoaderManager dynamicClassLoaderManager;
 
     @Reference(name = REPOSITORY_REFERNENCE_NAME, referenceInterface = SlingRepository.class)
     private ServiceReference repositoryReference;
