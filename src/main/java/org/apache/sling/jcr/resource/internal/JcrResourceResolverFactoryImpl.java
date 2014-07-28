@@ -64,7 +64,7 @@ public class JcrResourceResolverFactoryImpl implements
 
     /** The dynamic class loader */
     @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
-    private DynamicClassLoaderManager dynamicClassLoaderManager;
+    private volatile DynamicClassLoaderManager dynamicClassLoaderManager;
 
     private JcrItemAdapterFactory jcrItemAdapterFactory;
 
