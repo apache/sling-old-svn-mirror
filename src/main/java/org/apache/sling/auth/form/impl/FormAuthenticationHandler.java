@@ -289,7 +289,7 @@ public class FormAuthenticationHandler extends DefaultAuthenticationFeedbackHand
      * The resource resolver factory used to resolve the login form as a resource
      */
     @Reference(policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_UNARY)
-    private ResourceResolverFactory resourceResolverFactory;
+    private volatile ResourceResolverFactory resourceResolverFactory;
 
     /**
      * If true the login form will be presented when the token expires.
