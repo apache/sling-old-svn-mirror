@@ -115,7 +115,7 @@ public class SlingMainServlet extends GenericServlet {
     private HttpService httpService;
 
     @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
-    private AdapterManager adapterManager;
+    private volatile AdapterManager adapterManager;
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(SlingMainServlet.class);
