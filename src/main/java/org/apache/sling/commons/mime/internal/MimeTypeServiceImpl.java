@@ -65,7 +65,7 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
     private static final String PROP_MIME_TYPES = "mime.types";
 
     @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
-    private LogService logService;
+    private volatile LogService logService;
 
     private Map<String, String> mimeTab = new HashMap<String, String>();
 
