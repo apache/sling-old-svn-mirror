@@ -85,7 +85,7 @@ public class ObjectContentManagerFactoryImpl implements ObjectContentManagerFact
     private static final Logger log = LoggerFactory.getLogger(ObjectContentManagerFactoryImpl.class);
 
     @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
-    private EventAdmin eventAdmin;
+    private volatile EventAdmin eventAdmin;
 
     /**
      * The class loader used by the Jackrabbit OCM ReflectionUtils class to load
