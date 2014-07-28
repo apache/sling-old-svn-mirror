@@ -55,7 +55,7 @@ public class CrankstartFileProcessor implements Callable<Object> {
     private List<CrankstartCommand> builtinCommands = new ArrayList<CrankstartCommand>();
     private List<CrankstartCommand> extensionCommands = new ArrayList<CrankstartCommand>();
     
-    CrankstartFileProcessor() {
+    public CrankstartFileProcessor() {
         this(new CrankstartContext());
     }
     
@@ -145,6 +145,7 @@ public class CrankstartFileProcessor implements Callable<Object> {
     
     /** Reload our extension commands from the OSGi framework 
      * @throws InvalidSyntaxException */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private synchronized void reloadExtensionCommands() throws InvalidSyntaxException {
         if(crankstartContext.getOsgiFramework() == null) {
             return;
