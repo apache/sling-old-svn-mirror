@@ -262,7 +262,7 @@ public class SlingAuthenticator implements Authenticator,
      * The event admin service.
      */
     @Reference(policy=ReferencePolicy.DYNAMIC)
-    private EventAdmin eventAdmin;
+    private volatile EventAdmin eventAdmin;
 
     // ---------- SCR integration
 
