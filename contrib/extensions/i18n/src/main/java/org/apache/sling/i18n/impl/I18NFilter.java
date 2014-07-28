@@ -37,7 +37,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
-import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
@@ -61,8 +60,8 @@ import org.slf4j.LoggerFactory;
  * The <code>I18NFilter</code> class is a request level filter, which provides
  * the resource bundle for the current request.
  */
-@SlingFilter(generateComponent = false, generateService = true, order = -700, scope = { SlingFilterScope.REQUEST, SlingFilterScope.ERROR })
-@Component(immediate = true, specVersion="1.2")
+@SlingFilter(generateService = true,
+             order = -700, scope = { SlingFilterScope.REQUEST, SlingFilterScope.ERROR })
 @Properties({
     @Property(name = "pattern", value="/.*"),
     @Property(name = Constants.SERVICE_DESCRIPTION, value = "Internationalization Support Filter"),
