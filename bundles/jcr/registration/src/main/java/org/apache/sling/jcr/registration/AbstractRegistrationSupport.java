@@ -69,7 +69,7 @@ public abstract class AbstractRegistrationSupport {
      * logging correctly.
      */
     @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
-    private LogService log;
+    private volatile LogService log;
 
     /**
      * The OSGi ComponentContext.
