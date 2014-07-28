@@ -30,6 +30,7 @@ import org.apache.sling.crankstart.api.CrankstartContext;
 import org.apache.sling.crankstart.api.CrankstartException;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.cm.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +40,12 @@ public class Configure implements CrankstartCommand {
     public static final String FACTORY_SUFFIX = ".factory";
     public static final String FELIX_FORMAT_SUFFIX = "FORMAT:felix.config";
     private final Logger log = LoggerFactory.getLogger(getClass());
+    
+    /** Config factory definitions can include this property to define a unique
+     *  ID that avoids recreating them if the crankstart file runs several
+     *  times.
+     */
+    public static final String CRANKSTART_CONFIG_ID = "CRANKSTART_CONFIG_ID";
     
     @Override
     public boolean appliesTo(CrankstartCommandLine commandLine) {
@@ -50,6 +57,7 @@ public class Configure implements CrankstartCommand {
     }
 
     @Override
+    @SuppressWarnings("rawtypes")
     public void execute(CrankstartContext crankstartContext, CrankstartCommandLine commandLine) throws Exception {
         
         // Configs can be in our plain format or in Felix .config format, which supports various data types 
@@ -74,14 +82,19 @@ public class Configure implements CrankstartCommand {
         if(configAdminRef == null) {
             throw new IllegalStateException("Required service is missing:" + CONFIG_ADMIN_CLASS);
         }
+        
+        @SuppressWarnings("unchecked")
         final Object configAdminService = bundleContext.getService(configAdminRef);
         
         // Use reflection to minimize coupling with the OSGi framework that we are talking to
         Object config = null;
         if(commandLine.getVerb().endsWith(FACTORY_SUFFIX)) {
-            config = configAdminService.getClass()
-                    .getMethod("createFactoryConfiguration", String.class)
-                    .invoke(configAdminService, pid);
+            config = getExistingConfig(configAdminService, pid, properties);
+            if(config == null) {
+                config = configAdminService.getClass()
+                        .getMethod("createFactoryConfiguration", String.class)
+                        .invoke(configAdminService, pid);
+            }
         } else {
             config = configAdminService.getClass()
                     .getMethod("getConfiguration", String.class)
@@ -94,6 +107,32 @@ public class Configure implements CrankstartCommand {
             .getMethod("update", Dictionary.class)
             .invoke(config, properties);
         log.info("Updated configuration {}: {}", pid, properties);
+    }
+    
+    /** Return existing config if we have one for the specified factory, which has the same
+     *  CRANKSTART_CONFIG_ID as specified in properties.
+     */
+    Object getExistingConfig(Object configAdminService, String factoryPid, Dictionary<String, Object> properties) throws Exception {
+        final Object o = properties.get(CRANKSTART_CONFIG_ID);
+        if(o == null || !(o instanceof String)) {
+            log.info("Factory config does not specify {}, might be created multiple times", CRANKSTART_CONFIG_ID);
+            return null;
+        }
+        
+        final String id = (String)o;
+        final String filter = "(&(service.factoryPid=" + factoryPid + ")(" + CRANKSTART_CONFIG_ID + "=" + id + "))";
+        final Object [] c = (Object [])configAdminService.getClass()
+                .getMethod("listConfigurations", String.class)
+                .invoke(configAdminService, filter);
+        Object result = null;
+        if(c!=null && c.length > 0) {
+            if(c.length > 1) {
+                // Shouldn't have more than one of those configs
+                throw new CrankstartException("Found " + c.length + " configs with " + CRANKSTART_CONFIG_ID + "=" + id);
+            }
+            result = c[0];
+        }
+        return result;
     }
     
     @SuppressWarnings("unchecked")
