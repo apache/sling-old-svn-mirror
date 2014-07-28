@@ -51,6 +51,7 @@ config org.apache.sling.crankstart.testservices.SingleConfigServlet
   message=doesn't matter
 
 config.factory org.apache.sling.crankstart.testservices.ConfigFactoryServlet
+  CRANKSTART_CONFIG_ID=some.unique.ID
   path=/foo
   message=Not used
   
