@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
 @Properties({
     @Property(name="service.description", value="RequestProgressTracker dump filter"),
     @Property(name="service.vendor", value="The Apache Software Foundation"),
-    @Property(name="filter.scope", value="request", propertyPrivate=true)
+    @Property(name="filter.scope", value="request")
 })
 public class RequestProgressTrackerLogFilter implements Filter {
 
