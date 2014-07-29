@@ -49,12 +49,7 @@ import static javax.jcr.ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW;
  * <li>Import content into the content repository.
  * </ul>
  */
-@Component(
-    metatype = true,
-    immediate = false,
-    label = "%content.import.service.name",
-    description = "%content.import.service.description"
-)
+@Component
 @Properties({
     @Property(name = "service.vendor", value = "The Apache Software Foundation"),
     @Property(name = "service.description", value = "Apache Sling JCR Content Import Service")
