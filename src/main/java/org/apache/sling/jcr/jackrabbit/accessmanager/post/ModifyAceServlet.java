@@ -84,10 +84,7 @@ import org.apache.sling.servlets.post.Modification;
  * will not be added to the group. The group will only contain granted privileges.
  * </p>
  */
-@Component (immediate=true,
-		label="%modifyAce.post.operation.name",
-		description="%modifyAce.post.operation.description"
-)
+@Component
 @Service (value={
 		Servlet.class,
 		ModifyAce.class
