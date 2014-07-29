@@ -39,7 +39,7 @@ import org.apache.sling.jcr.api.SlingRepository;
  * A Felix WebConsole ConfigurationPrinter which outputs the current JCR
  * namespace mappings.
  */
-@Component(label = "%namespace.printer.name", description = "%namespace.printer.description", metatype = false)
+@Component
 @Service(ConfigurationPrinter.class)
 @Properties({
     @Property(name = "service.description", value = "JCR Namespace Configuration Printer"),

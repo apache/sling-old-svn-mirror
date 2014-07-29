@@ -46,7 +46,7 @@ import org.apache.sling.jcr.api.SlingRepository;
  * A Felix WebConsole ConfigurationPrinter which outputs the current JCR
  * nodetypes.
  */
-@Component(label = "%nodetype.printer.name", description = "%nodetype.printer.description", metatype = false)
+@Component
 @Service(ConfigurationPrinter.class)
 @Properties({
     @Property(name = "service.description", value = "JCR Nodetype Configuration Printer"),
