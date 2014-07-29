@@ -84,7 +84,7 @@ import org.slf4j.LoggerFactory;
  *
  * <h4>Notes</h4>
  */
-@Component (immediate=true, metatype=true,
+@Component (metatype=true,
 		label="%changeUserPassword.post.operation.name",
 		description="%changeUserPassword.post.operation.description")
 @Service (value={
@@ -97,7 +97,16 @@ import org.slf4j.LoggerFactory;
 	@Property (name="sling.servlet.methods",
 			value="POST"),
 	@Property (name="sling.servlet.selectors",
-			value="changePassword")
+			value="changePassword"),
+    @Property (name=AbstractAuthorizablePostServlet.PROP_DATE_FORMAT,
+            value={
+            "EEE MMM dd yyyy HH:mm:ss 'GMT'Z",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+            "yyyy-MM-dd'T'HH:mm:ss",
+            "yyyy-MM-dd",
+            "dd.MM.yyyy HH:mm:ss",
+            "dd.MM.yyyy"
+            })
 })
 public class ChangeUserPasswordServlet extends AbstractUserPostServlet implements ChangeUserPassword {
     private static final long serialVersionUID = 1923614318474654502L;
@@ -132,6 +141,7 @@ public class ChangeUserPasswordServlet extends AbstractUserPostServlet implement
      * @param componentContext The OSGi <code>ComponentContext</code> of this
      *            component.
      */
+    @Override
     protected void activate(ComponentContext componentContext) {
         super.activate(componentContext);
         Dictionary<?, ?> props = componentContext.getProperties();
@@ -139,6 +149,11 @@ public class ChangeUserPasswordServlet extends AbstractUserPostServlet implement
         this.userAdminGroupName = OsgiUtil.toString(props.get(PAR_USER_ADMIN_GROUP_NAME),
                 DEFAULT_USER_ADMIN_GROUP_NAME);
         log.info("User Admin Group Name {}", this.userAdminGroupName);
+    }
+
+    @Override
+    protected void deactivate(ComponentContext context) {
+        super.deactivate(context);
     }
 
     /*
