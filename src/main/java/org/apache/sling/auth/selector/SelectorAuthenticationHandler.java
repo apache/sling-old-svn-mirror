@@ -49,12 +49,12 @@ import org.slf4j.LoggerFactory;
  * The default form provided by this handler allows the client to choose from
  * Form Based and OpenID authentication.
  */
-@Component(label = "%auth.selector.name", description = "%auth.selector.description", name = "org.apache.sling.auth.selector.SelectorAuthenticationHandler")
+@Component(name = "org.apache.sling.auth.selector.SelectorAuthenticationHandler")
 @Properties( {
     @Property(name = "service.description", value = "Apache Sling Selector Form Handler"),
     @Property(name = "service.vendor", value = "The Apache Software Foundation"),
     @Property(name = org.apache.sling.auth.core.spi.AuthenticationHandler.PATH_PROPERTY, value = "/"),
-    @Property(name = "service.ranking", intValue = 5000, propertyPrivate = false) })
+    @Property(name = "service.ranking", intValue = 5000) })
 @Service
 public class SelectorAuthenticationHandler extends
         AbstractAuthenticationHandler {
