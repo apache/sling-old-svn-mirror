@@ -101,10 +101,7 @@ import org.apache.sling.jcr.jackrabbit.accessmanager.GetAcl;
  * </pre>
  * </code>
  */
-@Component (immediate=true,
-		label="%getAcl.get.operation.name",
-		description="%getAcl.get.operation.description"
-)
+@Component
 @Service (value={
 		Servlet.class,
 		GetAcl.class
