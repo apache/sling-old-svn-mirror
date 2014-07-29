@@ -22,11 +22,6 @@ import java.util.Map;
 
 import javax.jcr.Repository;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.References;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentConstants;
@@ -45,14 +40,6 @@ import org.osgi.service.log.LogService;
  * <p>
  * To ensure this thread-safeness, said methods should not be overwritten.
  */
-@Component(componentAbstract = true)
-@References({
-    @Reference(
-            name = "Repository",
-            policy = ReferencePolicy.DYNAMIC,
-            cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
-            referenceInterface = Repository.class)
-})
 public abstract class AbstractRegistrationSupport {
 
     /**
@@ -68,7 +55,6 @@ public abstract class AbstractRegistrationSupport {
      * service as a reference or call the {@link #bindLog(LogService)} to enable
      * logging correctly.
      */
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
     private volatile LogService log;
 
     /**
@@ -363,7 +349,9 @@ public abstract class AbstractRegistrationSupport {
 
     /** Unbinds the LogService */
     protected void unbindLog(LogService log) {
-        this.log = null;
+        if ( this.log == log ) {
+            this.log = null;
+        }
     }
 
     //---------- internal -----------------------------------------------------

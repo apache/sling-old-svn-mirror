@@ -23,9 +23,10 @@
  * class which may be extended by service exposing JCR Repository services
  * in any one non-OSGi registry such as RMI or JNDI.
  */
-@Version("1.0")
+@Version("1.1")
 @Export(optional = "provide:=true")
 package org.apache.sling.jcr.registration;
 
 import aQute.bnd.annotation.Export;
 import aQute.bnd.annotation.Version;
+

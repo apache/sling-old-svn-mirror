@@ -31,6 +31,10 @@ import javax.naming.NamingException;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.References;
 import org.apache.sling.jcr.registration.AbstractRegistrationSupport;
 import org.osgi.service.log.LogService;
 
@@ -67,12 +71,23 @@ import org.osgi.service.log.LogService;
     @Property(name = "service.vendor", value = "The Apache Software Foundation", propertyPrivate = true),
     @Property(name = "service.description", value = "JNDI Repository Registration", propertyPrivate = true)
 })
+@References({
+    @Reference(
+            name = "Repository",
+            policy = ReferencePolicy.DYNAMIC,
+            cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
+            referenceInterface = Repository.class),
+    @Reference(referenceInterface=LogService.class,
+            bind="bindLog", unbind="unbindLog",
+            cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
+})
 public class JndiRegistrationSupport extends AbstractRegistrationSupport {
 
     private Context jndiContext;
 
     // ---------- SCR intergration ---------------------------------------------
 
+    @Override
     protected boolean doActivate() {
         @SuppressWarnings("unchecked")
         Dictionary<String, Object> props = this.getComponentContext().getProperties();
@@ -104,6 +119,7 @@ public class JndiRegistrationSupport extends AbstractRegistrationSupport {
         return false;
     }
 
+    @Override
     protected void doDeactivate() {
         if (this.jndiContext != null) {
             try {
@@ -136,6 +152,7 @@ public class JndiRegistrationSupport extends AbstractRegistrationSupport {
         }
     }
 
+    @Override
     protected Object bindRepository(String name, Repository repository) {
 
         if (this.jndiContext != null) {
@@ -153,6 +170,7 @@ public class JndiRegistrationSupport extends AbstractRegistrationSupport {
         return null;
     }
 
+    @Override
     protected void unbindRepository(String name, Object data) {
         if (this.jndiContext != null) {
             try {
