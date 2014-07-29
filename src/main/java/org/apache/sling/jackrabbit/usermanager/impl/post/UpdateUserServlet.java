@@ -33,13 +33,13 @@ import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
-import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.jackrabbit.usermanager.UpdateUser;
 import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourceProvider;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.servlets.post.AbstractPostResponse;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.impl.helper.RequestProperty;
+import org.osgi.service.component.ComponentContext;
 
 /**
  * <p>
@@ -74,29 +74,48 @@ import org.apache.sling.servlets.post.impl.helper.RequestProperty;
  * <dd>Failure</dd>
  * </dl>
  * <h4>Example</h4>
- * 
+ *
  * <code>
  * curl -Fprop1=value2 -Fproperty1=value1 http://localhost:8080/system/userManager/user/ieb.update.html
  * </code>
  */
-@Component (immediate=true, metatype=true,
+@Component (metatype=true,
 		label="%updateUser.post.operation.name",
 		description="%updateUser.post.operation.description")
 @Service (value={
 	Servlet.class,
 	UpdateUser.class
-})		
+})
 @Properties ({
 	@Property (name="sling.servlet.resourceTypes",
 			value="sling/user"),
 	@Property (name="sling.servlet.methods",
 			value="POST"),
 	@Property (name="sling.servlet.selectors",
-			value="update")
+			value="update"),
+    @Property (name=AbstractAuthorizablePostServlet.PROP_DATE_FORMAT,
+            value={
+            "EEE MMM dd yyyy HH:mm:ss 'GMT'Z",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+            "yyyy-MM-dd'T'HH:mm:ss",
+            "yyyy-MM-dd",
+            "dd.MM.yyyy HH:mm:ss",
+            "dd.MM.yyyy"
+            })
 })
-public class UpdateUserServlet extends AbstractUserPostServlet 
+public class UpdateUserServlet extends AbstractUserPostServlet
         implements UpdateUser {
     private static final long serialVersionUID = 5874621724096106496L;
+
+    @Override
+    protected void activate(ComponentContext context) {
+        super.activate(context);
+    }
+
+    @Override
+    protected void deactivate(ComponentContext context) {
+        super.deactivate(context);
+    }
 
     /*
      * (non-Javadoc)
@@ -113,17 +132,17 @@ public class UpdateUserServlet extends AbstractUserPostServlet
         Session session = request.getResourceResolver().adaptTo(Session.class);
         updateUser(session,
                 resource.getName(),
-                request.getRequestParameterMap(), 
+                request.getRequestParameterMap(),
                 changes);
     }
-    
+
     /* (non-Javadoc)
      * @see org.apache.sling.jackrabbit.usermanager.UpdateUser#updateUser(javax.jcr.Session, java.lang.String, java.util.Map, java.util.List)
      */
     public User updateUser(Session jcrSession, String name,
             Map<String, ?> properties, List<Modification> changes)
             throws RepositoryException {
-        
+
         User user;
         UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
         Authorizable authorizable = userManager.getAuthorizable(name);
@@ -133,7 +152,7 @@ public class UpdateUserServlet extends AbstractUserPostServlet
             throw new ResourceNotFoundException(
                 "User to update could not be determined");
         }
-        
+
         String userPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
             + user.getID();
 
@@ -144,7 +163,7 @@ public class UpdateUserServlet extends AbstractUserPostServlet
 
             // write content from form
             writeContent(jcrSession, user, reqProperties, changes);
-            
+
             //SLING-2072 set the user as enabled or disabled if the request
             // has supplied the relevant properties
             String disabledParam = convertToString(properties.get(":disabled"));
@@ -163,5 +182,5 @@ public class UpdateUserServlet extends AbstractUserPostServlet
             throw new RepositoryException("Failed to update user.", re);
         }
         return user;
-    }    
+    }
 }
