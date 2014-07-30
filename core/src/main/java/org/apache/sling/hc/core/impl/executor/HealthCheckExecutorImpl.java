@@ -103,6 +103,9 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
     private final Map<HealthCheckMetadata, HealthCheckFuture> stillRunningFutures = new HashMap<HealthCheckMetadata, HealthCheckFuture>();
 
     @Reference
+    private AsyncHealthCheckExecutor asyncHealthCheckExecutor;
+    
+    @Reference
     private ThreadPoolManager threadPoolManager;
     private ThreadPool hcThreadPool;
 
@@ -199,6 +202,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         final List<HealthCheckExecutionResult> results = new ArrayList<HealthCheckExecutionResult>();
         final List<HealthCheckMetadata> healthCheckDescriptors = getHealthCheckMetadata(healthCheckReferences);
 
+        
         createResultsForDescriptors(healthCheckDescriptors, results);
 
         stopWatch.stop();
@@ -223,6 +227,9 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         // -- All methods below check if they can transform a healthCheckDescriptor into a result
         // -- if yes the descriptor is removed from the list and the result added
 
+        // get async results
+        asyncHealthCheckExecutor.collectAsyncResults(healthCheckDescriptors, results);
+        
         // reuse cached results where possible
         healthCheckResultCache.useValidCacheResults(healthCheckDescriptors, results, resultCacheTtlInMs);
 
