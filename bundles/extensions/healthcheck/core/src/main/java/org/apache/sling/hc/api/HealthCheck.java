@@ -60,7 +60,13 @@ public interface HealthCheck {
      * The value of this property must be of type String or String array.
      */
     String TAGS = "hc.tags";
-
+    
+    /**
+     * Optional service property: If this property is set the health check
+     * will be executed asynchronously using the cron expression provided.
+     */
+    String ASYNC_CRON_EXPRESSION = "hc.async.cronExpression";
+    
     /**
      * Execute this health check and return a {@link Result}
      * This is meant to execute quickly, access to external
