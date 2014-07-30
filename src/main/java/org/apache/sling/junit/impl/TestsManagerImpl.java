@@ -212,6 +212,10 @@ public class TestsManagerImpl implements TestsManager {
     /** @inheritDoc */
     public void listTests(Collection<String> testNames, Renderer renderer) throws Exception {
         renderer.title(2, "Test classes");
+        final String note = "The test set can be restricted using partial test names"
+                + " as a suffix to this URL"
+                + ", followed by the appropriate extension, like 'com.example.foo.tests.html'";
+        renderer.info("note", note);
         renderer.list("testNames", testNames);
     }
 }
