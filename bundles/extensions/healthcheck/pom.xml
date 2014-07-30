@@ -34,6 +34,7 @@
         <module>support</module>
         <module>webconsole</module>
         <module>junit-bridge</module>
+        <module>annotations</module>
         <module>it</module>
     </modules>
 </project>
