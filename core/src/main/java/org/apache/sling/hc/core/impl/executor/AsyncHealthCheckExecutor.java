@@ -137,7 +137,8 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
         try {
             HealthCheckAsyncJob healthCheckAsyncJob = new HealthCheckAsyncJob(descriptor);
             LOG.debug("Scheduling job {} with cron expression {}", healthCheckAsyncJob, descriptor.getAsyncCronExpression());
-            this.scheduler.addJob(healthCheckAsyncJob.getJobId(), healthCheckAsyncJob, null, descriptor.getAsyncCronExpression(), true);
+            final boolean concurrent = false;
+            this.scheduler.addJob(healthCheckAsyncJob.getJobId(), healthCheckAsyncJob, null, descriptor.getAsyncCronExpression(), concurrent);
             registeredJobs.put(descriptor, healthCheckAsyncJob);
             return true;
         } catch (Exception e) {
