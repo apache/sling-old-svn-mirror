@@ -3,5 +3,5 @@
     "hc.name" : "Asynchronous Health Check sample", 
     "hc.tags" : [async],
     "hc.mbean.name" : "AsyncHealthCheckSample", 
-    "hc.async.cronExpression" : "*/20 * * * * ?" 
+    "hc.async.cronExpression" : "*/5 * * * * ?" 
 }
