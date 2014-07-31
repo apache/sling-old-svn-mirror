@@ -26,6 +26,7 @@ import javax.servlet.ServletException;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.junit.Renderer;
+import org.apache.sling.junit.RendererFactory;
 import org.apache.sling.junit.RendererSelector;
 import org.apache.sling.junit.TestSelector;
 import org.osgi.framework.BundleContext;
@@ -68,7 +69,10 @@ public class RendererSelectorImpl implements RendererSelector {
         
         for(Renderer r : renderers) {
             if(r.appliesTo(selector)) {
-                return r;
+                if(r instanceof RendererFactory) {
+                    return ((RendererFactory)r).createRenderer();
+                }
+                throw new UnsupportedOperationException("Renderers must implement RendererFactory, this one does not:" + r);
             }
         }
         
