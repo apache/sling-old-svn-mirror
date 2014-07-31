@@ -17,35 +17,26 @@
  */
 package org.apache.sling.hc.samples.impl;
 
+import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.hc.annotations.SlingHealthCheck;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.util.FormattingResultLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Sample that demonstrates how to implement asynchronous health checks
- *  that run in the background at regular intervals.
- *  The execute() method stays fast as it just reads a pre-computed value. 
+/** Sample Health Check that uses a cron expression to
+ *  schedule regular async execution. 
  */
-@Component(
-        configurationFactory=true,
-        policy=ConfigurationPolicy.REQUIRE,
-        metatype=true)
-@Properties({
-    @Property(name=HealthCheck.NAME),
-    @Property(name=HealthCheck.TAGS, unbounded=PropertyUnbounded.ARRAY),
-    @Property(name=HealthCheck.MBEAN_NAME),
-    @Property(name=HealthCheck.ASYNC_CRON_EXPRESSION)
 
-})
+@SlingHealthCheck(
+        configurationFactory=true,
+        configurationPolicy=ConfigurationPolicy.REQUIRE,
+        metatype=true)
 @Service
 public class AsyncHealthCheckSample implements HealthCheck {
 
@@ -73,7 +64,7 @@ public class AsyncHealthCheckSample implements HealthCheck {
         
         final FormattingResultLog resultLog = new FormattingResultLog();
 
-        resultLog.debug("{} - counter value is {}", this, value);
+        resultLog.info("{} - counter value set to {} at {}", this, value, new Date());
         if(value % 2 != 0) {
             resultLog.warn("Counter value ({}) is not even", value);
         }
