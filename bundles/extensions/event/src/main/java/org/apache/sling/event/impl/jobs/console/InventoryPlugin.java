@@ -188,7 +188,6 @@ public class InventoryPlugin implements InventoryPrinter {
         pw.println();
 
         pw.println("Scheduled Jobs");
-        pw.println("<table class='nicetable'><tbody>");
         final Collection<ScheduledJobInfo> infos = this.jobManager.getScheduledJobs();
         if ( infos.size() == 0 ) {
             pw.print("No jobs currently scheduled");
