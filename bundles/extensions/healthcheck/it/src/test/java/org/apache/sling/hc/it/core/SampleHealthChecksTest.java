@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.management.DynamicMBean;
 
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.api.execution.HealthCheckExecutor;
@@ -32,6 +33,9 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 
 @RunWith(PaxExam.class)
 public class SampleHealthChecksTest {
@@ -39,13 +43,16 @@ public class SampleHealthChecksTest {
     @Inject
     private HealthCheckExecutor executor;
     
+    @Inject
+    private BundleContext bundleContext;
+    
     @Configuration
     public Option[] config() {
         return U.config();
     }
-
+    
     @Test
-    public void testAnnotatedHealthCheck() {
+    public void testAnnotatedHC() {
         final List<HealthCheckExecutionResult> results = executor.execute("annotation","sample");
         assertNotNull("Expecting non-null results");
         assertEquals("Expecting a single result", 1, results.size());
@@ -55,5 +62,14 @@ public class SampleHealthChecksTest {
         assertTrue(
                 "Expecting first log message to contain " + expected,
                 r.getHealthCheckResult().iterator().next().getMessage().contains(expected));
+    }
+
+    @Test
+    public void testAnnotatedHCMBean() throws InvalidSyntaxException {
+        // Verify that we have a DynamicMBean service with the right name, the JMX whiteboard will do the rest
+        final String filter = "(jmx.objectname=org.apache.sling.healthcheck:type=HealthCheck,name=annotatedHC)";
+        final ServiceReference<?> [] refs = bundleContext.getServiceReferences(DynamicMBean.class.getName(), filter);
+        assertNotNull("Expecting non-null ServiceReferences for " + filter, refs);
+        assertEquals("Expecting a single ServiceReference for " + filter, 1, refs.length);
     }
 }
