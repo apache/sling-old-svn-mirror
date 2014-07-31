@@ -50,7 +50,6 @@ import org.slf4j.LoggerFactory;
 public class CrankstartFileProcessor implements Callable<Object> {
     private final CrankstartContext crankstartContext;
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private Map<String, String> defaults = new HashMap<String, String>();
     
     private List<CrankstartCommand> builtinCommands = new ArrayList<CrankstartCommand>();
     private List<CrankstartCommand> extensionCommands = new ArrayList<CrankstartCommand>();
@@ -67,7 +66,7 @@ public class CrankstartFileProcessor implements Callable<Object> {
         builtinCommands.add(new StartBundles());
         builtinCommands.add(new StartFramework());
         builtinCommands.add(new Configure());
-        builtinCommands.add(new Defaults(defaults));
+        builtinCommands.add(new Defaults());
         
         // Need a null "classpath" command as our launcher uses it
         // outside of the usual command mechanism - it shouldn't cause
@@ -108,7 +107,7 @@ public class CrankstartFileProcessor implements Callable<Object> {
             protected String getVariable(String name) {
                 String result = System.getProperty(name);
                 if(result == null) {
-                    result = defaults.get(name);
+                    result = crankstartContext.getDefaults().get(name);
                 }
                 if(result == null) {
                     result = super.getVariable(name); 

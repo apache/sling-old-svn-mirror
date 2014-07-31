@@ -42,6 +42,11 @@ bundle mvn:org.apache.sling/org.apache.sling.jcr.jcr-wrapper/2.0.0
 bundle mvn:org.apache.sling/org.apache.sling.crankstart.sling.extensions/0.0.1-SNAPSHOT
 bundle mvn:commons-io/commons-io/2.4
 
+# Install a bundle at a start level higher than the current one
+# to be able to check that it's not active
+defaults crankstart.bundle.start.level 99
+bundle mvn:commons-collections/commons-collections/3.2.1
+
 # Now start our bundles
 start.all.bundles
 

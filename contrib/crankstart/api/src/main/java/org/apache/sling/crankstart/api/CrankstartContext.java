@@ -31,6 +31,11 @@ public class CrankstartContext {
     private final Map<String, String> osgiFrameworkProperties = new HashMap<String, String>();
     private final Map<String, Object> attributes = new HashMap<String, Object>();
     
+    private final Map<String, String> defaults = new HashMap<String, String>();
+    
+    /** Name of the default value used to set bundle start levels */
+    public static final String DEFAULT_BUNDLE_START_LEVEL = "crankstart.bundle.start.level";
+
     public void setOsgiFrameworkProperty(String key, String value) {
         osgiFrameworkProperties.put(key, value);
     }
@@ -74,5 +79,9 @@ public class CrankstartContext {
     
     public Object getAttribute(String key) {
         return attributes.get(key);
+    }
+    
+    public Map<String, String> getDefaults() {
+        return defaults;
     }
 }
