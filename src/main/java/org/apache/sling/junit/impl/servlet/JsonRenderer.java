@@ -28,6 +28,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
 import org.apache.sling.junit.Renderer;
+import org.apache.sling.junit.RendererFactory;
 import org.apache.sling.junit.SlingTestContextProvider;
 import org.apache.sling.junit.TestSelector;
 import org.junit.runner.Description;
@@ -40,7 +41,7 @@ import org.slf4j.LoggerFactory;
 /** JSON renderer for JUnit servlet */
 @Component(immediate=false)
 @Service
-public class JsonRenderer extends RunListener implements Renderer {
+public class JsonRenderer extends RunListener implements Renderer,RendererFactory {
 
     public static final String EXTENSION = "json";
     public static final String INFO_TYPE_KEY = "INFO_TYPE";
@@ -49,6 +50,11 @@ public class JsonRenderer extends RunListener implements Renderer {
     private final Logger log = LoggerFactory.getLogger(getClass());
     private JSONWriter writer;
     
+    /** @inheritDoc */
+    public Renderer createRenderer() { 
+        return new JsonRenderer();
+    }
+
     /** @inheritDoc */
     public boolean appliesTo(TestSelector selector) {
         return EXTENSION.equals(selector.getExtension());

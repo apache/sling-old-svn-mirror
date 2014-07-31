@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.junit.RendererFactory;
 import org.apache.sling.junit.Renderer;
 import org.apache.sling.junit.TestSelector;
 import org.junit.runner.Description;
@@ -35,11 +36,16 @@ import org.junit.runner.notification.RunListener;
 /** HTML renderer for JUnit servlet */
 @Component(immediate=false)
 @Service(serviceFactory=true)
-public class HtmlRenderer extends RunListener implements Renderer {
+public class HtmlRenderer extends RunListener implements Renderer,RendererFactory {
 
     public static final String EXTENSION = "html";
     private PrintWriter output;
     
+    /** @inheritDoc */
+    public Renderer createRenderer() { 
+        return new HtmlRenderer();
+    }
+
     /** @inheritDoc */
     public boolean appliesTo(TestSelector s) {
         // This is our default renderer, applies to the empty

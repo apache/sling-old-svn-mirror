@@ -41,6 +41,7 @@ import junit.runner.BaseTestRunner;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.junit.Renderer;
+import org.apache.sling.junit.RendererFactory;
 import org.apache.sling.junit.TestSelector;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
@@ -53,7 +54,7 @@ import org.w3c.dom.Text;
 /** XML renderer for JUnit servlet */
 @Component(immediate=false)
 @Service
-public class XmlRenderer extends RunListener implements Renderer {
+public class XmlRenderer extends RunListener implements Renderer, RendererFactory {
     
     /**
      * This renderer's extension
@@ -109,6 +110,11 @@ public class XmlRenderer extends RunListener implements Renderer {
 	 * Counter of test suites.
 	 */
 	private int testSuiteCount = 0;
+
+    /** @inheritDoc */
+    public Renderer createRenderer() { 
+        return new XmlRenderer();
+    }
 
     /** @inheritDoc */
     public boolean appliesTo(TestSelector selector) {
