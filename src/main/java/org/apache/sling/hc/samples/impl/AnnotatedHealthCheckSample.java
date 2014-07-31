@@ -28,7 +28,8 @@ import org.apache.sling.hc.util.FormattingResultLog;
  *  annotation. */
 
 @SlingHealthCheck(
-        name="annotatedHC", 
+        name="Annotated Health Check Sample", 
+        mbeanName="annotatedHC",
         description="Sample Health Check defined by a java annotation",
         tags={"sample","annotation"})
 
