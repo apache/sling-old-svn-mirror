@@ -87,6 +87,9 @@
         
         <!-- Change this to run selected tests only -->
         <tests.to.run>**/**Test.java</tests.to.run>
+        
+        <!-- Ignore the MultipleOsgiConsoleTest by default, it slows down tests and that's a somewhat exotic case -->
+        <tests.to.ignore>**/**MultipleOsgiConsoleTest.java</tests.to.ignore>
     </properties>
     
     <scm>
@@ -201,6 +204,9 @@
                     <includes>
                         <include>${tests.to.run}</include>
                     </includes>
+                    <excludes>
+                        <exclude>${tests.to.ignore}</exclude>
+                    </excludes>
                     <systemPropertyVariables>
                         <test.server.url>${test.server.url}</test.server.url>
                         <test.server.hostname>${test.server.hostname}</test.server.hostname>
