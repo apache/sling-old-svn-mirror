@@ -52,6 +52,9 @@ public class PlainTextRenderer extends RunListener implements Renderer {
 
     /** @inheritDoc */
     public void setup(HttpServletResponse response, String pageTitle) throws IOException, UnsupportedEncodingException {
+        if(output != null) {
+            throw new IllegalStateException("Output Writer already set");
+        }
         response.setContentType("text/plain");
         response.setCharacterEncoding("UTF-8");
         output = response.getWriter();
@@ -60,6 +63,7 @@ public class PlainTextRenderer extends RunListener implements Renderer {
     
     /** @inheritDoc */
     public void cleanup() {
+        output = null;
     }
 
     /** @inheritDoc */
