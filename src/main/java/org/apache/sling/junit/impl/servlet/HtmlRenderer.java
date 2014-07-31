@@ -34,7 +34,7 @@ import org.junit.runner.notification.RunListener;
 
 /** HTML renderer for JUnit servlet */
 @Component(immediate=false)
-@Service
+@Service(serviceFactory=true)
 public class HtmlRenderer extends RunListener implements Renderer {
 
     public static final String EXTENSION = "html";
@@ -102,6 +102,9 @@ public class HtmlRenderer extends RunListener implements Renderer {
 
     /** @inheritDoc */
     public void setup(HttpServletResponse response, String pageTitle) throws IOException, UnsupportedEncodingException {
+        if(output != null) {
+            throw new IllegalStateException("Output Writer already set");
+        }
         response.setContentType("text/html");
         response.setCharacterEncoding("UTF-8");
         output = response.getWriter();
@@ -119,6 +122,7 @@ public class HtmlRenderer extends RunListener implements Renderer {
     public void cleanup() {
         output.println("</body>");
         output.println("</html>");
+        output = null;
     }
     
     /** @inheritDoc */

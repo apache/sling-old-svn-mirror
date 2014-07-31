@@ -61,6 +61,9 @@ public class JsonRenderer extends RunListener implements Renderer {
 
     /** @inheritDoc */
     public void setup(HttpServletResponse response, String pageTitle) throws IOException, UnsupportedEncodingException {
+        if(writer != null) {
+            throw new IllegalStateException("Output Writer already set");
+        }
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         writer = new JSONWriter(response.getWriter());
