@@ -27,6 +27,27 @@ import org.apache.felix.scr.annotations.ConfigurationPolicy;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
 public @interface SlingHealthCheck {
+    
+    /** Defines the name of the health check. <p>
+     * This attribute is converted to values for the <code>hc.name</code> property. */
+    String name() default "";    
+
+    /** One ore more tags.
+     * <p>
+     * This attribute is converted to values for the <code>hc.tags</code> property. */
+    String[] tags() default {};
+    
+    /** The JMX mbean name (optional, the mbean is only registered if attribute present).
+     * <p>
+     * This attribute is converted to values for the <code>hc.mbean.name</code> property. */
+    String mbeanName() default "";    
+    
+    /** Cron expression for asynchronous execution (optional, default is synchronous execution).
+     * <p>
+     * This attribute is converted to values for the <code>hc.async.cronExpression</code> property. */
+    String asyncCronExpression() default "";       
+    
+    // handling of service and component properties (optional)
 
     /** Whether to generate a default SCR component tag. If set to false, a {@link org.apache.felix.scr.annotations.Component} annotation can be added manually
      * with defined whatever configuration needed. */
@@ -35,9 +56,6 @@ public @interface SlingHealthCheck {
     /** Whether to generate a default SCR service tag with "interface=org.apache.sling.hc.api.HealthCheck". If set to false, a
      * {@link org.apache.felix.scr.annotations.Service} annotation can be added manually with defined whatever configuration needed. */
     boolean generateService() default true;
-
-    /** Defines the name of the health check. */
-    String name();
     
     /** Defines the Component name also used as the PID for the Configuration Admin Service. Default value: Fully qualified name of the Java class. */
     String componentName() default "";
@@ -59,10 +77,4 @@ public @interface SlingHealthCheck {
     /** This is generally used as a description for the object described by the meta type. This name may be localized by prepending a % sign to the name. Default
      * value: %&lt;name&gt;.description */
     String description() default "";
-
-    /** One ore more tags.
-     * <p>
-     * This attribute is converted to values for the <code>hc.tags</code> property. */
-    String[] tags() default {};
-
 }
