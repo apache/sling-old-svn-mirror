@@ -57,14 +57,18 @@ public class SlingHealthCheckProcessor implements AnnotationProcessor {
 
         // generate ComponentDescription if required
         if (generateComponent) {
+            String nameOfAnnotatedClass = classDescription.getDescribedClass().getName();
+            
             final ComponentDescription cd = new ComponentDescription(cad);
-            cd.setName(cad.getStringValue("componentName", classDescription.getDescribedClass().getName()));
+            cd.setName(cad.getStringValue("componentName", nameOfAnnotatedClass));
             cd.setConfigurationPolicy(ComponentConfigurationPolicy.valueOf(cad.getEnumValue("configurationPolicy",
                     ComponentConfigurationPolicy.OPTIONAL.name())));
             cd.setSetMetatypeFactoryPid(cad.getBooleanValue("configurationFactory", false));
 
-            cd.setLabel(cad.getStringValue("label", null));
-            cd.setDescription(cad.getStringValue("description", null));
+            String nameFromAnnotation = (String) cad.getValue("name");
+            String defaultLabel = "Sling Health Check: " + (nameFromAnnotation!=null ? nameFromAnnotation : nameOfAnnotatedClass);
+            cd.setLabel(cad.getStringValue("label", defaultLabel));
+            cd.setDescription(cad.getStringValue("description", "Health Check Configuration"));
 
             cd.setCreateMetatype(metatype);
 
@@ -79,48 +83,41 @@ public class SlingHealthCheckProcessor implements AnnotationProcessor {
             classDescription.add(sd);
         }
 
-        // generate PropertyDescriptions
-        generateStringArrPropertyDescriptor(cad, classDescription, metatype, "tags", HealthCheck.TAGS);
-        generateStringPropertyDescriptor(cad, classDescription, metatype, "name", HealthCheck.NAME);
+        // generate HC PropertyDescriptions
+        generateStringPropertyDescriptor(cad, classDescription, metatype, "name", HealthCheck.NAME, "Name", "Name", false);
+        generateStringPropertyDescriptor(cad, classDescription, metatype, "tags", HealthCheck.TAGS, "Tags", "Tags", true);
+        generateStringPropertyDescriptor(cad, classDescription, metatype, "mbeanName", HealthCheck.MBEAN_NAME, "MBean", "MBean name (leave empty for not using JMX)", false);
+        generateStringPropertyDescriptor(cad, classDescription, metatype, "asyncCronExpression", "hc.async.cronExpression" /* use constant once API is released */ , "Cron expression", "Cron expression for asynchronous execution (leave empty for synchronous execution)", false);
     }
 
     /** Generates a property descriptor of type {@link PropertyType#String[]} */
-    private void generateStringArrPropertyDescriptor(final ClassAnnotation cad, final ClassDescription classDescription,
-            final boolean metatype, final String annotationName, final String propertyDescriptorName) {
-
-        final String[] values = (String[]) cad.getValue(annotationName);
-        if (values == null) {
-            return;
-        }
-
-        final PropertyDescription pd = new PropertyDescription(cad);
-        pd.setName(propertyDescriptorName);
-        pd.setMultiValue(values);
-        pd.setType(PropertyType.String);
-        pd.setUnbounded(PropertyUnbounded.ARRAY);
-        pd.setCardinality(Integer.MAX_VALUE);
-        if (metatype) {
-            pd.setPrivate(true);
-        }
-        classDescription.add(pd);
-    }
-
-    
-    /** Generates a property descriptor of type {@link PropertyType#String} */
     private void generateStringPropertyDescriptor(final ClassAnnotation cad, final ClassDescription classDescription,
-            final boolean metatype, final String annotationName, final String propertyDescriptorName) {
+            final boolean metatype, final String propertyName, final String propertyDescriptorName, String label, String description, boolean isArray) {
 
-        final String hcName = (String) cad.getValue(annotationName);
 
         final PropertyDescription pd = new PropertyDescription(cad);
         pd.setName(propertyDescriptorName);
-        pd.setValue(hcName);
+        pd.setLabel(label);
+        pd.setDescription(description);
         pd.setType(PropertyType.String);
-        if (metatype) {
+
+        if(isArray) {
+            final String[] values = (String[]) cad.getValue(propertyName);
+            pd.setMultiValue(values);
+            pd.setUnbounded(PropertyUnbounded.ARRAY);
+            pd.setCardinality(Integer.MAX_VALUE);
+        } else {
+            final String propertyVal = (String) cad.getValue(propertyName);
+            pd.setValue(propertyVal);
+            pd.setUnbounded(PropertyUnbounded.DEFAULT);
+        }
+        
+        if (!metatype) {
             pd.setPrivate(true);
         }
         classDescription.add(pd);
     }
+
     
     @Override
     public int getRanking() {
