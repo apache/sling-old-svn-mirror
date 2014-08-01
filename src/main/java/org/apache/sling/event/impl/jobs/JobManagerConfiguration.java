@@ -55,6 +55,9 @@ public class JobManagerConfiguration {
     /** Configuration property for the scheduled jobs path. */
     public static final String PROPERTY_SCHEDULED_JOBS_PATH = "job.scheduled.jobs.path";
 
+    /** Default value for background loading. */
+    public static final boolean DEFAULT_BACKGROUND_LOAD_SEARCH = true;
+
     /** The jobs base path with a slash. */
     private String jobsBasePathWithSlash;
 
