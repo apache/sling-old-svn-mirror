@@ -213,6 +213,19 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
         String topics = this.jobConsumerManager.getTopics();
         if ( topics == null ) {
             topics = "";
+        } else {
+            final String[] allTopics = topics.split(",");
+            final StringBuilder sb = new StringBuilder();
+            boolean first = true;
+            for(final String t : allTopics) {
+                if ( first) {
+                    first = false;
+                } else {
+                    sb.append("<br/>");
+                }
+                sb.append(t);
+            }
+            topics = sb.toString();
         }
         Statistics s = this.jobManager.getStatistics();
         pw.printf("<tr><td>Start Time</td><td>%s</td></tr>", formatDate(s.getStartTime()));
