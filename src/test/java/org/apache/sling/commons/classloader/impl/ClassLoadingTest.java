@@ -16,7 +16,7 @@
  */
 package org.apache.sling.commons.classloader.impl;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.jmock.Expectations;
 import org.jmock.Mockery;

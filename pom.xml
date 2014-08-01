@@ -49,6 +49,8 @@
         <bundle.file.name>
             ${bundle.build.name}/${project.build.finalName}.jar
         </bundle.file.name>
+        <pax-exam.version>4.1.0</pax-exam.version>
+        <pax-link.version>2.1.0</pax-link.version>
     </properties>
 
     <build>
@@ -160,31 +162,31 @@
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam-container-forked</artifactId>
-            <version>2.4.0</version>
+            <version>${pax-exam.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam-junit4</artifactId>
-            <version>2.4.0</version>
+            <version>${pax-exam.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam-link-mvn</artifactId>
-            <version>2.4.0</version>
+            <version>${pax-exam.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.ops4j.pax.url</groupId>
             <artifactId>pax-url-aether</artifactId>
-            <version>1.4.0</version>
+            <version>${pax-link.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.ops4j.pax.url</groupId>
             <artifactId>pax-url-wrap</artifactId>
-            <version>1.4.0</version>
+            <version>${pax-link.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -214,7 +216,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <version>4.0.2</version>
+            <version>4.4.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
