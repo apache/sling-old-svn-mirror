@@ -18,8 +18,9 @@
  */
 package org.apache.sling.settings.impl;
 
-import static org.junit.Assert.assertArrayEquals;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -27,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -74,8 +76,13 @@ public class RunModeImplTest {
     private void assertParse(String str, String [] expected) {
         final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock(str, null, null), new StartupHandlerImpl());
         final Set<String> modes = rm.getRunModes();
-        final String[] actual = modes.toArray(new String[modes.size()]);
-        assertArrayEquals("Parsed runModes match for '" + str + "'", expected, actual);
+
+        Set<String> expectedSet = new HashSet<String>(expected.length);
+        for (String expectedEntry : expected) {
+            expectedSet.add(expectedEntry);
+        }
+
+        assertThat("Parsed runModes match for '" + str + "'", modes, equalTo(expectedSet));
     }
 
     @org.junit.Test public void testParseRunModes() {
