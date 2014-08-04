@@ -44,6 +44,7 @@
     <module>org.apache.sling.launchpad.karaf</module>
     <module>org.apache.sling.launchpad.karaf-features</module>
     <module>org.apache.sling.launchpad.karaf-integration-tests</module>
+    <module>org.apache.sling.launchpad.karaf-launchpad-integration-tests</module>
   </modules>
 
 </project>

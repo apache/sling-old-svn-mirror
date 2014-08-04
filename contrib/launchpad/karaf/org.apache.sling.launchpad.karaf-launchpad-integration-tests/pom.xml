@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.apache.sling</groupId>
+    <artifactId>sling</artifactId>
+    <version>20</version>
+    <relativePath>../../../../parent/pom.xml</relativePath>
+  </parent>
+
+  <artifactId>org.apache.sling.launchpad.karaf-launchpad-integration-tests</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>bundle</packaging>
+
+  <name>Apache Sling Launchpad Karaf - Launchpad Integration Tests</name>
+  <description>Launchpad Integration Tests for Apache Sling Launchpad Karaf</description>
+
+  <dependencies>
+    <!-- logging -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.7</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-nop</artifactId>
+      <version>1.7.7</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- testing -->
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam</artifactId>
+      <version>4.1.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-container-karaf</artifactId>
+      <version>4.1.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-link-mvn</artifactId>
+      <version>4.1.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.launchpad.integration-tests</artifactId>
+      <version>1.0.1-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <!-- Version newer than the one declared in the parent pom -->
+        <version>3.1</version>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.ops4j.pax.exam</groupId>
+        <artifactId>exam-maven-plugin</artifactId>
+        <version>3.4.0</version>
+        <configuration>
+          <configClass>org.apache.sling.launchpad.karaf.tests.configuration.SlingLaunchpadConfiguration</configClass>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>start-container</goal>
+              <goal>stop-container</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>2.17</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <dependenciesToScan>
+            <dependency>org.apache.sling:org.apache.sling.launchpad.integration-tests</dependency>
+          </dependenciesToScan>
+          <includes>
+            <include>**/*Test.class</include>
+          </includes>
+          <excludes>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/post/CustomPostOperationTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/post/PostResponseCreatorTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/post/PostServletPrivilegesUpdateTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/auth/AuthenticationResponseCodeTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/scripting/SlingJSPTaglibTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/scripting/StandaloneScriptExecutionTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/userManager/CreateUserTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/userManager/UpdateUserTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/userManager/UserPrivilegesInfoTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/xml/DomTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/xml/SaxTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/xml/XPathTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/issues/SLING2082Test.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/issues/SLING2522Test.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/accessManager/AccessPrivilegesInfoTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/accessManager/GetAclTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/repository/JackrabbitRepositoryNameTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/repository/OakRepositoryNameTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/BundleContentTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/ContentLoaderMiscPropertyTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/DavExDisabledAnonAccessTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/DavExIntegrationTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/EventsCounterTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/ExportedPackagesTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/FiltersTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/GroovySlingResourceTypeRenderingTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/ImmediateScriptActivationTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/InitialContentTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/JSONGroovyBuilderTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/JUnitCategoriesTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/JsonQueryServletTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/JsonRenderingTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/JspForwardTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/JspScriptingTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/LaunchpadConfigInstallerTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/NamespaceMappingTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/ResourceDecoratorTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/ResourceResolverProxyTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/ScriptBindingsValuesProviderTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/ServerSideScriptsTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/ServletResolverConfigTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/SlingWebDavServletTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/VanityPathTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/WriteableResourcesProxyTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/resourceprovider/PlanetsResourceProviderTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/indexing/FullTextIndexingTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/login/RedirectOnLoginErrorTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/resolution/ExtensionServletTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/resolution/HtmlDefaultServletTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/resolution/PathsServletTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/resolution/PathsServletWithNodeTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/resolution/PrefixTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/resolution/PrioritiesTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/resolution/PutMethodServletTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/resolution/RequestUriOptingServletTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/resolution/SelectorServletTest.*</exclude>
+            <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/resolution/WarSelectorServletTest.*</exclude>
+          </excludes>
+          <forkMode>always</forkMode>
+          <parallel>none</parallel>
+          <threadCount>1</threadCount>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
