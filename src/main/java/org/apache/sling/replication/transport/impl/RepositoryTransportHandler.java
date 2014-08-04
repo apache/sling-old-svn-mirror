@@ -64,7 +64,7 @@ public class RepositoryTransportHandler extends AbstractTransportHandler
     }
 
     @Override
-    public void deliverPackageToEndpoint(ReplicationPackage replicationPackage, ReplicationEndpoint replicationEndpoint)
+    public void deliverPackageToEndpoint(ReplicationPackage replicationPackage, ReplicationEndpoint replicationEndpoint, ReplicationQueueProcessor responseProcessor)
             throws Exception {
 
         Session session = null;

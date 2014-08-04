@@ -34,7 +34,10 @@ import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.config.DefaultMetaInf;
 import org.apache.jackrabbit.vault.fs.config.DefaultWorkspaceFilter;
 import org.apache.jackrabbit.vault.fs.io.ImportOptions;
-import org.apache.jackrabbit.vault.packaging.*;
+import org.apache.jackrabbit.vault.packaging.ExportOptions;
+import org.apache.jackrabbit.vault.packaging.JcrPackage;
+import org.apache.jackrabbit.vault.packaging.Packaging;
+import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.communication.ReplicationRequest;
@@ -135,7 +138,7 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
     }
 
     @Override
-    protected ReplicationPackage readPackageInternal(final InputStream stream)
+    protected ReplicationPackage readPackageForAdd(final InputStream stream, boolean install)
             throws ReplicationPackageReadingException {
         if (log.isDebugEnabled()) {
             log.debug("reading a stream");
@@ -147,7 +150,9 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
             if (session != null) {
                 final JcrPackage jcrPackage = packaging.getPackageManager(session).upload(stream, true,
                         false);
-
+                if (install) {
+                    jcrPackage.install(new ImportOptions());
+                }
                 pkg = new FileVaultReplicationPackage(jcrPackage.getPackage());
             }
         } catch (Exception e) {
@@ -161,7 +166,6 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
         return pkg;
     }
 
-
     @Override
     protected ReplicationPackage getPackageInternal(String id) {
         ReplicationPackage replicationPackage = null;
@@ -169,10 +173,6 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
             File file = new File(id);
             if (file.exists()) {
                 VaultPackage pkg = packaging.getPackageManager().open(file);
-                replicationPackage = new FileVaultReplicationPackage(pkg);
-            }
-            else {
-                VaultPackage pkg = packaging.getPackageManager(getSession()).open(PackageId.fromString(id)).getPackage();
                 replicationPackage = new FileVaultReplicationPackage(pkg);
             }
         } catch (Exception e) {
@@ -189,28 +189,4 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
     }
 
 
-    @Override
-    public boolean installPackageInternal(ReplicationPackage replicationPackage) throws ReplicationPackageReadingException{
-        log.debug("reading a stream");
-
-        Session session = null;
-        try {
-            session = getSession();
-            if (session != null) {
-                final JcrPackage jcrPackage =  packaging.getPackageManager(getSession())
-                        .open(PackageId.fromString(replicationPackage.getId()));
-
-                jcrPackage.install(new ImportOptions());
-
-            }
-        } catch (Exception e) {
-            log.error("could not read / install the package", e);
-            throw new ReplicationPackageReadingException(e);
-        } finally {
-            if (session != null) {
-                session.logout();
-            }
-        }
-        return false;
-    }
 }
