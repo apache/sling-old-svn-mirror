@@ -2,7 +2,7 @@
     "jcr:primaryType" : "sling:OsgiConfig",
     "name" : "publish-reverse",
     "ReplicationPackageExporter.target" : "(name=publish)",
-    "ReplicationPackageImporter.target" : "(name=default)",
+    "ReplicationPackageImporter.target" : "(name=local)",
     "ReplicationQueueProvider.target" : "(name=sjh)",
     "ReplicationQueueDistributionStrategy.target" : "(name=error)",
     "rules" : ["scheduled poll every 30 sec"],
