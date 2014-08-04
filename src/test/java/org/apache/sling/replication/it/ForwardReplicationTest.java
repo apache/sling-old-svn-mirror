@@ -37,8 +37,8 @@ public class ForwardReplicationTest extends ReplicationIntegrationTestBase {
 
     @Test
     public void testDeleteContent() throws Exception {
-        String nodePath = createRandomNode(publishClient, "/content");
-
+        String nodePath = createRandomNode(authorClient, "/content");
+        replicate(author, "publish", ReplicationActionType.ADD, nodePath);
         assertExists(publishClient, nodePath);
 
         replicate(author, "publish", ReplicationActionType.DELETE, nodePath);
