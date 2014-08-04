@@ -102,7 +102,6 @@ public class OakRepositoryIT extends CommonTests {
                 // Oak
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.oak.server", slingOakServerVersion),
                 mavenBundle("com.google.guava", "guava", "15.0"),
-                mavenBundle("com.google.code.findbugs", "jsr305", "2.0.0"),
                 mavenBundle("org.apache.jackrabbit", "jackrabbit-api", "2.7.5"),
                 mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-commons", "2.7.5"),
                 mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-rmi", "2.4.2"),
