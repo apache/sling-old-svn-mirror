@@ -26,23 +26,22 @@ import org.apache.sling.replication.communication.ReplicationRequest;
  * A builder for {@link ReplicationPackage}s
  */
 public interface ReplicationPackageBuilder {
+
     /**
      * creates a {@link ReplicationPackage} for a specific {@link ReplicationRequest}
      *
      * @param request the {@link ReplicationRequest} to create the package for
      * @return a {@link ReplicationPackage}
      * @throws ReplicationPackageBuildingException
-     *
      */
     ReplicationPackage createPackage(ReplicationRequest request) throws ReplicationPackageBuildingException;
 
     /**
      * reads a stream and tries to convert it to a {@link ReplicationPackage} this provider can read and install
      *
-     * @param stream  the {@link InputStream} of the package to read
+     * @param stream the {@link InputStream} of the package to read
      * @return a {@link ReplicationPackage} if it can read it from the stream
-     * @throws ReplicationPackageReadingException
-     *          when the stream cannot be read as a {@link ReplicationPackage}
+     * @throws ReplicationPackageReadingException when the stream cannot be read as a {@link ReplicationPackage}
      */
     ReplicationPackage readPackage(InputStream stream) throws ReplicationPackageReadingException;
 
@@ -56,6 +55,7 @@ public interface ReplicationPackageBuilder {
 
     /**
      * Installs the given replicationPackage into the repository
+     *
      * @param replicationPackage
      * @return
      * @throws ReplicationPackageReadingException

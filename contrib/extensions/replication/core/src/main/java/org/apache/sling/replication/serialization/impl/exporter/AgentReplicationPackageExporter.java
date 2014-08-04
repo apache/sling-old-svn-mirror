@@ -18,13 +18,9 @@
  */
 package org.apache.sling.replication.serialization.impl.exporter;
 
+import java.util.Map;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.scr.annotations.*;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.communication.ReplicationRequest;
@@ -34,8 +30,6 @@ import org.apache.sling.replication.serialization.ReplicationPackageExporter;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Map;
 
 @Component(label = "Agent Based Replication Package Exporter")
 @Service(value = ReplicationPackageExporter.class)
@@ -56,28 +50,26 @@ public class AgentReplicationPackageExporter implements ReplicationPackageExport
     @Reference(name = "ReplicationPackageBuilder", target = "(name=vlt)", policy = ReferencePolicy.STATIC)
     private ReplicationPackageBuilder replicationPackageBuilder;
 
-
     private String queueName;
 
-
-
     @Activate
-    public void activate(BundleContext context, Map<String, ?> config) throws Exception {
+    public void activate(Map<String, ?> config) throws Exception {
         queueName = PropertiesUtil.toString(config.get(QUEUE_NAME), "");
     }
-
 
     public ReplicationPackage exportPackage(ReplicationRequest replicationRequest) {
 
         try {
-            log.info("getting item from queue {}", queueName);
+            if (log.isInfoEnabled()) {
+                log.info("getting item from queue {}", queueName);
+            }
 
             // get first item
-            ReplicationPackage head = agent.removeHead(queueName);
-            return head;
-        }
-        catch (Exception ex) {
-            log.error("Error exporting package", ex);
+            return agent.removeHead(queueName);
+        } catch (Exception ex) {
+            if (log.isErrorEnabled()) {
+                log.error("Error exporting package", ex);
+            }
         }
 
         return null;
