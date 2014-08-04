@@ -36,7 +36,6 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
     protected static final String ADAPTABLE_PROPERTY_NAME = "adaptable";
 
     private static final String MAIN_RESOURCE_PREFIX = ".";
-    private static final String ROOT_RESOURCE_PREFIX = "..";
 
     private final String resourceRoot;
     private final Map<String, Map<String, String>> additionalResourcePropertiesMap = new HashMap<String, Map<String, String>>();
@@ -46,12 +45,11 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
 
         this.resourceRoot = resourceRoot;
 
-        additionalResourcePropertiesMap.put(ROOT_RESOURCE_PREFIX, new HashMap<String, String>());
         additionalResourcePropertiesMap.put(MAIN_RESOURCE_PREFIX, new HashMap<String, String>());
         for (Map.Entry<String, String> entry : additionalResourceProperties.entrySet()) {
             String resourceName = MAIN_RESOURCE_PREFIX;
             String propertyName = entry.getKey();
-            int idx =propertyName.indexOf("/");
+            int idx = propertyName.indexOf("/");
             if (idx >=0) {
                 resourceName = propertyName.substring(0, idx);
                 propertyName = propertyName.substring(idx+1);
@@ -93,8 +91,10 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
             if (properties != null) {
                 Object adaptable = properties.remove(ADAPTABLE_PROPERTY_NAME);
 
-                Map<String, String > additionalProperties = additionalResourcePropertiesMap.get(ROOT_RESOURCE_PREFIX);
-                properties.putAll(additionalProperties);
+                Map<String, String> additionalProperties = additionalResourcePropertiesMap.get(MAIN_RESOURCE_PREFIX);
+                if (!properties.containsKey("sling:resourceType") && additionalProperties.containsKey("sling:resourceType")) {
+                    properties.put("sling:resourceType", additionalProperties.get("sling:resourceType") +"/list");
+                }
 
                 resource = new SimpleReadableResource(resourceResolver, pathInfo.getResourcePath(), properties, adaptable);
             }

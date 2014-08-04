@@ -1,0 +1,13 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "name" : "replicationExportersConfig",
+    "provider.roots" : [ "/libs/sling/replication/config/exporters/remote" ],
+    "serviceType" : "org.apache.sling.replication.transport.impl.exporter.RemoteReplicationPackageExporter",
+    "providerType" : "osgiConfig",
+
+    "resourceProperties" : [
+        "sling:resourceType=replication/config/exporter/remote",
+        "name={name}",
+        "endpoints={endpoints}"
+    ]
+}

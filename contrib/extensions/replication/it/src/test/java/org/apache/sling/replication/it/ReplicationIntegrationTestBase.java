@@ -24,8 +24,6 @@ import org.apache.sling.testing.tools.sling.SlingInstance;
 import org.apache.sling.testing.tools.sling.SlingInstanceManager;
 
 import static org.apache.sling.replication.it.ReplicationUtils.assertExists;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Integration test base class for replication
@@ -49,15 +47,13 @@ public abstract class ReplicationIntegrationTestBase {
 
         try {
             // change the url for publish agent and wait for it to start
-
-            String receiverUrl = "http://localhost:4503/libs/sling/replication/importer/default"
+            String receiverUrl = "http://localhost:4503/libs/sling/replication/importers/default"
                     .replace("http://localhost:4503", publish.getServerBaseUrl());
-            authorClient.setProperties("/libs/sling/replication/config/transport/http/http-publish-receive",
+            authorClient.setProperties("/libs/sling/replication/config/importers/remote/publish",
                     "endpoints", receiverUrl);
-            assertExists(authorClient, "/libs/sling/replication/agent/publish");
-        }
-        catch (Exception ex) {
-
+            assertExists(authorClient, "/libs/sling/replication/agents/publish");
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
 
     }

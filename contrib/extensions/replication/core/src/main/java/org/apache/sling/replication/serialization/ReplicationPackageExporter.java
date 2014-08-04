@@ -18,27 +18,22 @@
  */
 package org.apache.sling.replication.serialization;
 
-import java.io.InputStream;
+
+import org.apache.sling.replication.communication.ReplicationRequest;
 
 /**
- * A {@link org.apache.sling.replication.serialization.ReplicationPackage} importer
+ * A {@link org.apache.sling.replication.serialization.ReplicationPackage) exporter
  */
-public interface ReplicationPackageImporter {
+public interface ReplicationPackageExporter {
     /**
-     * Imports the given replication package
-     * @param replicationPackage - the package to be imported
-     * @return
+     * Exports a replication package.
+     * @return the first available package in the exporter.
      */
-    boolean importPackage(ReplicationPackage replicationPackage) throws ReplicationPackageReadingException;
+    ReplicationPackage exportPackage(ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException;
 
     /**
-     * reads a stream and tries to convert it to a {@link ReplicationPackage} this provider can read and install
-     *
-     * @param stream  the {@link InputStream} of the package to read
-     * @return a {@link ReplicationPackage} if it can read it from the stream
-     * @throws ReplicationPackageReadingException
-     *          when the stream cannot be read as a {@link ReplicationPackage}
+     * Exports a replication package.
+     * @return the first available package in the exporter.
      */
-    ReplicationPackage readPackage(InputStream stream) throws ReplicationPackageReadingException;
-
+    ReplicationPackage exportPackageById(String replicationPackageId);
 }

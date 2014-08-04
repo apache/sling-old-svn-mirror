@@ -1,0 +1,9 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "name" : "publish",
+    "ReplicationPackageExporter.target" : "(name=default)",
+    "ReplicationPackageImporter.target" : "(name=publish)",
+    "ReplicationQueueProvider.target" : "(name=sjh)",
+    "ReplicationQueueDistributionStrategy.target" : "(name=single)",
+    "runModes" : ["author"]
+}
