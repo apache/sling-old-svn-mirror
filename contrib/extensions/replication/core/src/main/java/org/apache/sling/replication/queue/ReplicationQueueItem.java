@@ -31,12 +31,22 @@ public class ReplicationQueueItem {
 
     private final String type;
 
+    private final byte[] bytes;
 
-    public ReplicationQueueItem(String id, String[] paths, String action, String type) {
+    private ReplicationQueueItem(String id, String[] paths, String action, String type, byte[] bytes) {
         this.id = id;
         this.paths = paths;
         this.action = action;
         this.type = type;
+        this.bytes = bytes;
+    }
+
+    public ReplicationQueueItem(String id, String[] paths, String action, String type) {
+        this(id, paths, action, type, null);
+    }
+
+    public ReplicationQueueItem(String[] paths, String action, String type, byte[] bytes) {
+        this(null, paths, action, type, bytes);
     }
 
     public String getId() {
@@ -53,5 +63,13 @@ public class ReplicationQueueItem {
 
     public String getType() {
         return type;
+    }
+
+    public byte[] getBytes() {
+        return bytes;
+    }
+
+    public boolean isTransient(){
+        return id == null;
     }
 }

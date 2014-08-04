@@ -31,7 +31,6 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.replication.communication.ReplicationHeader;
 import org.apache.sling.replication.resources.ReplicationConstants;
-import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageImporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,17 +62,23 @@ public class ReplicationPackageImporterServlet extends SlingAllMethodsServlet {
         response.setCharacterEncoding("utf-8");
 
         InputStream stream = request.getInputStream();
+        String type = request.getHeader(ReplicationHeader.TYPE.toString());
         try {
-            ReplicationPackage replicationPackage = replicationPackageImporter.readPackage(stream);
-            success = replicationPackageImporter.importPackage(replicationPackage);
+           success = replicationPackageImporter.importStream(stream, type);
         } catch (final Exception e) {
             response.setStatus(400);
-            log.error("Error during replication: {}", e.getMessage(), e);
+            if (log.isErrorEnabled()) {
+                log.error("Error during replication: {}", e.getMessage(), e);
+            }
             response.getWriter().print("error: " + e.toString());
         } finally {
             final long end = System.currentTimeMillis();
-            log.info("Processed replication request in {}ms: : {}", new Object[]{end - start, success});
+            if (log.isInfoEnabled()) {
+                log.info("Processed replication request in {}ms: : {}", new Object[]{
+                        end - start, success});
+            }
         }
+
     }
 
 }

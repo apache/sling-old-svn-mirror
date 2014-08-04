@@ -38,21 +38,36 @@ public class JobHandlingUtils {
 
     protected static final String ACTION = "replication.package.action";
 
+    protected static final String BYTES = "replication.package.bytes";
+
+
     public static ReplicationQueueItem getPackage(final Job job) {
-        return new ReplicationQueueItem((String) job.getProperty(ID),
-                (String[]) job.getProperty(PATHS),
-                String.valueOf(job.getProperty(ACTION)),
-                String.valueOf(job.getProperty(TYPE)));
+        String id = (String) job.getProperty(ID);
+        if (id != null) {
+            return new ReplicationQueueItem((String) job.getProperty(ID),
+                    (String[]) job.getProperty(PATHS),
+                    String.valueOf(job.getProperty(ACTION)),
+                    String.valueOf(job.getProperty(TYPE)));
+        } else {
+            return new ReplicationQueueItem((String[]) job.getProperty(PATHS),
+                    String.valueOf(job.getProperty(ACTION)),
+                    String.valueOf(job.getProperty(TYPE)),
+                    unBox((Byte[]) job.getProperty(BYTES)));
+        }
     }
 
     public static Map<String, Object> createFullPropertiesFromPackage(
             ReplicationQueueItem replicationPackage) {
         Map<String, Object> properties = new HashMap<String, Object>();
 
-        properties.put(ID, replicationPackage.getId());
+        if (replicationPackage.getId() != null)
+            properties.put(ID, replicationPackage.getId());
         properties.put(PATHS, replicationPackage.getPaths());
         properties.put(ACTION, replicationPackage.getAction());
         properties.put(TYPE, replicationPackage.getType());
+
+        if (replicationPackage.getBytes() != null)
+            properties.put(BYTES, box(replicationPackage.getBytes()));
 
         return properties;
     }

@@ -88,15 +88,17 @@ public class ReplicationUtils {
         ).getContent().replaceAll("\n", "").trim();
 
 
-        for (String parameter : parameters) {
-            assertTrue(parameter + " is not contained in " + content,
-                    content.contains(parameter));
+        for (int i = 0; i < parameters.length; i++) {
+            assertTrue(parameters[i] + " is not contained in " + content,
+                    content.contains(parameters[i])
+            );
         }
     }
 
 
-    public static void replicate(SlingInstance slingInstance, String agentName, ReplicationActionType action, String... paths) throws IOException {
-        String agentResource = agentUrl(agentName);
+    public static void replicate(SlingInstance slingInstance, String agent, ReplicationActionType action, String... paths) throws IOException {
+        String agentResource = agentUrl("publish");
+
 
         List<String> args = new ArrayList<String>();
         args.add(ReplicationHeader.ACTION.toString());
@@ -114,6 +116,7 @@ public class ReplicationUtils {
 
     public static void deleteNode(SlingInstance slingInstance, String path) throws IOException {
         assertPostResourceWithParameters(slingInstance, 200, path, ":operation", "delete");
+
     }
 
     public static void assertExists(SlingClient slingClient, String path) throws Exception {
@@ -130,6 +133,7 @@ public class ReplicationUtils {
         while(slingClient.exists(path) && retries-- > 0) {
             Thread.sleep(1000);
         }
+
         assertTrue(retries > 0);
     }
 
@@ -145,23 +149,23 @@ public class ReplicationUtils {
     }
 
     public static String agentUrl(String agentName) {
-        return REPLICATION_ROOT_PATH + "/agents/" + agentName;
+        return REPLICATION_ROOT_PATH + "/agent/" + agentName;
     }
 
     public static String queueUrl(String agentName) {
-        return REPLICATION_ROOT_PATH + "/agents/" + agentName +"/queue";
+        return REPLICATION_ROOT_PATH + "/agent/" + agentName +"/queue";
     }
 
     public static String agentConfigUrl(String agentName) {
-        return REPLICATION_ROOT_PATH + "/config/agents/" + agentName;
+        return REPLICATION_ROOT_PATH + "/config/agent/" + agentName;
     }
 
 
     public static String importerRootUrl() {
-        return REPLICATION_ROOT_PATH + "/importers";
+        return REPLICATION_ROOT_PATH + "/importer";
     }
 
     public static String importerUrl(String importerName) {
-        return REPLICATION_ROOT_PATH + "/importers/" + importerName;
+        return REPLICATION_ROOT_PATH + "/importer/" + importerName;
     }
 }

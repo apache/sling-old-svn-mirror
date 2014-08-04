@@ -41,7 +41,7 @@ public class VoidReplicationPackageBuilder implements ReplicationPackageBuilder 
         return new VoidReplicationPackage(request, "VOID");
     }
 
-    public ReplicationPackage readPackage(InputStream stream) throws ReplicationPackageReadingException {
+    public ReplicationPackage readPackage(InputStream stream, boolean install) throws ReplicationPackageReadingException {
         try {
             return VoidReplicationPackage.fromStream(stream);
         } catch (Exception e) {
@@ -56,9 +56,5 @@ public class VoidReplicationPackageBuilder implements ReplicationPackageBuilder 
         catch (IOException ex){
             return null;
         }
-    }
-
-    public boolean installPackage(ReplicationPackage replicationPackage) {
-        return false;
     }
 }

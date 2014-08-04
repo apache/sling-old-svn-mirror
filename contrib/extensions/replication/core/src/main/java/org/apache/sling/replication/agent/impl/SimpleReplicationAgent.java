@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.agent.impl;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.List;
@@ -37,10 +39,12 @@ import org.apache.sling.replication.queue.ReplicationQueueProcessor;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
 import org.apache.sling.replication.rule.ReplicationRuleEngine;
 import org.apache.sling.replication.serialization.ReplicationPackage;
+import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
-import org.apache.sling.replication.serialization.ReplicationPackageExporter;
-import org.apache.sling.replication.serialization.ReplicationPackageImporter;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
+import org.apache.sling.replication.transport.ReplicationTransportException;
+import org.apache.sling.replication.transport.TransportHandler;
+import org.apache.sling.replication.transport.impl.NopTransportHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,13 +53,15 @@ import org.slf4j.LoggerFactory;
  */
 public class SimpleReplicationAgent implements ReplicationAgent {
 
+    private final static String RESPONSE_QUEUE = "response";
+
     private final Logger log = LoggerFactory.getLogger(getClass());
+
+    private final ReplicationPackageBuilder packageBuilder;
 
     private final ReplicationQueueProvider queueProvider;
 
-    private final boolean passive;
-    private final ReplicationPackageImporter replicationPackageImporter;
-    private final ReplicationPackageExporter replicationPackageExporter;
+    private final TransportHandler transportHandler;
 
     private final ReplicationQueueDistributionStrategy queueDistributionStrategy;
 
@@ -71,17 +77,15 @@ public class SimpleReplicationAgent implements ReplicationAgent {
 
     public SimpleReplicationAgent(String name, String[] rules,
                                   boolean useAggregatePaths,
-                                  boolean passive,
-                                  ReplicationPackageImporter replicationPackageImporter,
-                                  ReplicationPackageExporter replicationPackageExporter,
+                                  TransportHandler transportHandler,
+                                  ReplicationPackageBuilder packageBuilder,
                                   ReplicationQueueProvider queueProvider,
                                   ReplicationQueueDistributionStrategy queueDistributionHandler,
                                   ReplicationEventFactory replicationEventFactory, ReplicationRuleEngine ruleEngine) {
         this.name = name;
         this.rules = rules;
-        this.passive = passive;
-        this.replicationPackageImporter = replicationPackageImporter;
-        this.replicationPackageExporter = replicationPackageExporter;
+        this.transportHandler = transportHandler;
+        this.packageBuilder = packageBuilder;
         this.queueProvider = queueProvider;
         this.queueDistributionStrategy = queueDistributionHandler;
         this.useAggregatePaths = useAggregatePaths;
@@ -106,7 +110,7 @@ public class SimpleReplicationAgent implements ReplicationAgent {
     }
 
     public boolean isPassive() {
-        return passive;
+        return transportHandler == null || transportHandler instanceof NopTransportHandler; // TODO : improve this
     }
 
 
@@ -114,7 +118,7 @@ public class SimpleReplicationAgent implements ReplicationAgent {
         // create package from request
         ReplicationPackage replicationPackage;
         try {
-            replicationPackage = replicationPackageExporter.exportPackage(replicationRequest);
+            replicationPackage = packageBuilder.createPackage(replicationRequest);
         } catch (ReplicationPackageBuildingException e) {
             throw new AgentReplicationException(e);
         }
@@ -212,7 +216,7 @@ public class SimpleReplicationAgent implements ReplicationAgent {
             ReplicationQueueItem info = queue.getHead();
             if (info != null) {
                 queue.removeHead();
-                replicationPackage = replicationPackageExporter.exportPackageById(info.getId());
+                replicationPackage = packageBuilder.getPackage(info.getId());
             }
             return replicationPackage;
         } else {
@@ -244,6 +248,7 @@ public class SimpleReplicationAgent implements ReplicationAgent {
 
         if (!isPassive()) {
             queueProvider.enableQueueProcessing(getName(), new PackageQueueProcessor());
+            transportHandler.enableProcessing(getName(), new ResponseProcessor());
         }
     }
 
@@ -255,14 +260,15 @@ public class SimpleReplicationAgent implements ReplicationAgent {
 
         if (!isPassive()) {
             queueProvider.disableQueueProcessing(getName());
+            transportHandler.disableProcessing(getName());
         }
     }
 
-    private boolean processTransportQueue(ReplicationQueueItem queueItem) {
-        log.debug("reading package from id {}", queueItem.getId());
+    private boolean processResponseQueue(ReplicationQueueItem queueItem) {
+        InputStream stream = new ByteArrayInputStream(queueItem.getBytes());
+        log.debug("reading package from stream {}", stream);
         try {
-            ReplicationPackage replicationPackage = replicationPackageExporter.exportPackageById(queueItem.getId());
-            replicationPackageImporter.importPackage(replicationPackage);
+            ReplicationPackage replicationPackage = packageBuilder.readPackage(stream, true);
             replicationPackage.delete();
             return true;
         } catch (ReplicationPackageReadingException e) {
@@ -270,11 +276,46 @@ public class SimpleReplicationAgent implements ReplicationAgent {
         }
     }
 
+    private boolean processTransportQueue(ReplicationQueueItem queueItem) {
+        try {
+            ReplicationPackage replicationPackage = packageBuilder.getPackage(queueItem.getId());
+            if (replicationPackage == null) {
+                return false;
+            }
+            if (transportHandler != null) {
+                transportHandler.transport(getName(), replicationPackage);
+                replicationPackage.delete();
+                return true;
+            } else {
+                log.info("agent {} processing skipped", name);
+                return false;
+            }
+        } catch (ReplicationTransportException e) {
+            log.error("transport error", e);
+            return false;
+        }
+    }
+
     class PackageQueueProcessor implements ReplicationQueueProcessor {
         public boolean process(String queueName, ReplicationQueueItem packageInfo) {
             log.info("running package queue processor");
-
-            return processTransportQueue(packageInfo);
+            if (RESPONSE_QUEUE.equalsIgnoreCase(queueName)) {
+                return processResponseQueue(packageInfo);
+            } else {
+                return processTransportQueue(packageInfo);
+            }
         }
     }
+
+    class ResponseProcessor implements ReplicationQueueProcessor {
+        public boolean process(String queueName, ReplicationQueueItem queueItem) {
+            log.info("running response processor");
+            try {
+                return getQueue(RESPONSE_QUEUE).add(queueItem);
+            } catch (Exception e) {
+                return false;
+            }
+        }
+    }
+
 }
