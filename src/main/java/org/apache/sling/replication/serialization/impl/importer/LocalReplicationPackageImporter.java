@@ -26,20 +26,24 @@ import java.util.Hashtable;
 import org.apache.felix.scr.annotations.*;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.event.ReplicationEventType;
-import org.apache.sling.replication.serialization.*;
+import org.apache.sling.replication.serialization.ReplicationPackage;
+import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
+import org.apache.sling.replication.serialization.ReplicationPackageImporter;
+import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Default implementation of {@link org.apache.sling.replication.serialization.ReplicationPackageImporter}
+ * {@link org.apache.sling.replication.serialization.ReplicationPackageImporter} implementation which imports a FileVault
+ * based {@link ReplicationPackage} locally.
  */
 @Component(label = "Default Replication Package Importer")
 @Service(value = ReplicationPackageImporter.class)
-@Property(name = "name", value = DefaultReplicationPackageImporter.NAME)
-public class DefaultReplicationPackageImporter implements ReplicationPackageImporter {
+@Property(name = "name", value = LocalReplicationPackageImporter.NAME)
+public class LocalReplicationPackageImporter implements ReplicationPackageImporter {
 
-    public static final String NAME = "default";
+    public static final String NAME = "local";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -77,11 +81,7 @@ public class DefaultReplicationPackageImporter implements ReplicationPackageImpo
 
     public ReplicationPackage readPackage(InputStream stream) throws ReplicationPackageReadingException {
         try {
-            ReplicationPackage replicationPackage = replicationPackageBuilder.readPackage(stream);
-
-            return replicationPackage;
-
-
+            return replicationPackageBuilder.readPackage(stream);
         } catch (Exception e) {
             log.error("cannot read a package from the given stream");
         }

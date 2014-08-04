@@ -82,7 +82,6 @@ public class RemoteReplicationPackageExporter implements ReplicationPackageExpor
 
 
     public ReplicationPackage exportPackage(ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
-
         try {
             return pollPackageFromEndpoint(replicationRequest, replicationEndpoint);
         } catch (Exception e) {

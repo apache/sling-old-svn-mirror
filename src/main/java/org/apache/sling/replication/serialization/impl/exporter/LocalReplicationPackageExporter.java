@@ -18,46 +18,35 @@
  */
 package org.apache.sling.replication.serialization.impl.exporter;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.replication.agent.ReplicationAgent;
+import org.apache.felix.scr.annotations.*;
 import org.apache.sling.replication.communication.ReplicationRequest;
-import org.apache.sling.replication.event.ReplicationEventFactory;
-import org.apache.sling.replication.event.ReplicationEventType;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
-import org.apache.sling.replication.serialization.ReplicationPackageBuilderProvider;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 import org.apache.sling.replication.serialization.ReplicationPackageExporter;
-import org.apache.sling.replication.serialization.ReplicationPackageImporter;
+import org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Dictionary;
-import java.util.Hashtable;
-
 /**
- * Default implementation of {@link org.apache.sling.replication.serialization.ReplicationPackageExporter}
+ * {@link org.apache.sling.replication.serialization.ReplicationPackageExporter} implementation which creates a FileVault based
+ * {@link org.apache.sling.replication.serialization.ReplicationPackage} locally.
  */
-@Component(label = "Default Replication Package Exporter")
+@Component(label = "Local Replication Package Exporter")
 @Service(value = ReplicationPackageExporter.class)
-@Property(name = "name", value = DefaultReplicationPackageExporter.NAME)
-public class DefaultReplicationPackageExporter implements ReplicationPackageExporter {
+@Property(name = "name", value = LocalReplicationPackageExporter.NAME)
+public class LocalReplicationPackageExporter implements ReplicationPackageExporter {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Property(label = "Name")
-    public static final String NAME = "default";
+    public static final String NAME = "local";
 
-    @Reference(name = "ReplicationPackageBuilder", target = "(name=vlt)", policy = ReferencePolicy.STATIC)
+    @Reference(name = "ReplicationPackageBuilder", target = "(name=" + FileVaultReplicationPackageBuilder.NAME + ")",
+            policy = ReferencePolicy.STATIC)
     private ReplicationPackageBuilder packageBuilder;
 
-    public ReplicationPackage exportPackage(ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException{
+    public ReplicationPackage exportPackage(ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
         return packageBuilder.createPackage(replicationRequest);
     }
 
