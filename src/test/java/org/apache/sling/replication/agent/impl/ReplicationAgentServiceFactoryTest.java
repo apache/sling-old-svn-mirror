@@ -25,6 +25,8 @@ import org.apache.sling.replication.agent.AgentConfigurationException;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
+import org.apache.sling.replication.serialization.ReplicationPackageExporter;
+import org.apache.sling.replication.serialization.ReplicationPackageImporter;
 import org.apache.sling.replication.transport.TransportHandler;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
@@ -41,10 +43,17 @@ public class ReplicationAgentServiceFactoryTest {
     public void testActivationWithAllServicesAndPropertiesBound() throws Exception {
         ReplicationAgentServiceFactory serviceFactory = new ReplicationAgentServiceFactory();
 
-        Field packageBuilderField = serviceFactory.getClass().getDeclaredField("packageBuilder");
-        packageBuilderField.setAccessible(true);
-        ReplicationPackageBuilder packageBuilder = mock(ReplicationPackageBuilder.class);
-        packageBuilderField.set(serviceFactory, packageBuilder);
+        Field packageImporterField = serviceFactory.getClass().getDeclaredField("packageImporter");
+        packageImporterField.setAccessible(true);
+        ReplicationPackageImporter packageImporter = mock(ReplicationPackageImporter.class);
+        packageImporterField.set(serviceFactory, packageImporter);
+
+
+        Field packageExporterField = serviceFactory.getClass().getDeclaredField("packageExporter");
+        packageExporterField.setAccessible(true);
+        ReplicationPackageExporter packageExporter = mock(ReplicationPackageExporter.class);
+        packageExporterField.set(serviceFactory, packageExporter);
+
 
         Field distributionField = serviceFactory.getClass().getDeclaredField("queueDistributionStrategy");
         distributionField.setAccessible(true);
@@ -55,11 +64,6 @@ public class ReplicationAgentServiceFactoryTest {
         queueField.setAccessible(true);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         queueField.set(serviceFactory, queueProvider);
-
-        Field transportField = serviceFactory.getClass().getDeclaredField("transportHandler");
-        transportField.setAccessible(true);
-        TransportHandler transportHandler = mock(TransportHandler.class);
-        transportField.set(serviceFactory, transportHandler);
 
 
         Map<String, Object> dictionary = new HashMap<String, Object>();
