@@ -45,8 +45,8 @@
     <properties>
         <site.jira.version.id>12315369</site.jira.version.id>
         <sling.java.version>6</sling.java.version>
-        <exam.version>3.0.3</exam.version>
-        <url.version>1.5.2</url.version>
+        <exam.version>3.5.0</exam.version>
+        <url.version>2.1.0</url.version>
         <bundle.build.name>${basedir}/target</bundle.build.name>
         <bundle.file.name>${bundle.build.name}/${project.build.finalName}.jar</bundle.file.name>
     </properties>
@@ -282,7 +282,7 @@
 
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
-            <artifactId>pax-exam-container-native</artifactId>
+            <artifactId>pax-exam-container-forked</artifactId>
             <version>${exam.version}</version>
             <scope>test</scope>
         </dependency>
@@ -311,7 +311,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <version>3.2.2</version>
+            <version>4.4.1</version>
             <scope>test</scope>
         </dependency>
 
@@ -340,6 +340,12 @@
             <version>0.1.0</version>
             <scope>test</scope>
         </dependency>
+         <dependency>
+             <groupId>javax.inject</groupId>
+             <artifactId>javax.inject</artifactId>
+             <version>1</version>
+             <scope>test</scope>
+         </dependency>
 
     </dependencies>
 </project>
