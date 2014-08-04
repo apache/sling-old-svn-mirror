@@ -231,7 +231,7 @@ public class SlingTestBase implements SlingInstance {
                      + " so that runnable jar stays up. Kill this process to exit.");
             synchronized (slingTestState) {
                 try {
-                    wait();
+                    slingTestState.wait();
                 } catch(InterruptedException iex) {
                     log.info("InterruptedException in blockIfRequested");
                 }
