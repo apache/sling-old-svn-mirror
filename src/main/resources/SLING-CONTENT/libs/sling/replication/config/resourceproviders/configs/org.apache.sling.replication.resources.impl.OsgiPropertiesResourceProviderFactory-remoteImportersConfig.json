@@ -1,0 +1,13 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "name" : "replicationImportersConfig",
+    "provider.roots" : [ "/libs/sling/replication/config/importers/remote" ],
+    "serviceType" : "org.apache.sling.replication.transport.impl.importer.RemoteReplicationPackageImporter",
+    "providerType" : "osgiConfig",
+
+    "resourceProperties" : [
+        "sling:resourceType=replication/config/importer/remote",
+        "name={name}",
+        "endpoints={endpoints}"
+    ]
+}

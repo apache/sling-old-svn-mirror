@@ -80,7 +80,7 @@ public class HttpTransportHandler extends AbstractTransportHandler
 
     @Override
     public void deliverPackageToEndpoint(ReplicationPackage replicationPackage,
-                                         ReplicationEndpoint replicationEndpoint, ReplicationQueueProcessor responseProcessor) throws Exception {
+                                         ReplicationEndpoint replicationEndpoint) throws Exception {
         log.info("delivering package {} to {} using auth {}",
                 new Object[]{replicationPackage.getId(),
                         replicationEndpoint.getUri(), transportAuthenticationProvider});

@@ -48,7 +48,7 @@ public class VoidReplicationPackage implements ReplicationPackage {
         this.paths = request.getPaths();
         this.action = request.getAction().toString();
         this.id = request.getAction().toString()
-                + ':' + Arrays.toString(request.getPaths())
+                + ':' + Arrays.toString(request.getPaths()).replaceAll("\\[", "").replaceAll("\\]", "")
                 + ':' + request.getTime()
                 + ':' + type;
     }
@@ -70,7 +70,7 @@ public class VoidReplicationPackage implements ReplicationPackage {
         VoidReplicationPackage replicationPackage = null;
         if(replicationActionType != null){
             pathsString = Text.unescape(pathsString);
-            String[] paths = pathsString.replaceAll("\\[", "").replaceAll("\\]", "").split(", ");
+            String[] paths = pathsString.split(", ");
 
             ReplicationRequest request = new ReplicationRequest(Long.valueOf(timeString),
                     replicationActionType, paths);
