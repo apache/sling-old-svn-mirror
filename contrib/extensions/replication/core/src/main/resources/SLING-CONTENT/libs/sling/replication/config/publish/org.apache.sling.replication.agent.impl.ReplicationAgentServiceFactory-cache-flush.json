@@ -3,7 +3,7 @@
     "name" : "cache-flush",
     "TransportHandler.target" : "(name=http-cache-flush)",
     "useAggregatePaths" : false,
-    "ReplicationPackageBuilder.target" : "(name=void)",
+    "ReplicationPackageExporter.target" : "(name=void)",
     "ReplicationQueueProvider.target" : "(name=simple)",
     "ReplicationQueueDistributionStrategy.target" : "(name=single)",
     "rules" : ["trigger on path: /content/usergenerated"],

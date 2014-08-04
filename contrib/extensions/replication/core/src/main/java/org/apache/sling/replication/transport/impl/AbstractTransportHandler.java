@@ -34,17 +34,13 @@ public abstract class AbstractTransportHandler implements TransportHandler {
     private int lastSuccessfulEnpointId = 0;
 
 
-    private final Map<String, ReplicationQueueProcessor> responseProcessorMap = new ConcurrentHashMap<String, ReplicationQueueProcessor>();
-
     public AbstractTransportHandler(ReplicationEndpoint[] endpoints, TransportEndpointStrategyType endpointStrategyType) {
         this.endpoints = endpoints;
         this.endpointStrategyType = endpointStrategyType;
     }
 
-    public void transport(String agentName, ReplicationPackage replicationPackage)
+    public void transport(ReplicationPackage replicationPackage)
             throws ReplicationTransportException {
-
-        ReplicationQueueProcessor responseProcessor = responseProcessorMap.get(agentName);
 
         ReplicationTransportException lastException = null;
         int offset = 0;
@@ -57,7 +53,7 @@ public abstract class AbstractTransportHandler implements TransportHandler {
 
             ReplicationEndpoint replicationEndpoint = endpoints[currentId];
             try {
-                deliverPackage(replicationPackage, replicationEndpoint, responseProcessor);
+                deliverPackage(replicationPackage, replicationEndpoint);
                 lastSuccessfulEnpointId = currentId;
                 if (endpointStrategyType.equals(TransportEndpointStrategyType.FirstSuccessful) ||
                         endpointStrategyType.equals(TransportEndpointStrategyType.OneSuccessful))
@@ -72,32 +68,22 @@ public abstract class AbstractTransportHandler implements TransportHandler {
     }
 
 
-    public void enableProcessing(String agentName, ReplicationQueueProcessor responseProcessor){
-        responseProcessorMap.put(agentName, responseProcessor);
-    }
-
-    public void disableProcessing(String agentName){
-        responseProcessorMap.remove(agentName);
-    }
-
 
     private void deliverPackage(ReplicationPackage replicationPackage,
-                                ReplicationEndpoint replicationEndpoint,
-                                ReplicationQueueProcessor responseProcessor)
+                                ReplicationEndpoint replicationEndpoint)
             throws ReplicationTransportException {
         if (!validateEndpoint(replicationEndpoint))
             throw new ReplicationTransportException("invalid endpoint " + replicationEndpoint.getUri());
 
         try {
-            deliverPackageToEndpoint(replicationPackage, replicationEndpoint, responseProcessor);
+            deliverPackageToEndpoint(replicationPackage, replicationEndpoint);
         } catch (Exception e) {
             throw new ReplicationTransportException(e);
         }
     }
 
     protected abstract void deliverPackageToEndpoint(ReplicationPackage replicationPackage,
-                                                     ReplicationEndpoint replicationEndpoint,
-                                                     ReplicationQueueProcessor responseProcessor)
+                                                     ReplicationEndpoint replicationEndpoint)
             throws Exception;
 
     protected abstract boolean validateEndpoint(ReplicationEndpoint endpoint);

@@ -1,0 +1,6 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "ReplicationPackageBuilder.target" : "(name=vlt)",
+    "ReplicationAgent.target" : "(name=reverse)",
+    "runModes" : ["publish"]
+}
