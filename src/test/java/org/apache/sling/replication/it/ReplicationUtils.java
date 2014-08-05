@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -88,9 +89,9 @@ public class ReplicationUtils {
         ).getContent().replaceAll("\n", "").trim();
 
 
-        for (int i = 0; i < parameters.length; i++) {
-            assertTrue(parameters[i] + " is not contained in " + content,
-                    content.contains(parameters[i])
+        for (String parameter : parameters) {
+            assertTrue(parameter + " is not contained in " + content,
+                    content.contains(parameter)
             );
         }
     }
@@ -98,7 +99,6 @@ public class ReplicationUtils {
 
     public static void replicate(SlingInstance slingInstance, String agentName, ReplicationActionType action, String... paths) throws IOException {
         String agentResource = agentUrl(agentName);
-
 
         List<String> args = new ArrayList<String>();
         args.add(ReplicationHeader.ACTION.toString());
@@ -116,34 +116,31 @@ public class ReplicationUtils {
 
     public static void deleteNode(SlingInstance slingInstance, String path) throws IOException {
         assertPostResourceWithParameters(slingInstance, 200, path, ":operation", "delete");
-
     }
 
     public static void assertExists(SlingClient slingClient, String path) throws Exception {
-
-        int retries = 100;
+        int retries = 10;
         while(!slingClient.exists(path) && retries-- > 0) {
             Thread.sleep(1000);
         }
-
-        assertTrue(retries > 0);
+        assertTrue(slingClient.exists(path));
     }
 
     public static void assertNotExits(SlingClient slingClient, String path) throws Exception {
-
-        int retries = 100;
+        int retries = 10;
         while(slingClient.exists(path) && retries-- > 0) {
             Thread.sleep(1000);
         }
-
-        assertTrue(retries > 0);
+        assertFalse(slingClient.exists(path));
     }
 
     public static String createRandomNode(SlingClient slingClient, String parentPath) throws Exception {
-        String nodePath = parentPath + "/" + UUID.randomUUID();
-        return slingClient.createNode(nodePath, "propName", "propValue");
+        if (!slingClient.exists(parentPath)) {
+            slingClient.createNode(parentPath, "jcr:primaryType", "nt:unstructured");
+        }
+        return slingClient.createNode(parentPath + "/" + UUID.randomUUID(), "jcr:primaryType", "nt:unstructured",
+                "propName", "propValue");
     }
-
 
     public static String agentRootUrl() {
         return REPLICATION_ROOT_PATH + "/agents";
