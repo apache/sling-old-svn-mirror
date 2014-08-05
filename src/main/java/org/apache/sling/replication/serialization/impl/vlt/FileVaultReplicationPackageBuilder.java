@@ -109,8 +109,10 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
             opts.setMetaInf(inf);
             opts.setRootPath("/");
             File tmpFile = File.createTempFile("vlt-rp-" + System.nanoTime(), ".zip");
-            VaultPackage pkg = packaging.getPackageManager().assemble(session, opts, tmpFile);
-            return new FileVaultReplicationPackage(pkg);
+            packaging.getPackageManager().assemble(session, opts, tmpFile);
+            JcrPackage jcrPackage = packaging.getPackageManager(session).upload(tmpFile, false, true, null);
+
+            return new FileVaultReplicationPackage(jcrPackage.getPackage());
         } catch (Exception e) {
             throw new ReplicationPackageBuildingException(e);
         } finally {
@@ -165,6 +167,10 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
             File file = new File(id);
             if (file.exists()) {
                 VaultPackage pkg = packaging.getPackageManager().open(file);
+                replicationPackage = new FileVaultReplicationPackage(pkg);
+            }
+            else {
+                VaultPackage pkg = packaging.getPackageManager(getSession()).open(PackageId.fromString(id)).getPackage();
                 replicationPackage = new FileVaultReplicationPackage(pkg);
             }
         } catch (Exception e) {

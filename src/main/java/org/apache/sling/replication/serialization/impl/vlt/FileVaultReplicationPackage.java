@@ -53,7 +53,7 @@ public class FileVaultReplicationPackage implements ReplicationPackage {
             paths[i] = filterSets.get(i).getRoot();
         }
         this.paths = paths;
-        this.id = pkg.getFile() != null ? pkg.getFile().getAbsolutePath() : String.valueOf(pkg.getId());
+        this.id = pkg.getId() != null ? String.valueOf(pkg.getId()) : pkg.getFile().getAbsolutePath();
         this.action = ReplicationActionType.ADD.toString();
     }
 
