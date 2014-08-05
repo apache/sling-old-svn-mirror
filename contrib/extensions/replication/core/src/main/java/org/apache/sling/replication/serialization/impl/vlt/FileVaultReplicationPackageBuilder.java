@@ -18,18 +18,14 @@
  */
 package org.apache.sling.replication.serialization.impl.vlt;
 
-import java.io.File;
-import java.io.InputStream;
-import java.util.Properties;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Modified;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
+import java.io.File;
+import java.io.InputStream;
+import java.util.Properties;
+
+import org.apache.felix.scr.annotations.*;
 import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.config.DefaultMetaInf;
 import org.apache.jackrabbit.vault.fs.config.DefaultWorkspaceFilter;
@@ -171,12 +167,8 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
                 VaultPackage pkg = packaging.getPackageManager().open(file);
                 replicationPackage = new FileVaultReplicationPackage(pkg);
             }
-            else {
-                VaultPackage pkg = packaging.getPackageManager(getSession()).open(PackageId.fromString(id)).getPackage();
-                replicationPackage = new FileVaultReplicationPackage(pkg);
-            }
         } catch (Exception e) {
-            log.info("could not find a package with id : {}", id);
+            log.warn("could not find a package with id : {}", id);
         }
         return replicationPackage;
     }
@@ -190,21 +182,25 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
 
 
     @Override
-    public boolean installPackageInternal(ReplicationPackage replicationPackage) throws ReplicationPackageReadingException{
-        log.debug("reading a stream");
+    public boolean installPackageInternal(ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {
+        if (log.isDebugEnabled()) {
+            log.debug("reading a replication package stream");
+        }
 
         Session session = null;
         try {
             session = getSession();
             if (session != null) {
-                final JcrPackage jcrPackage =  packaging.getPackageManager(getSession())
+                final JcrPackage jcrPackage = packaging.getPackageManager(getSession())
                         .open(PackageId.fromString(replicationPackage.getId()));
 
                 jcrPackage.install(new ImportOptions());
 
             }
         } catch (Exception e) {
-            log.error("could not read / install the package", e);
+            if (log.isErrorEnabled()) {
+                log.error("could not read / install the package", e);
+            }
             throw new ReplicationPackageReadingException(e);
         } finally {
             if (session != null) {

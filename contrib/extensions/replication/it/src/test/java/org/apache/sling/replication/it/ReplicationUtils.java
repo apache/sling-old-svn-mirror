@@ -19,6 +19,11 @@
 
 package org.apache.sling.replication.it;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.message.BasicNameValuePair;
@@ -28,14 +33,7 @@ import org.apache.sling.testing.tools.http.Request;
 import org.apache.sling.testing.tools.sling.SlingClient;
 import org.apache.sling.testing.tools.sling.SlingInstance;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Utils class for Replication ITs
@@ -46,7 +44,7 @@ public class ReplicationUtils {
     private static final String REPLICATION_ROOT_PATH = "/libs/sling/replication";
 
     private static void assertPostResourceWithParameters(SlingInstance slingInstance,
-                                                           int status, String path, String... parameters) throws IOException {
+                                                         int status, String path, String... parameters) throws IOException {
         Request request = slingInstance.getRequestBuilder().buildPostRequest(path);
 
         if (parameters != null) {
@@ -65,7 +63,7 @@ public class ReplicationUtils {
     }
 
     private static void assertPostResourceWithHeaders(SlingInstance slingInstance,
-                                                        int status, String path, String... headers) throws IOException {
+                                                      int status, String path, String... headers) throws IOException {
         Request request = slingInstance.getRequestBuilder().buildPostRequest(path);
         if (headers != null) {
             assertEquals(0, headers.length % 2);
@@ -79,7 +77,7 @@ public class ReplicationUtils {
     }
 
     public static void assertResponseContains(SlingInstance slingInstance,
-                                                     String resource, String... parameters) throws IOException {
+                                              String resource, String... parameters) throws IOException {
         if (!resource.endsWith(JSON_SELECTOR)) {
             resource += JSON_SELECTOR;
         }
@@ -105,7 +103,7 @@ public class ReplicationUtils {
         args.add(action.toString());
 
         if (paths != null) {
-            for (String path: paths) {
+            for (String path : paths) {
                 args.add(ReplicationHeader.PATH.toString());
                 args.add(path);
             }
@@ -120,7 +118,7 @@ public class ReplicationUtils {
 
     public static void assertExists(SlingClient slingClient, String path) throws Exception {
         int retries = 10;
-        while(!slingClient.exists(path) && retries-- > 0) {
+        while (!slingClient.exists(path) && retries-- > 0) {
             Thread.sleep(1000);
         }
         assertTrue(slingClient.exists(path));
@@ -128,18 +126,19 @@ public class ReplicationUtils {
 
     public static void assertNotExits(SlingClient slingClient, String path) throws Exception {
         int retries = 10;
-        while(slingClient.exists(path) && retries-- > 0) {
+        while (slingClient.exists(path) && retries-- > 0) {
             Thread.sleep(1000);
         }
         assertFalse(slingClient.exists(path));
     }
 
     public static String createRandomNode(SlingClient slingClient, String parentPath) throws Exception {
+        String nodePath = parentPath + "/" + UUID.randomUUID();
         if (!slingClient.exists(parentPath)) {
             slingClient.createNode(parentPath, "jcr:primaryType", "nt:unstructured");
         }
-        return slingClient.createNode(parentPath + "/" + UUID.randomUUID(), "jcr:primaryType", "nt:unstructured",
-                "propName", "propValue");
+        slingClient.createNode(nodePath, "jcr:primaryType", "nt:unstructured", "propName", "propValue");
+        return nodePath;
     }
 
     public static String agentRootUrl() {
@@ -151,7 +150,7 @@ public class ReplicationUtils {
     }
 
     public static String queueUrl(String agentName) {
-        return REPLICATION_ROOT_PATH + "/agents/" + agentName +"/queue";
+        return REPLICATION_ROOT_PATH + "/agents/" + agentName + "/queue";
     }
 
     public static String agentConfigUrl(String agentName) {
