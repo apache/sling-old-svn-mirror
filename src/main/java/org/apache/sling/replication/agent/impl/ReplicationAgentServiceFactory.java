@@ -94,8 +94,8 @@ public class ReplicationAgentServiceFactory {
     @Reference(name = "ReplicationPackageExporter", target = "(name=vlt)", policy = ReferencePolicy.DYNAMIC)
     private ReplicationPackageExporter packageExporter;
 
-    @Property(label = "Target ReplicationPackageImporter", name = "ReplicationPackageImporter.target", value = "(name=default)")
-    @Reference(name = "ReplicationPackageImporter", target = "(name=default)", policy = ReferencePolicy.DYNAMIC)
+    @Property(label = "Target ReplicationPackageImporter", name = "ReplicationPackageImporter.target", value = "(name=local)")
+    @Reference(name = "ReplicationPackageImporter", target = "(name=local)", policy = ReferencePolicy.DYNAMIC)
     private ReplicationPackageImporter packageImporter;
 
     @Property(label = "Target ReplicationQueueProvider", name = QUEUEPROVIDER, value = DEFAULT_QUEUEPROVIDER)

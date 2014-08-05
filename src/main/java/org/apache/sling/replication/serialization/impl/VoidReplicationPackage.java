@@ -117,4 +117,14 @@ public class VoidReplicationPackage implements ReplicationPackage {
     public void delete() {
 
     }
+
+    @Override
+    public String toString() {
+        return "VoidReplicationPackage{" +
+                "type='" + type + '\'' +
+                ", paths=" + Arrays.toString(paths) +
+                ", id='" + id + '\'' +
+                ", action='" + action + '\'' +
+                '}';
+    }
 }

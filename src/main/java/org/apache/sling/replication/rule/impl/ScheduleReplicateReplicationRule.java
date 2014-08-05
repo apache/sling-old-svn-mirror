@@ -92,6 +92,9 @@ public class ScheduleReplicateReplicationRule implements ReplicationRule {
 
         public void run() {
             try {
+                if (log.isDebugEnabled()) {
+                    log.debug("agent {}: scheduling {} replication of {}", new Object[]{agent, action, path});
+                }
                 agent.send(new ReplicationRequest(System.currentTimeMillis(), action, path));
             } catch (AgentReplicationException e) {
                 if (log.isErrorEnabled()) {
