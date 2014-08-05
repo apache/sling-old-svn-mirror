@@ -49,10 +49,16 @@ public abstract class ReplicationIntegrationTestBase {
 
         try {
             // change the url for publish agent and wait for it to start
-            String receiverUrl = "http://localhost:4503/libs/sling/replication/importers/local"
+            String remoteImporterUrl = "http://localhost:4503/libs/sling/replication/importers/local"
                     .replace("http://localhost:4503", publish.getServerBaseUrl());
             authorClient.setProperties("/libs/sling/replication/config/importers/remote/publish",
-                    "endpoints", receiverUrl);
+                    "endpoints", remoteImporterUrl);
+
+            String remoteExporterUrl = "http://localhost:4503/libs/sling/replication/exporters/agent"
+                    .replace("http://localhost:4503", publish.getServerBaseUrl());
+            authorClient.setProperties("/libs/sling/replication/config/exporters/remote/publish",
+                    "endpoints", remoteExporterUrl);
+
             assertExists(authorClient, "/libs/sling/replication/agents/publish");
         }
         catch (Exception ex) {
