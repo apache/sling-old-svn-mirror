@@ -27,6 +27,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1127,5 +1128,22 @@ public class MapEntriesTest {
         assertEquals(0, aliasMap.size()); 
         aliasMapEntry = mapEntries.getAliasMap("/parent");
         assertNull(aliasMapEntry);
+    }
+    
+    @Test
+    public void test_isValidVanityPath() throws Exception {
+        Method method = MapEntries.class.getDeclaredMethod("isValidVanityPath", Resource.class);
+        method.setAccessible(true);
+        
+        final Resource resource = mock(Resource.class);
+        when(resource.getPath()).thenReturn("/jcr:system/node");
+        
+        assertFalse((Boolean)method.invoke(mapEntries, resource));
+        
+        when(resource.getPath()).thenReturn("/justVanityPath");
+        assertFalse((Boolean)method.invoke(mapEntries, resource));
+        
+        when(resource.adaptTo(ValueMap.class)).thenReturn(mock(ValueMap.class));
+        assertTrue((Boolean)method.invoke(mapEntries, resource));
     }
 }

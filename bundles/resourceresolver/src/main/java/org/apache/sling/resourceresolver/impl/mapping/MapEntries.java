@@ -660,6 +660,36 @@ public class MapEntries implements EventHandler {
     }
 
     // ---------- internal
+    
+    private boolean isValidVanityPath(Resource resource){
+        // ignore system tree
+        if (resource.getPath().startsWith(JCR_SYSTEM_PREFIX)) {
+            log.debug("isValidVanityPath: not valid {}", resource);
+            return false;
+        }
+
+        // check white list
+        if ( this.vanityPathConfig != null ) {
+            boolean allowed = false;
+            for(final VanityPathConfig config : this.vanityPathConfig) {
+                if ( resource.getPath().startsWith(config.prefix) ) {
+                    allowed = !config.isExclude;
+                    break;
+                }
+            }
+            if ( !allowed ) {
+                log.debug("isValidVanityPath: not valid as not in white list {}", resource);
+                return false;
+            }
+        }
+        // require properties
+        final ValueMap props = resource.adaptTo(ValueMap.class);
+        if (props == null) {
+            log.debug("isValidVanityPath: not valid {} without properties", resource);
+            return false;
+        }
+        return true;
+    }
 
     private String getActualContentPath(String path){
         final String checkPath;
@@ -878,33 +908,12 @@ public class MapEntries implements EventHandler {
      * Load vanity path given a resource
      */
     private void loadVanityPath(final Resource resource, final Map<String, List<MapEntry>> entryMap, final Map <String, List<String>> targetPaths) {
-        // ignore system tree
-        if (resource.getPath().startsWith(JCR_SYSTEM_PREFIX)) {
-            log.debug("loadVanityPaths: Ignoring {}", resource);
+        
+        if (!isValidVanityPath(resource)) {            
             return;
         }
-
-        // check white list
-        if ( this.vanityPathConfig != null ) {
-            boolean allowed = false;
-            for(final VanityPathConfig config : this.vanityPathConfig) {
-                if ( resource.getPath().startsWith(config.prefix) ) {
-                    allowed = !config.isExclude;
-                    break;
-                }
-            }
-            if ( !allowed ) {
-                log.debug("loadVanityPaths: Ignoring as not in white list {}", resource);
-                return;
-            }
-        }
-        // require properties
+        
         final ValueMap props = resource.adaptTo(ValueMap.class);
-        if (props == null) {
-            log.debug("loadVanityPaths: Ignoring {} without properties", resource);
-            return;
-        }
-
         long vanityOrder = 0;
         if (props.containsKey(PROP_VANITY_ORDER)) {
             vanityOrder = props.get(PROP_VANITY_ORDER, Long.class);
