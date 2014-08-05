@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
@@ -95,4 +96,13 @@ public class FileVaultReplicationPackage implements ReplicationPackage {
         }
     }
 
+    @Override
+    public String toString() {
+        return "FileVaultReplicationPackage{" +
+                "id='" + id + '\'' +
+                ", paths=" + Arrays.toString(paths) +
+                ", pkg=" + pkg +
+                ", action='" + action + '\'' +
+                '}';
+    }
 }
