@@ -117,25 +117,25 @@ public class ReplicationUtils {
     }
 
     public static void assertExists(SlingClient slingClient, String path) throws Exception {
-        int retries = 10;
+        int retries = 100;
         while (!slingClient.exists(path) && retries-- > 0) {
             Thread.sleep(1000);
         }
-        assertTrue(slingClient.exists(path));
+        assertTrue("path " + path + " doesn't exist", slingClient.exists(path));
     }
 
     public static void assertNotExits(SlingClient slingClient, String path) throws Exception {
-        int retries = 10;
+        int retries = 100;
         while (slingClient.exists(path) && retries-- > 0) {
             Thread.sleep(1000);
         }
-        assertFalse(slingClient.exists(path));
+        assertFalse("path " + path + " still exists", slingClient.exists(path));
     }
 
     public static String createRandomNode(SlingClient slingClient, String parentPath) throws Exception {
         String nodePath = parentPath + "/" + UUID.randomUUID();
         if (!slingClient.exists(parentPath)) {
-            slingClient.createNode(parentPath, "jcr:primaryType", "nt:unstructured");
+            slingClient.mkdirs(parentPath);
         }
         slingClient.createNode(nodePath, "jcr:primaryType", "nt:unstructured", "propName", "propValue");
         return nodePath;

@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.replication.it;
 
 import org.apache.sling.testing.tools.sling.SlingClient;
@@ -62,7 +61,7 @@ public abstract class ReplicationIntegrationTestBase {
             assertExists(authorClient, "/libs/sling/replication/agents/publish");
         }
         catch (Exception ex) {
-
+            throw new RuntimeException(ex);
         }
 
     }
