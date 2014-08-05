@@ -24,6 +24,9 @@ import org.junit.Test;
 
 import static org.apache.sling.replication.it.ReplicationUtils.*;
 
+/**
+ * Integration test for forward replication
+ */
 public class ForwardReplicationTest extends ReplicationIntegrationTestBase {
 
     @Test
@@ -33,7 +36,6 @@ public class ForwardReplicationTest extends ReplicationIntegrationTestBase {
         replicate(author, "publish", ReplicationActionType.ADD, nodePath);
         assertExists(publishClient, nodePath);
     }
-
 
     @Test
     public void testDeleteContent() throws Exception {
