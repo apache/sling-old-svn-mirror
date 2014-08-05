@@ -33,8 +33,7 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
         String[] defaultAgentNames = new String[]{
                 "publish",
                 "publish-reverse",
-                "reverserepo",
-                "author",
+                "reverse",
                 "cache-flush"
         };
         for (String agentName : defaultAgentNames) {
@@ -47,8 +46,7 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
     public void testDefaultPublishAgentResources() throws Exception {
         // these agents do not exist as they are bundled to publish runMode
         String[] defaultPublishAgentNames = new String[]{
-                "reverserepo",
-                "author",
+                "reverse",
                 "cache-flush"
         };
         for (String agentName : defaultPublishAgentNames) {
@@ -72,8 +70,7 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
     public void testDefaultPublishAgentQueueResources() throws Exception {
         // these agent queues do not exist as they are bundled to publish runMode
         String[] defaultPublishAgentNames = new String[]{
-                "reverserepo",
-                "author",
+                "reverse",
                 "cache-flush"
         };
         for (String agentName : defaultPublishAgentNames) {
@@ -97,7 +94,7 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
     public void testDefaultAgentsRootResource() throws Exception {
         assertExists(authorClient, agentRootUrl());
         assertResponseContains(author, agentRootUrl(),
-                "sling:resourceType", "replication/agents",
+                "sling:resourceType", "replication/agent/list",
                 "items", "publish-reverse","publish");
     }
 
@@ -106,12 +103,11 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
         String agentName = "sample-create-config" + UUID.randomUUID();
         String newConfigResource = agentConfigUrl(agentName);
 
-        authorClient.createNode(newConfigResource, "name", agentName, "transportHandler", "(name=author)");
+        authorClient.createNode(newConfigResource, "name", agentName);
         assertExists(authorClient, newConfigResource);
         assertResponseContains(author, newConfigResource,
                 "sling:resourceType", "replication/config/agent",
-                "name", agentName,
-                "transportHandler", "(name=author)");
+                "name", agentName);
     }
 
     @Test

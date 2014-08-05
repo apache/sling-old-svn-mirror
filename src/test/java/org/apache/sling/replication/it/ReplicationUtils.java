@@ -120,6 +120,7 @@ public class ReplicationUtils {
     }
 
     public static void assertExists(SlingClient slingClient, String path) throws Exception {
+
         int retries = 100;
         while(!slingClient.exists(path) && retries-- > 0) {
             Thread.sleep(1000);
@@ -129,6 +130,7 @@ public class ReplicationUtils {
     }
 
     public static void assertNotExits(SlingClient slingClient, String path) throws Exception {
+
         int retries = 100;
         while(slingClient.exists(path) && retries-- > 0) {
             Thread.sleep(1000);
@@ -139,13 +141,12 @@ public class ReplicationUtils {
 
     public static String createRandomNode(SlingClient slingClient, String parentPath) throws Exception {
         String nodePath = parentPath + "/" + UUID.randomUUID();
-        slingClient.createNode(nodePath, "propName", "propValue");
-        return nodePath;
+        return slingClient.createNode(nodePath, "propName", "propValue");
     }
 
 
     public static String agentRootUrl() {
-        return REPLICATION_ROOT_PATH + "/agent";
+        return REPLICATION_ROOT_PATH + "/agents";
     }
 
     public static String agentUrl(String agentName) {

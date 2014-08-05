@@ -49,8 +49,7 @@ public abstract class ReplicationIntegrationTestBase {
 
         try {
             // change the url for publish agent and wait for it to start
-
-            String receiverUrl = "http://localhost:4503/libs/sling/replication/importers/default"
+            String receiverUrl = "http://localhost:4503/libs/sling/replication/importers/local"
                     .replace("http://localhost:4503", publish.getServerBaseUrl());
             authorClient.setProperties("/libs/sling/replication/config/importers/remote/publish",
                     "endpoints", receiverUrl);
