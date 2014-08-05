@@ -10,7 +10,7 @@ if you need logging only from session created in a particular thread then that
 can be done in following way
 
     <?xml version="1.0" encoding="UTF-8"?>
-    <configuration>
+    <configuration scan="true" scanPeriod="1 second">
       <jmxConfigurator/>
       <newRule pattern="*/configuration/osgi" actionClass="org.apache.sling.commons.log.logback.OsgiAction"/>
       <newRule pattern="*/configuration/appender-ref-osgi" actionClass="org.apache.sling.commons.log.logback.OsgiAppenderRefAction"/>
@@ -20,7 +20,7 @@ can be done in following way
         <filter class="ch.qos.logback.core.filter.EvaluatorFilter">      
           <evaluator class="ch.qos.logback.classic.boolex.GEventEvaluator"> 
             <expression><![CDATA[
-                return event.getThreadName().contains("JobHandler");
+                return e.getThreadName().contains("JobHandler");
             ]]></expression>
           </evaluator>
           <OnMismatch>DENY</OnMismatch>
@@ -38,7 +38,10 @@ can be done in following way
       </logger>
     </configuration>
     
-Above logback config would route all log messages from `org.apache.jackrabbit.oak.jcr.operations`
+Logback exposes a variable `e` which is of type [ILoggingEvent][1]. It provides access to current logging
+event. Above logback config would route all log messages from `org.apache.jackrabbit.oak.jcr.operations`
 category to `${sling.home}/logs/oak.log`. Further only those log messages would be logged
 where the `threadName` contains `JobHandler`. Depending on the requirement the expression can
 be customised.
+
+[1]: http://logback.qos.ch/apidocs/ch/qos/logback/classic/spi/ILoggingEvent.html
