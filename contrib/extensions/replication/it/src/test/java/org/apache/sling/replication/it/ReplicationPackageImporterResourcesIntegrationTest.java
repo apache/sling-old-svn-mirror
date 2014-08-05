@@ -32,16 +32,16 @@ public class ReplicationPackageImporterResourcesIntegrationTest extends Replicat
         String rootResource = importerRootUrl();
         assertExists(authorClient, rootResource);
         assertResponseContains(author, rootResource,
-                "sling:resourceType", "replication/importers",
-                "items", "default");
+                "sling:resourceType", "replication/importer/list",
+                "items", "local");
     }
 
     @Test
-    public void testDefaultImporterResource() throws Exception {
-        String rootResource = importerUrl("default");
+    public void testLocalImporterResource() throws Exception {
+        String rootResource = importerUrl("local");
         assertExists(authorClient, rootResource);
         assertResponseContains(author, rootResource,
                 "sling:resourceType", "replication/importer",
-                "name", "default");
+                "name", "local");
     }
 }

@@ -4,6 +4,6 @@
     "TransportAuthenticationProviderFactory.target" : "(name=user)",
     "authentication.properties" : ["user=admin","password=admin"],
     "ReplicationPackageBuilder.target" : "(name=vlt)",
-    "endpoints" : [ "http://localhost:4503/libs/sling/replication/importers/default" ],
+    "endpoints" : [ "http://localhost:4503/libs/sling/replication/importers/local" ],
     "runModes" : ["author"]
 }

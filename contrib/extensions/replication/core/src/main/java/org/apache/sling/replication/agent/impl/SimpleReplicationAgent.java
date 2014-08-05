@@ -22,25 +22,16 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.List;
 import java.util.Properties;
+
 import org.apache.sling.replication.agent.AgentReplicationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.communication.ReplicationResponse;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.event.ReplicationEventType;
-import org.apache.sling.replication.queue.ReplicationQueue;
-import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
-import org.apache.sling.replication.queue.ReplicationQueueException;
-import org.apache.sling.replication.queue.ReplicationQueueItem;
-import org.apache.sling.replication.queue.ReplicationQueueItemState;
-import org.apache.sling.replication.queue.ReplicationQueueProcessor;
-import org.apache.sling.replication.queue.ReplicationQueueProvider;
+import org.apache.sling.replication.queue.*;
 import org.apache.sling.replication.rule.ReplicationRuleEngine;
-import org.apache.sling.replication.serialization.ReplicationPackage;
-import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
-import org.apache.sling.replication.serialization.ReplicationPackageExporter;
-import org.apache.sling.replication.serialization.ReplicationPackageImporter;
-import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
+import org.apache.sling.replication.serialization.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,14 +119,17 @@ public class SimpleReplicationAgent implements ReplicationAgent {
 
         if (useAggregatePaths) {
             ReplicationPackage replicationPackage = buildPackage(replicationRequest);
-            packages.add(replicationPackage);
+            if (replicationPackage != null) {
+                packages.add(replicationPackage);
+            }
         } else {
             for (String path : replicationRequest.getPaths()) {
                 ReplicationPackage replicationPackage = buildPackage(new ReplicationRequest(replicationRequest.getTime(),
                         replicationRequest.getAction(),
                         path));
-
-                packages.add(replicationPackage);
+                if (replicationPackage != null) {
+                    packages.add(replicationPackage);
+                }
             }
         }
 
@@ -158,6 +152,9 @@ public class SimpleReplicationAgent implements ReplicationAgent {
 
     private ReplicationResponse schedule(ReplicationPackage replicationPackage, boolean offer) throws AgentReplicationException {
         ReplicationResponse replicationResponse = new ReplicationResponse();
+        if (log.isInfoEnabled()) {
+            log.info("scheduling replication of package {}", replicationPackage);
+        }
         ReplicationQueueItem replicationQueueItem = new ReplicationQueueItem(replicationPackage.getId(),
                 replicationPackage.getPaths(),
                 replicationPackage.getAction(),

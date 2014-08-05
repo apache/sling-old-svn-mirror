@@ -4,9 +4,7 @@ package org.apache.sling.replication.it;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.junit.Test;
 
-import static org.apache.sling.replication.it.ReplicationUtils.assertExists;
-import static org.apache.sling.replication.it.ReplicationUtils.createRandomNode;
-import static org.apache.sling.replication.it.ReplicationUtils.replicate;
+import static org.apache.sling.replication.it.ReplicationUtils.*;
 
 public class ReverseReplicationTest extends ReplicationIntegrationTestBase {
     @Test
@@ -16,5 +14,15 @@ public class ReverseReplicationTest extends ReplicationIntegrationTestBase {
         replicate(publish, "reverse", ReplicationActionType.ADD, nodePath);
 
         assertExists(authorClient, nodePath);
+    }
+
+
+    @Test
+    public void testDeleteContent() throws Exception {
+        String nodePath = createRandomNode(authorClient, "/content");
+        assertExists(authorClient, nodePath);
+        replicate(publish, "reverse", ReplicationActionType.DELETE, nodePath);
+
+        assertNotExits(authorClient, nodePath);
     }
 }
