@@ -23,7 +23,7 @@
     </description>
 
     <properties>
-        <pax.url.version>1.6.0</pax.url.version>
+        <pax.url.version>2.1.0</pax.url.version>
         <test.storage.base>${project.build.directory}</test.storage.base>
     </properties>
  
