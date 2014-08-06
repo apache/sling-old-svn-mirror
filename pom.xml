@@ -121,6 +121,9 @@
                         <exclude>eclipse-test/**</exclude>
                         <!-- exclude target file from the source-bundle project since it is not a module -->
                         <exclude>source-bundle/target/**</exclude>
+                        
+                        <!-- Jenkins Xvfb plugin -->
+                        <exclude>.Xauthority-*</exclude>
                     </excludes>
                 </configuration>
                 <executions>
