@@ -203,6 +203,7 @@
         <module>installer/providers/jcr</module>
         <module>installer/factories/configuration</module>
         <module>installer/factories/deploymentpck</module>
+        <module>installer/factories/subsystems</module>
         <module>installer/it</module>
         
         <!-- Launchpad -->
