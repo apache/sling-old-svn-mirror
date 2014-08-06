@@ -57,6 +57,7 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.commons.osgi.ServiceUtil;
@@ -70,6 +71,9 @@ import org.apache.sling.models.annotations.Via;
 import org.apache.sling.models.spi.DisposalCallback;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
+import org.apache.sling.models.spi.InvalidAdaptableException;
+import org.apache.sling.models.spi.ModelFactory;
+import org.apache.sling.models.spi.ValidationException;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotation;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
@@ -81,7 +85,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component
-public class ModelAdapterFactory implements AdapterFactory, Runnable {
+@Service(value=ModelFactory.class)
+public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFactory {
 
     /**
      * Comparator which sorts constructors by the number of parameters
@@ -170,11 +175,31 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
     private ServiceRegistration configPrinterRegistration;
 
-    @SuppressWarnings("unchecked")
+    @Override
     public <AdapterType> AdapterType getAdapter(Object adaptable, Class<AdapterType> type) {
+        try {
+            return createModel(adaptable, type);
+        } catch (ValidationException e) {
+            log.warn("Some validation error occured: {}", e.toString());
+            return null;
+        } catch (InvalidAdaptableException e) {
+            log.debug("Could not adapt from the given class", e);
+            return null;
+        } catch (IllegalArgumentException e) {
+            log.debug("Could not instanciate class, probably not a Sling Model:", e);
+            return null;
+        } catch (IllegalStateException e) {
+            log.error("Invalid Sling Model class", e);
+            return null;
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public <ModelType> ModelType createModel(Object adaptable, Class<ModelType> type) throws ValidationException, InvalidAdaptableException, IllegalStateException, IllegalArgumentException {
         Model modelAnnotation = type.getAnnotation(Model.class);
         if (modelAnnotation == null) {
-            return null;
+            throw new IllegalArgumentException("Class " + type + " does not have a model annotation, probably not a Sling Model class");
         }
         boolean isAdaptable = false;
 
@@ -185,22 +210,26 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
             }
         }
         if (!isAdaptable) {
-            return null;
+            throw new InvalidAdaptableException("Class " + type + " cannot be adapted from " + adaptable);
         }
 
         if (type.isInterface()) {
             InvocationHandler handler = createInvocationHandler(adaptable, type, modelAnnotation);
             if (handler != null) {
-                return (AdapterType) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] { type }, handler);
+                return (ModelType) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] { type }, handler);
             } else {
                 return null;
             }
         } else {
             try {
                 return createObject(adaptable, type, modelAnnotation);
-            } catch (Exception e) {
-                log.error("unable to create object", e);
-                return null;
+            } catch (ValidationException e1) {
+                // just rethrow validation exceptions
+                throw e1;
+            }
+            catch (Exception e2) {
+                // wrapp all other exceptions (e.g. the reflection exceptions) into ISE
+                throw new IllegalStateException("Could not instanciate object", e2);
             }
         }
     }
@@ -318,7 +347,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         return true;
     }
 
-    private InvocationHandler createInvocationHandler(final Object adaptable, final Class<?> type, Model modelAnnotation) {
+    private InvocationHandler createInvocationHandler(final Object adaptable, final Class<?> type, Model modelAnnotation) throws ValidationException {
         Set<Method> injectableMethods = collectInjectableMethods(type);
         final Map<Method, Object> methods = new HashMap<Method, Object>();
         SetMethodsCallback callback = new SetMethodsCallback(methods);
@@ -335,8 +364,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         }
         registry.seal();
         if (!requiredMethods.isEmpty()) {
-            log.warn("Required methods {} on model interface {} were not able to be injected.", requiredMethods, type);
-            return null;
+            throw new ValidationException("Required methods "+ requiredMethods + " on model interface " + type + " were not able to be injected.");
         }
         return handler;
     }
@@ -382,13 +410,12 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
     @SuppressWarnings("unchecked")
     private <AdapterType> AdapterType createObject(Object adaptable, Class<AdapterType> type, Model modelAnnotation)
-            throws InstantiationException, InvocationTargetException, IllegalAccessException {
+            throws InstantiationException, InvocationTargetException, IllegalAccessException, IllegalStateException {
         Set<Field> injectableFields = collectInjectableFields(type);
 
         Constructor<?>[] constructors = type.getConstructors();
         if (constructors.length == 0) {
-            log.warn("Model class {} does not have a public constructor.", type.getName());
-            return null;
+            throw new IllegalStateException("Model class " +  type.getName() + " does not have a public constructor.");
         }
 
         // sort the constructor list in order from most params to least params
@@ -415,8 +442,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         }
 
         if (constructorToUse == null) {
-            log.warn("Model class {} does not have a usable constructor", type.getName());
-            return null;
+            throw new IllegalStateException("Model class " +  type.getName() + " does not have a usable constructor");
         }
 
         final AdapterType object;
@@ -440,15 +466,13 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
         registry.seal();
         if (!requiredFields.isEmpty()) {
-            log.warn("Required properties {} on model class {} were not able to be injected.", requiredFields, type);
-            return null;
+            throw new ValidationException("Required properties "+ requiredFields +" on model class " + type +" were not able to be injected.");
         }
         try {
             invokePostConstruct(object);
             return object;
         } catch (Exception e) {
-            log.error("Unable to invoke post construct method.", e);
-            return null;
+            throw new IllegalStateException("Unable to invoke post construct method.", e);
         }
 
     }
@@ -809,7 +833,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
     protected void unbindInjectAnnotationProcessorFactory(final InjectAnnotationProcessorFactory injector, final Map<String, Object> props) {
         synchronized (injectors) {
             injectAnnotationProcessorFactories.remove(ServiceUtil.getComparableForServiceRanking(props));
-            sortedInjectAnnotationProcessorFactories = injectors.values().toArray(new InjectAnnotationProcessorFactory[injectAnnotationProcessorFactories.size()]);
+            sortedInjectAnnotationProcessorFactories = injectAnnotationProcessorFactories.values().toArray(new InjectAnnotationProcessorFactory[injectAnnotationProcessorFactories.size()]);
         }
     }
 
