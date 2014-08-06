@@ -25,36 +25,36 @@ import org.apache.sling.event.jobs.Statistics;
  */
 public class StatisticsImpl implements Statistics {
 
-    private volatile long startTime;
+    private long startTime;
 
-    private volatile long activeJobs;
+    private long activeJobs;
 
-    private volatile long queuedJobs;
+    private long queuedJobs;
 
-    private volatile long lastActivated = -1;
+    private long lastActivated = -1;
 
-    private volatile long lastFinished = -1;
+    private long lastFinished = -1;
 
-    private volatile long averageWaitingTime;
+    private long averageWaitingTime;
 
-    private volatile long averageProcessingTime;
+    private long averageProcessingTime;
 
-    private volatile long waitingTime;
+    private long waitingTime;
 
-    private volatile long processingTime;
+    private long processingTime;
 
-    private volatile long waitingCount;
+    private long waitingCount;
 
-    private volatile long processingCount;
+    private long processingCount;
 
-    private volatile long finishedJobs;
+    private long finishedJobs;
 
-    private volatile long failedJobs;
+    private long failedJobs;
 
-    private volatile long cancelledJobs;
+    private long cancelledJobs;
 
     public StatisticsImpl() {
-        this.startTime = System.currentTimeMillis();
+        this(System.currentTimeMillis());
     }
 
     public StatisticsImpl(final long startTime) {
