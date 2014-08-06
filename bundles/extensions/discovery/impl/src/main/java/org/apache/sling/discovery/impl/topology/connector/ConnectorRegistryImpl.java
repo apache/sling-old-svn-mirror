@@ -85,7 +85,7 @@ public class ConnectorRegistryImpl implements ConnectorRegistry {
             for (Iterator<Entry<String, TopologyConnectorClient>> it = outgoingClientsMap
                     .entrySet().iterator(); it.hasNext();) {
                 Entry<String, TopologyConnectorClient> entry = it.next();
-                if (entry.getValue().getConnectorUrl().equals(connectorUrl)) {
+                if (entry.getValue().getConnectorUrl().toExternalForm().equals(connectorUrl.toExternalForm())) {
                     it.remove();
                     logger.info("registerOutgoingConnection: re-registering connector: "+connectorUrl);
                 }
