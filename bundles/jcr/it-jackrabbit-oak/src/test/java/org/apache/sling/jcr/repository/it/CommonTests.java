@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.HashSet;
@@ -51,6 +52,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,21 +66,20 @@ import org.slf4j.LoggerFactory;
 public abstract class CommonTests {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
-    @Inject
+
     protected SlingRepository repository;
-    
+
     @Inject
     protected BundleContext bundleContext;
-    
+
     /** Check some repository descriptors to make sure we're
-     *  testing the expected implementation. */ 
+     *  testing the expected implementation. */
     protected abstract void doCheckRepositoryDescriptors();
-    
+
     private final List<String> toDelete = new LinkedList<String>();
     private final AtomicInteger uniqueNameCounter = new AtomicInteger();
-    
-    public static final String I18N_MESSAGE_CND = 
+
+    public static final String I18N_MESSAGE_CND =
         "<sling = 'http://sling.apache.org/jcr/sling/1.0'>\n"
         + "[mix:language]\n"
         + "mixin\n"
@@ -91,11 +92,11 @@ public abstract class CommonTests {
         + "\n"
         + "[sling:MessageEntry] > nt:hierarchyNode, sling:Message\n"
         ;
-    
+
     protected class JcrEventsCounter implements EventListener {
         private final Session s;
         private int jcrEventsCounter;
-        
+
         public JcrEventsCounter() throws RepositoryException {
             s = repository.loginAdministrative(null);
             final ObservationManager om = s.getWorkspace().getObservationManager();
@@ -107,11 +108,11 @@ public abstract class CommonTests {
             final String root = "/";
             om.addEventListener(this, eventTypes, root, deep, uuid, nodeTypeNames, noLocal);
         }
-        
+
         void close() {
             s.logout();
         }
-        
+
         @Override
         public void onEvent(EventIterator it) {
             while(it.hasNext()) {
@@ -124,12 +125,12 @@ public abstract class CommonTests {
             return jcrEventsCounter;
         }
     }
-    
+
     private <ItemType extends Item> ItemType deleteAfterTests(ItemType it) throws RepositoryException {
         toDelete.add(it.getPath());
         return it;
     }
-    
+
     /** Verify that admin can create and retrieve a node of the specified type.
      * @return the path of the test node that was created.
      */
@@ -154,18 +155,18 @@ public abstract class CommonTests {
             s.logout();
         }
     }
-    
+
     protected String uniqueName(String hint) {
         return hint + "_" + uniqueNameCounter.incrementAndGet() + "_" + System.currentTimeMillis();
     }
-    
+
     @After
     public void deleteTestItems() throws RepositoryException {
         if(toDelete.isEmpty()) {
             return;
-            
+
         }
-        
+
         final Session s = repository.loginAdministrative(null);
         try {
             for(String path : toDelete) {
@@ -179,12 +180,12 @@ public abstract class CommonTests {
             s.logout();
         }
     }
-    
+
     @Test
     public void testRepositoryPresent() {
         assertNotNull(repository);
     }
-    
+
     @Test
     public void testLoginAdministrative() throws RepositoryException {
         final Session s = repository.loginAdministrative(null);
@@ -197,13 +198,13 @@ public abstract class CommonTests {
         final Credentials creds = new SimpleCredentials("admin", "admin".toCharArray());
         repository.login(creds).logout();
     }
-    
+
     @Test(expected=RepositoryException.class)
     public void testWrongLogin() throws RepositoryException {
         final Credentials creds = new SimpleCredentials("badName", "badPAssword".toCharArray());
         repository.login(creds);
     }
-    
+
     @Test
     public void testAnonymousLoginA() throws RepositoryException {
         final Session s = repository.login();
@@ -217,7 +218,7 @@ public abstract class CommonTests {
         assertNotNull(s);
         s.logout();
     }
-    
+
     @Test
     public void testCreateRetrieveNode() throws RepositoryException {
         assertCreateRetrieveNode(null);
@@ -240,7 +241,7 @@ public abstract class CommonTests {
             s.logout();
         }
     }
-    
+
     @Test
     public void testSqlQuery() throws RepositoryException {
         final Session s = repository.loginAdministrative(null);
@@ -254,12 +255,12 @@ public abstract class CommonTests {
                 root.addNode(id + i).setProperty(propName, value);
             }
             s.save();
-            
+
             final String stmt = "SELECT * FROM nt:base WHERE " + propName + " IS NOT NULL";
-            
+
             @SuppressWarnings("deprecation")
             final Query q = s.getWorkspace().getQueryManager().createQuery(stmt, Query.SQL);
-            
+
             final NodeIterator it = q.execute().getNodes();
             int count = 0;
             while(it.hasNext()) {
@@ -271,7 +272,7 @@ public abstract class CommonTests {
             s.logout();
         }
     }
-    
+
     @Test
     public void testXpathQueryWithMixin() throws RepositoryException {
         Session s = repository.loginAdministrative(null);
@@ -281,7 +282,7 @@ public abstract class CommonTests {
             final Node n = deleteAfterTests(s.getRootNode().addNode(path));
             n.addMixin("mix:title");
             s.save();
-            
+
             final String statement = "/jcr:root//element(*, mix:title)";
             @SuppressWarnings("deprecation")
             final Query q = s.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
@@ -299,27 +300,27 @@ public abstract class CommonTests {
             s.logout();
         }
     }
-    
+
     @Test
     public final void checkRepositoryDescriptors() {
         doCheckRepositoryDescriptors();
     }
-    
+
     @Test
     public void testSingleValueInputStream() throws RepositoryException {
         Session s = repository.loginAdministrative(null);
         try {
             final String path = getClass().getSimpleName() + System.currentTimeMillis();
-            final Node child = (Node)deleteAfterTests(s.getRootNode().addNode(path));
+            final Node child = deleteAfterTests(s.getRootNode().addNode(path));
             final Property p = child.setProperty("foo", "bar");
             s.save();
             assertNotNull(p.getBinary().getStream());
         } finally {
             s.logout();
         }
-       
+
     }
-    
+
     @Test
     public void testMultiValueInputStream() throws RepositoryException {
         final Session s = repository.loginAdministrative(null);
@@ -328,7 +329,7 @@ public abstract class CommonTests {
             final Node child = deleteAfterTests(s.getRootNode().addNode(path));
             final Property p = child.setProperty("foo", new String[] { "bar", "wii " });
             s.save();
-            try { 
+            try {
                 p.getBinary().getStream();
                 fail("Expecting getStream() to fail on a multi-value Property");
             } catch(RepositoryException asExpected) {
@@ -337,7 +338,7 @@ public abstract class CommonTests {
             s.logout();
         }
     }
-    
+
     @Test
     @Ignore("SLING-3479 - doesn't work with Oak 1.0 yet")
     public void testOsgiResourceEvents() throws RepositoryException {
@@ -347,7 +348,7 @@ public abstract class CommonTests {
         final int nPaths = 500;
         final int timeoutMsec = 5000;
         final String prefix = uniqueName("testOsgiResourceEvents");
-        
+
         try {
             for(int i=0; i  < nPaths; i++) {
                 s.getRootNode().addNode(prefix + i);
@@ -356,7 +357,7 @@ public abstract class CommonTests {
 
             log.info("Added {} nodes, checking what ResourceEventListener got...", nPaths);
             final long timeout = System.currentTimeMillis() + timeoutMsec;
-            final Set<String> missing = new HashSet<String>(); 
+            final Set<String> missing = new HashSet<String>();
             while(System.currentTimeMillis() < timeout) {
                 missing.clear();
                 final Set<String> paths = listener.getPaths();
@@ -366,15 +367,15 @@ public abstract class CommonTests {
                         missing.add(path);
                     }
                 }
-                
+
                 if(missing.isEmpty()) {
                     break;
                 }
             }
-            
+
             if(!missing.isEmpty()) {
-                fail("OSGi add resource events are missing for " 
-                        + missing.size() + "/" + nPaths + " paths after " 
+                fail("OSGi add resource events are missing for "
+                        + missing.size() + "/" + nPaths + " paths after "
                         + timeoutMsec + " msec: " + missing);
             }
         } finally {
@@ -382,25 +383,25 @@ public abstract class CommonTests {
             s.logout();
         }
     }
-    
+
     @Test
     public void testNodetypeObservation() throws Exception {
         Session s = repository.loginAdministrative(null);
         final Reader cnd = new StringReader(I18N_MESSAGE_CND);
         JcrEventsCounter counter = null;
         final String path = "/" + uniqueName("observation");
-        
+
         // Add a sling:MessageEntry and verify that we get JCR events
         try {
             CndImporter.registerNodeTypes(cnd, s);
             counter = new JcrEventsCounter();
-            
-            final Node n = s.getRootNode().addNode(path.substring(1), "sling:MessageEntry"); 
+
+            final Node n = s.getRootNode().addNode(path.substring(1), "sling:MessageEntry");
             toDelete.add(n.getPath());
             n.setProperty("sling:key", "foo");
             n.setProperty("sling:message", "bar");
             s.save();
-            
+
             final JcrEventsCounter c = counter;
             new Retry(5000) {
                 @Override
@@ -408,22 +409,22 @@ public abstract class CommonTests {
                     assertTrue("Expecting JCR events after adding " + path, c.get() > 0);
                 }
             };
-            
+
         } finally {
             s.logout();
             cnd.close();
             counter.close();
         }
-        
+
         // In a separate session, modify node and verify that we get events
         counter = new JcrEventsCounter();
         s = repository.loginAdministrative(null);
         try {
-            
-            final Node n = s.getNode(path); 
+
+            final Node n = s.getNode(path);
             n.setProperty("sling:message", "CHANGED now");
             s.save();
-            
+
             final JcrEventsCounter c = counter;
             new Retry(5000) {
                 @Override
@@ -431,7 +432,7 @@ public abstract class CommonTests {
                     assertTrue("Expecting JCR events after modifying " + path, c.get() > 0);
                 }
             };
-            
+
         } finally {
             s.logout();
             cnd.close();
@@ -439,4 +440,14 @@ public abstract class CommonTests {
         }
 
     }
+
+    public void setup() throws IOException {
+        final ServiceTracker st = new ServiceTracker(bundleContext, SlingRepository.class.getName(), null);
+        st.open(true);
+        try {
+            this.repository = (SlingRepository) st.waitForService(10000);
+        } catch (InterruptedException e) {
+        }
+    }
+
 }

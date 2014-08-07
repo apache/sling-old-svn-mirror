@@ -24,22 +24,33 @@ import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import static org.ops4j.pax.exam.CoreOptions.when;
 
+import java.io.IOException;
+import java.util.Dictionary;
+import java.util.Hashtable;
+
+import javax.inject.Inject;
+
+import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
+import org.osgi.service.cm.ConfigurationAdmin;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
 public class OakRepositoryIT extends CommonTests {
+
+    @Inject
+    protected ConfigurationAdmin configAdmin;
 
     @org.ops4j.pax.exam.Configuration
     public Option[] config() {
         final String localRepo = System.getProperty("maven.repo.local", "");
         final String oakVersion = System.getProperty("oak.version", "NO_OAK_VERSION??");
         final String slingOakServerVersion = System.getProperty("sling.oak.server.version", "NO_OAK_SERVER_VERSION??");
-        final String SLF4J_VERSION = "1.7.5"; 
+        final String SLF4J_VERSION = "1.7.5";
 
         return options(
                 when( localRepo.length() > 0 ).useOptions(
@@ -98,7 +109,7 @@ public class OakRepositoryIT extends CommonTests {
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.jcr-wrapper", "2.0.0"),
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.api", "2.2.0"),
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.base", "2.2.2"),
-                
+
                 // Oak
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.oak.server", slingOakServerVersion),
                 mavenBundle("com.google.guava", "guava", "15.0"),
@@ -108,12 +119,12 @@ public class OakRepositoryIT extends CommonTests {
                 mavenBundle("org.apache.jackrabbit", "oak-core", oakVersion),
                 // embedded for now mavenBundle("org.apache.jackrabbit", "oak-jcr", oakVersion),
                 mavenBundle("org.apache.jackrabbit", "oak-commons", oakVersion),
-                
-                // not needed anymore? 
+
+                // not needed anymore?
                 mavenBundle("org.apache.jackrabbit", "oak-mk", oakVersion),
                 mavenBundle("org.apache.jackrabbit", "oak-mk-api", oakVersion),
                 mavenBundle("org.apache.jackrabbit", "oak-mk-remote", oakVersion),
-                
+
                 mavenBundle("org.apache.jackrabbit", "oak-lucene", oakVersion),
                 mavenBundle("org.apache.jackrabbit", "oak-blob", oakVersion),
 
@@ -126,13 +137,30 @@ public class OakRepositoryIT extends CommonTests {
            );
     }
 
+    @Override
     protected void doCheckRepositoryDescriptors() {
         final String propName = "jcr.repository.name";
         final String name = repository.getDescriptor(propName);
         final String expected = "Oak";
         if(!name.contains(expected)) {
-            fail("Expected repository descriptor " + propName + " to contain " 
+            fail("Expected repository descriptor " + propName + " to contain "
                     + expected + ", failed (descriptor=" + name + ")");
         }
+    }
+
+    @Override
+    @Before
+    public void setup() throws IOException {
+        final org.osgi.service.cm.Configuration cf = this.configAdmin.getConfiguration("org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService", null);
+        final Dictionary<String, Object> p = new Hashtable<String, Object>();
+        p.put("name", "Default NodeStore");
+        p.put("repository.home", "sling/oak/repository");
+        cf.update(p);
+
+        try {
+            Thread.sleep(1500);
+        } catch (InterruptedException e) {
+        }
+        super.setup();
     }
 }
