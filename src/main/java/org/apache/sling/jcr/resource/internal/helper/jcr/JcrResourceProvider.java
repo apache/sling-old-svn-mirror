@@ -392,7 +392,7 @@ public class JcrResourceProvider
             return (AdapterType) session;
         } else if (type == Principal.class) {       
             try {
-                if (this.session instanceof JackrabbitSession){
+                if (this.session instanceof JackrabbitSession && session.getUserID()!=null) {
                     JackrabbitSession s =((JackrabbitSession) this.session);
                     final UserManager um = s.getUserManager();
                     if (um != null) {
