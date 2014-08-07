@@ -65,10 +65,6 @@
             Context path of the Sling web application
         -->
         <jetty.sling.context>/</jetty.sling.context>
-        
-        <!-- trick maven-launchpad-plugin into not copying any configs -->
-        <empty.config.directory>${project.build.directory}/NOCONFIGS</empty.config.directory>
-
     </properties>
 
     <build>
