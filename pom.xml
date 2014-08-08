@@ -111,9 +111,26 @@
                     <bootDirectory>bundles</bootDirectory>
                     <configDirectory>${empty.config.directory}</configDirectory>
                     <jarWebSupport>
-                        <groupId>org.apache.felix</groupId>
-                        <artifactId>org.apache.felix.http.jetty</artifactId>
-                        <version>2.2.2</version>
+                        <bundles>
+                          <bundle>
+                                <groupId>org.apache.felix</groupId>
+                                <artifactId>org.apache.felix.http.api</artifactId>
+                                <version>2.3.0</version>
+                                <startLevel>5</startLevel>
+                            </bundle>
+                            <bundle>
+                                <groupId>org.apache.felix</groupId>
+                                <artifactId>org.apache.felix.http.servlet-api</artifactId>
+                                <version>1.0.0</version>
+                                <startLevel>5</startLevel>
+                            </bundle>
+                            <bundle>
+                                <groupId>org.apache.felix</groupId>
+                                <artifactId>org.apache.felix.http.jetty</artifactId>
+                                <version>2.3.0</version>
+                                <startLevel>5</startLevel>
+                            </bundle>
+                        </bundles>
                     </jarWebSupport>
                 </configuration>
                 <executions>
