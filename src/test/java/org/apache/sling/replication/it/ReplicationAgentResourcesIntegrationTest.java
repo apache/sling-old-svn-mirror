@@ -131,11 +131,11 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
 
         authorClient.createNode(newConfigResource, "name", agentName, "transportHandler", "(name=author)");
         assertExists(authorClient, newConfigResource);
-        authorClient.setProperties(newConfigResource, "transportHandler", "(name=updated)");
+        authorClient.setProperties(newConfigResource, "packageExporter", "(name=updated)");
         assertResponseContains(author, newConfigResource,
                 "sling:resourceType", "replication/config/agent",
                 "name", agentName,
-                "transportHandler", "(name=updated)");
+                "packageExporter", "(name=updated)");
     }
 
 }
