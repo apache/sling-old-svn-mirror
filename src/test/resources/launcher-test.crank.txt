@@ -8,6 +8,7 @@ defaults felix.http.jetty.version 2.2.0
 # Bootstrap classpath (variables are not supported here)
 classpath mvn:org.apache.felix/org.apache.felix.framework/4.4.0
 classpath mvn:org.slf4j/slf4j-api/1.6.2
+classpath mvn:org.slf4j/slf4j-simple/1.6.2
 classpath mvn:org.apache.sling/org.apache.sling.crankstart.core/0.0.1-SNAPSHOT
 classpath mvn:org.apache.sling/org.apache.sling.crankstart.api/0.0.1-SNAPSHOT
 
@@ -15,7 +16,8 @@ classpath mvn:org.apache.sling/org.apache.sling.crankstart.api/0.0.1-SNAPSHOT
 osgi.property org.osgi.service.http.port ${http.port}
 osgi.property org.osgi.framework.storage ${osgi.storage.path}
 
-# Start the framework
+# Start the framework. Crankstart file processing will stop here
+# if this is not the first startup.
 start.framework
 
 # Start ConfigAdmin, HTTP service and SCR
