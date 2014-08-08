@@ -23,6 +23,7 @@ import static org.apache.sling.api.SlingConstants.SLING_CURRENT_SERVLET_NAME;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
@@ -46,6 +47,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
+import org.apache.sling.engine.impl.StaticResponseHeader;
 import org.apache.sling.engine.impl.SlingHttpServletRequestImpl;
 import org.apache.sling.engine.impl.SlingHttpServletRequestImpl3;
 import org.apache.sling.engine.impl.SlingHttpServletResponseImpl;
@@ -108,6 +110,8 @@ public class RequestData {
     private static SlingMainServlet SLING_MAIN_SERVLET;
 
     private static SlingHttpServletRequestFactory REQUEST_FACTORY;
+    
+    private static ArrayList<StaticResponseHeader> ADDITIONAL_RESPONSE_HEADERS;
 
     /** The SlingMainServlet used for request dispatching and other stuff */
     private final SlingRequestProcessorImpl slingRequestProcessor;
@@ -179,6 +183,14 @@ public class RequestData {
     public static void setSlingMainServlet(final SlingMainServlet slingMainServlet) {
         RequestData.SLING_MAIN_SERVLET = slingMainServlet;
         RequestData.REQUEST_FACTORY = null;
+    }
+    
+    public static void setAdditionalResponseHeaders(ArrayList<StaticResponseHeader> mappings){
+        RequestData.ADDITIONAL_RESPONSE_HEADERS = mappings;
+    }    
+    
+    public static ArrayList<StaticResponseHeader> getAdditionalResponseHeaders() {
+        return ADDITIONAL_RESPONSE_HEADERS;
     }
 
     public RequestData(SlingRequestProcessorImpl slingRequestProcessor,

@@ -43,6 +43,12 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
         super(response);
         this.requestData = requestData;
         this.firstSlingResponse = !(response instanceof SlingHttpServletResponse);
+        
+        if (firstSlingResponse && RequestData.getAdditionalResponseHeaders() != null) {
+            for (StaticResponseHeader mapping: RequestData.getAdditionalResponseHeaders()) {
+                response.addHeader(mapping.getResponseHeaderName(), mapping.getResponseHeaderValue());
+            }
+        }
     }
 
     protected final RequestData getRequestData() {
