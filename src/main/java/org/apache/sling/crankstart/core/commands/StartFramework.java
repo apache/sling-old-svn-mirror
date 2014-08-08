@@ -28,6 +28,8 @@ public class StartFramework implements CrankstartCommand {
     public static final String I_START_FRAMEWORK = "start.framework";
     private final Logger log = LoggerFactory.getLogger(getClass());
     
+    public static final String EXIT_IF_NOT_FIRST = "exitIfNotFirstStartup";
+    
     @Override
     public boolean appliesTo(CrankstartCommandLine commandLine) {
         return I_START_FRAMEWORK.equals(commandLine.getVerb());
@@ -44,6 +46,40 @@ public class StartFramework implements CrankstartCommand {
         final FrameworkFactory frameworkFactory = (FrameworkFactory)getClass().getClassLoader().loadClass("org.apache.felix.framework.FrameworkFactory").newInstance();
         crankstartContext.setOsgiFramework(frameworkFactory.newFramework(crankstartContext.getOsgiFrameworkProperties()));
         crankstartContext.getOsgiFramework().start();
-        log.info("OSGi framework started");
+        final int nBundles = crankstartContext.getOsgiFramework().getBundleContext().getBundles().length;
+        log.info("OSGi framework started, {} bundles installed", nBundles);
+        
+        // Unless specified otherwise, stop processing the crankstart file if this is not the first
+        // startup. Crankstart is meant for immutable instances.
+        if(stopProcessing(commandLine, nBundles)) {
+            crankstartContext.setAttribute(CrankstartContext.ATTR_STOP_CRANKSTART_PROCESSING, true);
+        }
+    }
+    
+    /** True if we should stop processing the crankstart file according to
+     *  how many bundles are present after framework startup, combined
+     *  with cmd options.
+     */
+    boolean stopProcessing(CrankstartCommandLine cmd, int nBundles) {
+        boolean result = false;
+        final Object exitSetting = cmd.getProperties().get(EXIT_IF_NOT_FIRST);
+        final boolean doNotExit = exitSetting != null && !"true".equals(exitSetting);
+        
+        if(nBundles <= 0) {
+            throw new IllegalArgumentException("Expecting at least one installed bundle after startup");
+        } else if(doNotExit) {
+            log.info("{}={}, will continue processing the crankstart file although this is not the first startup", EXIT_IF_NOT_FIRST, exitSetting);
+        } else if (nBundles == 1) {
+            log.info(
+                    "Only {} bundle installed after framework startup, processing the full crankstart file",
+                    nBundles);
+        } else {
+            result = true;
+            log.info(
+                    "{} bundles installed, ignoring the rest of the crankstart file (set {}=false in this command's properties to disable this feature)", 
+                    nBundles,
+                    EXIT_IF_NOT_FIRST);
+        }
+        return result;
     }
 }

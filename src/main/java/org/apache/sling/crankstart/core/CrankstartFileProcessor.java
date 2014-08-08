@@ -21,10 +21,8 @@ import java.io.FileReader;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.apache.sling.crankstart.api.CrankstartCommand;
@@ -139,6 +137,10 @@ public class CrankstartFileProcessor implements Callable<Object> {
                 }
             }
             
+            if(crankstartContext.getAttribute(CrankstartContext.ATTR_STOP_CRANKSTART_PROCESSING) != null) {
+                log.info("{} attribute is set, ignoring the remaining crankstart commands", CrankstartContext.ATTR_STOP_CRANKSTART_PROCESSING);
+                break;
+            }
         }
     }
     
