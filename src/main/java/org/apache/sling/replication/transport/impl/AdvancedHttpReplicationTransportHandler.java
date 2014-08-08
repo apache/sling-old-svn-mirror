@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Executor;
@@ -32,25 +33,26 @@ import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ContentType;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.communication.ReplicationHeader;
-import org.apache.sling.replication.queue.ReplicationQueueProcessor;
 import org.apache.sling.replication.serialization.ReplicationPackage;
-import org.apache.sling.replication.transport.TransportHandler;
+import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
+import org.apache.sling.replication.transport.ReplicationTransportException;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * basic HTTP POST {@link TransportHandler}
+ * Advanced HTTP {@link org.apache.sling.replication.transport.ReplicationTransportHandler} supporting custom HTTP headers
+ * and body.
  */
-public class HttpTransportHandler extends AbstractTransportHandler
-        implements TransportHandler {
+public class AdvancedHttpReplicationTransportHandler extends SimpleHttpReplicationTransportHandler {
 
     private static final String PATH_VARIABLE_NAME = "{path}";
 
-    private static final Logger log = LoggerFactory.getLogger(HttpTransportHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(AdvancedHttpReplicationTransportHandler.class);
 
     private final TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider;
+    private final ReplicationEndpoint replicationEndpoint;
 
     private final boolean useCustomHeaders;
 
@@ -60,58 +62,60 @@ public class HttpTransportHandler extends AbstractTransportHandler
 
     private final String customBody;
 
-    public HttpTransportHandler(boolean useCustomHeaders,
-                                String[] customHeaders,
-                                boolean useCustomBody,
-                                String customBody,
-                                TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider,
-                                ReplicationEndpoint[] replicationEndpoints,
-                                TransportEndpointStrategyType endpointStrategyType) {
+    public AdvancedHttpReplicationTransportHandler(boolean useCustomHeaders,
+                                                   String[] customHeaders,
+                                                   boolean useCustomBody,
+                                                   String customBody,
+                                                   TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider,
+                                                   ReplicationEndpoint replicationEndpoint,
+                                                   ReplicationPackageBuilder packageBuilder,
+                                                   int maxNoOfPackages) {
 
-        super(replicationEndpoints, endpointStrategyType);
 
+        super(transportAuthenticationProvider, replicationEndpoint, packageBuilder, maxNoOfPackages);
         this.useCustomHeaders = useCustomHeaders;
         this.customHeaders = customHeaders;
         this.useCustomBody = useCustomBody;
         this.customBody = customBody;
         this.transportAuthenticationProvider = transportAuthenticationProvider;
 
+        this.replicationEndpoint = replicationEndpoint;
     }
 
     @Override
-    public void deliverPackageToEndpoint(ReplicationPackage replicationPackage,
-                                         ReplicationEndpoint replicationEndpoint) throws Exception {
+    public void deliverPackage(ReplicationPackage replicationPackage) throws ReplicationTransportException {
         log.info("delivering package {} to {} using auth {}",
                 new Object[]{replicationPackage.getId(),
                         replicationEndpoint.getUri(), transportAuthenticationProvider});
 
 
-        Executor executor = Executor.newInstance();
-        TransportAuthenticationContext context = new TransportAuthenticationContext();
-        context.addAttribute("endpoint", replicationEndpoint);
-        executor =  transportAuthenticationProvider.authenticate(executor, context);
+        try {
+            Executor executor = Executor.newInstance();
+            TransportAuthenticationContext context = new TransportAuthenticationContext();
+            context.addAttribute("endpoint", replicationEndpoint);
+            executor = transportAuthenticationProvider.authenticate(executor, context);
 
-        deliverPackage(executor, replicationPackage, replicationEndpoint);
+            deliverPackage(executor, replicationPackage, replicationEndpoint);
+
+        } catch (Exception ex) {
+            throw new ReplicationTransportException(ex);
+        }
+
     }
 
-    @Override
-    protected boolean validateEndpoint(ReplicationEndpoint endpoint) {
-        return true;
-    }
-
-    public static String[] getCustomizedHeaders(String[] additionalHeaders, String action, String[] paths){
+    public static String[] getCustomizedHeaders(String[] additionalHeaders, String action, String[] paths) {
         List<String> headers = new ArrayList<String>();
 
-        for(String additionalHeader : additionalHeaders){
+        for (String additionalHeader : additionalHeaders) {
             int idx = additionalHeader.indexOf("->");
 
-            if(idx < 0){
+            if (idx < 0) {
                 headers.add(additionalHeader);
             } else {
                 String actionSelector = additionalHeader.substring(0, idx).trim();
-                String header = additionalHeader.substring(idx+2).trim();
+                String header = additionalHeader.substring(idx + 2).trim();
 
-                if(actionSelector.equalsIgnoreCase(action) || actionSelector.equals("*")){
+                if (actionSelector.equalsIgnoreCase(action) || actionSelector.equals("*")) {
                     headers.add(header);
                 }
             }
@@ -119,9 +123,9 @@ public class HttpTransportHandler extends AbstractTransportHandler
 
         StringBuilder sb = new StringBuilder();
 
-        if(paths != null && paths.length > 0) {
+        if (paths != null && paths.length > 0) {
             sb.append(paths[0]);
-            for(int i=1; i < paths.length; i++){
+            for (int i = 1; i < paths.length; i++) {
                 sb.append(", ").append(paths[i]);
             }
         }
@@ -130,7 +134,7 @@ public class HttpTransportHandler extends AbstractTransportHandler
 
         List<String> boundHeaders = new ArrayList<String>();
 
-        for(String header : headers){
+        for (String header : headers) {
             boundHeaders.add(header.replace(PATH_VARIABLE_NAME, path));
         }
 
@@ -138,40 +142,37 @@ public class HttpTransportHandler extends AbstractTransportHandler
     }
 
     private void deliverPackage(Executor executor, ReplicationPackage replicationPackage,
-                                ReplicationEndpoint replicationEndpoint) throws IOException{
+                                ReplicationEndpoint replicationEndpoint) throws IOException {
         String type = replicationPackage.getType();
 
 
         Request req = Request.Post(replicationEndpoint.getUri()).useExpectContinue();
 
-        if(useCustomHeaders){
+        if (useCustomHeaders) {
             String[] customizedHeaders = getCustomizedHeaders(customHeaders, replicationPackage.getAction(), replicationPackage.getPaths());
-            for(String header : customizedHeaders){
+            for (String header : customizedHeaders) {
                 addHeader(req, header);
             }
-        }
-        else {
+        } else {
             req.addHeader(ReplicationHeader.TYPE.toString(), type);
         }
 
         InputStream inputStream = null;
         Response response = null;
-        try{
+        try {
             if (useCustomBody) {
                 String body = customBody == null ? "" : customBody;
                 inputStream = new ByteArrayInputStream(body.getBytes("UTF-8"));
-            }
-            else {
+            } else {
                 inputStream = replicationPackage.createInputStream();
             }
 
-            if(inputStream != null) {
+            if (inputStream != null) {
                 req = req.bodyStream(inputStream, ContentType.APPLICATION_OCTET_STREAM);
             }
 
             response = executor.execute(req);
-        }
-        finally {
+        } finally {
             IOUtils.closeQuietly(inputStream);
         }
 
@@ -181,17 +182,16 @@ public class HttpTransportHandler extends AbstractTransportHandler
                 log.info("Replication content of type {} for {} delivered: {}", new Object[]{
                         type, Arrays.toString(replicationPackage.getPaths()), content});
             }
-        }
-        else {
+        } else {
             throw new IOException("response is empty");
         }
     }
 
-    private static void addHeader(Request req, String header){
+    private static void addHeader(Request req, String header) {
         int idx = header.indexOf(":");
-        if(idx < 0) return;
+        if (idx < 0) return;
         String headerName = header.substring(0, idx).trim();
-        String headerValue = header.substring(idx+1).trim();
+        String headerValue = header.substring(idx + 1).trim();
         req.addHeader(headerName, headerValue);
     }
 }

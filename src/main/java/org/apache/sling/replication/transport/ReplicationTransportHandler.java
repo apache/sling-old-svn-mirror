@@ -23,19 +23,27 @@ import org.apache.sling.replication.queue.ReplicationQueueProcessor;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 
+import java.util.List;
+
 /**
  * A <code>TransportHandler</code> is responsible for implementing the transport of a
  * {@link ReplicationPackage}s to / from another instance described by a {@link ReplicationEndpoint}
  */
-public interface TransportHandler {
+public interface ReplicationTransportHandler {
 
     /**
-     * Executes the transport of a given {@link ReplicationPackage} to a specific {@link ReplicationEndpoint} using this
-     * transport and the supplied {@link TransportAuthenticationProvider} for authenticating the endpoint
+     * Delivers a given {@link ReplicationPackage}
      *
      * @param replicationPackage  a {@link ReplicationPackage} to transport
      * @throws ReplicationTransportException if any error occurs during the transport
      */
-    void transport(ReplicationPackage replicationPackage) throws ReplicationTransportException;
+    void deliverPackage(ReplicationPackage replicationPackage) throws ReplicationTransportException;
+
+    /**
+     * Retrieves a list of {@link ReplicationPackage}
+     *
+     * @throws ReplicationTransportException if any error occurs during the transport
+     */
+    public List<ReplicationPackage> retrievePackage() throws ReplicationTransportException;
 
 }

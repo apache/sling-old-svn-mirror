@@ -53,7 +53,7 @@ import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.resources.ReplicationConstants;
 import org.apache.sling.replication.rule.ReplicationRule;
-import org.apache.sling.replication.transport.TransportHandler;
+import org.apache.sling.replication.transport.ReplicationTransportHandler;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
@@ -189,7 +189,7 @@ public class ReplicateOnQueueEventRule implements ReplicationRule {
 
         public void run() {
             try {
-                ServiceReference[] serviceReferences = context.getServiceReferences(TransportHandler.class.getName(), targetTransport);
+                ServiceReference[] serviceReferences = context.getServiceReferences(ReplicationTransportHandler.class.getName(), targetTransport);
 
                 log.info("reference transport for {} found {}", targetTransport, serviceReferences != null);
 

@@ -18,7 +18,6 @@
  */
 package org.apache.sling.replication.transport.authentication.impl;
 
-import org.apache.sling.replication.transport.TransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationException;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
@@ -28,9 +27,7 @@ import org.apache.sling.replication.transport.authentication.TransportAuthentica
  */
 public class NopTransportAuthenticationProvider implements TransportAuthenticationProvider<Object, Object> {
 
-    public boolean supportsTransportHandler(TransportHandler transportHandler) {
-        return true;
-    }
+
 
     public Object authenticate(Object authenticable, TransportAuthenticationContext context)
                     throws TransportAuthenticationException {

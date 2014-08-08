@@ -41,6 +41,7 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 /**
  * Servlet to handle reception of replication content.
@@ -71,31 +72,35 @@ public class ReplicationPackageExporterServlet extends SlingAllMethodsServlet {
 
         try {
             // get first item
-            ReplicationPackage replicationPackage = replicationPackageExporter.exportPackage(null);
+            List<ReplicationPackage> replicationPackages = replicationPackageExporter.exportPackage(null);
 
-            if (replicationPackage != null) {
-                InputStream inputStream = null;
-                int bytesCopied = -1;
-                try {
-                    inputStream = replicationPackage.createInputStream();
-                    bytesCopied = IOUtils.copy(inputStream, response.getOutputStream());
+            if (replicationPackages.size() > 0) {
+                log.info("{} package(s) available for fetching, the first will be delivered", replicationPackages.size());
+
+                ReplicationPackage replicationPackage = replicationPackages.get(0);
+                if (replicationPackage != null) {
+                    InputStream inputStream = null;
+                    int bytesCopied = -1;
+                    try {
+                        inputStream = replicationPackage.createInputStream();
+                        bytesCopied = IOUtils.copy(inputStream, response.getOutputStream());
+                    }
+                    finally {
+                        IOUtils.closeQuietly(inputStream);
+                    }
+
+                    // delete the package permanently
+                    replicationPackage.delete();
+
+                    // everything ok
+                    response.setStatus(200);
+                    log.info("{} bytes written into the response", bytesCopied);
                 }
-                finally {
-                    IOUtils.closeQuietly(inputStream);
-                }
-
-                setPackageHeaders(response, replicationPackage);
-
-                // delete the package permanently
-                replicationPackage.delete();
-
-                log.info("{} bytes written into the response", bytesCopied);
-
-            } else {
+            } else  {
+                response.setStatus(204);
                 log.info("nothing to fetch");
             }
-            // everything ok
-            response.setStatus(200);
+
         } catch (Exception e) {
             response.setStatus(503);
             log.error("error while reverse replicating from agent", e);
@@ -103,14 +108,6 @@ public class ReplicationPackageExporterServlet extends SlingAllMethodsServlet {
         finally {
             final long end = System.currentTimeMillis();
             log.info("Processed replication export request in {}ms: : {}", new Object[]{end - start, success});
-        }
-    }
-
-    void setPackageHeaders(SlingHttpServletResponse response, ReplicationPackage replicationPackage){
-        response.setHeader(ReplicationHeader.TYPE.toString(), replicationPackage.getType());
-        response.setHeader(ReplicationHeader.ACTION.toString(), replicationPackage.getAction());
-        for (String path : replicationPackage.getPaths()){
-            response.setHeader(ReplicationHeader.PATH.toString(), path);
         }
     }
 
