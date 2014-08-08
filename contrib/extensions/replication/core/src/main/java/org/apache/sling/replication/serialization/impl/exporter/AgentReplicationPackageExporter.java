@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.serialization.impl.exporter;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.annotations.*;
@@ -27,7 +29,7 @@ import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageExporter;
-import org.osgi.framework.BundleContext;
+import org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,8 +48,10 @@ public class AgentReplicationPackageExporter implements ReplicationPackageExport
     @Reference(name = "ReplicationAgent", target = "(name=reverse)", policy = ReferencePolicy.STATIC)
     private ReplicationAgent agent;
 
-    @Property(label = "Target ReplicationPackageBuilder", name = "ReplicationPackageBuilder.target", value = "(name=vlt)")
-    @Reference(name = "ReplicationPackageBuilder", target = "(name=vlt)", policy = ReferencePolicy.STATIC)
+    @Property(label = "Target ReplicationPackageBuilder", name = "ReplicationPackageBuilder.target", value = "(name="
+            + FileVaultReplicationPackageBuilder.NAME + ")")
+    @Reference(name = "ReplicationPackageBuilder", target = "(name=" + FileVaultReplicationPackageBuilder.NAME + ")",
+            policy = ReferencePolicy.STATIC)
     private ReplicationPackageBuilder replicationPackageBuilder;
 
     private String queueName;
@@ -57,22 +61,22 @@ public class AgentReplicationPackageExporter implements ReplicationPackageExport
         queueName = PropertiesUtil.toString(config.get(QUEUE_NAME), "");
     }
 
-    public ReplicationPackage exportPackage(ReplicationRequest replicationRequest) {
+    public List<ReplicationPackage> exportPackage(ReplicationRequest replicationRequest) {
 
+        List<ReplicationPackage> result = new ArrayList<ReplicationPackage>();
         try {
             if (log.isInfoEnabled()) {
                 log.info("getting item from queue {}", queueName);
             }
 
             // get first item
-            return agent.removeHead(queueName);
+            ReplicationPackage headPackage = agent.removeHead(queueName);
+            result.add(headPackage);
         } catch (Exception ex) {
-            if (log.isErrorEnabled()) {
-                log.error("Error exporting package", ex);
-            }
+            log.error("Error exporting package", ex);
         }
 
-        return null;
+        return result;
     }
 
     public ReplicationPackage exportPackageById(String replicationPackageId) {

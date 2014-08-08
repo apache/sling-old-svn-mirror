@@ -12,7 +12,6 @@
         "packageExporter={ReplicationPackageExporter.target}",
         "packageImporter={ReplicationPackageImporter.target}",
         "queueStrategy={ReplicationQueueDistributionStrategy.target}",
-        "transportHandler={TransportHandler.target}"
     ]
 
 

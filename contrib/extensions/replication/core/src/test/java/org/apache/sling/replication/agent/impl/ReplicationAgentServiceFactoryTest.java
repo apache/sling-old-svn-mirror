@@ -24,10 +24,8 @@ import java.util.Map;
 import org.apache.sling.replication.agent.AgentConfigurationException;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
-import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageExporter;
 import org.apache.sling.replication.serialization.ReplicationPackageImporter;
-import org.apache.sling.replication.transport.TransportHandler;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 

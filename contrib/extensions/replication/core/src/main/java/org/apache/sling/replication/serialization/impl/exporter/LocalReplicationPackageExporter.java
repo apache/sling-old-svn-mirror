@@ -28,6 +28,9 @@ import org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationP
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * {@link org.apache.sling.replication.serialization.ReplicationPackageExporter} implementation which creates a FileVault based
  * {@link org.apache.sling.replication.serialization.ReplicationPackage} locally.
@@ -39,15 +42,19 @@ public class LocalReplicationPackageExporter implements ReplicationPackageExport
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(label = "Name")
     public static final String NAME = "local";
 
     @Reference(name = "ReplicationPackageBuilder", target = "(name=" + FileVaultReplicationPackageBuilder.NAME + ")",
             policy = ReferencePolicy.STATIC)
     private ReplicationPackageBuilder packageBuilder;
 
-    public ReplicationPackage exportPackage(ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
-        return packageBuilder.createPackage(replicationRequest);
+    public List<ReplicationPackage> exportPackage(ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
+        List<ReplicationPackage> result = new ArrayList<ReplicationPackage>();
+
+        ReplicationPackage createdPackage = packageBuilder.createPackage(replicationRequest);
+        result.add(createdPackage);
+
+        return result;
     }
 
     public ReplicationPackage exportPackageById(String replicationPackageId) {

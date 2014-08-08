@@ -16,21 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.replication.transport.impl;
 
+import java.util.Arrays;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.util.Arrays;
-
 import static org.junit.Assert.assertArrayEquals;
 
-
+/**
+ * Testcase for {@link AdvancedHttpReplicationTransportHandler}
+ */
 @RunWith(Parameterized.class)
-public class HttpTransportHandlerCustomHeadersTest {
+public class AdvancedHttpReplicationTransportHandlerTest {
 
     private final String[] inputTransportProperties;
     private final String inputSelector;
@@ -42,28 +42,28 @@ public class HttpTransportHandlerCustomHeadersTest {
     @Parameterized.Parameters
     public static Iterable<Object[]> data() {
         return Arrays.asList(new Object[][]{
-                { new String[]{}, "", new String[] {},
+                {new String[]{}, "", new String[]{},
                         new String[]{}},
-                { new String[]{}, "add", new String[] {},
+                {new String[]{}, "add", new String[]{},
                         new String[]{}},
-                { new String[]{"add -> Header: Add" }, "add", new String[] {},
-                        new String[]{ "Header: Add" }},
-                { new String[]{"add -> Header: Add", "Header: Always" }, "add", new String[] {},
-                        new String[]{ "Header: Add", "Header: Always" }},
-                { new String[]{"add -> Header: Add", "* -> Header: Always", "delete -> Header:Del" }, "add", new String[] {},
-                        new String[]{"Header: Add", "Header: Always" }},
-                { new String[]{"add -> Header: Add", "Header: Always" }, "delete", new String[] {},
-                        new String[]{"Header: Always" }},
-                { new String[]{"add -> Header: Add", "Header: Always" }, "add", new String[] {},
-                        new String[] {"Header: Add", "Header: Always" }},
-                { new String[]{"add -> Header: Add", "Header: Always", "PathHeader: {path}" }, "add", new String[] { "/content"},
+                {new String[]{"add -> Header: Add"}, "add", new String[]{},
+                        new String[]{"Header: Add"}},
+                {new String[]{"add -> Header: Add", "Header: Always"}, "add", new String[]{},
+                        new String[]{"Header: Add", "Header: Always"}},
+                {new String[]{"add -> Header: Add", "* -> Header: Always", "delete -> Header:Del"}, "add", new String[]{},
+                        new String[]{"Header: Add", "Header: Always"}},
+                {new String[]{"add -> Header: Add", "Header: Always"}, "delete", new String[]{},
+                        new String[]{"Header: Always"}},
+                {new String[]{"add -> Header: Add", "Header: Always"}, "add", new String[]{},
+                        new String[]{"Header: Add", "Header: Always"}},
+                {new String[]{"add -> Header: Add", "Header: Always", "PathHeader: {path}"}, "add", new String[]{"/content"},
                         new String[]{"Header: Add", "Header: Always", "PathHeader: /content"}},
         });
 
     }
 
-    public HttpTransportHandlerCustomHeadersTest(String[] inputTransportProperties, String inputSelector, String[] inputPaths,
-                                                 String[] outputHeaders){
+    public AdvancedHttpReplicationTransportHandlerTest(String[] inputTransportProperties, String inputSelector, String[] inputPaths,
+                                                       String[] outputHeaders) {
         this.inputTransportProperties = inputTransportProperties;
         this.inputSelector = inputSelector;
         this.outputHeaders = outputHeaders;
@@ -71,8 +71,8 @@ public class HttpTransportHandlerCustomHeadersTest {
     }
 
     @Test
-    public void testHttpTransportProperties () {
-        String[] headers = HttpTransportHandler.getCustomizedHeaders (inputTransportProperties, inputSelector, inputPaths);
+    public void testHttpTransportProperties() {
+        String[] headers = AdvancedHttpReplicationTransportHandler.getCustomizedHeaders(inputTransportProperties, inputSelector, inputPaths);
 
         assertArrayEquals(outputHeaders, headers);
     }

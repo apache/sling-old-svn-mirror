@@ -19,25 +19,24 @@
 package org.apache.sling.replication.transport.impl.exporter;
 
 import org.apache.felix.scr.annotations.*;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Executor;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.conn.HttpHostConnectException;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgentConfiguration;
-import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
-import org.apache.sling.replication.communication.ReplicationHeader;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.serialization.*;
-import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
+import org.apache.sling.replication.transport.ReplicationTransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
-import org.apache.sling.replication.transport.authentication.impl.UserCredentialsTransportAuthenticationProviderFactory;
+import org.apache.sling.replication.transport.impl.MultipleEndpointReplicationTransportHandler;
+import org.apache.sling.replication.transport.impl.SimpleHttpReplicationTransportHandler;
+import org.apache.sling.replication.transport.impl.TransportEndpointStrategyType;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -60,30 +59,56 @@ public class RemoteReplicationPackageExporter implements ReplicationPackageExpor
     @Reference(name = "ReplicationPackageBuilder", policy = ReferencePolicy.STATIC)
     private ReplicationPackageBuilder packageBuilder;
 
-    TransportAuthenticationProvider<Executor, Executor>  transportAuthenticationProvider;
-    ReplicationEndpoint replicationEndpoint;
+    @Property(name = "poll items", description = "number of subsequent poll requests to make", intValue = 1)
+    private static final String POLL_ITEMS = "poll.items";
+
+    @Property(options = {
+            @PropertyOption(name = "All",
+                    value = "all endpoints"
+            ),
+            @PropertyOption(name = "One",
+                    value = "one endpoint"
+            )},
+            value = "One"
+    )
+    private static final String ENDPOINT_STRATEGY = ReplicationAgentConfiguration.ENDPOINT_STRATEGY;
+
+    int pollItems;
+    ReplicationTransportHandler transportHandler;
 
     @Activate
     protected void activate(BundleContext context, Map<String, ?> config) throws Exception {
 
         Map<String, String> authenticationProperties = PropertiesUtil.toMap(config.get(ReplicationAgentConfiguration.AUTHENTICATION_PROPERTIES), new String[0]);
 
-        transportAuthenticationProvider = (TransportAuthenticationProvider<Executor, Executor>) transportAuthenticationProviderFactory.createAuthenticationProvider(authenticationProperties);
+        TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider = (TransportAuthenticationProvider<Executor, Executor>) transportAuthenticationProviderFactory.createAuthenticationProvider(authenticationProperties);
 
         String[] endpoints = PropertiesUtil.toStringArray(config.get(ReplicationAgentConfiguration.ENDPOINT), new String[0]);
 
-        replicationEndpoint = new ReplicationEndpoint(endpoints[0]);
+        pollItems = PropertiesUtil.toInteger(config.get(POLL_ITEMS), 1);
 
+        String endpointStrategyName = PropertiesUtil.toString(config.get(ReplicationAgentConfiguration.ENDPOINT_STRATEGY), "One");
+        TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(endpointStrategyName);
+
+        List<ReplicationTransportHandler> transportHandlers = new ArrayList<ReplicationTransportHandler>();
+
+        for (String endpoint : endpoints) {
+            if (endpoint != null && endpoint.length() > 0) {
+                transportHandlers.add(new SimpleHttpReplicationTransportHandler(transportAuthenticationProvider,
+                        new ReplicationEndpoint(endpoint), packageBuilder, pollItems));
+            }
+        }
+        transportHandler = new MultipleEndpointReplicationTransportHandler(transportHandlers,
+                transportEndpointStrategyType);
     }
 
     @Deactivate
     protected void deactivate() {
     }
 
-
-    public ReplicationPackage exportPackage(ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
+    public List<ReplicationPackage> exportPackage(ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
         try {
-            return pollPackageFromEndpoint(replicationRequest, replicationEndpoint);
+            return transportHandler.retrievePackage();
         } catch (Exception e) {
             throw new ReplicationPackageBuildingException(e);
         }
@@ -92,38 +117,4 @@ public class RemoteReplicationPackageExporter implements ReplicationPackageExpor
     public ReplicationPackage exportPackageById(String replicationPackageId) {
         return packageBuilder.getPackage(replicationPackageId);
     }
-
-
-    private ReplicationPackage pollPackageFromEndpoint(ReplicationRequest replicationRequest, ReplicationEndpoint replicationEndpoint)
-            throws Exception {
-        log.debug("polling from {}", replicationEndpoint.getUri());
-
-
-        Executor executor = Executor.newInstance();
-        TransportAuthenticationContext context = new TransportAuthenticationContext();
-        context.addAttribute("endpoint", replicationEndpoint);
-        executor = transportAuthenticationProvider.authenticate(executor, context);
-
-        Request req = Request.Post(replicationEndpoint.getUri())
-                .addHeader(ReplicationHeader.ACTION.toString(), ReplicationActionType.POLL.getName())
-                .useExpectContinue();
-        // TODO : add queue parameter
-
-        // continuously requests package streams as long as type header is received with the response (meaning there's a package of a certain type)
-        HttpResponse httpResponse;
-        try {
-            httpResponse = executor.execute(req).returnResponse();
-            if (httpResponse.containsHeader(ReplicationHeader.TYPE.toString())) {
-                ReplicationPackage responsePackage = packageBuilder.readPackage(httpResponse.getEntity().getContent());
-
-                return responsePackage;
-            }
-        } catch (HttpHostConnectException e) {
-            log.warn("could not connect to {} - skipping", replicationEndpoint.getUri());
-        }
-
-        return null;
-
-    }
-
 }

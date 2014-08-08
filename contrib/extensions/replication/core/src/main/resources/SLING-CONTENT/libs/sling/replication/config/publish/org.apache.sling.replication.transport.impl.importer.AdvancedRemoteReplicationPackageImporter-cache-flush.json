@@ -1,6 +1,6 @@
 {
     "jcr:primaryType" : "sling:OsgiConfig",
-    "name" : "http-cache-flush",
+    "name" : "cache-flush",
     "useCustomHeaders" : true,
     "customHeaders" : [
             "Path: {path}",

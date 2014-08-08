@@ -84,16 +84,30 @@ public class SimpleReplicationAgent implements ReplicationAgent {
             throws AgentReplicationException {
 
         // create packages from request
-        ReplicationPackage[] replicationPackages = buildPackages(replicationRequest);
+        List<ReplicationPackage> replicationPackages;
+        try {
+            replicationPackages = buildPackages(replicationRequest);
+            return schedule(replicationPackages, false);
 
-        return schedule(replicationPackages, false);
+        } catch (ReplicationPackageBuildingException e) {
+            log.error("Error building packages", e);
+            throw new AgentReplicationException(e);
+        }
+
     }
 
     public void send(ReplicationRequest replicationRequest) throws AgentReplicationException {
         // create packages from request
-        ReplicationPackage[] replicationPackages = buildPackages(replicationRequest);
+        List<ReplicationPackage> replicationPackages = null;
+        try {
+            replicationPackages = buildPackages(replicationRequest);
+            schedule(replicationPackages, true);
 
-        schedule(replicationPackages, true);
+        } catch (ReplicationPackageBuildingException e) {
+            log.error("Error building packages", e);
+            throw new AgentReplicationException(e);
+        }
+
     }
 
     public boolean isPassive() {
@@ -101,46 +115,31 @@ public class SimpleReplicationAgent implements ReplicationAgent {
     }
 
 
-    private ReplicationPackage buildPackage(ReplicationRequest replicationRequest) throws AgentReplicationException {
-        // create package from request
-        ReplicationPackage replicationPackage;
-        try {
-            replicationPackage = replicationPackageExporter.exportPackage(replicationRequest);
-        } catch (ReplicationPackageBuildingException e) {
-            throw new AgentReplicationException(e);
-        }
+    private List<ReplicationPackage> buildPackages(ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
 
-        return replicationPackage;
-    }
-
-    private ReplicationPackage[] buildPackages(ReplicationRequest replicationRequest) throws AgentReplicationException {
-
-        List<ReplicationPackage> packages = new ArrayList<ReplicationPackage>();
+        List<ReplicationPackage> replicationPackages = new ArrayList<ReplicationPackage>();
 
         if (useAggregatePaths) {
-            ReplicationPackage replicationPackage = buildPackage(replicationRequest);
-            if (replicationPackage != null) {
-                packages.add(replicationPackage);
-            }
+            List<ReplicationPackage> exportedPackages = replicationPackageExporter.exportPackage(replicationRequest);
+            replicationPackages.addAll(exportedPackages);
         } else {
             for (String path : replicationRequest.getPaths()) {
-                ReplicationPackage replicationPackage = buildPackage(new ReplicationRequest(replicationRequest.getTime(),
+                ReplicationRequest splitReplicationRequest = new ReplicationRequest(replicationRequest.getTime(),
                         replicationRequest.getAction(),
-                        path));
-                if (replicationPackage != null) {
-                    packages.add(replicationPackage);
-                }
+                        path);
+                List<ReplicationPackage> exportedPackages = replicationPackageExporter.exportPackage(splitReplicationRequest);
+                replicationPackages.addAll(exportedPackages);
             }
         }
 
-        return packages.toArray(new ReplicationPackage[packages.size()]);
+        return replicationPackages;
     }
 
     // offer option throws an exception at first error
-    private ReplicationResponse schedule(ReplicationPackage[] packages, boolean offer) throws AgentReplicationException {
+    private ReplicationResponse schedule(List<ReplicationPackage> replicationPackages, boolean offer) throws AgentReplicationException {
         ReplicationResponse replicationResponse = new ReplicationResponse();
 
-        for (ReplicationPackage replicationPackage : packages) {
+        for (ReplicationPackage replicationPackage : replicationPackages) {
             ReplicationResponse currentReplicationResponse = schedule(replicationPackage, offer);
 
             replicationResponse.setSuccessful(currentReplicationResponse.isSuccessful());
@@ -152,9 +151,8 @@ public class SimpleReplicationAgent implements ReplicationAgent {
 
     private ReplicationResponse schedule(ReplicationPackage replicationPackage, boolean offer) throws AgentReplicationException {
         ReplicationResponse replicationResponse = new ReplicationResponse();
-        if (log.isInfoEnabled()) {
-            log.info("scheduling replication of package {}", replicationPackage);
-        }
+        log.info("scheduling replication of package {}", replicationPackage);
+
         ReplicationQueueItem replicationQueueItem = new ReplicationQueueItem(replicationPackage.getId(),
                 replicationPackage.getPaths(),
                 replicationPackage.getAction(),

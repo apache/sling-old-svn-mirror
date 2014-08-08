@@ -19,7 +19,7 @@
 package org.apache.sling.replication.transport;
 
 /**
- * Represents an error happened while a {@link TransportHandler} is delivering a replication item to
+ * Represents an error happened while a {@link ReplicationTransportHandler} is delivering a replication item to
  * and endpoint.
  */
 @SuppressWarnings("serial")
