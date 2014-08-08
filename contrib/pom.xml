@@ -108,6 +108,7 @@
           <module>extensions/tenant</module>
           <module>extensions/replication/core</module>
           <module>extensions/replication/it</module>
+          <module>extensions/sling-query</module>
           <module>jcr/compiler</module>
           <module>jcr/jackrabbit-client</module>
           <module>jcr/ocm</module>
