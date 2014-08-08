@@ -110,6 +110,14 @@ public class SlingMainServlet extends GenericServlet {
 
     @Property
     private static final String PROP_SERVER_INFO = "sling.serverinfo";
+    
+
+    @Property(value = {"X-Content-Type-Options=nosniff"},
+            label = "Additional response headers",
+            description = "Provides mappings for additional response headers "
+                + "Each entry is of the form 'bundleId [ \":\" responseHeaderName ] \"=\" responseHeaderValue' ",
+            unbounded = PropertyUnbounded.ARRAY)
+    private static final String PROP_ADDITIONAL_RESPONSE_HEADERS = "sling.additional.response.headers";
 
     @Reference
     private HttpService httpService;
@@ -173,7 +181,7 @@ public class SlingMainServlet extends GenericServlet {
     private ServiceRegistration requestProcessorMBeanRegistration;
 
     private String configuredServerInfo;
-
+    
     // ---------- Servlet API -------------------------------------------------
 
     @Override
@@ -334,6 +342,22 @@ public class SlingMainServlet extends GenericServlet {
     @Activate
     protected void activate(final BundleContext bundleContext,
             final Map<String, Object> componentConfig) {
+        
+        final String[] props = PropertiesUtil.toStringArray(componentConfig.get(PROP_ADDITIONAL_RESPONSE_HEADERS));
+        
+        final ArrayList<StaticResponseHeader> mappings = new ArrayList<StaticResponseHeader>(props.length);
+        for (final String prop : props) {
+            if (prop != null && prop.trim().length() > 0 ) {
+                try {
+                    final StaticResponseHeader mapping = new StaticResponseHeader(prop.trim());
+                    mappings.add(mapping);
+                } catch (final IllegalArgumentException iae) {
+                    log.info("configure: Ignoring '{}': {}", prop, iae.getMessage());
+                }
+            }
+        }
+        RequestData.setAdditionalResponseHeaders(mappings);
+        
         configuredServerInfo = PropertiesUtil.toString(componentConfig.get(PROP_SERVER_INFO), null);
 
         // setup server info
