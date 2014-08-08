@@ -36,6 +36,9 @@ public class CrankstartContext {
     /** Name of the default value used to set bundle start levels */
     public static final String DEFAULT_BUNDLE_START_LEVEL = "crankstart.bundle.start.level";
 
+    /** Name of the attribute that causes crankstart processing to stop */
+    public static final String ATTR_STOP_CRANKSTART_PROCESSING = "crankstart.stop.processing";
+
     public void setOsgiFrameworkProperty(String key, String value) {
         osgiFrameworkProperties.put(key, value);
     }
