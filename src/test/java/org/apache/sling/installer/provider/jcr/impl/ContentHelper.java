@@ -112,7 +112,7 @@ class ContentHelper {
         }
     }
 
-    void createFolder(String path) throws Exception {
+    Node createFolder(String path) throws Exception {
         final String [] parts = relPath(path).split("/");
         Node n = session.getRootNode();
         for(String part : parts) {
@@ -123,6 +123,7 @@ class ContentHelper {
             }
         }
         session.save();
+        return n;
     }
 
     void delete(String path) throws RepositoryException {
