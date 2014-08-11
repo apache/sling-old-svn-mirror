@@ -18,6 +18,12 @@
  */
 package org.apache.sling.replication.servlet;
 
+import javax.servlet.Servlet;
+import javax.servlet.ServletException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
@@ -27,21 +33,11 @@ import org.apache.http.entity.ContentType;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.communication.ReplicationHeader;
-import org.apache.sling.replication.communication.ReplicationParameter;
 import org.apache.sling.replication.resources.ReplicationConstants;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageExporter;
-import org.apache.sling.replication.serialization.ReplicationPackageImporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
 
 /**
  * Servlet to handle reception of replication content.
@@ -69,13 +65,14 @@ public class ReplicationPackageExporterServlet extends SlingAllMethodsServlet {
 
         response.setContentType(ContentType.APPLICATION_OCTET_STREAM.toString());
 
-
         try {
             // get first item
             List<ReplicationPackage> replicationPackages = replicationPackageExporter.exportPackage(null);
 
             if (replicationPackages.size() > 0) {
-                log.info("{} package(s) available for fetching, the first will be delivered", replicationPackages.size());
+                if (log.isInfoEnabled()) {
+                    log.info("{} package(s) available for fetching, the first will be delivered", replicationPackages.size());
+                }
 
                 ReplicationPackage replicationPackage = replicationPackages.get(0);
                 if (replicationPackage != null) {
@@ -84,8 +81,7 @@ public class ReplicationPackageExporterServlet extends SlingAllMethodsServlet {
                     try {
                         inputStream = replicationPackage.createInputStream();
                         bytesCopied = IOUtils.copy(inputStream, response.getOutputStream());
-                    }
-                    finally {
+                    } finally {
                         IOUtils.closeQuietly(inputStream);
                     }
 
@@ -94,20 +90,33 @@ public class ReplicationPackageExporterServlet extends SlingAllMethodsServlet {
 
                     // everything ok
                     response.setStatus(200);
-                    log.info("{} bytes written into the response", bytesCopied);
+                    if (log.isInfoEnabled()) {
+                        log.info("{} bytes written into the response", bytesCopied);
+                    }
+                    success = true;
                 }
-            } else  {
+                else {
+                    if (log.isWarnEnabled()) {
+                        log.warn("fetched a null package");
+                    }
+                }
+            } else {
                 response.setStatus(204);
-                log.info("nothing to fetch");
+                if (log.isInfoEnabled()) {
+                    log.info("nothing to fetch");
+                }
             }
 
         } catch (Exception e) {
             response.setStatus(503);
-            log.error("error while reverse replicating from agent", e);
-        }
-        finally {
+            if (log.isErrorEnabled()) {
+                log.error("error while reverse replicating from agent", e);
+            }
+        } finally {
             final long end = System.currentTimeMillis();
-            log.info("Processed replication export request in {}ms: : {}", new Object[]{end - start, success});
+            if (log.isInfoEnabled()) {
+                log.info("Processed replication export request in {}ms: : {}", new Object[]{end - start, success});
+            }
         }
     }
 

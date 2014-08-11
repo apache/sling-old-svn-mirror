@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.api.WorkspaceFilter;
+import org.apache.jackrabbit.vault.fs.config.DefaultWorkspaceFilter;
 import org.apache.jackrabbit.vault.fs.config.MetaInf;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.replication.communication.ReplicationActionType;
@@ -53,12 +54,13 @@ public class FileVaultReplicationPackage implements ReplicationPackage {
         String[] paths = new String[0];
         if (metaInf != null) {
             WorkspaceFilter filter = metaInf.getFilter();
-            if (filter != null) {
-                List<PathFilterSet> filterSets = filter.getFilterSets();
-                paths = new String[filterSets.size()];
-                for (int i = 0; i < paths.length; i++) {
-                    paths[i] = filterSets.get(i).getRoot();
-                }
+            if (filter == null) {
+                filter = new DefaultWorkspaceFilter();
+            }
+            List<PathFilterSet> filterSets = filter.getFilterSets();
+            paths = new String[filterSets.size()];
+            for (int i = 0; i < paths.length; i++) {
+                paths[i] = filterSets.get(i).getRoot();
             }
         }
         this.paths = paths;
