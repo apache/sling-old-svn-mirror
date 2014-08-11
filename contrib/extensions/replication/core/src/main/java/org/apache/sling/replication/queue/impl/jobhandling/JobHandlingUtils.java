@@ -28,8 +28,6 @@ import org.slf4j.LoggerFactory;
 
 public class JobHandlingUtils {
 
-    private static final Logger log = LoggerFactory.getLogger(JobHandlingUtils.class.getName());
-
     private static final String PATHS = "replication.package.paths";
 
     public static final String ID = "replication.package.id";
@@ -94,6 +92,5 @@ public class JobHandlingUtils {
 
         return queue.substring(idx + 1);
     }
-
 
 }

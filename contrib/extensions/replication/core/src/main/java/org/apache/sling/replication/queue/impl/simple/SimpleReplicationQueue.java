@@ -50,9 +50,7 @@ public class SimpleReplicationQueue implements ReplicationQueue {
     private final Map<ReplicationQueueItem, ReplicationQueueItemState> statusMap;
 
     public SimpleReplicationQueue(String agentName, String name) {
-        if (log.isInfoEnabled()) {
-            log.info("starting a simple queue for agent {}", agentName);
-        }
+        log.info("starting a simple queue for agent {}", agentName);
         this.name = name;
         this.queue = new LinkedBlockingQueue<ReplicationQueueItem>();
         this.statusMap = new WeakHashMap<ReplicationQueueItem, ReplicationQueueItemState>(10);
@@ -120,9 +118,7 @@ public class SimpleReplicationQueue implements ReplicationQueue {
         if (toRemove != null) {
             removed = queue.remove(toRemove);
         }
-        if (log.isInfoEnabled()) {
-            log.info("item with id {} removed from the queue: {}", id, removed);
-        }
+        log.info("item with id {} removed from the queue: {}", id, removed);
     }
 
 }

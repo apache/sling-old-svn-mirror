@@ -18,13 +18,8 @@
  */
 package org.apache.sling.replication.queue.impl.jobhandling;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
+
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.JobManager.QueryType;
@@ -68,13 +63,9 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
                     .createFullPropertiesFromPackage(replicationPackage);
 
             Job job = jobManager.createJob(topic).properties(properties).add();
-            if (log.isInfoEnabled()) {
-                log.info("job {} added", job.getId());
-            }
+            log.info("job {} added", job.getId());
         } catch (Exception e) {
-            if (log.isErrorEnabled()) {
-                log.error("could not add an item to the queue", e);
-            }
+            log.error("could not add an item to the queue", e);
             result = false;
         }
         return result;
@@ -91,9 +82,7 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
                 itemStatus.setAttempts(job.getRetryCount());
                 itemStatus.setItemState(ItemState.valueOf(job.getJobState().toString()));
                 itemStatus.setEntered(job.getCreated());
-                if (log.isInfoEnabled()) {
-                    log.info("status of job {} is {}", job.getId(), job.getJobState());
-                }
+                log.info("status of job {} is {}", job.getId(), job.getJobState());
             } else {
                 itemStatus.setItemState(ItemState.DROPPED);
             }
@@ -121,9 +110,7 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
 
     @SuppressWarnings("unchecked")
     private Job getFirstItem() {
-        if (log.isInfoEnabled()) {
-            log.info("getting first item in the queue");
-        }
+        log.info("getting first item in the queue");
 
         Collection<Job> jobs = jobManager.findJobs(QueryType.QUEUED, topic, -1);
         jobs.addAll(jobManager.findJobs(QueryType.ACTIVE, topic, -1));
@@ -135,10 +122,8 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
                 }
             });
             Job firstItem = list.get(0);
-            if (log.isInfoEnabled()) {
-                log.info("first item in the queue is {}, retried {} times", firstItem.getId(),
-                        firstItem.getRetryCount());
-            }
+            log.info("first item in the queue is {}, retried {} times", firstItem.getId(),
+                    firstItem.getRetryCount());
             return firstItem;
         }
         return null;

@@ -18,23 +18,15 @@
  */
 package org.apache.sling.replication.servlet;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.felix.scr.annotations.*;
 import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
@@ -74,9 +66,7 @@ public class ReplicationAgentQueueEventServlet extends SlingAllMethodsServlet {
         Dictionary<String, Object> properties = new Hashtable<String, Object>();
         properties.put(EventConstants.EVENT_TOPIC, ReplicationEvent.getTopic(ReplicationEventType.PACKAGE_QUEUED));
         registration = context.registerService(EventHandler.class.getName(), new SSEListener(), properties);
-        if (log.isInfoEnabled()) {
-            log.info("SSE activated : {}", registration != null);
-        }
+        log.info("SSE activated : {}", registration != null);
     }
 
     @Deactivate
@@ -119,9 +109,7 @@ public class ReplicationAgentQueueEventServlet extends SlingAllMethodsServlet {
                     }
                 }
             } catch (InterruptedException e) {
-                if (log.isErrorEnabled()) {
-                    log.error("error during SSE", e);
-                }
+                log.error("error during SSE", e);
                 throw new ServletException(e);
             }
         }
@@ -141,28 +129,20 @@ public class ReplicationAgentQueueEventServlet extends SlingAllMethodsServlet {
 
         // flush the buffers to make sure the container sends the bytes
         writer.flush();
-        if (log.isDebugEnabled()) {
-            log.debug("SSE event {}: {}", event, message);
-        }
+        log.debug("SSE event {}: {}", event, message);
     }
 
     private class SSEListener implements EventHandler {
         public void handleEvent(Event event) {
-            if (log.isDebugEnabled()) {
-                log.debug("SSE listener running on event {}", event);
-            }
+            log.debug("SSE listener running on event {}", event);
             Object pathProperty = event.getProperty("replication.package.paths");
             Object agentNameProperty = event.getProperty("replication.agent.name");
-            if (log.isDebugEnabled()) {
-                log.debug("cached events {}", cachedEvents.size());
-            }
+            log.debug("cached events {}", cachedEvents.size());
             if (pathProperty != null && agentNameProperty != null) {
                 String agentName = String.valueOf(agentNameProperty);
                 String[] paths = (String[]) pathProperty;
                 synchronized (cachedEvents) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("queue event for agent {} on paths {}", agentName, Arrays.toString(paths));
-                    }
+                    log.debug("queue event for agent {} on paths {}", agentName, Arrays.toString(paths));
                     Collection<String> eventsForAgent = cachedEvents.get(agentName);
                     if (eventsForAgent == null) {
                         eventsForAgent = new LinkedList<String>();

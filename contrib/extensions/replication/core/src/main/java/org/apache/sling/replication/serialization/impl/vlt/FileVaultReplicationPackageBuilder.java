@@ -32,7 +32,10 @@ import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.config.DefaultMetaInf;
 import org.apache.jackrabbit.vault.fs.config.DefaultWorkspaceFilter;
 import org.apache.jackrabbit.vault.fs.io.ImportOptions;
-import org.apache.jackrabbit.vault.packaging.*;
+import org.apache.jackrabbit.vault.packaging.ExportOptions;
+import org.apache.jackrabbit.vault.packaging.JcrPackage;
+import org.apache.jackrabbit.vault.packaging.Packaging;
+import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.communication.ReplicationRequest;
@@ -78,7 +81,6 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
     @Reference
     private Packaging packaging;
 
-
     private String username;
     private String password;
 
@@ -103,9 +105,7 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
             props.setProperty(VaultPackage.NAME_GROUP, packageGroup);
             String packageName = String.valueOf(request.getTime());
             props.setProperty(VaultPackage.NAME_NAME, packageName);
-            if (log.isDebugEnabled()) {
-                log.debug("assembling package {}", packageGroup + '/' + packageName);
-            }
+            log.debug("assembling package {}", packageGroup + '/' + packageName);
             inf.setProperties(props);
 
             opts.setMetaInf(inf);
@@ -136,9 +136,7 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
     @Override
     protected ReplicationPackage readPackageInternal(final InputStream stream)
             throws ReplicationPackageReadingException {
-        if (log.isDebugEnabled()) {
-            log.debug("reading a stream");
-        }
+        log.debug("reading a stream");
         ReplicationPackage pkg = null;
         try {
             File tmpFile = File.createTempFile("rp-vlt-read-" + System.nanoTime(), ".zip");
@@ -151,15 +149,11 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
             if (vaultPackage != null) {
                 pkg = new FileVaultReplicationPackage(vaultPackage);
             } else {
-                if (log.isWarnEnabled()) {
-                    log.warn("stream could not be read as a vlt package");
-                }
+                log.warn("stream could not be read as a vlt package");
             }
 
         } catch (Exception e) {
-            if (log.isErrorEnabled()) {
-                log.error("could not read / install the package", e);
-            }
+            log.error("could not read / install the package", e);
             throw new ReplicationPackageReadingException(e);
         }
         return pkg;
@@ -180,9 +174,7 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
 //                replicationPackage = new FileVaultReplicationPackage(pkg);
 //            }
         } catch (Exception e) {
-            if (log.isWarnEnabled()) {
-                log.warn("could not find a package with id : {}", id);
-            }
+            log.warn("could not find a package with id : {}", id);
         }
         return replicationPackage;
     }
@@ -197,9 +189,7 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
 
     @Override
     public boolean installPackageInternal(ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {
-        if (log.isDebugEnabled()) {
-            log.debug("reading a replication package stream");
-        }
+        log.debug("reading a replication package stream");
 
         Session session = null;
         try {
@@ -216,9 +206,7 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
                 return true;
             }
         } catch (Exception e) {
-            if (log.isErrorEnabled()) {
-                log.error("could not read / install the package", e);
-            }
+            log.error("could not read / install the package", e);
             throw new ReplicationPackageReadingException(e);
         } finally {
             if (session != null) {

@@ -19,19 +19,11 @@
 package org.apache.sling.replication.queue.impl;
 
 import java.util.Calendar;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyOption;
-import org.apache.felix.scr.annotations.Service;
+
+import org.apache.felix.scr.annotations.*;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.replication.queue.ReplicationQueue;
-import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
-import org.apache.sling.replication.queue.ReplicationQueueException;
-import org.apache.sling.replication.queue.ReplicationQueueItem;
-import org.apache.sling.replication.queue.ReplicationQueueItemState;
+import org.apache.sling.replication.queue.*;
 import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
-import org.apache.sling.replication.queue.ReplicationQueueProvider;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,24 +73,16 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
                                          ReplicationQueueProvider queueProvider)
             throws ReplicationQueueException {
         try {
-            if (log.isInfoEnabled()) {
-                log.info("using error aware queue distribution");
-            }
+            log.info("using error aware queue distribution");
             ReplicationQueueItemState state = new ReplicationQueueItemState();
             ReplicationQueue queue = queueProvider.getDefaultQueue(agentName);
-            if (log.isInfoEnabled()) {
-                log.info("obtained queue {}", queue);
-            }
+            log.info("obtained queue {}", queue);
             if (queue != null) {
                 if (queue.add(replicationPackage)) {
-                    if (log.isInfoEnabled()) {
-                        log.info("replication status: {}", state);
-                    }
+                    log.info("replication status: {}", state);
                     state = queue.getStatus(replicationPackage);
                 } else {
-                    if (log.isErrorEnabled()) {
-                        log.error("could not add the item to the queue {}", queue);
-                    }
+                    log.error("could not add the item to the queue {}", queue);
                     state.setItemState(ItemState.ERROR);
                     state.setSuccessful(false);
                 }

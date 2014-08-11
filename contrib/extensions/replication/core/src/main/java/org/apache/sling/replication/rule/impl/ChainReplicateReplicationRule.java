@@ -110,7 +110,6 @@ public class ChainReplicateReplicationRule implements ReplicationRule {
             }
         } else {
             log.warn("rule {} doesn't match signature: {}", ruleString, SIGNATURE);
-
         }
     }
 
@@ -139,7 +138,6 @@ public class ChainReplicateReplicationRule implements ReplicationRule {
                             agent.execute(new ReplicationRequest(System.currentTimeMillis(), action, paths));
                         } catch (AgentReplicationException e) {
                             log.error("triggered replication resulted in an error {}", e);
-
                         }
                         break;
                     }

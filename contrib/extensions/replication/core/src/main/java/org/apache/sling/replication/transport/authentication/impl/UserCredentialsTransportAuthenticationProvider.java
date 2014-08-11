@@ -48,9 +48,7 @@ public class UserCredentialsTransportAuthenticationProvider implements
         if (endpoint != null) {
             Executor authenticated = authenticable.auth(new HttpHost(endpoint
                     .getUri().getHost()), username, password);
-            if (log.isInfoEnabled()) {
-                log.info("authenticated executor {} with user and password", authenticated);
-            }
+            log.debug("authenticated executor HTTP client with user and password");
             return authenticated;
         } else {
             throw new TransportAuthenticationException(

@@ -26,11 +26,10 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.queue.*;
+import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
 
 /**
  * Distribution algorithm which keeps one specific queue to handle specific paths and another queue
@@ -45,7 +44,7 @@ public class PriorityPathDistributionStrategy implements ReplicationQueueDistrib
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(value = { "/content" })
+    @Property(value = {"/content"})
     private static final String PRIORITYPATHS = "priority.paths";
 
     private String[] priorityPaths;
@@ -57,27 +56,19 @@ public class PriorityPathDistributionStrategy implements ReplicationQueueDistrib
 
     public ReplicationQueueItemState add(String agentName, ReplicationQueueItem replicationPackage,
                                          ReplicationQueueProvider queueProvider)
-                    throws ReplicationQueueException {
-        if (log.isInfoEnabled()) {
-            log.info("using path priority based queue distribution");
-        }
+            throws ReplicationQueueException {
+        log.info("using path priority based queue distribution");
         ReplicationQueueItemState state = new ReplicationQueueItemState();
 
         ReplicationQueue queue = getQueue(agentName, replicationPackage, queueProvider);
-        if (log.isInfoEnabled()) {
-            log.info("obtained queue {}", queue);
-        }
+        log.info("obtained queue {}", queue);
 
         if (queue != null) {
             if (queue.add(replicationPackage)) {
-                if (log.isInfoEnabled()) {
-                    log.info("replication status: {}", state);
-                }
+                log.info("replication status: {}", state);
                 state = queue.getStatus(replicationPackage);
             } else {
-                if (log.isErrorEnabled()) {
-                    log.error("could not add the item to the queue {}", queue);
-                }
+                log.error("could not add the item to the queue {}", queue);
                 state.setItemState(ItemState.ERROR);
                 state.setSuccessful(false);
             }
@@ -90,12 +81,10 @@ public class PriorityPathDistributionStrategy implements ReplicationQueueDistrib
 
     private ReplicationQueue getQueue(String agentName, ReplicationQueueItem replicationPackage,
                                       ReplicationQueueProvider queueProvider)
-                    throws ReplicationQueueException {
+            throws ReplicationQueueException {
         String[] paths = replicationPackage.getPaths();
 
-        if (log.isInfoEnabled()) {
-            log.info("calculating priority for paths {}", Arrays.toString(paths));
-        }
+        log.info("calculating priority for paths {}", Arrays.toString(paths));
 
         boolean usePriorityQueue = false;
         String pp = null;
@@ -111,14 +100,10 @@ public class PriorityPathDistributionStrategy implements ReplicationQueueDistrib
 
         ReplicationQueue queue;
         if (usePriorityQueue) {
-            if (log.isInfoEnabled()) {
-                log.info("using priority queue for path {}", pp);
-            }
+            log.info("using priority queue for path {}", pp);
             queue = queueProvider.getQueue(agentName, pp);
         } else {
-            if (log.isInfoEnabled()) {
-                log.info("using default queue");
-            }
+            log.info("using default queue");
             queue = queueProvider.getDefaultQueue(agentName);
         }
         return queue;

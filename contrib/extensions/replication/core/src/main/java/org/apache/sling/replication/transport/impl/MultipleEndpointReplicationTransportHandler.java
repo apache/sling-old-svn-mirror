@@ -24,8 +24,6 @@ import java.util.List;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.apache.sling.replication.transport.ReplicationTransportException;
 import org.apache.sling.replication.transport.ReplicationTransportHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * {@link org.apache.sling.replication.transport.ReplicationTransportHandler} supporting delivery / retrieval from multiple

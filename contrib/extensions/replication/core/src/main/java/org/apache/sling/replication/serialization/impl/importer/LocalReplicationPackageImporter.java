@@ -62,9 +62,7 @@ public class LocalReplicationPackageImporter implements ReplicationPackageImport
             success = replicationPackageBuilder.installPackage(replicationPackage);
 
             if (success) {
-                if (log.isInfoEnabled()) {
-                    log.info("replication package read and installed for path(s) {}", Arrays.toString(replicationPackage.getPaths()));
-                }
+                log.info("replication package read and installed for path(s) {}", Arrays.toString(replicationPackage.getPaths()));
 
                 Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
                 dictionary.put("replication.action", replicationPackage.getAction());
@@ -73,14 +71,10 @@ public class LocalReplicationPackageImporter implements ReplicationPackageImport
 
                 replicationPackage.delete();
             } else {
-                if (log.isWarnEnabled()) {
-                    log.warn("could not read a replication package");
-                }
+                log.warn("could not read a replication package");
             }
         } catch (Exception e) {
-            if (log.isErrorEnabled()) {
-                log.error("cannot import a package from the given stream of type {}", replicationPackage.getType());
-            }
+            log.error("cannot import a package from the given stream of type {}", replicationPackage.getType());
         }
         return success;
     }

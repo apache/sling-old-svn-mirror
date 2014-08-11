@@ -178,10 +178,8 @@ public class AdvancedHttpReplicationTransportHandler extends SimpleHttpReplicati
 
         if (response != null) {
             Content content = response.returnContent();
-            if (log.isInfoEnabled()) {
-                log.info("Replication content of type {} for {} delivered: {}", new Object[]{
-                        type, Arrays.toString(replicationPackage.getPaths()), content});
-            }
+            log.info("Replication content of type {} for {} delivered: {}", new Object[]{
+                    type, Arrays.toString(replicationPackage.getPaths()), content});
         } else {
             throw new IOException("response is empty");
         }

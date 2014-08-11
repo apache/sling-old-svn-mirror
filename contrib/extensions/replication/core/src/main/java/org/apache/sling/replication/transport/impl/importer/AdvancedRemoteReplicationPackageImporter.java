@@ -127,9 +127,7 @@ public class AdvancedRemoteReplicationPackageImporter implements ReplicationPack
             transportHandler.deliverPackage(replicationPackage);
             result = true;
         } catch (Exception e) {
-            if (log.isErrorEnabled()) {
-                log.error("failed delivery", e);
-            }
+            log.error("failed delivery", e);
         }
         return result;
     }
