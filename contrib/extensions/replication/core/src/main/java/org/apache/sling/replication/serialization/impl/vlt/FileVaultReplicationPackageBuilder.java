@@ -174,10 +174,11 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
             if (file.exists()) {
                 VaultPackage pkg = packaging.getPackageManager().open(file);
                 replicationPackage = new FileVaultReplicationPackage(pkg);
-            } else {
-                VaultPackage pkg = packaging.getPackageManager(getSession()).open(PackageId.fromString(id)).getPackage();
-                replicationPackage = new FileVaultReplicationPackage(pkg);
             }
+//            else {
+//                VaultPackage pkg = packaging.getPackageManager(getSession()).open(PackageId.fromString(id)).getPackage();
+//                replicationPackage = new FileVaultReplicationPackage(pkg);
+//            }
         } catch (Exception e) {
             if (log.isWarnEnabled()) {
                 log.warn("could not find a package with id : {}", id);
@@ -203,17 +204,17 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
         Session session = null;
         try {
             session = getSession();
-            if (session != null) {
-                final JcrPackage jcrPackage = packaging.getPackageManager(getSession())
-                        .open(PackageId.fromString(replicationPackage.getId()));
-                jcrPackage.install(new ImportOptions());
-            }
-//            File file = new File(replicationPackage.getId());
-//            if (file.exists()) {
-//                VaultPackage pkg = packaging.getPackageManager().open(file);
-//                pkg.extract(session, new ImportOptions());
-//                return true;
+//            if (session != null) {
+//                final JcrPackage jcrPackage = packaging.getPackageManager(getSession())
+//                        .open(PackageId.fromString(replicationPackage.getId()));
+//                jcrPackage.install(new ImportOptions());
 //            }
+            File file = new File(replicationPackage.getId());
+            if (file.exists()) {
+                VaultPackage pkg = packaging.getPackageManager().open(file);
+                pkg.extract(session, new ImportOptions());
+                return true;
+            }
         } catch (Exception e) {
             if (log.isErrorEnabled()) {
                 log.error("could not read / install the package", e);

@@ -190,7 +190,9 @@ public class SimpleReplicationAgent implements ReplicationAgent {
 
 
     public void enable() {
-        log.info("enabling agent");
+        if (log.isInfoEnabled()) {
+            log.info("enabling agent");
+        }
         // apply rules if any
         if (rules.length > 0) {
             ruleEngine.applyRules(this, rules);
@@ -202,7 +204,9 @@ public class SimpleReplicationAgent implements ReplicationAgent {
     }
 
     public void disable() {
-        log.info("disabling agent");
+        if (log.isInfoEnabled()) {
+            log.info("disabling agent");
+        }
         if (rules != null) {
             ruleEngine.unapplyRules(this, rules);
         }
@@ -213,21 +217,30 @@ public class SimpleReplicationAgent implements ReplicationAgent {
     }
 
     private boolean processTransportQueue(ReplicationQueueItem queueItem) {
-        log.debug("reading package from id {}", queueItem.getId());
+        boolean success = false;
+        if (log.isDebugEnabled()) {
+            log.debug("reading package with id {}", queueItem.getId());
+        }
         try {
             ReplicationPackage replicationPackage = replicationPackageExporter.exportPackageById(queueItem.getId());
-            replicationPackageImporter.importPackage(replicationPackage);
-            replicationPackage.delete();
-            return true;
+            if (replicationPackage != null) {
+                replicationPackageImporter.importPackage(replicationPackage);
+                replicationPackage.delete();
+                success = true;
+            }
         } catch (ReplicationPackageReadingException e) {
-            return false;
+            if (log.isErrorEnabled()) {
+                log.error("could not process transport queue", e);
+            }
         }
+        return success;
     }
 
     class PackageQueueProcessor implements ReplicationQueueProcessor {
         public boolean process(String queueName, ReplicationQueueItem packageInfo) {
-            log.info("running package queue processor");
-
+            if (log.isInfoEnabled()) {
+                log.info("running package queue processor");
+            }
             return processTransportQueue(packageInfo);
         }
     }
