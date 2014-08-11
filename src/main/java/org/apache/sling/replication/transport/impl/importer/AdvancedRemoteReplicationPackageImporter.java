@@ -26,7 +26,6 @@ import java.util.Map;
 import org.apache.felix.scr.annotations.*;
 import org.apache.http.client.fluent.Executor;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.replication.agent.ReplicationAgentConfiguration;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.serialization.ReplicationPackage;
@@ -37,6 +36,7 @@ import org.apache.sling.replication.transport.authentication.TransportAuthentica
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
 import org.apache.sling.replication.transport.impl.AdvancedHttpReplicationTransportHandler;
 import org.apache.sling.replication.transport.impl.MultipleEndpointReplicationTransportHandler;
+import org.apache.sling.replication.transport.impl.ReplicationTransportConstants;
 import org.apache.sling.replication.transport.impl.TransportEndpointStrategyType;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -52,7 +52,7 @@ public class AdvancedRemoteReplicationPackageImporter implements ReplicationPack
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(name = ReplicationAgentConfiguration.TRANSPORT_AUTHENTICATION_FACTORY)
+    @Property(name = ReplicationTransportConstants.TRANSPORT_AUTHENTICATION_FACTORY)
     @Reference(name = "TransportAuthenticationProviderFactory", policy = ReferencePolicy.DYNAMIC)
     private TransportAuthenticationProviderFactory transportAuthenticationProviderFactory;
 
@@ -65,7 +65,7 @@ public class AdvancedRemoteReplicationPackageImporter implements ReplicationPack
             )},
             value = "One"
     )
-    private static final String ENDPOINT_STRATEGY = ReplicationAgentConfiguration.ENDPOINT_STRATEGY;
+    private static final String ENDPOINT_STRATEGY = ReplicationTransportConstants.ENDPOINT_STRATEGY;
 
     @Property(boolValue = false)
     private static final String USE_CUSTOM_HEADERS = "useCustomHeaders";
@@ -89,13 +89,12 @@ public class AdvancedRemoteReplicationPackageImporter implements ReplicationPack
     @Activate
     protected void activate(BundleContext context, Map<String, ?> config) throws Exception {
 
-        Map<String, String> authenticationProperties = PropertiesUtil.toMap(config.get(ReplicationAgentConfiguration.AUTHENTICATION_PROPERTIES),
-                new String[0]);
+        Map<String, String> authenticationProperties = PropertiesUtil.toMap(config.get(ReplicationTransportConstants.AUTHENTICATION_PROPERTIES), new String[0]);
 
         TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider = (TransportAuthenticationProvider<Executor, Executor>)
                 transportAuthenticationProviderFactory.createAuthenticationProvider(authenticationProperties);
-        String[] endpoints = PropertiesUtil.toStringArray(config.get(ReplicationAgentConfiguration.ENDPOINT), new String[0]);
-        String endpointStrategyName = PropertiesUtil.toString(config.get(ReplicationAgentConfiguration.ENDPOINT_STRATEGY),
+        String[] endpoints = PropertiesUtil.toStringArray(config.get(ReplicationTransportConstants.ENDPOINTS), new String[0]);
+        String endpointStrategyName = PropertiesUtil.toString(config.get(ReplicationTransportConstants.ENDPOINT_STRATEGY),
                 TransportEndpointStrategyType.One.name());
         TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(endpointStrategyName);
 

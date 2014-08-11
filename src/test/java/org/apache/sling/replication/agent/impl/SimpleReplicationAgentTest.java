@@ -113,7 +113,7 @@ public class SimpleReplicationAgentTest {
         when(packageExporter.exportPackage(request)).thenReturn(Arrays.asList(new ReplicationPackage[] { replicationPackage } ));
         when(queueProvider.getDefaultQueue(agent.getName())).thenReturn(
                 new SimpleReplicationQueue(agent.getName(), "name"));
-        agent.send(request);
+        agent.execute(request);
     }
 
     @Test

@@ -21,7 +21,7 @@ package org.apache.sling.replication.agent.impl;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.sling.replication.agent.AgentConfigurationException;
+
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
 import org.apache.sling.replication.serialization.ReplicationPackageExporter;
@@ -33,13 +33,13 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 
 /**
- * Testcase for {@link ReplicationAgentServiceFactory}
+ * Testcase for {@link SimpleReplicationAgentFactory}
  */
-public class ReplicationAgentServiceFactoryTest {
+public class SimpleReplicationAgentFactoryTest {
 
     @Test
     public void testActivationWithAllServicesAndPropertiesBound() throws Exception {
-        ReplicationAgentServiceFactory serviceFactory = new ReplicationAgentServiceFactory();
+        SimpleReplicationAgentFactory serviceFactory = new SimpleReplicationAgentFactory();
 
         Field packageImporterField = serviceFactory.getClass().getDeclaredField("packageImporter");
         packageImporterField.setAccessible(true);
@@ -74,12 +74,12 @@ public class ReplicationAgentServiceFactoryTest {
     @Test
     public void testActivationWithNoServicesBound() throws Exception {
         try {
-            ReplicationAgentServiceFactory serviceFactory = new ReplicationAgentServiceFactory();
+            SimpleReplicationAgentFactory serviceFactory = new SimpleReplicationAgentFactory();
             Map<String, Object> dictionary = new HashMap<String, Object>();
             BundleContext context = mock(BundleContext.class);
             serviceFactory.activate(context, dictionary);
             fail("missing / incomplete configuration should trigger agent configuration exception");
-        } catch (AgentConfigurationException e) {
+        } catch (Exception e) {
             // expected
         }
     }

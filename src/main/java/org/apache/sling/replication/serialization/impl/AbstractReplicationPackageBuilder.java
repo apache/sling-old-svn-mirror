@@ -18,13 +18,13 @@
  */
 package org.apache.sling.replication.serialization.impl;
 
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
+
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.serialization.ReplicationPackage;
@@ -92,7 +92,6 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
         if (ReplicationActionType.DELETE.equals(actionType)) {
             return installDeletePackage(replicationPackage);
         }
-
         return installPackageInternal(replicationPackage);
 
     }
@@ -100,7 +99,7 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
     private boolean installDeletePackage(ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {
         Session session = null;
         try {
-            if(replicationPackage != null){
+            if (replicationPackage != null) {
                 session = getSession();
                 for (String path : replicationPackage.getPaths()) {
                     if (session.itemExists(path)) {
@@ -125,12 +124,11 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
         ReplicationPackage replicationPackage = null;
         try {
             replicationPackage = VoidReplicationPackage.fromStream(new ByteArrayInputStream(id.getBytes("UTF-8")));
-        }
-        catch (IOException ex){
+        } catch (IOException ex) {
             // not a void package
         }
 
-        if(replicationPackage == null) {
+        if (replicationPackage == null) {
             replicationPackage = getPackageInternal(id);
         }
         return replicationPackage;

@@ -2,7 +2,7 @@
     "jcr:primaryType" : "sling:OsgiConfig",
     "name" : "replicationAgentsConfig",
     "provider.roots" : [ "/libs/sling/replication/config/agents" ],
-    "serviceType" : "org.apache.sling.replication.agent.impl.ReplicationAgentServiceFactory",
+    "serviceType" : "org.apache.sling.replication.agent.impl.SimpleReplicationAgentFactory",
     "providerType" : "osgiConfig",
     "resourceProperties" : [
         "sling:resourceType=replication/config/agent",

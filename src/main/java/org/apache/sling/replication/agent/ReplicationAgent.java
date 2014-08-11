@@ -54,30 +54,4 @@ public interface ReplicationAgent {
      */
     ReplicationResponse execute(ReplicationRequest replicationRequest) throws AgentReplicationException;
 
-    /**
-     * Asynchronously sends a {@link ReplicationRequest} without waiting for any response
-     *
-     * @param replicationRequest the replication request
-     * @throws AgentReplicationException
-     */
-    void send(ReplicationRequest replicationRequest) throws AgentReplicationException;
-
-    /**
-     * removes a package from the top of the queue
-     * @param queueName
-     *          the name of a {@link ReplicationQueue} bound to this agent
-     * @return the <code>ReplicationPackage</code> popped from the underlying <code>ReplicationQueue</code>
-     * @throws ReplicationQueueException
-     */
-    ReplicationPackage removeHead(String queueName) throws ReplicationQueueException;
-
-    /**
-     * enables the current  {@link ReplicationAgent}
-     */
-    void enable();
-
-    /**
-     * disables the current  {@link ReplicationAgent}
-     */
-    void disable();
 }

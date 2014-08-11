@@ -81,22 +81,19 @@ public class ChainReplicateReplicationRule implements ReplicationRule {
             Dictionary<String, Object> properties = new Hashtable<String, Object>();
             properties.put(EventConstants.EVENT_TOPIC, ReplicationEvent.getTopic(ReplicationEventType.PACKAGE_INSTALLED));
             String path = ruleString.substring(ruleString.indexOf(':') + 1).trim();
-            if (log.isInfoEnabled()) {
-                log.info("agent {} will chain replication on path '{}'", agent.getName(), path);
-            }
+            log.info("agent {} will chain replication on path '{}'", agent.getName(), path);
+
 //            properties.put(EventConstants.EVENT_FILTER, "(path=" + path + "/*)");
             if (bundleContext != null) {
                 ServiceRegistration triggerPathEventRegistration = bundleContext.registerService(EventHandler.class.getName(), new TriggerAgentEventListener(agent, path), properties);
                 registrations.put(agent.getName() + ruleString, triggerPathEventRegistration);
             } else {
-                if (log.isErrorEnabled()) {
-                    log.error("cannot register trigger since bundle context is null");
-                }
+                log.error("cannot register trigger since bundle context is null");
+
             }
         } else {
-            if (log.isWarnEnabled()) {
-                log.warn("rule {} doesn't match signature: {}", ruleString, SIGNATURE);
-            }
+            log.warn("rule {} doesn't match signature: {}", ruleString, SIGNATURE);
+
         }
 
     }
@@ -112,9 +109,8 @@ public class ChainReplicateReplicationRule implements ReplicationRule {
                 serviceRegistration.unregister();
             }
         } else {
-            if (log.isWarnEnabled()) {
-                log.warn("rule {} doesn't match signature: {}", ruleString, SIGNATURE);
-            }
+            log.warn("rule {} doesn't match signature: {}", ruleString, SIGNATURE);
+
         }
     }
 
@@ -136,16 +132,14 @@ public class ChainReplicateReplicationRule implements ReplicationRule {
                 String[] paths = (String[]) pathProperty;
                 for (String p : paths) {
                     if (p.startsWith(path)) {
-                        if (log.isInfoEnabled()) {
-                            log.info("triggering chain replication from event {}", event);
-                        }
+                        log.info("triggering chain replication from event {}", event);
+
                         ReplicationActionType action = ReplicationActionType.valueOf(String.valueOf(actionProperty));
                         try {
-                            agent.send(new ReplicationRequest(System.currentTimeMillis(), action, paths));
+                            agent.execute(new ReplicationRequest(System.currentTimeMillis(), action, paths));
                         } catch (AgentReplicationException e) {
-                            if (log.isErrorEnabled()) {
-                                log.error("triggered replication resulted in an error {}", e);
-                            }
+                            log.error("triggered replication resulted in an error {}", e);
+
                         }
                         break;
                     }

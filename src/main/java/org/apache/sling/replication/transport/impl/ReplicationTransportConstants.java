@@ -16,19 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.agent;
+package org.apache.sling.replication.transport.impl;
 
 /**
- * Represents errors happened during {@link ReplicationAgent} configuration
+ * Replication transport constants
  */
-@SuppressWarnings("serial")
-public class AgentConfigurationException extends Exception {
+public class ReplicationTransportConstants {
 
-    public AgentConfigurationException(Exception e) {
-        super(e);
-    }
+    public static final String TRANSPORT_AUTHENTICATION_FACTORY = "TransportAuthenticationProviderFactory.target";
 
-    public AgentConfigurationException(String string) {
-        super(string);
-    }
+    public static final String ENDPOINTS = "endpoints";
+
+    public static final String ENDPOINT_STRATEGY = "endpoints.strategy";
+
+    public static final String AUTHENTICATION_PROPERTIES = "authentication.properties";
 }
