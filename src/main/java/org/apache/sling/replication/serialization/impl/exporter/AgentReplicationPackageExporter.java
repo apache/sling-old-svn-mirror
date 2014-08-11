@@ -77,9 +77,11 @@ public class AgentReplicationPackageExporter implements ReplicationPackageExport
             if (info != null) {
                 queue.removeHead();
                 replicationPackage = replicationPackageBuilder.getPackage(info.getId());
+                if (replicationPackage != null) {
+                    result.add(replicationPackage);
+                }
             }
 
-            result.add(replicationPackage);
         } catch (Exception ex) {
             if (log.isErrorEnabled()) {
                 log.error("Error exporting package", ex);
