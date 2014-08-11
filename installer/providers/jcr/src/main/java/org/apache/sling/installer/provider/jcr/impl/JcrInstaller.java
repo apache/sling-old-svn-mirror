@@ -178,6 +178,15 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
     /** The path for new configurations. */
     private String newConfigPath;
 
+    public static final String PAUSE_SCAN_NODE_PATH = "/system/sling/installer/jcr/pauseInstallation";
+    @Property(value= PAUSE_SCAN_NODE_PATH)
+    private static final String PROP_SCAN_PROP_PATH = "sling.jcrinstall.signal.path";
+
+    /** The path for pauseInstallation property */
+    private String pauseScanNodePath;
+
+    private volatile boolean pauseMessageLogged = false;
+
     private static final boolean DEFAULT_ENABLE_WRITEBACK = true;
     @Property(boolValue=DEFAULT_ENABLE_WRITEBACK)
     private static final String PROP_ENABLE_WRITEBACK = "sling.jcrinstall.enable.writeback";
@@ -359,6 +368,8 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
         if ( !preSlash ) {
             this.newConfigPath = this.folderNameFilter.getRootPaths()[0] + '/' + this.newConfigPath;
         }
+
+        this.pauseScanNodePath = PropertiesUtil.toString(getPropertyValue(PROP_SCAN_PROP_PATH), PAUSE_SCAN_NODE_PATH);
 
         backgroundThread = new StoppableThread();
         backgroundThread.start();
@@ -593,6 +604,22 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
         try {
             boolean didRefresh = false;
 
+            if (anyWatchFolderNeedsScan()) {
+                session.refresh(false);
+                didRefresh = true;
+                if (scanningIsPaused()) {
+                    if (!pauseMessageLogged) {
+                        //Avoid flooding the logs every 500 msec so log at info level once
+                        logger.info("Detected signal for pausing the JCR Provider i.e. child nodes found under path {}. " +
+                                "JCR Provider scanning would not be performed", pauseScanNodePath);
+                        pauseMessageLogged = true;
+                    }
+                    return;
+                } else if (pauseMessageLogged) {
+                    pauseMessageLogged = false;
+                }
+            }
+
             // Rescan WatchedFolders if needed
             boolean scanWf = false;
             for(WatchedFolder wf : watchedFolders) {
@@ -649,6 +676,32 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
             // ignore
         }
         counters[RUN_LOOP_COUNTER]++;
+    }
+
+    boolean scanningIsPaused() throws RepositoryException {
+        if (session.nodeExists(pauseScanNodePath)) {
+            Node node = session.getNode(pauseScanNodePath);
+            boolean result = node.hasNodes();
+            if (result && logger.isDebugEnabled()) {
+                List<String> nodeNames = new ArrayList<String>();
+                NodeIterator childItr = node.getNodes();
+                while (childItr.hasNext()) {
+                    nodeNames.add(childItr.nextNode().getName());
+                }
+                logger.debug("Found child nodes {} at path {}. Scanning would be paused", nodeNames, pauseScanNodePath);
+            }
+            return result;
+        }
+        return false;
+    }
+
+    private boolean anyWatchFolderNeedsScan() {
+        for (WatchedFolder wf : watchedFolders) {
+            if (wf.needsScan()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     long [] getCounters() {

@@ -18,11 +18,12 @@
  */
 package org.apache.sling.installer.provider.jcr.impl;
 
+
+import javax.jcr.Node;
 import javax.jcr.Session;
 
 import org.apache.sling.commons.testing.jcr.EventHelper;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
-import org.apache.sling.installer.provider.jcr.impl.JcrInstaller;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.Test;
 
@@ -56,6 +57,7 @@ public class ScanningLoopTest extends RepositoryTestBase {
         MiscUtil.waitForInstallerThread(installer, TIMEOUT);
         installer = null;
         contentHelper.cleanupContent();
+        contentHelper.deleteQuietly(JcrInstaller.PAUSE_SCAN_NODE_PATH);
         if(session != null) {
             session.logout();
             session = null;
@@ -82,6 +84,38 @@ public class ScanningLoopTest extends RepositoryTestBase {
     @Test
     public void testIdleState() throws Exception {
         Thread.sleep(JcrInstaller.RUN_LOOP_DELAY_MSEC * 4);
+        assertIdle();
+    }
+
+    public void testDefaultScanPauseFalse() throws Exception{
+        assertFalse(installer.scanningIsPaused());
+    }
+
+    public void testPauseScan() throws Exception{
+        assertFalse(installer.scanningIsPaused());
+
+        Node n = contentHelper.createFolder(JcrInstaller.PAUSE_SCAN_NODE_PATH);
+        Node testNode = n.addNode("foo.example.pause");
+        session.save();
+
+        eventHelper.waitForEvents(TIMEOUT);
+
+        assertTrue(installer.scanningIsPaused());
+        final long sf = installer.getCounters()[JcrInstaller.SCAN_FOLDERS_COUNTER];
+        final long uc = installer.getCounters()[JcrInstaller.UPDATE_FOLDERS_LIST_COUNTER];
+
+        Thread.sleep(JcrInstaller.RUN_LOOP_DELAY_MSEC * 2);
+
+        //Counters should not have changed as no scanning being performed
+        assertEquals(sf, installer.getCounters()[JcrInstaller.SCAN_FOLDERS_COUNTER]);
+
+        //Now lets resume again
+        testNode.remove();
+        session.save();
+
+        Thread.sleep(JcrInstaller.RUN_LOOP_DELAY_MSEC * 2);
+
+        //Now counters should have changed
         assertIdle();
     }
 
@@ -136,5 +170,10 @@ public class ScanningLoopTest extends RepositoryTestBase {
                 uc,  JcrInstaller.UPDATE_FOLDERS_LIST_COUNTER);
 
         assertIdle();
+    }
+
+    private static String getParentPath(String absPath){
+        int pos = absPath.lastIndexOf('/');
+        return absPath.substring(0, pos);
     }
 }
