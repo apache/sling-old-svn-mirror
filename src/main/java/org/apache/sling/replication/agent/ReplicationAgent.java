@@ -46,7 +46,7 @@ public interface ReplicationAgent {
     ReplicationQueue getQueue(String name) throws ReplicationQueueException;
 
     /**
-     * Synchronously sends a {@link ReplicationRequest} waiting for a {@link ReplicationResponse}
+     * sends a {@link ReplicationRequest} to this {@link org.apache.sling.replication.agent.ReplicationAgent}
      *
      * @param replicationRequest the replication request
      * @return a {@link ReplicationResponse}
