@@ -22,6 +22,7 @@ import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationException;
@@ -53,9 +54,7 @@ public class RepositoryTransportAuthenticationProvider implements TransportAuthe
                 if (!session.nodeExists(path)) {
                     throw new TransportAuthenticationException("failed to read path " + path);
                 } else {
-                    if (log.isInfoEnabled()) {
-                        log.info("authenticated path {} ", path);
-                    }
+                    log.info("authenticated path {} ", path);
                     return session;
                 }
             } catch (RepositoryException re) {

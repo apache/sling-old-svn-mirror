@@ -53,7 +53,6 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
             throw new PersistenceException("Not enough permissions");
         }
 
-
         String resourceName = pathInfo.getMainResourceName();
 
         boolean added = addToChangedResources(resourceName, properties, true);

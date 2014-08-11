@@ -18,19 +18,9 @@
  */
 package org.apache.sling.replication.agent.impl;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.*;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.event.ReplicationEventFactory;
@@ -161,10 +151,8 @@ public class SimpleReplicationAgentFactory {
             }
 
 
-            if (log.isInfoEnabled()) {
-                log.info("bound services for {} :  {} - {} - {} - {} - {} - {}", new Object[]{name,
-                        packageImporter, packageExporter, queueProvider, queueDistributionStrategy});
-            }
+            log.info("bound services for {} :  {} - {} - {} - {} - {} - {}", new Object[]{name,
+                    packageImporter, packageExporter, queueProvider, queueDistributionStrategy});
 
             SimpleReplicationAgent agent = new SimpleReplicationAgent(name, rules, useAggregatePaths, isPassive,
                     packageImporter, packageExporter, queueProvider, queueDistributionStrategy, replicationEventFactory, replicationRuleEngine);

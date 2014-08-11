@@ -67,9 +67,7 @@ public class AgentReplicationPackageExporter implements ReplicationPackageExport
 
         List<ReplicationPackage> result = new ArrayList<ReplicationPackage>();
         try {
-            if (log.isInfoEnabled()) {
-                log.info("getting item from queue {}", queueName);
-            }
+            log.info("getting item from queue {}", queueName);
 
             ReplicationQueue queue = agent.getQueue(queueName);
             ReplicationQueueItem info = queue.getHead();
@@ -83,9 +81,7 @@ public class AgentReplicationPackageExporter implements ReplicationPackageExport
             }
 
         } catch (Exception ex) {
-            if (log.isErrorEnabled()) {
-                log.error("Error exporting package", ex);
-            }
+            log.error("Error exporting package", ex);
         }
 
         return result;

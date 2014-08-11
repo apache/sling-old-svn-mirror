@@ -55,7 +55,6 @@ public class OsgiServicePropertiesResourceProvider extends AbstractReadableResou
                                                  Map<String, String> additionalResourceProperties) {
         super(resourceRoot, additionalResourceProperties);
         this.context = context;
-        String serviceInterface1 = serviceInterface;
         this.friendlyNameProperty = friendlyNameProperty;
     }
 

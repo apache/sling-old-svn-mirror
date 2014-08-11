@@ -20,6 +20,7 @@
 package org.apache.sling.replication.resources;
 
 public class ReplicationConstants {
+
     public static final String SUFFIX_RESOURCE_LIST = "/list";
     public static final String SUFFIX_AGENT_QUEUE = "/queue";
     public static final String SUFFIX_AGENT_QUEUE_EVENT = "/queue/event";
@@ -31,6 +32,5 @@ public class ReplicationConstants {
 
     public static final String  IMPORTER_RESOURCE_TYPE = "replication/importer";
     public static final String  EXPORTER_RESOURCE_TYPE = "replication/exporter";
-
 
 }

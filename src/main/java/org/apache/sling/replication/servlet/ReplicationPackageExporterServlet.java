@@ -70,9 +70,7 @@ public class ReplicationPackageExporterServlet extends SlingAllMethodsServlet {
             List<ReplicationPackage> replicationPackages = replicationPackageExporter.exportPackage(null);
 
             if (replicationPackages.size() > 0) {
-                if (log.isInfoEnabled()) {
-                    log.info("{} package(s) available for fetching, the first will be delivered", replicationPackages.size());
-                }
+                log.info("{} package(s) available for fetching, the first will be delivered", replicationPackages.size());
 
                 ReplicationPackage replicationPackage = replicationPackages.get(0);
                 if (replicationPackage != null) {
@@ -90,33 +88,22 @@ public class ReplicationPackageExporterServlet extends SlingAllMethodsServlet {
 
                     // everything ok
                     response.setStatus(200);
-                    if (log.isInfoEnabled()) {
-                        log.info("{} bytes written into the response", bytesCopied);
-                    }
+                    log.info("{} bytes written into the response", bytesCopied);
                     success = true;
-                }
-                else {
-                    if (log.isWarnEnabled()) {
-                        log.warn("fetched a null package");
-                    }
+                } else {
+                    log.warn("fetched a null package");
                 }
             } else {
                 response.setStatus(204);
-                if (log.isInfoEnabled()) {
-                    log.info("nothing to fetch");
-                }
+                log.info("nothing to fetch");
             }
 
         } catch (Exception e) {
             response.setStatus(503);
-            if (log.isErrorEnabled()) {
-                log.error("error while reverse replicating from agent", e);
-            }
+            log.error("error while reverse replicating from agent", e);
         } finally {
             final long end = System.currentTimeMillis();
-            if (log.isInfoEnabled()) {
-                log.info("Processed replication export request in {}ms: : {}", new Object[]{end - start, success});
-            }
+            log.info("Processed replication export request in {}ms: : {}", new Object[]{end - start, success});
         }
     }
 
