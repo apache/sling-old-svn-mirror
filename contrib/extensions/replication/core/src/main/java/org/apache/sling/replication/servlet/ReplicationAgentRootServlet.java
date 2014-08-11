@@ -76,7 +76,7 @@ public class ReplicationAgentRootServlet extends SlingAllMethodsServlet {
         boolean failed = false;
         for (ReplicationAgent agent : agents) {
             try {
-                agent.send(replicationRequest);
+                agent.execute(replicationRequest);
             } catch (AgentReplicationException e) {
                 log.warn("agent {} failed", agent.getName(), e);
 

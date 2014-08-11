@@ -82,22 +82,19 @@ public class TriggerPathReplicationRule implements ReplicationRule {
             properties.put(EventConstants.EVENT_TOPIC, new String[]{SlingConstants.TOPIC_RESOURCE_ADDED,
                     SlingConstants.TOPIC_RESOURCE_CHANGED, SlingConstants.TOPIC_RESOURCE_REMOVED});
             String path = ruleString.substring(ruleString.indexOf(':') + 1).trim();
-            if (log.isInfoEnabled()) {
-                log.info("trigger agent {} on path '{}'", agent.getName(), path);
-            }
+            log.info("trigger agent {} on path '{}'", agent.getName(), path);
+
             properties.put(EventConstants.EVENT_FILTER, "(path=" + path + "/*)");
             if (bundleContext != null) {
                 ServiceRegistration triggerPathEventRegistration = bundleContext.registerService(EventHandler.class.getName(), new TriggerAgentEventListener(agent), properties);
                 registrations.put(agent.getName() + ruleString, triggerPathEventRegistration);
             } else {
-                if (log.isErrorEnabled()) {
-                    log.error("cannot register trigger since bundle context is null");
-                }
+                log.error("cannot register trigger since bundle context is null");
+
             }
         } else {
-            if (log.isWarnEnabled()) {
-                log.warn("rule {} doesn't match signature: {}", ruleString, SIGNATURE);
-            }
+            log.warn("rule {} doesn't match signature: {}", ruleString, SIGNATURE);
+
         }
 
     }
@@ -113,9 +110,8 @@ public class TriggerPathReplicationRule implements ReplicationRule {
                 serviceRegistration.unregister();
             }
         } else {
-            if (log.isWarnEnabled()) {
-                log.warn("rule {} doesn't match signature: {}", ruleString, SIGNATURE);
-            }
+            log.warn("rule {} doesn't match signature: {}", ruleString, SIGNATURE);
+
         }
     }
 
@@ -130,18 +126,15 @@ public class TriggerPathReplicationRule implements ReplicationRule {
 
         public void handleEvent(Event event) {
             ReplicationActionType action = SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic()) ? ReplicationActionType.DELETE : ReplicationActionType.ADD;
-            if (log.isInfoEnabled()) {
-                log.info("triggering replication from event {}", event);
-            }
+            log.info("triggering replication from event {}", event);
+
             Object eventProperty = event.getProperty("path");
             if (eventProperty != null) {
                 String replicatingPath = String.valueOf(eventProperty);
                 try {
-                    agent.send(new ReplicationRequest(System.currentTimeMillis(), action, replicatingPath));
+                    agent.execute(new ReplicationRequest(System.currentTimeMillis(), action, replicatingPath));
                 } catch (AgentReplicationException e) {
-                    if (log.isErrorEnabled()) {
-                        log.error("triggered replication resulted in an error", e);
-                    }
+                    log.error("triggered replication resulted in an error", e);
                 }
             }
         }

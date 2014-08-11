@@ -87,21 +87,7 @@ public class SimpleReplicationAgent implements ReplicationAgent {
         List<ReplicationPackage> replicationPackages;
         try {
             replicationPackages = buildPackages(replicationRequest);
-            return schedule(replicationPackages, false);
-
-        } catch (ReplicationPackageBuildingException e) {
-            log.error("Error building packages", e);
-            throw new AgentReplicationException(e);
-        }
-
-    }
-
-    public void send(ReplicationRequest replicationRequest) throws AgentReplicationException {
-        // create packages from request
-        List<ReplicationPackage> replicationPackages = null;
-        try {
-            replicationPackages = buildPackages(replicationRequest);
-            schedule(replicationPackages, true);
+            return schedule(replicationPackages);
 
         } catch (ReplicationPackageBuildingException e) {
             log.error("Error building packages", e);
@@ -135,12 +121,11 @@ public class SimpleReplicationAgent implements ReplicationAgent {
         return replicationPackages;
     }
 
-    // offer option throws an exception at first error
-    private ReplicationResponse schedule(List<ReplicationPackage> replicationPackages, boolean offer) throws AgentReplicationException {
+    private ReplicationResponse schedule(List<ReplicationPackage> replicationPackages) {
         ReplicationResponse replicationResponse = new ReplicationResponse();
 
         for (ReplicationPackage replicationPackage : replicationPackages) {
-            ReplicationResponse currentReplicationResponse = schedule(replicationPackage, offer);
+            ReplicationResponse currentReplicationResponse = schedule(replicationPackage);
 
             replicationResponse.setSuccessful(currentReplicationResponse.isSuccessful());
             replicationResponse.setStatus(currentReplicationResponse.getStatus());
@@ -149,7 +134,7 @@ public class SimpleReplicationAgent implements ReplicationAgent {
         return replicationResponse;
     }
 
-    private ReplicationResponse schedule(ReplicationPackage replicationPackage, boolean offer) throws AgentReplicationException {
+    private ReplicationResponse schedule(ReplicationPackage replicationPackage) {
         ReplicationResponse replicationResponse = new ReplicationResponse();
         log.info("scheduling replication of package {}", replicationPackage);
 
@@ -158,38 +143,26 @@ public class SimpleReplicationAgent implements ReplicationAgent {
                 replicationPackage.getAction(),
                 replicationPackage.getType());
 
-        if (offer) {
-            try {
-                queueDistributionStrategy.offer(getName(), replicationQueueItem, queueProvider);
-                if (isPassive()) {
-                    generatePackageQueuedEvent(replicationQueueItem);
-                }
-            } catch (ReplicationQueueException e) {
-                replicationResponse.setSuccessful(false);
-                throw new AgentReplicationException(e);
+        // send the replication package to the queue distribution handler
+        try {
+            ReplicationQueueItemState state = queueDistributionStrategy.add(getName(), replicationQueueItem,
+                    queueProvider);
+            if (isPassive()) {
+                generatePackageQueuedEvent(replicationQueueItem);
             }
-        } else {
-            // send the replication package to the queue distribution handler
-            try {
-                ReplicationQueueItemState state = queueDistributionStrategy.add(getName(), replicationQueueItem,
-                        queueProvider);
-                if (isPassive()) {
-                    generatePackageQueuedEvent(replicationQueueItem);
-                }
-                if (state != null) {
-                    replicationResponse.setStatus(state.getItemState().toString());
-                    replicationResponse.setSuccessful(state.isSuccessful());
-                } else {
-                    replicationResponse.setStatus(ReplicationQueueItemState.ItemState.ERROR.toString());
-                    replicationResponse.setSuccessful(false);
-                }
-            } catch (Exception e) {
-                if (log.isErrorEnabled()) {
-                    log.error("an error happened during queue processing", e);
-                }
+            if (state != null) {
+                replicationResponse.setStatus(state.getItemState().toString());
+                replicationResponse.setSuccessful(state.isSuccessful());
+            } else {
+                replicationResponse.setStatus(ReplicationQueueItemState.ItemState.ERROR.toString());
                 replicationResponse.setSuccessful(false);
             }
+        } catch (Exception e) {
+            log.error("an error happened during queue processing", e);
+
+            replicationResponse.setSuccessful(false);
         }
+
         return replicationResponse;
     }
 
@@ -200,20 +173,6 @@ public class SimpleReplicationAgent implements ReplicationAgent {
         replicationEventFactory.generateEvent(ReplicationEventType.PACKAGE_QUEUED, properties);
     }
 
-    public ReplicationPackage removeHead(String queueName) throws ReplicationQueueException {
-        ReplicationPackage replicationPackage = null;
-        if (isPassive()) {
-            ReplicationQueue queue = getQueue(queueName);
-            ReplicationQueueItem info = queue.getHead();
-            if (info != null) {
-                queue.removeHead();
-                replicationPackage = replicationPackageExporter.exportPackageById(info.getId());
-            }
-            return replicationPackage;
-        } else {
-            throw new ReplicationQueueException("cannot explicitly fetch items from not-passive agents");
-        }
-    }
 
     public String getName() {
         return name;

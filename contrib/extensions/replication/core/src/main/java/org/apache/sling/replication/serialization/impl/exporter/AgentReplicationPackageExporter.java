@@ -26,6 +26,8 @@ import org.apache.felix.scr.annotations.*;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.queue.ReplicationQueue;
+import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageExporter;
@@ -69,11 +71,19 @@ public class AgentReplicationPackageExporter implements ReplicationPackageExport
                 log.info("getting item from queue {}", queueName);
             }
 
-            // get first item
-            ReplicationPackage headPackage = agent.removeHead(queueName);
-            result.add(headPackage);
+            ReplicationQueue queue = agent.getQueue(queueName);
+            ReplicationQueueItem info = queue.getHead();
+            ReplicationPackage replicationPackage = null;
+            if (info != null) {
+                queue.removeHead();
+                replicationPackage = replicationPackageBuilder.getPackage(info.getId());
+            }
+
+            result.add(replicationPackage);
         } catch (Exception ex) {
-            log.error("Error exporting package", ex);
+            if (log.isErrorEnabled()) {
+                log.error("Error exporting package", ex);
+            }
         }
 
         return result;

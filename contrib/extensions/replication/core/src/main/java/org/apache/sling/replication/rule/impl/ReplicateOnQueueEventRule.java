@@ -47,8 +47,6 @@ import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.replication.agent.AgentReplicationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.agent.ReplicationAgentConfiguration;
-import org.apache.sling.replication.agent.ReplicationAgentConfigurationManager;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.resources.ReplicationConstants;
@@ -74,8 +72,6 @@ public class ReplicateOnQueueEventRule implements ReplicationRule {
 
     private static final Pattern signaturePattern = Pattern.compile(SIGNATURE_REGEX);
 
-    @Reference
-    private ReplicationAgentConfigurationManager replicationAgentConfigurationManager;
 
     @Reference
     private Scheduler scheduler;
@@ -106,17 +102,10 @@ public class ReplicateOnQueueEventRule implements ReplicationRule {
             String path = matcher.group(5); // can be null
             try {
                 log.info("applying queue event replication rule");
-                // get configuration
-                ReplicationAgentConfiguration configuration = replicationAgentConfigurationManager.getConfiguration(agent.getName());
-
-                // get URI of the event queue
-                String targetTransport = configuration.getTargetTransportHandler();
-
-                log.info("found target transport {}", targetTransport);
 
                 ScheduleOptions options = scheduler.NOW();
                 options.name(agent.getName() + " " + ruleString);
-                scheduler.schedule(new EventBasedReplication(agent, actionType, path, targetTransport), options);
+                scheduler.schedule(new EventBasedReplication(agent, actionType, path, null), options);
 
             } catch (Exception e) {
                 log.error("{}", e);
@@ -171,7 +160,7 @@ public class ReplicateOnQueueEventRule implements ReplicationRule {
     }
 
     private void asyncReplicate(ReplicationAgent agent, ReplicationActionType action, String path) throws AgentReplicationException {
-        agent.send(new ReplicationRequest(System.currentTimeMillis(), action, path));
+        agent.execute(new ReplicationRequest(System.currentTimeMillis(), action, path));
     }
 
     private class EventBasedReplication implements Runnable {

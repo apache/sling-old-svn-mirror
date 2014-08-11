@@ -32,9 +32,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.replication.agent.AgentConfigurationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.agent.ReplicationAgentConfiguration;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
@@ -56,58 +54,60 @@ import org.slf4j.LoggerFactory;
 @Component(metatype = true,
         label = "Replication Agents Factory",
         description = "OSGi configuration based ReplicationAgent service factory",
-        name = ReplicationAgentServiceFactory.SERVICE_PID,
+        name = SimpleReplicationAgentFactory.SERVICE_PID,
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE
 )
-public class ReplicationAgentServiceFactory {
+public class SimpleReplicationAgentFactory {
+
+
+    public static final String PACKAGE_EXPORTER_TARGET = "ReplicationPackageExporter.target";
+
+    public static final String PACKAGE_IMPORTER_TARGET = "ReplicationPackageImporter.target";
+
+    public static final String QUEUEPROVIDER_TARGET = "ReplicationQueueProvider.target";
+
+    public static final String QUEUE_DISTRIBUTION_TARGET = "ReplicationQueueDistributionStrategy.target";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    static final String SERVICE_PID = "org.apache.sling.replication.agent.impl.ReplicationAgentServiceFactory";
+    static final String SERVICE_PID = "org.apache.sling.replication.agent.impl.SimpleReplicationAgentFactory";
 
-    private static final String QUEUEPROVIDER = ReplicationAgentConfiguration.QUEUEPROVIDER;
+    private static final String DEFAULT_QUEUEPROVIDER = "(name=" + JobHandlingReplicationQueueProvider.NAME + ")";
 
-    private static final String QUEUE_DISTRIBUTION = ReplicationAgentConfiguration.QUEUE_DISTRIBUTION;
-
-
-    private static final String DEFAULT_QUEUEPROVIDER = "(name="
-            + JobHandlingReplicationQueueProvider.NAME + ")";
-
-    private static final String DEFAULT_DISTRIBUTION = "(name="
-            + SingleQueueDistributionStrategy.NAME + ")";
+    private static final String DEFAULT_DISTRIBUTION = "(name=" + SingleQueueDistributionStrategy.NAME + ")";
 
     @Property(boolValue = true, label = "Enabled")
-    private static final String ENABLED = ReplicationAgentConfiguration.ENABLED;
+    private static final String ENABLED = "enabled";
 
     @Property(label = "Name")
-    private static final String NAME = ReplicationAgentConfiguration.NAME;
+    private static final String NAME = "name";
 
     @Property(label = "Rules")
-    private static final String RULES = ReplicationAgentConfiguration.RULES;
+    private static final String RULES = "rules";
 
     @Property(boolValue = true, label = "Replicate using aggregated paths")
-    private static final String USE_AGGREGATE_PATHS = ReplicationAgentConfiguration.USE_AGGREGATE_PATHS;
+    private static final String USE_AGGREGATE_PATHS = "useAggregatePaths";
 
-    @Property(label = "Target ReplicationPackageExporter", name = "ReplicationPackageExporter.target", value = "(name=vlt)")
-    @Reference(name = "ReplicationPackageExporter", target = "(name=vlt)", policy = ReferencePolicy.DYNAMIC)
+    @Property(label = "Target ReplicationPackageExporter", name = PACKAGE_EXPORTER_TARGET)
+    @Reference(name = "ReplicationPackageExporter", policy = ReferencePolicy.DYNAMIC)
     private ReplicationPackageExporter packageExporter;
 
-    @Property(label = "Target ReplicationPackageImporter", name = "ReplicationPackageImporter.target", value = "(name=local)")
-    @Reference(name = "ReplicationPackageImporter", target = "(name=local)", policy = ReferencePolicy.DYNAMIC)
+    @Property(label = "Target ReplicationPackageImporter", name = PACKAGE_IMPORTER_TARGET)
+    @Reference(name = "ReplicationPackageImporter", policy = ReferencePolicy.DYNAMIC)
     private ReplicationPackageImporter packageImporter;
 
-    @Property(label = "Target ReplicationQueueProvider", name = QUEUEPROVIDER, value = DEFAULT_QUEUEPROVIDER)
+    @Property(label = "Target ReplicationQueueProvider", name = QUEUEPROVIDER_TARGET, value = DEFAULT_QUEUEPROVIDER)
     @Reference(name = "ReplicationQueueProvider", target = DEFAULT_QUEUEPROVIDER, policy = ReferencePolicy.DYNAMIC)
     private volatile ReplicationQueueProvider queueProvider;
 
-    @Property(label = "Target QueueDistributionStrategy", name = QUEUE_DISTRIBUTION, value = DEFAULT_DISTRIBUTION)
+    @Property(label = "Target QueueDistributionStrategy", name = QUEUE_DISTRIBUTION_TARGET, value = DEFAULT_DISTRIBUTION)
     @Reference(name = "ReplicationQueueDistributionStrategy", target = DEFAULT_DISTRIBUTION, policy = ReferencePolicy.DYNAMIC)
     private volatile ReplicationQueueDistributionStrategy queueDistributionStrategy;
 
     @Property(label = "Runmodes")
-    private static final String RUNMODES = ReplicationAgentConfiguration.RUNMODES;
+    private static final String RUNMODES = "runModes";
 
     private ServiceRegistration agentReg;
 
@@ -139,11 +139,11 @@ public class ReplicationAgentServiceFactory {
             props.put(NAME, name);
 
 
-            String queue = PropertiesUtil.toString(config.get(QUEUEPROVIDER), "");
-            props.put(QUEUEPROVIDER, queue);
+            String queue = PropertiesUtil.toString(config.get(QUEUEPROVIDER_TARGET), "");
+            props.put(QUEUEPROVIDER_TARGET, queue);
 
-            String distribution = PropertiesUtil.toString(config.get(QUEUE_DISTRIBUTION), "");
-            props.put(QUEUE_DISTRIBUTION, distribution);
+            String distribution = PropertiesUtil.toString(config.get(QUEUE_DISTRIBUTION_TARGET), "");
+            props.put(QUEUE_DISTRIBUTION_TARGET, distribution);
 
             String[] rules = PropertiesUtil.toStringArray(config.get(RULES), new String[0]);
             props.put(RULES, rules);
@@ -157,7 +157,7 @@ public class ReplicationAgentServiceFactory {
 
             // check configuration is valid
             if (name == null || packageExporter == null || packageImporter == null || queueProvider == null || queueDistributionStrategy == null) {
-                throw new AgentConfigurationException("configuration for this agent is not valid");
+                throw new Exception("configuration for this agent is not valid");
             }
 
 
@@ -166,7 +166,7 @@ public class ReplicationAgentServiceFactory {
                         packageImporter, packageExporter, queueProvider, queueDistributionStrategy});
             }
 
-            ReplicationAgent agent = new SimpleReplicationAgent(name, rules, useAggregatePaths, isPassive,
+            SimpleReplicationAgent agent = new SimpleReplicationAgent(name, rules, useAggregatePaths, isPassive,
                     packageImporter, packageExporter, queueProvider, queueDistributionStrategy, replicationEventFactory, replicationRuleEngine);
 
 
@@ -199,7 +199,7 @@ public class ReplicationAgentServiceFactory {
     private void deactivate(BundleContext context) {
         if (agentReg != null) {
             ServiceReference reference = agentReg.getReference();
-            ReplicationAgent replicationAgent = (ReplicationAgent) context.getService(reference);
+            SimpleReplicationAgent replicationAgent = (SimpleReplicationAgent) context.getService(reference);
             replicationAgent.disable();
             agentReg.unregister();
         }

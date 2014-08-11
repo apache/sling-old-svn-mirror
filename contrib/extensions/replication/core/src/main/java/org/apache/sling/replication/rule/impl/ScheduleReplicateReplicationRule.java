@@ -92,15 +92,12 @@ public class ScheduleReplicateReplicationRule implements ReplicationRule {
 
         public void run() {
             try {
-                if (log.isDebugEnabled()) {
-                    log.debug("agent {}: scheduling {} replication of {}", new Object[]{agent, action, path});
-                }
-                agent.send(new ReplicationRequest(System.currentTimeMillis(), action, path));
+                log.debug("agent {}: scheduling {} replication of {}", new Object[]{agent, action, path});
+
+                agent.execute(new ReplicationRequest(System.currentTimeMillis(), action, path));
             } catch (AgentReplicationException e) {
-                if (log.isErrorEnabled()) {
-                    log.error("failed scheduled replication {} on agent {} for path {}", new Object[]{
-                            action.name(), agent.getName(), path}, e);
-                }
+                log.error("failed scheduled replication {} on agent {} for path {}", new Object[]{
+                        action.name(), agent.getName(), path}, e);
             }
         }
     }

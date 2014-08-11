@@ -21,7 +21,6 @@ package org.apache.sling.replication.transport.impl.exporter;
 import org.apache.felix.scr.annotations.*;
 import org.apache.http.client.fluent.Executor;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.replication.agent.ReplicationAgentConfiguration;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.serialization.*;
@@ -29,6 +28,7 @@ import org.apache.sling.replication.transport.ReplicationTransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
 import org.apache.sling.replication.transport.impl.MultipleEndpointReplicationTransportHandler;
+import org.apache.sling.replication.transport.impl.ReplicationTransportConstants;
 import org.apache.sling.replication.transport.impl.SimpleHttpReplicationTransportHandler;
 import org.apache.sling.replication.transport.impl.TransportEndpointStrategyType;
 import org.osgi.framework.BundleContext;
@@ -50,7 +50,7 @@ public class RemoteReplicationPackageExporter implements ReplicationPackageExpor
     @Property
     private static final String NAME = "name";
 
-    @Property(name = ReplicationAgentConfiguration.TRANSPORT_AUTHENTICATION_FACTORY)
+    @Property(name = ReplicationTransportConstants.TRANSPORT_AUTHENTICATION_FACTORY)
     @Reference(name = "TransportAuthenticationProviderFactory", policy = ReferencePolicy.DYNAMIC)
     private TransportAuthenticationProviderFactory transportAuthenticationProviderFactory;
 
@@ -71,7 +71,7 @@ public class RemoteReplicationPackageExporter implements ReplicationPackageExpor
             )},
             value = "One"
     )
-    private static final String ENDPOINT_STRATEGY = ReplicationAgentConfiguration.ENDPOINT_STRATEGY;
+    private static final String ENDPOINT_STRATEGY = ReplicationTransportConstants.ENDPOINT_STRATEGY;
 
     int pollItems;
     ReplicationTransportHandler transportHandler;
@@ -79,15 +79,15 @@ public class RemoteReplicationPackageExporter implements ReplicationPackageExpor
     @Activate
     protected void activate(BundleContext context, Map<String, ?> config) throws Exception {
 
-        Map<String, String> authenticationProperties = PropertiesUtil.toMap(config.get(ReplicationAgentConfiguration.AUTHENTICATION_PROPERTIES), new String[0]);
+        Map<String, String> authenticationProperties = PropertiesUtil.toMap(config.get(ReplicationTransportConstants.AUTHENTICATION_PROPERTIES), new String[0]);
 
         TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider = (TransportAuthenticationProvider<Executor, Executor>) transportAuthenticationProviderFactory.createAuthenticationProvider(authenticationProperties);
 
-        String[] endpoints = PropertiesUtil.toStringArray(config.get(ReplicationAgentConfiguration.ENDPOINT), new String[0]);
+        String[] endpoints = PropertiesUtil.toStringArray(config.get(ReplicationTransportConstants.ENDPOINTS), new String[0]);
 
         pollItems = PropertiesUtil.toInteger(config.get(POLL_ITEMS), 1);
 
-        String endpointStrategyName = PropertiesUtil.toString(config.get(ReplicationAgentConfiguration.ENDPOINT_STRATEGY), "One");
+        String endpointStrategyName = PropertiesUtil.toString(config.get(ReplicationTransportConstants.ENDPOINT_STRATEGY), "One");
         TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(endpointStrategyName);
 
         List<ReplicationTransportHandler> transportHandlers = new ArrayList<ReplicationTransportHandler>();
