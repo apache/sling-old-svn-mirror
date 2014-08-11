@@ -6,20 +6,10 @@ package org.apache.sling.models.spi;
  *
  */
 public class ValidationException extends RuntimeException {
-    /**
-     *  
-     */
     private static final long serialVersionUID = 7870762030809272254L;
-
+    
     public ValidationException(String message) {
         super(message);
     }
-
-    public ValidationException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public ValidationException(Throwable cause) {
-        super(cause);
-    }
+    
 }

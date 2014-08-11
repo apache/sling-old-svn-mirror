@@ -215,11 +215,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
         if (type.isInterface()) {
             InvocationHandler handler = createInvocationHandler(adaptable, type, modelAnnotation);
-            if (handler != null) {
-                return (ModelType) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] { type }, handler);
-            } else {
-                return null;
-            }
+            return (ModelType) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] { type }, handler);
         } else {
             try {
                 return createObject(adaptable, type, modelAnnotation);
@@ -228,7 +224,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
                 throw e1;
             }
             catch (Exception e2) {
-                // wrapp all other exceptions (e.g. the reflection exceptions) into ISE
+                // wrap all other exceptions (e.g. the reflection exceptions) into ISEs
                 throw new IllegalStateException("Could not instanciate object", e2);
             }
         }
@@ -278,7 +274,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         public boolean inject(AnnotatedElement element, Object value);
     }
 
-    private static class SetFieldCallback implements InjectCallback {
+    private class SetFieldCallback implements InjectCallback {
 
         private final Object object;
 
@@ -292,7 +288,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         }
     }
 
-    private static class SetMethodsCallback implements InjectCallback {
+    private class SetMethodsCallback implements InjectCallback {
 
         private final Map<Method, Object> methods;
 
@@ -662,13 +658,13 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         }
     }
 
-    private static boolean setField(Field field, Object createdObject, Object value) {
+    private boolean setField(Field field, Object createdObject, Object value) {
         if (value != null) {
             if (!isAcceptableType(field.getType(), field.getGenericType(), value)) {
                 Class<?> declaredType = field.getType();
                 Type genericType = field.getGenericType();
                 if (value instanceof Adaptable) {
-                    value = ((Adaptable) value).adaptTo(field.getType());
+                    value = createModelOrAdaptTo((Adaptable) value, field.getType());
                     if (value == null) {
                         return false;
                     }
@@ -681,7 +677,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
                         List<Object> result = new ArrayList<Object>();
                         for (Object valueObject : (Collection<?>) value) {
                             if (valueObject instanceof Adaptable) {
-                                Object adapted = ((Adaptable) valueObject).adaptTo((Class<?>) type.getActualTypeArguments()[0]);
+                                Object adapted = createModelOrAdaptTo((Adaptable) valueObject, (Class<?>) type.getActualTypeArguments()[0]);
                                 if (adapted != null) {
                                     result.add(adapted);
                                 }
@@ -710,11 +706,28 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             return false;
         }
     }
+    
+    /**
+     * First try to instanciate via ModelFactory and only if that fails use adaptTo mechanism. Necessary to make exception propagation work.
+     * @param adaptable
+     * @param type
+     * @return the instanciated model/adapted object (might be null)
+     */
+    private Object createModelOrAdaptTo(Adaptable adaptable, Class<?> type) {
+        try {
+            return this.createModel(adaptable, type);
+        } catch (InvalidAdaptableException e) {
+            log.debug("Could not adapt from the given class", e);
+        } catch (IllegalArgumentException e) {
+            log.debug("Could not instanciate class, probably not a Sling Model:", e);
+        }
+        return adaptable.adaptTo(type);
+    }
 
-    private static boolean setMethod(Method method, Map<Method, Object> methods, Object value) {
+    private boolean setMethod(Method method, Map<Method, Object> methods, Object value) {
         if (value != null) {
             if (!isAcceptableType(method.getReturnType(), method.getGenericReturnType(), value) && value instanceof Adaptable) {
-                value = ((Adaptable) value).adaptTo(method.getReturnType());
+                value = createModelOrAdaptTo((Adaptable) value, method.getReturnType());
                 if (value == null) {
                     return false;
                 }
