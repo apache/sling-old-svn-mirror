@@ -38,8 +38,10 @@ import aQute.bnd.annotation.ProviderType;
  * which usually is not wanted. Therefore it is advisable to also set the
  * {@link #PROPERTY_SCHEDULER_CONCURRENT} property with Boolean.FALSE.
  *
- * Jobs started through through the scheduler API are not persisted and are not
- * restarted after a bundle restart.
+ * Jobs started through  the scheduler API are not persisted and are not
+ * restarted after a bundle restart. If the client bundle is stopped, the scheduler
+ * will stop all jobs started by this bundle as well. However, the client bundle does
+ * not need to keep a reference to the scheduler service.
  */
 @ProviderType
 public interface Scheduler {
