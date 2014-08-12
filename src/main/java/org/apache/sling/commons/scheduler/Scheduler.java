@@ -37,6 +37,9 @@ import aQute.bnd.annotation.ProviderType;
  * property. Services registered by the whiteboard pattern can by default run concurrently,
  * which usually is not wanted. Therefore it is advisable to also set the
  * {@link #PROPERTY_SCHEDULER_CONCURRENT} property with Boolean.FALSE.
+ *
+ * Jobs started through through the scheduler API are not persisted and are not
+ * restarted after a bundle restart.
  */
 @ProviderType
 public interface Scheduler {
