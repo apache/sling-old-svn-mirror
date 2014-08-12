@@ -20,14 +20,15 @@ package org.apache.sling.commons.scheduler.impl;
 
 import java.io.PrintWriter;
 import java.util.Arrays;
-import java.util.Dictionary;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
 
-import org.osgi.framework.BundleContext;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceRegistration;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
@@ -40,36 +41,21 @@ import org.quartz.impl.matchers.GroupMatcher;
  * prints out the current configuration/status.
  *
  */
+@Component
+@Service(value=WebConsolePrinter.class)
+@Properties({
+    @Property(name=Constants.SERVICE_DESCRIPTION,
+              value="Apache Sling Scheduler Configuration Printer"),
+    @Property(name="felix.webconsole.label", value="slingscheduler"),
+    @Property(name="felix.webconsole.title", value="Sling Scheduler"),
+    @Property(name="felix.webconsole.configprinter.modes", value="always")
+})
 public class WebConsolePrinter {
-
-    public static ServiceRegistration initPlugin(final BundleContext bundleContext,
-                                                 final QuartzScheduler qs) {
-        final WebConsolePrinter propertiesPrinter = new WebConsolePrinter(qs);
-        final Dictionary<String, String> props = new Hashtable<String, String>();
-        props.put(Constants.SERVICE_DESCRIPTION,
-            "Apache Sling Scheduler Configuration Printer");
-        props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        props.put("felix.webconsole.label", "slingscheduler");
-        props.put("felix.webconsole.title", "Sling Scheduler");
-        props.put("felix.webconsole.configprinter.modes", "always");
-
-        return bundleContext.registerService(WebConsolePrinter.class.getName(),
-                                               propertiesPrinter, props);
-    }
-
-    public static void destroyPlugin(final ServiceRegistration plugin) {
-        if ( plugin != null) {
-            plugin.unregister();
-        }
-    }
 
     private static String HEADLINE = "Apache Sling Scheduler";
 
-    private final QuartzScheduler scheduler;
-
-    public WebConsolePrinter(final QuartzScheduler qs) {
-        this.scheduler = qs;
-    }
+    @Reference
+    private QuartzScheduler scheduler;
 
     /**
      * Print out the configuration
@@ -110,6 +96,11 @@ public class WebConsolePrinter {
                             if ( runOn != null ) {
                                 pw.print(", runOn: ");
                                 pw.print(Arrays.toString(runOn));
+                            }
+                            final Long bundleId = (Long)detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_BUNDLE_ID);
+                            if ( bundleId != null ) {
+                                pw.print(", bundleId: ");
+                                pw.print(String.valueOf(bundleId));
                             }
                             pw.println();
                             for(final Trigger trigger : s.getTriggersOfJob(key)) {
