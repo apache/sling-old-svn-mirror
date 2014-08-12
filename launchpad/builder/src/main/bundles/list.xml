@@ -149,7 +149,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.scheduler</artifactId>
-            <version>2.4.2</version>
+            <version>2.4.3-SNAPSHOT</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
