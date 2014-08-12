@@ -150,10 +150,16 @@ public class WhiteboardHandler {
                     if ( !immediate ) {
                         date.setTime(System.currentTimeMillis() + period * 1000);
                     }
-                    this.scheduler.schedule(ref.getBundle().getBundleId(), job, this.scheduler.AT(date, -1, period)
-                            .name(name)
-                            .canRunConcurrently((concurrent != null ? concurrent : true))
-                            .onInstancesOnly(runOnOpts));
+                    final Integer times = (Integer)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_TIMES);
+                    if ( times != null && times < 1 ) {
+                        this.logger.debug("Ignoring service {} : scheduler times is less than 1.", ref);
+                    } else {
+                        final int t = (times != null ? times : -1);
+                        this.scheduler.schedule(ref.getBundle().getBundleId(), job, this.scheduler.AT(date, t, period)
+                                .name(name)
+                                .canRunConcurrently((concurrent != null ? concurrent : true))
+                                .onInstancesOnly(runOnOpts));
+                    }
                 }
             } else {
                 this.logger.debug("Ignoring servce {} : no scheduling property found.", ref);

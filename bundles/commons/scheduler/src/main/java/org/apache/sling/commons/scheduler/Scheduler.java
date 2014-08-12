@@ -69,6 +69,12 @@ public interface Scheduler {
     /** Name of the configuration property to define the job name. */
     String PROPERTY_SCHEDULER_NAME = "scheduler.name";
 
+    /** Name of the optional configuration property to define the number of times the job
+     * should be executed when {@link #PROPERTY_SCHEDULER_PERIOD} is defined.
+     * This property is of type integer and must have a positive value.
+     */
+    String PROPERTY_SCHEDULER_TIMES = "scheduler.times";
+
     /**
      * Name of the configuration property to define the instances this job should run on.
      * By default a job is run on all instances. This property can be configured with:
