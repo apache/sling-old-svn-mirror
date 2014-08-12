@@ -44,7 +44,7 @@ public class WhiteboardHandler {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Reference
-    private Scheduler scheduler;
+    private QuartzScheduler scheduler;
 
     private ServiceTracker serviceTracker;
 
@@ -132,7 +132,7 @@ public class WhiteboardHandler {
         }
         final String expression = (String)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_EXPRESSION);
         if ( expression != null ) {
-            this.scheduler.schedule(job, this.scheduler.EXPR(expression)
+            this.scheduler.schedule(ref.getBundle().getBundleId(), job, this.scheduler.EXPR(expression)
                     .name(name)
                     .canRunConcurrently((concurrent != null ? concurrent : true))
                     .onInstancesOnly(runOnOpts));
@@ -150,7 +150,7 @@ public class WhiteboardHandler {
                     if ( !immediate ) {
                         date.setTime(System.currentTimeMillis() + period * 1000);
                     }
-                    this.scheduler.schedule(job, this.scheduler.AT(date, -1, period)
+                    this.scheduler.schedule(ref.getBundle().getBundleId(), job, this.scheduler.AT(date, -1, period)
                             .name(name)
                             .canRunConcurrently((concurrent != null ? concurrent : true))
                             .onInstancesOnly(runOnOpts));
@@ -167,6 +167,6 @@ public class WhiteboardHandler {
      */
     private void unregister(final ServiceReference reference, final Object service) {
         final String name = getServiceIdentifier(reference);
-        this.scheduler.unschedule(name);
+        this.scheduler.unschedule(reference.getBundle().getBundleId(), name);
     }
 }
