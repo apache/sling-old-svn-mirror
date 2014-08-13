@@ -65,14 +65,21 @@ public class SlingFtpFile implements FtpFile {
         return this.resource.adaptTo(InputStream.class);
     }
 
-    public OutputStream createOutputStream(long offset) throws IOException {
-        if (offset != 0) {
-            throw new IOException("random access not supported");
-        }
-
+    public OutputStream createOutputStream(final long offset) throws IOException {
         Resource content = getContent();
         if (content != null) {
-            return new SlingFtpOutputStream(content);
+            boolean append = offset != 0;
+
+            // validate offset against existing size
+            if (append) {
+                long existingFileLength = content.getResourceMetadata().getContentLength();
+                if (existingFileLength != offset) {
+                    throw new IOException("Cannot create OutputStream to " + this.getAbsolutePath()
+                        + ". Illegal offset " + offset + ", expected " + existingFileLength);
+                }
+            }
+
+            return new SlingFtpOutputStream(content, append);
         }
 
         throw new IOException("Cannot create OutputStream to " + this.getAbsolutePath());

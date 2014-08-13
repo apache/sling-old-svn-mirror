@@ -25,6 +25,7 @@ import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.ftpserver.util.IoUtils;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.Resource;
 
@@ -35,11 +36,29 @@ public class SlingFtpOutputStream extends FilterOutputStream {
     private final File tmpFile;
 
     public SlingFtpOutputStream(final Resource content) throws IOException {
+        this(content, false);
+    }
+
+    public SlingFtpOutputStream(final Resource content, final boolean append) throws IOException {
         super(null);
 
         this.content = content;
         this.tmpFile = File.createTempFile("slingftp", ".uploadtmp");
         this.out = new FileOutputStream(this.tmpFile);
+
+        if (append) {
+            final InputStream source = content.adaptTo(InputStream.class);
+            if (source != null) {
+                try {
+                    IoUtils.copy(source, this.out, 64 * 1024);
+                    source.close();
+                } finally {
+                    source.close();
+                }
+            } else {
+                throw new IOException("Failed preparing existing file data");
+            }
+        }
     }
 
     @Override
