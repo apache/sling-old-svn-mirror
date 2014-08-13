@@ -137,13 +137,17 @@ public class View {
     /**
      * Delete this view from the repository
      */
-    public void remove() {
+    public void remove(boolean logErrorOnFailure) {
         final ResourceResolver resourceResolver = getResource().getResourceResolver();
         try{
             resourceResolver.delete(getResource());
             resourceResolver.commit();
         } catch(PersistenceException pe) {
-            logger.error("remove: Could not remove node: " + pe, pe);
+            if (logErrorOnFailure) {
+                logger.error("remove: Could not remove node: " + pe, pe);
+            } else {
+                logger.info("remove: Could not remove node: "+pe);
+            }
             resourceResolver.refresh();
         }
     }
