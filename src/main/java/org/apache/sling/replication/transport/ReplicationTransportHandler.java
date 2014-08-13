@@ -19,9 +19,7 @@
 package org.apache.sling.replication.transport;
 
 import org.apache.sling.replication.communication.ReplicationEndpoint;
-import org.apache.sling.replication.queue.ReplicationQueueProcessor;
-import org.apache.sling.replication.serialization.ReplicationPackage;
-import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.replication.packaging.ReplicationPackage;
 
 import java.util.List;
 

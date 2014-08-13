@@ -22,13 +22,12 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.vault.util.Text;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
-import org.apache.sling.replication.serialization.ReplicationPackage;
+import org.apache.sling.replication.packaging.ReplicationPackage;
 
 /**
  * A void {@link ReplicationPackage} is used for deletion of certain paths on the target instance

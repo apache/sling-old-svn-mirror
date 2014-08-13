@@ -16,14 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.serialization.impl.exporter;
+package org.apache.sling.replication.packaging.impl.exporter;
 
 import org.apache.felix.scr.annotations.*;
 import org.apache.sling.replication.communication.ReplicationRequest;
-import org.apache.sling.replication.serialization.ReplicationPackage;
+import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
-import org.apache.sling.replication.serialization.ReplicationPackageExporter;
+import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,8 +32,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * {@link org.apache.sling.replication.serialization.ReplicationPackageExporter} implementation which creates a FileVault based
- * {@link org.apache.sling.replication.serialization.ReplicationPackage} locally.
+ * {@link org.apache.sling.replication.packaging.ReplicationPackageExporter} implementation which creates a FileVault based
+ * {@link org.apache.sling.replication.packaging.ReplicationPackage} locally.
  */
 @Component(label = "Local Replication Package Exporter")
 @Service(value = ReplicationPackageExporter.class)

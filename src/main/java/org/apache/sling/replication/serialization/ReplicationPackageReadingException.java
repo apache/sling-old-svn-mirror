@@ -20,7 +20,7 @@ package org.apache.sling.replication.serialization;
 
 /**
  * This represents an error happening while reading / installing a
- * {@link org.apache.sling.replication.serialization.ReplicationPackage}
+ * {@link org.apache.sling.replication.packaging.ReplicationPackage}
  */
 @SuppressWarnings("serial")
 public class ReplicationPackageReadingException extends Exception {

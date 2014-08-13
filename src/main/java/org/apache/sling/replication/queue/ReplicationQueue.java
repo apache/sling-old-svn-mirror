@@ -77,7 +77,7 @@ public interface ReplicationQueue {
     /**
      * get the items in the queue
      *
-     * @return a <code>Collection</code> of {@link org.apache.sling.replication.serialization.ReplicationPackage}s
+     * @return a <code>Collection</code> of {@link org.apache.sling.replication.packaging.ReplicationPackage}s
      */
     Collection<ReplicationQueueItem> getItems();
 

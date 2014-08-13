@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.serialization.impl.importer;
+package org.apache.sling.replication.packaging.impl.importer;
 
 import java.io.InputStream;
 import java.util.Arrays;
@@ -26,16 +26,16 @@ import java.util.Hashtable;
 import org.apache.felix.scr.annotations.*;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.event.ReplicationEventType;
-import org.apache.sling.replication.serialization.ReplicationPackage;
+import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
-import org.apache.sling.replication.serialization.ReplicationPackageImporter;
+import org.apache.sling.replication.packaging.ReplicationPackageImporter;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * {@link org.apache.sling.replication.serialization.ReplicationPackageImporter} implementation which imports a FileVault
+ * {@link org.apache.sling.replication.packaging.ReplicationPackageImporter} implementation which imports a FileVault
  * based {@link ReplicationPackage} locally.
  */
 @Component(label = "Default Replication Package Importer")
