@@ -28,7 +28,7 @@ import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.entity.ContentType;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
-import org.apache.sling.replication.communication.ReplicationHeader;
+import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.transport.ReplicationTransportException;
@@ -38,6 +38,7 @@ import org.apache.sling.replication.transport.authentication.TransportAuthentica
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -110,10 +111,11 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
 
     }
 
-    public List<ReplicationPackage> retrievePackage() throws ReplicationTransportException {
+    public List<ReplicationPackage> retrievePackages(ReplicationRequest replicationRequest) throws ReplicationTransportException {
         log.debug("polling from {}", replicationEndpoint.getUri());
 
         try {
+            URI replicationURI = RequestUtils.appendReplicationRequest(replicationEndpoint.getUri(), replicationRequest);
             List<ReplicationPackage> result = new ArrayList<ReplicationPackage>();
 
             Executor executor = Executor.newInstance();
@@ -121,8 +123,7 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
             context.addAttribute("endpoint", replicationEndpoint);
             executor = transportAuthenticationProvider.authenticate(executor, context);
 
-            Request req = Request.Post(replicationEndpoint.getUri())
-                    .addHeader(ReplicationHeader.ACTION.toString(), ReplicationActionType.POLL.getName())
+            Request req = Request.Post(replicationURI)
                     .useExpectContinue();
             // TODO : add queue parameter
 

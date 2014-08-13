@@ -39,6 +39,7 @@ import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.communication.*;
 import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
 import org.apache.sling.replication.resources.ReplicationConstants;
+import org.apache.sling.replication.transport.impl.RequestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,11 +62,7 @@ public class ReplicationAgentServlet extends SlingAllMethodsServlet {
 
         response.setContentType("application/json");
 
-        String action = request.getHeader(ReplicationHeader.ACTION.toString());
-        String[] path = toStringArray(request.getHeaders(ReplicationHeader.PATH.toString()));
-
-        ReplicationRequest replicationRequest = new ReplicationRequest(System.currentTimeMillis(),
-                ReplicationActionType.valueOf(action), path);
+        ReplicationRequest replicationRequest = RequestUtils.fromServletRequest(request);
 
         ReplicationAgent agent = request.getResource().adaptTo(ReplicationAgent.class);
 

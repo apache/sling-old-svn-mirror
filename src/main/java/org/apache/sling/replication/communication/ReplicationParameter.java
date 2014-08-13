@@ -23,7 +23,10 @@ package org.apache.sling.replication.communication;
  */
 public enum ReplicationParameter {
 
-    QUEUE("queue");
+    QUEUE("queue"),
+    TYPE("type"),
+    ACTION("action"),
+    PATH("path");
 
     private final String name;
 

@@ -19,6 +19,7 @@
 package org.apache.sling.replication.transport;
 
 import org.apache.sling.replication.communication.ReplicationEndpoint;
+import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 
 import java.util.List;
@@ -42,6 +43,6 @@ public interface ReplicationTransportHandler {
      *
      * @throws ReplicationTransportException if any error occurs during the transport
      */
-    public List<ReplicationPackage> retrievePackage() throws ReplicationTransportException;
+    public List<ReplicationPackage> retrievePackages(ReplicationRequest replicationRequest) throws ReplicationTransportException;
 
 }
