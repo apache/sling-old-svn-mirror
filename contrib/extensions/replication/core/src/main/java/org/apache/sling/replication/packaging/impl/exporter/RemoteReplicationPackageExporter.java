@@ -16,13 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.transport.impl.exporter;
+package org.apache.sling.replication.packaging.impl.exporter;
 
 import org.apache.felix.scr.annotations.*;
 import org.apache.http.client.fluent.Executor;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.packaging.ReplicationPackage;
+import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.serialization.*;
 import org.apache.sling.replication.transport.ReplicationTransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
@@ -40,7 +42,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Default implementation of {@link org.apache.sling.replication.serialization.ReplicationPackageExporter}
+ * Default implementation of {@link org.apache.sling.replication.packaging.ReplicationPackageExporter}
  */
 @Component(label = "Remote Replication Package Exporter", configurationFactory = true)
 @Service(value = ReplicationPackageExporter.class)

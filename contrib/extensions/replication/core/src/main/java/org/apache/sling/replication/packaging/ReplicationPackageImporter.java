@@ -16,12 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.serialization;
+package org.apache.sling.replication.packaging;
 
 import java.io.InputStream;
 
+import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
+
 /**
- * A {@link org.apache.sling.replication.serialization.ReplicationPackage} importer
+ * A {@link org.apache.sling.replication.packaging.ReplicationPackage} importer
  */
 public interface ReplicationPackageImporter {
     /**

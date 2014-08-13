@@ -24,8 +24,8 @@ import java.util.Map;
 
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
-import org.apache.sling.replication.serialization.ReplicationPackageExporter;
-import org.apache.sling.replication.serialization.ReplicationPackageImporter;
+import org.apache.sling.replication.packaging.ReplicationPackageExporter;
+import org.apache.sling.replication.packaging.ReplicationPackageImporter;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 

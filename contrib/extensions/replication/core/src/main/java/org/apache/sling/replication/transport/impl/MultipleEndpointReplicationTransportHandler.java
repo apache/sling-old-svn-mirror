@@ -21,7 +21,7 @@ package org.apache.sling.replication.transport.impl;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.sling.replication.serialization.ReplicationPackage;
+import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.transport.ReplicationTransportException;
 import org.apache.sling.replication.transport.ReplicationTransportHandler;
 

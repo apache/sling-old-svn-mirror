@@ -22,7 +22,6 @@ import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.communication.ReplicationResponse;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueException;
-import org.apache.sling.replication.serialization.ReplicationPackage;
 
 /**
  * A replication agent is responsible for delivering content to another instance

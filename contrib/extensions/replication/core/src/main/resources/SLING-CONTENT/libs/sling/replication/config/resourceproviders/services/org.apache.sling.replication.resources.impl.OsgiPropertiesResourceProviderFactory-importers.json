@@ -2,7 +2,7 @@
     "jcr:primaryType" : "sling:OsgiConfig",
     "name" : "replicationImporters",
     "provider.roots" : [ "/libs/sling/replication/importers" ],
-    "serviceType" : "org.apache.sling.replication.serialization.ReplicationPackageImporter",
+    "serviceType" : "org.apache.sling.replication.packaging.ReplicationPackageImporter",
     "resourceProperties" : [
         "sling:resourceType=replication/importer",
         "name={name}"

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.transport.impl.importer;
+package org.apache.sling.replication.packaging.impl.importer;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -28,8 +28,8 @@ import org.apache.http.client.fluent.Executor;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.event.ReplicationEventFactory;
-import org.apache.sling.replication.serialization.ReplicationPackage;
-import org.apache.sling.replication.serialization.ReplicationPackageImporter;
+import org.apache.sling.replication.packaging.ReplicationPackage;
+import org.apache.sling.replication.packaging.ReplicationPackageImporter;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.apache.sling.replication.transport.ReplicationTransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
@@ -43,7 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Implementation of {@link org.apache.sling.replication.serialization.ReplicationPackageImporter} supporting multiple
+ * Implementation of {@link org.apache.sling.replication.packaging.ReplicationPackageImporter} supporting multiple
  * endpoints and custom HTTP headers and body.
  */
 @Component(label = "Advanced Remote Replication Package Importer", configurationFactory = true)

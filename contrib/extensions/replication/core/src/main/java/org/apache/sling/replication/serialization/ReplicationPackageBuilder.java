@@ -21,17 +21,18 @@ package org.apache.sling.replication.serialization;
 import java.io.InputStream;
 
 import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.packaging.ReplicationPackage;
 
 /**
- * A builder for {@link ReplicationPackage}s
+ * A builder for {@link org.apache.sling.replication.packaging.ReplicationPackage}s
  */
 public interface ReplicationPackageBuilder {
 
     /**
-     * creates a {@link ReplicationPackage} for a specific {@link ReplicationRequest}
+     * creates a {@link org.apache.sling.replication.packaging.ReplicationPackage} for a specific {@link ReplicationRequest}
      *
      * @param request the {@link ReplicationRequest} to create the package for
-     * @return a {@link ReplicationPackage}
+     * @return a {@link org.apache.sling.replication.packaging.ReplicationPackage}
      * @throws ReplicationPackageBuildingException
      */
     ReplicationPackage createPackage(ReplicationRequest request) throws ReplicationPackageBuildingException;
