@@ -32,7 +32,6 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ContentType;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
-import org.apache.sling.replication.communication.ReplicationHeader;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.transport.ReplicationTransportException;
@@ -153,8 +152,6 @@ public class AdvancedHttpReplicationTransportHandler extends SimpleHttpReplicati
             for (String header : customizedHeaders) {
                 addHeader(req, header);
             }
-        } else {
-            req.addHeader(ReplicationHeader.TYPE.toString(), type);
         }
 
         InputStream inputStream = null;

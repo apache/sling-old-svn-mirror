@@ -21,10 +21,9 @@ package org.apache.sling.replication.packaging.impl.exporter;
 import org.apache.felix.scr.annotations.*;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
+import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
-import org.apache.sling.replication.packaging.ReplicationPackageExporter;
-import org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,17 +34,17 @@ import java.util.List;
  * {@link org.apache.sling.replication.packaging.ReplicationPackageExporter} implementation which creates a FileVault based
  * {@link org.apache.sling.replication.packaging.ReplicationPackage} locally.
  */
-@Component(label = "Local Replication Package Exporter")
+@Component(label = "Local Replication Package Exporter", configurationFactory = true)
 @Service(value = ReplicationPackageExporter.class)
-@Property(name = "name", value = LocalReplicationPackageExporter.NAME)
 public class LocalReplicationPackageExporter implements ReplicationPackageExporter {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public static final String NAME = "local";
+    @Property
+    private static final String NAME = "name";
 
-    @Reference(name = "ReplicationPackageBuilder", target = "(name=" + FileVaultReplicationPackageBuilder.NAME + ")",
-            policy = ReferencePolicy.STATIC)
+    @Property(label = "Target ReplicationPackageBuilder", name = "ReplicationPackageBuilder.target")
+    @Reference(name = "ReplicationPackageBuilder", policy = ReferencePolicy.STATIC)
     private ReplicationPackageBuilder packageBuilder;
 
     public List<ReplicationPackage> exportPackage(ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {

@@ -27,10 +27,9 @@ import org.apache.felix.scr.annotations.*;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.event.ReplicationEventType;
 import org.apache.sling.replication.packaging.ReplicationPackage;
-import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
+import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
-import org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,19 +37,17 @@ import org.slf4j.LoggerFactory;
  * {@link org.apache.sling.replication.packaging.ReplicationPackageImporter} implementation which imports a FileVault
  * based {@link ReplicationPackage} locally.
  */
-@Component(label = "Default Replication Package Importer")
+@Component(label = "Default Replication Package Importer", configurationFactory = true)
 @Service(value = ReplicationPackageImporter.class)
-@Property(name = "name", value = LocalReplicationPackageImporter.NAME)
 public class LocalReplicationPackageImporter implements ReplicationPackageImporter {
-
-    public static final String NAME = "local";
-
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Reference(name = "ReplicationPackageBuilder",
-            target = "(name=" + FileVaultReplicationPackageBuilder.NAME + ")",
-            policy = ReferencePolicy.DYNAMIC)
-    private ReplicationPackageBuilder replicationPackageBuilder;
+    @Property
+    private static final String NAME = "name";
+
+    @Property(label = "Target ReplicationPackageBuilder", name = "ReplicationPackageBuilder.target")
+    @Reference(name = "ReplicationPackageBuilder", policy = ReferencePolicy.STATIC)
+    private ReplicationPackageBuilder packageBuilder;
 
     @Reference
     private ReplicationEventFactory replicationEventFactory;
@@ -59,7 +56,7 @@ public class LocalReplicationPackageImporter implements ReplicationPackageImport
     public boolean importPackage(ReplicationPackage replicationPackage) {
         boolean success = false;
         try {
-            success = replicationPackageBuilder.installPackage(replicationPackage);
+            success = packageBuilder.installPackage(replicationPackage);
 
             if (success) {
                 log.info("replication package read and installed for path(s) {}", Arrays.toString(replicationPackage.getPaths()));
@@ -81,7 +78,7 @@ public class LocalReplicationPackageImporter implements ReplicationPackageImport
 
     public ReplicationPackage readPackage(InputStream stream) throws ReplicationPackageReadingException {
         try {
-            return replicationPackageBuilder.readPackage(stream);
+            return packageBuilder.readPackage(stream);
         } catch (Exception e) {
             log.error("cannot read a package from the given stream");
         }

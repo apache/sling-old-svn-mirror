@@ -26,9 +26,11 @@ import java.util.UUID;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.sling.replication.communication.ReplicationActionType;
-import org.apache.sling.replication.communication.ReplicationHeader;
+import org.apache.sling.replication.communication.ReplicationParameter;
+import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.testing.tools.http.Request;
 import org.apache.sling.testing.tools.sling.SlingClient;
 import org.apache.sling.testing.tools.sling.SlingInstance;
@@ -43,8 +45,8 @@ public class ReplicationUtils {
     private static final String JSON_SELECTOR = ".json";
     private static final String REPLICATION_ROOT_PATH = "/libs/sling/replication";
 
-    private static void assertPostResourceWithParameters(SlingInstance slingInstance,
-                                                         int status, String path, String... parameters) throws IOException {
+    private static String assertPostResourceWithParameters(SlingInstance slingInstance,
+                                                           int status, String path, String... parameters) throws IOException {
         Request request = slingInstance.getRequestBuilder().buildPostRequest(path);
 
         if (parameters != null) {
@@ -57,24 +59,29 @@ public class ReplicationUtils {
             UrlEncodedFormEntity entity = new UrlEncodedFormEntity(valuePairList);
             request.withEntity(entity);
         }
-        slingInstance.getRequestExecutor().execute(
+        String content = slingInstance.getRequestExecutor().execute(
                 request.withCredentials(slingInstance.getServerUsername(), slingInstance.getServerPassword())
-        ).assertStatus(status);
+        ).assertStatus(status).getContent();
+
+        return content;
     }
 
-    private static void assertPostResourceWithHeaders(SlingInstance slingInstance,
-                                                      int status, String path, String... headers) throws IOException {
+    private static String assertPostResource(SlingInstance slingInstance,
+                                             int status, String path, byte[] bytes) throws IOException {
         Request request = slingInstance.getRequestBuilder().buildPostRequest(path);
-        if (headers != null) {
-            assertEquals(0, headers.length % 2);
-            for (int i = 0; i < headers.length; i += 2) {
-                request = request.withHeader(headers[i], headers[i + 1]);
-            }
+
+        if (bytes != null) {
+
+            ByteArrayEntity entity = new ByteArrayEntity(bytes);
+            request.withEntity(entity);
         }
-        slingInstance.getRequestExecutor().execute(
+        String content = slingInstance.getRequestExecutor().execute(
                 request.withCredentials(slingInstance.getServerUsername(), slingInstance.getServerPassword())
-        ).assertStatus(status);
+        ).assertStatus(status).getContent();
+
+        return content;
     }
+
 
     public static void assertResponseContains(SlingInstance slingInstance,
                                               String resource, String... parameters) throws IOException {
@@ -98,18 +105,35 @@ public class ReplicationUtils {
     public static void replicate(SlingInstance slingInstance, String agentName, ReplicationActionType action, String... paths) throws IOException {
         String agentResource = agentUrl(agentName);
 
+        executeReplicationRequest(slingInstance, 202, agentResource, action, paths);
+    }
+
+    public static String executeReplicationRequest(SlingInstance slingInstance, int status, String resource, ReplicationActionType action, String... paths) throws IOException {
+
         List<String> args = new ArrayList<String>();
-        args.add(ReplicationHeader.ACTION.toString());
+        args.add(ReplicationParameter.ACTION.toString());
         args.add(action.toString());
 
         if (paths != null) {
             for (String path : paths) {
-                args.add(ReplicationHeader.PATH.toString());
+                args.add(ReplicationParameter.PATH.toString());
                 args.add(path);
             }
         }
 
-        assertPostResourceWithHeaders(slingInstance, 202, agentResource, args.toArray(new String[args.size()]));
+        return assertPostResourceWithParameters(slingInstance, status, resource, args.toArray(new String[args.size()]));
+    }
+
+    public static String doExport(SlingInstance slingInstance, String exporterName, ReplicationActionType action, String... paths) throws IOException {
+        String agentResource = exporterUrl(exporterName);
+
+        return executeReplicationRequest(slingInstance, 200, agentResource, action, paths);
+    }
+
+    public static String doImport(SlingInstance slingInstance, String importerName, byte[] bytes) throws IOException {
+        String agentResource = importerUrl(importerName);
+
+        return assertPostResource(slingInstance, 200, agentResource, bytes);
     }
 
     public static void deleteNode(SlingInstance slingInstance, String path) throws IOException {
@@ -164,5 +188,13 @@ public class ReplicationUtils {
 
     public static String importerUrl(String importerName) {
         return REPLICATION_ROOT_PATH + "/importers/" + importerName;
+    }
+
+    public static String exporterRootUrl() {
+        return REPLICATION_ROOT_PATH + "/exporters";
+    }
+
+    public static String exporterUrl(String exporterName) {
+        return REPLICATION_ROOT_PATH + "/exporters/" + exporterName;
     }
 }

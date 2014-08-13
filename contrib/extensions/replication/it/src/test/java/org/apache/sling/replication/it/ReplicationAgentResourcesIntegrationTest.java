@@ -30,15 +30,26 @@ import static org.apache.sling.replication.it.ReplicationUtils.*;
 public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegrationTestBase {
 
     @Test
-    public void testDefaultAgentConfigurationResources() throws Exception {
+    public void testDefaultAgentConfigurationResourcesOnAuthor() throws Exception {
         String[] defaultAgentNames = new String[]{
                 "publish",
-                "publish-reverse",
+                "publish-reverse"
+        };
+        for (String agentName : defaultAgentNames) {
+            assertExists(authorClient, agentConfigUrl(agentName));
+        }
+
+    }
+
+
+    @Test
+    public void testDefaultAgentConfigurationResourcesOnPublish() throws Exception {
+        String[] defaultAgentNames = new String[]{
                 "reverse",
                 "cache-flush"
         };
         for (String agentName : defaultAgentNames) {
-            assertExists(authorClient, agentConfigUrl(agentName));
+            assertExists(publishClient, agentConfigUrl(agentName));
         }
 
     }

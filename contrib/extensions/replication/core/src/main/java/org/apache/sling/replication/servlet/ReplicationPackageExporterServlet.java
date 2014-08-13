@@ -33,9 +33,13 @@ import org.apache.http.entity.ContentType;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
+import org.apache.sling.replication.communication.ReplicationActionType;
+import org.apache.sling.replication.communication.ReplicationParameter;
+import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.resources.ReplicationConstants;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
+import org.apache.sling.replication.transport.impl.RequestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,9 +69,11 @@ public class ReplicationPackageExporterServlet extends SlingAllMethodsServlet {
 
         response.setContentType(ContentType.APPLICATION_OCTET_STREAM.toString());
 
+        ReplicationRequest replicationRequest = RequestUtils.fromServletRequest(request);
+
         try {
             // get first item
-            List<ReplicationPackage> replicationPackages = replicationPackageExporter.exportPackage(null);
+            List<ReplicationPackage> replicationPackages = replicationPackageExporter.exportPackage(replicationRequest);
 
             if (replicationPackages.size() > 0) {
                 log.info("{} package(s) available for fetching, the first will be delivered", replicationPackages.size());

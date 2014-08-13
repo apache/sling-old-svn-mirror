@@ -110,7 +110,7 @@ public class RemoteReplicationPackageExporter implements ReplicationPackageExpor
 
     public List<ReplicationPackage> exportPackage(ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
         try {
-            return transportHandler.retrievePackage();
+            return transportHandler.retrievePackages(replicationRequest);
         } catch (Exception e) {
             throw new ReplicationPackageBuildingException(e);
         }

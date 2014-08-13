@@ -23,7 +23,7 @@ import org.junit.Test;
 import static org.apache.sling.replication.it.ReplicationUtils.*;
 
 /**
- * Integration test for {@link org.apache.sling.replication.serialization.ReplicationPackageImporter} resources
+ * Integration test for {@link org.apache.sling.replication.packaging.ReplicationPackageImporter} resources
  */
 public class ReplicationPackageImporterResourcesIntegrationTest extends ReplicationIntegrationTestBase {
 
