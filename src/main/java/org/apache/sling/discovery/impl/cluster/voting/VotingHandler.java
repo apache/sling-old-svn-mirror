@@ -185,7 +185,7 @@ public class VotingHandler implements EventHandler {
 	                logger.debug("analyzeVotings: there were no votes for my voting, so I have to remove it: "
 	                        + ongoingVotingRes);
             	}
-                ongoingVotingRes.remove();
+                ongoingVotingRes.remove(true);
                 it.remove();
             }
         }
@@ -280,7 +280,7 @@ public class VotingHandler implements EventHandler {
             VotingView timedoutVotingRes = it.next();
             if (timedoutVotingRes!=null) {
                 logger.info("cleanupTimedoutVotings: removing a timed out voting: "+timedoutVotingRes);
-                timedoutVotingRes.remove();
+                timedoutVotingRes.remove(false);
             }
         }
     }
