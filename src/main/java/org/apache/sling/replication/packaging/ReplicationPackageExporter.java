@@ -19,25 +19,30 @@
 package org.apache.sling.replication.packaging;
 
 
-import org.apache.sling.replication.communication.ReplicationRequest;
-import org.apache.sling.replication.packaging.ReplicationPackage;
-import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
-
 import java.util.List;
 
+import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
+
 /**
- * A {@link org.apache.sling.replication.packaging.ReplicationPackage ) exporter
+ * A {@link org.apache.sling.replication.packaging.ReplicationPackageExporter) is responsible of exporting
+ * {@link org.apache.sling.replication.packaging.ReplicationPackage}s to be then imported by a {@link org.apache.sling.replication.agent.ReplicationAgent}
+ * (via a {@link org.apache.sling.replication.packaging.ReplicationPackageImporter}).
  */
 public interface ReplicationPackageExporter {
+
     /**
-     * Exports a replication package.
-     * @return the first available package in the exporter.
+     * Exports the {@link org.apache.sling.replication.packaging.ReplicationPackage}s built from the
+     * passed {@link org.apache.sling.replication.communication.ReplicationRequest}.
+     *
+     * @return a <code>List</code> of {@link org.apache.sling.replication.packaging.ReplicationPackage}s
      */
     List<ReplicationPackage> exportPackage(ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException;
 
     /**
-     * Exports a replication package.
-     * @return the first available package in the exporter.
+     * Exports a {@link org.apache.sling.replication.packaging.ReplicationPackage} given its 'id', if it already exists.
+     *
+     * @return a {@link org.apache.sling.replication.packaging.ReplicationPackage} if available, <code>null</code> otherwise
      */
     ReplicationPackage exportPackageById(String replicationPackageId);
 }
