@@ -31,13 +31,14 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingConstants;
+import org.apache.sling.api.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.osgi.service.event.Event;
 
-public class MockResourceResolver implements ResourceResolver {
+public class MockResourceResolver extends SlingAdaptable implements ResourceResolver {
 
     private final Map<String, Map<String, Object>> resources;
 
@@ -51,11 +52,6 @@ public class MockResourceResolver implements ResourceResolver {
             final Map<String, Map<String, Object>> resources) {
         this.options = options;
         this.resources = resources;
-    }
-
-    @Override
-    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
-        return null;
     }
 
     @Override
