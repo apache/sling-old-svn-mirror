@@ -35,35 +35,31 @@ public interface ReplicationQueue {
     /**
      * add a replication package to this queue
      *
-     *
      * @param replicationPackage a replication package to replicate
      * @return <code>true</code> if the replication package was added correctly to the queue,
      * <code>false</code otherwise
-     * @throws ReplicationQueueException
      */
     boolean add(ReplicationQueueItem replicationPackage);
 
     /**
      * get the status of a certain package in the queue
      *
-     *
-     * @param replicationPackage the replication package to get the status for
+     * @param item the replication package to get the status for
      * @return the item status in the queue
      * @throws ReplicationQueueException
      */
-    ReplicationQueueItemState getStatus(ReplicationQueueItem replicationPackage)
+    ReplicationQueueItemState getStatus(ReplicationQueueItem item)
             throws ReplicationQueueException;
 
     /**
      * get the first item (FIFO wise, the next to be processed) into the queue
      *
-     * @return the first replication package into the queue
+     * @return the first item into the queue
      */
     ReplicationQueueItem getHead();
 
     /**
      * remove the first package into the queue from it
-     *
      */
     void removeHead();
 
@@ -77,12 +73,13 @@ public interface ReplicationQueue {
     /**
      * get the items in the queue
      *
-     * @return a <code>Collection</code> of {@link org.apache.sling.replication.packaging.ReplicationPackage}s
+     * @return a <code>Collection</code> of {@link org.apache.sling.replication.queue.ReplicationQueueItem}s
      */
     Collection<ReplicationQueueItem> getItems();
 
     /**
      * remove an item from the queue by specifying its id
+     *
      * @param id <code>String</code> representing an item's identifier
      */
     void remove(String id);

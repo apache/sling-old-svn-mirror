@@ -18,10 +18,11 @@
  */
 package org.apache.sling.replication.servlet;
 
-import java.io.IOException;
-import java.io.InputStream;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -29,9 +30,9 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.apache.sling.replication.resources.ReplicationConstants;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
+import org.apache.sling.replication.resources.ReplicationConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +65,11 @@ public class ReplicationPackageImporterServlet extends SlingAllMethodsServlet {
         InputStream stream = request.getInputStream();
         try {
             ReplicationPackage replicationPackage = replicationPackageImporter.readPackage(stream);
-            success = replicationPackageImporter.importPackage(replicationPackage);
+            if (replicationPackage != null) {
+                success = replicationPackageImporter.importPackage(replicationPackage);
+            } else {
+                log.warn("cannot read a replication package from the given stream");
+            }
         } catch (final Exception e) {
             response.setStatus(400);
             log.error("Error during replication: {}", e.getMessage(), e);

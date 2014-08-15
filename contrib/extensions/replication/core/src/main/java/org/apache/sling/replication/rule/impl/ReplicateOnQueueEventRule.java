@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
@@ -58,9 +59,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * {@link org.apache.sling.replication.rule.ReplicationRule} to trigger
+ * {@link org.apache.sling.replication.rule.ReplicationRule} to trigger replication upon reception of server sent events
+ * on a certain queue
  */
-@Component(immediate = true, label = "Rule for generating Server Sent Events for Queues")
+@Component(immediate = true, label = "Rule for listening on Server Sent Events for Queues")
 @Service(value = ReplicationRule.class)
 public class ReplicateOnQueueEventRule implements ReplicationRule {
 
@@ -71,7 +73,6 @@ public class ReplicateOnQueueEventRule implements ReplicationRule {
     private static final String SIGNATURE_REGEX = "(queue\\sevent\\sbased)\\s(add|delete|poll)(\\s(on)\\s(\\/\\w+)+)?";
 
     private static final Pattern signaturePattern = Pattern.compile(SIGNATURE_REGEX);
-
 
     @Reference
     private Scheduler scheduler;
@@ -219,7 +220,6 @@ public class ReplicateOnQueueEventRule implements ReplicationRule {
                                     new SSEResponseConsumer(agent, actionType, path), null);
                             requests.put(agent.getName(), futureResponse);
                             futureResponse.get();
-
                         } finally {
                             httpClient.close();
                         }

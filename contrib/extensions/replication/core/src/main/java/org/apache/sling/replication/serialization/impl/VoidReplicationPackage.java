@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.vault.util.Text;
 import org.apache.sling.replication.communication.ReplicationActionType;
@@ -34,6 +35,8 @@ import org.apache.sling.replication.packaging.ReplicationPackage;
  */
 public class VoidReplicationPackage implements ReplicationPackage {
 
+    private static final String TYPE = "VOID";
+
     private final String type;
 
     private final String[] paths;
@@ -41,6 +44,10 @@ public class VoidReplicationPackage implements ReplicationPackage {
     private final String id;
 
     private final String action;
+
+    public VoidReplicationPackage(ReplicationRequest request) {
+        this(request, TYPE);
+    }
 
     public VoidReplicationPackage(ReplicationRequest request, String type) {
         this.type = type;
@@ -57,7 +64,7 @@ public class VoidReplicationPackage implements ReplicationPackage {
 
         String[] parts = streamString.split(":");
 
-        if(parts.length < 4) return null;
+        if (parts.length < 4) return null;
 
         String actionString = parts[0];
         String pathsString = parts[1];
@@ -67,7 +74,7 @@ public class VoidReplicationPackage implements ReplicationPackage {
         ReplicationActionType replicationActionType = ReplicationActionType.fromName(actionString);
 
         VoidReplicationPackage replicationPackage = null;
-        if(replicationActionType != null){
+        if (replicationActionType != null) {
             pathsString = Text.unescape(pathsString);
             String[] paths = pathsString.split(", ");
 
