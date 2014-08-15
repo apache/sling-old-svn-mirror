@@ -243,6 +243,9 @@ public class MapEntries implements EventHandler {
                     doAddVanity(path); 
                 } else if (PROP_VANITY_ORDER.equals(changedAttribute)) {
                     doUpdateVanityOrder(path, false);
+                } else if (PROP_REDIRECT_EXTERNAL.equals(changedAttribute) 
+                        || PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS.equals(changedAttribute)) {
+                    doUpdateRedirectStatus(path);
                 } else if (ResourceResolverImpl.PROP_ALIAS.equals(changedAttribute)) {
                     if (enableOptimizeAliasResolution) {
                        doAddAlias(path);
@@ -272,6 +275,9 @@ public class MapEntries implements EventHandler {
                     doUpdateVanity(path);
                 } else if (PROP_VANITY_ORDER.equals(changedAttribute)) {
                     doUpdateVanityOrder(path, false);
+                } else if (PROP_REDIRECT_EXTERNAL.equals(changedAttribute)
+                        || PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS.equals(changedAttribute)) {
+                    doUpdateRedirectStatus(path);
                 } else if (ResourceResolverImpl.PROP_ALIAS.equals(changedAttribute)) {
                     if (enableOptimizeAliasResolution) {
                         doRemoveAlias(path, false);
@@ -303,6 +309,9 @@ public class MapEntries implements EventHandler {
                     doRemoveVanity(path);
                 } else if (PROP_VANITY_ORDER.equals(changedAttribute)) {
                     doUpdateVanityOrder(path, true);
+                } else if (PROP_REDIRECT_EXTERNAL.equals(changedAttribute)
+                        || PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS.equals(changedAttribute)) {
+                    doUpdateRedirectStatus(path);
                 } else if (ResourceResolverImpl.PROP_ALIAS.equals(changedAttribute)) {
                     if (enableOptimizeAliasResolution) {
                         doRemoveAlias(path, nodeDeletion); 
@@ -412,6 +421,14 @@ public class MapEntries implements EventHandler {
                     Collections.sort(entries);
                 }
             }
+        }
+    }
+    
+    private void doUpdateRedirectStatus(String path) {
+        String actualContentPath = getActualContentPath(path);
+        List<String> vanityPaths = vanityTargets.get(actualContentPath);
+        if (vanityPaths != null) {
+            doUpdateVanity(path);
         }
     }
 
@@ -653,8 +670,7 @@ public class MapEntries implements EventHandler {
                 if (log.isDebugEnabled()) {
                     log.debug("found removed attributes {}", removedAttributes);
                 }
-                final String checkPath = getActualContentPath(path);
-                wasResolverRefreshed = doRemoveAttributes(checkPath, removedAttributes, false, wasResolverRefreshed);
+                wasResolverRefreshed = doRemoveAttributes(path, removedAttributes, false, wasResolverRefreshed);
             } 
         }
     }
@@ -942,7 +958,7 @@ public class MapEntries implements EventHandler {
                 // whether the target is attained by a external redirect or
                 // by an internal redirect is defined by the sling:redirect
                 // property
-                final int status = props.get("sling:redirect", false) ? props.get(
+                final int status = props.get(PROP_REDIRECT_EXTERNAL, false) ? props.get(
                         PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS, factory.getDefaultVanityPathRedirectStatus())
                         : -1;
 
