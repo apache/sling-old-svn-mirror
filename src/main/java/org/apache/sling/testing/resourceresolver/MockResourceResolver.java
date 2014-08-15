@@ -135,7 +135,7 @@ public class MockResourceResolver implements ResourceResolver {
     @Override
     public Iterator<Resource> listChildren(final Resource parent) {
         final String prefixPath = parent.getPath() + "/";
-        final Map<String, Map<String, Object>> candidates = new HashMap<String, Map<String,Object>>();
+        final Map<String, Map<String, Object>> candidates = new LinkedHashMap<String, Map<String,Object>>();
         synchronized ( this.resources ) {
             for(final Map.Entry<String, Map<String, Object>> e : this.resources.entrySet()) {
                 if (e.getKey().startsWith(prefixPath) && e.getKey().lastIndexOf('/') < prefixPath.length() ) {
