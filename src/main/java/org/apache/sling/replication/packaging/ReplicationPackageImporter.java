@@ -23,11 +23,13 @@ import java.io.InputStream;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 
 /**
- * A {@link org.apache.sling.replication.packaging.ReplicationPackage} importer
+ * A {@link org.apache.sling.replication.packaging.ReplicationPackageImporter} is responsible for importing
+ * {@link org.apache.sling.replication.packaging.ReplicationPackage}s into the resource tree.
  */
 public interface ReplicationPackageImporter {
     /**
      * Imports the given replication package
+     *
      * @param replicationPackage - the package to be imported
      * @return <code>true</code> if the import succeeded, <code>false</code> otherwise
      */
@@ -36,10 +38,9 @@ public interface ReplicationPackageImporter {
     /**
      * reads a stream and tries to convert it to a {@link ReplicationPackage} this provider can read and install
      *
-     * @param stream  the {@link InputStream} of the package to read
+     * @param stream the {@link InputStream} of the package to read
      * @return a {@link ReplicationPackage} if it can read it from the stream
-     * @throws ReplicationPackageReadingException
-     *          when the stream cannot be read as a {@link ReplicationPackage}
+     * @throws ReplicationPackageReadingException when the stream cannot be read as a {@link ReplicationPackage}
      */
     ReplicationPackage readPackage(InputStream stream) throws ReplicationPackageReadingException;
 

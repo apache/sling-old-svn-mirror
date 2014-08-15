@@ -18,11 +18,11 @@
  */
 package org.apache.sling.replication.transport;
 
+import java.util.List;
+
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
-
-import java.util.List;
 
 /**
  * A <code>TransportHandler</code> is responsible for implementing the transport of a
@@ -33,7 +33,7 @@ public interface ReplicationTransportHandler {
     /**
      * Delivers a given {@link ReplicationPackage}
      *
-     * @param replicationPackage  a {@link ReplicationPackage} to transport
+     * @param replicationPackage a {@link ReplicationPackage} to transport
      * @throws ReplicationTransportException if any error occurs during the transport
      */
     void deliverPackage(ReplicationPackage replicationPackage) throws ReplicationTransportException;
@@ -41,6 +41,7 @@ public interface ReplicationTransportHandler {
     /**
      * Retrieves a list of {@link ReplicationPackage}
      *
+     * @param replicationRequest the replication request
      * @throws ReplicationTransportException if any error occurs during the transport
      */
     public List<ReplicationPackage> retrievePackages(ReplicationRequest replicationRequest) throws ReplicationTransportException;
