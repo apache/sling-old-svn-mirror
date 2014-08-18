@@ -49,23 +49,32 @@ abstract class JcrItemResource // this should be package private, see SLING-1414
 
     private final ResourceMetadata metadata;
 
-    protected JcrItemResource(ResourceResolver resourceResolver,
-                              String path) {
+    protected JcrItemResource(final ResourceResolver resourceResolver,
+                              final String path,
+                              final ResourceMetadata metadata) {
 
         this.resourceResolver = resourceResolver;
         this.path = path;
-
-        metadata = new ResourceMetadata();
+        this.metadata = metadata;
     }
 
+    /**
+     * @see org.apache.sling.api.resource.Resource#getResourceResolver()
+     */
     public ResourceResolver getResourceResolver() {
         return resourceResolver;
     }
 
+    /**
+     * @see org.apache.sling.api.resource.Resource#getPath()
+     */
     public String getPath() {
         return path;
     }
 
+    /**
+     * @see org.apache.sling.api.resource.Resource#getResourceMetadata()
+     */
     public ResourceMetadata getResourceMetadata() {
         return metadata;
     }
@@ -75,15 +84,16 @@ abstract class JcrItemResource // this should be package private, see SLING-1414
      * SLING_RESOURCE_TYPE_PROPERTY, or the node's primary node type, if the
      * property is not set
      */
-    protected String getResourceTypeForNode(Node node)
+    protected String getResourceTypeForNode(final Node node)
             throws RepositoryException {
         String result = null;
 
         if (node.hasProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY)) {
-            result = node.getProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY).getValue().getString();
+            result = node.getProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY).getString();
         }
 
         if (result == null || result.length() == 0) {
+            //result = node.getProperty("jcr:primaryType").getString();
             result = node.getPrimaryNodeType().getName();
         }
 

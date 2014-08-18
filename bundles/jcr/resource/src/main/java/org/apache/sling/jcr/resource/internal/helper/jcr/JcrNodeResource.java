@@ -17,11 +17,7 @@
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
 import static org.apache.jackrabbit.JcrConstants.JCR_CONTENT;
-import static org.apache.jackrabbit.JcrConstants.JCR_CREATED;
 import static org.apache.jackrabbit.JcrConstants.JCR_DATA;
-import static org.apache.jackrabbit.JcrConstants.JCR_ENCODING;
-import static org.apache.jackrabbit.JcrConstants.JCR_LASTMODIFIED;
-import static org.apache.jackrabbit.JcrConstants.JCR_MIMETYPE;
 import static org.apache.jackrabbit.JcrConstants.NT_FILE;
 
 import java.io.InputStream;
@@ -36,7 +32,6 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
-import javax.jcr.ValueFormatException;
 
 import org.apache.jackrabbit.net.URLFactory;
 import org.apache.sling.adapter.annotations.Adaptable;
@@ -44,7 +39,6 @@ import org.apache.sling.adapter.annotations.Adapter;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistableValueMap;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.JcrModifiablePropertyMap;
@@ -72,7 +66,7 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
 
     private final String resourceType;
 
-    protected String resourceSuperType;
+    private String resourceSuperType;
 
     private final ClassLoader dynamicClassLoader;
 
@@ -87,20 +81,23 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
                            final Node node,
                            final ClassLoader dynamicClassLoader)
     throws RepositoryException {
-        super(resourceResolver, node.getPath());
+        super(resourceResolver, node.getPath(), new JcrNodeResourceMetadata(node));
         this.dynamicClassLoader = dynamicClassLoader;
         this.node = node;
-        resourceType = getResourceTypeForNode(node);
-        resourceSuperType = UNSET_RESOURCE_SUPER_TYPE;
-
-        // check for nt:file metadata
-        setMetaData(node, getResourceMetadata());
+        this.resourceType = getResourceTypeForNode(node);
+        this.resourceSuperType = UNSET_RESOURCE_SUPER_TYPE;
     }
 
+    /**
+     * @see org.apache.sling.api.resource.Resource#getResourceType()
+     */
     public String getResourceType() {
         return resourceType;
     }
 
+    /**
+     * @see org.apache.sling.api.resource.Resource#getResourceSuperType()
+     */
     public String getResourceSuperType() {
         // Yes, this isn't how you're supposed to compare Strings, but this is intentional.
         if ( resourceSuperType == UNSET_RESOURCE_SUPER_TYPE ) {
@@ -264,57 +261,5 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
         }
 
         return Collections.<Resource> emptyList().iterator();
-    }
-
-    private void setMetaData(Node node, ResourceMetadata metadata) {
-        try {
-
-            // check stuff for nt:file nodes
-            if (node.isNodeType(NT_FILE)) {
-                metadata.setCreationTime(node.getProperty(JCR_CREATED).getLong());
-
-                // continue our stuff with the jcr:content node
-                // which might be nt:resource, which we support below
-                // if the node is new, the content node might not exist yet
-                if ( !node.isNew() || node.hasNode(JCR_CONTENT) ) {
-                    node = node.getNode(JCR_CONTENT);
-                }
-            }
-
-            // check stuff for nt:resource (or similar) nodes
-            if (node.hasProperty(JCR_MIMETYPE)) {
-                metadata.setContentType(node.getProperty(JCR_MIMETYPE).getString());
-            }
-
-            if (node.hasProperty(JCR_ENCODING)) {
-                metadata.setCharacterEncoding(node.getProperty(JCR_ENCODING).getString());
-            }
-
-            if (node.hasProperty(JCR_LASTMODIFIED)) {
-                // We don't check node type, so JCR_LASTMODIFIED might not be a long
-                final Property prop = node.getProperty(JCR_LASTMODIFIED);
-                try {
-                    metadata.setModificationTime(prop.getLong());
-                } catch(ValueFormatException vfe) {
-                    LOGGER.debug("Property {} cannot be converted to a long, ignored ({})",
-                            prop.getPath(), vfe);
-                }
-            }
-
-            if (node.hasProperty(JCR_DATA)) {
-                final Property prop = node.getProperty(JCR_DATA);
-                try {
-                    metadata.setContentLength(prop.getLength());
-                } catch (ValueFormatException vfe) {
-                    LOGGER.debug(
-                        "Length of Property {} cannot be retrieved, ignored ({})",
-                        prop.getPath(), vfe);
-                }
-            }
-        } catch (RepositoryException re) {
-            LOGGER.info(
-                "setMetaData: Problem extracting metadata information for "
-                    + getPath(), re);
-        }
     }
 }
