@@ -335,6 +335,10 @@ public class ResourceMetadata extends HashMap<String, Object> {
         return super.remove(key);
     }
     
+    protected void internalPut(String key, Object value) {
+        super.put(key, value);
+    }
+    
     @Override
     public Object clone() {
         ResourceMetadata result = (ResourceMetadata) super.clone();
