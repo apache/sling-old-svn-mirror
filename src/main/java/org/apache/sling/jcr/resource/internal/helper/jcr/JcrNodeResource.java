@@ -64,7 +64,7 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
 
     private final Node node;
 
-    private final String resourceType;
+    private String resourceType;
 
     private String resourceSuperType;
 
@@ -84,7 +84,6 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
         super(resourceResolver, node.getPath(), new JcrNodeResourceMetadata(node));
         this.dynamicClassLoader = dynamicClassLoader;
         this.node = node;
-        this.resourceType = getResourceTypeForNode(node);
         this.resourceSuperType = UNSET_RESOURCE_SUPER_TYPE;
     }
 
@@ -92,6 +91,14 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
      * @see org.apache.sling.api.resource.Resource#getResourceType()
      */
     public String getResourceType() {
+        if ( this.resourceType == null ) {
+            try {
+                this.resourceType = getResourceTypeForNode(this.node);
+            } catch (final RepositoryException e) {
+                LOGGER.error("Unable to get resource type for node " + node, e);
+                this.resourceType = "<unknown resource type>";
+            }
+        }
         return resourceType;
     }
 
