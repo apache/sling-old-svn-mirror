@@ -192,7 +192,7 @@ public class JcrResourceProvider
                 log.debug(
                     "createResource: Found JCR Node Resource at path '{}'",
                     path);
-                return new JcrNodeResource(resourceResolver, (Node) item, dynamicClassLoader);
+                return new JcrNodeResource(resourceResolver, path, (Node) item, dynamicClassLoader);
             }
 
             log.debug(
@@ -390,7 +390,7 @@ public class JcrResourceProvider
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         if (type == Session.class) {
             return (AdapterType) session;
-        } else if (type == Principal.class) {       
+        } else if (type == Principal.class) {
             try {
                 if (this.session instanceof JackrabbitSession && session.getUserID() != null) {
                     JackrabbitSession s =((JackrabbitSession) this.session);
@@ -481,15 +481,8 @@ public class JcrResourceProvider
                 }
             }
 
-            return new JcrNodeResource(resolver, node, this.dynamicClassLoader);
+            return new JcrNodeResource(resolver, path, node, this.dynamicClassLoader);
         } catch (final RepositoryException e) {
-            if ( node != null ) {
-                try {
-                    node.remove();
-                } catch ( final RepositoryException re) {
-                    // we ignore this
-                }
-            }
             throw new PersistenceException("Unable to create node at " + path, e, path, null);
         }
     }
