@@ -258,6 +258,38 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
    }
 
     /**
+     * Test get a job
+     */
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testGetJob() throws Exception {
+        final Barrier cb = new Barrier(2);
+        final Barrier cb2 = new Barrier(2);
+        final ServiceRegistration jcReg = this.registerJobConsumer(TOPIC,
+                new JobConsumer() {
+
+                    @Override
+                    public JobResult process(Job job) {
+                        cb.block();
+                        cb2.block();
+                        return JobResult.OK;
+                    }
+                });
+        try {
+            final JobManager jobManager = this.getJobManager();
+            final Job j = jobManager.addJob(TOPIC, null);
+            cb.block();
+
+            assertNotNull(jobManager.getJob(TOPIC, null));
+
+            cb2.block(); // and continue job
+
+            jobManager.removeJobById(j.getId());
+        } finally {
+            jcReg.unregister();
+        }
+    }
+
+    /**
      * Test force canceling a job
      * The job execution always fails
      */

@@ -946,10 +946,15 @@ public class JobManagerImpl
     /**
      * @see org.apache.sling.event.jobs.JobManager#getJob(java.lang.String, java.util.Map)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public Job getJob(final String topic, final Map<String, Object> template) {
-        @SuppressWarnings("unchecked")
-        final Iterable<Job> iter = this.findJobs(QueryType.ALL, topic, 1, template);
+        final Iterable<Job> iter;
+        if ( template == null ) {
+            iter = this.findJobs(QueryType.ALL, topic, 1, (Map<String, Object>[])null);
+        } else {
+            iter = this.findJobs(QueryType.ALL, topic, 1, template);
+        }
         final Iterator<Job> i = iter.iterator();
         if ( i.hasNext() ) {
             return i.next();
