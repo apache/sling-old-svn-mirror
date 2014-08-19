@@ -39,6 +39,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
 
 @RunWith(MockitoJUnitRunner.class)
+@SuppressWarnings("javadoc")
 public class DefaultTest {
 
     @Mock
@@ -58,7 +59,7 @@ public class DefaultTest {
     }
 
     @Test
-    public void testDefaultStringValue() {
+    public void testDefaultStringValueField() {
         ValueMap vm = new ValueMapDecorator(Collections.<String, Object>emptyMap());
 
         Resource res = mock(Resource.class);
@@ -71,7 +72,7 @@ public class DefaultTest {
     }
 
     @Test
-    public void testDefaultStringValueOnInterface() {
+    public void testDefaultStringValueOnInterfaceField() {
         ValueMap vm = new ValueMapDecorator(Collections.<String, Object>singletonMap("first", "first value"));
 
         Resource res = mock(Resource.class);
@@ -85,7 +86,7 @@ public class DefaultTest {
 
 
     @Test
-    public void testDefaultPrimitives() {
+    public void testDefaultPrimitivesField() {
         ValueMap vm = new ValueMapDecorator(Collections.<String, Object>emptyMap());
 
         Resource res = mock(Resource.class);
@@ -103,7 +104,7 @@ public class DefaultTest {
     }
 
     @Test
-    public void testDefaultWrappers() {
+    public void testDefaultWrappersField() {
         ValueMap vm = new ValueMapDecorator(Collections.<String, Object>emptyMap());
 
         Resource res = mock(Resource.class);
@@ -119,4 +120,57 @@ public class DefaultTest {
         assertEquals(Long.valueOf(1L), model.getLongWrapperProperty());
         assertArrayEquals(new Long[] { Long.valueOf(1L), Long.valueOf(1L) }, model.getLongWrapperArrayProperty());
     }
+
+    @Test
+    public void testDefaultStringValueConstructor() {
+        ValueMap vm = new ValueMapDecorator(Collections.<String, Object>emptyMap());
+
+        Resource res = mock(Resource.class);
+        when(res.adaptTo(ValueMap.class)).thenReturn(vm);
+
+        org.apache.sling.models.testmodels.classes.constructorinjection.DefaultStringModel model
+                = factory.getAdapter(res, org.apache.sling.models.testmodels.classes.constructorinjection.DefaultStringModel.class);
+        assertNotNull(model);
+        assertEquals("firstDefault", model.getFirstProperty());
+        assertEquals(2, model.getSecondProperty().length);
+    }
+
+    @Test
+    public void testDefaultPrimitivesConstructor() {
+        ValueMap vm = new ValueMapDecorator(Collections.<String, Object>emptyMap());
+
+        Resource res = mock(Resource.class);
+        when(res.adaptTo(ValueMap.class)).thenReturn(vm);
+
+        org.apache.sling.models.testmodels.classes.constructorinjection.DefaultPrimitivesModel model
+                = factory.getAdapter(res, org.apache.sling.models.testmodels.classes.constructorinjection.DefaultPrimitivesModel.class);
+        assertNotNull(model);
+
+        assertEquals(true, model.getBooleanProperty());
+        // we need to wait for JUnit 4.12 for this assertArrayEquals to be working on primitive boolean arrays, https://github.com/junit-team/junit/issues/86!
+        assertTrue(Arrays.equals(new boolean[] { true, true }, model.getBooleanArrayProperty()));
+
+        assertEquals(1L, model.getLongProperty());
+        assertArrayEquals(new long[] { 1L, 1L }, model.getLongArrayProperty());
+    }
+
+    @Test
+    public void testDefaultWrappersConstructor() {
+        ValueMap vm = new ValueMapDecorator(Collections.<String, Object>emptyMap());
+
+        Resource res = mock(Resource.class);
+        when(res.adaptTo(ValueMap.class)).thenReturn(vm);
+
+        org.apache.sling.models.testmodels.classes.constructorinjection.DefaultWrappersModel model
+                = factory.getAdapter(res, org.apache.sling.models.testmodels.classes.constructorinjection.DefaultWrappersModel.class);
+        assertNotNull(model);
+
+        assertEquals(Boolean.valueOf(true), model.getBooleanWrapperProperty());
+        // we need to wait for JUnit 4.12 for this assertArrayEquals to be working on primitive boolean arrays, https://github.com/junit-team/junit/issues/86!
+        assertTrue(Arrays.equals(new Boolean[] { Boolean.TRUE, Boolean.TRUE }, model.getBooleanWrapperArrayProperty()));
+
+        assertEquals(Long.valueOf(1L), model.getLongWrapperProperty());
+        assertArrayEquals(new Long[] { Long.valueOf(1L), Long.valueOf(1L) }, model.getLongWrapperArrayProperty());
+    }
+
 }

@@ -14,18 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.models.annotations;
+package org.apache.sling.models.testmodels.classes.constructorinjection;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import javax.inject.Inject;
+import javax.inject.Named;
 
-/**
- * Marker annotation for optional injections.
- */
-@Target({ ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER })
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Optional {
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.apache.sling.models.annotations.Model;
+
+@Model(adaptables = SlingHttpServletRequest.class)
+@SuppressWarnings("javadoc")
+public class BindingsModel {
+
+    private final SlingScriptHelper sling;
+
+    @Inject
+    public BindingsModel(@Named("sling") SlingScriptHelper sling) {
+        this.sling = sling;
+    }
+
+    public SlingScriptHelper getSling() {
+        return sling;
+    }
 
 }

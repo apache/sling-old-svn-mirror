@@ -14,18 +14,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.models.annotations;
+package org.apache.sling.models.it.models;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.util.List;
 
-/**
- * Marker annotation for optional injections.
- */
-@Target({ ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER })
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Optional {
+import javax.inject.Inject;
+import javax.servlet.Filter;
+
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.models.annotations.Model;
+
+@Model(adaptables=Resource.class)
+@SuppressWarnings("javadoc")
+public class FieldInjectionTestModel {
+
+    @Inject
+    private String testProperty;
+    
+    @Inject
+    private List<Filter> filters;
+    
+    private final Resource resource;
+    
+    public FieldInjectionTestModel(Resource pResource) {
+        this.resource = pResource;
+    }
+    
+    public String getTestProperty() {
+        return testProperty;
+    }
+    
+    public List<Filter> getFilters() {
+        return filters;
+    }
+
+    public Resource getResource() {
+        return resource;
+    }
 
 }

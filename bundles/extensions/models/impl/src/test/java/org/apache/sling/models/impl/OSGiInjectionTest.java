@@ -47,6 +47,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 
 @RunWith(MockitoJUnitRunner.class)
+@SuppressWarnings("javadoc")
 public class OSGiInjectionTest {
     private ModelAdapterFactory factory;
 
@@ -75,7 +76,7 @@ public class OSGiInjectionTest {
     }
 
     @Test
-    public void testSimpleOSGiModel() throws Exception {
+    public void testSimpleOSGiModelField() throws Exception {
         ServiceReference ref = mock(ServiceReference.class);
         ServiceInterface service = mock(ServiceInterface.class);
         when(bundleContext.getServiceReferences(ServiceInterface.class.getName(), null)).thenReturn(
@@ -93,7 +94,7 @@ public class OSGiInjectionTest {
     }
 
     @Test
-    public void testRequestOSGiModel() throws Exception {
+    public void testRequestOSGiModelField() throws Exception {
         ServiceInterface service = mock(ServiceInterface.class);
 
         SlingHttpServletRequest request = mock(SlingHttpServletRequest.class);
@@ -114,7 +115,7 @@ public class OSGiInjectionTest {
     }
 
     @Test
-    public void testListOSGiModel() throws Exception {
+    public void testListOSGiModelField() throws Exception {
         ServiceReference ref1 = mock(ServiceReference.class);
         ServiceInterface service1 = mock(ServiceInterface.class);
         when(bundleContext.getService(ref1)).thenReturn(service1);
@@ -138,7 +139,7 @@ public class OSGiInjectionTest {
     }
 
     @Test
-    public void testArrayOSGiModel() throws Exception {
+    public void testArrayOSGiModelField() throws Exception {
         ServiceReference ref1 = mock(ServiceReference.class);
         ServiceInterface service1 = mock(ServiceInterface.class);
         when(bundleContext.getService(ref1)).thenReturn(service1);
@@ -162,7 +163,7 @@ public class OSGiInjectionTest {
     }
 
     @Test
-    public void testOptionalArrayOSGiModel() throws Exception {
+    public void testOptionalArrayOSGiModelField() throws Exception {
 
         Resource res = mock(Resource.class);
 
@@ -174,7 +175,7 @@ public class OSGiInjectionTest {
     }
 
     @Test
-    public void testOptionalListOSGiModel() throws Exception {
+    public void testOptionalListOSGiModelField() throws Exception {
         Resource res = mock(Resource.class);
 
         OptionalListOSGiModel model = factory.getAdapter(res, OptionalListOSGiModel.class);
@@ -185,7 +186,7 @@ public class OSGiInjectionTest {
     }
 
     @Test
-    public void testCollectionOSGiModel() throws Exception {
+    public void testCollectionOSGiModelField() throws Exception {
         ServiceReference ref1 = mock(ServiceReference.class);
         ServiceInterface service1 = mock(ServiceInterface.class);
         when(bundleContext.getService(ref1)).thenReturn(service1);
@@ -210,7 +211,7 @@ public class OSGiInjectionTest {
     }
 
     @Test
-    public void testSetOSGiModel() throws Exception {
+    public void testSetOSGiModelField() throws Exception {
         ServiceReference ref1 = mock(ServiceReference.class);
         ServiceInterface service1 = mock(ServiceInterface.class);
         when(bundleContext.getService(ref1)).thenReturn(service1);
@@ -232,4 +233,49 @@ public class OSGiInjectionTest {
         verify(bundleContext).getBundles();
         verifyNoMoreInteractions(res, bundleContext);
     }
+
+    @Test
+    public void testSimpleOSGiModelConstructor() throws Exception {
+        ServiceReference ref = mock(ServiceReference.class);
+        ServiceInterface service = mock(ServiceInterface.class);
+        when(bundleContext.getServiceReferences(ServiceInterface.class.getName(), null)).thenReturn(
+                new ServiceReference[] { ref });
+        when(bundleContext.getService(ref)).thenReturn(service);
+
+        Resource res = mock(Resource.class);
+
+        org.apache.sling.models.testmodels.classes.constructorinjection.SimpleOSGiModel model
+                = factory.getAdapter(res, org.apache.sling.models.testmodels.classes.constructorinjection.SimpleOSGiModel.class);
+        assertNotNull(model);
+        assertNotNull(model.getService());
+        assertEquals(service, model.getService());
+
+        verifyNoMoreInteractions(res);
+    }
+
+    @Test
+    public void testListOSGiModelConstructor() throws Exception {
+        ServiceReference ref1 = mock(ServiceReference.class);
+        ServiceInterface service1 = mock(ServiceInterface.class);
+        when(bundleContext.getService(ref1)).thenReturn(service1);
+        ServiceReference ref2 = mock(ServiceReference.class);
+        ServiceInterface service2 = mock(ServiceInterface.class);
+        when(bundleContext.getService(ref2)).thenReturn(service2);
+
+        when(bundleContext.getServiceReferences(ServiceInterface.class.getName(), null)).thenReturn(
+                new ServiceReference[] { ref1, ref2 });
+
+        Resource res = mock(Resource.class);
+
+        org.apache.sling.models.testmodels.classes.constructorinjection.ListOSGiModel model
+                = factory.getAdapter(res, org.apache.sling.models.testmodels.classes.constructorinjection.ListOSGiModel.class);
+        assertNotNull(model);
+        assertNotNull(model.getServices());
+        assertEquals(2, model.getServices().size());
+        assertEquals(service1, model.getServices().get(0));
+        assertEquals(service2, model.getServices().get(1));
+
+        verifyNoMoreInteractions(res);
+    }
+
 }

@@ -19,25 +19,38 @@ package org.apache.sling.models.it.models;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.servlet.Filter;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.Model;
 
 @Model(adaptables=Resource.class)
-public class TestModel {
+@SuppressWarnings("javadoc")
+public class ConstructorInjectionTestModel {
 
-    @Inject
-    private String testProperty;
+    private final String testProperty;
+    private final List<Filter> filters;
+    private final Resource resource;
     
     @Inject
-    private List<Filter> filters;
+    public ConstructorInjectionTestModel(@Named("testProperty") String testProperty,
+            @Named("filters") List<Filter> filters, Resource resource) {
+        this.testProperty = testProperty;
+        this.filters = filters;
+        this.resource = resource;
+    }
     
     public String getTestProperty() {
         return testProperty;
     }
-    
+
     public List<Filter> getFilters() {
         return filters;
     }
+
+    public Resource getResource() {
+        return resource;
+    }
+
 }
