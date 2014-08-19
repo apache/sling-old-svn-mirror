@@ -190,8 +190,7 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
     /**
      * Returns a stream to the <em>jcr:data</em> property if the
      * {@link #getNode() node} is an <em>nt:file</em> or <em>nt:resource</em>
-     * node. Otherwise returns <code>null</code>. If a valid stream can be
-     * returned, this method also sets the content length resource metadata.
+     * node. Otherwise returns <code>null</code>.
      */
     private InputStream getInputStream() {
         // implement this for nt:file only
@@ -215,13 +214,7 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
                         while (item.isNode()) {
                             item = ((Node) item).getPrimaryItem();
                         }
-                        data = ((Property) item);
-
-                        // set the content length property as a side effect
-                        // for resources which are not nt:file based and whose
-                        // data is not in jcr:content/jcr:data this will lazily
-                        // set the correct content length
-                        this.setContentLength(data);
+                        data = (Property) item;
 
                     } catch (ItemNotFoundException infe) {
                         // we don't actually care, but log for completeness

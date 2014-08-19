@@ -25,6 +25,7 @@ import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.ValueFormatException;
 
 import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.Resource;
@@ -100,25 +101,32 @@ abstract class JcrItemResource // this should be package private, see SLING-1414
         return result;
     }
 
-    protected void setContentLength(final Property property) throws RepositoryException {
+    public static long getContentLength(final Property property) throws RepositoryException {
         if (property.isMultiple()) {
-            return;
+            return -1;
         }
 
         try {
-            final long length;
+            long length = -1;
             if (property.getType() == PropertyType.BINARY ) {
                 // we're interested in the number of bytes, not the
                 // number of characters
-                length = property.getLength();
+                try {
+                    length =  property.getLength();
+                } catch (final ValueFormatException vfe) {
+                    LOGGER.debug(
+                        "Length of Property {} cannot be retrieved, ignored ({})",
+                        property.getPath(), vfe);
+                }
             } else {
                 length = property.getString().getBytes("UTF-8").length;
             }
-            getResourceMetadata().setContentLength(length);
+            return length;
         } catch (UnsupportedEncodingException uee) {
             LOGGER.warn("getPropertyContentLength: Cannot determine length of non-binary property {}: {}",
-                    toString(), uee);
+                    property, uee);
         }
+        return -1;
     }
 
     /**
