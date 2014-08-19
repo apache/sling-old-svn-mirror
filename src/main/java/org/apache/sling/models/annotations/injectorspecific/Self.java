@@ -28,26 +28,19 @@ import org.apache.sling.models.annotations.Source;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotation;
 
 /**
- * Annotation to be used on either methods, fields or constructor parameters to let Sling Models inject a
- * request attribute.
- *
+ * Annotation to be used on either methods, fields or constructor parameters to let Sling Models
+ * inject the adaptable itself, or an object that can be adapted from it. 
  */
 @Target({ METHOD, FIELD, PARAMETER })
 @Retention(RUNTIME)
 @InjectAnnotation
-@Source("request-attributes")
-public @interface RequestAttribute {
+@Source("self")
+public @interface Self {
 
     /**
-     * Specifies the name of the request attribute. If empty or not set, then the name
-     * is derived from the method or field.
-     */
-    public String name() default "";
-
-    /**
-     * If set to true, the model can be instantiated even if there is no request attribute
-     * with the given name found.
+     * If set to true, the model can be instantiated even if there is no object that can be adapted from the adaptable itself. 
      * Default = false.
      */
     public boolean optional() default false;
+
 }

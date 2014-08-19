@@ -26,7 +26,7 @@ import javax.inject.Qualifier;
 /**
  * Provide a filter on an @Inject.
  */
-@Target({ ElementType.FIELD, ElementType.METHOD })
+@Target({ ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Source("osgi-services")
 @Qualifier

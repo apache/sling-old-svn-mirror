@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
 /**
  * Marker annotation for required injections.
  */
-@Target({ ElementType.FIELD, ElementType.METHOD })
+@Target({ ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Required {
 

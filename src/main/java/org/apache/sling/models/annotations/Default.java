@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
 /**
  * Default value for an injection.
  */
-@Target({ ElementType.FIELD, ElementType.METHOD })
+@Target({ ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Default {
 

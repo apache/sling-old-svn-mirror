@@ -18,6 +18,7 @@ package org.apache.sling.models.annotations.injectorspecific;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import java.lang.annotation.Retention;
@@ -27,11 +28,11 @@ import org.apache.sling.models.annotations.Source;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotation;
 
 /**
- * Annotation to be used on either methods or fields to let Sling Models inject a
+ * Annotation to be used on either methods, fields or constructor parameters to let Sling Models inject a
  * script variable (from the {@link org.apache.sling.api.scripting.SlingBindings})
  *
  */
-@Target({ METHOD, FIELD })
+@Target({ METHOD, FIELD, PARAMETER })
 @Retention(RUNTIME)
 @InjectAnnotation
 @Source("script-bindings")
