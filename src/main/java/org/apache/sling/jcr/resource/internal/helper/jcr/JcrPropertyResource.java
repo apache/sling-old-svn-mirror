@@ -66,7 +66,7 @@ class JcrPropertyResource extends JcrItemResource { // this should be package pr
             this.getResourceMetadata().setCharacterEncoding("UTF-8");
         }
 
-        this.setContentLength(property);
+        this.getResourceMetadata().setContentLength(getContentLength(property));
     }
 
     public JcrPropertyResource(final ResourceResolver resourceResolver,

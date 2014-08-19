@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
@@ -60,11 +61,7 @@ class JcrNodeResourceMetadata extends ResourceMetadata {
         this.node = inNode;
     }
 
-    private Node getTargetNode() {
-        return contentNode != null ? contentNode : node;
-    }
-
-    private void promoteNode() {
+    private Node promoteNode() {
         // check stuff for nt:file nodes
         try {
             if ( (!nodePromotionChecked) && node.isNodeType(NT_FILE)) {
@@ -81,13 +78,13 @@ class JcrNodeResourceMetadata extends ResourceMetadata {
         } catch (final RepositoryException re) {
             report(re);
         }
-
+        return contentNode != null ? contentNode : node;
     }
 
     private void report(final RepositoryException re) {
         String nodePath = "<unknown node path>";
         try {
-            nodePath = getTargetNode().getPath();
+            nodePath = contentNode != null ? contentNode.getPath() : node.getPath();
         } catch (RepositoryException e) {
             // ignore
         }
@@ -109,12 +106,12 @@ class JcrNodeResourceMetadata extends ResourceMetadata {
             return creationTime;
         } else if (CONTENT_TYPE.equals(key)) {
             if (contentType == null) {
-                promoteNode();
+                final Node targetNode = promoteNode();
                 try {
-                    if (getTargetNode().hasProperty(JCR_MIMETYPE)) {
-                        contentType = getTargetNode().getProperty(JCR_MIMETYPE).getString();
+                    if (targetNode.hasProperty(JCR_MIMETYPE)) {
+                        contentType = targetNode.getProperty(JCR_MIMETYPE).getString();
                     }
-                } catch (RepositoryException re) {
+                } catch (final RepositoryException re) {
                     report(re);
                 }
 
@@ -123,12 +120,12 @@ class JcrNodeResourceMetadata extends ResourceMetadata {
             return contentType;
         } else if (CHARACTER_ENCODING.equals(key)) {
             if (characterEncoding == null) {
-                promoteNode();
+                final Node targetNode = promoteNode();
                 try {
-                    if (getTargetNode().hasProperty(JCR_ENCODING)) {
-                        characterEncoding = getTargetNode().getProperty(JCR_ENCODING).getString();
+                    if (targetNode.hasProperty(JCR_ENCODING)) {
+                        characterEncoding = targetNode.getProperty(JCR_ENCODING).getString();
                     }
-                } catch (RepositoryException re) {
+                } catch (final RepositoryException re) {
                     report(re);
                 }
                 internalPut(CHARACTER_ENCODING, characterEncoding);
@@ -136,14 +133,14 @@ class JcrNodeResourceMetadata extends ResourceMetadata {
             return characterEncoding;
         } else if (MODIFICATION_TIME.equals(key)) {
             if (modificationTime == -1) {
-                promoteNode();
+                final Node targetNode = promoteNode();
                 try {
-                    if (getTargetNode().hasProperty(JCR_LASTMODIFIED)) {
+                    if (targetNode.hasProperty(JCR_LASTMODIFIED)) {
                         // We don't check node type, so JCR_LASTMODIFIED might not be a long
-                        final Property prop = getTargetNode().getProperty(JCR_LASTMODIFIED);
+                        final Property prop = targetNode.getProperty(JCR_LASTMODIFIED);
                         try {
                             modificationTime = prop.getLong();
-                        } catch(ValueFormatException vfe) {
+                        } catch (final ValueFormatException vfe) {
                             LOGGER.debug("Property {} cannot be converted to a long, ignored ({})",
                                 prop.getPath(), vfe);
                         }
@@ -156,17 +153,25 @@ class JcrNodeResourceMetadata extends ResourceMetadata {
             return modificationTime;
         } else if (CONTENT_LENGTH.equals(key)) {
             if (contentLength == -1) {
-                promoteNode();
+                final Node targetNode = promoteNode();
                 try {
-                    if (getTargetNode().hasProperty(JCR_DATA)) {
-                        final Property prop = getTargetNode().getProperty(JCR_DATA);
-                        try {
-                            contentLength = prop.getLength();
-                        } catch (ValueFormatException vfe) {
-                            LOGGER.debug(
-                                "Length of Property {} cannot be retrieved, ignored ({})",
-                                prop.getPath(), vfe);
+                    // if the node has a jcr:data property, use that property
+                    if (targetNode.hasProperty(JCR_DATA)) {
+                        final Property prop = targetNode.getProperty(JCR_DATA);
+                        contentLength = JcrItemResource.getContentLength(prop);
+                    } else {
+                        // otherwise try to follow default item trail
+                        Item item = targetNode.getPrimaryItem();
+                        while (item.isNode()) {
+                            item = ((Node) item).getPrimaryItem();
                         }
+                        final Property data = (Property) item;
+
+                        // set the content length property as a side effect
+                        // for resources which are not nt:file based and whose
+                        // data is not in jcr:content/jcr:data this will lazily
+                        // set the correct content length
+                        contentLength = JcrItemResource.getContentLength(data);
                     }
                 } catch (final RepositoryException re) {
                     report(re);
