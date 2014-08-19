@@ -100,7 +100,16 @@ public class SlingLaunchpadConfiguration {
             addBootFeature("sling-auth-form"),
             addBootFeature("sling-auth-openid"),
             addBootFeature("sling-auth-selector"),
-            addBootFeature("sling-extension-adapter")
+            addBootFeature("sling-extension-adapter"),
+            // misc (legacy, snapshots, ...) stuff
+            mavenBundle().groupId("org.codehaus.groovy").artifactId("groovy-all").version("1.8.9"),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.servlets.compat").version("1.0.3-SNAPSHOT"),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.extensions.groovy").version("1.0.0-SNAPSHOT"),
+            // test support
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.junit.core").version("1.0.9-SNAPSHOT"),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.junit.remote").version("1.0.9-SNAPSHOT"),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.junit.scriptable").version("1.0.9-SNAPSHOT"),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.launchpad.test-services").version("2.0.9-SNAPSHOT")
         );
     }
 
