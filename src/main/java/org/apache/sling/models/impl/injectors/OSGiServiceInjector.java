@@ -38,6 +38,7 @@ import org.apache.sling.models.annotations.Filter;
 import org.apache.sling.models.annotations.injectorspecific.OSGiService;
 import org.apache.sling.models.spi.DisposalCallback;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
+import org.apache.sling.models.spi.AcceptsNullName;
 import org.apache.sling.models.spi.Injector;
 import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
@@ -53,7 +54,7 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 5000)
-public class OSGiServiceInjector implements Injector, InjectAnnotationProcessorFactory {
+public class OSGiServiceInjector implements Injector, InjectAnnotationProcessorFactory, AcceptsNullName {
 
     private static final Logger log = LoggerFactory.getLogger(OSGiServiceInjector.class);
 
