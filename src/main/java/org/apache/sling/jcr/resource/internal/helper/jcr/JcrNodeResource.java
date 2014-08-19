@@ -136,7 +136,7 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
         } else if (type == PersistableValueMap.class ) {
             // check write
             try {
-                getNode().getSession().checkPermission(getNode().getPath(),
+                getNode().getSession().checkPermission(getPath(),
                     "set_property");
                 return (Type) new JcrModifiablePropertyMap(getNode(), this.dynamicClassLoader);
             } catch (AccessControlException ace) {
@@ -153,7 +153,7 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
         } else if (type == ModifiableValueMap.class ) {
             // check write
             try {
-                getNode().getSession().checkPermission(getNode().getPath(),
+                getNode().getSession().checkPermission(getPath(),
                     "set_property");
                 return (Type) new JcrModifiableValueMap(getNode(), this.dynamicClassLoader);
             } catch (AccessControlException ace) {
@@ -239,8 +239,8 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
 
     private URL getURL() {
         try {
-            return URLFactory.createURL(node.getSession(), node.getPath());
-        } catch (Exception ex) {
+            return URLFactory.createURL(node.getSession(), getPath());
+        } catch (final Exception ex) {
             LOGGER.error("getURL: Cannot create URL for " + this, ex);
         }
 
@@ -256,7 +256,7 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
                 return new JcrNodeResourceIterator(getResourceResolver(),
                     getNode().getNodes(), this.dynamicClassLoader);
             }
-        } catch (RepositoryException re) {
+        } catch (final RepositoryException re) {
             LOGGER.error("listChildren: Cannot get children of " + this, re);
         }
 
