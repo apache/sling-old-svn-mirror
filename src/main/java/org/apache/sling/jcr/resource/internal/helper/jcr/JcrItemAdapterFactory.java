@@ -72,7 +72,7 @@ public class JcrItemAdapterFactory implements AdapterFactory {
                 if (adaptable instanceof Node) {
                     Node node = (Node) adaptable;
                     return (AdapterType) new JcrNodeResource(resourceResolverFactory.getResourceResolver(node
-                            .getSession()), node, resourceResolverFactory.getDynamicClassLoader());
+                            .getSession()), node.getPath(), node, resourceResolverFactory.getDynamicClassLoader());
                 } else if (adaptable instanceof Property) {
                     Property property = (Property) adaptable;
                     return (AdapterType) new JcrPropertyResource(resourceResolverFactory.getResourceResolver(property
