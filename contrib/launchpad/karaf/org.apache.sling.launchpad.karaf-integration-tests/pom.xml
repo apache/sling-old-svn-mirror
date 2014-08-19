@@ -74,13 +74,6 @@
       <version>2.3.4</version>
       <scope>test</scope>
     </dependency>
-    <!-- Apache Sling Extensions -->
-    <dependency>
-      <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.event</artifactId>
-      <version>3.3.10</version>
-      <scope>test</scope>
-    </dependency>
     <!-- logging -->
     <dependency>
       <groupId>org.slf4j</groupId>
