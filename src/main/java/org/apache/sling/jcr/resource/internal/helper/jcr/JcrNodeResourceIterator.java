@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 
 import org.apache.sling.api.resource.Resource;
@@ -89,8 +90,10 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
     private Resource seek() {
         while (nodes.hasNext()) {
             try {
+                final Node n = nodes.nextNode();
                 Resource resource = new JcrNodeResource(resourceResolver,
-                    nodes.nextNode(), dynamicClassLoader);
+                    n.getPath(),
+                    n, dynamicClassLoader);
                 LOGGER.debug("seek: Returning Resource {}", resource);
                 return resource;
             } catch (final ItemNotFoundException infe) {

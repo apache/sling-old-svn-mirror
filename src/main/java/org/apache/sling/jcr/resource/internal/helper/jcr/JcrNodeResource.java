@@ -23,7 +23,6 @@ import static org.apache.jackrabbit.JcrConstants.NT_FILE;
 import java.io.InputStream;
 import java.net.URL;
 import java.security.AccessControlException;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -73,15 +72,16 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
     /**
      * Constructor
      * @param resourceResolver
+     * @param The path of the resource
      * @param node
      * @param dynamicClassLoader Dynamic class loader for loading serialized objects.
      * @throws RepositoryException
      */
     public JcrNodeResource(final ResourceResolver resourceResolver,
+                           final String path,
                            final Node node,
-                           final ClassLoader dynamicClassLoader)
-    throws RepositoryException {
-        super(resourceResolver, node.getPath(), new JcrNodeResourceMetadata(node));
+                           final ClassLoader dynamicClassLoader) {
+        super(resourceResolver, path, new JcrNodeResourceMetadata(node));
         this.dynamicClassLoader = dynamicClassLoader;
         this.node = node;
         this.resourceSuperType = UNSET_RESOURCE_SUPER_TYPE;
@@ -267,6 +267,6 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
             LOGGER.error("listChildren: Cannot get children of " + this, re);
         }
 
-        return Collections.<Resource> emptyList().iterator();
+        return null;
     }
 }
