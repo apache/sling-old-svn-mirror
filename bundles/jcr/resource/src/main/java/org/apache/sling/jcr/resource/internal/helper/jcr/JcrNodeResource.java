@@ -53,15 +53,13 @@ import org.slf4j.LoggerFactory;
         @Adapter(value=PersistableValueMap.class, condition="If the resource is a JcrNodeResource and the user has set property privileges on the node."),
         @Adapter(value=InputStream.class, condition="If the resource is a JcrNodeResource and has a jcr:data property or is an nt:file node.")
 })
-class JcrNodeResource extends JcrItemResource { // this should be package private, see SLING-1414
+class JcrNodeResource extends JcrItemResource<Node> { // this should be package private, see SLING-1414
 
     /** marker value for the resourceSupertType before trying to evaluate */
     private static final String UNSET_RESOURCE_SUPER_TYPE = "<unset>";
 
     /** default log */
     private static final Logger LOGGER = LoggerFactory.getLogger(JcrNodeResource.class);
-
-    private final Node node;
 
     private String resourceType;
 
@@ -72,8 +70,8 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
     /**
      * Constructor
      * @param resourceResolver
-     * @param The path of the resource
-     * @param node
+     * @param path The path of the resource (lazily initialized if null)
+     * @param node The Node underlying this resource
      * @param dynamicClassLoader Dynamic class loader for loading serialized objects.
      * @throws RepositoryException
      */
@@ -81,9 +79,8 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
                            final String path,
                            final Node node,
                            final ClassLoader dynamicClassLoader) {
-        super(resourceResolver, path, new JcrNodeResourceMetadata(node));
+        super(resourceResolver, path, node, new JcrNodeResourceMetadata(node));
         this.dynamicClassLoader = dynamicClassLoader;
-        this.node = node;
         this.resourceSuperType = UNSET_RESOURCE_SUPER_TYPE;
     }
 
@@ -93,9 +90,9 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
     public String getResourceType() {
         if ( this.resourceType == null ) {
             try {
-                this.resourceType = getResourceTypeForNode(this.node);
+                this.resourceType = getResourceTypeForNode(getNode());
             } catch (final RepositoryException e) {
-                LOGGER.error("Unable to get resource type for node " + node, e);
+                LOGGER.error("Unable to get resource type for node " + getNode(), e);
                 this.resourceType = "<unknown resource type>";
             }
         }
@@ -109,8 +106,8 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
         // Yes, this isn't how you're supposed to compare Strings, but this is intentional.
         if ( resourceSuperType == UNSET_RESOURCE_SUPER_TYPE ) {
             try {
-                if (node.hasProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY)) {
-                    resourceSuperType = node.getProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY).getValue().getString();
+                if (getNode().hasProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY)) {
+                    resourceSuperType = getNode().getProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY).getValue().getString();
                 }
             } catch (RepositoryException re) {
                 // we ignore this
@@ -184,7 +181,7 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
     // ---------- internal -----------------------------------------------------
 
     private Node getNode() {
-        return node;
+        return getItem();
     }
 
     /**
@@ -194,6 +191,7 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
      */
     private InputStream getInputStream() {
         // implement this for nt:file only
+        final Node node = getNode();
         if (node != null) {
             try {
                 // find the content node: for nt:file it is jcr:content
@@ -239,7 +237,7 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
 
     private URL getURL() {
         try {
-            return URLFactory.createURL(node.getSession(), getPath());
+            return URLFactory.createURL(getNode().getSession(), getPath());
         } catch (final Exception ex) {
             LOGGER.error("getURL: Cannot create URL for " + this, ex);
         }
