@@ -33,7 +33,15 @@ public class OptionalPrimitivesModel {
     private final double doubleValue;
     private final char charValue;
     private final boolean booleanValue;
-    
+    private final Byte byteObjectValue;
+    private final Short shortObjectValue;
+    private final Integer intObjectValue;
+    private final Long longObjectValue;
+    private final Float floatObjectValue;
+    private final Double doubleObjectValue;
+    private final Character charObjectValue;
+    private final Boolean booleanObjectValue;
+
     @Inject
     public OptionalPrimitivesModel(
             @Optional byte byteValue,
@@ -43,7 +51,15 @@ public class OptionalPrimitivesModel {
             @Optional float floatValue,
             @Optional double doubleValue,
             @Optional char charValue,
-            @Optional boolean booleanValue) {
+            @Optional boolean booleanValue,
+            @Optional Byte byteObjectValue,
+            @Optional Short shortObjectValue,
+            @Optional Integer intObjectValue,
+            @Optional Long longObjectValue,
+            @Optional Float floatObjectValue,
+            @Optional Double doubleObjectValue,
+            @Optional Character charObjectValue,
+            @Optional Boolean booleanObjectValue) {
         this.byteValue = byteValue;
         this.shortValue = shortValue;
         this.intValue = intValue;
@@ -52,6 +68,14 @@ public class OptionalPrimitivesModel {
         this.doubleValue = doubleValue;
         this.charValue = charValue;
         this.booleanValue = booleanValue;
+        this.byteObjectValue = byteObjectValue;
+        this.shortObjectValue = shortObjectValue;
+        this.intObjectValue = intObjectValue;
+        this.longObjectValue = longObjectValue;
+        this.floatObjectValue = floatObjectValue;
+        this.doubleObjectValue = doubleObjectValue;
+        this.charObjectValue = charObjectValue;
+        this.booleanObjectValue = booleanObjectValue;
     }
 
     public byte getByteValue() {
@@ -84,6 +108,38 @@ public class OptionalPrimitivesModel {
 
     public boolean getBooleanValue() {
         return this.booleanValue;
+    }
+    
+    public Byte getByteObjectValue() {
+        return this.byteObjectValue;
+    }
+
+    public Short getShortObjectValue() {
+        return this.shortObjectValue;
+    }
+
+    public Integer getIntObjectValue() {
+        return this.intObjectValue;
+    }
+
+    public Long getLongObjectValue() {
+        return this.longObjectValue;
+    }
+
+    public Float getFloatObjectValue() {
+        return this.floatObjectValue;
+    }
+
+    public Double getDoubleObjectValue() {
+        return this.doubleObjectValue;
+    }
+
+    public Character getCharObjectValue() {
+        return this.charObjectValue;
+    }
+
+    public Boolean getBooleanObjectValue() {
+        return this.booleanObjectValue;
     }
     
 }
