@@ -32,6 +32,7 @@ import org.apache.sling.crankstart.api.CrankstartContext;
 import org.apache.sling.crankstart.api.CrankstartException;
 import org.apache.sling.crankstart.core.commands.Configure;
 import org.apache.sling.crankstart.core.commands.Defaults;
+import org.apache.sling.crankstart.core.commands.Exit;
 import org.apache.sling.crankstart.core.commands.InstallBundle;
 import org.apache.sling.crankstart.core.commands.Log;
 import org.apache.sling.crankstart.core.commands.NullCommand;
@@ -65,6 +66,7 @@ public class CrankstartFileProcessor implements Callable<Object> {
         builtinCommands.add(new StartFramework());
         builtinCommands.add(new Configure());
         builtinCommands.add(new Defaults());
+        builtinCommands.add(new Exit());
         
         // Need a null "classpath" command as our launcher uses it
         // outside of the usual command mechanism - it shouldn't cause
