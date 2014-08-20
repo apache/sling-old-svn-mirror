@@ -21,7 +21,6 @@ package org.apache.sling.jcr.resource.internal.helper.jcr;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 
@@ -42,10 +41,10 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
     private static final Logger LOGGER = LoggerFactory.getLogger(JcrNodeResourceIterator.class);
 
     /** resource resolver used to create resources from nodes */
-    private ResourceResolver resourceResolver;
+    private final ResourceResolver resourceResolver;
 
     /** underlying node iterator to be used for resources */
-    private NodeIterator nodes;
+    private final NodeIterator nodes;
 
     /** The prefetched next iterator entry, null at the end of iterating */
     private Resource nextResult;
