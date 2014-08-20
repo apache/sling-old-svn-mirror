@@ -21,6 +21,7 @@ package org.apache.sling.jcr.resource.internal.helper.jcr;
 import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
 
+import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
@@ -35,7 +36,7 @@ import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-abstract class JcrItemResource // this should be package private, see SLING-1414
+abstract class JcrItemResource<T extends Item> // this should be package private, see SLING-1414
     extends AbstractResource
     implements Resource {
 
@@ -46,16 +47,20 @@ abstract class JcrItemResource // this should be package private, see SLING-1414
 
     private final ResourceResolver resourceResolver;
 
-    private final String path;
+    private String path;
+
+    private final T item;
 
     private final ResourceMetadata metadata;
 
     protected JcrItemResource(final ResourceResolver resourceResolver,
                               final String path,
+                              final T item,
                               final ResourceMetadata metadata) {
 
         this.resourceResolver = resourceResolver;
         this.path = path;
+        this.item = item;
         this.metadata = metadata;
     }
 
@@ -70,6 +75,13 @@ abstract class JcrItemResource // this should be package private, see SLING-1414
      * @see org.apache.sling.api.resource.Resource#getPath()
      */
     public String getPath() {
+        if (path == null) {
+            try {
+                path = getItem().getPath();
+            } catch (RepositoryException e) {
+                throw new IllegalStateException("Failed to retrieve path from Item:", e);
+            }
+        }
         return path;
     }
 
@@ -78,6 +90,17 @@ abstract class JcrItemResource // this should be package private, see SLING-1414
      */
     public ResourceMetadata getResourceMetadata() {
         return metadata;
+    }
+
+    /**
+     * Get the underlying item. Depending on the concrete implementation either
+     * a {@link javax.jcr.Node} or a {@link javax.jcr.Property}.
+     *
+     * @return a {@link javax.jcr.Node} or a {@link javax.jcr.Property}, depending
+     *         on the implementation
+     */
+    protected T getItem() {
+        return item;
     }
 
     /**

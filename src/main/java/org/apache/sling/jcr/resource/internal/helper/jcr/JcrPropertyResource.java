@@ -44,12 +44,10 @@ import org.slf4j.LoggerFactory;
                 Double.class, BigDecimal.class, Calendar.class, InputStream.class, Value[].class, String[].class,
                 Boolean[].class, Long[].class, Double[].class, BigDecimal[].class }),
         @Adapter(value = Node.class, condition = "If the resource is a JcrPropertyResource and the property is a reference or weak reference property.") })
-class JcrPropertyResource extends JcrItemResource { // this should be package private, see SLING-1414
+class JcrPropertyResource extends JcrItemResource<Property> { // this should be package private, see SLING-1414
 
     /** default log */
     private static final Logger LOGGER = LoggerFactory.getLogger(JcrPropertyResource.class);
-
-    private final Property property;
 
     private final String resourceType;
 
@@ -57,22 +55,15 @@ class JcrPropertyResource extends JcrItemResource { // this should be package pr
                                final String path,
                                final Property property)
     throws RepositoryException {
-        super(resourceResolver, path, new ResourceMetadata());
-        this.property = property;
+        super(resourceResolver, path, property, new ResourceMetadata());
         this.resourceType = getResourceTypeForNode(property.getParent())
                 + "/" + property.getName();
-        if (PropertyType.BINARY != this.property.getType()) {
+        if (PropertyType.BINARY != getProperty().getType()) {
             this.getResourceMetadata().setContentType("text/plain");
             this.getResourceMetadata().setCharacterEncoding("UTF-8");
         }
 
         this.getResourceMetadata().setContentLength(getContentLength(property));
-    }
-
-    public JcrPropertyResource(final ResourceResolver resourceResolver,
-                               final Property property)
-    throws RepositoryException {
-        this(resourceResolver, property.getPath(), property);
     }
 
     public String getResourceType() {
@@ -217,7 +208,7 @@ class JcrPropertyResource extends JcrItemResource { // this should be package pr
     }
 
     private Property getProperty() {
-        return property;
+        return getItem();
     }
 
     private InputStream getInputStream() {

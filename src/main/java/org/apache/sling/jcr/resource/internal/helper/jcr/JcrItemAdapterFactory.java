@@ -76,7 +76,7 @@ public class JcrItemAdapterFactory implements AdapterFactory {
                 } else if (adaptable instanceof Property) {
                     Property property = (Property) adaptable;
                     return (AdapterType) new JcrPropertyResource(resourceResolverFactory.getResourceResolver(property
-                            .getSession()), property);
+                            .getSession()), property.getPath(), property);
                 }
             } catch (RepositoryException e) {
                 logger.error("Unable to adapt JCR Item to a Resource", e);
