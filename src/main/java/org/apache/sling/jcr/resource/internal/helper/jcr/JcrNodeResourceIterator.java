@@ -92,14 +92,10 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
             try {
                 final Node n = nodes.nextNode();
                 Resource resource = new JcrNodeResource(resourceResolver,
-                    n.getPath(),
+                    null, // do not eagerly initialize path due to performance considerations
                     n, dynamicClassLoader);
                 LOGGER.debug("seek: Returning Resource {}", resource);
                 return resource;
-            } catch (final ItemNotFoundException infe) {
-                LOGGER.debug(
-                                "seek: Problem creating Resource for next node, skipping",
-                                infe);
             } catch (final Throwable t) {
                 LOGGER.error(
                     "seek: Problem creating Resource for next node, skipping",
