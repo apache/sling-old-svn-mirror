@@ -33,4 +33,6 @@ public @interface Model {
 
     public DefaultInjectionStrategy defaultInjectionStrategy() default DefaultInjectionStrategy.REQUIRED;
 
+    public String condition() default "";
+
 }
