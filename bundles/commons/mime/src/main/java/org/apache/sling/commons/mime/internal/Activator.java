@@ -47,9 +47,9 @@ public class Activator implements BundleActivator {
 
             reg = context.registerService(MimeTypeProvider.class.getName(), provider, props);
 
-            logger.info("Registered Apache Tika mime type provider");
+            logger.debug("Registered Apache Tika mime type provider");
         } catch (final Throwable t) {
-            logger.info("Unable to register Apache Tika mime type provider", t);
+            logger.debug("Unable to register Apache Tika mime type provider", t);
         }
     }
 
