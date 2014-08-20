@@ -249,6 +249,8 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
          * @return true if injection was successful otherwise false
          */
         public boolean inject(AnnotatedElement element, Object value);
+
+        public boolean shouldInjectPrimitiveInitValue();
     }
 
     private static class SetFieldCallback implements InjectCallback {
@@ -262,6 +264,11 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         @Override
         public boolean inject(AnnotatedElement element, Object value) {
             return setField((Field) element, object, value);
+        }
+
+        @Override
+        public boolean shouldInjectPrimitiveInitValue() {
+            return false;
         }
     }
 
@@ -277,6 +284,11 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         public boolean inject(AnnotatedElement element, Object value) {
             return setMethod((Method) element, methods, value);
         }
+
+        @Override
+        public boolean shouldInjectPrimitiveInitValue() {
+            return true;
+        }
     }
     
     private static class SetConstructorParameterCallback implements InjectCallback {
@@ -290,6 +302,11 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         @Override
         public boolean inject(AnnotatedElement element, Object value) {
             return setConstructorParameter((ConstructorParameter)element, parameterValues, value);
+        }
+
+        @Override
+        public boolean shouldInjectPrimitiveInitValue() {
+            return true;
         }
     }
 
@@ -331,9 +348,16 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         }
 
         // if default is not set, check if mandatory
-        if (!wasInjectionSuccessful && !isOptional(element, modelAnnotation, annotationProcessor)) {
-            return false;
+        if (!wasInjectionSuccessful) {
+            if (isOptional(element, modelAnnotation, annotationProcessor)) {
+                if (callback.shouldInjectPrimitiveInitValue()) {
+                    injectPrimitiveInitialValue(element, type, callback);
+                }
+            } else {
+                return false;
+            }
         }
+        
         return true;
     }
 
@@ -613,6 +637,39 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         return callback.inject(point, value);
     }
 
+    /**
+     * Injects the default initial value for the given primitive class which
+     * cannot be null (e.g. int = 0, boolean = false).
+     * 
+     * @param point Annotated element
+     * @param wrapperType Non-primitive wrapper class for primitive class
+     * @param callback Inject callback
+     */
+    private void injectPrimitiveInitialValue(AnnotatedElement point, Type wrapperType, InjectCallback callback) {
+        Type primitiveType = mapWrapperClasses(wrapperType);
+        Object value = null;
+        if (primitiveType == int.class) {
+            value = Integer.valueOf(0);
+        } else if (primitiveType == long.class) {
+            value = Long.valueOf(0);
+        } else if (primitiveType == boolean.class) {
+            value = Boolean.FALSE;
+        } else if (primitiveType == double.class) {
+            value = Double.valueOf(0);
+        } else if (primitiveType == float.class) {
+            value = Float.valueOf(0);
+        } else if (primitiveType == short.class) {
+            value = Short.valueOf((short) 0);
+        } else if (primitiveType == byte.class) {
+            value = Byte.valueOf((byte) 0);
+        } else if (primitiveType == char.class) {
+            value = Character.valueOf('\u0000');
+        }
+        if (value != null) {
+            callback.inject(point, value);
+        };
+    }
+    
     private Object getAdaptable(Object adaptable, AnnotatedElement point, InjectAnnotationProcessor processor) {
         String viaPropertyName = null;
         if (processor != null) {
@@ -701,9 +758,17 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         }
     }
 
-    private Type mapPrimitiveClasses(Type type) {
+    private static Type mapPrimitiveClasses(Type type) {
         if (type instanceof Class<?>) {
             return ClassUtils.primitiveToWrapper((Class<?>) type);
+        } else {
+            return type;
+        }
+    }
+
+    private static Type mapWrapperClasses(Type type) {
+        if (type instanceof Class<?>) {
+            return ClassUtils.wrapperToPrimitive((Class<?>) type);
         } else {
             return type;
         }
@@ -830,6 +895,9 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         }
         if (type == Short.TYPE) {
             return Short.class.isInstance(value);
+        }
+        if (type == Byte.TYPE) {
+            return Byte.class.isInstance(value);
         }
         if (type == Character.TYPE) {
             return Character.class.isInstance(value);
