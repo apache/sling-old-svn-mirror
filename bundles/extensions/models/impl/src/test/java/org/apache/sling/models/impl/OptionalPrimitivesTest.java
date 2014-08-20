@@ -18,6 +18,7 @@ package org.apache.sling.models.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -66,6 +67,8 @@ public class OptionalPrimitivesTest {
         org.apache.sling.models.testmodels.classes.OptionalPrimitivesModel model
                 = factory.getAdapter(res, org.apache.sling.models.testmodels.classes.OptionalPrimitivesModel.class);
         assertNotNull(model);
+
+        // make sure primitives are initialized with initial value
         assertEquals(0, model.getByteValue());
         assertEquals(0, model.getShortValue());
         assertEquals(0, model.getIntValue());
@@ -74,7 +77,17 @@ public class OptionalPrimitivesTest {
         assertEquals(0.0d, model.getDoubleValue(), 0.00001d);
         assertEquals('\u0000', model.getCharValue());
         assertEquals(false, model.getBooleanValue());
-    }
+
+        // make sure object wrapper of primitives are null
+        assertNull(model.getByteObjectValue());
+        assertNull(model.getShortObjectValue());
+        assertNull(model.getIntObjectValue());
+        assertNull(model.getLongObjectValue());
+        assertNull(model.getFloatObjectValue());
+        assertNull(model.getDoubleObjectValue());
+        assertNull(model.getCharObjectValue());
+        assertNull(model.getBooleanObjectValue());
+}
 
     @Test
     public void testConstructorInjection() {
@@ -86,6 +99,8 @@ public class OptionalPrimitivesTest {
         org.apache.sling.models.testmodels.classes.constructorinjection.OptionalPrimitivesModel model
                 = factory.getAdapter(res, org.apache.sling.models.testmodels.classes.constructorinjection.OptionalPrimitivesModel.class);
         assertNotNull(model);
+
+        // make sure primitives are initialized with initial value
         assertEquals(0, model.getByteValue());
         assertEquals(0, model.getShortValue());
         assertEquals(0, model.getIntValue());
@@ -94,7 +109,17 @@ public class OptionalPrimitivesTest {
         assertEquals(0.0d, model.getDoubleValue(), 0.00001d);
         assertEquals('\u0000', model.getCharValue());
         assertEquals(false, model.getBooleanValue());
-    }
+
+        // make sure object wrapper of primitives are null
+        assertNull(model.getByteObjectValue());
+        assertNull(model.getShortObjectValue());
+        assertNull(model.getIntObjectValue());
+        assertNull(model.getLongObjectValue());
+        assertNull(model.getFloatObjectValue());
+        assertNull(model.getDoubleObjectValue());
+        assertNull(model.getCharObjectValue());
+        assertNull(model.getBooleanObjectValue());
+}
 
     @Test
     public void testFieldInjectionInterface() {
@@ -106,6 +131,8 @@ public class OptionalPrimitivesTest {
         org.apache.sling.models.testmodels.interfaces.OptionalPrimitivesModel model
                 = factory.getAdapter(res, org.apache.sling.models.testmodels.interfaces.OptionalPrimitivesModel.class);
         assertNotNull(model);
+
+        // make sure primitives are initialized with initial value
         assertEquals(0, model.getByteValue());
         assertEquals(0, model.getShortValue());
         assertEquals(0, model.getIntValue());
@@ -114,6 +141,16 @@ public class OptionalPrimitivesTest {
         assertEquals(0.0d, model.getDoubleValue(), 0.00001d);
         assertEquals('\u0000', model.getCharValue());
         assertEquals(false, model.getBooleanValue());
+
+        // make sure object wrapper of primitives are null
+        assertNull(model.getByteObjectValue());
+        assertNull(model.getShortObjectValue());
+        assertNull(model.getIntObjectValue());
+        assertNull(model.getLongObjectValue());
+        assertNull(model.getFloatObjectValue());
+        assertNull(model.getDoubleObjectValue());
+        assertNull(model.getCharObjectValue());
+        assertNull(model.getBooleanObjectValue());
     }
 
 }

@@ -33,20 +33,44 @@ public interface OptionalPrimitivesModel {
 
     @Inject @Optional
     public int getIntValue();
-    
+
     @Inject @Optional
     public long getLongValue();
-    
+
     @Inject @Optional
     public float getFloatValue();
-    
+
     @Inject @Optional
     public double getDoubleValue();
-    
+
     @Inject @Optional
     public char getCharValue();
-    
+
     @Inject @Optional
     public boolean getBooleanValue();
-    
+
+    @Inject @Optional
+    public Byte getByteObjectValue();
+
+    @Inject @Optional
+    public Short getShortObjectValue();
+
+    @Inject @Optional
+    public Integer getIntObjectValue();
+
+    @Inject @Optional
+    public Long getLongObjectValue();
+
+    @Inject @Optional
+    public Float getFloatObjectValue();
+
+    @Inject @Optional
+    public Double getDoubleObjectValue();
+
+    @Inject @Optional
+    public Character getCharObjectValue();
+
+    @Inject @Optional
+    public Boolean getBooleanObjectValue();
+
 }

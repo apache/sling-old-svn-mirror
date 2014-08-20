@@ -33,21 +33,45 @@ public class OptionalPrimitivesModel {
 
     @Inject @Optional
     private int intValue;
-    
+
     @Inject @Optional
     private long longValue;
-    
+
     @Inject @Optional
     private float floatValue;
-    
+
     @Inject @Optional
     private double doubleValue;
-    
+
     @Inject @Optional
     private char charValue;
-    
+
     @Inject @Optional
     private boolean booleanValue;
+
+    @Inject @Optional
+    private Byte byteObjectValue;
+
+    @Inject @Optional
+    private Short shortObjectValue;
+
+    @Inject @Optional
+    private Integer intObjectValue;
+
+    @Inject @Optional
+    private Long longObjectValue;
+
+    @Inject @Optional
+    private Float floatObjectValue;
+
+    @Inject @Optional
+    private Double doubleObjectValue;
+
+    @Inject @Optional
+    private Character charObjectValue;
+
+    @Inject @Optional
+    private Boolean booleanObjectValue;
 
     public byte getByteValue() {
         return this.byteValue;
@@ -79,6 +103,38 @@ public class OptionalPrimitivesModel {
 
     public boolean getBooleanValue() {
         return this.booleanValue;
+    }
+
+    public Byte getByteObjectValue() {
+        return this.byteObjectValue;
+    }
+
+    public Short getShortObjectValue() {
+        return this.shortObjectValue;
+    }
+
+    public Integer getIntObjectValue() {
+        return this.intObjectValue;
+    }
+
+    public Long getLongObjectValue() {
+        return this.longObjectValue;
+    }
+
+    public Float getFloatObjectValue() {
+        return this.floatObjectValue;
+    }
+
+    public Double getDoubleObjectValue() {
+        return this.doubleObjectValue;
+    }
+
+    public Character getCharObjectValue() {
+        return this.charObjectValue;
+    }
+
+    public Boolean getBooleanObjectValue() {
+        return this.booleanObjectValue;
     }
 
 }

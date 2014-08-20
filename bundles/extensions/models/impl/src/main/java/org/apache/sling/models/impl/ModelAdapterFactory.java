@@ -249,8 +249,6 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
          * @return true if injection was successful otherwise false
          */
         public boolean inject(AnnotatedElement element, Object value);
-
-        public boolean shouldInjectPrimitiveInitValue();
     }
 
     private static class SetFieldCallback implements InjectCallback {
@@ -264,11 +262,6 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         @Override
         public boolean inject(AnnotatedElement element, Object value) {
             return setField((Field) element, object, value);
-        }
-
-        @Override
-        public boolean shouldInjectPrimitiveInitValue() {
-            return false;
         }
     }
 
@@ -284,13 +277,8 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         public boolean inject(AnnotatedElement element, Object value) {
             return setMethod((Method) element, methods, value);
         }
-
-        @Override
-        public boolean shouldInjectPrimitiveInitValue() {
-            return true;
-        }
     }
-    
+
     private static class SetConstructorParameterCallback implements InjectCallback {
 
         private final List<Object> parameterValues;
@@ -303,15 +291,11 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         public boolean inject(AnnotatedElement element, Object value) {
             return setConstructorParameter((ConstructorParameter)element, parameterValues, value);
         }
-
-        @Override
-        public boolean shouldInjectPrimitiveInitValue() {
-            return true;
-        }
     }
 
     private boolean injectElement(final AnnotatedElement element, final Object adaptable, final Type type,
-            final Model modelAnnotation, final DisposalCallbackRegistry registry, InjectCallback callback) {
+            final boolean injectPrimitiveInitialValue, final Model modelAnnotation, final DisposalCallbackRegistry registry,
+            final InjectCallback callback) {
 
         InjectAnnotationProcessor annotationProcessor = null;
         String source = getSource(element);
@@ -350,7 +334,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         // if default is not set, check if mandatory
         if (!wasInjectionSuccessful) {
             if (isOptional(element, modelAnnotation, annotationProcessor)) {
-                if (callback.shouldInjectPrimitiveInitValue()) {
+                if (injectPrimitiveInitialValue) {
                     injectPrimitiveInitialValue(element, type, callback);
                 }
             } else {
@@ -372,8 +356,13 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         Set<Method> requiredMethods = new HashSet<Method>();
 
         for (Method method : injectableMethods) {
-            Type returnType = mapPrimitiveClasses(method.getGenericReturnType());
-            if (!injectElement(method, adaptable, returnType, modelAnnotation, registry, callback)) {
+            Type genericReturnType = method.getGenericReturnType();
+            Type returnType = mapPrimitiveClasses(genericReturnType);
+            boolean isPrimitive = false;
+            if (returnType != genericReturnType) {
+                isPrimitive = true;
+            }
+            if (!injectElement(method, adaptable, returnType, isPrimitive, modelAnnotation, registry, callback)) {
                 requiredMethods.add(method);
             }
         }
@@ -467,7 +456,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         Set<Field> injectableFields = collectInjectableFields(type);
         for (Field field : injectableFields) {
             Type fieldType = mapPrimitiveClasses(field.getGenericType());
-            if (!injectElement(field, adaptable, fieldType, modelAnnotation, registry, callback)) {
+            if (!injectElement(field, adaptable, fieldType, false, modelAnnotation, registry, callback)) {
                 requiredFields.add(field);
             }
         }
@@ -532,9 +521,14 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
         for (int i = 0; i < parameterTypes.length; i++) {
             Type genericType = mapPrimitiveClasses(parameterTypes[i]);
+
+            boolean isPrimitive = false;
+            if (parameterTypes[i] != genericType) {
+                isPrimitive = true;
+            }
             ConstructorParameter constructorParameter = new ConstructorParameter(
                     constructor.getParameterAnnotations()[i], constructor.getParameterTypes()[i], genericType, i);
-            if (!injectElement(constructorParameter, adaptable, genericType, modelAnnotation, registry, callback)) {
+            if (!injectElement(constructorParameter, adaptable, genericType, isPrimitive, modelAnnotation, registry, callback)) {
                 requiredParameters.add(constructorParameter);
             }
         }
