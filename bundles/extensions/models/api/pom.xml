@@ -29,8 +29,8 @@
     <artifactId>org.apache.sling.models.api</artifactId>
     <packaging>bundle</packaging>
     <version>1.0.3-SNAPSHOT</version>
-    <name>Sling Models API</name>
-    <description>Sling Models API</description>
+    <name>Apache Sling Models API</name>
+    <description>Apache Sling Models API</description>
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/models/api</connection>
         <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/models/api</developerConnection>
