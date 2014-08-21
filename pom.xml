@@ -29,8 +29,8 @@
     <artifactId>org.apache.sling.models.impl</artifactId>
     <packaging>bundle</packaging>
     <version>1.0.7-SNAPSHOT</version>
-    <name>Sling Models Implementation</name>
-    <description>Sling Models Implementation</description>
+    <name>Apache Sling Models Implementation</name>
+    <description>Apache Sling Models Implementation</description>
     <properties>
         <sling.java.version>6</sling.java.version>
     </properties>
