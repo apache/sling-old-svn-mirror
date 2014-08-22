@@ -195,6 +195,7 @@ public class FileInstaller
             file.getParentFile().mkdirs();
             final FileOutputStream fos = new FileOutputStream(file);
             try {
+                fos.write("# Configuration created by Apache Sling File Installer\n".getBytes("UTF-8"));
                 ConfigurationHandler.write(fos, dict);
             } finally {
                 try {
