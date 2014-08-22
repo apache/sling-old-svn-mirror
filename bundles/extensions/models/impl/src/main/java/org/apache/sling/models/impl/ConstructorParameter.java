@@ -27,7 +27,7 @@ import java.lang.reflect.Type;
  * AnnotatedElement. This class acts as a facade to ease
  * compatibility with field and method injection.
  */
-class ConstructorParameter implements AnnotatedElement {
+public class ConstructorParameter implements AnnotatedElement {
 
     private final Annotation[] annotations;
     private final Class<?> type;
