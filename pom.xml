@@ -56,9 +56,13 @@
                 <configuration>
                     <instructions>
                         <!-- As we're using JCR 2.0 for testing we explicitly have to
-                             import version 1.0 here  -->
+                             import version 1.0 here
+                             We need at least 3.1.2 as this allows reading comments from a config
+                         -->
                         <Import-Package>
-                            javax.jcr.*;version=1.0,*
+                            javax.jcr.*;version=1.0,
+                            org.apache.sling.installer.api;version="[3.1.2,4)",
+                            *
                         </Import-Package>
                         <Private-Package>org.apache.sling.installer.provider.jcr.impl.*</Private-Package>
                         <Sling-Nodetypes>SLING-INF/nodetypes/osgiconfig.cnd</Sling-Nodetypes>
@@ -86,8 +90,8 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.installer.api</artifactId>
-            <version>1.0.0</version>
+            <artifactId>org.apache.sling.installer.core</artifactId>
+            <version>3.5.3-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
