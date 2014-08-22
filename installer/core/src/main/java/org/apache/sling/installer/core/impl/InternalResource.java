@@ -221,7 +221,7 @@ public class InternalResource extends InstallableResource {
             final InputStream is, final String extension)
     throws IOException {
         final Hashtable<String, Object> ht = new Hashtable<String, Object>();
-        final InputStream in = new BufferedInputStream(is);
+        final BufferedInputStream in = new BufferedInputStream(is);
         try {
             if ( !extension.equals("config") ) {
                 final Properties p = new Properties();
@@ -239,6 +239,19 @@ public class InternalResource extends InstallableResource {
                     ht.put(key.toString(), p.get(key));
                 }
             } else {
+                // check for initial comment line
+                in.mark(256);
+                final int firstChar = in.read();
+                if ( firstChar == '#' ) {
+                    int b;
+                    while ((b = in.read()) != '\n' ) {
+                        if ( b == -1 ) {
+                            throw new IOException("Unable to read configuration.");
+                        }
+                    }
+                } else {
+                    in.reset();
+                }
                 @SuppressWarnings("unchecked")
                 final Dictionary<String, Object> config = ConfigurationHandler.read(in);
                 final Enumeration<String> i = config.keys();

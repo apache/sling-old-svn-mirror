@@ -874,6 +874,7 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
 
             // write to a byte array stream
             final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            baos.write("# Configuration created by Apache Sling JCR Installer\n".getBytes("UTF-8"));
             ConfigurationHandler.write(baos, dict);
             baos.close();
 
