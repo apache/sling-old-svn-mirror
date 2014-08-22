@@ -68,9 +68,9 @@ public class MultipleInjectorTest {
 
         factory = new ModelAdapterFactory();
         factory.activate(componentCtx);
-        factory.bindInjector(bindingsInjector, new ServicePropertiesMap(2, 2));
-        factory.bindInjector(attributesInjector, new ServicePropertiesMap(1, 1));
-        factory.bindInjectAnnotationProcessorFactory(bindingsInjector, new ServicePropertiesMap(2, 2));
+        factory.bindInjector(bindingsInjector, new ServicePropertiesMap(1, 1));
+        factory.bindInjector(attributesInjector, new ServicePropertiesMap(2, 2));
+        factory.bindInjectAnnotationProcessorFactory(bindingsInjector, new ServicePropertiesMap(1, 1));
 
         when(request.getAttribute(SlingBindings.class.getName())).thenReturn(bindings);
     }
