@@ -22,6 +22,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
@@ -78,6 +79,8 @@ public class ResourcePathInjectionTest {
         ValueMap properties = new ValueMapDecorator(map);
 
         when(componentCtx.getBundleContext()).thenReturn(bundleContext);
+        when(componentCtx.getProperties()).thenReturn(new Hashtable<String, Object>());
+
         when(adaptable.getResourceResolver()).thenReturn(resourceResolver);
         when(adaptable.adaptTo(ValueMap.class)).thenReturn(properties);
 

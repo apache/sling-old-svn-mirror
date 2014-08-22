@@ -19,6 +19,8 @@ package org.apache.sling.models.impl;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Hashtable;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.testmodels.classes.SubClass;
 import org.junit.Before;
@@ -41,6 +43,7 @@ public class PostConstructTest {
     @Before
     public void setup() {
         when(componentCtx.getBundleContext()).thenReturn(bundleContext);
+        when(componentCtx.getProperties()).thenReturn(new Hashtable<String, Object>());
     }
 
     @Test

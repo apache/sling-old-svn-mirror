@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Collections;
+import java.util.Hashtable;
 import java.util.Map;
 
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -51,6 +52,7 @@ public class InvalidAdaptationsTest {
     @Before
     public void setup() {
         when(componentCtx.getBundleContext()).thenReturn(bundleContext);
+        when(componentCtx.getProperties()).thenReturn(new Hashtable<String, Object>());
 
         factory = new ModelAdapterFactory();
         factory.activate(componentCtx);

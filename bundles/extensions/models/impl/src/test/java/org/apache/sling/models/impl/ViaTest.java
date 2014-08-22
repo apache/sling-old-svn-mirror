@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Collections;
+import java.util.Hashtable;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -56,6 +57,8 @@ public class ViaTest {
     @Before
     public void setup() {
         when(componentCtx.getBundleContext()).thenReturn(bundleContext);
+        when(componentCtx.getProperties()).thenReturn(new Hashtable<String, Object>());
+
         when(request.getResource()).thenReturn(resource);
         factory = new ModelAdapterFactory();
         factory.activate(componentCtx);

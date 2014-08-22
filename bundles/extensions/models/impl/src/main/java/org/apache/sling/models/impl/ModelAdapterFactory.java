@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -53,11 +54,13 @@ import org.apache.commons.lang.ClassUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.adapter.AdapterFactory;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.osgi.ServiceUtil;
 import org.apache.sling.models.annotations.Default;
 import org.apache.sling.models.annotations.DefaultInjectionStrategy;
@@ -80,7 +83,7 @@ import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component
+@Component(metatype = true)
 public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
     private static class DisposalCallbackRegistryImpl implements DisposalCallbackRegistry {
@@ -121,6 +124,11 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
     private static final Logger log = LoggerFactory.getLogger(ModelAdapterFactory.class);
 
+    private static final int DEFAULT_MAX_RECURSION_DEPTH = 20;
+
+    @Property(label = "Maximum Recursion Depth", description = "Maximum depth adaptation will be attempted.", intValue = DEFAULT_MAX_RECURSION_DEPTH)
+    private static final String PROP_MAX_RECURSION_DEPTH = "max.recursion.depth";
+
     @Reference(name = "injector", referenceInterface = Injector.class,
             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
     private final Map<Object, Injector> injectors = new TreeMap<Object, Injector>();
@@ -138,38 +146,19 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
     private ServiceRegistration jobRegistration;
 
     private ServiceRegistration configPrinterRegistration;
-    
+
     // Use threadlocal to count recursive invocations and break recursing if a max. limit is reached (to avoid cyclic dependencies)
-    private static final int MAX_RECURSIVE_INOVCATIONS = 20;
-
-    private static class ThreadInvocationCounter {
-        private int count;
-        public boolean isMaximumReached() {
-            return count >= MAX_RECURSIVE_INOVCATIONS;
-        }
-        public void increase() {
-            this.count++;
-        }
-        public void decrease() {
-            this.count--;
-        }
-    }
-
-    private static final ThreadLocal<ThreadInvocationCounter> INVOCATION_COUNT_THREADLOCAL = new ThreadLocal<ModelAdapterFactory.ThreadInvocationCounter>() {
-        @Override
-        protected ThreadInvocationCounter initialValue() {
-            return new ThreadInvocationCounter();
-        }
-    };
+    private ThreadLocal<ThreadInvocationCounter> invocationCountThreadLocal;
 
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType getAdapter(Object adaptable, Class<AdapterType> type) {
-        if (INVOCATION_COUNT_THREADLOCAL.get().isMaximumReached()) {
+        ThreadInvocationCounter threadInvocationCounter = invocationCountThreadLocal.get();
+        if (threadInvocationCounter.isMaximumReached()) {
             log.error("Adapting {} to {} failed, too much recursive invocations (>={}).",
-                    new Object[] { adaptable, type, MAX_RECURSIVE_INOVCATIONS });
+                    new Object[] { adaptable, type, threadInvocationCounter.maxRecursionDepth });
             return null;
         };
-        INVOCATION_COUNT_THREADLOCAL.get().increase();
+        threadInvocationCounter.increase();
         try {
             Model modelAnnotation = type.getAnnotation(Model.class);
             if (modelAnnotation == null) {
@@ -203,7 +192,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
                 }
             }
         } finally {
-            INVOCATION_COUNT_THREADLOCAL.get().decrease();
+            threadInvocationCounter.decrease();
         }
     }
 
@@ -902,6 +891,15 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
     @Activate
     protected void activate(final ComponentContext ctx) {
+        Dictionary<?, ?> props = ctx.getProperties();
+        final int maxRecursionDepth = PropertiesUtil.toInteger(props.get(PROP_MAX_RECURSION_DEPTH), DEFAULT_MAX_RECURSION_DEPTH);
+        this.invocationCountThreadLocal = new ThreadLocal<ThreadInvocationCounter>() {
+            @Override
+            protected ThreadInvocationCounter initialValue() {
+                return new ThreadInvocationCounter(maxRecursionDepth);
+            }
+        };
+
         BundleContext bundleContext = ctx.getBundleContext();
         this.queue = new ReferenceQueue<Object>();
         this.disposalCallbacks = new ConcurrentHashMap<java.lang.ref.Reference<Object>, DisposalCallbackRegistryImpl>();

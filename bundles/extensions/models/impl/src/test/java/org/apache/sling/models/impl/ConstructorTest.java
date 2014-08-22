@@ -19,6 +19,8 @@ package org.apache.sling.models.impl;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Hashtable;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.models.impl.injectors.RequestAttributeInjector;
 import org.apache.sling.models.impl.injectors.SelfInjector;
@@ -59,6 +61,7 @@ public class ConstructorTest {
     @Before
     public void setup() {
         when(componentCtx.getBundleContext()).thenReturn(bundleContext);
+        when(componentCtx.getProperties()).thenReturn(new Hashtable<String, Object>());
 
         when(request.getAttribute("attribute")).thenReturn(INT_VALUE);
         when(request.getAttribute("attribute2")).thenReturn(STRING_VALUE);
