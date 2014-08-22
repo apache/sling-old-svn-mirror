@@ -23,6 +23,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.models.annotations.injectorspecific.Self;
+import org.apache.sling.models.impl.ConstructorParameter;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.AcceptsNullName;
 import org.apache.sling.models.spi.Injector;
@@ -36,7 +37,7 @@ import org.osgi.framework.Constants;
  */
 @Component
 @Service
-@Property(name = Constants.SERVICE_RANKING, intValue = 100)
+@Property(name = Constants.SERVICE_RANKING, intValue = Integer.MAX_VALUE)
 public class SelfInjector implements Injector, InjectAnnotationProcessorFactory, AcceptsNullName {
 
     @Override
@@ -49,11 +50,13 @@ public class SelfInjector implements Injector, InjectAnnotationProcessorFactory,
         // if the @Self annotation is present return the adaptable to be inserted directly or to be adapted from
         if (element.isAnnotationPresent(Self.class)) {
             return adaptable;
-        }
-        // otherwise apply class-based injection only if class matches or is a superclass
-        else if (type instanceof Class<?>) {
-            Class<?> requestedClass = (Class<?>)type;
-            if (requestedClass.isAssignableFrom(adaptable.getClass())) {
+        } else {
+            // special handling for the first constructor parameter
+            // apply class-based injection only if class matches or is a superclass
+            if (element instanceof ConstructorParameter &&
+                    ((ConstructorParameter)element).getParameterIndex() == 0 &&
+                    type instanceof Class<?> &&
+                    ((Class<?>)type).isAssignableFrom(adaptable.getClass())) {
                 return adaptable;
             }
         }
