@@ -21,6 +21,7 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Dictionary;
+import java.util.Hashtable;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
@@ -65,6 +66,8 @@ public class OSGiInjectionTest {
     @Before
     public void setup() {
         when(componentCtx.getBundleContext()).thenReturn(bundleContext);
+        when(componentCtx.getProperties()).thenReturn(new Hashtable<String, Object>());
+
         factory = new ModelAdapterFactory();
         factory.activate(componentCtx);
 

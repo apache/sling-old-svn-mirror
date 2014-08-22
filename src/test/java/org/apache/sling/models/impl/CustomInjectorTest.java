@@ -19,6 +19,8 @@ package org.apache.sling.models.impl;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Hashtable;
+
 import javax.inject.Inject;
 
 import org.apache.sling.models.annotations.Model;
@@ -47,6 +49,7 @@ public class CustomInjectorTest {
     @Before
     public void setup() {
         when(componentCtx.getBundleContext()).thenReturn(bundleContext);
+        when(componentCtx.getProperties()).thenReturn(new Hashtable<String, Object>());
 
         factory = new ModelAdapterFactory();
         factory.activate(componentCtx);

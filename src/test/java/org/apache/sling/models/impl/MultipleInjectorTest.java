@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.AnnotatedElement;
+import java.util.Hashtable;
 
 import javax.inject.Inject;
 
@@ -64,6 +65,8 @@ public class MultipleInjectorTest {
     @Before
     public void setup() {
         when(componentCtx.getBundleContext()).thenReturn(bundleContext);
+        when(componentCtx.getProperties()).thenReturn(new Hashtable<String, Object>());
+
         bindings = new SlingBindings();
 
         factory = new ModelAdapterFactory();

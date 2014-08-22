@@ -19,6 +19,8 @@ package org.apache.sling.models.impl;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Hashtable;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
@@ -53,6 +55,7 @@ public class RequestInjectionTest {
     @Before
     public void setup() {
         when(componentCtx.getBundleContext()).thenReturn(bundleContext);
+        when(componentCtx.getProperties()).thenReturn(new Hashtable<String, Object>());
 
         SlingBindings bindings = new SlingBindings();
         bindings.setSling(sling);
