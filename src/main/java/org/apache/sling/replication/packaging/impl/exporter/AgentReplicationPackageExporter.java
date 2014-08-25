@@ -35,25 +35,26 @@ import org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationP
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(label = "Agent Based Replication Package Exporter")
+@Component(label = "Agent Based Replication Package Exporter", configurationFactory = true)
 @Service(value = ReplicationPackageExporter.class)
-@Property(name = "name", value = AgentReplicationPackageExporter.NAME)
 public class AgentReplicationPackageExporter implements ReplicationPackageExporter {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public static final String NAME = "agent";
+    @Property
+    private static final String NAME = "name";
+
+    @Property(value = "exporters/agent", propertyPrivate = true)
+    private static final String FACTORY_NAME = "factoryName";
 
     @Property(label = "Queue")
     private static final String QUEUE_NAME = "queue";
 
-    @Property(label = "Target ReplicationAgent", name = "ReplicationAgent.target", value = "(name=reverse)")
-    @Reference(name = "ReplicationAgent", target = "(name=reverse)", policy = ReferencePolicy.STATIC)
+    @Property(label = "Target ReplicationAgent", name = "ReplicationAgent.target")
+    @Reference(name = "ReplicationAgent", policy = ReferencePolicy.STATIC)
     private ReplicationAgent agent;
 
-    @Property(label = "Target ReplicationPackageBuilder", name = "ReplicationPackageBuilder.target", value = "(name="
-            + FileVaultReplicationPackageBuilder.NAME + ")")
-    @Reference(name = "ReplicationPackageBuilder", target = "(name=" + FileVaultReplicationPackageBuilder.NAME + ")",
-            policy = ReferencePolicy.STATIC)
+    @Property(label = "Target ReplicationPackageBuilder", name = "ReplicationPackageBuilder.target")
+    @Reference(name = "ReplicationPackageBuilder", policy = ReferencePolicy.STATIC)
     private ReplicationPackageBuilder replicationPackageBuilder;
 
     private String queueName;

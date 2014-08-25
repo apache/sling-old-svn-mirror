@@ -51,6 +51,12 @@ public class RemoteReplicationPackageImporter implements ReplicationPackageImpor
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    @Property
+    private static final String NAME = "name";
+
+    @Property(value = "importers/remote", propertyPrivate = true)
+    private static final String FACTORY_NAME = "factoryName";
+
     @Property(name = ReplicationTransportConstants.TRANSPORT_AUTHENTICATION_FACTORY)
     @Reference(name = "TransportAuthenticationProviderFactory", policy = ReferencePolicy.DYNAMIC)
     private TransportAuthenticationProviderFactory transportAuthenticationProviderFactory;

@@ -47,6 +47,7 @@ public class OsgiServicePropertiesResourceProvider extends AbstractReadableResou
 
     private final Map<String, Object> services = new ConcurrentHashMap<String, Object>();
     private final Map<String, Map<String, Object>> serviceProperties = new ConcurrentHashMap<String, Map<String, Object>>();
+    private final Map<String, String> resources = new ConcurrentHashMap<String, String>();
 
     public OsgiServicePropertiesResourceProvider(BundleContext context,
                                                  String serviceInterface,
@@ -60,8 +61,9 @@ public class OsgiServicePropertiesResourceProvider extends AbstractReadableResou
 
     @Override
     protected Map<String, Object> getResourceProperties(String resourceName) {
-        Map<String, Object> properties = serviceProperties.get(resourceName);
-        Object service = services.get(resourceName);
+        String serviceName = resources.get(resourceName);
+        Map<String, Object> properties = serviceProperties.get(serviceName);
+        Object service = services.get(serviceName);
 
         if (service != null && properties != null) {
             properties.put(ADAPTABLE_PROPERTY_NAME, service);
@@ -94,6 +96,8 @@ public class OsgiServicePropertiesResourceProvider extends AbstractReadableResou
 
         if (serviceName == null) return null;
 
+        String resourceName = getResourceName(serviceName);
+
         Map<String, Object> properties = new HashMap<String, Object>();
 
         for (String key : serviceReference.getPropertyKeys()) {
@@ -104,6 +108,7 @@ public class OsgiServicePropertiesResourceProvider extends AbstractReadableResou
 
         services.put(serviceName, service);
         serviceProperties.put(serviceName, properties);
+        resources.put(resourceName, serviceName);
 
 
         return service;
@@ -118,9 +123,22 @@ public class OsgiServicePropertiesResourceProvider extends AbstractReadableResou
 
         if (serviceName == null) return;
 
+        String resourceName = getResourceName(serviceName);
+
         services.remove(serviceName);
         serviceProperties.remove(serviceName);
+        resources.remove(resourceName);
 
         context.ungetService(serviceReference);
+    }
+
+    private String  getResourceName(String serviceName) {
+        String resourceName = serviceName;
+        int index = serviceName.lastIndexOf("/");
+        if (index >= 0) {
+            resourceName = serviceName.substring(index+1);
+        }
+        return resourceName;
+
     }
 }

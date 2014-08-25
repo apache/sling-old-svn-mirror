@@ -45,6 +45,9 @@ public class LocalReplicationPackageImporter implements ReplicationPackageImport
     @Property
     private static final String NAME = "name";
 
+    @Property(value = "importers/local", propertyPrivate = true)
+    private static final String FACTORY_NAME = "factoryName";
+
     @Property(label = "Target ReplicationPackageBuilder", name = "ReplicationPackageBuilder.target")
     @Reference(name = "ReplicationPackageBuilder", policy = ReferencePolicy.STATIC)
     private ReplicationPackageBuilder packageBuilder;

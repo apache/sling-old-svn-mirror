@@ -52,13 +52,16 @@ public class RemoteReplicationPackageExporter implements ReplicationPackageExpor
     @Property
     private static final String NAME = "name";
 
+    @Property(value = "exporters/remote", propertyPrivate = true)
+    private static final String FACTORY_NAME = "factoryName";
+
     @Property(name = ReplicationTransportConstants.TRANSPORT_AUTHENTICATION_FACTORY)
     @Reference(name = "TransportAuthenticationProviderFactory", policy = ReferencePolicy.DYNAMIC)
     private TransportAuthenticationProviderFactory transportAuthenticationProviderFactory;
 
 
     @Property(label = "Target ReplicationPackageBuilder", name = "ReplicationPackageBuilder.target")
-    @Reference(name = "ReplicationPackageBuilder", policy = ReferencePolicy.STATIC)
+    @Reference(name = "ReplicationPackageBuilder", policy = ReferencePolicy.DYNAMIC)
     private ReplicationPackageBuilder packageBuilder;
 
     @Property(name = "poll items", description = "number of subsequent poll requests to make", intValue = 1)

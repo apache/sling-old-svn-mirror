@@ -1,9 +1,9 @@
 {
     "jcr:primaryType" : "sling:OsgiConfig",
-    "name": "publish",
+    "name": "importers/remote/publish",
+
     "TransportAuthenticationProviderFactory.target" : "(name=user)",
     "authentication.properties" : ["user=admin","password=admin"],
     "ReplicationPackageBuilder.target" : "(name=vlt)",
-    "endpoints" : [ "http://localhost:4503/libs/sling/replication/importers/local" ],
-    "runModes" : ["author"]
+    "endpoints" : [ "http://localhost:4503/libs/sling/replication/services/importers/default" ],
 }
