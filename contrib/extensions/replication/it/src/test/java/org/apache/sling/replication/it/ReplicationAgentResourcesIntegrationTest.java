@@ -106,7 +106,7 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
     public void testDefaultAgentsRootResource() throws Exception {
         assertExists(authorClient, agentRootUrl());
         assertResponseContains(author, agentRootUrl(),
-                "sling:resourceType", "replication/agent/list",
+                "sling:resourceType", "sling/replication/service/agent/list",
                 "items", "publish-reverse","publish");
     }
 
@@ -118,7 +118,7 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
         authorClient.createNode(newConfigResource, "name", agentName);
         assertExists(authorClient, newConfigResource);
         assertResponseContains(author, newConfigResource,
-                "sling:resourceType", "replication/config/agent",
+                "sling:resourceType", "sling/replication/setting/agent",
                 "name", agentName);
     }
 
@@ -140,13 +140,13 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
         String agentName = "sample-create-config" + UUID.randomUUID();
         String newConfigResource = agentConfigUrl(agentName);
 
-        authorClient.createNode(newConfigResource, "name", agentName, "transportHandler", "(name=author)");
+        authorClient.createNode(newConfigResource, "name", agentName);
         assertExists(authorClient, newConfigResource);
-        authorClient.setProperties(newConfigResource, "packageExporter", "(name=updated)");
+        authorClient.setProperties(newConfigResource, "packageExporter", "exporters/remote/updated");
         assertResponseContains(author, newConfigResource,
-                "sling:resourceType", "replication/config/agent",
+                "sling:resourceType", "sling/replication/setting/agent",
                 "name", agentName,
-                "packageExporter", "(name=updated)");
+                "packageExporter", "updated");
     }
 
 }

@@ -68,7 +68,8 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
     public void deliverPackage(ReplicationPackage replicationPackage) throws ReplicationTransportException {
         log.info("delivering package {} to {} using auth {}",
                 new Object[]{replicationPackage.getId(),
-                        replicationEndpoint.getUri(), transportAuthenticationProvider});
+                        replicationEndpoint.getUri(),
+                        transportAuthenticationProvider});
 
         try {
             Executor executor = Executor.newInstance();
@@ -131,13 +132,20 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
             HttpResponse httpResponse;
             try {
 
-                int polls = maxNumberOfPackages;
+                int polls = 0;
                 while ((httpResponse = executor.execute(req).returnResponse()).getStatusLine().getStatusCode() == 200
-                        && polls > 0) {
+                        && polls < maxNumberOfPackages) {
                     ReplicationPackage responsePackage = packageBuilder.readPackage(httpResponse.getEntity().getContent());
 
                     result.add(responsePackage);
-                    polls--;
+                    polls++;
+                }
+
+                if (polls > 0) {
+                    log.info("polled {} packages from {}", polls, replicationEndpoint.getUri());
+                }
+                else {
+                    log.debug("polled {} packages from {}", polls, replicationEndpoint.getUri());
                 }
 
             } catch (HttpHostConnectException e) {

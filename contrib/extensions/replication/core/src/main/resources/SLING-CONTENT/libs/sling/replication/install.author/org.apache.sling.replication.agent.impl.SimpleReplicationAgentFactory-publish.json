@@ -1,8 +1,8 @@
 {
     "jcr:primaryType" : "sling:OsgiConfig",
-    "name" : "publish",
-    "ReplicationPackageExporter.target" : "(name=local)",
-    "ReplicationPackageImporter.target" : "(name=publish)",
+    "name" : "agents/publish",
+    "ReplicationPackageExporter.target" : "(name=exporters/local/default)",
+    "ReplicationPackageImporter.target" : "(name=importers/remote/publish)",
     "ReplicationQueueProvider.target" : "(name=sjh)",
     "ReplicationQueueDistributionStrategy.target" : "(name=single)",
     "runModes" : ["author"]

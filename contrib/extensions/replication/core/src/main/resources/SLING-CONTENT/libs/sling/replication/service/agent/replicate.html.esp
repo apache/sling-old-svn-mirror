@@ -1,0 +1,18 @@
+<%
+var valueMap = resource.adaptTo(Packages.org.apache.sling.api.resource.ValueMap);
+var pit = valueMap.keySet().iterator();
+%>
+<html>
+  <body>
+    <h1>Replicate: <%= valueMap.get("name") %></h1>
+
+    <form action="<%= request.contextPath + resource.path %>" method="POST">
+        Path: <input type="text" name="path"><br>
+        Action: <input type="radio" name="action" value="ADD">Add
+                <input type="radio" name="action" value="DELETE">Delete<br>
+
+        <input type="submit" value="Submit">
+
+    </form>
+  </body>
+</html>

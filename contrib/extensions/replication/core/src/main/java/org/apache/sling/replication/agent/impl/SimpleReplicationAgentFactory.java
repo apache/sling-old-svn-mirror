@@ -51,7 +51,6 @@ import org.slf4j.LoggerFactory;
 )
 public class SimpleReplicationAgentFactory {
 
-
     public static final String PACKAGE_EXPORTER_TARGET = "ReplicationPackageExporter.target";
 
     public static final String PACKAGE_IMPORTER_TARGET = "ReplicationPackageImporter.target";
@@ -129,10 +128,10 @@ public class SimpleReplicationAgentFactory {
             props.put(NAME, name);
 
 
-            String queue = PropertiesUtil.toString(config.get(QUEUEPROVIDER_TARGET), "");
+            String queue = PropertiesUtil.toString(config.get(QUEUEPROVIDER_TARGET), DEFAULT_QUEUEPROVIDER);
             props.put(QUEUEPROVIDER_TARGET, queue);
 
-            String distribution = PropertiesUtil.toString(config.get(QUEUE_DISTRIBUTION_TARGET), "");
+            String distribution = PropertiesUtil.toString(config.get(QUEUE_DISTRIBUTION_TARGET), DEFAULT_DISTRIBUTION);
             props.put(QUEUE_DISTRIBUTION_TARGET, distribution);
 
             String[] rules = PropertiesUtil.toStringArray(config.get(RULES), new String[0]);

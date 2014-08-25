@@ -30,6 +30,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.sling.api.resource.ModifyingResourceProvider;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -50,17 +53,20 @@ public class OsgiConfigurationResourceProvider extends AbstractModifyingResource
     private final ConfigurationAdmin configurationAdmin;
     private final String configFactory;
     private final String friendlyNameProperty;
+    private final String groupPrefix;
 
     public OsgiConfigurationResourceProvider(ConfigurationAdmin configurationAdmin,
                                              String configFactory,
                                              String friendlyNameProperty,
                                              String resourceRoot,
+                                             String groupPrefix,
                                              Map<String, String> additionalResourceProperties) {
         super(resourceRoot, additionalResourceProperties);
 
         this.configurationAdmin = configurationAdmin;
         this.configFactory = configFactory;
         this.friendlyNameProperty = friendlyNameProperty;
+        this.groupPrefix = groupPrefix;
     }
 
     @Override
@@ -68,8 +74,10 @@ public class OsgiConfigurationResourceProvider extends AbstractModifyingResource
                         Set<String> deletedResources) throws PersistenceException {
         try {
             for (Map.Entry<String, Map<String, Object>> entry : changedResources.entrySet()) {
-                String configName = entry.getKey();
+                String resourceName = entry.getKey();
                 Map<String, Object> properties = entry.getValue();
+
+                String configName = getConfigName(resourceName);
                 properties.put(friendlyNameProperty, configName);
 
                 Configuration configuration = getConfiguration(configName);
@@ -78,10 +86,12 @@ public class OsgiConfigurationResourceProvider extends AbstractModifyingResource
                     configuration = configurationAdmin.createFactoryConfiguration(configFactory);
                 }
 
+                properties = filterBeforeSave(properties);
                 configuration.update(toDictionary(properties));
             }
 
-            for (String configName : deletedResources) {
+            for (String resourceName : deletedResources) {
+                String configName = getConfigName(resourceName);
                 Configuration configuration = getConfiguration(configName);
                 if (configuration != null) {
                     configuration.delete();
@@ -116,7 +126,8 @@ public class OsgiConfigurationResourceProvider extends AbstractModifyingResource
     @Override
     protected Map<String, Object> getResourceProperties(String resourceName) {
 
-        Configuration configuration = getConfiguration(resourceName);
+        String configName = getConfigName(resourceName);
+        Configuration configuration = getConfiguration(configName);
 
 
         if (configuration == null) {
@@ -128,7 +139,8 @@ public class OsgiConfigurationResourceProvider extends AbstractModifyingResource
         }
 
 
-        return toMap(configuration);
+        Map<String, Object> properties = toMap(configuration);
+        return filterBeforeRead(properties);
     }
 
 
@@ -198,5 +210,71 @@ public class OsgiConfigurationResourceProvider extends AbstractModifyingResource
         }
 
         return dictionary;
+    }
+
+    private Map<String, Object>  filterBeforeSave(Map<String, Object> properties) {
+        Map<String, Object> result = new HashMap<String, Object>();
+
+        for (Map.Entry<String, Object> entry : properties.entrySet()) {
+            if (entry.getKey().endsWith(".target")) {
+                String entryValue = (String) entry.getValue();
+                entryValue = packOsgiFilter(entryValue);
+                if (entryValue != null) {
+                    result.put(entry.getKey(), entryValue);
+                }
+            }
+            else {
+                result.put(entry.getKey(), entry.getValue());
+            }
+
+        }
+
+        return result;
+
+    }
+
+    private Map<String, Object>  filterBeforeRead(Map<String, Object> properties) {
+        Map<String, Object> result = new HashMap<String, Object>();
+
+        for (Map.Entry<String, Object> entry : properties.entrySet()) {
+            if (entry.getKey().endsWith(".target")) {
+                String entryValue = (String) entry.getValue();
+                entryValue = unpackOsgiFilter(entryValue);
+                if (entryValue != null) {
+                    result.put(entry.getKey(), entryValue);
+                }
+            }
+            else {
+                result.put(entry.getKey(), entry.getValue());
+            }
+
+        }
+
+        return result;
+    }
+
+
+    private String unpackOsgiFilter(String propertyValue) {
+
+        String result = null;
+
+        String namePattern = "\\(" + friendlyNameProperty + "=(.*?)\\)";
+
+        Pattern r = Pattern.compile(namePattern);
+        Matcher m = r.matcher(propertyValue);
+
+        if (m.matches()) {
+            result = m.group(1);
+        }
+
+        return result;
+    }
+
+    private String packOsgiFilter(String propertyValue) {
+        return "(" + friendlyNameProperty + "=" + OsgiUtils.escape(propertyValue) + ")";
+    }
+
+    private String getConfigName(String configName) {
+        return groupPrefix == null? configName : groupPrefix + "/" + configName;
     }
 }

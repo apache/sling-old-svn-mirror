@@ -1,5 +1,5 @@
 {
     "jcr:primaryType" : "sling:OsgiConfig",
-    "name": "local",
+    "name": "importers/local/default",
     "ReplicationPackageBuilder.target" : "(name=vlt)"
 }

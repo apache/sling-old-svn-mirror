@@ -1,8 +1,8 @@
 {
     "jcr:primaryType" : "sling:OsgiConfig",
-    "name" : "reverse",
-    "ReplicationPackageExporter.target" : "(name=local)",
-    "ReplicationPackageImporter.target" : "(name=local)",
+    "name" : "agents/reverse",
+    "ReplicationPackageExporter.target" : "(name=exporters/local/default)",
+    "ReplicationPackageImporter.target" : "(name=importers/local/default)",
     "ReplicationQueueProvider.target" : "(name=sjh)",
     "ReplicationQueueDistributionStrategy.target" : "(name=error)",
     "rules" : ["trigger on path: /content/usergenerated"],

@@ -1,10 +1,11 @@
 {
     "jcr:primaryType" : "sling:OsgiConfig",
     "name" : "replicationAgents",
-    "provider.roots" : [ "/libs/sling/replication/agents" ],
+    "provider.roots" : [ "/libs/sling/replication/services/agents" ],
     "serviceType" : "org.apache.sling.replication.agent.ReplicationAgent",
     "resourceProperties" : [
-        "sling:resourceType=replication/agent",
+        "sling:resourceType=sling/replication/service/agent",
+        "sling:resourceSuperType=sling/replication/service",
         "name={name}",
 
         "queue/sling:resourceType=replication/agent/queue"

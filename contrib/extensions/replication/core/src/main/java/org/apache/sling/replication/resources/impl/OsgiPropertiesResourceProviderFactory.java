@@ -98,6 +98,10 @@ public class OsgiPropertiesResourceProviderFactory implements ResourceProviderFa
     @Property(value = DEFAULT_PROVIDER_TYPE)
     public final static String PROVIDER_TYPE = "providerType";
 
+
+    @Property
+    public final static String GROUP_PREFIX = "groupPrefix";
+
     @Reference
     public ConfigurationAdmin configurationAdmin;
 
@@ -109,6 +113,8 @@ public class OsgiPropertiesResourceProviderFactory implements ResourceProviderFa
         String friendlyNameProperty = PropertiesUtil.toString(properties.get(FRIENDLY_NAME_PROPERTY), DEFAULT_FRIENDLY_NAME_PROPERTY);
         String type = PropertiesUtil.toString(properties.get(SERVICE_INTERFACE), null);
         String resourceRoot = PropertiesUtil.toString(properties.get(ResourceProvider.ROOTS), null);
+        String groupPrefix = PropertiesUtil.toString(properties.get(GROUP_PREFIX), null);
+
 
         Map<String, String> additionalResourceProperties = PropertiesUtil.toMap(properties.get(RESOURCE_PROPERTIES),
                 new String[]{friendlyNameProperty + "=" + friendlyNameProperty});
@@ -120,6 +126,7 @@ public class OsgiPropertiesResourceProviderFactory implements ResourceProviderFa
                     type,
                     friendlyNameProperty,
                     resourceRoot,
+                    groupPrefix,
                     additionalResourceProperties);
 
         }

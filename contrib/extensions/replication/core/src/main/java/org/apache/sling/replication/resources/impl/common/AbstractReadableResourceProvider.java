@@ -95,6 +95,9 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
                 if (!properties.containsKey("sling:resourceType") && additionalProperties.containsKey("sling:resourceType")) {
                     properties.put("sling:resourceType", additionalProperties.get("sling:resourceType") +"/list");
                 }
+                if (!properties.containsKey("sling:resourceSuperType") && additionalProperties.containsKey("sling:resourceSuperType")) {
+                    properties.put("sling:resourceSuperType", additionalProperties.get("sling:resourceSuperType") +"/list");
+                }
 
                 resource = new SimpleReadableResource(resourceResolver, pathInfo.getResourcePath(), properties, adaptable);
             }

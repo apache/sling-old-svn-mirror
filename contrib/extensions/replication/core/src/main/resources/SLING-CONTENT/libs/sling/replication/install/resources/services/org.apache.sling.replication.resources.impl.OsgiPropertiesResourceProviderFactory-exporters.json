@@ -1,10 +1,12 @@
 {
     "jcr:primaryType" : "sling:OsgiConfig",
     "name" : "replicationExporters",
-    "provider.roots" : [ "/libs/sling/replication/exporters" ],
+    "provider.roots" : [ "/libs/sling/replication/services/exporters" ],
     "serviceType" : "org.apache.sling.replication.packaging.ReplicationPackageExporter",
     "resourceProperties" : [
-        "sling:resourceType=replication/exporter",
+        "sling:resourceType=sling/replication/service/exporter",
+        "sling:resourceSuperType=sling/replication/service",
+
         "name={name}"
     ]
 }
