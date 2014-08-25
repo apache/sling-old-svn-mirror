@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
@@ -32,6 +33,7 @@ import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.models.impl.injectors.ResourcePathInjector;
 import org.apache.sling.models.impl.injectors.SelfInjector;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
+import org.apache.sling.models.testmodels.classes.ResourcePathAllOptionalModel;
 import org.apache.sling.models.testmodels.classes.ResourcePathModel;
 import org.junit.Before;
 import org.junit.Test;
@@ -106,5 +108,26 @@ public class ResourcePathInjectionTest {
         assertEquals(byPathResource2, model.getFromPath2());
         assertEquals(byPropertyValueResource2, model.getByDerefProperty2());
     }
+
+    @Test
+    public void testPathInjectionWithNonResourceAdaptable() {
+        SlingHttpServletRequest nonResourceAdaptable = mock(SlingHttpServletRequest.class);
+        ResourcePathModel model = factory.getAdapter(nonResourceAdaptable, ResourcePathModel.class);
+        // should be null because mandatory fields could not be injected
+        assertNull(model);
+    }
+
+    @Test
+    public void testOptionalPathInjectionWithNonResourceAdaptable() {
+        SlingHttpServletRequest nonResourceAdaptable = mock(SlingHttpServletRequest.class);
+        ResourcePathAllOptionalModel model = factory.getAdapter(nonResourceAdaptable, ResourcePathAllOptionalModel.class);
+        // should not be null because resource paths fields are optional
+        assertNotNull(model);
+        // but the field itself are null
+        assertNull(model.getFromPath());
+        assertNull(model.getByDerefProperty());
+        assertNull(model.getFromPath2());
+        assertNull(model.getByDerefProperty2());
+   }
 
 }

@@ -66,7 +66,9 @@ public class ResourcePathInjector extends AbstractInjector implements Injector, 
             if (resourcePath == null && name != null) {
                 // try to get from value map
                 ValueMap map = getValueMap(adaptable);
-                resourcePath = map.get(name, String.class);
+                if (map != null) {
+                    resourcePath = map.get(name, String.class);
+                }
             }
         }
 
