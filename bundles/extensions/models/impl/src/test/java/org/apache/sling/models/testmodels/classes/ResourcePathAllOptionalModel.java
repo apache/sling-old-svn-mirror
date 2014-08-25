@@ -24,24 +24,27 @@ import javax.inject.Named;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.Model;
+import org.apache.sling.models.annotations.Optional;
 import org.apache.sling.models.annotations.Path;
 import org.apache.sling.models.annotations.injectorspecific.ResourcePath;
 
 @Model(adaptables = {Resource.class, SlingHttpServletRequest.class})
-public class ResourcePathModel {
+public class ResourcePathAllOptionalModel {
 
     @Inject
     @Path("/some/path")
+    @Optional
     private Resource fromPath;
 
     @Inject
     @Named("propertyContainingAPath")
+    @Optional
     private Resource derefProperty;
 
-    @ResourcePath(path = "/some/path2")
+    @ResourcePath(path = "/some/path2", optional=true)
     private Resource fromPath2;
 
-    @ResourcePath(name = "anotherPropertyContainingAPath")
+    @ResourcePath(name = "anotherPropertyContainingAPath", optional=true)
     private Resource derefProperty2;
 
     public Resource getFromPath() {
