@@ -166,35 +166,44 @@ public class ReplicationUtils {
     }
 
     public static String agentRootUrl() {
-        return REPLICATION_ROOT_PATH + "/agents";
+        return REPLICATION_ROOT_PATH + "/services/agents";
     }
 
     public static String agentUrl(String agentName) {
-        return REPLICATION_ROOT_PATH + "/agents/" + agentName;
+        return agentRootUrl() + "/" + agentName;
     }
 
     public static String queueUrl(String agentName) {
-        return REPLICATION_ROOT_PATH + "/agents/" + agentName + "/queue";
+        return agentUrl(agentName) + "/queue";
     }
 
     public static String agentConfigUrl(String agentName) {
-        return REPLICATION_ROOT_PATH + "/config/agents/" + agentName;
+        return REPLICATION_ROOT_PATH + "/settings/agents/" + agentName;
     }
 
 
     public static String importerRootUrl() {
-        return REPLICATION_ROOT_PATH + "/importers";
+        return REPLICATION_ROOT_PATH + "/services/importers";
     }
 
     public static String importerUrl(String importerName) {
-        return REPLICATION_ROOT_PATH + "/importers/" + importerName;
+        return importerRootUrl() + "/" + importerName;
     }
 
     public static String exporterRootUrl() {
-        return REPLICATION_ROOT_PATH + "/exporters";
+        return REPLICATION_ROOT_PATH + "/services/exporters";
     }
 
     public static String exporterUrl(String exporterName) {
-        return REPLICATION_ROOT_PATH + "/exporters/" + exporterName;
+        return exporterRootUrl() + "/" + exporterName;
     }
+
+    public static String importerConfigUrl(String importerName) {
+        return REPLICATION_ROOT_PATH + "/settings/importers/" + importerName;
+    }
+
+    public static String exporterConfigUrl(String exporterName) {
+        return REPLICATION_ROOT_PATH + "/settings/exporters/" + exporterName;
+    }
+
 }
