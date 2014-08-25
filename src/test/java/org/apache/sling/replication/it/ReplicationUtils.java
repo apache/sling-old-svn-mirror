@@ -59,11 +59,10 @@ public class ReplicationUtils {
             UrlEncodedFormEntity entity = new UrlEncodedFormEntity(valuePairList);
             request.withEntity(entity);
         }
-        String content = slingInstance.getRequestExecutor().execute(
+
+        return slingInstance.getRequestExecutor().execute(
                 request.withCredentials(slingInstance.getServerUsername(), slingInstance.getServerPassword())
         ).assertStatus(status).getContent();
-
-        return content;
     }
 
     private static String assertPostResource(SlingInstance slingInstance,
