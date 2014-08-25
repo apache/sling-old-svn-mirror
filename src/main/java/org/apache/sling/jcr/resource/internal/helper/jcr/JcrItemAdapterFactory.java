@@ -48,8 +48,8 @@ public class JcrItemAdapterFactory implements AdapterFactory {
 
     private ServiceRegistration serviceRegsitration;
 
-    private boolean loggedNodeWarning = false;
-    private boolean loggedPropertyWarning = false;
+    private volatile boolean loggedNodeWarning = false;
+    private volatile boolean loggedPropertyWarning = false;
 
     public JcrItemAdapterFactory(BundleContext ctx, JcrResourceResolverFactoryImpl resourceResolverFactory) {
         this.resourceResolverFactory = resourceResolverFactory;

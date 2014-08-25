@@ -58,6 +58,8 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
     /** marker value for the resourceSupertType before trying to evaluate */
     private static final String UNSET_RESOURCE_SUPER_TYPE = "<unset>";
 
+    private static volatile boolean loggedUrlWarning = false;
+
     /** default log */
     private static final Logger LOGGER = LoggerFactory.getLogger(JcrNodeResource.class);
 
@@ -236,6 +238,11 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
     }
 
     private URL getURL() {
+        if ( !loggedUrlWarning ) {
+            loggedUrlWarning = true;
+            LOGGER.warn("Adapting a JCR resource to a URL is deprecated. This feature will be " +
+                    "removed in future versions. Please adjust your code.");
+        }
         try {
             return URLFactory.createURL(getNode().getSession(), getPath());
         } catch (final Exception ex) {
