@@ -32,6 +32,7 @@ import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.event.ReplicationEvent;
 import org.apache.sling.replication.event.ReplicationEventType;
+import org.apache.sling.replication.rule.ReplicationRequestHandler;
 import org.apache.sling.replication.rule.ReplicationRule;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -75,18 +76,18 @@ public class ChainReplicateReplicationRule implements ReplicationRule {
         return SIGNATURE;
     }
 
-    public void apply(String ruleString, ReplicationAgent agent) {
+    public void apply(String handlerId, ReplicationRequestHandler agent, String ruleString) {
         if (signatureMatches(ruleString)) {
             // register an event handler on replication package install (on a certain path) which triggers the chain replication of that same package
             Dictionary<String, Object> properties = new Hashtable<String, Object>();
             properties.put(EventConstants.EVENT_TOPIC, ReplicationEvent.getTopic(ReplicationEventType.PACKAGE_INSTALLED));
             String path = ruleString.substring(ruleString.indexOf(':') + 1).trim();
-            log.info("agent {} will chain replication on path '{}'", agent.getName(), path);
+            log.info("handler {} will chain replication on path '{}'", handlerId, path);
 
 //            properties.put(EventConstants.EVENT_FILTER, "(path=" + path + "/*)");
             if (bundleContext != null) {
                 ServiceRegistration triggerPathEventRegistration = bundleContext.registerService(EventHandler.class.getName(), new TriggerAgentEventListener(agent, path), properties);
-                registrations.put(agent.getName() + ruleString, triggerPathEventRegistration);
+                registrations.put(handlerId, triggerPathEventRegistration);
             } else {
                 log.error("cannot register trigger since bundle context is null");
 
@@ -102,24 +103,20 @@ public class ChainReplicateReplicationRule implements ReplicationRule {
         return ruleString.startsWith(PREFIX) && ruleString.substring(PREFIX.length() + 1).matches("\\s*(\\/\\w+)+");
     }
 
-    public void undo(String ruleString, ReplicationAgent agent) {
-        if (signatureMatches(ruleString)) {
-            ServiceRegistration serviceRegistration = registrations.get(agent.getName() + ruleString);
-            if (serviceRegistration != null) {
-                serviceRegistration.unregister();
-            }
-        } else {
-            log.warn("rule {} doesn't match signature: {}", ruleString, SIGNATURE);
+    public void undo(String handleId) {
+        ServiceRegistration serviceRegistration = registrations.get(handleId);
+        if (serviceRegistration != null) {
+            serviceRegistration.unregister();
         }
     }
 
 
     private class TriggerAgentEventListener implements EventHandler {
 
-        private final ReplicationAgent agent;
+        private final ReplicationRequestHandler agent;
         private final String path;
 
-        public TriggerAgentEventListener(ReplicationAgent agent, String path) {
+        public TriggerAgentEventListener(ReplicationRequestHandler agent, String path) {
             this.agent = agent;
             this.path = path;
         }
@@ -134,11 +131,7 @@ public class ChainReplicateReplicationRule implements ReplicationRule {
                         log.info("triggering chain replication from event {}", event);
 
                         ReplicationActionType action = ReplicationActionType.valueOf(String.valueOf(actionProperty));
-                        try {
-                            agent.execute(new ReplicationRequest(System.currentTimeMillis(), action, paths));
-                        } catch (AgentReplicationException e) {
-                            log.error("triggered replication resulted in an error {}", e);
-                        }
+                        agent.execute(new ReplicationRequest(System.currentTimeMillis(), action, paths));
                         break;
                     }
                 }

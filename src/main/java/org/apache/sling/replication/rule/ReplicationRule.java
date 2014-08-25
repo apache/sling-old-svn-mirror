@@ -44,14 +44,14 @@ public interface ReplicationRule {
      * apply this rule to a replication agent
      *
      * @param ruleString the rule to apply to the agent
-     * @param agent      {@link ReplicationAgent agent} the agent to apply the rule to
+     * @param requestHandler      {@link ReplicationRequestHandler agent} the agent to apply the rule to
      */
-    void apply(String ruleString, ReplicationAgent agent);
+    void apply(String handlerId, ReplicationRequestHandler requestHandler, String ruleString);
 
     /**
      * undo the application of this rule to the given agent
      *
-     * @param agent the {@link ReplicationAgent agent} on which undoing this rule application
+     * @param handlerId the {@link ReplicationAgent agent} on which undoing this rule application
      */
-    void undo(String ruleString, ReplicationAgent agent);
+    void undo(String handlerId);
 }

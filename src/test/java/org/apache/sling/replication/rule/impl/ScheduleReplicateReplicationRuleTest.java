@@ -22,6 +22,7 @@ import java.lang.reflect.Field;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.replication.agent.ReplicationAgent;
+import org.apache.sling.replication.rule.ReplicationRequestHandler;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
@@ -56,8 +57,8 @@ public class ScheduleReplicateReplicationRuleTest {
     public void testApplyWithNonMatchingString() throws Exception {
         ScheduleReplicateReplicationRule scheduleReplicateReplicationRule = new ScheduleReplicateReplicationRule();
         String ruleString = "";
-        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
-        scheduleReplicateReplicationRule.apply(ruleString, replicationAgent);
+        ReplicationRequestHandler requestHandler = mock(ReplicationRequestHandler.class);
+        scheduleReplicateReplicationRule.apply("", requestHandler, ruleString);
     }
 
     @Test
@@ -71,8 +72,8 @@ public class ScheduleReplicateReplicationRuleTest {
         schedulerField.set(scheduleReplicateReplicationRule, scheduler);
 
         String ruleString = "scheduled add on /system every 12 sec";
-        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
-        scheduleReplicateReplicationRule.apply(ruleString, replicationAgent);
+        ReplicationRequestHandler requestHandler = mock(ReplicationRequestHandler.class);
+        scheduleReplicateReplicationRule.apply("", requestHandler, ruleString);
     }
 
     @Test
@@ -86,8 +87,8 @@ public class ScheduleReplicateReplicationRuleTest {
         schedulerField.set(scheduleReplicateReplicationRule, scheduler);
 
         String ruleString = "scheduled add on /system every 12 sec";
-        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
-        scheduleReplicateReplicationRule.apply(ruleString, replicationAgent);
+        ReplicationRequestHandler requestHandler = mock(ReplicationRequestHandler.class);
+        scheduleReplicateReplicationRule.apply("", requestHandler, ruleString);
     }
 
     @Test
@@ -101,24 +102,11 @@ public class ScheduleReplicateReplicationRuleTest {
         schedulerField.set(scheduleReplicateReplicationRule, scheduler);
 
         String ruleString = "scheduled add on /system every 12 sec";
-        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
-        scheduleReplicateReplicationRule.apply(ruleString, replicationAgent);
+        ReplicationRequestHandler requestHandler = mock(ReplicationRequestHandler.class);
+        scheduleReplicateReplicationRule.apply("", requestHandler, ruleString);
+
     }
 
-    @Test
-    public void testUndoWithNonMatchingString() throws Exception {
-        ScheduleReplicateReplicationRule scheduleReplicateReplicationRule = new ScheduleReplicateReplicationRule();
-        Field schedulerField = scheduleReplicateReplicationRule.getClass().getDeclaredField("scheduler");
-        schedulerField.setAccessible(true);
-        Scheduler scheduler = mock(Scheduler.class);
-        ScheduleOptions options = mock(ScheduleOptions.class);
-        when(scheduler.NOW(any(Integer.class), any(Integer.class))).thenReturn(options);
-        schedulerField.set(scheduleReplicateReplicationRule, scheduler);
-
-        String ruleString = "";
-        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
-        scheduleReplicateReplicationRule.undo(ruleString, replicationAgent);
-    }
 
     @Test
     public void testUndoWithMatchingString() throws Exception {
@@ -130,9 +118,7 @@ public class ScheduleReplicateReplicationRuleTest {
         when(scheduler.NOW(any(Integer.class), any(Integer.class))).thenReturn(options);
         schedulerField.set(scheduleReplicateReplicationRule, scheduler);
 
-        String ruleString = "scheduled add on /system every 12 sec";
-        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
-        scheduleReplicateReplicationRule.undo(ruleString, replicationAgent);
+        scheduleReplicateReplicationRule.undo("");
     }
 
     @Test
@@ -145,23 +131,7 @@ public class ScheduleReplicateReplicationRuleTest {
         when(scheduler.NOW(any(Integer.class), any(Integer.class))).thenReturn(options);
         schedulerField.set(scheduleReplicateReplicationRule, scheduler);
 
-        String ruleString = "scheduled add on /system every 12 sec";
-        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
-        scheduleReplicateReplicationRule.undo(ruleString, replicationAgent);
+        scheduleReplicateReplicationRule.undo("");
     }
 
-    @Test
-    public void testUndoWithNonMatchingStringAndRegisteredContext() throws Exception {
-        ScheduleReplicateReplicationRule scheduleReplicateReplicationRule = new ScheduleReplicateReplicationRule();
-        Field schedulerField = scheduleReplicateReplicationRule.getClass().getDeclaredField("scheduler");
-        schedulerField.setAccessible(true);
-        Scheduler scheduler = mock(Scheduler.class);
-        ScheduleOptions options = mock(ScheduleOptions.class);
-        when(scheduler.NOW(any(Integer.class), any(Integer.class))).thenReturn(options);
-        schedulerField.set(scheduleReplicateReplicationRule, scheduler);
-
-        String ruleString = "scheduled add on /system every 12 sec";
-        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
-        scheduleReplicateReplicationRule.undo(ruleString, replicationAgent);
-    }
 }

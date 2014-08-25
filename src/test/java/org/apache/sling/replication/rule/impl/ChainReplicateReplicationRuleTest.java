@@ -19,6 +19,7 @@
 package org.apache.sling.replication.rule.impl;
 
 import org.apache.sling.replication.agent.ReplicationAgent;
+import org.apache.sling.replication.rule.ReplicationRequestHandler;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 
@@ -52,71 +53,58 @@ public class ChainReplicateReplicationRuleTest {
     public void testApplyWithNonMatchingString() throws Exception {
         ChainReplicateReplicationRule chainPathReplicationRule = new ChainReplicateReplicationRule();
         String ruleString = "";
-        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
-        chainPathReplicationRule.apply(ruleString, replicationAgent);
+        ReplicationRequestHandler requestHandler = mock(ReplicationRequestHandler.class);
+        chainPathReplicationRule.apply("", requestHandler, ruleString);
     }
 
     @Test
     public void testApplyWithMatchingString() throws Exception {
         ChainReplicateReplicationRule chainPathReplicationRule = new ChainReplicateReplicationRule();
         String ruleString = "chain on path: /foo/bar";
-        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
-        chainPathReplicationRule.apply(ruleString, replicationAgent);
+        ReplicationRequestHandler requestHandler = mock(ReplicationRequestHandler.class);
+        chainPathReplicationRule.apply("", requestHandler, ruleString);
     }
 
     @Test
     public void testApplyWithMatchingStringAndRegisteredContext() throws Exception {
         ChainReplicateReplicationRule chainPathReplicationRule = new ChainReplicateReplicationRule();
         String ruleString = "chain on path: /foo/bar";
-        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
+        ReplicationRequestHandler requestHandler = mock(ReplicationRequestHandler.class);
         BundleContext context = mock(BundleContext.class);
         chainPathReplicationRule.activate(context);
-        chainPathReplicationRule.apply(ruleString, replicationAgent);
+        chainPathReplicationRule.apply("", requestHandler, ruleString);
     }
 
     @Test
     public void testApplyWithNonMatchingStringAndRegisteredContext() throws Exception {
         ChainReplicateReplicationRule chainPathReplicationRule = new ChainReplicateReplicationRule();
         String ruleString = "chain on path: 1 2 3";
-        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
+        ReplicationRequestHandler requestHandler = mock(ReplicationRequestHandler.class);
         BundleContext context = mock(BundleContext.class);
         chainPathReplicationRule.activate(context);
-        chainPathReplicationRule.apply(ruleString, replicationAgent);
+        chainPathReplicationRule.apply("", requestHandler, ruleString);
     }
 
     @Test
     public void testUndoWithNonMatchingString() throws Exception {
         ChainReplicateReplicationRule chainPathReplicationRule = new ChainReplicateReplicationRule();
         String ruleString = "";
-        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
-        chainPathReplicationRule.undo(ruleString, replicationAgent);
+        ReplicationRequestHandler requestHandler = mock(ReplicationRequestHandler.class);
+        chainPathReplicationRule.apply("", requestHandler, ruleString);
     }
 
     @Test
     public void testUndoWithMatchingString() throws Exception {
         ChainReplicateReplicationRule chainPathReplicationRule = new ChainReplicateReplicationRule();
-        String ruleString = "chain on path: /foo/bar";
-        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
-        chainPathReplicationRule.undo(ruleString, replicationAgent);
+        chainPathReplicationRule.undo("");
     }
 
     @Test
     public void testUndoWithMatchingStringAndRegisteredContext() throws Exception {
         ChainReplicateReplicationRule chainPathReplicationRule = new ChainReplicateReplicationRule();
-        String ruleString = "chain on path: /foo/bar";
-        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
         BundleContext context = mock(BundleContext.class);
         chainPathReplicationRule.activate(context);
-        chainPathReplicationRule.undo(ruleString, replicationAgent);
+        chainPathReplicationRule.undo("");
     }
 
-    @Test
-    public void testUndoWithNonMatchingStringAndRegisteredContext() throws Exception {
-        ChainReplicateReplicationRule chainPathReplicationRule = new ChainReplicateReplicationRule();
-        String ruleString = "chain on path: 1 2 3";
-        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
-        BundleContext context = mock(BundleContext.class);
-        chainPathReplicationRule.activate(context);
-        chainPathReplicationRule.undo(ruleString, replicationAgent);
-    }
 }
