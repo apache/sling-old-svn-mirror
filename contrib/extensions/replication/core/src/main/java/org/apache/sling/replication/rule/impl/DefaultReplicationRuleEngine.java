@@ -28,7 +28,11 @@ import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.replication.agent.AgentReplicationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
+import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.communication.ReplicationResponse;
+import org.apache.sling.replication.rule.ReplicationRequestHandler;
 import org.apache.sling.replication.rule.ReplicationRule;
 import org.apache.sling.replication.rule.ReplicationRuleEngine;
 import org.slf4j.Logger;
@@ -79,10 +83,9 @@ public class DefaultReplicationRuleEngine implements ReplicationRuleEngine {
 
             for (ReplicationRule rule : replicationRules) {
                 if (rule.signatureMatches(ruleString)) {
-                    if (log.isInfoEnabled()) {
-                        log.info("applying rule {} with string {} to agent {}", new Object[]{rule, ruleString, agent});
-                    }
-                    rule.apply(ruleString, agent);
+                    log.info("applying rule {} with string {} to agent {}", new Object[]{rule, ruleString, agent});
+
+                    rule.apply(agent.getName()+ruleString, handlerForAgent(agent), ruleString);
                     break;
                 }
             }
@@ -95,15 +98,38 @@ public class DefaultReplicationRuleEngine implements ReplicationRuleEngine {
 
             for (ReplicationRule rule : replicationRules) {
                 if (rule.signatureMatches(ruleString)) {
-                    if (log.isInfoEnabled()) {
-                        log.info("un-applying rule {} with string {} to agent {}", new Object[]{rule, ruleString, agent});
-                    }
-                    rule.undo(ruleString, agent);
+                    log.info("un-applying rule {} with string {} to agent {}", new Object[]{rule, ruleString, agent});
+
+                    rule.undo(agent.getName() + ruleString);
                     break;
                 }
             }
 
         }
+    }
+
+
+    public class AgentBasedRequestHandler implements ReplicationRequestHandler {
+        private final ReplicationAgent agent;
+
+        public AgentBasedRequestHandler(ReplicationAgent agent) {
+
+            this.agent = agent;
+        }
+
+        public void execute(ReplicationRequest request) {
+            try {
+                agent.execute(request);
+            }
+            catch (AgentReplicationException e) {
+                log.error("Error executing handler", e);
+            }
+        }
+    }
+
+
+    ReplicationRequestHandler handlerForAgent(ReplicationAgent agent) {
+        return new AgentBasedRequestHandler(agent);
     }
 
 }

@@ -20,16 +20,15 @@ package org.apache.sling.replication.rule.impl;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.scr.annotations.*;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
@@ -44,6 +43,7 @@ import org.apache.http.nio.ContentDecoder;
 import org.apache.http.nio.IOControl;
 import org.apache.http.nio.protocol.BasicAsyncRequestProducer;
 import org.apache.http.nio.protocol.BasicAsyncResponseConsumer;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.replication.agent.AgentReplicationException;
@@ -51,8 +51,10 @@ import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.resources.ReplicationConstants;
+import org.apache.sling.replication.rule.ReplicationRequestHandler;
 import org.apache.sling.replication.rule.ReplicationRule;
 import org.apache.sling.replication.transport.ReplicationTransportHandler;
+import org.apache.sling.replication.transport.impl.ReplicationTransportConstants;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
@@ -66,11 +68,14 @@ import org.slf4j.LoggerFactory;
 @Service(value = ReplicationRule.class)
 public class ReplicateOnQueueEventRule implements ReplicationRule {
 
+    @Property(label = "Name", value = "remote", propertyPrivate = true)
+    private static final String NAME = "name";
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private static final String SIGNATURE = "queue event based {action} [on ${path}]";
+    private static final String SIGNATURE = "remote trigger on {path} with user {user} and password {password}";
 
-    private static final String SIGNATURE_REGEX = "(queue\\sevent\\sbased)\\s(add|delete|poll)(\\s(on)\\s(\\/\\w+)+)?";
+    private static final String SIGNATURE_REGEX = "remote\\strigger\\son\\s([^\\s]+)\\swith\\suser\\s([^\\s]+)\\sand\\spassword\\s([^\\s]+)";
 
     private static final Pattern signaturePattern = Pattern.compile(SIGNATURE_REGEX);
 
@@ -82,7 +87,7 @@ public class ReplicateOnQueueEventRule implements ReplicationRule {
     private Map<String, Future<HttpResponse>> requests;
 
     @Activate
-    protected void activate(BundleContext context) {
+    protected void activate(BundleContext context, Map<String, ?> config) {
         this.context = context;
         this.requests = new ConcurrentHashMap<String, Future<HttpResponse>>();
     }
@@ -95,18 +100,21 @@ public class ReplicateOnQueueEventRule implements ReplicationRule {
         return ruleString.matches(SIGNATURE_REGEX);
     }
 
-    public void apply(String ruleString, ReplicationAgent agent) {
+    public void apply(String handleId, ReplicationRequestHandler agent, String ruleString) {
         Matcher matcher = signaturePattern.matcher(ruleString);
         if (matcher.find()) {
-            String action = matcher.group(2);
-            ReplicationActionType actionType = ReplicationActionType.fromName(action.toUpperCase());
-            String path = matcher.group(5); // can be null
+            String remotePath = matcher.group(1);
+            String user = matcher.group(2);
+            String password = matcher.group(3);
+
+
+
             try {
                 log.info("applying queue event replication rule");
 
                 ScheduleOptions options = scheduler.NOW();
-                options.name(agent.getName() + " " + ruleString);
-                scheduler.schedule(new EventBasedReplication(agent, actionType, path, null), options);
+                options.name(handleId);
+                scheduler.schedule(new EventBasedReplication(handleId, agent, remotePath, user, password), options);
 
             } catch (Exception e) {
                 log.error("{}", e);
@@ -116,8 +124,8 @@ public class ReplicateOnQueueEventRule implements ReplicationRule {
         }
     }
 
-    public void undo(String ruleString, ReplicationAgent agent) {
-        Future<HttpResponse> httpResponseFuture = requests.remove(agent.getName());
+    public void undo(String handleId) {
+        Future<HttpResponse> httpResponseFuture = requests.remove(handleId);
         if (httpResponseFuture != null) {
             httpResponseFuture.cancel(true);
         }
@@ -125,30 +133,30 @@ public class ReplicateOnQueueEventRule implements ReplicationRule {
 
     private class SSEResponseConsumer extends BasicAsyncResponseConsumer {
 
-        private final ReplicationAgent agent;
-        private final ReplicationActionType action;
-        private final String path;
+        private final String handleId;
+        private final ReplicationRequestHandler agent;
 
-        private SSEResponseConsumer(ReplicationAgent agent, ReplicationActionType action, String path) {
+
+        private SSEResponseConsumer(String handleId, ReplicationRequestHandler agent) {
+            this.handleId = handleId;
             this.agent = agent;
-            this.action = action;
-            this.path = path == null ? "/" : path;
+
         }
 
         @Override
         protected void onContentReceived(ContentDecoder decoder, IOControl ioctrl) throws IOException {
-//            log.info("complete ? ", decoder.isCompleted());
-//            ByteBuffer buffer = ByteBuffer.allocate(1024);
-//            decoder.read(buffer);
-//            log.info("content {} received {},{}", new Object[]{buffer, decoder, ioctrl});
+            log.info("complete ? ", decoder.isCompleted());
+            ByteBuffer buffer = ByteBuffer.allocate(1024);
+            decoder.read(buffer);
+            log.info("content {} received {},{}", new Object[]{buffer, decoder, ioctrl});
             log.info("event received");
 
-            try {
-                asyncReplicate(agent, action, path);
-                log.info("replication request to agent {} sent ({} on {})", new Object[]{agent.getName(), action, path});
-            } catch (AgentReplicationException e) {
-                log.error("cannot replicate to agent {}, {}", agent.getName(), e);
-            }
+            ReplicationRequest replicationRequest = new ReplicationRequest(System.currentTimeMillis(), ReplicationActionType.POLL, null);
+            agent.execute(replicationRequest);
+            log.info("replication request to agent {} sent ({} on {})", new Object[]{
+                    handleId,
+                    replicationRequest.getAction(),
+                    replicationRequest.getPaths()});
 
             super.onContentReceived(decoder, ioctrl);
         }
@@ -160,74 +168,55 @@ public class ReplicateOnQueueEventRule implements ReplicationRule {
         }
     }
 
-    private void asyncReplicate(ReplicationAgent agent, ReplicationActionType action, String path) throws AgentReplicationException {
-        agent.execute(new ReplicationRequest(System.currentTimeMillis(), action, path));
-    }
+
 
     private class EventBasedReplication implements Runnable {
-        private final ReplicationAgent agent;
-        private final ReplicationActionType actionType;
+        private final String handleId;
+        private final ReplicationRequestHandler agent;
         private final String targetTransport;
-        private final String path;
+        private final String userName;
+        private final String password;
 
-        public EventBasedReplication(ReplicationAgent agent, ReplicationActionType actionType, String path, String targetTransport) {
+        public EventBasedReplication(String handleId, ReplicationRequestHandler agent, String targetTransport, String userName, String password) {
+            this.handleId = handleId;
             this.agent = agent;
-            this.actionType = actionType;
             this.targetTransport = targetTransport;
-            this.path = path;
+            this.userName = userName;
+            this.password = password;
         }
 
         public void run() {
             try {
-                ServiceReference[] serviceReferences = context.getServiceReferences(ReplicationTransportHandler.class.getName(), targetTransport);
 
-                log.info("reference transport for {} found {}", targetTransport, serviceReferences != null);
 
-                if (serviceReferences != null && serviceReferences.length == 1) {
+                log.info("getting event from {}", targetTransport + "?sec=600");
 
-                    Object endpointsProperty = serviceReferences[0].getProperty("endpoints");
-                    Object authenticationPropertiesProperty = serviceReferences[0].getProperty("authentication.properties");
+                URI eventEndpoint = URI.create(targetTransport);
 
-                    log.info("endpoint prop: {} authentication properties prop: {}", endpointsProperty, authenticationPropertiesProperty);
 
-                    String[] endpoints = (String[]) endpointsProperty;
-                    Map<String, String> authenticationProperties = (Map<String, String>) authenticationPropertiesProperty;
-
-                    log.info("endpoint {} props {}", endpoints, authenticationProperties);
-                    // only works with HTTP
-                    if (endpoints.length == 1 && endpoints[0].startsWith("http") && authenticationProperties != null) {
-                        log.info("getting event queue URI");
-                        URI eventEndpoint = URI.create(endpoints[0] + ReplicationConstants.SUFFIX_AGENT_QUEUE_EVENT);
-                        String userName = authenticationProperties.get("user");
-                        String password = authenticationProperties.get("password");
-
-                        log.info("preparing request");
-                        CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-                        credentialsProvider.setCredentials(
-                                new AuthScope(eventEndpoint.getHost(), eventEndpoint.getPort()),
-                                new UsernamePasswordCredentials(userName, password));
-                        CloseableHttpAsyncClient httpClient = HttpAsyncClients.custom()
-                                .setDefaultCredentialsProvider(credentialsProvider)
-                                .build();
-                        try {
-                            HttpGet get = new HttpGet(eventEndpoint);
-                            HttpHost target = URIUtils.extractHost(get.getURI());
-                            BasicAsyncRequestProducer basicAsyncRequestProducer = new BasicAsyncRequestProducer(target, get);
-                            httpClient.start();
-                            log.info("sending request");
-                            Future<HttpResponse> futureResponse = httpClient.execute(
-                                    basicAsyncRequestProducer,
-                                    new SSEResponseConsumer(agent, actionType, path), null);
-                            requests.put(agent.getName(), futureResponse);
-                            futureResponse.get();
-                        } finally {
-                            httpClient.close();
-                        }
-                        log.info("request finished");
-                    }
+                log.info("preparing request");
+                CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+                credentialsProvider.setCredentials(
+                        new AuthScope(eventEndpoint.getHost(), eventEndpoint.getPort()),
+                        new UsernamePasswordCredentials(userName, password));
+                CloseableHttpAsyncClient httpClient = HttpAsyncClients.custom()
+                        .setDefaultCredentialsProvider(credentialsProvider)
+                        .build();
+                try {
+                    HttpGet get = new HttpGet(eventEndpoint);
+                    HttpHost target = URIUtils.extractHost(get.getURI());
+                    BasicAsyncRequestProducer basicAsyncRequestProducer = new BasicAsyncRequestProducer(target, get);
+                    httpClient.start();
+                    log.info("sending request");
+                    Future<HttpResponse> futureResponse = httpClient.execute(
+                            basicAsyncRequestProducer,
+                            new SSEResponseConsumer(handleId, agent), null);
+                    requests.put(handleId, futureResponse);
+                    futureResponse.get();
+                } finally {
+                    httpClient.close();
                 }
-            } catch (RuntimeException e) {
-                throw e;
+                log.info("request finished");
             } catch (Exception e) {
                 log.error("cannot execute event based replication");
             }
