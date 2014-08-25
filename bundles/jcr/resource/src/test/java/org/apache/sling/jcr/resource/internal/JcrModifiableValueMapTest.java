@@ -20,6 +20,8 @@ package org.apache.sling.jcr.resource.internal;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -252,4 +254,51 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
             assertEquals(values.get(entry.getKey()), stored);
         }
     }
+    
+    /**
+     * Test date conversions from Date to Calendar and vice versa when reading or writing from value maps.
+     */
+    public void testDateConversion() throws Exception {
+        this.rootNode.getSession().refresh(false);
+        
+        // prepare some date values
+        Date dateValue1 = new Date(10000);
+        Calendar calendarValue1 = Calendar.getInstance();
+        calendarValue1.setTime(dateValue1);
+        
+        Date dateValue2 = new Date(20000);
+        Calendar calendarValue2 = Calendar.getInstance();
+        calendarValue2.setTime(dateValue2);
+
+        Date dateValue3 = new Date(30000);
+        Calendar calendarValue3 = Calendar.getInstance();
+        calendarValue3.setTime(dateValue3);
+
+        // write property
+        final Node testNode = this.rootNode.addNode("dateConversionTest" + System.currentTimeMillis());
+        testNode.setProperty(PROP1, calendarValue1);
+        testNode.getSession().save();
+
+        // write with property map
+        final ModifiableValueMap pvm = new JcrModifiableValueMap(testNode, null);
+        pvm.put(PROP2, dateValue2);
+        pvm.put(PROP3, calendarValue3);
+        getSession().save();
+
+        // read with property map
+        final ValueMap vm = new JcrModifiableValueMap(testNode, null);
+        assertEquals(dateValue1, vm.get(PROP1, Date.class));
+        assertEquals(calendarValue1, vm.get(PROP1, Calendar.class));
+        assertEquals(dateValue2, vm.get(PROP2, Date.class));
+        assertEquals(calendarValue2, vm.get(PROP2, Calendar.class));
+        assertEquals(dateValue3, vm.get(PROP3, Date.class));
+        assertEquals(calendarValue3, vm.get(PROP3, Calendar.class));
+
+        // read properties
+        assertEquals(calendarValue1, testNode.getProperty(PROP1).getDate());
+        assertEquals(calendarValue2, testNode.getProperty(PROP2).getDate());
+        assertEquals(calendarValue3, testNode.getProperty(PROP3).getDate());
+        
+    }
+    
 }
