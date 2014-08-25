@@ -37,7 +37,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * AdapterFactory which adapts JCR Nodes and Properties into Resources.
+ * @deprecated
  */
+@Deprecated
 public class JcrItemAdapterFactory implements AdapterFactory {
 
     private final Logger logger = LoggerFactory.getLogger(JcrItemAdapterFactory.class);
@@ -46,6 +48,9 @@ public class JcrItemAdapterFactory implements AdapterFactory {
 
     private ServiceRegistration serviceRegsitration;
 
+    private boolean loggedNodeWarning = false;
+    private boolean loggedPropertyWarning = false;
+
     public JcrItemAdapterFactory(BundleContext ctx, JcrResourceResolverFactoryImpl resourceResolverFactory) {
         this.resourceResolverFactory = resourceResolverFactory;
         Dictionary<Object, Object> properties = new Hashtable<Object, Object>();
@@ -53,7 +58,8 @@ public class JcrItemAdapterFactory implements AdapterFactory {
         properties.put(ADAPTER_CLASSES,
                 new String[] { Resource.class.getName(), Map.class.getName(), ValueMap.class.getName(),
                         PersistableValueMap.class.getName() });
-        properties.put(Constants.SERVICE_DESCRIPTION, "JCR Item Adapter Factory");
+        properties.put("adapter.deprecated", Boolean.TRUE);
+        properties.put(Constants.SERVICE_DESCRIPTION, "Apache Sling JCR Item Adapter Factory");
         properties.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         this.serviceRegsitration = ctx.registerService(AdapterFactory.class.getName(), this, properties);
     }
@@ -66,19 +72,29 @@ public class JcrItemAdapterFactory implements AdapterFactory {
     }
 
     @SuppressWarnings("unchecked")
-    public <AdapterType> AdapterType getAdapter(Object adaptable, Class<AdapterType> type) {
+    public <AdapterType> AdapterType getAdapter(final Object adaptable, final Class<AdapterType> type) {
         if (type == Resource.class) {
             try {
                 if (adaptable instanceof Node) {
-                    Node node = (Node) adaptable;
+                    final Node node = (Node) adaptable;
+                    if ( !loggedNodeWarning ) {
+                        loggedNodeWarning = true;
+                        logger.warn("Adapting a JCR node to a resource is deprecated. This feature will be " +
+                                    "removed in future versions. Please adjust your code.");
+                    }
                     return (AdapterType) new JcrNodeResource(resourceResolverFactory.getResourceResolver(node
                             .getSession()), node.getPath(), node, resourceResolverFactory.getDynamicClassLoader());
                 } else if (adaptable instanceof Property) {
-                    Property property = (Property) adaptable;
+                    final Property property = (Property) adaptable;
+                    if ( !loggedPropertyWarning ) {
+                        loggedPropertyWarning = true;
+                        logger.warn("Adapting a JCR property to a resource is deprecated. This feature will be " +
+                                    "removed in future versions. Please adjust your code.");
+                    }
                     return (AdapterType) new JcrPropertyResource(resourceResolverFactory.getResourceResolver(property
                             .getSession()), property.getPath(), property);
                 }
-            } catch (RepositoryException e) {
+            } catch (final RepositoryException e) {
                 logger.error("Unable to adapt JCR Item to a Resource", e);
             }
             return null;
