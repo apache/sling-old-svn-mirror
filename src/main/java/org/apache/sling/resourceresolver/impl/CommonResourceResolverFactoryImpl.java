@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 import org.apache.commons.collections.BidiMap;
 import org.apache.sling.api.resource.LoginException;
@@ -56,6 +57,11 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     /** The activator */
     private final ResourceResolverFactoryActivator activator;
 
+    /**
+     * Thread local holding the resource resolver stack
+     */
+    private ThreadLocal<Stack<ResourceResolver>> resolverStackHolder = new ThreadLocal<Stack<ResourceResolver>>();
+
     public CommonResourceResolverFactoryImpl(final ResourceResolverFactoryActivator activator) {
         this.activator = activator;
     }
@@ -76,6 +82,9 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         return getResourceResolverInternal(authenticationInfo, true);
     }
 
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolverFactory#getResourceResolver(java.util.Map)
+     */
     public ResourceResolver getResourceResolver(final Map<String, Object> passedAuthenticationInfo)
     throws LoginException {
         // create a copy of the passed authentication info as we modify the map
@@ -87,10 +96,41 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
             authenticationInfo.remove(SUBSERVICE);
         }
 
-        return getResourceResolverInternal(authenticationInfo, false);
+        final ResourceResolver result = getResourceResolverInternal(authenticationInfo, false);
+        Stack<ResourceResolver> resolverStack = resolverStackHolder.get();
+        if ( resolverStack == null ) {
+            resolverStack = new Stack<ResourceResolver>();
+            resolverStackHolder.set(resolverStack);
+        }
+        resolverStack.push(result);
+        return result;
+    }
+
+
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolverFactory#getThreadResourceResolver()
+     */
+    public ResourceResolver getThreadResourceResolver() {
+        ResourceResolver result = null;
+        final Stack<ResourceResolver> resolverStack = resolverStackHolder.get();
+        if ( resolverStack != null && !resolverStack.isEmpty() ) {
+            result = resolverStack.peek();
+        }
+        return result;
     }
 
     // ---------- Implementation helpers --------------------------------------
+
+    /**
+     * Inform about a closed resource resolver.
+     * Make sure to remove it from the current thread context.
+     */
+    public void closed(final ResourceResolverImpl resourceResolverImpl) {
+        final Stack<ResourceResolver> resolverStack = resolverStackHolder.get();
+        if ( resolverStack != null ) {
+            resolverStack.remove(resourceResolverImpl);
+        }
+    }
 
     /**
      * Create a new ResourceResolver
@@ -121,7 +161,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         try {
             plugin = new ResourceResolverWebConsolePlugin(bundleContext, this);
         } catch (final Throwable ignore) {
-            // an exception here propably means the web console plugin is not
+            // an exception here probably means the web console plugin is not
             // available
             logger.debug("activate: unable to setup web console plugin.", ignore);
         }
@@ -134,7 +174,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     }
 
     /**
-     * Deativates this component
+     * Deactivates this component
      */
     protected void deactivate() {
         if (plugin != null) {
@@ -146,6 +186,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
             mapEntries.dispose();
             mapEntries = MapEntries.EMPTY;
         }
+        resolverStackHolder = null;
     }
 
     public ResourceDecoratorTracker getResourceDecoratorTracker() {
@@ -199,7 +240,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     public boolean isOptimizeAliasResolutionEnabled() {
         return this.activator.isOptimizeAliasResolutionEnabled();
     }
-    
+
     public boolean hasVanityPathPrecedence() {
         return this.activator.hasVanityPathPrecedence();
     }

@@ -142,6 +142,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         if (!this.closed) {
             this.closed = true;
             this.context.close();
+            this.factory.closed(this);
         }
     }
 
