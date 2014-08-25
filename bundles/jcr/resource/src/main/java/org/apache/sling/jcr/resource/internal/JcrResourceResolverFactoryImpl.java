@@ -128,4 +128,11 @@ public class JcrResourceResolverFactoryImpl implements
             throws LoginException {
         return delegatee.getResourceResolver(arg0);
     }
+
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolverFactory#getThreadResourceResolver()
+     */
+    public ResourceResolver getThreadResourceResolver() {
+        return delegatee.getThreadResourceResolver();
+    }
 }
