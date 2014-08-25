@@ -37,6 +37,12 @@ import org.slf4j.LoggerFactory;
 
 /**
  * AdapterFactory which adapts JCR Nodes and Properties into Resources.
+ *
+ * Whenever a node or property is adapted using this factory, a new resource resolver
+ * is created! Therefore client code using this adapter factory needs to take care
+ * to close the returned resolver properly, otherwise this might result in a memory
+ * leak.
+ *
  * @deprecated
  */
 @Deprecated
