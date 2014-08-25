@@ -161,11 +161,11 @@ public interface ResourceResolverFactory {
      * If such permission is missing, a {@code LoginException} is thrown.
      *
      * @param authenticationInfo A map of further service information which may
-     *            be used by the implementation to parametrize how the resource
+     *            be used by the implementation to parameterize how the resource
      *            resolver is created. This may be <code>null</code>.
      * @return A {@link ResourceResolver} with appropriate permissions to
      *         execute the service.
-     * @throws LoginException If an error occurrs creating the new
+     * @throws LoginException If an error occurs creating the new
      *             <code>ResourceResolver</code> for the service represented by
      *             the calling bundle.
      * @since 2.4 (bundle version 2.5.0) to replace
@@ -175,4 +175,18 @@ public interface ResourceResolverFactory {
      *      Authentication</a>
      */
     ResourceResolver getServiceResourceResolver(Map<String, Object> authenticationInfo) throws LoginException;
+
+    /**
+     * Returns the {@link ResourceResolver} for the current thread.
+     * <p>
+     * Each resource resolver created by {@link #getResourceResolver(Map)} is associated with
+     * the thread of its creation time. From within this thread, this method returns
+     * the last non-closed resource resolver. When a resource resolver is closed, the
+     * association is removed.
+     *
+     * @return A {@link ResourceResolver} created from the current thread or <code>null</code>.
+     *
+     * @since 2.6
+     */
+    ResourceResolver getThreadResourceResolver();
 }
