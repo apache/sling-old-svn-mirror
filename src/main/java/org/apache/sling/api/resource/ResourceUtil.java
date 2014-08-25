@@ -641,4 +641,53 @@ public class ResourceUtil {
         }
         return result;
     }
+
+    /**
+     * A batch resource remover deletes resources in batches. Once the batch
+     * size (threshold) is reached, an intermediate commit is performed. Resource
+     * trees are deleted resource by resource starting with the deepest children first.
+     * Once all resources have been passed to the batch resource remover, a final
+     * commit needs to be called on the resource resolver.
+     * @since 2.6
+     */
+    public static class BatchResourceRemover {
+
+        private final int max;
+
+        private int count;
+
+        public BatchResourceRemover(final int batchSize) {
+            this.max = (batchSize < 1 ? 50 : batchSize);
+        }
+
+        public void delete(final Resource rsrc)
+        throws PersistenceException {
+            final ResourceResolver resolver = rsrc.getResourceResolver();
+            for(final Resource child : rsrc.getChildren()) {
+                delete(child);
+            }
+            resolver.delete(rsrc);
+            count++;
+            if ( count >= max ) {
+                resolver.commit();
+                count = 0;
+            }
+        }
+    }
+
+    /**
+     * Create a batch resource remover.
+     * A batch resource remove can be used to delete resources in batches.
+     * Once the passed in threshold of deleted resources is reached, an intermediate
+     * commit is called on the resource resolver. In addition the batch remover
+     * deletes a resource recursively.
+     * Once all resources to delete are passed to the remover, a final commit needs
+     * to be call on the resource resolver.
+     * @param threshold The threshold for the intermediate saves.
+     * @return A new batch resource remover.
+     * Since 2.6
+     */
+    public static BatchResourceRemover getBatchResourceResourceRemover(final int threshold) {
+        return new BatchResourceRemover(threshold);
+    }
 }
