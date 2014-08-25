@@ -38,7 +38,7 @@ import org.apache.sling.models.spi.injectorspecific.InjectAnnotation;
 public @interface ResourcePath {
 
     /**
-     * Specifies the path of the resource. If not provided, the path is dervied from the proeprty name.
+     * Specifies the path of the resource. If not provided, the path is derived from the property name.
      */
     public String path() default "";
 
