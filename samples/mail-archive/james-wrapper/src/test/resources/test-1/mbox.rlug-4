@@ -1,0 +1,65 @@
+From: "Dragosh M." <dragosh@lsd.ro>
+Subject: LSTP problem - solved
+Date: 08 Feb 2003 01:58:32 +0200
+Lines: 27
+Sender: rlug-bounce@lug.ro
+Message-ID: <1044662313.5121.17.camel@snow.lsd.ro>
+Reply-To: rlug@lug.ro
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <rlug-bounce@lug.ro>
+Received: from lug.lug.ro ([193.226.140.220])
+	by main.gmane.org with esmtp (Exim 3.35 #1 (Debian))
+	id 18hIID-0003pf-00
+	for <gourg-rlug@gmane.org>; Sat, 08 Feb 2003 00:52:25 +0100
+Received: from lug.lug.ro (localhost.localdomain [127.0.0.1])
+	by lug.lug.ro (Postfix) with ESMTP
+	id 461C532D55; Sat,  8 Feb 2003 01:53:03 +0200 (EET)
+Received: with LISTAR (v0.129a; list rlug); Sat, 08 Feb 2003 01:53:02 +0200 (EET)
+Delivered-To: rlug@lug.ro
+Received: from rdsnet.ro (mail.rdsnet.ro [193.231.236.16])
+	by lug.lug.ro (Postfix) with SMTP id F315032D02
+	for <rlug@lug.ro>; Sat,  8 Feb 2003 01:52:59 +0200 (EET)
+Received: (qmail 5162 invoked from network); 7 Feb 2003 23:52:49 -0000
+Received: from unknown (HELO snow.lsd.ro) (81.196.12.127)
+  by mail.rdsnet.ro with SMTP; 7 Feb 2003 23:52:49 -0000
+To: rlug@lug.ro
+X-Mailer: Ximian Evolution 1.0.8 (1.0.8-10) 
+X-archive-position: 23612
+X-listar-version: Listar v0.129a
+Errors-To: rlug-bounce@lug.ro
+X-original-sender: dragosh@lsd.ro
+Precedence: bulk
+X-list: rlug
+
+In sfarsit am rezolvat crapu, cu ajutorul lui James McQuillan (taticul
+LTSP). E foarte simplu si foarte nedocumentat, 16 mega NU sunt
+suficienti pentru o statie desi peste tot se zice ca si 8 sunt ok, motiv
+pentru care e imperativ necesar sa se foloseasca swap-over-NFS care
+merge super bine (stiu ca majoritatea au o reticenta in a folosi
+swap/nfs, don't be shy, it rocks). Am mai adaugat 64 de ram pe NFS si
+acum rupe tovarashu' terminal, am load 2 la server si totul merge f
+bine.  
+Un 32 de MB sunt minim, 8/16 cat are sistemul + 32 e safe. 
+Sper ca observatia asta sa apara in viitoarea versiune a documentatiei
+ce vine cu LTSP, cel putin asa mi s-a promis.
+
+You've got yourself a happy smilin' motherfucker.
+
+Good fight, good night.
+
+Dragosh "smilin'" M.
+-- 
+I/O error while opening .signature file
+
+---
+Pentru dezabonare, trimiteti mail la 
+listar@lug.ro cu subiectul 'unsubscribe rlug'.
+REGULI, arhive si alte informatii: http://www.lug.ro/mlist/
+
+
+
+
+
+

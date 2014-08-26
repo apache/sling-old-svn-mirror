@@ -1,0 +1,50 @@
+From: Adrian Rapa <adrian@dtedu.net>
+Subject: Qmail mysql virtualusers +ssl + smtp auth +pop3
+Date: Fri, 7 Feb 2003 19:36:01 +0200
+Organization: Asociatia Studenteasca a Retelelor din Drumul Taberei
+Lines: 12
+Sender: rlug-bounce@lug.ro
+Message-ID: <20030207193601.2613a439.adrian@dtedu.net>
+Reply-To: rlug@lug.ro
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <rlug-bounce@lug.ro>
+Received: from lug.lug.ro ([193.226.140.220])
+	by main.gmane.org with esmtp (Exim 3.35 #1 (Debian))
+	id 18hCPk-0002ZW-00
+	for <gourg-rlug@gmane.org>; Fri, 07 Feb 2003 18:35:48 +0100
+Received: from lug.lug.ro (localhost.localdomain [127.0.0.1])
+	by lug.lug.ro (Postfix) with ESMTP
+	id DC08032D8E; Fri,  7 Feb 2003 19:36:21 +0200 (EET)
+Received: with LISTAR (v0.129a; list rlug); Fri, 07 Feb 2003 19:36:20 +0200 (EET)
+Delivered-To: rlug@lug.ro
+Received: from www.dtedu.net (tabara.imago.ro [193.254.242.5])
+	by lug.lug.ro (Postfix) with SMTP id 3794D32CC7
+	for <rlug@lug.ro>; Fri,  7 Feb 2003 19:36:17 +0200 (EET)
+Received: (qmail 10170 invoked from network); 7 Feb 2003 17:36:02 -0000
+Received: from games.tabara.net (HELO games) (10.39.2.5)
+  by tabara.imago.ro with SMTP; 7 Feb 2003 17:36:02 -0000
+To: rlug@lug.ro
+X-Mailer: Sylpheed version 0.8.9 (GTK+ 1.2.10; i686-pc-linux-gnu)
+X-archive-position: 23610
+X-listar-version: Listar v0.129a
+Errors-To: rlug-bounce@lug.ro
+X-original-sender: adrian@dtedu.net
+Precedence: bulk
+X-list: rlug
+
+Salut,
+poate cineva sa imi dea combinatia aceasta? am incercat sa pun patchurile dar dadeau erori
+
+
+Adrian Rapa
+---
+Pentru dezabonare, trimiteti mail la 
+listar@lug.ro cu subiectul 'unsubscribe rlug'.
+REGULI, arhive si alte informatii: http://www.lug.ro/mlist/
+
+
+
+
+

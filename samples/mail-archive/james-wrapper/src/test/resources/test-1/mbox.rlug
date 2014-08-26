@@ -1,0 +1,346 @@
+From news@gmane.org Tue Mar 04 03:33:20 2003
+From: "mmihai" <mmihai@netcompsj.ro>
+Subject: Din windows ma pot, din LINUX NU ma pot conecta (la ZAPP)
+Date: Fri, 7 Feb 2003 18:35:25 +0200
+Lines: 45
+Sender: rlug-bounce@lug.ro
+Message-ID: <001401c2cec7$4eb5b460$941c10ac@ok6f6gr01ta4hv>
+Reply-To: rlug@lug.ro
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-2"
+Content-Transfer-Encoding: 7bit
+Return-path: <rlug-bounce@lug.ro>
+Received: from lug.lug.ro ([193.226.140.220])
+	by main.gmane.org with esmtp (Exim 3.35 #1 (Debian))
+	id 18hBoh-0007L5-00
+	for <gourg-rlug@gmane.org>; Fri, 07 Feb 2003 17:57:31 +0100
+Received: from lug.lug.ro (localhost.localdomain [127.0.0.1])
+	by lug.lug.ro (Postfix) with ESMTP
+	id 70A5332D87; Fri,  7 Feb 2003 18:38:06 +0200 (EET)
+Received: with LISTAR (v0.129a; list rlug); Fri, 07 Feb 2003 18:38:05 +0200 (EET)
+Delivered-To: rlug@lug.ro
+Received: from ns.zappmobile.ro (ns.zapp.ro [80.96.151.2])
+	by lug.lug.ro (Postfix) with ESMTP id 2C3BD32CC7
+	for <rlug@lug.ro>; Fri,  7 Feb 2003 18:38:02 +0200 (EET)
+Received: from mail.zappmobile.ro (mail-server.zappmobile.ro [172.31.254.14])
+	by ns.zappmobile.ro (Postfix) with ESMTP id AFDC2490D
+	for <rlug@lug.ro>; Fri,  7 Feb 2003 18:37:48 +0200 (EET)
+Received: from localhost (localhost [127.0.0.1])
+	by mail.zappmobile.ro (Postfix) with ESMTP
+	id 994A6A0BB1; Fri,  7 Feb 2003 18:37:12 +0200 (EET)
+Received: from ok6f6gr01ta4hv (unknown [172.16.28.148])
+	by mail.zappmobile.ro (Postfix) with SMTP id 292599D67B
+	for <rlug@lug.ro>; Fri,  7 Feb 2003 18:37:09 +0200 (EET)
+To: <rlug@lug.ro>
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2600.0000
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2600.0000
+X-Virus-Scanned: by AMaViS perl-11
+X-archive-position: 23608
+X-listar-version: Listar v0.129a
+Errors-To: rlug-bounce@lug.ro
+X-original-sender: mmihai@netcompsj.ro
+Precedence: bulk
+X-list: rlug
+
+Buna Ziua tuturor,
+
+Am o placa de baza, cu mare probabilitate J-542B, Chipset Ali M1542/M1543,
+Aladdin-V chipset.
+Vreau sa ma conectez la ZAPP, din Linux, pe portul USB
+Un lucru este absolut cert: portul exista si este functional intrucit ma pot
+conecta din XP.
+In Control Panel-ul din XP la "Sectiunea USB" scrie:
+ALI PCI to USB Open Host Controller
+USB Root Hub # Iar sistemul il asigneaza pe COM 4 !!??!!
+L-am lasat in pace ca de mers merge........
+
+Ies din Windows. Pe alta partitie este RH-8.0
+Ma duc in LINUX, RH-8.0, kernel-ul distributiei, nemodificat.
+Inserez modulele:
+1) modprobe usbcore # totul e OK
+2) modprobe usb-ohci # Sistemul imi spune:
+" usb.c: USB device 2 (vend/prod 0X678/0/2303) is not claimed by
+any actine driver.
+#si cele doua module sunt inserate.
+3) Instalez scriptul celor de la ZAPP ( install_hy.sh, e functional, la
+slujba lucreaza excelent)
+4) Incerc conectarea si dau comanda "zapp"
+Modific (de nervi) in /etc/ppp/peers/hyundai-zappmobile de la /dev/ttyUSB0
+pina la /dev/tty/USB4
+si nimic bun, in tail -f /var/log/messages imi zice:
+"Failed to open /dev/ttyUSB0 (#sau cit o fi): No such device.
+Am incercat si pe /dev/ttyS0.......3 si zice:
+Can't get terminal parameters: Input output error
+
+Va rog indrumati-ma si spuneti-mi ce sa fac ca sa lucreze ZAPP-ul  (si) in
+linux, (ca in windows e clar ca e OK ) ??
+
+Va multumesc
+
+
+
+
+---
+Pentru dezabonare, trimiteti mail la 
+listar@lug.ro cu subiectul 'unsubscribe rlug'.
+REGULI, arhive si alte informatii: http://www.lug.ro/mlist/
+
+
+
+
+
+From news@gmane.org Tue Mar 04 03:33:20 2003
+From: lonely wolf <wolfy@pcnet.ro>
+Subject: Re: RH 8.0 boot floppy
+Date: Fri, 07 Feb 2003 19:21:04 +0200
+Lines: 27
+Sender: rlug-bounce@lug.ro
+Message-ID: <3E43EB00.7040006@pcnet.ro>
+References: <3E43BB6D.8080601@myrealbox.com> <3E43BC3C.4050608@apsro.com> <3E43BE1C.9020602@myrealbox.com> <3E43BEC3.5060903@apsro.com>
+Reply-To: rlug@lug.ro
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <rlug-bounce@lug.ro>
+Received: from lug.lug.ro ([193.226.140.220])
+	by main.gmane.org with esmtp (Exim 3.35 #1 (Debian))
+	id 18hCBB-0001J4-00
+	for <gourg-rlug@gmane.org>; Fri, 07 Feb 2003 18:20:45 +0100
+Received: from lug.lug.ro (localhost.localdomain [127.0.0.1])
+	by lug.lug.ro (Postfix) with ESMTP
+	id 63CDE32D58; Fri,  7 Feb 2003 19:21:17 +0200 (EET)
+Received: with LISTAR (v0.129a; list rlug); Fri, 07 Feb 2003 19:21:16 +0200 (EET)
+Delivered-To: rlug@lug.ro
+Received: from mail.nobugconsulting.ro (nobugconsulting.ro [213.157.160.38])
+	by lug.lug.ro (Postfix) with ESMTP id 4F31632CC7
+	for <rlug@lug.ro>; Fri,  7 Feb 2003 19:21:14 +0200 (EET)
+Received: from 127.0.0.1 (localhost.localdomain [127.0.0.1])
+	by buick.nobugconsulting.ro (Postfix) with SMTP id 146354EDCE
+	for <rlug@lug.ro>; Fri,  7 Feb 2003 19:21:04 +0200 (EET)
+Received: from pcnet.ro (unknown [192.168.1.2])
+	by mail.nobugconsulting.ro (Postfix) with ESMTP id DC16D4ED96
+	for <rlug@lug.ro>; Fri,  7 Feb 2003 19:21:03 +0200 (EET)
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.0.2) Gecko/20021120 Netscape/7.01
+X-Accept-Language: en-us, fr, ro
+To: rlug@lug.ro
+X-archive-position: 23609
+X-listar-version: Listar v0.129a
+Errors-To: rlug-bounce@lug.ro
+X-original-sender: wolfy@pcnet.ro
+Precedence: bulk
+X-list: rlug
+
+Nicu Buculei wrote:
+> Daniel Pavel a scris, in 2/7/03 4:09 PM:
+> 
+>> :) nu _am_ CD-ul de instalare...  Imaginea am luat-o de pe un rh mirror.
+> 
+>                                     ^^^^^^^^
+> 
+> si ce ai facut cu imaginea ? nu ai tras-o pe cd ?
+> 
+
+ia cu incredere o discheta de 1.44 (sper ca macar floppy ai), scrie pe 
+ea bootnet.img copiat de pe net si apoi (multumindu-i in gind lui cioby) 
+zici asa:
+- linux rescue (la lilo prompt)
+- alegi ftp ca modalitate de lucru
+- ftp.ines.ro (server)
+- /pub/linux/distributions/redhat-8.0/ftpinstall (path catre distributie)
+
+
+
+---
+Pentru dezabonare, trimiteti mail la 
+listar@lug.ro cu subiectul 'unsubscribe rlug'.
+REGULI, arhive si alte informatii: http://www.lug.ro/mlist/
+
+
+
+
+
+From news@gmane.org Tue Mar 04 03:33:20 2003
+From: Adrian Rapa <adrian@dtedu.net>
+Subject: Qmail mysql virtualusers +ssl + smtp auth +pop3
+Date: Fri, 7 Feb 2003 19:36:01 +0200
+Organization: Asociatia Studenteasca a Retelelor din Drumul Taberei
+Lines: 12
+Sender: rlug-bounce@lug.ro
+Message-ID: <20030207193601.2613a439.adrian@dtedu.net>
+Reply-To: rlug@lug.ro
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <rlug-bounce@lug.ro>
+Received: from lug.lug.ro ([193.226.140.220])
+	by main.gmane.org with esmtp (Exim 3.35 #1 (Debian))
+	id 18hCPk-0002ZW-00
+	for <gourg-rlug@gmane.org>; Fri, 07 Feb 2003 18:35:48 +0100
+Received: from lug.lug.ro (localhost.localdomain [127.0.0.1])
+	by lug.lug.ro (Postfix) with ESMTP
+	id DC08032D8E; Fri,  7 Feb 2003 19:36:21 +0200 (EET)
+Received: with LISTAR (v0.129a; list rlug); Fri, 07 Feb 2003 19:36:20 +0200 (EET)
+Delivered-To: rlug@lug.ro
+Received: from www.dtedu.net (tabara.imago.ro [193.254.242.5])
+	by lug.lug.ro (Postfix) with SMTP id 3794D32CC7
+	for <rlug@lug.ro>; Fri,  7 Feb 2003 19:36:17 +0200 (EET)
+Received: (qmail 10170 invoked from network); 7 Feb 2003 17:36:02 -0000
+Received: from games.tabara.net (HELO games) (10.39.2.5)
+  by tabara.imago.ro with SMTP; 7 Feb 2003 17:36:02 -0000
+To: rlug@lug.ro
+X-Mailer: Sylpheed version 0.8.9 (GTK+ 1.2.10; i686-pc-linux-gnu)
+X-archive-position: 23610
+X-listar-version: Listar v0.129a
+Errors-To: rlug-bounce@lug.ro
+X-original-sender: adrian@dtedu.net
+Precedence: bulk
+X-list: rlug
+
+Salut,
+poate cineva sa imi dea combinatia aceasta? am incercat sa pun patchurile dar dadeau erori
+
+
+Adrian Rapa
+---
+Pentru dezabonare, trimiteti mail la 
+listar@lug.ro cu subiectul 'unsubscribe rlug'.
+REGULI, arhive si alte informatii: http://www.lug.ro/mlist/
+
+
+
+
+
+From news@gmane.org Tue Mar 04 03:33:20 2003
+From: teo.55@home.ro
+Subject: Re: Din windows ma pot, din LINUX NU ma pot conecta (la ZAPP)
+Date: Sat, 8 Feb 2003 01:41:31 +0200
+Lines: 25
+Sender: rlug-bounce@lug.ro
+Message-ID: <20030208014131.00fd30ce.teo.55@home.ro>
+References: <001401c2cec7$4eb5b460$941c10ac@ok6f6gr01ta4hv>
+Reply-To: rlug@lug.ro
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <rlug-bounce@lug.ro>
+Received: from lug.lug.ro ([193.226.140.220])
+	by main.gmane.org with esmtp (Exim 3.35 #1 (Debian))
+	id 18hI9b-0003OX-00
+	for <gourg-rlug@gmane.org>; Sat, 08 Feb 2003 00:43:31 +0100
+Received: from lug.lug.ro (localhost.localdomain [127.0.0.1])
+	by lug.lug.ro (Postfix) with ESMTP
+	id 6064032D4F; Sat,  8 Feb 2003 01:44:08 +0200 (EET)
+Received: with LISTAR (v0.129a; list rlug); Sat, 08 Feb 2003 01:44:07 +0200 (EET)
+Delivered-To: rlug@lug.ro
+Received: from s1.home.ro (home.rdsnet.ro [193.231.236.40])
+	by lug.lug.ro (Postfix) with SMTP id 0EEE832D02
+	for <rlug@lug.ro>; Sat,  8 Feb 2003 01:44:05 +0200 (EET)
+Received: (qmail 3538 invoked from network); 7 Feb 2003 23:37:23 -0000
+Received: from unknown (HELO linbox) (213.233.108.98)
+  by s1.home.ro with SMTP; 7 Feb 2003 23:37:23 -0000
+To: rlug@lug.ro
+In-Reply-To: <001401c2cec7$4eb5b460$941c10ac@ok6f6gr01ta4hv>
+X-Mailer: Sylpheed version 0.8.6 (GTK+ 1.2.10; i686-pc-linux-gnu)
+X-archive-position: 23611
+X-listar-version: Listar v0.129a
+Errors-To: rlug-bounce@lug.ro
+X-original-sender: teo.55@home.ro
+Precedence: bulk
+X-list: rlug
+
+On Fri, 7 Feb 2003 18:35:25 +0200
+"mmihai" <mmihai@netcompsj.ro> wrote:
+
+> Buna Ziua tuturor,
+> 
+> Am o placa de baza, cu mare probabilitate J-542B, Chipset Ali
+> M1542/M1543, Aladdin-V chipset.
+> Vreau sa ma conectez la ZAPP, din Linux, pe portul USB
+> Un lucru este absolut cert: portul exista si este functional intrucit
+> ma pot conecta din XP.
+> In Control Panel-ul din XP la "Sectiunea USB" scrie:
+> 
+pl2303.o ?
+ai modulul pentru cipul ala de pe cablu ?
+compileaza, insereaza, bla...
+apoi merge
+
+
+---
+Pentru dezabonare, trimiteti mail la 
+listar@lug.ro cu subiectul 'unsubscribe rlug'.
+REGULI, arhive si alte informatii: http://www.lug.ro/mlist/
+
+
+
+
+
+From news@gmane.org Tue Mar 04 03:33:20 2003
+From: "Dragosh M." <dragosh@lsd.ro>
+Subject: LSTP problem - solved
+Date: 08 Feb 2003 01:58:32 +0200
+Lines: 27
+Sender: rlug-bounce@lug.ro
+Message-ID: <1044662313.5121.17.camel@snow.lsd.ro>
+Reply-To: rlug@lug.ro
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <rlug-bounce@lug.ro>
+Received: from lug.lug.ro ([193.226.140.220])
+	by main.gmane.org with esmtp (Exim 3.35 #1 (Debian))
+	id 18hIID-0003pf-00
+	for <gourg-rlug@gmane.org>; Sat, 08 Feb 2003 00:52:25 +0100
+Received: from lug.lug.ro (localhost.localdomain [127.0.0.1])
+	by lug.lug.ro (Postfix) with ESMTP
+	id 461C532D55; Sat,  8 Feb 2003 01:53:03 +0200 (EET)
+Received: with LISTAR (v0.129a; list rlug); Sat, 08 Feb 2003 01:53:02 +0200 (EET)
+Delivered-To: rlug@lug.ro
+Received: from rdsnet.ro (mail.rdsnet.ro [193.231.236.16])
+	by lug.lug.ro (Postfix) with SMTP id F315032D02
+	for <rlug@lug.ro>; Sat,  8 Feb 2003 01:52:59 +0200 (EET)
+Received: (qmail 5162 invoked from network); 7 Feb 2003 23:52:49 -0000
+Received: from unknown (HELO snow.lsd.ro) (81.196.12.127)
+  by mail.rdsnet.ro with SMTP; 7 Feb 2003 23:52:49 -0000
+To: rlug@lug.ro
+X-Mailer: Ximian Evolution 1.0.8 (1.0.8-10) 
+X-archive-position: 23612
+X-listar-version: Listar v0.129a
+Errors-To: rlug-bounce@lug.ro
+X-original-sender: dragosh@lsd.ro
+Precedence: bulk
+X-list: rlug
+
+In sfarsit am rezolvat crapu, cu ajutorul lui James McQuillan (taticul
+LTSP). E foarte simplu si foarte nedocumentat, 16 mega NU sunt
+suficienti pentru o statie desi peste tot se zice ca si 8 sunt ok, motiv
+pentru care e imperativ necesar sa se foloseasca swap-over-NFS care
+merge super bine (stiu ca majoritatea au o reticenta in a folosi
+swap/nfs, don't be shy, it rocks). Am mai adaugat 64 de ram pe NFS si
+acum rupe tovarashu' terminal, am load 2 la server si totul merge f
+bine.  
+Un 32 de MB sunt minim, 8/16 cat are sistemul + 32 e safe. 
+Sper ca observatia asta sa apara in viitoarea versiune a documentatiei
+ce vine cu LTSP, cel putin asa mi s-a promis.
+
+You've got yourself a happy smilin' motherfucker.
+
+Good fight, good night.
+
+Dragosh "smilin'" M.
+-- 
+I/O error while opening .signature file
+
+---
+Pentru dezabonare, trimiteti mail la 
+listar@lug.ro cu subiectul 'unsubscribe rlug'.
+REGULI, arhive si alte informatii: http://www.lug.ro/mlist/
+
+
+
+
+
+

@@ -1,0 +1,69 @@
+From: lonely wolf <wolfy@pcnet.ro>
+Subject: Re: RH 8.0 boot floppy
+Date: Fri, 07 Feb 2003 19:21:04 +0200
+Lines: 27
+Sender: rlug-bounce@lug.ro
+Message-ID: <3E43EB00.7040006@pcnet.ro>
+References: <3E43BB6D.8080601@myrealbox.com> <3E43BC3C.4050608@apsro.com> <3E43BE1C.9020602@myrealbox.com> <3E43BEC3.5060903@apsro.com>
+Reply-To: rlug@lug.ro
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <rlug-bounce@lug.ro>
+Received: from lug.lug.ro ([193.226.140.220])
+	by main.gmane.org with esmtp (Exim 3.35 #1 (Debian))
+	id 18hCBB-0001J4-00
+	for <gourg-rlug@gmane.org>; Fri, 07 Feb 2003 18:20:45 +0100
+Received: from lug.lug.ro (localhost.localdomain [127.0.0.1])
+	by lug.lug.ro (Postfix) with ESMTP
+	id 63CDE32D58; Fri,  7 Feb 2003 19:21:17 +0200 (EET)
+Received: with LISTAR (v0.129a; list rlug); Fri, 07 Feb 2003 19:21:16 +0200 (EET)
+Delivered-To: rlug@lug.ro
+Received: from mail.nobugconsulting.ro (nobugconsulting.ro [213.157.160.38])
+	by lug.lug.ro (Postfix) with ESMTP id 4F31632CC7
+	for <rlug@lug.ro>; Fri,  7 Feb 2003 19:21:14 +0200 (EET)
+Received: from 127.0.0.1 (localhost.localdomain [127.0.0.1])
+	by buick.nobugconsulting.ro (Postfix) with SMTP id 146354EDCE
+	for <rlug@lug.ro>; Fri,  7 Feb 2003 19:21:04 +0200 (EET)
+Received: from pcnet.ro (unknown [192.168.1.2])
+	by mail.nobugconsulting.ro (Postfix) with ESMTP id DC16D4ED96
+	for <rlug@lug.ro>; Fri,  7 Feb 2003 19:21:03 +0200 (EET)
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.0.2) Gecko/20021120 Netscape/7.01
+X-Accept-Language: en-us, fr, ro
+To: rlug@lug.ro
+X-archive-position: 23609
+X-listar-version: Listar v0.129a
+Errors-To: rlug-bounce@lug.ro
+X-original-sender: wolfy@pcnet.ro
+Precedence: bulk
+X-list: rlug
+
+Nicu Buculei wrote:
+> Daniel Pavel a scris, in 2/7/03 4:09 PM:
+> 
+>> :) nu _am_ CD-ul de instalare...  Imaginea am luat-o de pe un rh mirror.
+> 
+>                                     ^^^^^^^^
+> 
+> si ce ai facut cu imaginea ? nu ai tras-o pe cd ?
+> 
+
+ia cu incredere o discheta de 1.44 (sper ca macar floppy ai), scrie pe 
+ea bootnet.img copiat de pe net si apoi (multumindu-i in gind lui cioby) 
+zici asa:
+- linux rescue (la lilo prompt)
+- alegi ftp ca modalitate de lucru
+- ftp.ines.ro (server)
+- /pub/linux/distributions/redhat-8.0/ftpinstall (path catre distributie)
+
+
+
+---
+Pentru dezabonare, trimiteti mail la 
+listar@lug.ro cu subiectul 'unsubscribe rlug'.
+REGULI, arhive si alte informatii: http://www.lug.ro/mlist/
+
+
+
+
+

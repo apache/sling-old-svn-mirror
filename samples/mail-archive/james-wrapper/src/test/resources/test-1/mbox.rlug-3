@@ -1,0 +1,64 @@
+From: teo.55@home.ro
+Subject: Re: Din windows ma pot, din LINUX NU ma pot conecta (la ZAPP)
+Date: Sat, 8 Feb 2003 01:41:31 +0200
+Lines: 25
+Sender: rlug-bounce@lug.ro
+Message-ID: <20030208014131.00fd30ce.teo.55@home.ro>
+References: <001401c2cec7$4eb5b460$941c10ac@ok6f6gr01ta4hv>
+Reply-To: rlug@lug.ro
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <rlug-bounce@lug.ro>
+Received: from lug.lug.ro ([193.226.140.220])
+	by main.gmane.org with esmtp (Exim 3.35 #1 (Debian))
+	id 18hI9b-0003OX-00
+	for <gourg-rlug@gmane.org>; Sat, 08 Feb 2003 00:43:31 +0100
+Received: from lug.lug.ro (localhost.localdomain [127.0.0.1])
+	by lug.lug.ro (Postfix) with ESMTP
+	id 6064032D4F; Sat,  8 Feb 2003 01:44:08 +0200 (EET)
+Received: with LISTAR (v0.129a; list rlug); Sat, 08 Feb 2003 01:44:07 +0200 (EET)
+Delivered-To: rlug@lug.ro
+Received: from s1.home.ro (home.rdsnet.ro [193.231.236.40])
+	by lug.lug.ro (Postfix) with SMTP id 0EEE832D02
+	for <rlug@lug.ro>; Sat,  8 Feb 2003 01:44:05 +0200 (EET)
+Received: (qmail 3538 invoked from network); 7 Feb 2003 23:37:23 -0000
+Received: from unknown (HELO linbox) (213.233.108.98)
+  by s1.home.ro with SMTP; 7 Feb 2003 23:37:23 -0000
+To: rlug@lug.ro
+In-Reply-To: <001401c2cec7$4eb5b460$941c10ac@ok6f6gr01ta4hv>
+X-Mailer: Sylpheed version 0.8.6 (GTK+ 1.2.10; i686-pc-linux-gnu)
+X-archive-position: 23611
+X-listar-version: Listar v0.129a
+Errors-To: rlug-bounce@lug.ro
+X-original-sender: teo.55@home.ro
+Precedence: bulk
+X-list: rlug
+
+On Fri, 7 Feb 2003 18:35:25 +0200
+"mmihai" <mmihai@netcompsj.ro> wrote:
+
+> Buna Ziua tuturor,
+> 
+> Am o placa de baza, cu mare probabilitate J-542B, Chipset Ali
+> M1542/M1543, Aladdin-V chipset.
+> Vreau sa ma conectez la ZAPP, din Linux, pe portul USB
+> Un lucru este absolut cert: portul exista si este functional intrucit
+> ma pot conecta din XP.
+> In Control Panel-ul din XP la "Sectiunea USB" scrie:
+> 
+pl2303.o ?
+ai modulul pentru cipul ala de pe cablu ?
+compileaza, insereaza, bla...
+apoi merge
+
+
+---
+Pentru dezabonare, trimiteti mail la 
+listar@lug.ro cu subiectul 'unsubscribe rlug'.
+REGULI, arhive si alte informatii: http://www.lug.ro/mlist/
+
+
+
+
+

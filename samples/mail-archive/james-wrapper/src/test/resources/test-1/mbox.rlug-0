@@ -1,0 +1,93 @@
+From: "mmihai" <mmihai@netcompsj.ro>
+Subject: Din windows ma pot, din LINUX NU ma pot conecta (la ZAPP)
+Date: Fri, 7 Feb 2003 18:35:25 +0200
+Lines: 45
+Sender: rlug-bounce@lug.ro
+Message-ID: <001401c2cec7$4eb5b460$941c10ac@ok6f6gr01ta4hv>
+Reply-To: rlug@lug.ro
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-2"
+Content-Transfer-Encoding: 7bit
+Return-path: <rlug-bounce@lug.ro>
+Received: from lug.lug.ro ([193.226.140.220])
+	by main.gmane.org with esmtp (Exim 3.35 #1 (Debian))
+	id 18hBoh-0007L5-00
+	for <gourg-rlug@gmane.org>; Fri, 07 Feb 2003 17:57:31 +0100
+Received: from lug.lug.ro (localhost.localdomain [127.0.0.1])
+	by lug.lug.ro (Postfix) with ESMTP
+	id 70A5332D87; Fri,  7 Feb 2003 18:38:06 +0200 (EET)
+Received: with LISTAR (v0.129a; list rlug); Fri, 07 Feb 2003 18:38:05 +0200 (EET)
+Delivered-To: rlug@lug.ro
+Received: from ns.zappmobile.ro (ns.zapp.ro [80.96.151.2])
+	by lug.lug.ro (Postfix) with ESMTP id 2C3BD32CC7
+	for <rlug@lug.ro>; Fri,  7 Feb 2003 18:38:02 +0200 (EET)
+Received: from mail.zappmobile.ro (mail-server.zappmobile.ro [172.31.254.14])
+	by ns.zappmobile.ro (Postfix) with ESMTP id AFDC2490D
+	for <rlug@lug.ro>; Fri,  7 Feb 2003 18:37:48 +0200 (EET)
+Received: from localhost (localhost [127.0.0.1])
+	by mail.zappmobile.ro (Postfix) with ESMTP
+	id 994A6A0BB1; Fri,  7 Feb 2003 18:37:12 +0200 (EET)
+Received: from ok6f6gr01ta4hv (unknown [172.16.28.148])
+	by mail.zappmobile.ro (Postfix) with SMTP id 292599D67B
+	for <rlug@lug.ro>; Fri,  7 Feb 2003 18:37:09 +0200 (EET)
+To: <rlug@lug.ro>
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2600.0000
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2600.0000
+X-Virus-Scanned: by AMaViS perl-11
+X-archive-position: 23608
+X-listar-version: Listar v0.129a
+Errors-To: rlug-bounce@lug.ro
+X-original-sender: mmihai@netcompsj.ro
+Precedence: bulk
+X-list: rlug
+
+Buna Ziua tuturor,
+
+Am o placa de baza, cu mare probabilitate J-542B, Chipset Ali M1542/M1543,
+Aladdin-V chipset.
+Vreau sa ma conectez la ZAPP, din Linux, pe portul USB
+Un lucru este absolut cert: portul exista si este functional intrucit ma pot
+conecta din XP.
+In Control Panel-ul din XP la "Sectiunea USB" scrie:
+ALI PCI to USB Open Host Controller
+USB Root Hub # Iar sistemul il asigneaza pe COM 4 !!??!!
+L-am lasat in pace ca de mers merge........
+
+Ies din Windows. Pe alta partitie este RH-8.0
+Ma duc in LINUX, RH-8.0, kernel-ul distributiei, nemodificat.
+Inserez modulele:
+1) modprobe usbcore # totul e OK
+2) modprobe usb-ohci # Sistemul imi spune:
+" usb.c: USB device 2 (vend/prod 0X678/0/2303) is not claimed by
+any actine driver.
+#si cele doua module sunt inserate.
+3) Instalez scriptul celor de la ZAPP ( install_hy.sh, e functional, la
+slujba lucreaza excelent)
+4) Incerc conectarea si dau comanda "zapp"
+Modific (de nervi) in /etc/ppp/peers/hyundai-zappmobile de la /dev/ttyUSB0
+pina la /dev/tty/USB4
+si nimic bun, in tail -f /var/log/messages imi zice:
+"Failed to open /dev/ttyUSB0 (#sau cit o fi): No such device.
+Am incercat si pe /dev/ttyS0.......3 si zice:
+Can't get terminal parameters: Input output error
+
+Va rog indrumati-ma si spuneti-mi ce sa fac ca sa lucreze ZAPP-ul  (si) in
+linux, (ca in windows e clar ca e OK ) ??
+
+Va multumesc
+
+
+
+
+---
+Pentru dezabonare, trimiteti mail la 
+listar@lug.ro cu subiectul 'unsubscribe rlug'.
+REGULI, arhive si alte informatii: http://www.lug.ro/mlist/
+
+
+
+
+
