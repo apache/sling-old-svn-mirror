@@ -71,6 +71,7 @@ public class MockResource extends AbstractResource {
         return this.resolver;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <AdapterType> AdapterType adaptTo(final Class<AdapterType> type) {
         if ( type == ValueMap.class ) {
@@ -80,6 +81,11 @@ public class MockResource extends AbstractResource {
             return (AdapterType)new ModifiableValueMapDecorator(this.props);
         }
         return super.adaptTo(type);
+    }
+
+    @Override
+    public ValueMap getValueMap() {
+        return new ValueMapDecorator(this.props);
     }
 
     @Override

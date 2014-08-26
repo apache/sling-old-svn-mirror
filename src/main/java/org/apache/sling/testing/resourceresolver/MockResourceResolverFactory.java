@@ -21,6 +21,7 @@ package org.apache.sling.testing.resourceresolver;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Stack;
 
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -63,18 +64,54 @@ public class MockResourceResolverFactory implements ResourceResolverFactory {
     @Override
     public ResourceResolver getResourceResolver(
             final Map<String, Object> authenticationInfo) throws LoginException {
-        return new MockResourceResolver(options, resources);
+        final ResourceResolver result = new MockResourceResolver(options, this, resources);
+        Stack<ResourceResolver> resolverStack = resolverStackHolder.get();
+        if ( resolverStack == null ) {
+            resolverStack = new Stack<ResourceResolver>();
+            resolverStackHolder.set(resolverStack);
+        }
+        resolverStack.push(result);
+        return result;
     }
 
     @Override
     public ResourceResolver getAdministrativeResourceResolver(
             final Map<String, Object> authenticationInfo) throws LoginException {
-        return new MockResourceResolver(options, resources);
+        return new MockResourceResolver(options, this, resources);
     }
 
     @Override
     public ResourceResolver getServiceResourceResolver(
             Map<String, Object> authenticationInfo) throws LoginException {
-        return new MockResourceResolver(options, resources);
+        return new MockResourceResolver(options, this, resources);
+    }
+
+    /**
+     * Thread local holding the resource resolver stack
+     */
+    private ThreadLocal<Stack<ResourceResolver>> resolverStackHolder = new ThreadLocal<Stack<ResourceResolver>>();
+
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolverFactory#getThreadResourceResolver()
+     */
+    @Override
+    public ResourceResolver getThreadResourceResolver() {
+        ResourceResolver result = null;
+        final Stack<ResourceResolver> resolverStack = resolverStackHolder.get();
+        if ( resolverStack != null && !resolverStack.isEmpty() ) {
+            result = resolverStack.peek();
+        }
+        return result;
+    }
+
+    /**
+     * Inform about a closed resource resolver.
+     * Make sure to remove it from the current thread context.
+     */
+    public void closed(final ResourceResolver resourceResolverImpl) {
+        final Stack<ResourceResolver> resolverStack = resolverStackHolder.get();
+        if ( resolverStack != null ) {
+            resolverStack.remove(resourceResolverImpl);
+        }
     }
 }
