@@ -8,6 +8,6 @@
         "sling:resourceSuperType=sling/replication/service",
         "name={name}",
 
-        "queue/sling:resourceType=replication/agent/queue"
+        "queue/sling:resourceType=sling/replication/service/agent/queue"
     ]
 }

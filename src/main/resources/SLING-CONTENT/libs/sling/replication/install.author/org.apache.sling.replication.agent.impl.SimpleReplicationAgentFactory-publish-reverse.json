@@ -1,10 +1,11 @@
 {
-    "jcr:primaryType" : "sling:OsgiConfig",
-    "name" : "agents/publish-reverse",
-    "ReplicationPackageExporter.target" : "(name=exporters/remote/publish)",
-    "ReplicationPackageImporter.target" : "(name=importers/local/default)",
-    "ReplicationQueueProvider.target" : "(name=sjh)",
-    "ReplicationQueueDistributionStrategy.target" : "(name=error)",
-    "rules" : ["scheduled poll every 30 sec"],
-    "runModes" : ["author"]
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "agents/publish-reverse",
+    "ReplicationPackageExporter.target": "(name=exporters/remote/publish)",
+    "ReplicationPackageImporter.target": "(name=importers/local/default)",
+    "ReplicationQueueProvider.target": "(name=sjh)",
+    "ReplicationQueueDistributionStrategy.target": "(name=error)",
+    "rules": ["scheduled poll every 30 sec",
+        "remote trigger on http://localhost:4503/libs/sling/replication/services/triggers/content-event with user admin and password admin"],
+    "runModes": ["author"]
 }
