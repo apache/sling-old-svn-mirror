@@ -35,6 +35,7 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -118,7 +119,9 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider {
      * base name and <code>Locale</code> used to load and identify the
      * <code>ResourceBundle</code>.
      */
-    private final ConcurrentHashMap<Key, JcrResourceBundle> resourceBundleCache = new ConcurrentHashMap<JcrResourceBundleProvider.Key, JcrResourceBundle>();
+    private final ConcurrentHashMap<Key, JcrResourceBundle> resourceBundleCache = new ConcurrentHashMap<Key, JcrResourceBundle>();
+
+    private final ConcurrentHashMap<Key, Semaphore> loadingGuards = new ConcurrentHashMap<Key, Semaphore>();
 
     private final Set<String> languageRootPaths = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
 
@@ -296,46 +299,53 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider {
      *             created and the <code>ResourceResolver</code> is not
      *             available to access the resources.
      */
-    private ResourceBundle getResourceBundleInternal(String baseName,
-            Locale locale) {
-
+    private ResourceBundle getResourceBundleInternal(final String baseName, final Locale locale) {
         final Key key = new Key(baseName, locale);
         JcrResourceBundle resourceBundle = resourceBundleCache.get(key);
-
-        if (resourceBundle == null) {
-            log.debug(
-                "getResourceBundleInternal({}, {}): reading from Repository",
-                new Object[] { baseName, locale });
-            resourceBundle = createResourceBundle(baseName, locale);
-            if (resourceBundleCache.putIfAbsent(key, resourceBundle) != null) {
+        if (resourceBundle != null) {
+            log.debug("getResourceBundleInternal({}): got cache hit on first try", key);
+        } else {
+            if (loadingGuards.get(key) == null) {
+                loadingGuards.putIfAbsent(key, new Semaphore(1));
+            }
+            final Semaphore loadingGuard = loadingGuards.get(key);
+            try {
+                loadingGuard.acquire();
                 resourceBundle = resourceBundleCache.get(key);
-                log.debug(
-                    "getResourceBundleInternal({}, {}): duplicate creation, using existing ResourceBundle",
-                    new Object[] { baseName, locale
-                            });
-            } else {
-                Dictionary<Object, Object> serviceProps = new Hashtable<Object, Object>();
-                if (key.baseName != null) {
-                    serviceProps.put("baseName", key.baseName);
+                if (resourceBundle != null) {
+                    log.debug("getResourceBundleInternal({}): got cache hit on second try", key);
+                } else {
+                    log.debug("getResourceBundleInternal({}): reading from Repository", key);
+                    resourceBundle = createResourceBundle(key.baseName, key.locale);
+                    resourceBundleCache.put(key, resourceBundle);
+                    registerResourceBundle(key, resourceBundle);
                 }
-                serviceProps.put("locale", key.locale.toString());
-                ServiceRegistration serviceReg = bundleContext.registerService(ResourceBundle.class.getName(),
-                    resourceBundle, serviceProps);
-                synchronized (this) {
-                    bundleServiceRegistrations.add(serviceReg);
-                }
-
-                // register language root paths
-                languageRootPaths.addAll(resourceBundle.getLanguageRootPaths());
+            } catch (InterruptedException e) {
+                Thread.interrupted();
+            } finally {
+                loadingGuard.release();
             }
         }
+        log.trace("getResourceBundleInternal({}) ==> {}", key, resourceBundle);
+        return resourceBundle;
+    }
 
-        if (log.isDebugEnabled()) {
-            log.debug("getResourceBundleInternal({}, {}) ==> {}", new Object[] {
-                baseName, locale, resourceBundle });
+    private void registerResourceBundle(Key key, JcrResourceBundle resourceBundle) {
+        Dictionary<Object, Object> serviceProps = new Hashtable<Object, Object>();
+        if (key.baseName != null) {
+            serviceProps.put("baseName", key.baseName);
+        }
+        serviceProps.put("locale", key.locale.toString());
+        ServiceRegistration serviceReg = bundleContext.registerService(ResourceBundle.class.getName(),
+                resourceBundle, serviceProps);
+        synchronized (this) {
+            bundleServiceRegistrations.add(serviceReg);
         }
 
-        return resourceBundle;
+        // register language root paths
+        final Set<String> languageRoots = resourceBundle.getLanguageRootPaths();
+        languageRootPaths.addAll(languageRoots);
+        log.debug("registerResourceBundle({}, ...): added service registration and language roots {}", key, languageRoots);
     }
 
     /**
@@ -353,8 +363,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider {
                 "ResourceResolver not available", getClass().getName(), "");
         }
 
-        JcrResourceBundle bundle = new JcrResourceBundle(locale, baseName,
-            resolver);
+        final JcrResourceBundle bundle = new JcrResourceBundle(locale, baseName, resolver);
 
         // set parent resource bundle
         Locale parentLocale = getParentLocale(locale);
@@ -489,7 +498,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider {
         if (preloadBundles) {
             @SuppressWarnings("deprecation")
             Iterator<Map<String, Object>> bundles = getResourceResolver().queryResources(
-                    "//element(*,mix:language)", Query.XPATH);
+                    JcrResourceBundle.QUERY_LANGUAGE_ROOTS, Query.XPATH);
             Set<Key> usedKeys = new HashSet<Key>();
             while (bundles.hasNext()) {
                 Map<String,Object> bundle = bundles.next();
@@ -609,8 +618,8 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider {
     //---------- internal class
 
     /**
-     * The <code>Key</code> class encapsulates the base name and Locale for the
-     * key of the {@link #resourceBundleCache} map.
+     * The <code>Key</code> class encapsulates the base name and Locale in a
+     * single object that can be used as the key in a <code>HashMap</code>.
      */
     private static class Key {
 
@@ -620,7 +629,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider {
 
         // precomputed hash code, because this will always be used due to
         // this instance being used as a key in a HashMap.
-        final int hashCode;
+        private final int hashCode;
 
         Key(final String baseName, final Locale locale) {
 
@@ -664,6 +673,11 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider {
                 return false;
             }
             return true;
+        }
+
+        @Override
+        public String toString() {
+            return "Key(" + baseName + ", " + locale + ")";
         }
     }
 }
