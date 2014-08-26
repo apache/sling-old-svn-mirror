@@ -6,10 +6,8 @@ contributed by Igor Bogomolov who wrote it as part of an internship,
 and meant to create a useful mail archive server that also serves
 as a more complex Sling sample.
 
-To run this, install the dom, core and mbox bundles from the 
-http://james.apache.org/mime4j/ project on a trunk Sling launchpad
-instance, and install the bundles provided by this module. Note the
-MIME4J-231 issue when building the Mime4J bundles.
+To run this, and install the bundles provided by this module in a 
+Sling Launchpad (trunk) instance.
 
 Then, start at http://localhost:8080/mailarchiveserver/import.mbox.html
 to import a few mbox files, you can find some at 

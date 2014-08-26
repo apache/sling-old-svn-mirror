@@ -103,27 +103,21 @@
     </build>
     <dependencies>
         <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>apache-mime4j-core</artifactId>
-            <version>0.8.0-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>apache-mime4j-mbox-iterator</artifactId>
-            <version>0.8.0-SNAPSHOT</version>
+		    <groupId>org.apache.sling</groupId>
+		    <artifactId>org.apache.sling.mailarchive.james.wrapper</artifactId>
+		    <version>0.1.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.james</groupId>
             <artifactId>apache-mime4j-dom</artifactId>
-            <version>0.8.0-SNAPSHOT</version>
+            <version>0.7.2</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.james</groupId>
             <artifactId>apache-mime4j-storage</artifactId>
-            <version>0.8.0-SNAPSHOT</version>
+            <version>0.7.2</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
