@@ -22,10 +22,8 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Service;
+
+import org.apache.felix.scr.annotations.*;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.replication.agent.AgentReplicationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
@@ -55,6 +53,9 @@ public class TriggerPathReplicationRule implements ReplicationRule {
 
     private BundleContext bundleContext;
     private final Map<String, ServiceRegistration> registrations = new HashMap<String, ServiceRegistration>();
+
+    @Property(label = "Name", value = "trigger", propertyPrivate = true)
+    private static final String NAME = "name";
 
     @Activate
     protected void activate(BundleContext bundleContext) {

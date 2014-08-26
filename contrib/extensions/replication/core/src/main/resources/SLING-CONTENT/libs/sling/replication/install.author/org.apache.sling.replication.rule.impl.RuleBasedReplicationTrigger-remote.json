@@ -1,0 +1,7 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "name": "triggers/rule/remote",
+
+    "ReplicationRule.target" : "(name=remote)",
+    "ruleString" : "remote trigger on http://localhost:4503/libs/sling/replication/services/triggers/content-event with user admin and password admin"
+}
