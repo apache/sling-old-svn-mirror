@@ -48,8 +48,12 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
 
     private final MockResourceResolverFactoryOptions options;
 
+    private final MockResourceResolverFactory factory;
+
     public MockResourceResolver(final MockResourceResolverFactoryOptions options,
+            final MockResourceResolverFactory factory,
             final Map<String, Map<String, Object>> resources) {
+        this.factory = factory;
         this.options = options;
         this.resources = resources;
     }
@@ -193,7 +197,7 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
 
     @Override
     public void close() {
-        // nothing to do
+        this.factory.closed(this);
     }
 
     @Override
