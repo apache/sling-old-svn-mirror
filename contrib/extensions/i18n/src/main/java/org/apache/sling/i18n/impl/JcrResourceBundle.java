@@ -65,6 +65,8 @@ public class JcrResourceBundle extends ResourceBundle {
      */
     private static final String QUERY_MESSAGES_FORMAT = "/jcr:root%s//element(*,sling:Message)";
 
+    static final String QUERY_LANGUAGE_ROOTS = "//element(*,mix:language)[@jcr:language]";
+
     private final Map<String, Object> resources;
 
     private final Locale locale;
@@ -231,7 +233,7 @@ public class JcrResourceBundle extends ResourceBundle {
 
         Set<String> paths = new HashSet<String>();
         @SuppressWarnings("deprecation")
-        Iterator<Resource> bundles = resourceResolver.findResources("//element(*,mix:language)", Query.XPATH);
+        Iterator<Resource> bundles = resourceResolver.findResources(QUERY_LANGUAGE_ROOTS, Query.XPATH);
         while (bundles.hasNext()) {
             Resource bundle = bundles.next();
             ValueMap properties = bundle.adaptTo(ValueMap.class);
