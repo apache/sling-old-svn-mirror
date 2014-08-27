@@ -45,7 +45,6 @@ public abstract class ReplicationIntegrationTestBase {
         authorClient = new SlingClient(author.getServerBaseUrl(), author.getServerUsername(), author.getServerPassword());
         publishClient = new SlingClient(publish.getServerBaseUrl(), publish.getServerUsername(), publish.getServerPassword());
 
-
         try {
             // change the url for publish agent and wait for it to start
             String remoteImporterUrl = publish.getServerBaseUrl() + importerUrl("default");
