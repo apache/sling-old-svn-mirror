@@ -39,6 +39,9 @@ public class CrankstartContext {
     /** Name of the attribute that causes crankstart processing to stop */
     public static final String ATTR_STOP_CRANKSTART_PROCESSING = "crankstart.stop.processing";
 
+    /** Name of the attribute that signals a framework stop */
+    public static final String ATTR_STOP_OSGI_FRAMEWORK = "stop.osgi.framework";
+
     public void setOsgiFrameworkProperty(String key, String value) {
         osgiFrameworkProperties.put(key, value);
     }

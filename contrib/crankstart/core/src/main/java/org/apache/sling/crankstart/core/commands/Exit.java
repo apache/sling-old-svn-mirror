@@ -42,8 +42,8 @@ public class Exit implements CrankstartCommand {
     @Override
     public void execute(CrankstartContext crankstartContext, CrankstartCommandLine commandLine) throws Exception {
         if(Boolean.valueOf(commandLine.getQualifier())) {
-            log.info("Qualifier is true, stopping the OSGi framework");
-            crankstartContext.getOsgiFramework().stop();
+            log.info("Qualifier is true, OSGi framework will be stopped");
+            crankstartContext.setAttribute(CrankstartContext.ATTR_STOP_OSGI_FRAMEWORK, true);
         }
     }
 }

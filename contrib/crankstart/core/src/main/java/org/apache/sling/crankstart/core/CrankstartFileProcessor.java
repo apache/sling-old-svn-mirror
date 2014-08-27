@@ -82,7 +82,17 @@ public class CrankstartFileProcessor implements Callable<Object> {
             throw new CrankstartException("Missing system property " + CrankstartConstants.CRANKSTART_INPUT_FILENAME);
         }
         process(new FileReader(new File(inputFilename)));
-        waitForExit();
+        
+        if(crankstartContext.getAttribute(CrankstartContext.ATTR_STOP_OSGI_FRAMEWORK) != null) {
+            log.info("Stopping OSGi framework due to {} attribute (state={})", 
+                    CrankstartContext.ATTR_STOP_OSGI_FRAMEWORK,
+                    crankstartContext.getOsgiFramework().getState()
+                    );
+            crankstartContext.getOsgiFramework().stop();
+            System.exit(0);
+        } else {
+            waitForExit();
+        }
         return null;
     }
     
