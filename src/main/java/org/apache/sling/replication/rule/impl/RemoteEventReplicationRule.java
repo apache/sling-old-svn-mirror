@@ -21,7 +21,6 @@ package org.apache.sling.replication.rule.impl;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -43,37 +42,29 @@ import org.apache.http.nio.ContentDecoder;
 import org.apache.http.nio.IOControl;
 import org.apache.http.nio.protocol.BasicAsyncRequestProducer;
 import org.apache.http.nio.protocol.BasicAsyncResponseConsumer;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
-import org.apache.sling.replication.agent.AgentReplicationException;
-import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
-import org.apache.sling.replication.resources.ReplicationConstants;
 import org.apache.sling.replication.rule.ReplicationRequestHandler;
 import org.apache.sling.replication.rule.ReplicationRule;
-import org.apache.sling.replication.transport.ReplicationTransportHandler;
-import org.apache.sling.replication.transport.impl.ReplicationTransportConstants;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * {@link org.apache.sling.replication.rule.ReplicationRule} to trigger replication upon reception of server sent events
- * on a certain queue
+ * on a certain URL
  */
-@Component(immediate = true, label = "Rule for listening on Server Sent Events for Queues")
+@Component(immediate = true, label = "Rule for listening on Server Sent Events on a certain URL")
 @Service(value = ReplicationRule.class)
-public class ReplicateOnQueueEventRule implements ReplicationRule {
+public class RemoteEventReplicationRule implements ReplicationRule {
 
     @Property(label = "Name", value = "remote", propertyPrivate = true)
     private static final String NAME = "name";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private static final String SIGNATURE = "remote trigger on {path} with user {user} and password {password}";
+    private static final String SIGNATURE = "remote trigger on {host} with user {user} and password {password}";
 
     private static final String SIGNATURE_REGEX = "remote\\strigger\\son\\s([^\\s]+)\\swith\\suser\\s([^\\s]+)\\sand\\spassword\\s([^\\s]+)";
 
@@ -82,13 +73,10 @@ public class ReplicateOnQueueEventRule implements ReplicationRule {
     @Reference
     private Scheduler scheduler;
 
-    private BundleContext context;
-
     private Map<String, Future<HttpResponse>> requests;
 
     @Activate
-    protected void activate(BundleContext context, Map<String, ?> config) {
-        this.context = context;
+    protected void activate() {
         this.requests = new ConcurrentHashMap<String, Future<HttpResponse>>();
     }
 
@@ -103,24 +91,21 @@ public class ReplicateOnQueueEventRule implements ReplicationRule {
     public void apply(String handleId, ReplicationRequestHandler agent, String ruleString) {
         Matcher matcher = signaturePattern.matcher(ruleString);
         if (matcher.find()) {
-            String remotePath = matcher.group(1);
+            String remoteHost = matcher.group(1);
             String user = matcher.group(2);
             String password = matcher.group(3);
 
-
-
             try {
-                log.info("applying queue event replication rule");
+                log.info("applying remote event replication rule");
 
                 ScheduleOptions options = scheduler.NOW();
                 options.name(handleId);
-                scheduler.schedule(new EventBasedReplication(handleId, agent, remotePath, user, password), options);
+                scheduler.schedule(new EventBasedReplication(handleId, agent, remoteHost, user, password), options);
 
             } catch (Exception e) {
-                log.error("{}", e);
                 log.error("cannot apply rule {} to agent {}", ruleString, agent);
+                log.error("{}", e);
             }
-
         }
     }
 
@@ -136,24 +121,22 @@ public class ReplicateOnQueueEventRule implements ReplicationRule {
         private final String handleId;
         private final ReplicationRequestHandler agent;
 
-
         private SSEResponseConsumer(String handleId, ReplicationRequestHandler agent) {
             this.handleId = handleId;
             this.agent = agent;
-
         }
 
         @Override
         protected void onContentReceived(ContentDecoder decoder, IOControl ioctrl) throws IOException {
-            log.info("complete ? ", decoder.isCompleted());
+            log.debug("complete {}", decoder.isCompleted());
             ByteBuffer buffer = ByteBuffer.allocate(1024);
             decoder.read(buffer);
-            log.info("content {} received {},{}", new Object[]{buffer, decoder, ioctrl});
-            log.info("event received");
+            log.debug("content {} received {},{}", new Object[]{buffer, decoder, ioctrl});
 
-            ReplicationRequest replicationRequest = new ReplicationRequest(System.currentTimeMillis(), ReplicationActionType.POLL, null);
+            // TODO : currently it always triggers poll request on /, should this be configurable?
+            ReplicationRequest replicationRequest = new ReplicationRequest(System.currentTimeMillis(), ReplicationActionType.POLL, "/");
             agent.execute(replicationRequest);
-            log.info("replication request to agent {} sent ({} on {})", new Object[]{
+            log.info("replication request to agent {} sent ({} {})", new Object[]{
                     handleId,
                     replicationRequest.getAction(),
                     replicationRequest.getPaths()});
@@ -167,8 +150,6 @@ public class ReplicateOnQueueEventRule implements ReplicationRule {
             super.onResponseReceived(response);
         }
     }
-
-
 
     private class EventBasedReplication implements Runnable {
         private final String handleId;
@@ -187,14 +168,11 @@ public class ReplicateOnQueueEventRule implements ReplicationRule {
 
         public void run() {
             try {
-
-
-                log.info("getting event from {}", targetTransport + "?sec=600");
+                log.debug("getting events from {}", targetTransport);
 
                 URI eventEndpoint = URI.create(targetTransport);
 
-
-                log.info("preparing request");
+                log.debug("preparing request");
                 CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
                 credentialsProvider.setCredentials(
                         new AuthScope(eventEndpoint.getHost(), eventEndpoint.getPort()),
@@ -207,7 +185,7 @@ public class ReplicateOnQueueEventRule implements ReplicationRule {
                     HttpHost target = URIUtils.extractHost(get.getURI());
                     BasicAsyncRequestProducer basicAsyncRequestProducer = new BasicAsyncRequestProducer(target, get);
                     httpClient.start();
-                    log.info("sending request");
+                    log.debug("sending request");
                     Future<HttpResponse> futureResponse = httpClient.execute(
                             basicAsyncRequestProducer,
                             new SSEResponseConsumer(handleId, agent), null);
@@ -216,7 +194,7 @@ public class ReplicateOnQueueEventRule implements ReplicationRule {
                 } finally {
                     httpClient.close();
                 }
-                log.info("request finished");
+                log.debug("request finished");
             } catch (Exception e) {
                 log.error("cannot execute event based replication");
             }

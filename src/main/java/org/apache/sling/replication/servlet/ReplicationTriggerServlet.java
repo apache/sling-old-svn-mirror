@@ -18,32 +18,25 @@
  */
 package org.apache.sling.replication.servlet;
 
-import org.apache.felix.scr.annotations.*;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.communication.ReplicationRequest;
-import org.apache.sling.replication.event.ReplicationEvent;
-import org.apache.sling.replication.event.ReplicationEventType;
-import org.apache.sling.replication.resources.ReplicationConstants;
-import org.apache.sling.replication.rule.ReplicationRequestHandler;
-import org.apache.sling.replication.rule.ReplicationTrigger;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventConstants;
-import org.osgi.service.event.EventHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Arrays;
+import java.util.UUID;
+
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.servlets.SlingAllMethodsServlet;
+import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.rule.ReplicationRequestHandler;
+import org.apache.sling.replication.rule.ReplicationTrigger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Triggers Server Sent Events servlet
@@ -57,29 +50,23 @@ import java.util.concurrent.ConcurrentHashMap;
 })
 public class ReplicationTriggerServlet extends SlingAllMethodsServlet {
 
-    private final int MAX_NUMBER_OF_SECONDS = 3600;
-    private final int DEFAULT_NUMBER_OF_SECONDS = 60;
-    private final String HANDLER_NAME = "ReplicationTriggerServlet";
-
     private final Logger log = LoggerFactory.getLogger(getClass());
+
+    private final static int DEFAULT_NUMBER_OF_SECONDS = 60;
 
     @Override
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response)
             throws ServletException, IOException {
 
-        int seconds = DEFAULT_NUMBER_OF_SECONDS;
+        String secondsParameter = request.getParameter("sec");
 
-        try{
-            seconds = Integer.parseInt(request.getParameter("sec"));
+        int seconds = secondsParameter != null && secondsParameter.length() > 0 ? Integer.parseInt(secondsParameter) :
+                DEFAULT_NUMBER_OF_SECONDS;
 
-        } catch(Throwable e){
-
-        }
-
+        int MAX_NUMBER_OF_SECONDS = 3600;
         if (seconds > MAX_NUMBER_OF_SECONDS) {
             seconds = MAX_NUMBER_OF_SECONDS;
-        }
-        else if (seconds < 0) {
+        } else if (seconds < 0) {
             seconds = DEFAULT_NUMBER_OF_SECONDS;
         }
 
@@ -96,7 +83,7 @@ public class ReplicationTriggerServlet extends SlingAllMethodsServlet {
 
         final PrintWriter writer = response.getWriter();
 
-        String handlerId = HANDLER_NAME + UUID.randomUUID().toString();
+        String handlerId = "ReplicationTriggerServlet" + UUID.randomUUID().toString();
 
         replicationTrigger.register(handlerId, new ReplicationRequestHandler() {
             public void execute(ReplicationRequest request) {
@@ -123,10 +110,11 @@ public class ReplicationTriggerServlet extends SlingAllMethodsServlet {
         // write the actual data
         // this could be simple text or could be JSON-encoded text that the
         // client then decodes
-        writer.write("data: " + replicationRequest.getAction() + "\n\n");
+        writer.write("data: " + replicationRequest.getAction() + " " + Arrays.toString(replicationRequest.getPaths()) + "\n\n");
 
         // flush the buffers to make sure the container sends the bytes
         writer.flush();
-        log.debug("SSE event {}: {}", replicationRequest.getTime(), replicationRequest.getAction());
+        log.debug("SSE event {}: {} {}", new Object[]{replicationRequest.getTime(), replicationRequest.getAction(),
+                replicationRequest.getPaths()});
     }
 }
