@@ -18,14 +18,11 @@
  */
 package org.apache.sling.replication.rule.impl;
 
-import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.rule.ReplicationRequestHandler;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
 /**
