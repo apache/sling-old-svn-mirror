@@ -35,6 +35,7 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIUtils;
+import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
@@ -173,30 +174,46 @@ public class RemoteEventReplicationRule implements ReplicationRule {
                 URI eventEndpoint = URI.create(targetTransport);
 
                 log.debug("preparing request");
+
                 CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
                 credentialsProvider.setCredentials(
                         new AuthScope(eventEndpoint.getHost(), eventEndpoint.getPort()),
                         new UsernamePasswordCredentials(userName, password));
-                CloseableHttpAsyncClient httpClient = HttpAsyncClients.custom()
+                final CloseableHttpAsyncClient httpClient = HttpAsyncClients.custom()
                         .setDefaultCredentialsProvider(credentialsProvider)
                         .build();
+
+                HttpGet get = new HttpGet(eventEndpoint);
+                HttpHost target = URIUtils.extractHost(get.getURI());
+                BasicAsyncRequestProducer basicAsyncRequestProducer = new BasicAsyncRequestProducer(target, get);
+                httpClient.start();
                 try {
-                    HttpGet get = new HttpGet(eventEndpoint);
-                    HttpHost target = URIUtils.extractHost(get.getURI());
-                    BasicAsyncRequestProducer basicAsyncRequestProducer = new BasicAsyncRequestProducer(target, get);
-                    httpClient.start();
                     log.debug("sending request");
                     Future<HttpResponse> futureResponse = httpClient.execute(
                             basicAsyncRequestProducer,
-                            new SSEResponseConsumer(handleId, agent), null);
+                            new SSEResponseConsumer(handleId, agent), new FutureCallback<HttpResponse>() {
+                                public void completed(HttpResponse httpResponse) {
+                                    log.debug("response received {}", httpResponse);
+                                }
+
+                                public void failed(Exception e) {
+                                    log.warn("failed request {}", e.toString());
+                                }
+
+                                public void cancelled() {
+                                    log.warn("request cancelled");
+                                }
+                            });
                     requests.put(handleId, futureResponse);
                     futureResponse.get();
-                } finally {
-                    httpClient.close();
+
+                } catch (Exception e) {
+                    log.warn("cannot communicate with {} - {}", targetTransport, e);
                 }
+                httpClient.close();
                 log.debug("request finished");
             } catch (Exception e) {
-                log.error("cannot execute event based replication");
+                log.error("cannot run event based replication {}", e);
             }
         }
     }
