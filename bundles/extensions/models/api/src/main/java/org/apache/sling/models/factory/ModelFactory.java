@@ -13,8 +13,8 @@ public interface ModelFactory {
      * @param type the class to instantiate
      * @return a new instance for the required model (never null)
      * @throws NoInjectorFoundException in case no injector was able to inject some required values with the given types
-     * @throws InvalidAdaptableException in case the given class cannot be instantiated from the given adaptable (different adaptable on the model annotation or no model annotation at all)
-     * @throws InvalidModelException in case the model could not be instanciated because reflection failed, no valid constructor was found or post-construct has thrown an error
+     * @throws InvalidAdaptableException in case the given class cannot be instantiated from the given adaptable (different adaptable on the model annotation)
+     * @throws InvalidModelException in case the model could not be instanciated because model annotation was missing, reflection failed, no valid constructor was found or post-construct has thrown an error
      */
     public <ModelType> ModelType createModel(Object adaptable, Class<ModelType> type) throws NoInjectorFoundException, InvalidAdaptableException, InvalidModelException;
     
