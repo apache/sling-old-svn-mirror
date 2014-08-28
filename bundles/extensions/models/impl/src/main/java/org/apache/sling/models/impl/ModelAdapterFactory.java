@@ -170,6 +170,32 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     }
     
     @Override
+    public boolean canCreateFromAdaptable(Class<?> modelClass, Object adaptable) throws InvalidModelException {
+        Model modelAnnotation = modelClass.getAnnotation(Model.class);
+        if (modelAnnotation == null) {
+            String msg = MessageFormatter.format("Model class {} does not have a model annotation", "1,2");
+            throw new InvalidModelException(msg);
+        }
+
+        Class<?>[] declaredAdaptable = modelAnnotation.adaptables();
+        for (Class<?> clazz : declaredAdaptable) {
+            if (clazz.isInstance(adaptable)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean isModelClass(Class<?> modelClass) {
+        return getModelAnnotation(modelClass) != null;
+    }
+    
+    private Model getModelAnnotation(Class<?> modelClass) {
+        return modelClass.getAnnotation(Model.class);
+    }
+    
+    @Override
     public <ModelType> ModelType createModel(Object adaptable, Class<ModelType> type) throws NoInjectorFoundException,
     InvalidAdaptableException {
         return internalCreateModel(adaptable, type, true);
@@ -183,26 +209,16 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         };
         threadInvocationCounter.increase();
         try {
-            Model modelAnnotation = type.getAnnotation(Model.class);
+            Model modelAnnotation = getModelAnnotation(type);
             if (modelAnnotation == null) {
-                String msg = MessageFormatter.format("Model class {} does not have a model annotation", "1,2");
-                if (throwExceptions) {
-                    throw new InvalidModelException(msg);
-                } else {
-                    log.debug(msg);
-                }
-                return null;
-            }
-            boolean isAdaptable = false;
-
-            Class<?>[] declaredAdaptable = modelAnnotation.adaptables();
-            for (Class<?> clazz : declaredAdaptable) {
-                if (clazz.isInstance(adaptable)) {
-                    isAdaptable = true;
+                if (!throwExceptions) {
+                    log.debug("Model class {} does not have a model annotation", type);
+                    return null;
                 }
             }
-            if (!isAdaptable) {
-                String msg = MessageFormatter.format("Could not adapt model {} from class {}.", "1,2");
+            
+            if (canCreateFromAdaptable(type, adaptable)) {
+                String msg = MessageFormatter.format("Could not adapt model {} from class {}.", type, adaptable.getClass());
                 if (throwExceptions) {
                     throw new InvalidAdaptableException(msg);
                 } else {
@@ -280,7 +296,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         public boolean inject(AnnotatedElement element, Object value) throws IllegalArgumentException, IllegalAccessException;
     }
 
-    private static class SetFieldCallback implements InjectCallback {
+    private class SetFieldCallback implements InjectCallback {
 
         private final Object object;
 
@@ -294,7 +310,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         }
     }
 
-    private static class SetMethodsCallback implements InjectCallback {
+    private class SetMethodsCallback implements InjectCallback {
 
         private final Map<Method, Object> methods;
 
@@ -308,7 +324,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         }
     }
 
-    private static class SetConstructorParameterCallback implements InjectCallback {
+    private class SetConstructorParameterCallback implements InjectCallback {
 
         private final List<Object> parameterValues;
 
@@ -821,13 +837,30 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             return type;
         }
     }
+    
+    /**
+    * First try to instanciate via ModelFactory and only if that fails use adaptTo mechanism. Necessary to make exception propagation work.
+    * @param adaptable
+    * @param type
+    * @return the instanciated model/adapted object (might be null)
+    */
+    private Object createModelOrAdaptTo(Adaptable adaptable, Class<?> type) {
+        try {
+            return this.createModel(adaptable, type);
+       } catch (InvalidAdaptableException e) {
+           log.debug("Could not adapt from the given class", e);
+       } catch (IllegalArgumentException e) {
+           log.debug("Could not instanciate class, probably not a Sling Model:", e);
+    }
+    return adaptable.adaptTo(type);
+}
 
-    private static boolean setField(Field field, Object createdObject, Object value) throws IllegalArgumentException, IllegalAccessException {
+    private boolean setField(Field field, Object createdObject, Object value) throws IllegalArgumentException, IllegalAccessException {
         if (!isAcceptableType(field.getType(), field.getGenericType(), value)) {
             Class<?> declaredType = field.getType();
             Type genericType = field.getGenericType();
             if (value instanceof Adaptable) {
-                value = ((Adaptable) value).adaptTo(field.getType());
+                value = createModelOrAdaptTo((Adaptable) value, field.getType());
                 if (value == null) {
                     return false;
                 }
@@ -840,8 +873,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
                     List<Object> result = new ArrayList<Object>();
                     for (Object valueObject : (Collection<?>) value) {
                         if (valueObject instanceof Adaptable) {
-                            Object adapted = ((Adaptable) valueObject)
-                                    .adaptTo((Class<?>) type.getActualTypeArguments()[0]);
+                            Object adapted = createModelOrAdaptTo((Adaptable) valueObject, (Class<?>) type.getActualTypeArguments()[0]);
                             if (adapted != null) {
                                 result.add(adapted);
                             }
@@ -865,10 +897,10 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         }
     } 
     
-    private static boolean setMethod(Method method, Map<Method, Object> methods, Object value) {
+    private boolean setMethod(Method method, Map<Method, Object> methods, Object value) {
         if (value != null) {
             if (!isAcceptableType(method.getReturnType(), method.getGenericReturnType(), value) && value instanceof Adaptable) {
-                value = ((Adaptable) value).adaptTo(method.getReturnType());
+                value = createModelOrAdaptTo((Adaptable) value, method.getReturnType());
                 if (value == null) {
                     return false;
                 }
@@ -880,12 +912,12 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         }
     }
 
-    private static boolean setConstructorParameter(ConstructorParameter constructorParameter, List<Object> parameterValues, Object value) {
+    private boolean setConstructorParameter(ConstructorParameter constructorParameter, List<Object> parameterValues, Object value) {
         if (constructorParameter.getType() instanceof Class<?>) {
             Class<?> requestedType = (Class<?>)constructorParameter.getType();
             if (!isAcceptableType(requestedType, constructorParameter.getGenericType(), value)) {
                 if (value instanceof Adaptable) {
-                    value = ((Adaptable) value).adaptTo(requestedType);
+                    value = createModelOrAdaptTo((Adaptable) value, requestedType);
                     if (value == null) {
                         return false;
                     }

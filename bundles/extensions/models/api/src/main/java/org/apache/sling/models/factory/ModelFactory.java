@@ -13,8 +13,25 @@ public interface ModelFactory {
      * @param type the class to instantiate
      * @return a new instance for the required model (never null)
      * @throws NoInjectorFoundException in case no injector was able to inject some required values with the given types
-     * @throws InvalidAdaptableException in case the given class cannot be instantiated from the given adaptable (different adaptable on the model annotation)
+     * @throws InvalidAdaptableException in case the given class cannot be instantiated from the given adaptable (different adaptable on the model annotation or no model annotation at all)
      * @throws InvalidModelException in case the model could not be instanciated because reflection failed, no valid constructor was found or post-construct has thrown an error
      */
-    public <ModelType> ModelType createModel(Object adaptable, Class<ModelType> type) throws NoInjectorFoundException, InvalidAdaptableException, InvalidModelException; 
+    public <ModelType> ModelType createModel(Object adaptable, Class<ModelType> type) throws NoInjectorFoundException, InvalidAdaptableException, InvalidModelException;
+    
+    /**
+     * 
+     * @param modelClass
+     * @return false in case the given class can not be adapted from the given type
+     * @throws InvalidModelException in case the given class does not have a model annotation
+     */
+    public boolean canCreateFromAdaptable(Class<?> modelClass, Object adaptable) throws InvalidModelException;
+    
+    /**
+     * 
+     * @param type
+     * @return false in case the given class has no model annotation
+     * 
+     * @see org.apache.sling.models.annotations.Model
+     */
+    public boolean isModelClass(Class<?> modelClass);
 }
