@@ -31,8 +31,7 @@
     <!-- ======================================================================= -->
     <!-- P R O J E C T                                                           -->
     <!-- ======================================================================= -->
-    <groupId>org.apache.sling</groupId>
-    <artifactId>org.apache.sling.replication</artifactId>
+    <artifactId>org.apache.sling.replication.core</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
