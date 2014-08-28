@@ -23,7 +23,6 @@ import static org.mockito.Mockito.*;
 
 import javax.servlet.ServletRequest;
 
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.junit.Before;
@@ -74,12 +73,6 @@ public class BindingsInjectorTest {
     public void testClassInstance() {
         Object result = injector.getValue(request, CLASS_PARAM, ResourceResolver.class, null, null);
         assertSame(CLASS_INSTANCE, result);
-    }
-
-    @Test
-    public void testNonMatchingClassInstance() {
-        Object result = injector.getValue(request, CLASS_PARAM, Resource.class, null, null);
-        assertNull(result);
     }
 
     @Test
