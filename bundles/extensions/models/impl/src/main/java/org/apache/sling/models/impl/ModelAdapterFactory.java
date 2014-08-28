@@ -759,32 +759,10 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
     private static boolean setField(Field field, Object createdObject, Object value) {
         if (value != null) {
-            if (!isAcceptableType(field.getType(), field.getGenericType(), value)) {
-                Class<?> declaredType = field.getType();
-                Type genericType = field.getGenericType();
-                if (value instanceof Adaptable) {
-                    value = ((Adaptable) value).adaptTo(field.getType());
-                    if (value == null) {
-                        return false;
-                    }
-                } else if (genericType instanceof ParameterizedType) {
-                    ParameterizedType type = (ParameterizedType) genericType;
-                    Class<?> collectionType = (Class<?>) declaredType;
-                    if (value instanceof Collection &&
-                            (collectionType.equals(Collection.class) || collectionType.equals(List.class)) &&
-                            type.getActualTypeArguments().length == 1) {
-                        List<Object> result = new ArrayList<Object>();
-                        for (Object valueObject : (Collection<?>) value) {
-                            if (valueObject instanceof Adaptable) {
-                                Object adapted = ((Adaptable) valueObject).adaptTo((Class<?>) type.getActualTypeArguments()[0]);
-                                if (adapted != null) {
-                                    result.add(adapted);
-                                }
-                            }
-                        }
-                        value = result;
-                    }
-                }
+            value = adaptIfNecessary(value, field.getType(), field.getGenericType());
+            // value may now be null due to the adaptation done above
+            if (value == null) {
+                return false;
             }
             boolean accessible = field.isAccessible();
             try {
@@ -808,11 +786,10 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
     private static boolean setMethod(Method method, Map<Method, Object> methods, Object value) {
         if (value != null) {
-            if (!isAcceptableType(method.getReturnType(), method.getGenericReturnType(), value) && value instanceof Adaptable) {
-                value = ((Adaptable) value).adaptTo(method.getReturnType());
-                if (value == null) {
-                    return false;
-                }
+            value = adaptIfNecessary(value, method.getReturnType(), method.getGenericReturnType());
+            // value may now be null due to the adaptation done above
+            if (value == null) {
+                return false;
             }
             methods.put(method, value);
             return true;
@@ -823,23 +800,43 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
     private static boolean setConstructorParameter(ConstructorParameter constructorParameter, List<Object> parameterValues, Object value) {
         if (value != null && constructorParameter.getType() instanceof Class<?>) {
-            Class<?> requestedType = (Class<?>)constructorParameter.getType();
-            if (!isAcceptableType(requestedType, constructorParameter.getGenericType(), value)) {
-                if (value instanceof Adaptable) {
-                    value = ((Adaptable) value).adaptTo(requestedType);
-                    if (value == null) {
-                        return false;
-                    }
-                }
-                else {
-                    return false;
-                }
+            value = adaptIfNecessary(value, (Class<?>) constructorParameter.getType(), constructorParameter.getGenericType());
+            // value may now be null due to the adaptation done above
+            if (value == null) {
+                return false;
             }
             parameterValues.set(constructorParameter.getParameterIndex(), value);
             return true;
         } else {
             return false;
         }
+    }
+
+    private static Object adaptIfNecessary(Object value, Class<?> type, Type genericType) {
+        if (!isAcceptableType(type, genericType, value)) {
+            Class<?> declaredType = type;
+            if (value instanceof Adaptable) {
+                value = ((Adaptable) value).adaptTo(type);
+            } else if (genericType instanceof ParameterizedType) {
+                ParameterizedType parameterizedType = (ParameterizedType) genericType;
+                Class<?> collectionType = (Class<?>) declaredType;
+                if (value instanceof Collection &&
+                        (collectionType.equals(Collection.class) || collectionType.equals(List.class)) &&
+                        parameterizedType.getActualTypeArguments().length == 1) {
+                    List<Object> result = new ArrayList<Object>();
+                    for (Object valueObject : (Collection<?>) value) {
+                        if (valueObject instanceof Adaptable) {
+                            Object adapted = ((Adaptable) valueObject).adaptTo((Class<?>) parameterizedType.getActualTypeArguments()[0]);
+                            if (adapted != null) {
+                                result.add(adapted);
+                            }
+                        }
+                    }
+                    value = result;
+                }
+            }
+        }
+        return value;
     }
 
     private static boolean isAcceptableType(Class<?> type, Type genericType, Object value) {

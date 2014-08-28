@@ -16,7 +16,10 @@
  */
 package org.apache.sling.models.testmodels.interfaces;
 
+import java.util.List;
+
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.Model;
@@ -26,4 +29,10 @@ public interface ParentModel {
 
     @Inject
     public ChildModel getFirstChild();
+    
+    @Inject @Named("secondChild")
+    public List<ChildModel> getGrandChildren();
+
+    @Inject @Named("emptyChild")
+    public List<ChildModel> getEmptyGrandChildren();
 }

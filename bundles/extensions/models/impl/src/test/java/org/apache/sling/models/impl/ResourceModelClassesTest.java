@@ -259,7 +259,7 @@ public class ResourceModelClassesTest {
 
         final Resource firstChild = mock(Resource.class);
         when(firstChild.adaptTo(ValueMap.class)).thenReturn(firstMap);
-        when(firstChild.adaptTo(ChildModel.class)).thenAnswer(new AdaptToChildMap());
+        when(firstChild.adaptTo(ChildModel.class)).thenAnswer(new AdaptToChildModel());
 
         Object firstGrandChildValue = RandomStringUtils.randomAlphabetic(10);
         ValueMap firstGrandChildMap = new ValueMapDecorator(Collections.singletonMap("property", firstGrandChildValue));
@@ -268,11 +268,11 @@ public class ResourceModelClassesTest {
 
         final Resource firstGrandChild = mock(Resource.class);
         when(firstGrandChild.adaptTo(ValueMap.class)).thenReturn(firstGrandChildMap);
-        when(firstGrandChild.adaptTo(ChildModel.class)).thenAnswer(new AdaptToChildMap());
+        when(firstGrandChild.adaptTo(ChildModel.class)).thenAnswer(new AdaptToChildModel());
 
         final Resource secondGrandChild = mock(Resource.class);
         when(secondGrandChild.adaptTo(ValueMap.class)).thenReturn(secondGrandChildMap);
-        when(secondGrandChild.adaptTo(ChildModel.class)).thenAnswer(new AdaptToChildMap());
+        when(secondGrandChild.adaptTo(ChildModel.class)).thenAnswer(new AdaptToChildModel());
 
         Resource secondChild = mock(Resource.class);
         when(secondChild.listChildren()).thenReturn(Arrays.asList(firstGrandChild, secondGrandChild).iterator());
@@ -294,9 +294,10 @@ public class ResourceModelClassesTest {
         assertEquals(2, model.getGrandChildren().size());
         assertEquals(firstGrandChildValue, model.getGrandChildren().get(0).getProperty());
         assertEquals(secondGrandChildValue, model.getGrandChildren().get(1).getProperty());
+        assertEquals(0, model.getEmptyGrandChildren().size());
     }
 
-    private class AdaptToChildMap implements Answer<ChildModel> {
+    private class AdaptToChildModel implements Answer<ChildModel> {
 
         @Override
         public ChildModel answer(InvocationOnMock invocation) throws Throwable {

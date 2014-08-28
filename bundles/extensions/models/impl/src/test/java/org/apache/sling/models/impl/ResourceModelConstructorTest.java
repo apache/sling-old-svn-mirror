@@ -21,9 +21,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Map;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.sling.api.resource.Resource;
@@ -31,12 +29,8 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.models.impl.injectors.ChildResourceInjector;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
-import org.apache.sling.models.testmodels.classes.ResourceModelWithRequiredField;
-import org.apache.sling.models.testmodels.interfaces.ChildModel;
-import org.apache.sling.models.testmodels.interfaces.ChildResourceModel;
-import org.apache.sling.models.testmodels.interfaces.ChildValueMapModel;
-import org.apache.sling.models.testmodels.interfaces.ParentModel;
-import org.apache.sling.models.testmodels.interfaces.SimplePropertyModel;
+import org.apache.sling.models.testmodels.classes.ChildModel;
+import org.apache.sling.models.testmodels.classes.constructorinjection.ParentModel;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,7 +42,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ResourceModelInterfacesTest {
+public class ResourceModelConstructorTest {
 
     @Mock
     private ComponentContext componentCtx;
@@ -70,75 +64,12 @@ public class ResourceModelInterfacesTest {
     }
 
     @Test
-    public void testSimplePropertyModel() {
-        Map<String, Object> map = new HashMap<String, Object>();
-        map.put("first", "first-value");
-        map.put("third", "third-value");
-        map.put("fourth", true);
-        ValueMap vm = new ValueMapDecorator(map);
-
-        Resource res = mock(Resource.class);
-        when(res.adaptTo(ValueMap.class)).thenReturn(vm);
-
-        SimplePropertyModel model = factory.getAdapter(res, SimplePropertyModel.class);
-        assertNotNull(model);
-        assertEquals("first-value", model.getFirst());
-        assertNull(model.getSecond());
-        assertEquals("third-value", model.getThirdProperty());
-        assertTrue(model.isFourth());
-    }
-
-    @Test
-    public void testRequiredPropertyModel() {
-        Map<String, Object> map = new HashMap<String, Object>();
-        map.put("first", "first-value");
-        map.put("third", "third-value");
-        ValueMap vm = spy(new ValueMapDecorator(map));
-
-        Resource res = mock(Resource.class);
-        when(res.adaptTo(ValueMap.class)).thenReturn(vm);
-
-        ResourceModelWithRequiredField model = factory.getAdapter(res, ResourceModelWithRequiredField.class);
-        assertNull(model);
-
-        verify(vm).get("required", String.class);
-    }
-
-    @Test
-    public void testChildResource() {
-        Resource child = mock(Resource.class);
-
-        Resource res = mock(Resource.class);
-        when(res.getChild("firstChild")).thenReturn(child);
-
-        ChildResourceModel model = factory.getAdapter(res, ChildResourceModel.class);
-        assertNotNull(model);
-        assertEquals(child, model.getFirstChild());
-    }
-
-    @Test
-    public void testChildValueMap() {
-        ValueMap map = ValueMapDecorator.EMPTY;
-
-        Resource child = mock(Resource.class);
-        when(child.adaptTo(ValueMap.class)).thenReturn(map);
-
-        Resource res = mock(Resource.class);
-        when(res.getChild("firstChild")).thenReturn(child);
-
-        ChildValueMapModel model = factory.getAdapter(res, ChildValueMapModel.class);
-        assertNotNull(model);
-        assertEquals(map, model.getFirstChild());
-    }
-
-    @Test
     public void testChildModel() {
-        Object value = RandomStringUtils.randomAlphabetic(10);
-        Map<String, Object> props = Collections.singletonMap("property", value);
-        ValueMap map = new ValueMapDecorator(props);
+        Object firstValue = RandomStringUtils.randomAlphabetic(10);
+        ValueMap firstMap = new ValueMapDecorator(Collections.singletonMap("property", firstValue));
 
         final Resource firstChild = mock(Resource.class);
-        when(firstChild.adaptTo(ValueMap.class)).thenReturn(map);
+        when(firstChild.adaptTo(ValueMap.class)).thenReturn(firstMap);
         when(firstChild.adaptTo(ChildModel.class)).thenAnswer(new AdaptToChildModel());
 
         Object firstGrandChildValue = RandomStringUtils.randomAlphabetic(10);
@@ -170,7 +101,7 @@ public class ResourceModelInterfacesTest {
 
         ChildModel childModel = model.getFirstChild();
         assertNotNull(childModel);
-        assertEquals(value, childModel.getProperty());
+        assertEquals(firstValue, childModel.getProperty());
         assertEquals(2, model.getGrandChildren().size());
         assertEquals(firstGrandChildValue, model.getGrandChildren().get(0).getProperty());
         assertEquals(secondGrandChildValue, model.getGrandChildren().get(1).getProperty());
