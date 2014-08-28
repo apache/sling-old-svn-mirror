@@ -17,13 +17,12 @@ public class InjectionContext {
     }
 
     public String getInjectorName() {
-        return (injectorName == null) ? "any injector" : injectorName;
+        return (injectorName == null) ? "any" : injectorName;
     }
     
     @Override
     public String toString() {
-        return getInjectorName() + " into element " + annotatedElementName + " with name " + name + " and type " + type;
+        return "injector '" + getInjectorName() + "' into element '" + annotatedElementName + "' with name '" + name + "' and type '" + type + "'";
     }
-    
     
 }

@@ -89,7 +89,6 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.helpers.MessageFormatter;
 
 @Component(metatype = true, immediate=true)
 @Service(value=ModelFactory.class)
@@ -173,8 +172,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     public boolean canCreateFromAdaptable(Class<?> modelClass, Object adaptable) throws InvalidModelException {
         Model modelAnnotation = modelClass.getAnnotation(Model.class);
         if (modelAnnotation == null) {
-            String msg = MessageFormatter.format("Model class {} does not have a model annotation", modelClass);
-            throw new InvalidModelException(msg);
+            throw new InvalidModelException("Model class '"+modelClass+"' does not have a model annotation");
         }
 
         Class<?>[] declaredAdaptable = modelAnnotation.adaptables();
@@ -204,7 +202,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     private <ModelType> ModelType internalCreateModel(Object adaptable, Class<ModelType> type, boolean throwExceptions) throws InvalidModelException, NoInjectorFoundException  {
         ThreadInvocationCounter threadInvocationCounter = invocationCountThreadLocal.get();
         if (threadInvocationCounter.isMaximumReached()) {
-            throw new InvalidModelException(MessageFormatter.format("Adapting {} to {} failed, too much recursive invocations (>={}).", new Object[] { adaptable, type, threadInvocationCounter.maxRecursionDepth }));
+            throw new InvalidModelException("Adapting " +adaptable + " to " +type+ " failed, too much recursive invocations (>="+ threadInvocationCounter.maxRecursionDepth +").");
         };
         threadInvocationCounter.increase();
         try {
@@ -217,7 +215,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             }
             
             if (!canCreateFromAdaptable(type, adaptable)) {
-                String msg = MessageFormatter.format("Could not adapt model {} from class {}.", type, adaptable.getClass());
+                String msg = "Could not adapt model '" + type + "' from class '" +  adaptable.getClass() + "'.";
                 if (throwExceptions) {
                     throw new InvalidAdaptableException(msg);
                 } else {
@@ -368,8 +366,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
                                 wasInjectionSuccessful = true;
                                 break;
                             } else {
-                                String msg = MessageFormatter.format("Invalid type conversion: Could not inject {} (from injector {}) into {} with type {}", new Object[] { value, injector.getName(), element.toString(), type });
-                                throw new InvalidModelException(msg);
+                                throw new InvalidModelException("Invalid type conversion: Could not inject " + value + " (from injector " + injector.getName() +") into " + element.toString() + " with type "+ type);
                             }
                         }
                     }
@@ -420,7 +417,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         }
         registry.seal();
         if (!injectionContexts.isEmpty()) {
-            String msg = MessageFormatter.format("Some required methods on model interface {} were not able to be injected. ({})", type, injectionContexts);
+            String msg = "Some required methods on model interface " + type + " were not able to be injected. (" + injectionContexts + ")";
             if (throwExceptions) {
                 throw new NoInjectorFoundException(msg, injectionContexts);
             } else {
@@ -474,7 +471,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
         Constructor<AdapterType> constructorToUse = getBestMatchingConstructor(adaptable, type);
         if (constructorToUse == null) {
-            throw new InstantiationException(MessageFormatter.format("Model class {} does not have a usable constructor", type.getName()));
+            throw new InstantiationException("Model class " + type.getName() + " does not have a usable constructor");
         }
 
         final AdapterType object;
@@ -520,7 +517,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
         registry.seal();
         if (!injectionContexts.isEmpty()) {
-            String msg = MessageFormatter.format("Some required properties on model interface {} were not able to be injected. ({})", type, injectionContexts);
+            String msg = "Some required properties on model interface " + type + " were not able to be injected. (" + injectionContexts + ")";
             if (throwExceptions) {
                 throw new NoInjectorFoundException(msg, injectionContexts);
             } else {
@@ -596,7 +593,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             }
         }
         if (!injectionContexts.isEmpty()) {
-            String msg = MessageFormatter.format("Some required constructor parameters on model interface {} were not able to be injected. ({})", type, injectionContexts);
+            String msg = "Some required constructor parameters on model interface " + type + " were not able to be injected. (" + injectionContexts + ")";
             if (throwExceptions) {
                 throw new NoInjectorFoundException(msg, injectionContexts);
             } else {

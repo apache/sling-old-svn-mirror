@@ -14,6 +14,7 @@ public class NoInjectorFoundException extends RuntimeException {
     private final Collection<InjectionContext> contexts;
     
     public NoInjectorFoundException(String message, Collection<InjectionContext> contexts) {
+        super(message);
         this.contexts = contexts;
     }
 
