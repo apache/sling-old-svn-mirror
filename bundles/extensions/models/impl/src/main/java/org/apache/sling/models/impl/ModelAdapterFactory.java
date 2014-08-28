@@ -91,7 +91,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.MessageFormatter;
 
-@Component(metatype = true)
+@Component(metatype = true, immediate=true)
 @Service(value=ModelFactory.class)
 public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFactory {
 
