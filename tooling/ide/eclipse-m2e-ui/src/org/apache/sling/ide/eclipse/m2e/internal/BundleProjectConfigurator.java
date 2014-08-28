@@ -18,7 +18,7 @@ package org.apache.sling.ide.eclipse.m2e.internal;
 
 import org.apache.maven.model.Plugin;
 import org.apache.sling.ide.eclipse.core.ConfigurationHelper;
-import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
+import org.apache.sling.ide.log.Logger;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -34,7 +34,7 @@ public class BundleProjectConfigurator extends AbstractProjectConfigurator {
     public void configure(ProjectConfigurationRequest configRequest, IProgressMonitor monitor) throws CoreException {
         // at this point the JDT project is already created by the tycho plugin
         // we just need to setup the appropriate facets
-        PluginLogger logger = Activator.getDefault().getPluginLogger();
+        Logger logger = Activator.getDefault().getPluginLogger();
         IProject project = configRequest.getProject();
         logger.trace("BundleProjectActivator called for POM {0} and project {1}", configRequest.getPom().getFullPath(),
                 project.getName());

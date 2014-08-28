@@ -24,13 +24,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import org.apache.sling.commons.json.io.JSONRenderer;
 
 /**
  * A JSONObject is an unordered collection of name/value pairs. Its
@@ -86,6 +87,11 @@ import java.util.Map;
  * @version 2
  */
 public class JSONObject {
+    
+    /** A renderer with default settings, used to avoid having to create
+     *  one for simple rendering operations
+     */
+    private static final JSONRenderer renderer = new JSONRenderer();
 
     /**
      * JSONObject.NULL is equivalent to the value that JavaScript calls null,
@@ -334,30 +340,11 @@ public class JSONObject {
 
 
     /**
-     * Produce a string from a double. The string "null" will be returned if
-     * the number is not finite.
-     * @param  d A double.
-     * @return A String.
+     * Produce a string from a double using {@link JSONRenderer#doubleToString}
      */
     static public String doubleToString(double d) {
-        if (Double.isInfinite(d) || Double.isNaN(d)) {
-        	return "null";
-        }
-
-        // Shave off trailing zeros and decimal point, if possible.
-
-        String s = Double.toString(d);
-        if (s.indexOf('.') > 0 && s.indexOf('e') < 0 && s.indexOf('E') < 0) {
-            while (s.endsWith("0")) {
-                s = s.substring(0, s.length() - 1);
-            }
-            if (s.endsWith(".")) {
-                s = s.substring(0, s.length() - 1);
-            }
-        }
-        return s;
+        return renderer.doubleToString(d);
     }
-
 
     /**
      * Get the value object associated with a key.
@@ -564,25 +551,8 @@ public class JSONObject {
      * @return A String.
      * @throws JSONException If n is a non-finite number.
      */
-    static public String numberToString(Number n)
-            throws JSONException {
-        if (n == null) {
-            throw new JSONException("Null pointer");
-        }
-        testValidity(n);
-
-        // Shave off trailing zeros and decimal point, if possible.
-
-        String s = n.toString();
-        if (s.indexOf('.') > 0 && s.indexOf('e') < 0 && s.indexOf('E') < 0) {
-            while (s.endsWith("0")) {
-                s = s.substring(0, s.length() - 1);
-            }
-            if (s.endsWith(".")) {
-                s = s.substring(0, s.length() - 1);
-            }
-        }
-        return s;
+    static public String numberToString(Number n) throws JSONException {
+        return renderer.numberToString(n);
     }
 
 
@@ -919,60 +889,7 @@ public class JSONObject {
      * @return  A String correctly formatted for insertion in a JSON text.
      */
     public static String quote(String string) {
-        if (string == null || string.length() == 0) {
-            return "\"\"";
-        }
-
-        char         b;
-        char         c = 0;
-        int          i;
-        int          len = string.length();
-        StringBuffer sb = new StringBuffer(len + 4);
-        String       t;
-
-        sb.append('"');
-        for (i = 0; i < len; i += 1) {
-            b = c;
-            c = string.charAt(i);
-            switch (c) {
-            case '\\':
-            case '"':
-                sb.append('\\');
-                sb.append(c);
-                break;
-            case '/':
-                if (b == '<') {
-                    sb.append('\\');
-                }
-                sb.append(c);
-                break;
-            case '\b':
-                sb.append("\\b");
-                break;
-            case '\t':
-                sb.append("\\t");
-                break;
-            case '\n':
-                sb.append("\\n");
-                break;
-            case '\f':
-                sb.append("\\f");
-                break;
-            case '\r':
-                sb.append("\\r");
-                break;
-            default:
-                if (c < ' ' || (c >= '\u0080' && c < '\u00a0') ||
-                               (c >= '\u2000' && c < '\u2100')) {
-                    t = "000" + Integer.toHexString(c);
-                    sb.append("\\u" + t.substring(t.length() - 4));
-                } else {
-                    sb.append(c);
-                }
-            }
-        }
-        sb.append('"');
-        return sb.toString();
+        return renderer.quote(string);
     }
 
     /**
@@ -992,21 +909,8 @@ public class JSONObject {
      * @throws JSONException If o is a non-finite number.
      */
     static void testValidity(Object o) throws JSONException {
-        if (o != null) {
-            if (o instanceof Double) {
-                if (((Double)o).isInfinite() || ((Double)o).isNaN()) {
-                    throw new JSONException(
-                        "JSON does not allow non-finite numbers");
-                }
-            } else if (o instanceof Float) {
-                if (((Float)o).isInfinite() || ((Float)o).isNaN()) {
-                    throw new JSONException(
-                        "JSON does not allow non-finite numbers.");
-                }
-            }
-        }
+        renderer.testNumberValidity(o);
     }
-
 
     /**
      * Produce a JSONArray containing the values of the members of this
@@ -1028,38 +932,11 @@ public class JSONObject {
     }
 
     /**
-     * Make a JSON text of this JSONObject. For compactness, no whitespace
-     * is added. If this would not result in a syntactically correct JSON text,
-     * then null will be returned instead.
-     * <p>
-     * Warning: This method assumes that the data structure is acyclical.
-     *
-     * @return a printable, displayable, portable, transmittable
-     *  representation of the object, beginning
-     *  with <code>{</code>&nbsp;<small>(left brace)</small> and ending
-     *  with <code>}</code>&nbsp;<small>(right brace)</small>.
+     * Make a JSON text of this JSONObject using {@link JSONRenderer#toString}
      */
     public String toString() {
-        try {
-            Iterator<String>     keys = keys();
-            StringBuffer sb = new StringBuffer("{");
-
-            while (keys.hasNext()) {
-                if (sb.length() > 1) {
-                    sb.append(',');
-                }
-                String o = keys.next();
-                sb.append(quote(o));
-                sb.append(':');
-                sb.append(valueToString(this.myHashMap.get(o)));
-            }
-            sb.append('}');
-            return sb.toString();
-        } catch (Exception e) {
-            return null;
-        }
+        return renderer.toString(this);
     }
-
 
     /**
      * Make a prettyprinted JSON text of this JSONObject.
@@ -1079,59 +956,12 @@ public class JSONObject {
 
 
     /**
-     * Make a prettyprinted JSON text of this JSONObject.
-     * <p>
-     * Warning: This method assumes that the data structure is acyclical.
-     * @param indentFactor The number of spaces to add to each level of
-     *  indentation.
-     * @param indent The indentation of the top level.
-     * @return a printable, displayable, transmittable
-     *  representation of the object, beginning
-     *  with <code>{</code>&nbsp;<small>(left brace)</small> and ending
-     *  with <code>}</code>&nbsp;<small>(right brace)</small>.
-     * @throws JSONException If the object contains an invalid number.
+     * Make a prettyprinted JSON text of this JSONObject using
+     * {@link JSONRenderer#prettyPrint}
      */
-    String toString(int indentFactor, int indent) throws JSONException {
-        int          i;
-        int          n = length();
-        if (n == 0) {
-            return "{}";
-        }
-        Iterator<String>     keys = keys();
-        StringBuffer sb = new StringBuffer("{");
-        int          newindent = indent + indentFactor;
-        String       o;
-        if (n == 1) {
-            o = keys.next();
-            sb.append(quote(o));
-            sb.append(": ");
-            sb.append(valueToString(this.myHashMap.get(o), indentFactor,
-                    indent));
-        } else {
-            while (keys.hasNext()) {
-                o = keys.next();
-                if (sb.length() > 1) {
-                    sb.append(",\n");
-                } else {
-                    sb.append('\n');
-                }
-                for (i = 0; i < newindent; i += 1) {
-                    sb.append(' ');
-                }
-                sb.append(quote(o.toString()));
-                sb.append(": ");
-                sb.append(valueToString(this.myHashMap.get(o), indentFactor,
-                        newindent));
-            }
-            if (sb.length() > 1) {
-                sb.append('\n');
-                for (i = 0; i < indent; i += 1) {
-                    sb.append(' ');
-                }
-            }
-        }
-        sb.append('}');
-        return sb.toString();
+    String toString(int indentFactor, int initialIndent) throws JSONException {
+        return renderer.prettyPrint(this, 
+                renderer.options().withIndent(indentFactor).withInitialIndent(initialIndent));
     }
 
 
@@ -1152,113 +982,24 @@ public class JSONObject {
      * @throws JSONException If the value is or contains an invalid number.
      */
     public static String valueToString(Object value) throws JSONException {
-        if (value == null || value.equals(null)) {
-            return "null";
-        }
-        if (value instanceof JSONString) {
-        	Object o;
-        	try {
-            	o = ((JSONString)value).toJSONString();
-            } catch (Exception e) {
-            	throw new JSONException(e);
-            }
-            if (o instanceof String) {
-	        	return (String)o;
-	        }
-            throw new JSONException("Bad value from toJSONString: " + o);
-        }
-        if (value instanceof Number) {
-            return numberToString((Number) value);
-        }
-        if (value instanceof Boolean || value instanceof JSONObject ||
-                value instanceof JSONArray) {
-            return value.toString();
-        }
-        return quote(value.toString());
+        return renderer.valueToString(value);
     }
-
 
     /**
-     * Make a prettyprinted JSON text of an object value.
-     * <p>
-     * Warning: This method assumes that the data structure is acyclical.
-     * @param value The value to be serialized.
-     * @param indentFactor The number of spaces to add to each level of
-     *  indentation.
-     * @param indent The indentation of the top level.
-     * @return a printable, displayable, transmittable
-     *  representation of the object, beginning
-     *  with <code>{</code>&nbsp;<small>(left brace)</small> and ending
-     *  with <code>}</code>&nbsp;<small>(right brace)</small>.
-     * @throws JSONException If the object contains an invalid number.
+     * Make a prettyprinted JSON text of an object value
+     * using {@link JSONRenderer#valueToString}
      */
-     static String valueToString(Object value, int indentFactor, int indent)
+     static String valueToString(Object value, int indentFactor, int initialIndent)
             throws JSONException {
-        if (value == null || value.equals(null)) {
-            return "null";
-        }
-        try {
-	        if (value instanceof JSONString) {
-		        Object o = ((JSONString)value).toJSONString();
-		        if (o instanceof String) {
-		        	return (String)o;
-		        }
-	        }
-        } catch (Exception e) {
-        	/* forget about it */
-        }
-        if (value instanceof Number) {
-            return numberToString((Number) value);
-        }
-        if (value instanceof Boolean) {
-            return value.toString();
-        }
-        if (value instanceof JSONObject) {
-            return ((JSONObject)value).toString(indentFactor, indent);
-        }
-        if (value instanceof JSONArray) {
-            return ((JSONArray)value).toString(indentFactor, indent);
-        }
-        return quote(value.toString());
+         return renderer.valueToString(value, 
+                 renderer.options().withIndent(indentFactor).withInitialIndent(initialIndent));
     }
 
-
      /**
-      * Write the contents of the JSONObject as JSON text to a writer.
-      * For compactness, no whitespace is added.
-      * <p>
-      * Warning: This method assumes that the data structure is acyclical.
-      *
-      * @return The writer.
-      * @throws JSONException
+      * Write the contents of the JSONObject as JSON text to a writer
+      * using {@link JSONRenderer#write(JSONObject)}
       */
      public Writer write(Writer writer) throws JSONException {
-        try {
-            boolean  b = false;
-            Iterator<String> keys = keys();
-            writer.write('{');
-
-            while (keys.hasNext()) {
-                if (b) {
-                    writer.write(',');
-                }
-                String k = keys.next();
-                writer.write(quote(k));
-                writer.write(':');
-                Object v = this.myHashMap.get(k);
-                if (v instanceof JSONObject) {
-                    ((JSONObject)v).write(writer);
-                } else if (v instanceof JSONArray) {
-                    ((JSONArray)v).write(writer);
-                } else {
-                    writer.write(valueToString(v));
-                }
-                b = true;
-            }
-            writer.write('}');
-            return writer;
-        } catch (IOException e) {
-            throw new JSONException(e);
-        }
+         return renderer.write(writer, this);
      }
 }

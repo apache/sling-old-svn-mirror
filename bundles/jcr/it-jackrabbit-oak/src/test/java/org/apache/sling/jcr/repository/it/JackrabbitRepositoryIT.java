@@ -24,10 +24,13 @@ import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import static org.ops4j.pax.exam.CoreOptions.when;
 
+import java.io.IOException;
+
+import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
 
 @RunWith(PaxExam.class)
@@ -115,7 +118,14 @@ public class JackrabbitRepositoryIT extends CommonTests {
            );
     }
 
+    @Override
     protected void doCheckRepositoryDescriptors() {
         assertEquals("Jackrabbit", repository.getDescriptor("jcr.repository.name"));
+    }
+
+    @Override
+    @Before
+    public void setup() throws IOException {
+        super.setup();
     }
 }

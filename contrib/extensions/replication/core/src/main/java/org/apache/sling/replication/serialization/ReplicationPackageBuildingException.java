@@ -19,7 +19,7 @@
 package org.apache.sling.replication.serialization;
 
 /**
- * This represents an error happening while building a {@link ReplicationPackage}
+ * This represents an error happening while building a {@link org.apache.sling.replication.packaging.ReplicationPackage}
  */
 @SuppressWarnings("serial")
 public class ReplicationPackageBuildingException extends Exception {

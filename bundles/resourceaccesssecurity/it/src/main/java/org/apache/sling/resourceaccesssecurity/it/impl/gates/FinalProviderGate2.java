@@ -36,9 +36,9 @@ import java.util.Map;
 @Properties({
         @Property(name=ResourceAccessGate.PATH, label="Path", value="/test/(un|)secured-provider/read(-update|)/(prov|mixed)/.*", 
                 description="The path is a regular expression for which resources the service should be called"),
-        @Property(name=ResourceAccessGate.FINALOPERATIONS, value="read,update", propertyPrivate=true),
-        @Property(name = Constants.SERVICE_RANKING, intValue = 5, propertyPrivate = false),
-        @Property(name=ResourceAccessGate.CONTEXT, value=ResourceAccessGate.PROVIDER_CONTEXT, propertyPrivate=true)
+        @Property(name=ResourceAccessGate.FINALOPERATIONS, value="read,update"),
+        @Property(name = Constants.SERVICE_RANKING, intValue = 5),
+        @Property(name=ResourceAccessGate.CONTEXT, value=ResourceAccessGate.PROVIDER_CONTEXT)
 })
 public class FinalProviderGate2 extends AResourceAccessGate implements ResourceAccessGate {
 

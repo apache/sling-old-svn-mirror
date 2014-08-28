@@ -196,17 +196,14 @@ public class PerformanceRunner extends BlockJUnit4ClassRunner {
 
 		if (!suiteAlreadyRegistered) {
 			if (beforeSuiteMethods.size() == 1) {
-				newSuite.setBeforeSuiteMethod(beforeSuiteMethods.get(0)
-						.getMethod());
+				newSuite.setBeforeSuiteMethod(beforeSuiteMethods.get(0).getMethod());
 			}
 			if (afterSuiteMethods.size() == 1) {
-				newSuite.setAfterSuiteMethod(afterSuiteMethods.get(0)
-						.getMethod());
+				newSuite.setAfterSuiteMethod(afterSuiteMethods.get(0).getMethod());
 			}
 
 			current = newSuite;
-			newSuite.setTargetObjectSuite(getTestClass().getJavaClass()
-					.newInstance());
+			newSuite.setTargetObjectSuite(getTestClass().getJavaClass().newInstance());
 
 		}
 
@@ -218,14 +215,11 @@ public class PerformanceRunner extends BlockJUnit4ClassRunner {
 			for (Object testObject : testObjects) {
 
 				// retrieve the test methods from the test classes
-				Method[] testMethods = getSpecificMethods(
-						testObject.getClass(), PerformanceTest.class);
-
+				Method[] testMethods = getSpecificMethods(testObject.getClass(), PerformanceTest.class);
 
 				for (Method method : testMethods) {
-					FrameworkPerformanceMethod performaceTestMethod = new
-							FrameworkPerformanceMethod(
-							method, testObject, current, reportLevel);
+					FrameworkPerformanceMethod performaceTestMethod =
+                            new FrameworkPerformanceMethod(method, testObject, current, reportLevel);
 					tests.add(performaceTestMethod);
 				}
 
@@ -240,8 +234,7 @@ public class PerformanceRunner extends BlockJUnit4ClassRunner {
 
 		// Retrieve the performance tests in the case we don't have a
 		// performance test suite
-		for (FrameworkMethod method : getTestClass().getAnnotatedMethods(
-				PerformanceTest.class)) {
+		for (FrameworkMethod method : getTestClass().getAnnotatedMethods(PerformanceTest.class)) {
 			Object targetObject = getTestClass().getJavaClass().newInstance();
 			FrameworkPerformanceMethod performanceTestMethod = new FrameworkPerformanceMethod(
 					method.getMethod(), targetObject, current, reportLevel);

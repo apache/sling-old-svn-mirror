@@ -70,13 +70,16 @@ import org.slf4j.LoggerFactory;
     @Property(name = "felix.webconsole.label", value = "adapters"),
     @Property(name = "felix.webconsole.title", value = "Sling Adapters"),
     @Property(name = "felix.webconsole.css", value = "/adapters/res/ui/adapters.css"),
-    @Property(name = "felix.webconsole.configprinter.modes", value = "always") })
+    @Property(name = "felix.webconsole.configprinter.modes", value = "always"),
+    @Property(name = "felix.webconsole.category", value = "Sling")})
 @SuppressWarnings("serial")
 public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrackerCustomizer, BundleListener {
 
     private static final int INDENT = 4;
 
     private static final String ADAPTER_CONDITION = "adapter.condition";
+
+    private static final String ADAPTER_DEPRECATED = "adapter.deprecated";
 
     private final Logger logger = LoggerFactory.getLogger(AdapterWebConsolePlugin.class);
 
@@ -97,10 +100,11 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
     private void addServiceMetadata(final ServiceReference reference, final Object service) {
         final String[] adapters = PropertiesUtil.toStringArray(reference.getProperty(ADAPTER_CLASSES));
         final String condition = PropertiesUtil.toString(reference.getProperty(ADAPTER_CONDITION), null);
+        final boolean deprecated = PropertiesUtil.toBoolean(reference.getProperty(ADAPTER_DEPRECATED), false);
         final String[] adaptables = PropertiesUtil.toStringArray(reference.getProperty(ADAPTABLE_CLASSES));
         final List<AdaptableDescription> descriptions = new ArrayList<AdaptableDescription>(adaptables.length);
         for (final String adaptable : adaptables) {
-            descriptions.add(new AdaptableDescription(reference.getBundle(), adaptable, adapters, condition));
+            descriptions.add(new AdaptableDescription(reference.getBundle(), adaptable, adapters, condition, deprecated));
         }
         synchronized (this) {
             adapterServices.put(service, descriptions);
@@ -150,7 +154,7 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
                             } else {
                                 adapters = new String[] { value.toString() };
                             }
-                            descs.add(new AdaptableDescription(bundle, adaptableName, adapters, condition));
+                            descs.add(new AdaptableDescription(bundle, adaptableName, adapters, condition, false));
                         }
                     }
                 }
@@ -259,7 +263,7 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
         writer.println("<p class=\"statline ui-state-highlight\">${How to Use This Information}</p>");
         writer.println("<p>${usage}</p>");
         writer.println("<table class=\"adapters nicetable\">");
-        writer.println("<thead><tr><th class=\"header\">${Adaptable Class}</th><th class=\"header\">${Adapter Class}</th><th class=\"header\">${Condition}</th><th class=\"header\">${Providing Bundle}</th></tr></thead>");
+        writer.println("<thead><tr><th class=\"header\">${Adaptable Class}</th><th class=\"header\">${Adapter Class}</th><th class=\"header\">${Condition}</th><th class=\"header\">${Deprecated}</th><th class=\"header\">${Providing Bundle}</th></tr></thead>");
         String rowClass = "odd";
         for (final AdaptableDescription desc : allAdaptables) {
             writer.printf("<tr class=\"%s ui-state-default\"><td>%s</td>", rowClass, desc.adaptable);
@@ -273,6 +277,11 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
                 writer.print("<td>&nbsp;</td>");
             } else {
                 writer.printf("<td>%s</td>", desc.condition);
+            }
+            if (desc.deprecated) {
+                writer.print("<td>${Deprecated}</td>");
+            } else {
+                writer.print("<td></td>");
             }
             writer.printf("<td><a href=\"${pluginRoot}/../bundles/%s\">%s (%s)</a></td>", desc.bundle.getBundleId(),
                             desc.bundle.getSymbolicName(), desc.bundle.getBundleId());
@@ -320,19 +329,21 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
         private final String[] adapters;
         private final String condition;
         private final Bundle bundle;
+        private final boolean deprecated;
 
         public AdaptableDescription(final Bundle bundle, final String adaptable, final String[] adapters,
-                        final String condition) {
+                        final String condition, boolean deprecated) {
             this.adaptable = adaptable;
             this.adapters = adapters;
             this.condition = condition;
             this.bundle = bundle;
+            this.deprecated = deprecated;
         }
 
         @Override
         public String toString() {
             return "AdapterDescription [adaptable=" + this.adaptable + ", adapters=" + Arrays.toString(this.adapters)
-                            + ", condition=" + this.condition + ", bundle=" + this.bundle + "]";
+                            + ", condition=" + this.condition + ", bundle=" + this.bundle + ", deprecated= " + this.deprecated + "]";
         }
 
         public int compareTo(final AdaptableDescription o) {

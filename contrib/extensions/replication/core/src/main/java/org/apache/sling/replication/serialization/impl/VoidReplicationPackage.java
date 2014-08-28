@@ -22,18 +22,20 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 import java.util.Arrays;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.vault.util.Text;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
-import org.apache.sling.replication.serialization.ReplicationPackage;
+import org.apache.sling.replication.packaging.ReplicationPackage;
 
 /**
  * A void {@link ReplicationPackage} is used for deletion of certain paths on the target instance
  */
 public class VoidReplicationPackage implements ReplicationPackage {
+
+    private static final String TYPE = "VOID";
 
     private final String type;
 
@@ -43,12 +45,16 @@ public class VoidReplicationPackage implements ReplicationPackage {
 
     private final String action;
 
+    public VoidReplicationPackage(ReplicationRequest request) {
+        this(request, TYPE);
+    }
+
     public VoidReplicationPackage(ReplicationRequest request, String type) {
         this.type = type;
         this.paths = request.getPaths();
         this.action = request.getAction().toString();
         this.id = request.getAction().toString()
-                + ':' + Arrays.toString(request.getPaths())
+                + ':' + Arrays.toString(request.getPaths()).replaceAll("\\[", "").replaceAll("\\]", "")
                 + ':' + request.getTime()
                 + ':' + type;
     }
@@ -58,7 +64,7 @@ public class VoidReplicationPackage implements ReplicationPackage {
 
         String[] parts = streamString.split(":");
 
-        if(parts.length < 4) return null;
+        if (parts.length < 4) return null;
 
         String actionString = parts[0];
         String pathsString = parts[1];
@@ -68,9 +74,9 @@ public class VoidReplicationPackage implements ReplicationPackage {
         ReplicationActionType replicationActionType = ReplicationActionType.fromName(actionString);
 
         VoidReplicationPackage replicationPackage = null;
-        if(replicationActionType != null){
+        if (replicationActionType != null) {
             pathsString = Text.unescape(pathsString);
-            String[] paths = pathsString.replaceAll("\\[", "").replaceAll("\\]", "").split(", ");
+            String[] paths = pathsString.split(", ");
 
             ReplicationRequest request = new ReplicationRequest(Long.valueOf(timeString),
                     replicationActionType, paths);
@@ -116,5 +122,15 @@ public class VoidReplicationPackage implements ReplicationPackage {
 
     public void delete() {
 
+    }
+
+    @Override
+    public String toString() {
+        return "VoidReplicationPackage{" +
+                "type='" + type + '\'' +
+                ", paths=" + Arrays.toString(paths) +
+                ", id='" + id + '\'' +
+                ", action='" + action + '\'' +
+                '}';
     }
 }

@@ -17,6 +17,7 @@
 package org.apache.sling.crankstart.api;
 
 import java.util.Dictionary;
+import java.util.Hashtable;
 
 /** A command line read from a crankstart txt file */
 public class CrankstartCommandLine {
@@ -24,10 +25,12 @@ public class CrankstartCommandLine {
     private final String qualifier;
     private final Dictionary<String, Object> properties;
     
+    private static final Dictionary<String, Object> EMPTY_PROPERTIES = new Hashtable<String, Object>();
+    
     public CrankstartCommandLine(String verb, String qualifier, Dictionary<String, Object> properties) {
         this.verb = verb;
         this.qualifier = qualifier;
-        this.properties = properties;
+        this.properties = properties == null ? EMPTY_PROPERTIES : properties;
     }
     
     @Override

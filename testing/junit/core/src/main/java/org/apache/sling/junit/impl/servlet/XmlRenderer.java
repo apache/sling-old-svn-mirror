@@ -41,6 +41,7 @@ import junit.runner.BaseTestRunner;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.junit.Renderer;
+import org.apache.sling.junit.RendererFactory;
 import org.apache.sling.junit.TestSelector;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
@@ -53,7 +54,7 @@ import org.w3c.dom.Text;
 /** XML renderer for JUnit servlet */
 @Component(immediate=false)
 @Service
-public class XmlRenderer extends RunListener implements Renderer {
+public class XmlRenderer extends RunListener implements Renderer, RendererFactory {
     
     /**
      * This renderer's extension
@@ -111,6 +112,11 @@ public class XmlRenderer extends RunListener implements Renderer {
 	private int testSuiteCount = 0;
 
     /** @inheritDoc */
+    public Renderer createRenderer() { 
+        return new XmlRenderer();
+    }
+
+    /** @inheritDoc */
     public boolean appliesTo(TestSelector selector) {
         return EXTENSION.equals(selector.getExtension());
     }
@@ -122,6 +128,9 @@ public class XmlRenderer extends RunListener implements Renderer {
 
     /** @inheritDoc */
 	public void setup(HttpServletResponse response, String pageTitle) throws IOException, UnsupportedEncodingException {
+        if(output != null) {
+            throw new IllegalStateException("Output Writer already set");
+        }
 		suiteStartTime = System.currentTimeMillis();
 
 		response.setContentType("text/xml");
@@ -154,10 +163,12 @@ public class XmlRenderer extends RunListener implements Renderer {
 
     /** @inheritDoc */
 	public void cleanup() {
-		if (testSuiteCount > 1)
+		if (testSuiteCount > 1) {
 			output.println(getStringFromElement(suitesElement));
-		else
+		} else {
 			output.println(getStringFromElement(rootElement));
+		}
+		output = null;
 	}
 	
     /** @inheritDoc */

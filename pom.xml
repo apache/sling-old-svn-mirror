@@ -140,7 +140,6 @@
         <module>bundles/jcr/jackrabbit-usermanager</module>
         <module>bundles/jcr/jackrabbit-accessmanager</module>
         <module>bundles/jcr/jcr-wrapper</module>
-        <module>bundles/jcr/ocm</module>
         <module>bundles/jcr/resource</module>
         <module>bundles/jcr/registration</module>
         <module>bundles/jcr/webdav</module>
@@ -193,6 +192,7 @@
         <module>testing/junit/scriptable</module>
         <module>testing/junit/healthcheck</module>
         <module>testing/junit/remote</module>
+        <module>testing/junit/performance</module>
         <module>testing/resourceresolver-mock</module>
         <module>testing/sling-pax-util</module>
         
@@ -203,6 +203,7 @@
         <module>installer/providers/jcr</module>
         <module>installer/factories/configuration</module>
         <module>installer/factories/deploymentpck</module>
+        <module>installer/factories/subsystems</module>
         <module>installer/it</module>
         
         <!-- Launchpad -->

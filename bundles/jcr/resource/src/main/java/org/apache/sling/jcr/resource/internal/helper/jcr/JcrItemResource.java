@@ -21,10 +21,12 @@ package org.apache.sling.jcr.resource.internal.helper.jcr;
 import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
 
+import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.ValueFormatException;
 
 import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.Resource;
@@ -34,7 +36,7 @@ import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-abstract class JcrItemResource // this should be package private, see SLING-1414
+abstract class JcrItemResource<T extends Item> // this should be package private, see SLING-1414
     extends AbstractResource
     implements Resource {
 
@@ -45,30 +47,60 @@ abstract class JcrItemResource // this should be package private, see SLING-1414
 
     private final ResourceResolver resourceResolver;
 
-    private final String path;
+    private String path;
+
+    private final T item;
 
     private final ResourceMetadata metadata;
 
-    protected JcrItemResource(ResourceResolver resourceResolver,
-                              String path) {
+    protected JcrItemResource(final ResourceResolver resourceResolver,
+                              final String path,
+                              final T item,
+                              final ResourceMetadata metadata) {
 
         this.resourceResolver = resourceResolver;
         this.path = path;
-
-        metadata = new ResourceMetadata();
-        metadata.setResolutionPath(path);
+        this.item = item;
+        this.metadata = metadata;
     }
 
+    /**
+     * @see org.apache.sling.api.resource.Resource#getResourceResolver()
+     */
     public ResourceResolver getResourceResolver() {
         return resourceResolver;
     }
 
+    /**
+     * @see org.apache.sling.api.resource.Resource#getPath()
+     */
     public String getPath() {
+        if (path == null) {
+            try {
+                path = getItem().getPath();
+            } catch (RepositoryException e) {
+                throw new IllegalStateException("Failed to retrieve path from Item:", e);
+            }
+        }
         return path;
     }
 
+    /**
+     * @see org.apache.sling.api.resource.Resource#getResourceMetadata()
+     */
     public ResourceMetadata getResourceMetadata() {
         return metadata;
+    }
+
+    /**
+     * Get the underlying item. Depending on the concrete implementation either
+     * a {@link javax.jcr.Node} or a {@link javax.jcr.Property}.
+     *
+     * @return a {@link javax.jcr.Node} or a {@link javax.jcr.Property}, depending
+     *         on the implementation
+     */
+    protected T getItem() {
+        return item;
     }
 
     /**
@@ -76,40 +108,48 @@ abstract class JcrItemResource // this should be package private, see SLING-1414
      * SLING_RESOURCE_TYPE_PROPERTY, or the node's primary node type, if the
      * property is not set
      */
-    protected String getResourceTypeForNode(Node node)
+    protected String getResourceTypeForNode(final Node node)
             throws RepositoryException {
         String result = null;
 
         if (node.hasProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY)) {
-            result = node.getProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY).getValue().getString();
+            result = node.getProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY).getString();
         }
 
         if (result == null || result.length() == 0) {
+            //result = node.getProperty("jcr:primaryType").getString();
             result = node.getPrimaryNodeType().getName();
         }
 
         return result;
     }
 
-    protected void setContentLength(final Property property) throws RepositoryException {
+    public static long getContentLength(final Property property) throws RepositoryException {
         if (property.isMultiple()) {
-            return;
+            return -1;
         }
 
         try {
-            final long length;
+            long length = -1;
             if (property.getType() == PropertyType.BINARY ) {
                 // we're interested in the number of bytes, not the
                 // number of characters
-                length = property.getLength();
+                try {
+                    length =  property.getLength();
+                } catch (final ValueFormatException vfe) {
+                    LOGGER.debug(
+                        "Length of Property {} cannot be retrieved, ignored ({})",
+                        property.getPath(), vfe);
+                }
             } else {
                 length = property.getString().getBytes("UTF-8").length;
             }
-            getResourceMetadata().setContentLength(length);
+            return length;
         } catch (UnsupportedEncodingException uee) {
             LOGGER.warn("getPropertyContentLength: Cannot determine length of non-binary property {}: {}",
-                    toString(), uee);
+                    property, uee);
         }
+        return -1;
     }
 
     /**

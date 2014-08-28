@@ -22,12 +22,13 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.transport.ResourceProxy;
 
 public class GetNodeContentCommand extends JcrCommand<ResourceProxy> {
 
-    public GetNodeContentCommand(Repository repository, Credentials credentials, String path) {
-        super(repository, credentials, path);
+    public GetNodeContentCommand(Repository repository, Credentials credentials, String path, Logger logger) {
+        super(repository, credentials, path, logger);
     }
 
     @Override

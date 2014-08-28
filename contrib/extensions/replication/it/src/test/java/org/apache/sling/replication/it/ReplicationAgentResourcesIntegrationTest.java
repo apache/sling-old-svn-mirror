@@ -23,22 +23,33 @@ import java.util.UUID;
 import org.junit.Test;
 
 import static org.apache.sling.replication.it.ReplicationUtils.*;
+
 /**
  * Integration test for {@link org.apache.sling.replication.agent.ReplicationAgent} resources
  */
 public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegrationTestBase {
 
     @Test
-    public void testDefaultAgentConfigurationResources() throws Exception {
+    public void testDefaultAgentConfigurationResourcesOnAuthor() throws Exception {
         String[] defaultAgentNames = new String[]{
                 "publish",
-                "publish-reverse",
-                "reverserepo",
-                "author",
-                "cache-flush"
+                "publish-reverse"
         };
         for (String agentName : defaultAgentNames) {
             assertExists(authorClient, agentConfigUrl(agentName));
+        }
+
+    }
+
+
+    @Test
+    public void testDefaultAgentConfigurationResourcesOnPublish() throws Exception {
+        String[] defaultAgentNames = new String[]{
+                "reverse",
+                "cache-flush"
+        };
+        for (String agentName : defaultAgentNames) {
+            assertExists(publishClient, agentConfigUrl(agentName));
         }
 
     }
@@ -47,8 +58,7 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
     public void testDefaultPublishAgentResources() throws Exception {
         // these agents do not exist as they are bundled to publish runMode
         String[] defaultPublishAgentNames = new String[]{
-                "reverserepo",
-                "author",
+                "reverse",
                 "cache-flush"
         };
         for (String agentName : defaultPublishAgentNames) {
@@ -72,8 +82,7 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
     public void testDefaultPublishAgentQueueResources() throws Exception {
         // these agent queues do not exist as they are bundled to publish runMode
         String[] defaultPublishAgentNames = new String[]{
-                "reverserepo",
-                "author",
+                "reverse",
                 "cache-flush"
         };
         for (String agentName : defaultPublishAgentNames) {
@@ -97,7 +106,7 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
     public void testDefaultAgentsRootResource() throws Exception {
         assertExists(authorClient, agentRootUrl());
         assertResponseContains(author, agentRootUrl(),
-                "sling:resourceType", "replication/agents",
+                "sling:resourceType", "sling/replication/service/agent/list",
                 "items", "publish-reverse","publish");
     }
 
@@ -106,12 +115,11 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
         String agentName = "sample-create-config" + UUID.randomUUID();
         String newConfigResource = agentConfigUrl(agentName);
 
-        authorClient.createNode(newConfigResource, "name", agentName, "transportHandler", "(name=author)");
+        authorClient.createNode(newConfigResource, "name", agentName);
         assertExists(authorClient, newConfigResource);
         assertResponseContains(author, newConfigResource,
-                "sling:resourceType", "replication/config/agent",
-                "name", agentName,
-                "transportHandler", "(name=author)");
+                "sling:resourceType", "sling/replication/setting/agent",
+                "name", agentName);
     }
 
     @Test
@@ -132,13 +140,13 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
         String agentName = "sample-create-config" + UUID.randomUUID();
         String newConfigResource = agentConfigUrl(agentName);
 
-        authorClient.createNode(newConfigResource, "name", agentName, "transportHandler", "(name=author)");
+        authorClient.createNode(newConfigResource, "name", agentName);
         assertExists(authorClient, newConfigResource);
-        authorClient.setProperties(newConfigResource, "transportHandler", "(name=updated)");
+        authorClient.setProperties(newConfigResource, "packageExporter", "exporters/remote/updated");
         assertResponseContains(author, newConfigResource,
-                "sling:resourceType", "replication/config/agent",
+                "sling:resourceType", "sling/replication/setting/agent",
                 "name", agentName,
-                "transportHandler", "(name=updated)");
+                "packageExporter", "updated");
     }
 
 }

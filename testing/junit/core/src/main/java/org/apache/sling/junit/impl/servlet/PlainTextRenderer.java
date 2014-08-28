@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.junit.Renderer;
+import org.apache.sling.junit.RendererFactory;
 import org.apache.sling.junit.TestSelector;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
@@ -35,10 +36,15 @@ import org.junit.runner.notification.RunListener;
 @Component(immediate=false)
 @Service
 /** Plain text renderer */
-public class PlainTextRenderer extends RunListener implements Renderer {
+public class PlainTextRenderer extends RunListener implements Renderer, RendererFactory {
     public static final String EXTENSION = "txt";
     private PrintWriter output;
     
+    /** @inheritDoc */
+    public Renderer createRenderer() { 
+        return new PlainTextRenderer();
+    }
+
     /** @inheritDoc */
     public boolean appliesTo(TestSelector selector) {
         return EXTENSION.equals(selector.getExtension());
@@ -52,6 +58,9 @@ public class PlainTextRenderer extends RunListener implements Renderer {
 
     /** @inheritDoc */
     public void setup(HttpServletResponse response, String pageTitle) throws IOException, UnsupportedEncodingException {
+        if(output != null) {
+            throw new IllegalStateException("Output Writer already set");
+        }
         response.setContentType("text/plain");
         response.setCharacterEncoding("UTF-8");
         output = response.getWriter();
@@ -60,6 +69,7 @@ public class PlainTextRenderer extends RunListener implements Renderer {
     
     /** @inheritDoc */
     public void cleanup() {
+        output = null;
     }
 
     /** @inheritDoc */

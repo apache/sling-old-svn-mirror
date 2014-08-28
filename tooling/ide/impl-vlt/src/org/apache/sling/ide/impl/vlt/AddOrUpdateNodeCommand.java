@@ -33,9 +33,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -56,6 +54,7 @@ import javax.jcr.nodetype.NodeType;
 
 import org.apache.jackrabbit.vault.util.JcrConstants;
 import org.apache.jackrabbit.vault.util.Text;
+import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.util.PathUtil;
@@ -66,9 +65,10 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
     private FileInfo fileInfo;
     private boolean primaryTypeHasChanged;
 
-    public AddOrUpdateNodeCommand(Repository jcrRepo, Credentials credentials, FileInfo fileInfo, ResourceProxy resource) {
+    public AddOrUpdateNodeCommand(Repository jcrRepo, Credentials credentials, FileInfo fileInfo,
+            ResourceProxy resource, Logger logger) {
 
-        super(jcrRepo, credentials, resource.getPath());
+        super(jcrRepo, credentials, resource.getPath(), logger);
 
         this.fileInfo = fileInfo;
         this.resource = resource;
@@ -89,14 +89,11 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         Node node;
         if (nodeExists) {
             node = session.getNode(path);
-            Activator
-                    .getDefault()
-                    .getPluginLogger()
-                    .trace("Found existing node at {0} with primaryType {1}", path, node.getPrimaryNodeType().getName());
+            getLogger().trace("Found existing node at {0} with primaryType {1}", path,
+                    node.getPrimaryNodeType().getName());
         } else {
             node = createNode(resource, session);
-            Activator.getDefault().getPluginLogger()
-                    .trace("Created node at {0} with primaryType {1}", path, node.getPrimaryNodeType().getName());
+            getLogger().trace("Created node at {0} with primaryType {1}", path, node.getPrimaryNodeType().getName());
         }
 
         updateNode(node, resource);
@@ -112,12 +109,6 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         if (primaryTypeHasChanged) {
             session.save();
         }
-
-        NodeType primaryNodeType = node.getPrimaryNodeType();
-
-        if (primaryNodeType.hasOrderableChildNodes()) {
-            reorderChildNodes(node, resource);
-        }
     }
 
     private void processDeletedNodes(Node node, ResourceProxy resource2) throws RepositoryException {
@@ -126,7 +117,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
         List<ResourceProxy> resourceChildren = resource2.getChildren();
         if (resourceChildren.size() == 0) {
-            Activator.getDefault().getPluginLogger()
+            getLogger()
                     .trace("Resource at {0} has no children, skipping deleted nodes processing",
                             resource2.getPath());
             return;
@@ -151,112 +142,10 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
                 continue;
             }
 
-            Activator.getDefault().getPluginLogger()
+            getLogger()
                     .trace("Deleting node {0} as it is no longer present in the local checkout", child.getPath());
             child.remove();
         }
-    }
-
-    private void reorderChildNodes(Node nodeToReorder, ResourceProxy resourceToReorder) throws RepositoryException {
-
-        List<ResourceProxy> children = resourceToReorder.getChildren();
-        ListIterator<ResourceProxy> childrenIterator = children.listIterator();
-
-        // do not process
-        if (!childrenIterator.hasNext()) {
-            Activator.getDefault().getPluginLogger()
-                    .trace("Resource at {0} has no children, skipping child node reordering",
-                            resourceToReorder.getPath());
-            return;
-        }
-        List<Node> nodeChildren = new LinkedList<Node>();
-        NodeIterator nodeChildrenIt = nodeToReorder.getNodes();
-        while (nodeChildrenIt.hasNext()) {
-            nodeChildren.add(nodeChildrenIt.nextNode());
-        }
-        ListIterator<Node> nodeChildrenListIt = nodeChildren.listIterator();
-
-        // it is possible for the repository and the local workspace to have a different types of elements
-        // for instance if the repository has been changed independently of the local workspace modifications
-        // therefore allow for the
-        boolean changed = false;
-
-        traceResourcesAndNodes(children, nodeChildren);
-
-        if (children.size() != nodeChildren.size()) {
-            Activator.getDefault().getPluginLogger()
-                    .warn("Different number of children between the local workspace and the repository for path "
-                            + resourceToReorder.getPath() + ". Reordering will not be performed");
-            return;
-        }
-
-        while (childrenIterator.hasNext() || nodeChildrenListIt.hasNext()) {
-
-            ResourceProxy childResource = childrenIterator.next();
-            Node childNode = nodeChildrenListIt.next();
-
-            // order is as expected, skip reordering
-            if (Text.getName(childResource.getPath()).equals(childNode.getName())) {
-                // descend into covered child resources once they are properly arranged and perform reordering
-                if (resourceToReorder.covers(childResource.getPath())) {
-                    reorderChildNodes(childNode, childResource);
-                }
-                continue;
-            }
-
-            // don't perform any reordering if this particular node does not have reorderable children
-            if (!nodeToReorder.getPrimaryNodeType().hasOrderableChildNodes()) {
-                Activator
-                        .getDefault()
-                        .getPluginLogger()
-                        .trace("Node at {0} does not have orderable child nodes, skipping reordering of {1}",
-                                nodeToReorder.getPath(), childResource.getPath());
-                continue;
-            }
-
-            String expectedParentName;
-            if (childrenIterator.hasNext()) {
-                expectedParentName = Text.getName(childrenIterator.next().getPath());
-                childrenIterator.previous(); // move back
-            } else {
-                expectedParentName = null;
-            }
-
-            Activator.getDefault().getPluginLogger()
-                    .trace("For node at {0} ordering {1} before {2}", nodeToReorder.getPath(),
-                            Text.getName(childResource.getPath()),
-                            expectedParentName);
-
-            nodeToReorder.orderBefore(Text.getName(childResource.getPath()), expectedParentName);
-            changed = true;
-            break;
-        }
-
-        // re-read the data and run the ordering again
-        // this makes sure that we don't have inconsistent data in the node list
-        if (changed) {
-            reorderChildNodes(nodeToReorder, resourceToReorder);
-        }
-
-    }
-
-    private void traceResourcesAndNodes(List<ResourceProxy> children, List<Node> nodeChildren)
-            throws RepositoryException {
-        
-        StringBuilder out = new StringBuilder();
-        out.append("Comparison of nodes and resources before reordering \n");
-        
-        out.append(" === Resources === \n");
-        for (int i = 0; i < children.size(); i++) {
-            out.append(String.format("%3d. %s%n", i, children.get(i).getPath()));
-        }
-
-        out.append(" === Nodes === \n");
-        for (int i = 0; i < nodeChildren.size(); i++) {
-            out.append(String.format("%3d. %s%n", i, nodeChildren.get(i).getPath()));
-        }
-
-        Activator.getDefault().getPluginLogger().trace(out.toString());
     }
 
     private Node createNode(ResourceProxy resource, Session session) throws RepositoryException, FileNotFoundException {
@@ -283,7 +172,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
     private void updateNode(Node node, ResourceProxy resource) throws RepositoryException, IOException {
 
-        if (node.getPath().equals(getPath())) {
+        if (node.getPath().equals(getPath()) && fileInfo != null) {
             updateFileLikeNodeTypes(node);
         }
 
@@ -310,11 +199,10 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
         }
 
         String primaryType = (String) resource.getProperties().get(JcrConstants.JCR_PRIMARYTYPE);
-        if (!node.getPrimaryNodeType().getName().equals(primaryType)) {
+        if (!node.getPrimaryNodeType().getName().equals(primaryType) && node.getDepth() != 0) {
             node.setPrimaryType(primaryType);
             primaryTypeHasChanged = true;
-            Activator.getDefault().getPluginLogger()
-                    .trace("Set new primary type {0} for node at {1}", primaryType, node.getPath());
+            getLogger().trace("Set new primary type {0} for node at {1}", primaryType, node.getPath());
         }
 
         // TODO - review for completeness and filevault compatibility
@@ -407,18 +295,19 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
             if (value != null) {
                 Object[] arguments = { propertyName, value, propertyValue, node.getPath() };
-                Activator.getDefault().getPluginLogger()
-                        .trace("Setting property {0} with value {1} (raw =  {2}) on node at {3}", arguments);
+                getLogger().trace("Setting property {0} with value {1} (raw =  {2}) on node at {3}", arguments);
                 node.setProperty(propertyName, value);
-                Activator.getDefault().getPluginLogger()
-                        .trace("Set property {0} with value {1} (raw =  {2}) on node at {3}", arguments);
+                getLogger().trace("Set property {0} with value {1} (raw =  {2}) on node at {3}", arguments);
             } else if (values != null) {
+                if (node.hasProperty(propertyName) && !node.getProperty(propertyName).isMultiple()) {
+                    getLogger().trace("Removing single-valued property {0} since we need to set multiple values",
+                            propertyName);
+                    node.getProperty(propertyName).remove();
+                }
                 Object[] arguments = { propertyName, values, propertyValue, node.getPath() };
-                Activator.getDefault().getPluginLogger()
-                        .trace("Setting property {0} with values {1} (raw =  {2}) on node at {3}", arguments);
+                getLogger().trace("Setting property {0} with values {1} (raw =  {2}) on node at {3}", arguments);
                 node.setProperty(propertyName, values);
-                Activator.getDefault().getPluginLogger()
-                        .trace("Set property {0} with values {1} (raw =  {2}) on node at {3}", arguments);
+                getLogger().trace("Set property {0} with values {1} (raw =  {2}) on node at {3}", arguments);
             } else {
                 throw new IllegalArgumentException("Unable to extract a value or a value array for property '"
                         + propertyName + "' with value '" + propertyValue + "'");
@@ -427,8 +316,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
         for (String propertyToRemove : propertiesToRemove) {
             node.getProperty(propertyToRemove).remove();
-            Activator.getDefault().getPluginLogger()
-                    .trace("Removed property {0} from node at {1}", propertyToRemove, node.getPath());
+            getLogger().trace("Removed property {0} from node at {1}", propertyToRemove, node.getPath());
         }
 
     }
@@ -455,13 +343,13 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
         for (String mixinToAdd : mixinsToAdd) {
             node.addMixin(mixinToAdd);
-            Activator.getDefault().getPluginLogger()
+            getLogger()
                     .trace("Added new mixin {0} to node at path {1}", mixinToAdd, node.getPath());
         }
 
         for (String mixinToRemove : mixinsToRemove) {
             node.removeMixin(mixinToRemove);
-            Activator.getDefault().getPluginLogger()
+            getLogger()
                     .trace("Removed mixin {0} from node at path {1}", mixinToRemove, node.getPath());
         }
     }
@@ -487,8 +375,7 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
             }
         }
 
-        Activator.getDefault().getPluginLogger()
-                .trace("Updating {0} property on node at {1} ", JCR_DATA, contentNode.getPath());
+        getLogger().trace("Updating {0} property on node at {1} ", JCR_DATA, contentNode.getPath());
 
         FileInputStream inputStream = new FileInputStream(file);
         try {

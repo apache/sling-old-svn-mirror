@@ -94,7 +94,7 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
     };
 
     @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
-    private LogService log;
+    private volatile LogService log;
 
     @Reference
     private HttpService httpService;
@@ -107,6 +107,7 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
 
     private String webManagerRoot;
 
+    @Override
     public void init() throws ServletException {
         String location = this.getServletConfig().getInitParameter("obrLocation");
         if (location == null || location.length() == 0) {
@@ -145,6 +146,7 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
         }
     }
 
+    @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
         // send repository.xml if requested
@@ -186,6 +188,7 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
         this.listBundles(req, resp);
     }
 
+    @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
@@ -262,6 +265,7 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
         }
     }
 
+    @Override
     public String getServletInfo() {
         return "OSGi Bundle Repository (OBR) Servlet";
     }

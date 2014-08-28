@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
@@ -184,7 +185,7 @@ public class VotingHandler implements EventHandler {
 	                logger.debug("analyzeVotings: there were no votes for my voting, so I have to remove it: "
 	                        + ongoingVotingRes);
             	}
-                ongoingVotingRes.remove();
+                ongoingVotingRes.remove(true);
                 it.remove();
             }
         }
@@ -279,7 +280,7 @@ public class VotingHandler implements EventHandler {
             VotingView timedoutVotingRes = it.next();
             if (timedoutVotingRes!=null) {
                 logger.info("cleanupTimedoutVotings: removing a timed out voting: "+timedoutVotingRes);
-                timedoutVotingRes.remove();
+                timedoutVotingRes.remove(false);
             }
         }
     }
@@ -289,7 +290,7 @@ public class VotingHandler implements EventHandler {
      */
     private void promote(final ResourceResolver resourceResolver,
             final Resource winningVoteResource) throws PersistenceException {
-        final Resource previousViewsResource = ResourceHelper
+        Resource previousViewsResource = ResourceHelper
                 .getOrCreateResource(
                         resourceResolver,
                         config.getPreviousViewPath());
@@ -315,9 +316,20 @@ public class VotingHandler implements EventHandler {
 
         // step 1: remove any nodes under previousViews
         final Iterator<Resource> it1 = previousViewsResource.getChildren().iterator();
-        while (it1.hasNext()) {
-            Resource previousView = it1.next();
-            resourceResolver.delete(previousView);
+        try{
+            while (it1.hasNext()) {
+                Resource previousView = it1.next();
+                resourceResolver.delete(previousView);
+            }
+        } catch(PersistenceException e) {
+            // if we cannot delete, apply workaround suggested in SLING-3785
+            logger.error("promote: Could not delete a previous view - trying move next: "+e, e);
+            ResourceHelper.moveResource(previousViewsResource, config.getPreviousViewPath()+"_trash_"+UUID.randomUUID().toString());
+            logger.info("promote: recreating the previousviews node");
+            previousViewsResource = ResourceHelper
+                    .getOrCreateResource(
+                            resourceResolver,
+                            config.getPreviousViewPath());            
         }
 
         // step 2: retire the existing established view.

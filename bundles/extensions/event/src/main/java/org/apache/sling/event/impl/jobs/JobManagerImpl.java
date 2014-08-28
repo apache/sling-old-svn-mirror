@@ -946,10 +946,15 @@ public class JobManagerImpl
     /**
      * @see org.apache.sling.event.jobs.JobManager#getJob(java.lang.String, java.util.Map)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public Job getJob(final String topic, final Map<String, Object> template) {
-        @SuppressWarnings("unchecked")
-        final Iterable<Job> iter = this.findJobs(QueryType.ALL, topic, 1, template);
+        final Iterable<Job> iter;
+        if ( template == null ) {
+            iter = this.findJobs(QueryType.ALL, topic, 1, (Map<String, Object>[])null);
+        } else {
+            iter = this.findJobs(QueryType.ALL, topic, 1, template);
+        }
         final Iterator<Job> i = iter.iterator();
         if ( i.hasNext() ) {
             return i.next();
@@ -963,6 +968,14 @@ public class JobManagerImpl
     @Override
     public boolean removeJobById(final String jobId) {
         return this.internalRemoveJobById(jobId, true);
+    }
+
+    private enum Operation {
+        LESS,
+        LESS_OR_EQUALS,
+        EQUALS,
+        GREATER_OR_EQUALS,
+        GREATER
     }
 
     /**
@@ -1053,7 +1066,36 @@ public class JobManagerImpl
                     boolean first = true;
                     while ( i.hasNext() ) {
                         final Map.Entry<String, Object> current = i.next();
-                        final String propName = ISO9075.encode(current.getKey());
+                        final String key = ISO9075.encode(current.getKey());
+                        final char firstChar = key.length() > 0 ? key.charAt(0) : 0;
+                        final String propName;
+                        final Operation op;
+                        if ( firstChar == '=' ) {
+                            propName = key.substring(1);
+                            op  = Operation.EQUALS;
+                        } else if ( firstChar == '<' ) {
+                            final char secondChar = key.length() > 1 ? key.charAt(1) : 0;
+                            if ( secondChar == '=' ) {
+                                op = Operation.LESS_OR_EQUALS;
+                                propName = key.substring(2);
+                            } else {
+                                op = Operation.LESS;
+                                propName = key.substring(1);
+                            }
+                        } else if ( firstChar == '>' ) {
+                            final char secondChar = key.length() > 1 ? key.charAt(1) : 0;
+                            if ( secondChar == '=' ) {
+                                op = Operation.GREATER_OR_EQUALS;
+                                propName = key.substring(2);
+                            } else {
+                                op = Operation.GREATER;
+                                propName = key.substring(1);
+                            }
+                        } else {
+                            propName = key;
+                            op  = Operation.EQUALS;
+                        }
+
                         if ( first ) {
                             first = false;
                             buf.append('@');
@@ -1061,7 +1103,15 @@ public class JobManagerImpl
                             buf.append(" and @");
                         }
                         buf.append(propName);
-                        buf.append(" = '");
+                        buf.append(' ');
+                        switch ( op ) {
+                            case EQUALS : buf.append('=');break;
+                            case LESS : buf.append('<'); break;
+                            case LESS_OR_EQUALS : buf.append("<="); break;
+                            case GREATER : buf.append('>'); break;
+                            case GREATER_OR_EQUALS : buf.append(">="); break;
+                        }
+                        buf.append(" '");
                         buf.append(current.getValue());
                         buf.append("'");
                     }
@@ -1512,7 +1562,17 @@ public class JobManagerImpl
      */
     @Override
     public Collection<ScheduledJobInfo> getScheduledJobs() {
-        return this.jobScheduler.getScheduledJobs();
+        return this.jobScheduler.getScheduledJobs(null, -1, (Map<String, Object>[])null);
+    }
+
+    /**
+     * @see org.apache.sling.event.jobs.JobManager#getScheduledJobs()
+     */
+    @Override
+    public Collection<ScheduledJobInfo> getScheduledJobs(final String topic,
+            final long limit,
+            final Map<String, Object>... templates) {
+        return this.jobScheduler.getScheduledJobs(topic, limit, templates);
     }
 
     public ScheduledJobInfo addScheduledJob(final String topic,

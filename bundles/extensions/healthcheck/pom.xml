@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>19</version>
+        <version>20</version>
         <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
 
@@ -33,6 +33,8 @@
         <module>samples</module>
         <module>support</module>
         <module>webconsole</module>
+        <module>junit-bridge</module>
+        <module>annotations</module>
         <module>it</module>
     </modules>
 </project>

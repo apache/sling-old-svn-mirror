@@ -24,7 +24,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.junit.runner.notification.RunListener;
 
-/** Renderer for our servlet output */
+/** Renderer for our servlet output. Should not be used directly for
+ *  rendering as it leads to non-reentrant renderers. Use only via
+ *  {@link RendererFactory} as {@link RendererSelectorImpl} does 
+ */
  public interface Renderer {
     /** True if this renderer applies to supplied request */
      boolean appliesTo(TestSelector selector);

@@ -20,13 +20,25 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.launch.Framework;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CrankstartContext {
+    private final Logger log = LoggerFactory.getLogger(getClass());
     private Framework osgiFramework;
     private final Map<String, String> osgiFrameworkProperties = new HashMap<String, String>();
     private final Map<String, Object> attributes = new HashMap<String, Object>();
     
+    private final Map<String, String> defaults = new HashMap<String, String>();
+    
+    /** Name of the default value used to set bundle start levels */
+    public static final String DEFAULT_BUNDLE_START_LEVEL = "crankstart.bundle.start.level";
+
+    /** Name of the attribute that causes crankstart processing to stop */
+    public static final String ATTR_STOP_CRANKSTART_PROCESSING = "crankstart.stop.processing";
+
     public void setOsgiFrameworkProperty(String key, String value) {
         osgiFrameworkProperties.put(key, value);
     }
@@ -40,6 +52,24 @@ public class CrankstartContext {
             throw new IllegalStateException("OSGi framework already set");
         }
         osgiFramework = f;
+        
+        // Shutdown the framework when the JVM exits
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                if(osgiFramework != null && osgiFramework.getState() == Bundle.ACTIVE) {
+                    try {
+                        log.info("Stopping the OSGi framework");
+                        osgiFramework.stop();
+                        log.info("Waiting for the OSGi framework to exit");
+                        osgiFramework.waitForStop(0);
+                        log.info("OSGi framework stopped");
+                    } catch(Exception e) {
+                        log.error("Exception while stopping OSGi framework", e);
+                    }
+                }
+            }
+        });
     }
     
     public Framework getOsgiFramework() {
@@ -52,5 +82,9 @@ public class CrankstartContext {
     
     public Object getAttribute(String key) {
         return attributes.get(key);
+    }
+    
+    public Map<String, String> getDefaults() {
+        return defaults;
     }
 }

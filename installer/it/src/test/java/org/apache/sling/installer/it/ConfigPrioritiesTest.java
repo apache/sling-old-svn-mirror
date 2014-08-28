@@ -39,12 +39,13 @@ public class ConfigPrioritiesTest extends OsgiInstallerTestBase {
     public Option[] config() {
         return defaultConfiguration();
     }
-    
+
     @Before
     public void setUp() {
         setupInstaller();
     }
 
+    @Override
     @After
     public void tearDown() {
         super.tearDown();
@@ -70,14 +71,14 @@ public class ConfigPrioritiesTest extends OsgiInstallerTestBase {
     @Test
     public void testOverrideConfig() throws Exception {
         final String pid = getClass().getSimpleName() + "." + System.currentTimeMillis();
-        
+
         final Dictionary<String, Object> data = new Hashtable<String, Object>();
         data.put("foo", "a");
-        final InstallableResource a = getInstallableResource(pid, data, InstallableResource.DEFAULT_PRIORITY - 1)[0];
+        final InstallableResource a = getInstallableResource("a/" + pid, data, InstallableResource.DEFAULT_PRIORITY - 1)[0];
         data.put("foo", "b");
-        final InstallableResource b = getInstallableResource(pid, data, InstallableResource.DEFAULT_PRIORITY)[0];
+        final InstallableResource b = getInstallableResource("b/" + pid, data, InstallableResource.DEFAULT_PRIORITY)[0];
         data.put("foo", "c");
-        final InstallableResource c = getInstallableResource(pid, data, InstallableResource.DEFAULT_PRIORITY + 1)[0];
+        final InstallableResource c = getInstallableResource("c/" + pid, data, InstallableResource.DEFAULT_PRIORITY + 1)[0];
 
         // c has more priority than b which has more than a
         installer.updateResources(URL_SCHEME, new InstallableResource[] {b}, null);
@@ -85,23 +86,20 @@ public class ConfigPrioritiesTest extends OsgiInstallerTestBase {
         installer.updateResources(URL_SCHEME, new InstallableResource[] {c}, null);
         assertConfigValue(pid, "foo", "c", TIMEOUT);
         installer.updateResources(URL_SCHEME, new InstallableResource[] {a}, null);
-        
-        // TODO should be "c" here - looks like the installer does not
-        // take priorities into account
-        assertConfigValue(pid, "foo", "a", TIMEOUT);
-        
-        // TODO: after removing c value should go back to b, looks like
-        // installer removes the config instead 
+
+        // highest prio should be active (c)
+        assertConfigValue(pid, "foo", "c", TIMEOUT);
+
+        // removing c, second highest prio should be active (b)
         installer.updateResources(URL_SCHEME, null, new String[] {c.getId()});
-        // assertConfigValue(pid, "foo", "b", TIMEOUT);
+        assertConfigValue(pid, "foo", "b", TIMEOUT);
+
+        // removing b, a should be active
+        installer.updateResources(URL_SCHEME, null, new String[] {b.getId()});
+        assertConfigValue(pid, "foo", "a", TIMEOUT);
+
+        // and config should be gone only after removing everything
+        installer.updateResources(URL_SCHEME, null, new String[] {a.getId()});
         waitForConfiguration("After removing all resources", pid, TIMEOUT, false);
-        
-        // TODO after removing b value should go back to a
-        // installer.updateResources(URL_SCHEME, null, new String[] {b.getId()});
-        // assertConfigValue(pid, "foo", "a", TIMEOUT);
-        
-        // TODO and config should be gone only after removing everything
-        // installer.updateResources(URL_SCHEME, null, new String[] {a.getId()});
-        // waitForConfiguration("After removing all resources", pid, TIMEOUT, false);
     }
 }

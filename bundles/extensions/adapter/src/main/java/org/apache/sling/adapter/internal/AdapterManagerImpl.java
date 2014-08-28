@@ -109,7 +109,7 @@ public class AdapterManagerImpl implements AdapterManager {
      * The service tracker for the event admin
      */
     @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
-    private EventAdmin eventAdmin;
+    private volatile EventAdmin eventAdmin;
 
     // ---------- AdapterManager interface -------------------------------------
 

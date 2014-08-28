@@ -25,14 +25,13 @@ import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.sling.ide.transport.RepositoryException;
 import org.apache.sling.ide.transport.RepositoryInfo;
-import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.Result;
 
 class DeleteNodeCommand extends AbstractCommand<Void> {
 
 
-    DeleteNodeCommand(ResourceProxy resource, RepositoryInfo repositoryInfo, HttpClient httpClient) {
-        super(repositoryInfo, httpClient, resource.getPath());
+    DeleteNodeCommand(String path, RepositoryInfo repositoryInfo, HttpClient httpClient) {
+        super(repositoryInfo, httpClient, path);
     }
 
     @Override

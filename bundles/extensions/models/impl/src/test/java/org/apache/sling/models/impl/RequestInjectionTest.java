@@ -19,6 +19,8 @@ package org.apache.sling.models.impl;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Hashtable;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
@@ -33,6 +35,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
 
 @RunWith(MockitoJUnitRunner.class)
+@SuppressWarnings("javadoc")
 public class RequestInjectionTest {
 
     @Mock
@@ -52,6 +55,7 @@ public class RequestInjectionTest {
     @Before
     public void setup() {
         when(componentCtx.getBundleContext()).thenReturn(bundleContext);
+        when(componentCtx.getProperties()).thenReturn(new Hashtable<String, Object>());
 
         SlingBindings bindings = new SlingBindings();
         bindings.setSling(sling);
@@ -63,8 +67,16 @@ public class RequestInjectionTest {
     }
 
     @Test
-    public void testNamedInjection() {
+    public void testNamedInjectionField() {
         BindingsModel model = factory.getAdapter(request, BindingsModel.class);
+        assertNotNull(model.getSling());
+        assertEquals(sling, model.getSling());
+    }
+
+    @Test
+    public void testNamedInjectionConstructor() {
+        org.apache.sling.models.testmodels.classes.constructorinjection.BindingsModel model
+                = factory.getAdapter(request, org.apache.sling.models.testmodels.classes.constructorinjection.BindingsModel.class);
         assertNotNull(model.getSling());
         assertEquals(sling, model.getSling());
     }

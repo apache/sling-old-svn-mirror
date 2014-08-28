@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
     @Property(name="sling.servlet.resourceTypes", value="sling/servlet/default"),
     @Property(name="sling.servlet.extensions", value="json"),
     @Property(name="sling.servlet.selectors", value="query"),
-    @Property(name="sling.servlet.prefix", intValue=-1, propertyPrivate=true)
+    @Property(name="sling.servlet.prefix", intValue=-1)
 })
 public class JsonQueryServlet extends SlingSafeMethodsServlet {
 

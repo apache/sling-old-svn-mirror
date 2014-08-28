@@ -19,6 +19,7 @@
 package org.apache.sling.replication.rule.impl;
 
 import org.apache.sling.replication.agent.ReplicationAgent;
+import org.apache.sling.replication.rule.ReplicationRequestHandler;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 
@@ -52,71 +53,50 @@ public class TriggerPathReplicationRuleTest {
     public void testApplyWithNonMatchingString() throws Exception {
         TriggerPathReplicationRule triggerPathReplicationRule = new TriggerPathReplicationRule();
         String ruleString = "";
-        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
-        triggerPathReplicationRule.apply(ruleString, replicationAgent);
+        ReplicationRequestHandler requestHandler = mock(ReplicationRequestHandler.class);
+        triggerPathReplicationRule.apply("", requestHandler, ruleString);
     }
 
     @Test
     public void testApplyWithMatchingString() throws Exception {
         TriggerPathReplicationRule triggerPathReplicationRule = new TriggerPathReplicationRule();
         String ruleString = "trigger on path: /foo/bar";
-        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
-        triggerPathReplicationRule.apply(ruleString, replicationAgent);
+        ReplicationRequestHandler requestHandler = mock(ReplicationRequestHandler.class);
+        triggerPathReplicationRule.apply("", requestHandler, ruleString);
     }
 
     @Test
     public void testApplyWithMatchingStringAndRegisteredContext() throws Exception {
         TriggerPathReplicationRule triggerPathReplicationRule = new TriggerPathReplicationRule();
         String ruleString = "trigger on path: /foo/bar";
-        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
+        ReplicationRequestHandler requestHandler = mock(ReplicationRequestHandler.class);
         BundleContext context = mock(BundleContext.class);
         triggerPathReplicationRule.activate(context);
-        triggerPathReplicationRule.apply(ruleString, replicationAgent);
+        triggerPathReplicationRule.apply("", requestHandler, ruleString);
     }
 
     @Test
     public void testApplyWithNonMatchingStringAndRegisteredContext() throws Exception {
         TriggerPathReplicationRule triggerPathReplicationRule = new TriggerPathReplicationRule();
         String ruleString = "trigger on path: 1 2 3";
-        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
+        ReplicationRequestHandler requestHandler = mock(ReplicationRequestHandler.class);
         BundleContext context = mock(BundleContext.class);
         triggerPathReplicationRule.activate(context);
-        triggerPathReplicationRule.apply(ruleString, replicationAgent);
-    }
-
-    @Test
-    public void testUndoWithNonMatchingString() throws Exception {
-        TriggerPathReplicationRule triggerPathReplicationRule = new TriggerPathReplicationRule();
-        String ruleString = "";
-        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
-        triggerPathReplicationRule.undo(ruleString, replicationAgent);
+        triggerPathReplicationRule.apply("", requestHandler, ruleString);
     }
 
     @Test
     public void testUndoWithMatchingString() throws Exception {
         TriggerPathReplicationRule triggerPathReplicationRule = new TriggerPathReplicationRule();
-        String ruleString = "trigger on path: /foo/bar";
-        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
-        triggerPathReplicationRule.undo(ruleString, replicationAgent);
+        triggerPathReplicationRule.undo("");
     }
 
     @Test
     public void testUndoWithMatchingStringAndRegisteredContext() throws Exception {
         TriggerPathReplicationRule triggerPathReplicationRule = new TriggerPathReplicationRule();
-        String ruleString = "trigger on path: /foo/bar";
-        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
         BundleContext context = mock(BundleContext.class);
         triggerPathReplicationRule.activate(context);
-        triggerPathReplicationRule.undo(ruleString, replicationAgent);
+        triggerPathReplicationRule.undo("");
     }
 
-    @Test
-    public void testUndoWithNonMatchingStringAndRegisteredContext() throws Exception {
-        TriggerPathReplicationRule triggerPathReplicationRule = new TriggerPathReplicationRule();
-        String ruleString = "trigger on path: 1 2 3";
-        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
-        BundleContext context = mock(BundleContext.class);
-        triggerPathReplicationRule.activate(context);
-        triggerPathReplicationRule.undo(ruleString, replicationAgent);
-    }
 }

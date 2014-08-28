@@ -106,13 +106,13 @@ public class ClassLoaderWriterImpl
     private SlingRepository repository;
 
     @Reference(policy=ReferencePolicy.DYNAMIC, cardinality=ReferenceCardinality.OPTIONAL_UNARY)
-    private MimeTypeService mimeTypeService;
+    private volatile MimeTypeService mimeTypeService;
 
     @Reference(
             referenceInterface = DynamicClassLoaderManager.class,
             bind = "bindDynamicClassLoaderManager",
             unbind = "unbindDynamicClassLoaderManager")
-    private ServiceReference dynamicClassLoaderManager;
+    private volatile ServiceReference dynamicClassLoaderManager;
 
     /** The bundle asking for this service instance */
     private Bundle callerBundle;

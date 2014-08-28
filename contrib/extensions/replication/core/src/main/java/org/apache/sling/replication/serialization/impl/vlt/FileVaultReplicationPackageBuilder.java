@@ -18,18 +18,16 @@
  */
 package org.apache.sling.replication.serialization.impl.vlt;
 
-import java.io.File;
-import java.io.InputStream;
-import java.util.Properties;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Modified;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.util.Properties;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.felix.scr.annotations.*;
 import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.config.DefaultMetaInf;
 import org.apache.jackrabbit.vault.fs.config.DefaultWorkspaceFilter;
@@ -41,7 +39,7 @@ import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.communication.ReplicationRequest;
-import org.apache.sling.replication.serialization.ReplicationPackage;
+import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
@@ -83,7 +81,6 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
     @Reference
     private Packaging packaging;
 
-
     private String username;
     private String password;
 
@@ -108,16 +105,15 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
             props.setProperty(VaultPackage.NAME_GROUP, packageGroup);
             String packageName = String.valueOf(request.getTime());
             props.setProperty(VaultPackage.NAME_NAME, packageName);
-            if (log.isDebugEnabled()) {
-                log.debug("assembling package {}", packageGroup + '/' + packageName);
-            }
+            log.debug("assembling package {}", packageGroup + '/' + packageName);
             inf.setProperties(props);
 
             opts.setMetaInf(inf);
             opts.setRootPath("/");
-            File tmpFile = File.createTempFile("vlt-rp-" + System.nanoTime(), ".zip");
-            VaultPackage pkg = packaging.getPackageManager().assemble(session, opts, tmpFile);
-            return new FileVaultReplicationPackage(pkg);
+            File tmpFile = File.createTempFile("rp-vlt-create-" + System.nanoTime(), ".zip");
+            packaging.getPackageManager().assemble(session, opts, tmpFile);
+            JcrPackage jcrPackage = packaging.getPackageManager(session).upload(tmpFile, false, true, null);
+            return new FileVaultReplicationPackage(jcrPackage.getPackage());
         } catch (Exception e) {
             throw new ReplicationPackageBuildingException(e);
         } finally {
@@ -138,33 +134,31 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
     }
 
     @Override
-    protected ReplicationPackage readPackageForAdd(final InputStream stream, boolean install)
+    protected ReplicationPackage readPackageInternal(final InputStream stream)
             throws ReplicationPackageReadingException {
-        if (log.isDebugEnabled()) {
-            log.debug("reading a stream");
-        }
-        Session session = null;
+        log.debug("reading a stream");
         ReplicationPackage pkg = null;
         try {
-            session = getSession();
-            if (session != null) {
-                final JcrPackage jcrPackage = packaging.getPackageManager(session).upload(stream, true,
-                        false);
-                if (install) {
-                    jcrPackage.install(new ImportOptions());
-                }
-                pkg = new FileVaultReplicationPackage(jcrPackage.getPackage());
+            File tmpFile = File.createTempFile("rp-vlt-read-" + System.nanoTime(), ".zip");
+            FileOutputStream fileStream = new FileOutputStream(tmpFile);
+            IOUtils.copy(stream, fileStream);
+            IOUtils.closeQuietly(fileStream);
+
+            VaultPackage vaultPackage = packaging.getPackageManager().open(tmpFile);
+
+            if (vaultPackage != null) {
+                pkg = new FileVaultReplicationPackage(vaultPackage);
+            } else {
+                log.warn("stream could not be read as a vlt package");
             }
+
         } catch (Exception e) {
             log.error("could not read / install the package", e);
             throw new ReplicationPackageReadingException(e);
-        } finally {
-            if (session != null) {
-                session.logout();
-            }
         }
         return pkg;
     }
+
 
     @Override
     protected ReplicationPackage getPackageInternal(String id) {
@@ -175,8 +169,12 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
                 VaultPackage pkg = packaging.getPackageManager().open(file);
                 replicationPackage = new FileVaultReplicationPackage(pkg);
             }
+//            else {
+//                VaultPackage pkg = packaging.getPackageManager(getSession()).open(PackageId.fromString(id)).getPackage();
+//                replicationPackage = new FileVaultReplicationPackage(pkg);
+//            }
         } catch (Exception e) {
-            log.info("could not find a package with id : {}", id);
+            log.warn("could not find a package with id : {}", id);
         }
         return replicationPackage;
     }
@@ -189,4 +187,32 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
     }
 
 
+    @Override
+    public boolean installPackageInternal(ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {
+        log.debug("reading a replication package stream");
+
+        Session session = null;
+        try {
+            session = getSession();
+//            if (session != null) {
+//                final JcrPackage jcrPackage = packaging.getPackageManager(getSession())
+//                        .open(PackageId.fromString(replicationPackage.getId()));
+//                jcrPackage.install(new ImportOptions());
+//            }
+            File file = new File(replicationPackage.getId());
+            if (file.exists()) {
+                VaultPackage pkg = packaging.getPackageManager().open(file);
+                pkg.extract(session, new ImportOptions());
+                return true;
+            }
+        } catch (Exception e) {
+            log.error("could not read / install the package", e);
+            throw new ReplicationPackageReadingException(e);
+        } finally {
+            if (session != null) {
+                session.logout();
+            }
+        }
+        return false;
+    }
 }

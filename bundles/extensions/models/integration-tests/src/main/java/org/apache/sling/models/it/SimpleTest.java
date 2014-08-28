@@ -27,44 +27,78 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.junit.annotations.SlingAnnotationsTestRunner;
 import org.apache.sling.junit.annotations.TestReference;
-import org.apache.sling.models.it.models.TestModel;
+import org.apache.sling.models.it.models.ConstructorInjectionTestModel;
+import org.apache.sling.models.it.models.InterfaceInjectionTestModel;
+import org.apache.sling.models.it.models.FieldInjectionTestModel;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(SlingAnnotationsTestRunner.class)
+@SuppressWarnings("javadoc")
 public class SimpleTest {
 
     @TestReference
     private ResourceResolverFactory rrFactory;
+    
+    private String value;
+    private ResourceResolver resolver;
+    private Resource resource;
+    private Node createdNode;
+    
+    @Before
+    public void setUp() throws Exception {
+        value = RandomStringUtils.randomAlphanumeric(10);
 
-    @Test
-    public void test() throws Exception {
-        String value = RandomStringUtils.randomAlphanumeric(10);
+        resolver = rrFactory.getAdministrativeResourceResolver(null);     
+        Session session = resolver.adaptTo(Session.class);
+        Node rootNode = session.getRootNode();
+        createdNode = rootNode.addNode("test_" + RandomStringUtils.randomAlphanumeric(10));
+        createdNode.setProperty("testProperty", value);
+        session.save();
 
-        ResourceResolver resolver = null;
-        Node createdNode = null;
-        try {
-            resolver = rrFactory.getAdministrativeResourceResolver(null);
-            Session session = resolver.adaptTo(Session.class);
-            Node rootNode = session.getRootNode();
-            createdNode = rootNode.addNode("test_" + RandomStringUtils.randomAlphanumeric(10));
-            createdNode.setProperty("testProperty", value);
-            session.save();
+        resource = resolver.getResource(createdNode.getPath());
+    }
 
-            Resource resource = resolver.getResource(createdNode.getPath());
-
-            TestModel model = resource.adaptTo(TestModel.class);
-
-            assertNotNull("Model is null", model);
-            assertEquals("Test Property is not set correctly", value, model.getTestProperty());
-            assertNotNull("Filters is null", model.getFilters());
-        } finally {
-            if (createdNode != null) {
-                createdNode.remove();
-            }
-            if (resolver != null) {
-                resolver.close();
-            }
+    @After
+    public void tearDown() throws Exception {
+        if (createdNode != null) {
+            createdNode.remove();
+        }
+        if (resolver != null) {
+            resolver.close();
         }
     }
+
+    @Test
+    public void testFieldInjection() {
+        FieldInjectionTestModel model = resource.adaptTo(FieldInjectionTestModel.class);
+    
+        assertNotNull("Model is null", model);
+        assertEquals("Test Property is not set correctly", value, model.getTestProperty());
+        assertNotNull("Filters is null", model.getFilters());
+        assertSame("Adaptable is not injected", resource, model.getResource());
+    }
+
+    @Test
+    public void testInterfaceInjection() {
+        InterfaceInjectionTestModel model = resource.adaptTo(InterfaceInjectionTestModel.class);
+    
+        assertNotNull("Model is null", model);
+        assertEquals("Test Property is not set correctly", value, model.getTestProperty());
+        assertNotNull("Filters is null", model.getFilters());
+        assertSame("Adaptable is not injected", resource, model.getResource());
+    }
+
+    @Test
+    public void testConstructorInjection() {
+        ConstructorInjectionTestModel model = resource.adaptTo(ConstructorInjectionTestModel.class);
+    
+        assertNotNull("Model is null", model);
+        assertEquals("Test Property is not set correctly", value, model.getTestProperty());
+        assertNotNull("Filters is null", model.getFilters());
+        assertSame("Adaptable is not injected", resource, model.getResource());
+    }
+
 }

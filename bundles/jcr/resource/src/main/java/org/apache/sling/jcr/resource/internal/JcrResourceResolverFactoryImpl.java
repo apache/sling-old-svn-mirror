@@ -64,7 +64,7 @@ public class JcrResourceResolverFactoryImpl implements
 
     /** The dynamic class loader */
     @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
-    private DynamicClassLoaderManager dynamicClassLoaderManager;
+    private volatile DynamicClassLoaderManager dynamicClassLoaderManager;
 
     private JcrItemAdapterFactory jcrItemAdapterFactory;
 
@@ -127,5 +127,12 @@ public class JcrResourceResolverFactoryImpl implements
     public ResourceResolver getResourceResolver(final Map<String, Object> arg0)
             throws LoginException {
         return delegatee.getResourceResolver(arg0);
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolverFactory#getThreadResourceResolver()
+     */
+    public ResourceResolver getThreadResourceResolver() {
+        return delegatee.getThreadResourceResolver();
     }
 }

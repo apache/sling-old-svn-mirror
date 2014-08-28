@@ -18,7 +18,9 @@
  */
 package org.apache.sling.replication.transport.authentication;
 
-
+/**
+ * Represents an error in transport authentication
+ */
 @SuppressWarnings("serial")
 public class TransportAuthenticationException extends Exception {
 

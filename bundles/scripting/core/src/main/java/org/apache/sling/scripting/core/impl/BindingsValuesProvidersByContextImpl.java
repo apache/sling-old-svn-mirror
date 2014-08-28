@@ -63,18 +63,18 @@ public class BindingsValuesProvidersByContextImpl implements BindingsValuesProvi
     private static final String TOPIC_CREATED = "org/apache/sling/scripting/core/BindingsValuesProvider/CREATED";
     private static final String TOPIC_MODIFIED = "org/apache/sling/scripting/core/BindingsValuesProvider/MODIFIED";
     private static final String TOPIC_REMOVED = "org/apache/sling/scripting/core/BindingsValuesProvider/REMOVED";
-    
+
     private ServiceTracker bvpTracker;
     private ServiceTracker mapsTracker;
     private BundleContext bundleContext;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final List<ServiceReference> pendingRefs = new ArrayList<ServiceReference>();
-    
+
     @Reference
     private SlingScriptEngineManager scriptEngineManager;
 
     @Reference(policy = ReferencePolicy.DYNAMIC)
-    private EventAdmin eventAdmin;
+    private volatile EventAdmin eventAdmin;
 
     private abstract class ContextLoop {
         Object apply(ServiceReference ref) {
@@ -93,36 +93,37 @@ public class BindingsValuesProvidersByContextImpl implements BindingsValuesProvi
             }
             return service;
         }
-        
+
         protected abstract void applyInContext(ContextBvpCollector c);
     };
-    
+
     @Activate
     public void activate(ComponentContext ctx) {
         bundleContext = ctx.getBundleContext();
-        
+
         synchronized (pendingRefs) {
             for(ServiceReference ref : pendingRefs) {
                 addingService(ref);
             }
             pendingRefs.clear();
         }
-        
+
         bvpTracker = new ServiceTracker(bundleContext, BindingsValuesProvider.class.getName(), this);
         bvpTracker.open();
-        
+
         // Map services can also be registered to provide bindings
         mapsTracker = new ServiceTracker(bundleContext, Map.class.getName(), this);
         mapsTracker.open();
     }
-    
+
     @Deactivate
     public void deactivate(ComponentContext ctx) {
         bvpTracker.close();
         mapsTracker.close();
         bundleContext = null;
     }
-    
+
+    @Override
     public Collection<BindingsValuesProvider> getBindingsValuesProviders(
             ScriptEngineFactory scriptEngineFactory,
             String context) {
@@ -135,7 +136,7 @@ public class BindingsValuesProvidersByContextImpl implements BindingsValuesProvi
             logger.debug("no BindingsValuesProviderCustomizer available for context '{}'", context);
             return results;
         }
-        
+
         results.addAll(bvpc.getGenericBindingsValuesProviders().values());
         logger.debug("Generic BindingsValuesProviders added for engine {}: {}", scriptEngineFactory.getNames(), results);
 
@@ -174,6 +175,7 @@ public class BindingsValuesProvidersByContextImpl implements BindingsValuesProvi
         return new Event(topic, props);
     }
 
+    @Override
     public Object addingService(final ServiceReference reference) {
         if(bundleContext == null) {
             synchronized (pendingRefs) {
@@ -192,6 +194,7 @@ public class BindingsValuesProvidersByContextImpl implements BindingsValuesProvi
         }.apply(reference);
     }
 
+    @Override
     public void modifiedService(final ServiceReference reference, final Object service) {
         new ContextLoop() {
             @Override
@@ -204,6 +207,7 @@ public class BindingsValuesProvidersByContextImpl implements BindingsValuesProvi
         }.apply(reference);
     }
 
+    @Override
     public void removedService(final ServiceReference reference, final Object service) {
         if(bundleContext == null) {
             synchronized (pendingRefs) {

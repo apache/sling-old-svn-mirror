@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
  * Indicate that this injection point should be handled using a projected
  * property of the adaptable.
  */
-@Target({ ElementType.FIELD, ElementType.METHOD })
+@Target({ ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Via {
 

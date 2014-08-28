@@ -78,8 +78,21 @@ public interface Repository {
     RepositoryInfo getRepositoryInfo();
 
     Command<Void> newAddOrUpdateNodeCommand(FileInfo fileInfo, ResourceProxy resourceProxy);
+
+    /**
+     * Reorder the child nodes under the specified resource
+     * 
+     * <p>
+     * Only the first-level child nodes are typically ordered, but if child nodes are completely covered they will be
+     * ordered recursively.
+     * </p>
+     * 
+     * @param resourceProxy
+     * @return
+     */
+    Command<Void> newReorderChildNodesCommand(ResourceProxy resourceProxy);
 	
-	Command<Void> newDeleteNodeCommand(ResourceProxy resourceProxy);
+    Command<Void> newDeleteNodeCommand(String path);
  
     /**
      * Retrieves information about the resource located at <tt>path</tt> and its direct descendants

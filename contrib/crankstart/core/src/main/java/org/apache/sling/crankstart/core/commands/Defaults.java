@@ -27,12 +27,7 @@ import org.slf4j.LoggerFactory;
 /** CrankstartCommand that sets a default value for a variable */
 public class Defaults implements CrankstartCommand {
     public static final String I_DEFAULTS = "defaults";
-    private final Map<String, String> variables;
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
-    public Defaults(Map<String, String> variables) {
-        this.variables = variables;
-    }
     
     public String getDescription() {
         return I_DEFAULTS + ": set the default value of a crankstart variable";
@@ -55,7 +50,7 @@ public class Defaults implements CrankstartCommand {
             sb.append(parts[i]);
         }
         final String value = sb.toString();
-        variables.put(key, value);
+        crankstartContext.getDefaults().put(key, value);
         log.info("[{}] has default value [{}]", key, value);
     }
 }

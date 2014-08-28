@@ -24,12 +24,12 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>19</version>
+    <version>20</version>
     <relativePath>../../../parent/pom.xml</relativePath>
   </parent>
 
   <artifactId>org.apache.sling.scripting.thymeleaf</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.3-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
   <name>Apache Sling Scripting Thymeleaf</name>
@@ -161,8 +161,6 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Bundle-Category>sling</Bundle-Category>
-            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Export-Package>
               org.apache.sling.scripting.thymeleaf
             </Export-Package>

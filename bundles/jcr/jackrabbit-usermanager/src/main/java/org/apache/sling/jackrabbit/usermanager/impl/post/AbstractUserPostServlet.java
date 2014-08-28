@@ -16,13 +16,11 @@
  */
 package org.apache.sling.jackrabbit.usermanager.impl.post;
 
-import org.apache.felix.scr.annotations.Component;
 import org.osgi.service.component.ComponentContext;
 
 /**
  * Base class for servlets manipulating users
  */
-@Component (componentAbstract=true)
 public abstract class AbstractUserPostServlet extends
         AbstractAuthorizablePostServlet {
 
@@ -30,10 +28,12 @@ public abstract class AbstractUserPostServlet extends
 
 	// ---------- SCR Integration ----------------------------------------------
 
-	protected void activate(ComponentContext context) {
+	@Override
+    protected void activate(ComponentContext context) {
         super.activate(context);
     }
 
+    @Override
     protected void deactivate(ComponentContext context) {
         super.deactivate(context);
     }

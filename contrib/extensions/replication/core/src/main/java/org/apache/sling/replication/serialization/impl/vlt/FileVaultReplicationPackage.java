@@ -22,12 +22,16 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
+import org.apache.jackrabbit.vault.fs.api.WorkspaceFilter;
+import org.apache.jackrabbit.vault.fs.config.DefaultWorkspaceFilter;
+import org.apache.jackrabbit.vault.fs.config.MetaInf;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.replication.communication.ReplicationActionType;
-import org.apache.sling.replication.serialization.ReplicationPackage;
+import org.apache.sling.replication.packaging.ReplicationPackage;
 
 /**
  * a FileVault {@link ReplicationPackage}
@@ -46,13 +50,21 @@ public class FileVaultReplicationPackage implements ReplicationPackage {
 
     public FileVaultReplicationPackage(VaultPackage pkg) {
         this.pkg = pkg;
-        List<PathFilterSet> filterSets = pkg.getMetaInf().getFilter().getFilterSets();
-        String[] paths = new String[filterSets.size()];
-        for (int i = 0; i < paths.length; i++) {
-            paths[i] = filterSets.get(i).getRoot();
+        MetaInf metaInf = pkg.getMetaInf();
+        String[] paths = new String[0];
+        if (metaInf != null) {
+            WorkspaceFilter filter = metaInf.getFilter();
+            if (filter == null) {
+                filter = new DefaultWorkspaceFilter();
+            }
+            List<PathFilterSet> filterSets = filter.getFilterSets();
+            paths = new String[filterSets.size()];
+            for (int i = 0; i < paths.length; i++) {
+                paths[i] = filterSets.get(i).getRoot();
+            }
         }
         this.paths = paths;
-        this.id = pkg.getFile() != null ? pkg.getFile().getAbsolutePath() : String.valueOf(pkg.getId());
+        this.id = pkg.getFile().getAbsolutePath();
         this.action = ReplicationActionType.ADD.toString();
     }
 
@@ -95,4 +107,13 @@ public class FileVaultReplicationPackage implements ReplicationPackage {
         }
     }
 
+    @Override
+    public String toString() {
+        return "FileVaultReplicationPackage{" +
+                "id='" + id + '\'' +
+                ", paths=" + Arrays.toString(paths) +
+                ", pkg=" + pkg +
+                ", action='" + action + '\'' +
+                '}';
+    }
 }

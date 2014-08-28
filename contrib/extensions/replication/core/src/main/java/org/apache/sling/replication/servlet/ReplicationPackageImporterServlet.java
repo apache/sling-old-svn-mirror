@@ -18,10 +18,11 @@
  */
 package org.apache.sling.replication.servlet;
 
-import java.io.IOException;
-import java.io.InputStream;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -29,9 +30,9 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.apache.sling.replication.communication.ReplicationHeader;
+import org.apache.sling.replication.packaging.ReplicationPackage;
+import org.apache.sling.replication.packaging.ReplicationPackageImporter;
 import org.apache.sling.replication.resources.ReplicationConstants;
-import org.apache.sling.replication.serialization.ReplicationPackageImporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,23 +63,21 @@ public class ReplicationPackageImporterServlet extends SlingAllMethodsServlet {
         response.setCharacterEncoding("utf-8");
 
         InputStream stream = request.getInputStream();
-        String type = request.getHeader(ReplicationHeader.TYPE.toString());
         try {
-           success = replicationPackageImporter.importStream(stream, type);
+            ReplicationPackage replicationPackage = replicationPackageImporter.readPackage(stream);
+            if (replicationPackage != null) {
+                success = replicationPackageImporter.importPackage(replicationPackage);
+            } else {
+                log.warn("cannot read a replication package from the given stream");
+            }
         } catch (final Exception e) {
             response.setStatus(400);
-            if (log.isErrorEnabled()) {
-                log.error("Error during replication: {}", e.getMessage(), e);
-            }
+            log.error("Error during replication: {}", e.getMessage(), e);
             response.getWriter().print("error: " + e.toString());
         } finally {
             final long end = System.currentTimeMillis();
-            if (log.isInfoEnabled()) {
-                log.info("Processed replication request in {}ms: : {}", new Object[]{
-                        end - start, success});
-            }
+            log.info("Processed replication request in {}ms: : {}", new Object[]{end - start, success});
         }
-
     }
 
 }

@@ -21,6 +21,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -50,6 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @RunWith(MockitoJUnitRunner.class)
+@SuppressWarnings("javadoc")
 public class InjectorSpecificAnnotationTest {
 
     @Mock
@@ -71,6 +73,8 @@ public class InjectorSpecificAnnotationTest {
     @Before
     public void setup() {
         when(componentCtx.getBundleContext()).thenReturn(bundleContext);
+        when(componentCtx.getProperties()).thenReturn(new Hashtable<String, Object>());
+
         factory = new ModelAdapterFactory();
         factory.activate(componentCtx);
 
@@ -110,7 +114,7 @@ public class InjectorSpecificAnnotationTest {
     }
 
     @Test
-    public void testSimpleValueModel() {
+    public void testSimpleValueModelField() {
         Map<String, Object> map = new HashMap<String, Object>();
         map.put("first", "first-value");
         map.put("second", "second-value");
@@ -127,7 +131,7 @@ public class InjectorSpecificAnnotationTest {
     }
 
     @Test
-    public void testOrderForValueAnnotation() {
+    public void testOrderForValueAnnotationField() {
         // make sure that that the correct injection is used
         // make sure that log is adapted from value map
         // and not coming from request attribute
@@ -149,7 +153,7 @@ public class InjectorSpecificAnnotationTest {
     }
 
     @Test
-    public void testOSGiService() throws InvalidSyntaxException {
+    public void testOSGiServiceField() throws InvalidSyntaxException {
         ServiceReference ref = mock(ServiceReference.class);
         Logger log = mock(Logger.class);
         when(bundleContext.getServiceReferences(Logger.class.getName(), null)).thenReturn(
@@ -162,7 +166,7 @@ public class InjectorSpecificAnnotationTest {
     }
 
     @Test
-    public void testScriptVariable() throws InvalidSyntaxException {
+    public void testScriptVariableField() throws InvalidSyntaxException {
         SlingBindings bindings = new SlingBindings();
         SlingScriptHelper helper = mock(SlingScriptHelper.class);
         bindings.setSling(helper);
@@ -174,7 +178,7 @@ public class InjectorSpecificAnnotationTest {
     }
 
     @Test
-    public void testRequestAttribute() throws InvalidSyntaxException {
+    public void testRequestAttributeField() throws InvalidSyntaxException {
         Object attribute = new Object();
         when(request.getAttribute("attribute")).thenReturn(attribute);
 
@@ -184,7 +188,7 @@ public class InjectorSpecificAnnotationTest {
     }
 
     @Test
-    public void testChildResource() {
+    public void testChildResourceField() {
         Resource res = mock(Resource.class);
         Resource child = mock(Resource.class);
         when(res.getChild("child1")).thenReturn(child);
@@ -194,4 +198,97 @@ public class InjectorSpecificAnnotationTest {
         assertNotNull("Could not instanciate model", model);
         assertEquals(child, model.getChildResource());
     }
+
+    @Test
+    public void testSimpleValueModelConstructor() {
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("first", "first-value");
+        map.put("second", "second-value");
+        ValueMap vm = new ValueMapDecorator(map);
+
+        Resource res = mock(Resource.class);
+        when(res.adaptTo(ValueMap.class)).thenReturn(vm);
+        when(request.getResource()).thenReturn(res);
+
+        org.apache.sling.models.testmodels.classes.constructorinjection.InjectorSpecificAnnotationModel model
+                = factory.getAdapter(request, org.apache.sling.models.testmodels.classes.constructorinjection.InjectorSpecificAnnotationModel.class);
+        assertNotNull("Could not instanciate model", model);
+        assertEquals("first-value", model.getFirst());
+        assertEquals("second-value", model.getSecond());
+    }
+
+    @Test
+    public void testOrderForValueAnnotationConstructor() {
+        // make sure that that the correct injection is used
+        // make sure that log is adapted from value map
+        // and not coming from request attribute
+        Logger logFromValueMap = LoggerFactory.getLogger(this.getClass());
+
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("first", "first-value");
+        map.put("log", logFromValueMap);
+        ValueMap vm = new ValueMapDecorator(map);
+
+        Resource res = mock(Resource.class);
+        when(res.adaptTo(ValueMap.class)).thenReturn(vm);
+        when(request.getResource()).thenReturn(res);
+
+        org.apache.sling.models.testmodels.classes.constructorinjection.InjectorSpecificAnnotationModel model
+                = factory.getAdapter(request, org.apache.sling.models.testmodels.classes.constructorinjection.InjectorSpecificAnnotationModel.class);
+        assertNotNull("Could not instanciate model", model);
+        assertEquals("first-value", model.getFirst());
+        assertEquals(logFromValueMap, model.getLog());
+    }
+
+    @Test
+    public void testOSGiServiceConstructor() throws InvalidSyntaxException {
+        ServiceReference ref = mock(ServiceReference.class);
+        Logger log = mock(Logger.class);
+        when(bundleContext.getServiceReferences(Logger.class.getName(), null)).thenReturn(
+                new ServiceReference[] { ref });
+        when(bundleContext.getService(ref)).thenReturn(log);
+
+        org.apache.sling.models.testmodels.classes.constructorinjection.InjectorSpecificAnnotationModel model
+                = factory.getAdapter(request, org.apache.sling.models.testmodels.classes.constructorinjection.InjectorSpecificAnnotationModel.class);
+        assertNotNull("Could not instanciate model", model);
+        assertEquals(log, model.getService());
+    }
+
+    @Test
+    public void testScriptVariableConstructor() throws InvalidSyntaxException {
+        SlingBindings bindings = new SlingBindings();
+        SlingScriptHelper helper = mock(SlingScriptHelper.class);
+        bindings.setSling(helper);
+        when(request.getAttribute(SlingBindings.class.getName())).thenReturn(bindings);
+
+        org.apache.sling.models.testmodels.classes.constructorinjection.InjectorSpecificAnnotationModel model
+                = factory.getAdapter(request, org.apache.sling.models.testmodels.classes.constructorinjection.InjectorSpecificAnnotationModel.class);
+        assertNotNull("Could not instanciate model", model);
+        assertEquals(helper, model.getHelper());
+    }
+
+    @Test
+    public void testRequestAttributeConstructor() throws InvalidSyntaxException {
+        Object attribute = new Object();
+        when(request.getAttribute("attribute")).thenReturn(attribute);
+
+        org.apache.sling.models.testmodels.classes.constructorinjection.InjectorSpecificAnnotationModel model
+                = factory.getAdapter(request, org.apache.sling.models.testmodels.classes.constructorinjection.InjectorSpecificAnnotationModel.class);
+        assertNotNull("Could not instanciate model", model);
+        assertEquals(attribute, model.getRequestAttribute());
+    }
+
+    @Test
+    public void testChildResourceConstructor() {
+        Resource res = mock(Resource.class);
+        Resource child = mock(Resource.class);
+        when(res.getChild("child1")).thenReturn(child);
+        when(request.getResource()).thenReturn(res);
+
+        org.apache.sling.models.testmodels.classes.constructorinjection.InjectorSpecificAnnotationModel model
+                = factory.getAdapter(request, org.apache.sling.models.testmodels.classes.constructorinjection.InjectorSpecificAnnotationModel.class);
+        assertNotNull("Could not instanciate model", model);
+        assertEquals(child, model.getChildResource());
+    }
+
 }

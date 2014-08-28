@@ -22,7 +22,6 @@ import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.communication.ReplicationResponse;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueException;
-import org.apache.sling.replication.serialization.ReplicationPackage;
 
 /**
  * A replication agent is responsible for delivering content to another instance
@@ -46,7 +45,7 @@ public interface ReplicationAgent {
     ReplicationQueue getQueue(String name) throws ReplicationQueueException;
 
     /**
-     * Synchronously sends a {@link ReplicationRequest} waiting for a {@link ReplicationResponse}
+     * sends a {@link ReplicationRequest} to this {@link org.apache.sling.replication.agent.ReplicationAgent}
      *
      * @param replicationRequest the replication request
      * @return a {@link ReplicationResponse}
@@ -54,30 +53,4 @@ public interface ReplicationAgent {
      */
     ReplicationResponse execute(ReplicationRequest replicationRequest) throws AgentReplicationException;
 
-    /**
-     * Asynchronously sends a {@link ReplicationRequest} without waiting for any response
-     *
-     * @param replicationRequest the replication request
-     * @throws AgentReplicationException
-     */
-    void send(ReplicationRequest replicationRequest) throws AgentReplicationException;
-
-    /**
-     * removes a package from the top of the queue
-     * @param queueName
-     *          the name of a {@link ReplicationQueue} bound to this agent
-     * @return the <code>ReplicationPackage</code> popped from the underlying <code>ReplicationQueue</code>
-     * @throws ReplicationQueueException
-     */
-    ReplicationPackage removeHead(String queueName) throws ReplicationQueueException;
-
-    /**
-     * enables the current  {@link ReplicationAgent}
-     */
-    void enable();
-
-    /**
-     * disables the current  {@link ReplicationAgent}
-     */
-    void disable();
 }

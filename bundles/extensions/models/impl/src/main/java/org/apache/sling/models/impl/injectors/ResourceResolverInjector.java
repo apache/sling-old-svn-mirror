@@ -24,8 +24,6 @@ import java.lang.reflect.Type;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
 import org.osgi.framework.Constants;
@@ -33,7 +31,7 @@ import org.osgi.framework.Constants;
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 900)
-public class ResourceResolverInjector implements Injector {
+public class ResourceResolverInjector extends AbstractInjector implements Injector {
 
     private static final String NAME_RESOURCE_RESOLVER = "resourceResolver";
 
@@ -46,11 +44,7 @@ public class ResourceResolverInjector implements Injector {
     public Object getValue(Object adaptable, String name, Type declaredType, AnnotatedElement element,
             DisposalCallbackRegistry callbackRegistry) {
         if (NAME_RESOURCE_RESOLVER.equals(name)) {
-            if (adaptable instanceof Resource) {
-                return ((Resource) adaptable).getResourceResolver();
-            } else if (adaptable instanceof SlingHttpServletRequest) {
-                return ((SlingHttpServletRequest) adaptable).getResourceResolver();
-            }
+            return getResourceResolver(adaptable);
         }
         return null;
     }

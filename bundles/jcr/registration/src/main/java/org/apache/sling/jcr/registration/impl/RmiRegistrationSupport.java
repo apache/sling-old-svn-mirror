@@ -30,6 +30,10 @@ import javax.jcr.Repository;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.References;
 import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
 import org.apache.jackrabbit.rmi.server.ServerAdapterFactory;
 import org.apache.sling.jcr.registration.AbstractRegistrationSupport;
@@ -54,6 +58,16 @@ import org.osgi.service.log.LogService;
     @Property(name = "service.vendor", value = "The Apache Software Foundation", propertyPrivate = true),
     @Property(name = "service.description", value = "RMI based Repository Registration", propertyPrivate = true)
 })
+@References({
+    @Reference(
+            name = "Repository",
+            policy = ReferencePolicy.DYNAMIC,
+            cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
+            referenceInterface = Repository.class),
+    @Reference(referenceInterface=LogService.class,
+            bind="bindLog", unbind="unbindLog",
+            cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
+})
 public class RmiRegistrationSupport extends AbstractRegistrationSupport {
 
     @Property(intValue = 1099, label = "%rmi.port.name", description = "%rmi.port.description")
@@ -74,6 +88,7 @@ public class RmiRegistrationSupport extends AbstractRegistrationSupport {
      * registry is disabled, if the port property is negative. If the port is
      * zero or not a number, the default port (1099) is assumed.
      */
+    @Override
     protected boolean doActivate() {
 
         Object portProp = this.getComponentContext().getProperties().get(
@@ -112,6 +127,7 @@ public class RmiRegistrationSupport extends AbstractRegistrationSupport {
      * If a private registry has been acquired this method unexports the
      * registry object to free the RMI registry OID for later use.
      */
+    @Override
     protected void doDeactivate() {
         // if we have a private RMI registry, unexport it here to free
         // the RMI registry OID
@@ -130,10 +146,12 @@ public class RmiRegistrationSupport extends AbstractRegistrationSupport {
         this.registry = null;
     }
 
+    @Override
     protected Object bindRepository(String name, Repository repository) {
         return new RmiRegistration(name, repository);
     }
 
+    @Override
     protected void unbindRepository(String name, Object data) {
         RmiRegistration rr = (RmiRegistration) data;
         rr.unregister();

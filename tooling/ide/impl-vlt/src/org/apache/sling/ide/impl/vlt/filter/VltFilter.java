@@ -26,7 +26,6 @@ import org.apache.jackrabbit.vault.fs.config.DefaultWorkspaceFilter;
 import org.apache.jackrabbit.vault.fs.impl.AggregateManagerImpl;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterResult;
-import org.apache.sling.ide.transport.RepositoryInfo;
 
 public class VltFilter implements Filter {
 
@@ -44,7 +43,7 @@ public class VltFilter implements Filter {
     }
 
     @Override
-    public FilterResult filter(File contentSyncRoot, String relativeFilePath, RepositoryInfo repositoryInfo) {
+    public FilterResult filter(File contentSyncRoot, String relativeFilePath) {
         // TODO - is this the right check? I _think_ that filter paths are repository-based, not fs-based
         // so this could be incorrect
 

@@ -28,7 +28,7 @@ import javax.inject.Qualifier;
  * Can also be used as a meta-annotation to declare that some other annotation implies
  * a source.
  */
-@Target({ ElementType.FIELD, ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+@Target({ ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Qualifier
 public @interface Source {

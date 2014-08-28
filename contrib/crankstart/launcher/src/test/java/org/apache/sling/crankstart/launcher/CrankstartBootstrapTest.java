@@ -22,6 +22,8 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
+import org.apache.sling.commons.json.JSONArray;
+import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.junit.Retry;
 import org.apache.sling.commons.testing.junit.RetryRule;
 import org.junit.AfterClass;
@@ -237,6 +239,43 @@ public class CrankstartBootstrapTest {
             for(String exp : expected) {
                 assertTrue("Expecting config content to contain " + exp, content.contains(exp));
             }
+        } finally {
+            closeConnection(response);
+        }
+    }
+    
+    @Test
+    @Retry(timeoutMsec=10000, intervalMsec=250)
+    public void testSpecificStartLevel() throws Exception {
+        // Verify that this bundle is only installed, as it's set to start level 99
+        setAdminCredentials();
+        final String path = "/system/console/bundles/org.apache.commons.collections.json";
+        final HttpUriRequest get = new HttpGet(baseUrl + path);
+        HttpResponse response = null;
+        try {
+            response = client.execute(get);
+            assertEquals("Expecting bundle status to be available at " + get.getURI(), 200, response.getStatusLine().getStatusCode());
+            assertNotNull("Expecting response entity", response.getEntity());
+            String encoding = "UTF-8";
+            if(response.getEntity().getContentEncoding() != null) {
+                encoding = response.getEntity().getContentEncoding().getValue();
+            }
+            final String content = IOUtils.toString(response.getEntity().getContent(), encoding);
+            
+            // Start level is in the props array, with key="Start Level"
+            final JSONObject status = new JSONObject(content);
+            final JSONArray props = status.getJSONArray("data").getJSONObject(0).getJSONArray("props");
+            final String KEY = "key";
+            final String SL = "Start Level";
+            boolean found = false;
+            for(int i=0; i < props.length(); i++) {
+                final JSONObject o = props.getJSONObject(i);
+                if(o.has(KEY) && SL.equals(o.getString(KEY))) {
+                    found = true;
+                    assertEquals("Expecting the start level that we set", "99", o.getString("value"));
+                }
+            }
+            assertTrue("Expecting start level to be found in JSON output", found);
         } finally {
             closeConnection(response);
         }

@@ -19,7 +19,6 @@
 package org.apache.sling.replication.servlet;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -27,12 +26,10 @@ import java.util.List;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.http.entity.ContentType;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
@@ -42,7 +39,7 @@ import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.communication.*;
 import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
 import org.apache.sling.replication.resources.ReplicationConstants;
-import org.apache.sling.replication.serialization.ReplicationPackage;
+import org.apache.sling.replication.transport.impl.RequestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,26 +59,10 @@ public class ReplicationAgentServlet extends SlingAllMethodsServlet {
     @Override
     protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
             throws ServletException, IOException {
-        String action = request.getHeader(ReplicationHeader.ACTION.toString());
-
-        if(ReplicationActionType.POLL.getName().equalsIgnoreCase(action)){
-            doRemove(request, response);
-        }
-        else {
-            doCreate(request, response);
-        }
-    }
-
-    private void doCreate(SlingHttpServletRequest request, SlingHttpServletResponse response)
-            throws IOException {
 
         response.setContentType("application/json");
 
-        String action = request.getHeader(ReplicationHeader.ACTION.toString());
-        String[] path = toStringArray(request.getHeaders(ReplicationHeader.PATH.toString()));
-
-        ReplicationRequest replicationRequest = new ReplicationRequest(System.currentTimeMillis(),
-                ReplicationActionType.valueOf(action), path);
+        ReplicationRequest replicationRequest = RequestUtils.fromServletRequest(request);
 
         ReplicationAgent agent = request.getResource().adaptTo(ReplicationAgent.class);
 
@@ -111,56 +92,6 @@ public class ReplicationAgentServlet extends SlingAllMethodsServlet {
         }
     }
 
-    private void doRemove(SlingHttpServletRequest request, SlingHttpServletResponse response) {
-
-        response.setContentType(ContentType.APPLICATION_OCTET_STREAM.toString());
-
-        String queueName = request.getParameter(ReplicationParameter.QUEUE.toString());
-
-        ReplicationAgent agent = request.getResource().adaptTo(ReplicationAgent.class);
-
-        /* directly polling an agent queue is only possible if such an agent doesn't have its own endpoint
-        (that is it just adds items to its queue to be polled remotely)*/
-        if (agent != null) {
-            try {
-                // TODO : consider using queue distribution strategy and validating who's making this request
-                log.info("getting item from queue {}", queueName);
-
-                // get first item
-                ReplicationPackage head = agent.removeHead(queueName);
-
-                if (head != null) {
-                    InputStream inputStream = null;
-                    int bytesCopied = -1;
-                    try {
-                        inputStream = head.createInputStream();
-                        bytesCopied = IOUtils.copy(inputStream, response.getOutputStream());
-                    }
-                    finally {
-                        IOUtils.closeQuietly(inputStream);
-                    }
-
-                    setPackageHeaders(response, head);
-
-                    // delete the package permanently
-                    head.delete();
-
-                    log.info("{} bytes written into the response", bytesCopied);
-
-                } else {
-                    log.info("nothing to fetch");
-                }
-            } catch (Exception e) {
-                response.setStatus(503);
-                log.error("error while reverse replicating from agent", e);
-            }
-            // everything ok
-            response.setStatus(200);
-        } else {
-            response.setStatus(404);
-        }
-    }
-
     String[] toStringArray(Enumeration<String> e){
         List<String> l = new ArrayList<String>();
         while (e.hasMoreElements()){
@@ -168,15 +99,5 @@ public class ReplicationAgentServlet extends SlingAllMethodsServlet {
         }
 
         return l.toArray(new String[l.size()]);
-
-    }
-
-    void setPackageHeaders(SlingHttpServletResponse response, ReplicationPackage replicationPackage){
-        response.setHeader(ReplicationHeader.TYPE.toString(), replicationPackage.getType());
-        response.setHeader(ReplicationHeader.ACTION.toString(), replicationPackage.getAction());
-        for (String path : replicationPackage.getPaths()){
-            response.setHeader(ReplicationHeader.PATH.toString(), path);
-        }
-
     }
 }

@@ -27,7 +27,7 @@ public class JcrTestNodeResource extends JcrNodeResource {
 
     public JcrTestNodeResource(ResourceResolver resourceResolver, Node node,
             ClassLoader dynamicClassLoader) throws RepositoryException {
-        super(resourceResolver, node, dynamicClassLoader);
+        super(resourceResolver, node.getPath(), node, dynamicClassLoader);
     }
 
 }

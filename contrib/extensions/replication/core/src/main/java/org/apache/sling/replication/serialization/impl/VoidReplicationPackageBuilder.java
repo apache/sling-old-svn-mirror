@@ -18,30 +18,31 @@
  */
 package org.apache.sling.replication.serialization.impl;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.replication.communication.ReplicationRequest;
-import org.apache.sling.replication.serialization.ReplicationPackage;
+import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 
 @Component(metatype = false, label = "Void Replication Package Builder")
 @Service(value = ReplicationPackageBuilder.class)
 @Property(name = "name", value = VoidReplicationPackageBuilder.NAME)
 public class VoidReplicationPackageBuilder implements ReplicationPackageBuilder {
-    public static final String NAME = "void";
+
+    static final String NAME = "void";
 
     public ReplicationPackage createPackage(ReplicationRequest request) throws ReplicationPackageBuildingException {
-        return new VoidReplicationPackage(request, "VOID");
+        return new VoidReplicationPackage(request);
     }
 
-    public ReplicationPackage readPackage(InputStream stream, boolean install) throws ReplicationPackageReadingException {
+    public ReplicationPackage readPackage(InputStream stream) throws ReplicationPackageReadingException {
         try {
             return VoidReplicationPackage.fromStream(stream);
         } catch (Exception e) {
@@ -52,9 +53,12 @@ public class VoidReplicationPackageBuilder implements ReplicationPackageBuilder 
     public ReplicationPackage getPackage(String id) {
         try {
             return VoidReplicationPackage.fromStream(new ByteArrayInputStream(id.getBytes("UTF-8")));
-        }
-        catch (IOException ex){
+        } catch (IOException ex) {
             return null;
         }
+    }
+
+    public boolean installPackage(ReplicationPackage replicationPackage) {
+        return false;
     }
 }

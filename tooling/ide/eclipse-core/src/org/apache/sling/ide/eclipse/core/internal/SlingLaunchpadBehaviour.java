@@ -19,12 +19,16 @@ package org.apache.sling.ide.eclipse.core.internal;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.sling.ide.artifacts.EmbeddedArtifact;
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
-import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
+import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.osgi.OsgiClient;
 import org.apache.sling.ide.osgi.OsgiClientException;
 import org.apache.sling.ide.serialization.SerializationException;
@@ -74,55 +78,90 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
 
     public void start(IProgressMonitor monitor) throws CoreException {
 
+        
+        
         boolean success = false;
         Result<ResourceProxy> result = null;
+        monitor.beginTask("Starting server", 5);
+        
+        try {
+            if (getServer().getMode().equals(ILaunchManager.DEBUG_MODE)) {
+                debuggerConnection = new JVMDebuggerConnection();
+                success = debuggerConnection.connectInDebugMode(launch, getServer(), monitor);
 
-        if (getServer().getMode().equals(ILaunchManager.DEBUG_MODE)) {
-            debuggerConnection = new JVMDebuggerConnection();
-            success = debuggerConnection.connectInDebugMode(launch, getServer(), monitor);
+            } else {
 
-        } else {
+                Repository repository;
+                try {
+                    repository = ServerUtil.connectRepository(getServer(), monitor);
+                } catch (CoreException e) {
+                    setServerState(IServer.STATE_STOPPED);
+                    throw e;
+                }
+                
+                monitor.worked(2); // 2/5 done
+                
+                Command<ResourceProxy> command = repository.newListChildrenNodeCommand("/");
+                result = command.execute();
+                success = result.isSuccess();
+                
+                monitor.worked(1); // 3/5 done
+                
+                RepositoryInfo repositoryInfo;
+                try {
+                    repositoryInfo = ServerUtil.getRepositoryInfo(getServer(), monitor);
+                    OsgiClient client = Activator.getDefault().getOsgiClientFactory().createOsgiClient(repositoryInfo);
+                    EmbeddedArtifactLocator artifactLocator = Activator.getDefault().getArtifactLocator();
+                    Version remoteVersion = client.getBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME);
+                    
+                    monitor.worked(1); // 4/5 done
+                    
+                    final EmbeddedArtifact supportBundle = artifactLocator.loadToolingSupportBundle();
 
-            Repository repository;
-            try {
-                repository = ServerUtil.connectRepository(getServer(), monitor);
-            } catch (CoreException e) {
+                    final Version embeddedVersion = new Version(supportBundle.getVersion());
+                    
+                    ISlingLaunchpadServer launchpadServer = (ISlingLaunchpadServer) getServer().loadAdapter(SlingLaunchpadServer.class,
+                            monitor);
+                    if (remoteVersion == null || remoteVersion.compareTo(embeddedVersion) < 0) {
+                        InputStream contents = null;
+                        try {
+                            contents = supportBundle.openInputStream();
+                            client.installBundle(contents, supportBundle.getName());
+                        } finally {
+                            IOUtils.closeQuietly(contents);
+                        }
+                        remoteVersion = embeddedVersion;
+
+                    }
+                    launchpadServer.setBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME, remoteVersion,
+                            monitor);
+                    
+                    monitor.worked(1); // 5/5 done
+                    
+                } catch ( IOException e) {
+                    Activator.getDefault().getPluginLogger()
+                        .warn("Failed reading the installation support bundle", e);
+                } catch (URISyntaxException e) {
+                    Activator.getDefault().getPluginLogger()
+                            .warn("Failed retrieving information about the installation support bundle", e);
+                } catch (OsgiClientException e) {
+                    Activator.getDefault().getPluginLogger()
+                            .warn("Failed retrieving information about the installation support bundle", e);
+                }
+            }
+
+            if (success) {
+                setServerState(IServer.STATE_STARTED);
+            } else {
                 setServerState(IServer.STATE_STOPPED);
-                throw e;
+                String message = "Unable to connect to the Server. Please make sure a server instance is running ";
+                if (result != null) {
+                    message += " (" + result.toString() + ")";
+                }
+                throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, message));
             }
-            Command<ResourceProxy> command = repository.newListChildrenNodeCommand("/");
-            result = command.execute();
-            success = result.isSuccess();
-            
-            RepositoryInfo repositoryInfo;
-            try {
-                repositoryInfo = ServerUtil.getRepositoryInfo(getServer(), monitor);
-                OsgiClient client = Activator.getDefault().getOsgiClientFactory().createOsgiClient(repositoryInfo);
-                Version bundleVersion = client.getBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME);
-                
-                ISlingLaunchpadServer launchpadServer = (ISlingLaunchpadServer) getServer().loadAdapter(SlingLaunchpadServer.class,
-                        monitor);
-                launchpadServer.setBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME, bundleVersion,
-                        monitor);
-                
-            } catch (URISyntaxException e) {
-                Activator.getDefault().getPluginLogger()
-                        .warn("Failed retrieving information about the installation support bundle", e);
-            } catch (OsgiClientException e) {
-                Activator.getDefault().getPluginLogger()
-                        .warn("Failed retrieving information about the installation support bundle", e);
-            }
-        }
-
-        if (success) {
-            setServerState(IServer.STATE_STARTED);
-        } else {
-            setServerState(IServer.STATE_STOPPED);
-            String message = "Unable to connect to the Server. Please make sure a server instance is running ";
-            if (result != null) {
-                message += " (" + result.toString() + ")";
-            }
-            throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, message));
+        } finally {
+            monitor.done();
         }
     }
 
@@ -140,7 +179,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
     protected void publishModule(int kind, int deltaKind, IModule[] module, IProgressMonitor monitor)
             throws CoreException {
 
-        PluginLogger logger = Activator.getDefault().getPluginLogger();
+        Logger logger = Activator.getDefault().getPluginLogger();
         
         if (commandFactory == null) {
             commandFactory = new ResourceChangeCommandFactory(Activator.getDefault().getSerializationManager());
@@ -300,6 +339,8 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
             
             monitor.worked(1);
 
+            //TODO SLING-3767:
+            //osgiClient must have a timeout!!!
             if ( installLocally ) {
                 osgiClient.installLocalBundle(outputLocation.toOSString());
                 monitor.worked(3);
@@ -328,7 +369,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
     private void publishContentModule(int kind, int deltaKind, IModule[] module, IProgressMonitor monitor)
             throws CoreException, SerializationException, IOException {
 
-        PluginLogger logger = Activator.getDefault().getPluginLogger();
+        Logger logger = Activator.getDefault().getPluginLogger();
 
 		Repository repository = ServerUtil.getConnectedRepository(getServer(), monitor);
         
@@ -336,6 +377,8 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
         // it would be simpler to implement this in SlingContentModuleAdapter, but
         // the behaviour for resources being filtered out is deletion, and that
         // would be an incorrect ( or at least suprising ) behaviour at development time
+
+        List<IModuleResource> addedOrUpdatedResources = new ArrayList<IModuleResource>();
 
         switch (deltaKind) {
             case ServerBehaviourDelegate.CHANGED:
@@ -370,6 +413,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                         case IModuleResourceDelta.CHANGED:
                         case IModuleResourceDelta.NO_CHANGE: // TODO is this needed?
                             execute(addFileCommand(repository, resourceDelta.getModuleResource()));
+                            addedOrUpdatedResources.add(resourceDelta.getModuleResource());
                             break;
                         case IModuleResourceDelta.REMOVED:
                             execute(removeFileCommand(repository, resourceDelta.getModuleResource()));
@@ -382,14 +426,19 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
             case ServerBehaviourDelegate.NO_CHANGE: // TODO is this correct ?
                 for (IModuleResource resource : getResources(module)) {
                     execute(addFileCommand(repository, resource));
+                    addedOrUpdatedResources.add(resource);
                 }
                 break;
             case ServerBehaviourDelegate.REMOVED:
-                IModuleResource[] moduleResources2 = getResources(module);
-                for (IModuleResource resource : moduleResources2) {
+                for (IModuleResource resource : getResources(module)) {
                     execute(removeFileCommand(repository, resource));
                 }
                 break;
+        }
+
+        // reorder the child nodes at the end, when all create/update/deletes have been processed
+        for (IModuleResource resource : addedOrUpdatedResources) {
+            execute(reorderChildNodesCommand(repository, resource));
         }
 
 
@@ -425,6 +474,18 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
         return commandFactory.newCommandForAddedOrUpdated(repository, res);
     }
 
+    private Command<?> reorderChildNodesCommand(Repository repository, IModuleResource resource) throws CoreException,
+            SerializationException, IOException {
+
+        IResource res = getResource(resource);
+
+        if (res == null) {
+            return null;
+        }
+
+        return commandFactory.newReorderChildNodesCommand(repository, res);
+    }
+
     private IResource getResource(IModuleResource resource) {
 
         IResource file = (IFile) resource.getAdapter(IFile.class);
@@ -445,7 +506,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
 
     private Command<?> removeFileCommand(Repository repository, IModuleResource resource)
             throws SerializationException, IOException, CoreException {
-    	
+
         IResource deletedResource = getResource(resource);
 
         if (deletedResource == null) {

@@ -41,6 +41,8 @@ public class HealthCheckMetadata {
     private final long serviceId;
 
     private final List<String> tags;
+    
+    private final String asyncCronExpression;
 
     private final transient ServiceReference serviceReference;
 
@@ -50,6 +52,7 @@ public class HealthCheckMetadata {
         this.mbeanName = (String) ref.getProperty(HealthCheck.MBEAN_NAME);
         this.title = getHealthCheckTitle(ref);
         this.tags = arrayPropertyToListOfStr(ref.getProperty(HealthCheck.TAGS));
+        this.asyncCronExpression = (String) ref.getProperty(HealthCheck.ASYNC_CRON_EXPRESSION);
         this.serviceReference = ref;
     }
 
@@ -88,6 +91,14 @@ public class HealthCheckMetadata {
      */
     public List<String> getTags() {
         return tags;
+    }
+    
+    
+    /**
+     * Return the cron expression used for asynchronous execution.
+     */
+    public String getAsyncCronExpression() {
+        return asyncCronExpression;
     }
 
     /**

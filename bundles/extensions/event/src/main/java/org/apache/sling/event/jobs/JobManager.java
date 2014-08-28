@@ -204,6 +204,18 @@ public interface JobManager {
     Collection<ScheduledJobInfo> getScheduledJobs();
 
     /**
+     * Return all matching available job schedules.
+     * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
+     * @param limit A positive number indicating the maximum number of jobs returned by the iterator. A value
+     *              of zero or less indicates that all jobs should be returned.
+     * @param templates A list of filter property maps. Each map acts like a template. The searched job
+     *                    must match the template (AND query). By providing several maps, different filters
+     *                    are possible (OR query).
+     * @since 1.4
+     */
+    Collection<ScheduledJobInfo> getScheduledJobs(String topic, long limit, Map<String, Object>... templates);
+
+    /**
      * Add a new job
      *
      * If the topic is <code>null</code> or illegal, no job is created and <code>null</code> is returned.

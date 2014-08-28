@@ -16,7 +16,7 @@
  */
 package org.apache.sling.ide.eclipse.core.debug.impl;
 
-import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
+import org.apache.sling.ide.log.Logger;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Plugin;
 import org.eclipse.core.runtime.Status;
@@ -26,9 +26,9 @@ import org.eclipse.osgi.service.debug.DebugTrace;
 import org.eclipse.osgi.util.NLS;
 
 /**
- * The <tt>Tracer</tt> is the default implementation of the <tt>PluginLogger</tt>
+ * The <tt>Tracer</tt> is the default implementation of the <tt>Logger</tt>
  */
-public class Tracer implements DebugOptionsListener, PluginLogger {
+public class Tracer implements DebugOptionsListener, Logger {
 
     private final Plugin plugin;
     private boolean debugEnabled;

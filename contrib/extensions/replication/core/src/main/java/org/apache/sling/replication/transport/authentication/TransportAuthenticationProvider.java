@@ -21,7 +21,7 @@ package org.apache.sling.replication.transport.authentication;
 
 /**
  * A <code>TransportAuthenticationProvider</code> is responsible for authentication of instances sending and
- * receiving replication items via {@link org.apache.sling.replication.transport.TransportHandler}s
+ * receiving replication items via {@link org.apache.sling.replication.transport.ReplicationTransportHandler}s
  */
 public interface TransportAuthenticationProvider<A, T> {
 

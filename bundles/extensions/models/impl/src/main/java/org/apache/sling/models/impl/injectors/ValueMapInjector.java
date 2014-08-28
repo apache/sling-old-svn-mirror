@@ -30,7 +30,6 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.models.annotations.injectorspecific.ValueMapValue;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
@@ -45,7 +44,7 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 2000)
-public class ValueMapInjector implements Injector, InjectAnnotationProcessorFactory {
+public class ValueMapInjector extends AbstractInjector implements Injector, InjectAnnotationProcessorFactory {
 
     private static final Logger log = LoggerFactory.getLogger(ValueMapInjector.class);
 
@@ -56,7 +55,7 @@ public class ValueMapInjector implements Injector, InjectAnnotationProcessorFact
 
     public Object getValue(Object adaptable, String name, Type type, AnnotatedElement element,
             DisposalCallbackRegistry callbackRegistry) {
-        ValueMap map = getMap(adaptable);
+        ValueMap map = getValueMap(adaptable);
         if (map == null) {
             return null;
         } else if (type instanceof Class<?>) {
@@ -108,17 +107,6 @@ public class ValueMapInjector implements Injector, InjectAnnotationProcessorFact
             return Arrays.asList((Object[]) array);
         } else {
             log.debug("ValueMapInjector doesn't support non-class types {}", type);
-            return null;
-        }
-    }
-
-    private ValueMap getMap(Object adaptable) {
-        if (adaptable instanceof ValueMap) {
-            return (ValueMap) adaptable;
-        } else if (adaptable instanceof Adaptable) {
-            ValueMap map = ((Adaptable) adaptable).adaptTo(ValueMap.class);
-            return map;
-        } else {
             return null;
         }
     }

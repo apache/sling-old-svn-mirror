@@ -17,17 +17,12 @@
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
 import static org.apache.jackrabbit.JcrConstants.JCR_CONTENT;
-import static org.apache.jackrabbit.JcrConstants.JCR_CREATED;
 import static org.apache.jackrabbit.JcrConstants.JCR_DATA;
-import static org.apache.jackrabbit.JcrConstants.JCR_ENCODING;
-import static org.apache.jackrabbit.JcrConstants.JCR_LASTMODIFIED;
-import static org.apache.jackrabbit.JcrConstants.JCR_MIMETYPE;
 import static org.apache.jackrabbit.JcrConstants.NT_FILE;
 
 import java.io.InputStream;
 import java.net.URL;
 import java.security.AccessControlException;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -36,7 +31,6 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
-import javax.jcr.ValueFormatException;
 
 import org.apache.jackrabbit.net.URLFactory;
 import org.apache.sling.adapter.annotations.Adaptable;
@@ -44,7 +38,6 @@ import org.apache.sling.adapter.annotations.Adapter;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistableValueMap;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.JcrModifiablePropertyMap;
@@ -60,53 +53,63 @@ import org.slf4j.LoggerFactory;
         @Adapter(value=PersistableValueMap.class, condition="If the resource is a JcrNodeResource and the user has set property privileges on the node."),
         @Adapter(value=InputStream.class, condition="If the resource is a JcrNodeResource and has a jcr:data property or is an nt:file node.")
 })
-class JcrNodeResource extends JcrItemResource { // this should be package private, see SLING-1414
+class JcrNodeResource extends JcrItemResource<Node> { // this should be package private, see SLING-1414
 
     /** marker value for the resourceSupertType before trying to evaluate */
     private static final String UNSET_RESOURCE_SUPER_TYPE = "<unset>";
 
+    private static volatile boolean loggedUrlWarning = false;
+
     /** default log */
     private static final Logger LOGGER = LoggerFactory.getLogger(JcrNodeResource.class);
 
-    private final Node node;
+    private String resourceType;
 
-    private final String resourceType;
-
-    protected String resourceSuperType;
+    private String resourceSuperType;
 
     private final ClassLoader dynamicClassLoader;
 
     /**
      * Constructor
      * @param resourceResolver
-     * @param node
+     * @param path The path of the resource (lazily initialized if null)
+     * @param node The Node underlying this resource
      * @param dynamicClassLoader Dynamic class loader for loading serialized objects.
      * @throws RepositoryException
      */
     public JcrNodeResource(final ResourceResolver resourceResolver,
+                           final String path,
                            final Node node,
-                           final ClassLoader dynamicClassLoader)
-    throws RepositoryException {
-        super(resourceResolver, node.getPath());
+                           final ClassLoader dynamicClassLoader) {
+        super(resourceResolver, path, node, new JcrNodeResourceMetadata(node));
         this.dynamicClassLoader = dynamicClassLoader;
-        this.node = node;
-        resourceType = getResourceTypeForNode(node);
-        resourceSuperType = UNSET_RESOURCE_SUPER_TYPE;
-
-        // check for nt:file metadata
-        setMetaData(node, getResourceMetadata());
+        this.resourceSuperType = UNSET_RESOURCE_SUPER_TYPE;
     }
 
+    /**
+     * @see org.apache.sling.api.resource.Resource#getResourceType()
+     */
     public String getResourceType() {
+        if ( this.resourceType == null ) {
+            try {
+                this.resourceType = getResourceTypeForNode(getNode());
+            } catch (final RepositoryException e) {
+                LOGGER.error("Unable to get resource type for node " + getNode(), e);
+                this.resourceType = "<unknown resource type>";
+            }
+        }
         return resourceType;
     }
 
+    /**
+     * @see org.apache.sling.api.resource.Resource#getResourceSuperType()
+     */
     public String getResourceSuperType() {
         // Yes, this isn't how you're supposed to compare Strings, but this is intentional.
         if ( resourceSuperType == UNSET_RESOURCE_SUPER_TYPE ) {
             try {
-                if (node.hasProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY)) {
-                    resourceSuperType = node.getProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY).getValue().getString();
+                if (getNode().hasProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY)) {
+                    resourceSuperType = getNode().getProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY).getValue().getString();
                 }
             } catch (RepositoryException re) {
                 // we ignore this
@@ -132,7 +135,7 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
         } else if (type == PersistableValueMap.class ) {
             // check write
             try {
-                getNode().getSession().checkPermission(getNode().getPath(),
+                getNode().getSession().checkPermission(getPath(),
                     "set_property");
                 return (Type) new JcrModifiablePropertyMap(getNode(), this.dynamicClassLoader);
             } catch (AccessControlException ace) {
@@ -149,7 +152,7 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
         } else if (type == ModifiableValueMap.class ) {
             // check write
             try {
-                getNode().getSession().checkPermission(getNode().getPath(),
+                getNode().getSession().checkPermission(getPath(),
                     "set_property");
                 return (Type) new JcrModifiableValueMap(getNode(), this.dynamicClassLoader);
             } catch (AccessControlException ace) {
@@ -180,17 +183,17 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
     // ---------- internal -----------------------------------------------------
 
     private Node getNode() {
-        return node;
+        return getItem();
     }
 
     /**
      * Returns a stream to the <em>jcr:data</em> property if the
      * {@link #getNode() node} is an <em>nt:file</em> or <em>nt:resource</em>
-     * node. Otherwise returns <code>null</code>. If a valid stream can be
-     * returned, this method also sets the content length resource metadata.
+     * node. Otherwise returns <code>null</code>.
      */
     private InputStream getInputStream() {
         // implement this for nt:file only
+        final Node node = getNode();
         if (node != null) {
             try {
                 // find the content node: for nt:file it is jcr:content
@@ -211,13 +214,7 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
                         while (item.isNode()) {
                             item = ((Node) item).getPrimaryItem();
                         }
-                        data = ((Property) item);
-
-                        // set the content length property as a side effect
-                        // for resources which are not nt:file based and whose
-                        // data is not in jcr:content/jcr:data this will lazily
-                        // set the correct content length
-                        this.setContentLength(data);
+                        data = (Property) item;
 
                     } catch (ItemNotFoundException infe) {
                         // we don't actually care, but log for completeness
@@ -241,9 +238,14 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
     }
 
     private URL getURL() {
+        if ( !loggedUrlWarning ) {
+            loggedUrlWarning = true;
+            LOGGER.warn("Adapting a JCR resource to a URL is deprecated. This feature will be " +
+                    "removed in future versions. Please adjust your code.");
+        }
         try {
-            return URLFactory.createURL(node.getSession(), node.getPath());
-        } catch (Exception ex) {
+            return URLFactory.createURL(getNode().getSession(), getPath());
+        } catch (final Exception ex) {
             LOGGER.error("getURL: Cannot create URL for " + this, ex);
         }
 
@@ -259,62 +261,10 @@ class JcrNodeResource extends JcrItemResource { // this should be package privat
                 return new JcrNodeResourceIterator(getResourceResolver(),
                     getNode().getNodes(), this.dynamicClassLoader);
             }
-        } catch (RepositoryException re) {
+        } catch (final RepositoryException re) {
             LOGGER.error("listChildren: Cannot get children of " + this, re);
         }
 
-        return Collections.<Resource> emptyList().iterator();
-    }
-
-    private void setMetaData(Node node, ResourceMetadata metadata) {
-        try {
-
-            // check stuff for nt:file nodes
-            if (node.isNodeType(NT_FILE)) {
-                metadata.setCreationTime(node.getProperty(JCR_CREATED).getLong());
-
-                // continue our stuff with the jcr:content node
-                // which might be nt:resource, which we support below
-                // if the node is new, the content node might not exist yet
-                if ( !node.isNew() || node.hasNode(JCR_CONTENT) ) {
-                    node = node.getNode(JCR_CONTENT);
-                }
-            }
-
-            // check stuff for nt:resource (or similar) nodes
-            if (node.hasProperty(JCR_MIMETYPE)) {
-                metadata.setContentType(node.getProperty(JCR_MIMETYPE).getString());
-            }
-
-            if (node.hasProperty(JCR_ENCODING)) {
-                metadata.setCharacterEncoding(node.getProperty(JCR_ENCODING).getString());
-            }
-
-            if (node.hasProperty(JCR_LASTMODIFIED)) {
-                // We don't check node type, so JCR_LASTMODIFIED might not be a long
-                final Property prop = node.getProperty(JCR_LASTMODIFIED);
-                try {
-                    metadata.setModificationTime(prop.getLong());
-                } catch(ValueFormatException vfe) {
-                    LOGGER.debug("Property {} cannot be converted to a long, ignored ({})",
-                            prop.getPath(), vfe);
-                }
-            }
-
-            if (node.hasProperty(JCR_DATA)) {
-                final Property prop = node.getProperty(JCR_DATA);
-                try {
-                    metadata.setContentLength(prop.getLength());
-                } catch (ValueFormatException vfe) {
-                    LOGGER.debug(
-                        "Length of Property {} cannot be retrieved, ignored ({})",
-                        prop.getPath(), vfe);
-                }
-            }
-        } catch (RepositoryException re) {
-            LOGGER.info(
-                "setMetaData: Problem extracting metadata information for "
-                    + getPath(), re);
-        }
+        return null;
     }
 }

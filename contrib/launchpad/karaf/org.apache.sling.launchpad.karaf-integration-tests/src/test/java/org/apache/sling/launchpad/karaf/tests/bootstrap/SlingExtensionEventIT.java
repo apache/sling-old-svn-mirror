@@ -18,10 +18,6 @@
  */
 package org.apache.sling.launchpad.karaf.tests.bootstrap;
 
-import javax.inject.Inject;
-
-import org.apache.sling.event.impl.EnvironmentComponent;
-import org.apache.sling.event.impl.EventingThreadPool;
 import org.apache.sling.launchpad.karaf.testing.KarafTestSupport;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,7 +27,6 @@ import org.ops4j.pax.exam.OptionUtils;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
-import org.ops4j.pax.exam.util.Filter;
 import org.osgi.framework.Bundle;
 
 import static org.junit.Assert.assertEquals;
@@ -40,14 +35,6 @@ import static org.junit.Assert.assertNotNull;
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
 public class SlingExtensionEventIT extends KarafTestSupport {
-
-    @Inject
-    @Filter(timeout = 300000)
-    public EnvironmentComponent environmentComponent;
-
-    @Inject
-    @Filter(timeout = 300000)
-    public EventingThreadPool eventingThreadPool;
 
     @Configuration
     public Option[] configuration() {
@@ -61,16 +48,6 @@ public class SlingExtensionEventIT extends KarafTestSupport {
         final Bundle bundle = findBundle("org.apache.sling.event");
         assertNotNull(bundle);
         assertEquals(Bundle.ACTIVE, bundle.getState());
-    }
-
-    @Test
-    public void testEnvironmentComponent() throws Exception {
-        assertNotNull(environmentComponent);
-    }
-
-    @Test
-    public void testEventingThreadPool() throws Exception {
-        assertNotNull(eventingThreadPool);
     }
 
 }

@@ -106,7 +106,7 @@ public class ViewHelper {
         while (true) {
             logger.error("getEstablishedView: more than one established view encountered! Removing: "
                     + establishedView);
-            new View(establishedView).remove();
+            new View(establishedView).remove(false);
             if (!it.hasNext()) {
                 return null;
             }

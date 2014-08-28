@@ -16,22 +16,15 @@
  */
 package org.apache.sling.commons.mime.internal;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.mime.MimeTypeProvider;
 import org.apache.tika.Tika;
 import org.apache.tika.mime.MimeType;
 import org.apache.tika.mime.MimeTypeException;
 import org.apache.tika.mime.MimeTypes;
-import org.osgi.framework.Constants;
 
 /**
  * MIME type provider based on Apache Tika.
  */
-@Component
-@Service(MimeTypeProvider.class)
-@Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Tika MIME Type Provider")
 public class TikaMimeTypeProvider implements MimeTypeProvider {
 
     private final Tika tika = new Tika();

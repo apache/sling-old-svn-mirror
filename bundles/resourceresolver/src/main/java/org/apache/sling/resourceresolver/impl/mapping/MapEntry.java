@@ -63,7 +63,7 @@ public class MapEntry implements Comparable<MapEntry> {
     private final String[] redirect;
 
     private final int status;
-    
+
     private long order;
 
     public static String appendSlash(String path) {
@@ -274,8 +274,10 @@ public class MapEntry implements Comparable<MapEntry> {
             for (int i = 0; i < redirects.length; i++) {
             	try{
             		 results[i] = m.replaceFirst(redirects[i]);
-            	}catch(StringIndexOutOfBoundsException siob){
-            		log.debug("Exception while replacing, ignoring entry {} ",redirects[i],siob);
+            	} catch (final StringIndexOutOfBoundsException siob){
+            		log.debug("Exception while replacing, ignoring entry {} ", redirects[i], siob);
+                } catch (final IllegalArgumentException iae){
+                    log.debug("Exception while replacing, ignoring entry {} ", redirects[i], iae);
              	}
             }
             return results;

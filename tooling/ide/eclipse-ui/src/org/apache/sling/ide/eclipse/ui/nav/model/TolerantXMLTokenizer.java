@@ -16,8 +16,6 @@
  */
 package org.apache.sling.ide.eclipse.ui.nav.model;
 
-import org.eclipse.core.resources.IFile;
-
 import de.pdark.decentxml.Location;
 import de.pdark.decentxml.Token;
 import de.pdark.decentxml.XMLParseException;
@@ -33,11 +31,12 @@ import de.pdark.decentxml.XMLTokenizer;
  * @see <a href="https://code.google.com/p/decentxml/issues/detail?id=5">decentxml bug report</a>
  */
 final class TolerantXMLTokenizer extends XMLTokenizer {
-	private final IFile file;
 
-	TolerantXMLTokenizer(XMLSource source, IFile file) {
+    private final String originDetails;
+
+	TolerantXMLTokenizer(XMLSource source, String originDetails) {
 		super(source);
-		this.file = file;
+		this.originDetails = originDetails;
 	}
 
 	@Override
@@ -76,7 +75,7 @@ final class TolerantXMLTokenizer extends XMLTokenizer {
 	            break;
 	        if (c == '<') {
 	        	Location l = new Location(source, pos);
-	            System.err.println("Illegal character in attribute value: '"+c+"' in "+file.getFullPath()+" at "+l);
+	            System.err.println("Illegal character in attribute value: '"+c+"' in "+originDetails+" at "+l);
 	        }
 	    }
 	    

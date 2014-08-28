@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.replication.it;
 
 import org.apache.sling.replication.communication.ReplicationActionType;
@@ -24,23 +23,23 @@ import org.junit.Test;
 
 import static org.apache.sling.replication.it.ReplicationUtils.*;
 
+/**
+ * Integration test for forward replication
+ */
 public class ForwardReplicationTest extends ReplicationIntegrationTestBase {
 
     @Test
     public void testAddContent() throws Exception {
-        String nodePath = createRandomNode(authorClient, "/content");
+        String nodePath = createRandomNode(authorClient, "/content/forward_add_" + System.nanoTime());
         assertExists(authorClient, nodePath);
         replicate(author, "publish", ReplicationActionType.ADD, nodePath);
         assertExists(publishClient, nodePath);
     }
 
-
     @Test
     public void testDeleteContent() throws Exception {
-        String nodePath = createRandomNode(authorClient, "/content");
-        replicate(author, "publish", ReplicationActionType.ADD, nodePath);
+        String nodePath = createRandomNode(publishClient, "/content/forward_del_" + System.nanoTime());
         assertExists(publishClient, nodePath);
-
         replicate(author, "publish", ReplicationActionType.DELETE, nodePath);
         assertNotExits(publishClient, nodePath);
     }

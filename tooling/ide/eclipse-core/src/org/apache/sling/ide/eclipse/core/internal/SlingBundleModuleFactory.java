@@ -22,7 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.sling.ide.eclipse.core.debug.PluginLogger;
+import org.apache.sling.ide.log.Logger;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -174,7 +174,7 @@ public class SlingBundleModuleFactory extends ProjectModuleFactoryDelegate {
                 }
             });
 
-            PluginLogger logger = Activator.getDefault().getPluginLogger();
+            Logger logger = Activator.getDefault().getPluginLogger();
 
             for (Iterator<IModuleResource> it = resources.iterator(); it.hasNext();) {
 				IModuleResource iModuleResource = it.next();

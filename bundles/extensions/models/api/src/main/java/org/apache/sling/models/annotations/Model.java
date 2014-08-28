@@ -22,7 +22,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Mark a class as adaptable via YAMF.
+ * Mark a class as adaptable via Sling Models.
  *
  */
 @Target(ElementType.TYPE)
@@ -32,5 +32,7 @@ public @interface Model {
     public Class<?>[] adaptables();
 
     public DefaultInjectionStrategy defaultInjectionStrategy() default DefaultInjectionStrategy.REQUIRED;
+
+    public String condition() default "";
 
 }

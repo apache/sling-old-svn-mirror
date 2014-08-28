@@ -21,32 +21,30 @@ package org.apache.sling.replication.serialization;
 import java.io.InputStream;
 
 import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.packaging.ReplicationPackage;
 
 /**
- * A builder for {@link ReplicationPackage}s
+ * A builder for {@link org.apache.sling.replication.packaging.ReplicationPackage}s
  */
 public interface ReplicationPackageBuilder {
+
     /**
-     * creates a {@link ReplicationPackage} for a specific {@link ReplicationRequest}
+     * creates a {@link org.apache.sling.replication.packaging.ReplicationPackage} for a specific {@link ReplicationRequest}
      *
      * @param request the {@link ReplicationRequest} to create the package for
-     * @return a {@link ReplicationPackage}
+     * @return a {@link org.apache.sling.replication.packaging.ReplicationPackage}
      * @throws ReplicationPackageBuildingException
-     *
      */
     ReplicationPackage createPackage(ReplicationRequest request) throws ReplicationPackageBuildingException;
 
     /**
      * reads a stream and tries to convert it to a {@link ReplicationPackage} this provider can read and install
      *
-     * @param stream  the {@link InputStream} of the package to read
-     * @param install if <code>true</code> then if the package can be read from the stream then it will try also
-     *                to install it into the repository
+     * @param stream the {@link InputStream} of the package to read
      * @return a {@link ReplicationPackage} if it can read it from the stream
-     * @throws ReplicationPackageReadingException
-     *          when the stream cannot be read as a {@link ReplicationPackage}
+     * @throws ReplicationPackageReadingException when the stream cannot be read as a {@link ReplicationPackage}
      */
-    ReplicationPackage readPackage(InputStream stream, boolean install) throws ReplicationPackageReadingException;
+    ReplicationPackage readPackage(InputStream stream) throws ReplicationPackageReadingException;
 
     /**
      * get an already created (and saved into the repository) {@link ReplicationPackage} by its id
@@ -55,5 +53,14 @@ public interface ReplicationPackageBuilder {
      * @return a {@link ReplicationPackage} if one with such an id exists, <code>null</code> otherwise
      */
     ReplicationPackage getPackage(String id);
+
+    /**
+     * Installs the given replicationPackage into the repository
+     *
+     * @param replicationPackage
+     * @return
+     * @throws ReplicationPackageReadingException
+     */
+    boolean installPackage(ReplicationPackage replicationPackage) throws ReplicationPackageReadingException;
 
 }

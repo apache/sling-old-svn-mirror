@@ -58,7 +58,7 @@ public class LoginServlet extends SlingAllMethodsServlet {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
-    private Authenticator authenticator;
+    private volatile Authenticator authenticator;
 
     /**
      * The servlet is registered on this path, and the authenticator allows any

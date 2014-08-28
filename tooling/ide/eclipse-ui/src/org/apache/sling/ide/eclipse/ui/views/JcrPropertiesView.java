@@ -55,13 +55,13 @@ import org.eclipse.jface.viewers.TableViewerEditor;
 import org.eclipse.jface.viewers.TableViewerFocusCellManager;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.TraverseEvent;
-import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
@@ -69,7 +69,9 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.IWorkbenchPartSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
@@ -105,6 +107,10 @@ public class JcrPropertiesView extends ViewPart {
 
     private ColumnId lastEditedColumnId;
 
+    private Composite mainControl;
+
+    private IWorkbenchPage page;
+
 	class ViewContentProvider implements IStructuredContentProvider {
 		public void inputChanged(Viewer v, Object oldInput, Object newInput) {
 		}
@@ -126,6 +132,10 @@ public class JcrPropertiesView extends ViewPart {
 	public JcrPropertiesView() {
 	}
 
+	public Control getMainControl() {
+	    return mainControl;
+	}
+	
 	/**
 	 * This is a callback that will allow us
 	 * to create the viewer and initialize it.
@@ -139,18 +149,20 @@ public class JcrPropertiesView extends ViewPart {
             }
         });
 	    
-	    Composite c = new Composite(parent, SWT.NONE);
+	    mainControl = new Composite(parent, SWT.NONE);
 	    final GridLayout gridLayout = new GridLayout(1, true);
-        c.setLayout(gridLayout);
+        mainControl.setLayout(gridLayout);
 	    
-        titleLabel = new Label(c, SWT.WRAP);
-        titleLabel.setText("");
-        GridData data = new GridData(GridData.FILL_HORIZONTAL);
-        titleLabel.setLayoutData(data);
+        if (getViewSite()!=null) {
+            titleLabel = new Label(mainControl, SWT.WRAP);
+            titleLabel.setText("");
+            GridData data = new GridData(GridData.FILL_HORIZONTAL);
+            titleLabel.setLayoutData(data);
+            Label horizontalLine = new Label(mainControl, SWT.SEPARATOR | SWT.HORIZONTAL);
+            data = new GridData(GridData.FILL_HORIZONTAL);
+            horizontalLine.setLayoutData(data);
+        }
         
-        Label horizontalLine = new Label(c, SWT.SEPARATOR | SWT.HORIZONTAL);
-        data = new GridData(GridData.FILL_HORIZONTAL);
-        horizontalLine.setLayoutData(data);
         Font font;
         if (! JFaceResources.getFontRegistry().hasValueFor(TITLE_FONT)) {
             FontData[] fontData = JFaceResources.getFontRegistry().getBold(
@@ -160,11 +172,24 @@ public class JcrPropertiesView extends ViewPart {
             JFaceResources.getFontRegistry().put(TITLE_FONT, fontData);
         }
         font = JFaceResources.getFont(TITLE_FONT);
-        titleLabel.setFont(font);
+        if (titleLabel!=null) {
+            titleLabel.setFont(font);
+        }
 
-        Composite tableParent = new Composite(c, SWT.NONE);
-        tableParent.setLayoutData(new GridData(GridData.FILL_BOTH));
-        TableColumnLayout tableLayout = new TableColumnLayout();
+        Composite tableParent = new Composite(mainControl, SWT.NONE);
+//        tableParent.setBackground(new Color(Display.getDefault(), 100,20,180));
+        GridData tableLayoutData = new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1);
+        tableLayoutData.widthHint = 1; // shrink to min - table settings will resize to correct ratios
+        tableLayoutData.heightHint = SWT.DEFAULT;
+        tableParent.setLayoutData(tableLayoutData);
+        TableColumnLayout tableLayout = new TableColumnLayout() {
+            @Override
+            protected Point computeSize(Composite composite, int wHint,
+                    int hHint, boolean flushCache) {
+                Point p = super.computeSize(composite, wHint, hHint, flushCache);
+                return new Point(p.x, p.y);
+            }
+        };
         tableParent.setLayout(tableLayout);
         
         viewer = new TableViewer(tableParent, SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER | SWT.HIDE_SELECTION | SWT.FULL_SELECTION);
@@ -216,7 +241,7 @@ public class JcrPropertiesView extends ViewPart {
 		column0.getColumn().setText("Name");
 		column0.getColumn().setResizable(true);
 		column0.getColumn().setWidth(200);
-        tableLayout.setColumnData(column0.getColumn(), new ColumnWeightData(30, 150));
+        tableLayout.setColumnData(column0.getColumn(), new ColumnWeightData(30, 140));
 
         final TableViewerColumn column1 = new TableViewerColumn(viewer, SWT.NONE);
         column1.getColumn().setText("Type");
@@ -229,7 +254,7 @@ public class JcrPropertiesView extends ViewPart {
         column2.getColumn().setText("Value");
         column2.getColumn().setResizable(true);
         column2.getColumn().setWidth(300);
-        tableLayout.setColumnData(column2.getColumn(), new ColumnWeightData(70, 250));
+        tableLayout.setColumnData(column2.getColumn(), new ColumnWeightData(70, 220));
         
         final TableViewerColumn column3 = new TableViewerColumn(viewer, SWT.NONE);
         column3.getColumn().setText("Protected");
@@ -292,16 +317,18 @@ public class JcrPropertiesView extends ViewPart {
                 }
             }
         };
-        getViewSite().getPage().addSelectionListener(listener);
-        final ISelection selection = getViewSite().getPage().getSelection();
-        Display.getCurrent().asyncExec(new Runnable() {
-
-            @Override
-            public void run() {
-                listener.selectionChanged(null, selection);
-            }
-            
-        });
+        if (getViewSite()!=null) {
+            getViewSite().getPage().addSelectionListener(listener);
+            final ISelection selection = getViewSite().getPage().getSelection();
+            Display.getCurrent().asyncExec(new Runnable() {
+    
+                @Override
+                public void run() {
+                    listener.selectionChanged(null, selection);
+                }
+                
+            });
+        }
 	}
 	
     void resetLastValueEdited() {
@@ -335,13 +362,18 @@ public class JcrPropertiesView extends ViewPart {
 		});
 		Menu menu = menuMgr.createContextMenu(viewer.getControl());
 		viewer.getControl().setMenu(menu);
-		getSite().registerContextMenu(menuMgr, viewer);
+		IWorkbenchPartSite site = getSite();
+		if (site!=null) {
+		    site.registerContextMenu(menuMgr, viewer);
+		}
 	}
 
 	private void contributeToActionBars() {
-		IActionBars bars = getViewSite().getActionBars();
-		fillLocalPullDown(bars.getMenuManager());
-		fillLocalToolBar(bars.getToolBarManager());
+	    if (getViewSite()!=null) {
+    		IActionBars bars = getViewSite().getActionBars();
+    		fillLocalPullDown(bars.getMenuManager());
+    		fillLocalToolBar(bars.getToolBarManager());
+	    }
 	}
 
 	private void fillLocalPullDown(IMenuManager manager) {
@@ -349,16 +381,24 @@ public class JcrPropertiesView extends ViewPart {
 //		manager.add(new Separator());
 		manager.add(deleteAction);
         manager.add(showInEditorAction);
-        manager.add(pinAction);
-        manager.add(synchedAction);
+        if (pinAction!=null) {
+            manager.add(pinAction);
+        }
+        if (synchedAction!=null) {
+            manager.add(synchedAction);
+        }
 	}
 
 	private void fillContextMenu(IMenuManager manager) {
 		manager.add(insertAction);
         manager.add(deleteAction);
         manager.add(showInEditorAction);
-        manager.add(pinAction);
-        manager.add(synchedAction);
+        if (pinAction!=null) {
+            manager.add(pinAction);
+        }
+        if (synchedAction!=null) {
+            manager.add(synchedAction);
+        }
 		// Other plug-ins can contribute there actions here
 		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
@@ -367,8 +407,12 @@ public class JcrPropertiesView extends ViewPart {
 		manager.add(insertAction);
 		manager.add(deleteAction);
         manager.add(showInEditorAction);
-        manager.add(pinAction);
-        manager.add(synchedAction);
+        if (pinAction!=null) {
+            manager.add(pinAction);
+        }
+        if (synchedAction!=null) {
+            manager.add(synchedAction);
+        }
 	}
 
 	private void makeActions() {
@@ -424,7 +468,7 @@ public class JcrPropertiesView extends ViewPart {
                 final IFile file = node.getFileForEditor();
                 if (file!=null) {
                     try {
-                        IDE.openEditor(getViewSite().getPage(), file, true);
+                        IDE.openEditor(getPage(), file, true);
                     } catch (PartInitException e) {
                         e.printStackTrace(System.out);
                     }
@@ -436,40 +480,44 @@ public class JcrPropertiesView extends ViewPart {
 		showInEditorAction.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
                 getImageDescriptor(ISharedImages.IMG_OBJ_FILE));
 		
-		pinAction = new Action("pin to selection", IAction.AS_CHECK_BOX) {
-		    public void run() {
-		        if (!pinAction.isChecked()) {
-		            // unpin
-		            setContentDescription("");
-		            setInput(lastInput);
-		        } else {
-		            setContentDescription("[pinned]");
-		        }
-		        // toggle state of syncedAction accordingly
-		        synchedAction.setEnabled(!pinAction.isChecked());
-		    }
-		};
-		pinAction.setText("Pin to selection");
-		pinAction.setToolTipText("Pin this property view to the current selection");
-		pinAction.setImageDescriptor(WorkbenchImages
-                .getImageDescriptor(IWorkbenchGraphicConstants.IMG_ETOOL_PIN_EDITOR));
-		pinAction.setDisabledImageDescriptor(WorkbenchImages
-                .getImageDescriptor(IWorkbenchGraphicConstants.IMG_ETOOL_PIN_EDITOR_DISABLED));
-		pinAction.setChecked(false);
+		if (getViewSite()!=null) {
+    		pinAction = new Action("pin to selection", IAction.AS_CHECK_BOX) {
+    		    public void run() {
+    		        if (!pinAction.isChecked()) {
+    		            // unpin
+    		            setContentDescription("");
+    		            setInput(lastInput);
+    		        } else {
+    		            setContentDescription("[pinned]");
+    		        }
+    		        // toggle state of syncedAction accordingly
+    		        if (synchedAction!=null) {
+    		            synchedAction.setEnabled(!pinAction.isChecked());
+    		        }
+    		    }
+    		};
+    		pinAction.setText("Pin to selection");
+    		pinAction.setToolTipText("Pin this property view to the current selection");
+    		pinAction.setImageDescriptor(WorkbenchImages
+                    .getImageDescriptor(IWorkbenchGraphicConstants.IMG_ETOOL_PIN_EDITOR));
+    		pinAction.setDisabledImageDescriptor(WorkbenchImages
+                    .getImageDescriptor(IWorkbenchGraphicConstants.IMG_ETOOL_PIN_EDITOR_DISABLED));
+    		pinAction.setChecked(false);
 		
-		synchedAction = new Action("Link with Editor and selection", IAction.AS_CHECK_BOX) {
-            public void run() {
-                // toggle state of pinAction accordingly
-                pinAction.setEnabled(!synchedAction.isChecked());
-            }
-        };
-        synchedAction.setText("Link with Editor and selection");
-        synchedAction.setToolTipText("Link with Editor and selection");
-        synchedAction.setImageDescriptor(WorkbenchImages
-                .getImageDescriptor(ISharedImages.IMG_ELCL_SYNCED));
-        synchedAction.setDisabledImageDescriptor(WorkbenchImages
-                .getImageDescriptor(ISharedImages.IMG_ELCL_SYNCED_DISABLED));
-        synchedAction.setChecked(true);
+    		synchedAction = new Action("Link with Editor and selection", IAction.AS_CHECK_BOX) {
+                public void run() {
+                    // toggle state of pinAction accordingly
+                    pinAction.setEnabled(!synchedAction.isChecked());
+                }
+            };
+            synchedAction.setText("Link with Editor and selection");
+            synchedAction.setToolTipText("Link with Editor and selection");
+            synchedAction.setImageDescriptor(WorkbenchImages
+                    .getImageDescriptor(ISharedImages.IMG_ELCL_SYNCED));
+            synchedAction.setDisabledImageDescriptor(WorkbenchImages
+                    .getImageDescriptor(ISharedImages.IMG_ELCL_SYNCED_DISABLED));
+            synchedAction.setChecked(true);
+		}
 	}
 
 	private void hookDoubleClickAction() {
@@ -544,22 +592,38 @@ public class JcrPropertiesView extends ViewPart {
         }
     }
 
-    private void setInput(JcrNode jcrNode) {
+    public void setInput(JcrNode jcrNode) {
         // reset the last edited values..:
         resetLastValueEdited();
 
-        if (pinAction.isChecked()) {
+        if (pinAction!=null && pinAction.isChecked()) {
             lastInput = jcrNode;
         } else {
-            if (synchedAction.isChecked()) {
+            if (getViewSite()!=null && synchedAction!=null && synchedAction.isChecked()) {
                 getViewSite().getPage().bringToTop(this);
             }
             viewer.setInput(jcrNode);
-            titleLabel.setText(jcrNode.getJcrPath());
+            if (titleLabel!=null) {
+                titleLabel.setText(jcrNode.getJcrPath());
+            }
             insertAction.setEnabled(!jcrNode.getPrimaryType().equals("nt:folder"));
             deleteAction.setEnabled(false);
             showInEditorAction.setEnabled(jcrNode.getFileForEditor()!=null);
         }
+    }
+    
+    private IWorkbenchPage getPage() {
+        if (page!=null) {
+            return page;
+        } else if (getViewSite()!=null) {
+            return getViewSite().getPage();
+        } else {
+            return null;
+        }
+    }
+
+    public void setPage(IWorkbenchPage page) {
+        this.page = page;
     }
 
 }

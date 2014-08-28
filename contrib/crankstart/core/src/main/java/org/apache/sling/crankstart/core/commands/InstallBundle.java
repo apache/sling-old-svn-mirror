@@ -22,7 +22,9 @@ import java.net.URL;
 import org.apache.sling.crankstart.api.CrankstartCommand;
 import org.apache.sling.crankstart.api.CrankstartCommandLine;
 import org.apache.sling.crankstart.api.CrankstartContext;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.startlevel.BundleStartLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,10 +49,35 @@ public class InstallBundle implements CrankstartCommand {
         final BundleContext ctx = crankstartContext.getOsgiFramework().getBundleContext();
         final InputStream bundleStream = url.openStream();
         try {
-            ctx.installBundle(bundleRef, url.openStream());
-            log.info("bundle installed: {}", bundleRef);
+            final Bundle b = ctx.installBundle(bundleRef, url.openStream());
+            
+            final int level = getStartLevel(crankstartContext);
+            if(level > 0) {
+                final BundleStartLevel bsl = (BundleStartLevel)b.adapt(BundleStartLevel.class);
+                if(bsl == null) {
+                    log.warn("Bundle does not adapt to BundleStartLevel, cannot set start level", bundleRef);
+                }
+                bsl.setStartLevel(level);
+            }
+            
+            log.info("bundle installed at start level {}: {}", level, bundleRef);
         } finally {
             bundleStream.close();
         }
+    }
+    
+    private int getStartLevel(CrankstartContext ctx) {
+        int result = 0;
+        final String str = ctx.getDefaults().get(CrankstartContext.DEFAULT_BUNDLE_START_LEVEL);
+        if(str == null) {
+            log.debug("{} default value is not set, using default bundle start level", CrankstartContext.DEFAULT_BUNDLE_START_LEVEL);
+        } else {
+            try {
+                result = Integer.valueOf(str);
+            } catch(NumberFormatException nfe) {
+                log.warn("Invalid {} value [{}], will use default bundle start level", CrankstartContext.DEFAULT_BUNDLE_START_LEVEL, str);
+            }
+        }
+        return result;
     }
 }

@@ -21,7 +21,6 @@ import java.util.Date;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
@@ -50,8 +49,7 @@ class HealthCheckFuture extends FutureTask<ExecutionResult> {
         super(new Callable<ExecutionResult>() {
             @Override
             public ExecutionResult call() throws Exception {
-                Thread.currentThread().setName(
-                        "Health-Check-" + StringUtils.substringAfterLast(metadata.getTitle(), "."));
+                Thread.currentThread().setName("HealthCheck " + metadata.getTitle());
                 LOG.debug("Starting check {}", metadata);
 
                 final StopWatch stopWatch = new StopWatch();
@@ -84,8 +82,8 @@ class HealthCheckFuture extends FutureTask<ExecutionResult> {
                     LOG.debug("Time consumed for {}: {}", metadata, HealthCheckExecutorImpl.msHumanReadable(elapsedTime));
                 }
 
-                Thread.currentThread().setName("Health-Check-idle");
                 callback.finished(executionResult);
+                Thread.currentThread().setName("HealthCheck idle");
                 return executionResult;
             }
         });

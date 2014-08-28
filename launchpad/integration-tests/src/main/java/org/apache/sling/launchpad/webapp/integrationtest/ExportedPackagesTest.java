@@ -35,8 +35,7 @@ public class ExportedPackagesTest extends HttpTestBase {
         assertExported("org.apache.sling.launchpad.testservices.exported");
     }
     
-    /** TODO fails due to SLING-2808 */
-    public void DISABLED_testPackageFromFragment() throws Exception {
+    public void testPackageFromFragment() throws Exception {
         assertExported("org.apache.sling.launchpad.testservices.fragment.testpackage");
     }
 }

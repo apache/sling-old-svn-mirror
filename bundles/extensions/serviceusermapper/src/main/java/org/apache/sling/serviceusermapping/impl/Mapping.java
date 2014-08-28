@@ -87,4 +87,10 @@ class Mapping {
     private boolean equals(String str1, String str2) {
         return ((str1 == null) ? str2 == null : str1.equals(str2));
     }
+
+    @Override
+    public String toString() {
+        return "Mapping [serviceName=" + serviceName + ", subServiceName="
+                + subServiceName + ", userName=" + userName + "]";
+    }
 }

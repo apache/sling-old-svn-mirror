@@ -9,20 +9,19 @@
 	License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS 
 	OF ANY KIND, either express or implied. See the License for the specific 
 	language governing permissions and limitations under the License. -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.apache.sling</groupId>
 		<artifactId>sling</artifactId>
-		<version>19</version>
+		<version>20</version>
 		<relativePath>../../../parent/pom.xml</relativePath>
 	</parent>
 
 	<artifactId>org.apache.sling.commons.json</artifactId>
 	<packaging>bundle</packaging>
-	<version>2.0.7-SNAPSHOT</version>
+	<version>2.0.9-SNAPSHOT</version>
 
 	<name>Apache Sling JSON Library</name>
 	<description>Apache Sling JSON Library</description>
@@ -41,9 +40,12 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-						<Export-Package>
-							org.apache.sling.commons.json.*;version=2.0.4
-						</Export-Package>
+						<DynamicImport-Package>
+							javax.jcr;version="[2.0,3)",
+							javax.jcr.nodetype;version="[2.0,3)",
+							org.apache.sling.api.request;version="[2.0,3)",
+							org.apache.sling.api.resource;version="[2.0,3)"
+						</DynamicImport-Package>
 					</instructions>
 				</configuration>
 			</plugin>

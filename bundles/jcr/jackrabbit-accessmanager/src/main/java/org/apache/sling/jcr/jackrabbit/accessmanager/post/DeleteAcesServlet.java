@@ -74,9 +74,7 @@ import org.apache.sling.servlets.post.SlingPostConstants;
  * <dd>Failure. HTML explains the failure.</dd>
  * </dl>
  */
-@Component (immediate=true, 
-		label="%deleteAces.post.operation.name", 
-		description="%deleteAces.post.operation.description")
+@Component
 @Service (value={
 		Servlet.class,
 		DeleteAces.class})

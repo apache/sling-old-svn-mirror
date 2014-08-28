@@ -82,6 +82,9 @@
 
     <!-- List modules to be included in the build here ! -->
     <modules>
+          <module>auth/org.apache.sling.auth.xing.api</module>
+          <module>auth/org.apache.sling.auth.xing.login</module>
+          <module>auth/org.apache.sling.auth.xing.oauth</module>
           <module>commons/fsclassloader</module>
           <module>commons/html</module>
           <module>extensions/apt/parser</module>
@@ -105,8 +108,10 @@
           <module>extensions/tenant</module>
           <module>extensions/replication/core</module>
           <module>extensions/replication/it</module>
-          <module>jcr/jackrabbit-client</module>
+          <module>extensions/sling-query</module>
           <module>jcr/compiler</module>
+          <module>jcr/jackrabbit-client</module>
+          <module>jcr/ocm</module>
           <module>jcr/prefs</module>
           <module>jcr/resourcesecurity</module>
           <module>launchpad/karaf</module>
@@ -131,7 +136,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <modules>
-                <module>launchpad/testing</module> 
+                <module>launchpad/testing</module>
             </modules>
         </profile>
         <profile>

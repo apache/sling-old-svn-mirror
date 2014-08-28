@@ -23,7 +23,7 @@ import org.junit.Test;
 import static org.apache.sling.replication.it.ReplicationUtils.*;
 
 /**
- * Integration test for {@link org.apache.sling.replication.serialization.ReplicationPackageImporter} resources
+ * Integration test for {@link org.apache.sling.replication.packaging.ReplicationPackageImporter} resources
  */
 public class ReplicationPackageImporterResourcesIntegrationTest extends ReplicationIntegrationTestBase {
 
@@ -32,16 +32,16 @@ public class ReplicationPackageImporterResourcesIntegrationTest extends Replicat
         String rootResource = importerRootUrl();
         assertExists(authorClient, rootResource);
         assertResponseContains(author, rootResource,
-                "sling:resourceType", "replication/importers",
+                "sling:resourceType", "sling/replication/service/importer/list",
                 "items", "default");
     }
 
     @Test
-    public void testDefaultImporterResource() throws Exception {
+    public void testLocalImporterResource() throws Exception {
         String rootResource = importerUrl("default");
         assertExists(authorClient, rootResource);
         assertResponseContains(author, rootResource,
-                "sling:resourceType", "replication/importer",
+                "sling:resourceType", "sling/replication/service/importer",
                 "name", "default");
     }
 }

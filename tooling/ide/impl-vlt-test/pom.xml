@@ -19,7 +19,7 @@
   <parent>
     <groupId>org.apache.sling.ide</groupId>
     <artifactId>reactor</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.3-SNAPSHOT</version>
   </parent>
   <artifactId>org.apache.sling.ide.impl-vlt-test</artifactId>
   <name>Sling IDE Tools: FileVault Implementation Tests</name>
@@ -89,6 +89,11 @@
           <artifactId>jackrabbit-jcr-commons</artifactId>
           <version>${jackrabbit.version}</version>
           <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.apache.jackrabbit</groupId>
+          <artifactId>jackrabbit-core</artifactId>
+          <version>${jackrabbit.version}</version>
       </dependency>
       <dependency>
          <groupId>org.apache.jackrabbit.vault</groupId>

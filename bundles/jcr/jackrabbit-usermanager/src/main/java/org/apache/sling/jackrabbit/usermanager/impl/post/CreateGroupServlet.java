@@ -96,7 +96,16 @@ import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 	@Property (name="sling.servlet.methods",
 			value="POST"),
 	@Property (name="sling.servlet.selectors",
-			value="create")
+			value="create"),
+    @Property (name=AbstractAuthorizablePostServlet.PROP_DATE_FORMAT,
+            value={
+            "EEE MMM dd yyyy HH:mm:ss 'GMT'Z",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+            "yyyy-MM-dd'T'HH:mm:ss",
+            "yyyy-MM-dd",
+            "dd.MM.yyyy HH:mm:ss",
+            "dd.MM.yyyy"
+            })
 })
 public class CreateGroupServlet extends AbstractGroupPostServlet implements CreateGroup {
     private static final long serialVersionUID = -1084915263933901466L;

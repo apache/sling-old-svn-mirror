@@ -40,6 +40,11 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
 
     private static final String HEADER = "Sling-Model-Packages";
 
+    /**
+     * Service registration property for the adapter condition.
+     */
+    private static final String PROP_ADAPTER_CONDITION = "adapter.condition";
+
     private static final Logger log = LoggerFactory.getLogger(ModelPackageBundleListener.class);
     
     private final BundleContext bundleContext;
@@ -87,6 +92,11 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
                             Dictionary<String, Object> registrationProps = new Hashtable<String, Object>();
                             registrationProps.put(AdapterFactory.ADAPTER_CLASSES, className);
                             registrationProps.put(AdapterFactory.ADAPTABLE_CLASSES, classNames);
+
+                            String condition = annotation.condition();
+                            if (StringUtils.isNotBlank(condition)) {
+                                registrationProps.put(PROP_ADAPTER_CONDITION, condition);
+                            }
                             ServiceRegistration reg = bundleContext.registerService(AdapterFactory.SERVICE_NAME,
                                     factory, registrationProps);
                             regs.add(reg);

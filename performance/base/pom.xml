@@ -29,6 +29,7 @@
 
     <artifactId>org.apache.sling.performance.base</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+    <packaging>bundle</packaging>
  
     <name>Apache Sling Performance Test Utilities</name>
     
@@ -117,6 +118,26 @@
                    <argLine>-Xms256m -Xmx1024m -XX:MaxPermSize=512m</argLine>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Export-Package>
+                            org.apache.sling.performance.*;
+                        </Export-Package>
+                         <Import-Package>                         	 
+                         	!org.apache.sling.commons.testing.jcr.*,
+                         	*;
+                         </Import-Package>
+                    </instructions>
+                </configuration>
+            </plugin>  
         </plugins>
     </build>
 </project>

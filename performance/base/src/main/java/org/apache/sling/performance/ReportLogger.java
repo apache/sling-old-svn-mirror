@@ -37,10 +37,10 @@ public class ReportLogger {
     public static void writeReport(String testSuiteName, String testCaseName, String className, String methodName,
             DescriptiveStatistics statistics, ReportType reportType, PerformanceRunner.ReportLevel reportLevel) throws Exception {
 		switch (reportType) {
-		case TXT:
+            case TXT:
                 writeReportTxt(testSuiteName, testCaseName, className, methodName, statistics, reportLevel);
-			break;
-		default:
+                break;
+            default:
                 throw new Exception("The specified reporting format is not yet supported");
 		}
 	}
@@ -53,21 +53,16 @@ public class ReportLogger {
      * @param className
      * @param methodName
 	 * @param statistics
-     * @param reportlevel
+     * @param reportLevel
      * @throws Exception
 	 */
     public static void writeReportTxt(String testSuiteName, String testCaseName, String className, String methodName,
-            DescriptiveStatistics statistics, PerformanceRunner.ReportLevel reportlevel) throws Exception {
-
-        // Short class form
-        String shortClassName = className.substring(className.lastIndexOf(".") + 1);
+            DescriptiveStatistics statistics, PerformanceRunner.ReportLevel reportLevel) throws Exception {
 
         File reportDir = new File("target/" + REPORTS_DIR);
-		if (!reportDir.exists()) {
-            if (!reportDir.mkdir()) {
+		if (!reportDir.exists() && !reportDir.mkdir()) {
                 throw new IOException("Unable to create " + REPORTS_DIR + " directory");
 		}
-        }
 
 		// need this in the case a user wants to set the suite name from the
 		// command line
@@ -79,13 +74,13 @@ public class ReportLogger {
 			}
 		}
 
-        String resultFileName = shortClassName;
-		if (reportlevel.equals(PerformanceRunner.ReportLevel.ClassLevel)){
-			writeReportClassLevel(resultFileName, testSuiteName, statistics);
-			}else if (reportlevel.equals(PerformanceRunner.ReportLevel.MethodLevel)){
-            resultFileName = shortClassName + "." + methodName;
+		if (reportLevel.equals(PerformanceRunner.ReportLevel.ClassLevel)) {
+            String resultFileName = className;
+            writeReportClassLevel(resultFileName, testSuiteName, statistics);
+        } else if (reportLevel.equals(PerformanceRunner.ReportLevel.MethodLevel)) {
+            String resultFileName = className + "." + methodName;
             writeReportMethodLevel(resultFileName, testSuiteName, testCaseName, className, methodName, statistics);
-			}
+        }
 	}
 	
 	/**
@@ -104,22 +99,20 @@ public class ReportLogger {
 	    		new FileWriterWithEncoding(report, "UTF-8", true));
 	    try {
 	    	if (needsPrefix) {
-	    		writer.format(
-	    				"# %-34.34s     min     10%%     50%%     90%%     max%n",
-	    				resultFileName);
+	    		writer.format("# %-50.50s     min     10%%     50%%     90%%     max%n", resultFileName);
 	    	}
 	    	
 	    	writer.format(
-	    			"%-36.36s  %6.0f  %6.0f  %6.0f  %6.0f  %6.0f%n",
+	    			"%-52.52s  %6.0f  %6.0f  %6.0f  %6.0f  %6.0f%n",
 	    			testSuiteName,
 	    			statistics.getMin(),
 	    			statistics.getPercentile(10.0),
 	    			statistics.getPercentile(50.0),
 	    			statistics.getPercentile(90.0),
 	    			statistics.getMax());
-	    	} finally {
-	    		writer.close();
-	   		}
+        } finally {
+            writer.close();
+        }
 	}
     
     /**

@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.AnnotatedElement;
+import java.util.Hashtable;
 
 import javax.inject.Inject;
 
@@ -64,13 +65,15 @@ public class MultipleInjectorTest {
     @Before
     public void setup() {
         when(componentCtx.getBundleContext()).thenReturn(bundleContext);
+        when(componentCtx.getProperties()).thenReturn(new Hashtable<String, Object>());
+
         bindings = new SlingBindings();
 
         factory = new ModelAdapterFactory();
         factory.activate(componentCtx);
-        factory.bindInjector(bindingsInjector, new ServicePropertiesMap(2, 2));
-        factory.bindInjector(attributesInjector, new ServicePropertiesMap(1, 1));
-        factory.bindInjectAnnotationProcessorFactory(bindingsInjector, new ServicePropertiesMap(2, 2));
+        factory.bindInjector(bindingsInjector, new ServicePropertiesMap(1, 1));
+        factory.bindInjector(attributesInjector, new ServicePropertiesMap(2, 2));
+        factory.bindInjectAnnotationProcessorFactory(bindingsInjector, new ServicePropertiesMap(1, 1));
 
         when(request.getAttribute(SlingBindings.class.getName())).thenReturn(bindings);
     }

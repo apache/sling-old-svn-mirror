@@ -19,14 +19,10 @@ package org.apache.sling.crankstart.core;
 import java.io.File;
 import java.io.FileReader;
 import java.io.Reader;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.apache.sling.crankstart.api.CrankstartCommand;
@@ -36,6 +32,7 @@ import org.apache.sling.crankstart.api.CrankstartContext;
 import org.apache.sling.crankstart.api.CrankstartException;
 import org.apache.sling.crankstart.core.commands.Configure;
 import org.apache.sling.crankstart.core.commands.Defaults;
+import org.apache.sling.crankstart.core.commands.Exit;
 import org.apache.sling.crankstart.core.commands.InstallBundle;
 import org.apache.sling.crankstart.core.commands.Log;
 import org.apache.sling.crankstart.core.commands.NullCommand;
@@ -50,21 +47,26 @@ import org.slf4j.LoggerFactory;
 
 /** Process a crankstart file */
 public class CrankstartFileProcessor implements Callable<Object> {
-    private final CrankstartContext crankstartContext = new CrankstartContext();
+    private final CrankstartContext crankstartContext;
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private Map<String, String> defaults = new HashMap<String, String>();
     
     private List<CrankstartCommand> builtinCommands = new ArrayList<CrankstartCommand>();
     private List<CrankstartCommand> extensionCommands = new ArrayList<CrankstartCommand>();
     
     public CrankstartFileProcessor() {
+        this(new CrankstartContext());
+    }
+    
+    public CrankstartFileProcessor(CrankstartContext ctx) {
+        this.crankstartContext = ctx;
         builtinCommands.add(new InstallBundle());
         builtinCommands.add(new Log());
         builtinCommands.add(new SetOsgiFrameworkProperty());
         builtinCommands.add(new StartBundles());
         builtinCommands.add(new StartFramework());
         builtinCommands.add(new Configure());
-        builtinCommands.add(new Defaults(defaults));
+        builtinCommands.add(new Defaults());
+        builtinCommands.add(new Exit());
         
         // Need a null "classpath" command as our launcher uses it
         // outside of the usual command mechanism - it shouldn't cause
@@ -105,7 +107,7 @@ public class CrankstartFileProcessor implements Callable<Object> {
             protected String getVariable(String name) {
                 String result = System.getProperty(name);
                 if(result == null) {
-                    result = defaults.get(name);
+                    result = crankstartContext.getDefaults().get(name);
                 }
                 if(result == null) {
                     result = super.getVariable(name); 
@@ -137,11 +139,16 @@ public class CrankstartFileProcessor implements Callable<Object> {
                 }
             }
             
+            if(crankstartContext.getAttribute(CrankstartContext.ATTR_STOP_CRANKSTART_PROCESSING) != null) {
+                log.info("{} attribute is set, ignoring the remaining crankstart commands", CrankstartContext.ATTR_STOP_CRANKSTART_PROCESSING);
+                break;
+            }
         }
     }
     
     /** Reload our extension commands from the OSGi framework 
      * @throws InvalidSyntaxException */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private synchronized void reloadExtensionCommands() throws InvalidSyntaxException {
         if(crankstartContext.getOsgiFramework() == null) {
             return;

@@ -16,14 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.replication.it;
 
 import org.apache.sling.testing.tools.sling.SlingClient;
 import org.apache.sling.testing.tools.sling.SlingInstance;
 import org.apache.sling.testing.tools.sling.SlingInstanceManager;
 
-import static org.apache.sling.replication.it.ReplicationUtils.assertExists;
+import static org.apache.sling.replication.it.ReplicationUtils.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -49,15 +48,16 @@ public abstract class ReplicationIntegrationTestBase {
 
         try {
             // change the url for publish agent and wait for it to start
+            String remoteImporterUrl = publish.getServerBaseUrl() + importerUrl("default");
+            authorClient.setProperties(importerConfigUrl("remote/publish"), "endpoints", remoteImporterUrl);
 
-            String receiverUrl = "http://localhost:4503/libs/sling/replication/importer/default"
-                    .replace("http://localhost:4503", publish.getServerBaseUrl());
-            authorClient.setProperties("/libs/sling/replication/config/transport/http/http-publish-receive",
-                    "endpoints", receiverUrl);
-            assertExists(authorClient, "/libs/sling/replication/agent/publish");
+            String remoteExporterUrl = publish.getServerBaseUrl() + exporterUrl("reverse");
+            authorClient.setProperties(exporterConfigUrl("remote/publish"),"endpoints", remoteExporterUrl);
+
+            assertExists(authorClient, agentUrl("publish"));
         }
         catch (Exception ex) {
-
+            throw new RuntimeException(ex);
         }
 
     }

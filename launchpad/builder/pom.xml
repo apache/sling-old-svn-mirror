@@ -16,7 +16,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>19</version>
+        <version>20</version>
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
@@ -65,10 +65,6 @@
             Context path of the Sling web application
         -->
         <jetty.sling.context>/</jetty.sling.context>
-        
-        <!-- trick maven-launchpad-plugin into not copying any configs -->
-        <empty.config.directory>${project.build.directory}/NOCONFIGS</empty.config.directory>
-
     </properties>
 
     <build>
@@ -115,9 +111,26 @@
                     <bootDirectory>bundles</bootDirectory>
                     <configDirectory>${empty.config.directory}</configDirectory>
                     <jarWebSupport>
-                        <groupId>org.apache.felix</groupId>
-                        <artifactId>org.apache.felix.http.jetty</artifactId>
-                        <version>2.2.2</version>
+                        <bundles>
+                          <bundle>
+                                <groupId>org.apache.felix</groupId>
+                                <artifactId>org.apache.felix.http.api</artifactId>
+                                <version>2.3.0</version>
+                                <startLevel>5</startLevel>
+                            </bundle>
+                            <bundle>
+                                <groupId>org.apache.felix</groupId>
+                                <artifactId>org.apache.felix.http.servlet-api</artifactId>
+                                <version>1.0.0</version>
+                                <startLevel>5</startLevel>
+                            </bundle>
+                            <bundle>
+                                <groupId>org.apache.felix</groupId>
+                                <artifactId>org.apache.felix.http.jetty</artifactId>
+                                <version>2.3.0</version>
+                                <startLevel>5</startLevel>
+                            </bundle>
+                        </bundles>
                     </jarWebSupport>
                 </configuration>
                 <executions>
@@ -311,7 +324,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad.base</artifactId>
-            <version>4.4.0-2.5.1-SNAPSHOT</version>
+            <version>4.4.1-2.5.2</version>
             <classifier>webapp</classifier>
             <type>war</type>
             <scope>runtime</scope>
@@ -319,7 +332,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad.base</artifactId>
-            <version>4.4.0-2.5.1-SNAPSHOT</version>
+            <version>4.4.1-2.5.2</version>
             <classifier>app</classifier>
             <scope>provided</scope>
         </dependency>

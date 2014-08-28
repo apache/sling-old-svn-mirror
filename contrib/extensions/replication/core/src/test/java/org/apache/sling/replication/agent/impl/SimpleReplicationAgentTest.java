@@ -28,10 +28,12 @@ import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.queue.ReplicationQueueItemState;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
 import org.apache.sling.replication.queue.impl.simple.SimpleReplicationQueue;
-import org.apache.sling.replication.serialization.ReplicationPackage;
-import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
-import org.apache.sling.replication.transport.TransportHandler;
+import org.apache.sling.replication.packaging.ReplicationPackage;
+import org.apache.sling.replication.packaging.ReplicationPackageExporter;
+import org.apache.sling.replication.packaging.ReplicationPackageImporter;
 import org.junit.Test;
+
+import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -49,18 +51,21 @@ public class SimpleReplicationAgentTest {
     @Test
     public void testSyncReplicationWithFailingDistributionStrategy() throws Exception {
         String name = "sample-agent";
-        TransportHandler transportHandler = mock(TransportHandler.class);
-        ReplicationPackageBuilder packageBuilder = mock(ReplicationPackageBuilder.class);
+        ReplicationPackageImporter packageImporter = mock(ReplicationPackageImporter.class);
+        ReplicationPackageExporter packageExporter = mock(ReplicationPackageExporter.class);
+
+
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueueDistributionStrategy distributionHandler = mock(ReplicationQueueDistributionStrategy.class);
         ReplicationEventFactory replicationEventFactory = mock(ReplicationEventFactory.class);
         SimpleReplicationAgent agent = new SimpleReplicationAgent(name, new String[0], true,
-                transportHandler, packageBuilder, queueProvider, distributionHandler, replicationEventFactory, null);
+                false, packageImporter, packageExporter, queueProvider, distributionHandler, replicationEventFactory, null);
         ReplicationRequest request = new ReplicationRequest(System.nanoTime(),
                 ReplicationActionType.ADD, "/");
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
+
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/"});
-        when(packageBuilder.createPackage(request)).thenReturn(replicationPackage);
+        when(packageExporter.exportPackage(request)).thenReturn(Arrays.asList(new ReplicationPackage[] { replicationPackage } ));
         when(queueProvider.getDefaultQueue(agent.getName())).thenReturn(
                 new SimpleReplicationQueue(agent.getName(), "name"));
         ReplicationResponse response = agent.execute(request);
@@ -71,13 +76,12 @@ public class SimpleReplicationAgentTest {
     @Test
     public void testSyncReplicationWithWorkingDistributionStrategy() throws Exception {
         String name = "sample-agent";
-        TransportHandler transportHandler = mock(TransportHandler.class);
-        ReplicationPackageBuilder packageBuilder = mock(ReplicationPackageBuilder.class);
-        ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
+        ReplicationPackageImporter packageImporter = mock(ReplicationPackageImporter.class);
+        ReplicationPackageExporter packageExporter = mock(ReplicationPackageExporter.class);        ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueueDistributionStrategy distributionHandler = mock(ReplicationQueueDistributionStrategy.class);
         ReplicationEventFactory replicationEventFactory = mock(ReplicationEventFactory.class);
         SimpleReplicationAgent agent = new SimpleReplicationAgent(name, new String[0], true,
-                transportHandler, packageBuilder, queueProvider, distributionHandler, replicationEventFactory, null);
+                false, packageImporter, packageExporter, queueProvider, distributionHandler, replicationEventFactory, null);
         ReplicationRequest request = new ReplicationRequest(System.nanoTime(),
                 ReplicationActionType.ADD, "/");
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
@@ -85,7 +89,7 @@ public class SimpleReplicationAgentTest {
         ReplicationQueueItemState state = new ReplicationQueueItemState();
         state.setItemState(ReplicationQueueItemState.ItemState.SUCCEEDED);
         when(distributionHandler.add(any(String.class), any(ReplicationQueueItem.class), eq(queueProvider))).thenReturn(state);
-        when(packageBuilder.createPackage(any(ReplicationRequest.class))).thenReturn(replicationPackage);
+        when(packageExporter.exportPackage(any(ReplicationRequest.class))).thenReturn(Arrays.asList(new ReplicationPackage[] { replicationPackage } ));
         when(queueProvider.getDefaultQueue(agent.getName())).thenReturn(
                 new SimpleReplicationQueue(agent.getName(), "name"));
         ReplicationResponse response = agent.execute(request);
@@ -96,32 +100,31 @@ public class SimpleReplicationAgentTest {
     @Test
     public void testAsyncReplication() throws Exception {
         String name = "sample-agent";
-        TransportHandler transportHandler = mock(TransportHandler.class);
-        ReplicationPackageBuilder packageBuilder = mock(ReplicationPackageBuilder.class);
-        ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
+        ReplicationPackageImporter packageImporter = mock(ReplicationPackageImporter.class);
+        ReplicationPackageExporter packageExporter = mock(ReplicationPackageExporter.class);        ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueueDistributionStrategy distributionHandler = mock(ReplicationQueueDistributionStrategy.class);
         ReplicationEventFactory replicationEventFactory = mock(ReplicationEventFactory.class);
         SimpleReplicationAgent agent = new SimpleReplicationAgent(name, new String[0], true,
-                transportHandler, packageBuilder, queueProvider, distributionHandler, replicationEventFactory, null);
+                false, packageImporter, packageExporter, queueProvider, distributionHandler, replicationEventFactory, null);
         ReplicationRequest request = new ReplicationRequest(System.nanoTime(),
                 ReplicationActionType.ADD, "/");
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/"});
-        when(packageBuilder.createPackage(request)).thenReturn(replicationPackage);
+        when(packageExporter.exportPackage(request)).thenReturn(Arrays.asList(new ReplicationPackage[] { replicationPackage } ));
         when(queueProvider.getDefaultQueue(agent.getName())).thenReturn(
                 new SimpleReplicationQueue(agent.getName(), "name"));
-        agent.send(request);
+        agent.execute(request);
     }
 
     @Test
     public void testGetDefaultQueue() throws Exception {
         String name = "sample-agent";
-        TransportHandler transportHandler = mock(TransportHandler.class);
-        ReplicationPackageBuilder packageBuilder = mock(ReplicationPackageBuilder.class);
+        ReplicationPackageImporter packageImporter = mock(ReplicationPackageImporter.class);
+        ReplicationPackageExporter packageExporter = mock(ReplicationPackageExporter.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueueDistributionStrategy distributionHandler = mock(ReplicationQueueDistributionStrategy.class);
         SimpleReplicationAgent agent = new SimpleReplicationAgent(name, new String[0], true,
-                transportHandler, packageBuilder, queueProvider, distributionHandler, null, null);
+                false, packageImporter, packageExporter, queueProvider, distributionHandler, null, null);
         ReplicationQueue queue = mock(ReplicationQueue.class);
         when(queueProvider.getDefaultQueue(agent.getName())).thenReturn(queue);
         assertNotNull(agent.getQueue(null));
@@ -130,12 +133,12 @@ public class SimpleReplicationAgentTest {
     @Test
     public void testGetExistingNamedQueue() throws Exception {
         String name = "sample-agent";
-        TransportHandler transportHandler = mock(TransportHandler.class);
-        ReplicationPackageBuilder packageBuilder = mock(ReplicationPackageBuilder.class);
+        ReplicationPackageImporter packageImporter = mock(ReplicationPackageImporter.class);
+        ReplicationPackageExporter packageExporter = mock(ReplicationPackageExporter.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueueDistributionStrategy distributionHandler = mock(ReplicationQueueDistributionStrategy.class);
         SimpleReplicationAgent agent = new SimpleReplicationAgent(name, new String[0], true,
-                transportHandler, packageBuilder, queueProvider, distributionHandler, null, null);
+                false, packageImporter, packageExporter, queueProvider, distributionHandler, null, null);
         ReplicationQueue queue = mock(ReplicationQueue.class);
         when(queueProvider.getQueue(agent.getName(), "priority")).thenReturn(queue);
         assertNotNull(agent.getQueue("priority"));
@@ -144,12 +147,12 @@ public class SimpleReplicationAgentTest {
     @Test
     public void testGetNonExistingNamedQueue() throws Exception {
         String name = "sample-agent";
-        TransportHandler transportHandler = mock(TransportHandler.class);
-        ReplicationPackageBuilder packageBuilder = mock(ReplicationPackageBuilder.class);
+        ReplicationPackageImporter packageImporter = mock(ReplicationPackageImporter.class);
+        ReplicationPackageExporter packageExporter = mock(ReplicationPackageExporter.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueueDistributionStrategy distributionHandler = mock(ReplicationQueueDistributionStrategy.class);
         SimpleReplicationAgent agent = new SimpleReplicationAgent(name, new String[0], true,
-                transportHandler, packageBuilder, queueProvider, distributionHandler, null, null);
+                false, packageImporter, packageExporter, queueProvider, distributionHandler, null, null);
         ReplicationQueue queue = mock(ReplicationQueue.class);
         when(queueProvider.getQueue(agent.getName(), "priority")).thenReturn(queue);
         assertNull(agent.getQueue("weird"));

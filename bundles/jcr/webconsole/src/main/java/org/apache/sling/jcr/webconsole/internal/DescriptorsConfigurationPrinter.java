@@ -33,7 +33,7 @@ import org.apache.sling.jcr.api.SlingRepository;
  * A Felix WebConsole ConfigurationPrinter which outputs the current JCR
  * repository descriptors.
  */
-@Component(label = "%descriptors.printer.name", description = "%descriptors.printer.description", metatype = false)
+@Component
 @Service(ConfigurationPrinter.class)
 @Properties({
     @Property(name = "service.description", value = "JCR Descriptors Configuration Printer"),
@@ -43,7 +43,7 @@ public class DescriptorsConfigurationPrinter implements ConfigurationPrinter {
 
 
     @Reference(policy=ReferencePolicy.DYNAMIC)
-    private SlingRepository slingRepository;
+    private volatile SlingRepository slingRepository;
 
     /**
      * Get the title of the configuration status page.

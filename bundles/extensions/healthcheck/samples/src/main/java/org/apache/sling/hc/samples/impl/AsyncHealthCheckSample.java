@@ -17,65 +17,40 @@
  */
 package org.apache.sling.hc.samples.impl;
 
+import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.hc.annotations.SlingHealthCheck;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.util.FormattingResultLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Sample that demonstrates how to implement asynchronous health checks
- *  that run in the background at regular intervals.
- *  The execute() method stays fast as it just reads a pre-computed value. 
+/** Sample Health Check that uses a cron expression to
+ *  schedule regular async execution. 
  */
-@Component(
-        configurationFactory=true,
-        policy=ConfigurationPolicy.REQUIRE,
-        metatype=true)
-@Properties({
-    @Property(name=HealthCheck.NAME),
-    @Property(name=HealthCheck.TAGS, unbounded=PropertyUnbounded.ARRAY),
-    @Property(name=HealthCheck.MBEAN_NAME),
-    
-    // Period *must* be a Long
-    @Property(name="scheduler.period", longValue=AsyncHealthCheckSample.PERIOD_SECONDS, propertyPrivate=true),
-    // Concurrent=false avoids reentrant calls to run()
-    @Property(name="scheduler.concurrent", boolValue=false)
-})
-@Service(value={HealthCheck.class,Runnable.class})
-public class AsyncHealthCheckSample implements HealthCheck, Runnable {
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
-    private final AtomicInteger counter = new AtomicInteger();
+@SlingHealthCheck(
+        configurationFactory=true,
+        configurationPolicy=ConfigurationPolicy.REQUIRE,
+        metatype=true)
+@Service
+public class AsyncHealthCheckSample implements HealthCheck {
+
+    private final Logger log = LoggerFactory.getLogger(AsyncHealthCheckSample.class);
+    
+    // static because for factories, not always the same instance is returned for 
+    // the same service reference
+    private static final AtomicInteger counter = new AtomicInteger();
     
     public static final int PERIOD_SECONDS = 5;
     
     @Override
     public Result execute() {
-        final FormattingResultLog resultLog = new FormattingResultLog();
-        final int value = counter.get();
-        resultLog.debug("{} - counter value is {}", this, value);
-        if(value % 2 != 0) {
-            resultLog.warn("Counter value ({}) is not even", value);
-        }
-        return new Result(resultLog);
-    }
- 
-    /** Called by the Sling scheduler, every {@link #SCHEDULER_PERIOD} seconds, without
-     *  reentrant calls, as configured by our scheduler.* service properties.
-     *  
-     *  Simulates an expensive operation by waiting a random time up to twice that period
-     *  before incrementing our counter.
-     */
-    @Override
-    public void run() {
+        
         final long toWait = (long)(Math.random() * 2 * PERIOD_SECONDS);
         log.info("{} - Waiting {} seconds to simulate an expensive operation...", this, toWait);
         try {
@@ -83,7 +58,17 @@ public class AsyncHealthCheckSample implements HealthCheck, Runnable {
         } catch(InterruptedException iex) {
             log.warn("Sleep interrupted", iex);
         }
-        counter.incrementAndGet();
-        log.info("{} - counter set to {}", this, counter.get());
+
+        final int value =  counter.incrementAndGet();
+        log.info("{} - counter set to {}", this, value);
+        
+        final FormattingResultLog resultLog = new FormattingResultLog();
+
+        resultLog.info("{} - counter value set to {} at {}", this, value, new Date());
+        if(value % 2 != 0) {
+            resultLog.warn("Counter value ({}) is not even", value);
+        }
+        return new Result(resultLog);
     }
+ 
 }
