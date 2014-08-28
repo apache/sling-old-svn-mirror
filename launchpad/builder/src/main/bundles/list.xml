@@ -235,7 +235,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.servlets.post</artifactId>
-            <version>2.3.8</version>
+            <version>2.3.6</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
