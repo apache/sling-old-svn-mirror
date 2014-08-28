@@ -173,7 +173,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     public boolean canCreateFromAdaptable(Class<?> modelClass, Object adaptable) throws InvalidModelException {
         Model modelAnnotation = modelClass.getAnnotation(Model.class);
         if (modelAnnotation == null) {
-            String msg = MessageFormatter.format("Model class {} does not have a model annotation", "1,2");
+            String msg = MessageFormatter.format("Model class {} does not have a model annotation", modelClass);
             throw new InvalidModelException(msg);
         }
 
@@ -196,8 +196,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     }
     
     @Override
-    public <ModelType> ModelType createModel(Object adaptable, Class<ModelType> type) throws NoInjectorFoundException,
-    InvalidAdaptableException {
+    public <ModelType> ModelType createModel(Object adaptable, Class<ModelType> type) throws NoInjectorFoundException, InvalidAdaptableException {
         return internalCreateModel(adaptable, type, true);
     }
     
@@ -217,7 +216,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
                 }
             }
             
-            if (canCreateFromAdaptable(type, adaptable)) {
+            if (!canCreateFromAdaptable(type, adaptable)) {
                 String msg = MessageFormatter.format("Could not adapt model {} from class {}.", type, adaptable.getClass());
                 if (throwExceptions) {
                     throw new InvalidAdaptableException(msg);
@@ -839,21 +838,18 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     }
     
     /**
-    * First try to instanciate via ModelFactory and only if that fails use adaptTo mechanism. Necessary to make exception propagation work.
+    * Try to instanciate via ModelFactory if possible and only if that fails use adaptTo mechanism. Necessary to make exception propagation work.
     * @param adaptable
     * @param type
     * @return the instanciated model/adapted object (might be null)
     */
     private Object createModelOrAdaptTo(Adaptable adaptable, Class<?> type) {
-        try {
+        if (this.isModelClass(type) && this.canCreateFromAdaptable(type, adaptable)) {
             return this.createModel(adaptable, type);
-       } catch (InvalidAdaptableException e) {
-           log.debug("Could not adapt from the given class", e);
-       } catch (IllegalArgumentException e) {
-           log.debug("Could not instanciate class, probably not a Sling Model:", e);
+        } else {
+            return adaptable.adaptTo(type);
+        }
     }
-    return adaptable.adaptTo(type);
-}
 
     private boolean setField(Field field, Object createdObject, Object value) throws IllegalArgumentException, IllegalAccessException {
         if (!isAcceptableType(field.getType(), field.getGenericType(), value)) {

@@ -20,15 +20,16 @@ public interface ModelFactory {
     
     /**
      * 
-     * @param modelClass
-     * @return false in case the given class can not be adapted from the given type
+     * @param modelClass the class to check
+     * @param adaptable the adaptable to check
+     * @return false in case the given class can not be adapted from the given adaptable
      * @throws InvalidModelException in case the given class does not have a model annotation
      */
     public boolean canCreateFromAdaptable(Class<?> modelClass, Object adaptable) throws InvalidModelException;
     
     /**
      * 
-     * @param type
+     * @param modelClass the class to check
      * @return false in case the given class has no model annotation
      * 
      * @see org.apache.sling.models.annotations.Model
