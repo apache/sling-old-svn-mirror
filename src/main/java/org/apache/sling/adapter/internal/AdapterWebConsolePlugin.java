@@ -84,7 +84,7 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
     private final Logger logger = LoggerFactory.getLogger(AdapterWebConsolePlugin.class);
 
     private List<AdaptableDescription> allAdaptables;
-    private Map<Object, List<AdaptableDescription>> adapterServices;
+    private Map<ServiceReference, List<AdaptableDescription>> adapterServiceReferences;
     private Map<Bundle, List<AdaptableDescription>> adapterBundles;
 
     private ServiceTracker adapterTracker;
@@ -107,7 +107,7 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
             descriptions.add(new AdaptableDescription(reference.getBundle(), adaptable, adapters, condition, deprecated));
         }
         synchronized (this) {
-            adapterServices.put(service, descriptions);
+            adapterServiceReferences.put(reference, descriptions);
             update();
         }
     }
@@ -126,7 +126,7 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
 
     public void removedService(final ServiceReference reference, final Object service) {
         synchronized (this) {
-            adapterServices.remove(service);
+            adapterServiceReferences.remove(reference);
             update();
         }
     }
@@ -190,7 +190,7 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
 
     private void update() {
         final List<AdaptableDescription> newList = new ArrayList<AdaptableDescription>();
-        for (final List<AdaptableDescription> descriptions : adapterServices.values()) {
+        for (final List<AdaptableDescription> descriptions : adapterServiceReferences.values()) {
             newList.addAll(descriptions);
         }
         for (final List<AdaptableDescription> list : adapterBundles.values()) {
@@ -202,7 +202,7 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
 
     protected void activate(final ComponentContext ctx) throws InvalidSyntaxException {
         this.bundleContext = ctx.getBundleContext();
-        this.adapterServices = new HashMap<Object, List<AdaptableDescription>>();
+        this.adapterServiceReferences = new HashMap<ServiceReference, List<AdaptableDescription>>();
         this.adapterBundles = new HashMap<Bundle, List<AdaptableDescription>>();
         for (final Bundle bundle : this.bundleContext.getBundles()) {
             if (bundle.getState() == Bundle.ACTIVE) {
@@ -219,7 +219,7 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
     protected void deactivate(final ComponentContext ctx) {
         this.bundleContext.removeBundleListener(this);
         this.adapterTracker.close();
-        this.adapterServices = null;
+        this.adapterServiceReferences = null;
         this.adapterBundles = null;
     }
 
