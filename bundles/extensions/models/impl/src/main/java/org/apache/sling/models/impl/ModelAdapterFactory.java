@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -58,6 +59,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
@@ -69,9 +71,14 @@ import org.apache.sling.models.annotations.Optional;
 import org.apache.sling.models.annotations.Required;
 import org.apache.sling.models.annotations.Source;
 import org.apache.sling.models.annotations.Via;
+import org.apache.sling.models.factory.InjectionContext;
+import org.apache.sling.models.factory.InvalidAdaptableException;
+import org.apache.sling.models.factory.InvalidModelException;
+import org.apache.sling.models.factory.ModelFactory;
+import org.apache.sling.models.factory.NoInjectorFoundException;
+import org.apache.sling.models.spi.AcceptsNullName;
 import org.apache.sling.models.spi.DisposalCallback;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
-import org.apache.sling.models.spi.AcceptsNullName;
 import org.apache.sling.models.spi.Injector;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotation;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
@@ -83,8 +90,9 @@ import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(metatype = true)
-public class ModelAdapterFactory implements AdapterFactory, Runnable {
+@Component(metatype = true, immediate=true)
+@Service(value=ModelFactory.class)
+public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFactory {
 
     private static class DisposalCallbackRegistryImpl implements DisposalCallbackRegistry {
 
@@ -150,51 +158,94 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
     // Use threadlocal to count recursive invocations and break recursing if a max. limit is reached (to avoid cyclic dependencies)
     private ThreadLocal<ThreadInvocationCounter> invocationCountThreadLocal;
 
-    @SuppressWarnings("unchecked")
+    @Override
     public <AdapterType> AdapterType getAdapter(Object adaptable, Class<AdapterType> type) {
+        try {
+            return internalCreateModel(adaptable, type, false);
+        } catch (InvalidModelException e) {
+            log.error("Could not create model", e);
+        }
+        return null;
+    }
+    
+    @Override
+    public boolean canCreateFromAdaptable(Class<?> modelClass, Object adaptable) throws InvalidModelException {
+        Model modelAnnotation = modelClass.getAnnotation(Model.class);
+        if (modelAnnotation == null) {
+            throw new InvalidModelException("Model class '"+modelClass+"' does not have a model annotation");
+        }
+
+        Class<?>[] declaredAdaptable = modelAnnotation.adaptables();
+        for (Class<?> clazz : declaredAdaptable) {
+            if (clazz.isInstance(adaptable)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean isModelClass(Class<?> modelClass) {
+        return getModelAnnotation(modelClass) != null;
+    }
+    
+    private Model getModelAnnotation(Class<?> modelClass) {
+        return modelClass.getAnnotation(Model.class);
+    }
+    
+    @Override
+    public <ModelType> ModelType createModel(Object adaptable, Class<ModelType> type) throws NoInjectorFoundException, InvalidAdaptableException {
+        return internalCreateModel(adaptable, type, true);
+    }
+    
+    @SuppressWarnings("unchecked")
+    private <ModelType> ModelType internalCreateModel(Object adaptable, Class<ModelType> type, boolean throwExceptions) throws InvalidModelException, NoInjectorFoundException  {
         ThreadInvocationCounter threadInvocationCounter = invocationCountThreadLocal.get();
         if (threadInvocationCounter.isMaximumReached()) {
-            log.error("Adapting {} to {} failed, too much recursive invocations (>={}).",
-                    new Object[] { adaptable, type, threadInvocationCounter.maxRecursionDepth });
-            return null;
+            throw new InvalidModelException("Adapting " +adaptable + " to " +type+ " failed, too much recursive invocations (>="+ threadInvocationCounter.maxRecursionDepth +").");
         };
         threadInvocationCounter.increase();
         try {
-            Model modelAnnotation = type.getAnnotation(Model.class);
+            Model modelAnnotation = getModelAnnotation(type);
             if (modelAnnotation == null) {
-                return null;
-            }
-            boolean isAdaptable = false;
-
-            Class<?>[] declaredAdaptable = modelAnnotation.adaptables();
-            for (Class<?> clazz : declaredAdaptable) {
-                if (clazz.isInstance(adaptable)) {
-                    isAdaptable = true;
+                if (!throwExceptions) {
+                    log.debug("Model class {} does not have a model annotation", type);
+                    return null;
                 }
             }
-            if (!isAdaptable) {
+            
+            if (!canCreateFromAdaptable(type, adaptable)) {
+                String msg = "Could not adapt model '" + type + "' from class '" +  adaptable.getClass() + "'.";
+                if (throwExceptions) {
+                    throw new InvalidAdaptableException(msg);
+                } else {
+                    log.debug(msg);
+                }
                 return null;
             }
 
             if (type.isInterface()) {
-                InvocationHandler handler = createInvocationHandler(adaptable, type, modelAnnotation);
+                InvocationHandler handler = createInvocationHandler(adaptable, type, modelAnnotation, throwExceptions);
                 if (handler != null) {
-                    return (AdapterType) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] { type }, handler);
+                    return (ModelType) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] { type }, handler);
                 } else {
                     return null;
                 }
             } else {
-                try {
-                    return createObject(adaptable, type, modelAnnotation);
-                } catch (Exception e) {
-                    log.error("unable to create object", e);
-                    return null;
-                }
+                return createObject(adaptable, type, modelAnnotation, throwExceptions);
             }
+        } catch (InstantiationException e) {
+            throw new InvalidModelException(e);
+        } catch (InvocationTargetException e) {
+            throw new InvalidModelException(e);
+        } catch (IllegalAccessException e) {
+            throw new InvalidModelException(e);
         } finally {
             threadInvocationCounter.decrease();
         }
     }
+
+
 
     private Set<Field> collectInjectableFields(Class<?> type) {
         Set<Field> result = new HashSet<Field>();
@@ -234,13 +285,16 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         /**
          * Is called each time when the given value should be injected into the given element
          * @param element
-         * @param value
+         * @param value (never null)
+         * @param throwExceptions true if it is allowed to throw exceptions (in case the callback was triggered through the ModelFactory).
          * @return true if injection was successful otherwise false
+         * @throws IllegalAccessException 
+         * @throws IllegalArgumentException 
          */
-        public boolean inject(AnnotatedElement element, Object value);
+        public boolean inject(AnnotatedElement element, Object value, boolean throwExceptions) throws IllegalArgumentException, IllegalAccessException;
     }
 
-    private static class SetFieldCallback implements InjectCallback {
+    private class SetFieldCallback implements InjectCallback {
 
         private final Object object;
 
@@ -249,12 +303,12 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         }
 
         @Override
-        public boolean inject(AnnotatedElement element, Object value) {
-            return setField((Field) element, object, value);
+        public boolean inject(AnnotatedElement element, Object value, boolean throwExceptions) throws IllegalArgumentException, IllegalAccessException {
+            return setField((Field) element, object, value, throwExceptions);
         }
     }
 
-    private static class SetMethodsCallback implements InjectCallback {
+    private class SetMethodsCallback implements InjectCallback {
 
         private final Map<Method, Object> methods;
 
@@ -263,12 +317,12 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         }
 
         @Override
-        public boolean inject(AnnotatedElement element, Object value) {
-            return setMethod((Method) element, methods, value);
+        public boolean inject(AnnotatedElement element, Object value, boolean throwExceptions) {
+            return setMethod((Method) element, methods, value, throwExceptions);
         }
     }
 
-    private static class SetConstructorParameterCallback implements InjectCallback {
+    private class SetConstructorParameterCallback implements InjectCallback {
 
         private final List<Object> parameterValues;
 
@@ -277,14 +331,14 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         }
 
         @Override
-        public boolean inject(AnnotatedElement element, Object value) {
-            return setConstructorParameter((ConstructorParameter)element, parameterValues, value);
+        public boolean inject(AnnotatedElement element, Object value, boolean throwExceptions) {
+            return setConstructorParameter((ConstructorParameter)element, parameterValues, value, throwExceptions);
         }
     }
 
-    private boolean injectElement(final AnnotatedElement element, final Object adaptable, final Type type,
+    private InjectionResult injectElement(final AnnotatedElement element, final Object adaptable, final Type type,
             final boolean injectPrimitiveInitialValue, final Model modelAnnotation, final DisposalCallbackRegistry registry,
-            final InjectCallback callback) {
+            final InjectCallback callback, boolean throwExceptions) throws IllegalArgumentException, IllegalAccessException {
 
         InjectAnnotationProcessor annotationProcessor = null;
         String source = getSource(element);
@@ -307,9 +361,13 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
                 if (name != null || injector instanceof AcceptsNullName) {
                     if (injectionAdaptable != null) {
                         Object value = injector.getValue(injectionAdaptable, name, type, element, registry);
-                        if (callback.inject(element, value)) {
-                            wasInjectionSuccessful = true;
-                            break;
+                        if (value != null) {
+                            if (callback.inject(element, value, throwExceptions)) {
+                                wasInjectionSuccessful = true;
+                                break;
+                            } else {
+                                throw new InvalidModelException("Invalid type conversion: Could not inject " + value + " (from injector " + injector.getName() +") into " + element.toString() + " with type "+ type);
+                            }
                         }
                     }
                 }
@@ -317,24 +375,24 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         }
         // if injection failed, use default
         if (!wasInjectionSuccessful) {
-            wasInjectionSuccessful = injectDefaultValue(element, type, annotationProcessor, callback);
+            wasInjectionSuccessful = injectDefaultValue(element, type, annotationProcessor, callback, throwExceptions);
         }
 
         // if default is not set, check if mandatory
         if (!wasInjectionSuccessful) {
             if (isOptional(element, modelAnnotation, annotationProcessor)) {
                 if (injectPrimitiveInitialValue) {
-                    injectPrimitiveInitialValue(element, type, callback);
+                    injectPrimitiveInitialValue(element, type, callback, throwExceptions);
                 }
             } else {
-                return false;
+                return new InjectionResult(true, new InjectionContext(source, name, type, element.toString()));
             }
         }
         
-        return true;
+        return new InjectionResult(false, null);
     }
 
-    private InvocationHandler createInvocationHandler(final Object adaptable, final Class<?> type, Model modelAnnotation) {
+    private InvocationHandler createInvocationHandler(final Object adaptable, final Class<?> type, Model modelAnnotation, boolean throwExceptions) throws IllegalArgumentException, IllegalAccessException {
         Set<Method> injectableMethods = collectInjectableMethods(type);
         final Map<Method, Object> methods = new HashMap<Method, Object>();
         SetMethodsCallback callback = new SetMethodsCallback(methods);
@@ -342,7 +400,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
         DisposalCallbackRegistryImpl registry = new DisposalCallbackRegistryImpl();
         registerCallbackRegistry(handler, registry);
-        Set<Method> requiredMethods = new HashSet<Method>();
+        List<InjectionContext> injectionContexts = new LinkedList<InjectionContext>();
 
         for (Method method : injectableMethods) {
             Type genericReturnType = method.getGenericReturnType();
@@ -351,14 +409,21 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
             if (returnType != genericReturnType) {
                 isPrimitive = true;
             }
-            if (!injectElement(method, adaptable, returnType, isPrimitive, modelAnnotation, registry, callback)) {
-                requiredMethods.add(method);
+            
+            InjectionResult result = injectElement(method, adaptable, returnType, isPrimitive, modelAnnotation, registry, callback, throwExceptions);
+            if (!result.isOk()) {
+                injectionContexts.add(result.getContext());
             }
         }
         registry.seal();
-        if (!requiredMethods.isEmpty()) {
-            log.warn("Required methods {} on model interface {} were not able to be injected.", requiredMethods, type);
-            return null;
+        if (!injectionContexts.isEmpty()) {
+            String msg = "Some required methods on model interface " + type + " were not able to be injected. (" + injectionContexts + ")";
+            if (throwExceptions) {
+                throw new NoInjectorFoundException(msg, injectionContexts);
+            } else {
+                log.warn(msg);
+                return null;
+            }
         }
         return handler;
     }
@@ -400,14 +465,13 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         return null;
     }
 
-    private <AdapterType> AdapterType createObject(Object adaptable, Class<AdapterType> type, Model modelAnnotation)
+    private <AdapterType> AdapterType createObject(Object adaptable, Class<AdapterType> type, Model modelAnnotation, boolean throwExceptions)
             throws InstantiationException, InvocationTargetException, IllegalAccessException {
         DisposalCallbackRegistryImpl registry = new DisposalCallbackRegistryImpl();
 
         Constructor<AdapterType> constructorToUse = getBestMatchingConstructor(adaptable, type);
         if (constructorToUse == null) {
-            log.warn("Model class {} does not have a usable constructor", type.getName());
-            return null;
+            throw new InstantiationException("Model class " + type.getName() + " does not have a usable constructor");
         }
 
         final AdapterType object;
@@ -418,16 +482,16 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
             // instantiate with constructor injection
             // if this fails, make sure resources that may be claimed by injectors are cleared up again
             try {
-                object = newInstanceWithConstructorInjection(constructorToUse, adaptable, type, modelAnnotation, registry);
+                object = newInstanceWithConstructorInjection(constructorToUse, adaptable, type, modelAnnotation, registry, throwExceptions);
             } catch (InstantiationException ex) {
                 registry.onDisposed();
-                throw ex;
+                throw new InvalidModelException(ex);
             } catch (InvocationTargetException ex) {
                 registry.onDisposed();
-                throw ex;
+                throw new InvalidModelException(ex);
             } catch (IllegalAccessException ex) {
                 registry.onDisposed();
-                throw ex;
+                throw new InvalidModelException(ex);
             }
         }
 
@@ -440,29 +504,33 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
         InjectCallback callback = new SetFieldCallback(object);
 
-        Set<Field> requiredFields = new HashSet<Field>();
+        List<InjectionContext> injectionContexts = new LinkedList<InjectionContext>();
 
         Set<Field> injectableFields = collectInjectableFields(type);
         for (Field field : injectableFields) {
             Type fieldType = mapPrimitiveClasses(field.getGenericType());
-            if (!injectElement(field, adaptable, fieldType, false, modelAnnotation, registry, callback)) {
-                requiredFields.add(field);
+            InjectionResult result = injectElement(field, adaptable, fieldType, false, modelAnnotation, registry, callback, throwExceptions);
+            if (!result.isOk()) {
+                injectionContexts.add(result.getContext());
             }
         }
 
         registry.seal();
-        if (!requiredFields.isEmpty()) {
-            log.warn("Required properties {} on model class {} were not able to be injected.", requiredFields, type);
-            return null;
+        if (!injectionContexts.isEmpty()) {
+            String msg = "Some required properties on model interface " + type + " were not able to be injected. (" + injectionContexts + ")";
+            if (throwExceptions) {
+                throw new NoInjectorFoundException(msg, injectionContexts);
+            } else {
+                log.warn(msg);
+                return null;
+            }
         }
         try {
             invokePostConstruct(object);
-            return object;
         } catch (Exception e) {
-            log.error("Unable to invoke post construct method.", e);
-            return null;
+            throw new InvalidModelException("Error in post construct", e);
         }
-
+        return object;
     }
 
     /**
@@ -501,9 +569,9 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
     }
 
     private <AdapterType> AdapterType newInstanceWithConstructorInjection(Constructor<AdapterType> constructor, Object adaptable,
-            Class<AdapterType> type, Model modelAnnotation, DisposalCallbackRegistry registry)
+            Class<AdapterType> type, Model modelAnnotation, DisposalCallbackRegistry registry, boolean throwExceptions)
             throws InstantiationException, InvocationTargetException, IllegalAccessException {
-        Set<ConstructorParameter> requiredParameters = new HashSet<ConstructorParameter>();
+        List<InjectionContext> injectionContexts = new LinkedList<InjectionContext>();
         Type[] parameterTypes = constructor.getGenericParameterTypes();
         List<Object> paramValues = new ArrayList<Object>(Arrays.asList(new Object[parameterTypes.length]));
         InjectCallback callback = new SetConstructorParameterCallback(paramValues);
@@ -517,13 +585,21 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
             }
             ConstructorParameter constructorParameter = new ConstructorParameter(
                     constructor.getParameterAnnotations()[i], constructor.getParameterTypes()[i], genericType, i);
-            if (!injectElement(constructorParameter, adaptable, genericType, isPrimitive, modelAnnotation, registry, callback)) {
-                requiredParameters.add(constructorParameter);
+            
+            
+            InjectionResult result = injectElement(constructorParameter, adaptable, genericType, isPrimitive, modelAnnotation, registry, callback, throwExceptions);
+            if (!result.isOk()) {
+                injectionContexts.add(result.getContext());
             }
         }
-        if (!requiredParameters.isEmpty()) {
-            log.warn("Required constructor parameters {} on model class {} were not able to be injected.", requiredParameters, type);
-            return null;
+        if (!injectionContexts.isEmpty()) {
+            String msg = "Some required constructor parameters on model interface " + type + " were not able to be injected. (" + injectionContexts + ")";
+            if (throwExceptions) {
+                throw new NoInjectorFoundException(msg, injectionContexts);
+            } else {
+                log.warn(msg);
+                return null;
+            }
         }
         return constructor.newInstance(paramValues.toArray(new Object[paramValues.size()]));
     }
@@ -544,11 +620,11 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
     }
 
     private boolean injectDefaultValue(AnnotatedElement point, Type type, InjectAnnotationProcessor processor,
-            InjectCallback callback) {
+            InjectCallback callback,  boolean throwExceptions) throws IllegalArgumentException, IllegalAccessException {
 
         if (processor != null) {
             if (processor.hasDefault()) {
-                return callback.inject(point, processor.getDefault());
+                return callback.inject(point, processor.getDefault(), throwExceptions);
             }
         }
         Default defaultAnnotation = point.getAnnotation(Default.class);
@@ -617,7 +693,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
             log.warn("Cannot provide default for {}", type);
             return false;
         }
-        return callback.inject(point, value);
+        return callback.inject(point, value, throwExceptions);
     }
 
     /**
@@ -627,8 +703,11 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
      * @param point Annotated element
      * @param wrapperType Non-primitive wrapper class for primitive class
      * @param callback Inject callback
+     * @param throwExceptions true if method is allowed to throw exceptions
+     * @throws IllegalAccessException 
+     * @throws IllegalArgumentException 
      */
-    private void injectPrimitiveInitialValue(AnnotatedElement point, Type wrapperType, InjectCallback callback) {
+    private void injectPrimitiveInitialValue(AnnotatedElement point, Type wrapperType, InjectCallback callback, boolean throwExceptions) throws IllegalArgumentException, IllegalAccessException {
         Type primitiveType = mapWrapperClasses(wrapperType);
         Object value = null;
         if (primitiveType == int.class) {
@@ -649,7 +728,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
             value = Character.valueOf('\u0000');
         }
         if (value != null) {
-            callback.inject(point, value);
+            callback.inject(point, value, throwExceptions);
         };
     }
     
@@ -713,7 +792,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         }
     }
 
-    private void invokePostConstruct(Object object) throws Exception {
+    private void invokePostConstruct(Object object) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {
         Class<?> clazz = object.getClass();
         List<Method> postConstructMethods = new ArrayList<Method>();
         while (clazz != null) {
@@ -756,60 +835,67 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
             return type;
         }
     }
-
-    private static boolean setField(Field field, Object createdObject, Object value) {
-        if (value != null) {
-            if (!isAcceptableType(field.getType(), field.getGenericType(), value)) {
-                Class<?> declaredType = field.getType();
-                Type genericType = field.getGenericType();
-                if (value instanceof Adaptable) {
-                    value = ((Adaptable) value).adaptTo(field.getType());
-                    if (value == null) {
-                        return false;
-                    }
-                } else if (genericType instanceof ParameterizedType) {
-                    ParameterizedType type = (ParameterizedType) genericType;
-                    Class<?> collectionType = (Class<?>) declaredType;
-                    if (value instanceof Collection &&
-                            (collectionType.equals(Collection.class) || collectionType.equals(List.class)) &&
-                            type.getActualTypeArguments().length == 1) {
-                        List<Object> result = new ArrayList<Object>();
-                        for (Object valueObject : (Collection<?>) value) {
-                            if (valueObject instanceof Adaptable) {
-                                Object adapted = ((Adaptable) valueObject).adaptTo((Class<?>) type.getActualTypeArguments()[0]);
-                                if (adapted != null) {
-                                    result.add(adapted);
-                                }
-                            }
-                        }
-                        value = result;
-                    }
-                }
-            }
-            boolean accessible = field.isAccessible();
-            try {
-                if (!accessible) {
-                    field.setAccessible(true);
-                }
-                field.set(createdObject, value);
-                return true;
-            } catch (Exception e) {
-                log.error("unable to inject field", e);
-                return false;
-            } finally {
-                if (!accessible) {
-                    field.setAccessible(false);
-                }
-            }
+    
+    /**
+    * Try to instanciate via ModelFactory if possible and only if that fails use adaptTo mechanism. Necessary to make exception propagation work.
+    * @param adaptable
+    * @param type
+    * @return the instanciated model/adapted object (might be null)
+    */
+    private Object createModelOrAdaptTo(Adaptable adaptable, Class<?> type, boolean throwExceptions) {
+        if (throwExceptions && this.isModelClass(type) && this.canCreateFromAdaptable(type, adaptable)) {
+            return this.createModel(adaptable, type);
         } else {
-            return false;
+            return adaptable.adaptTo(type);
         }
     }
 
-    private static boolean setMethod(Method method, Map<Method, Object> methods, Object value) {
+    private boolean setField(Field field, Object createdObject, Object value, boolean throwExceptions) throws IllegalArgumentException, IllegalAccessException {
+        if (!isAcceptableType(field.getType(), field.getGenericType(), value)) {
+            Class<?> declaredType = field.getType();
+            Type genericType = field.getGenericType();
+            if (value instanceof Adaptable) {
+                value = createModelOrAdaptTo((Adaptable) value, field.getType(), throwExceptions);
+                if (value == null) {
+                    return false;
+                }
+            } else if (genericType instanceof ParameterizedType) {
+                ParameterizedType type = (ParameterizedType) genericType;
+                Class<?> collectionType = (Class<?>) declaredType;
+                if (value instanceof Collection
+                        && (collectionType.equals(Collection.class) || collectionType.equals(List.class))
+                        && type.getActualTypeArguments().length == 1) {
+                    List<Object> result = new ArrayList<Object>();
+                    for (Object valueObject : (Collection<?>) value) {
+                        if (valueObject instanceof Adaptable) {
+                            Object adapted = createModelOrAdaptTo((Adaptable) valueObject, (Class<?>) type.getActualTypeArguments()[0], throwExceptions);
+                            if (adapted != null) {
+                                result.add(adapted);
+                            }
+                        }
+                    }
+                    value = result;
+                }
+            }
+        }
+        boolean accessible = field.isAccessible();
+        try {
+            if (!accessible) {
+                field.setAccessible(true);
+            }
+            field.set(createdObject, value);
+            return true;
+        } finally {
+            if (!accessible) {
+                field.setAccessible(false);
+            }
+        }
+    } 
+    
+    private boolean setMethod(Method method, Map<Method, Object> methods, Object value, boolean throwExceptions) {
         if (value != null) {
             if (!isAcceptableType(method.getReturnType(), method.getGenericReturnType(), value) && value instanceof Adaptable) {
-                value = ((Adaptable) value).adaptTo(method.getReturnType());
+                value = createModelOrAdaptTo((Adaptable) value, method.getReturnType(), throwExceptions);
                 if (value == null) {
                     return false;
                 }
@@ -821,12 +907,12 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         }
     }
 
-    private static boolean setConstructorParameter(ConstructorParameter constructorParameter, List<Object> parameterValues, Object value) {
-        if (value != null && constructorParameter.getType() instanceof Class<?>) {
+    private boolean setConstructorParameter(ConstructorParameter constructorParameter, List<Object> parameterValues, Object value, boolean throwExceptions) {
+        if (constructorParameter.getType() instanceof Class<?>) {
             Class<?> requestedType = (Class<?>)constructorParameter.getType();
             if (!isAcceptableType(requestedType, constructorParameter.getGenericType(), value)) {
                 if (value instanceof Adaptable) {
-                    value = ((Adaptable) value).adaptTo(requestedType);
+                    value = createModelOrAdaptTo((Adaptable) value, requestedType, throwExceptions);
                     if (value == null) {
                         return false;
                     }
@@ -837,7 +923,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
             }
             parameterValues.set(constructorParameter.getParameterIndex(), value);
             return true;
-        } else {
+        } else { 
             return false;
         }
     }
@@ -952,16 +1038,16 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
     }
 
     protected void bindInjectAnnotationProcessorFactory(final InjectAnnotationProcessorFactory injector, final Map<String, Object> props) {
-        synchronized (injectors) {
+        synchronized (injectAnnotationProcessorFactories) {
             injectAnnotationProcessorFactories.put(ServiceUtil.getComparableForServiceRanking(props), injector);
             sortedInjectAnnotationProcessorFactories = injectAnnotationProcessorFactories.values().toArray(new InjectAnnotationProcessorFactory[injectAnnotationProcessorFactories.size()]);
         }
     }
 
     protected void unbindInjectAnnotationProcessorFactory(final InjectAnnotationProcessorFactory injector, final Map<String, Object> props) {
-        synchronized (injectors) {
+        synchronized (injectAnnotationProcessorFactories) {
             injectAnnotationProcessorFactories.remove(ServiceUtil.getComparableForServiceRanking(props));
-            sortedInjectAnnotationProcessorFactories = injectors.values().toArray(new InjectAnnotationProcessorFactory[injectAnnotationProcessorFactories.size()]);
+            sortedInjectAnnotationProcessorFactories = injectAnnotationProcessorFactories.values().toArray(new InjectAnnotationProcessorFactory[injectAnnotationProcessorFactories.size()]);
         }
     }
 
