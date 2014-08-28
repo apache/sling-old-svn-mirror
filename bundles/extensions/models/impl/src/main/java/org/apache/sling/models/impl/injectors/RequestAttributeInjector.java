@@ -17,7 +17,6 @@
 package org.apache.sling.models.impl.injectors;
 
 import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 import javax.servlet.ServletRequest;
@@ -53,30 +52,7 @@ public class RequestAttributeInjector implements Injector, InjectAnnotationProce
         if (!(adaptable instanceof ServletRequest)) {
             return null;
         } else {
-            Object attribute = ((ServletRequest) adaptable).getAttribute(name);
-            if (attribute != null) {
-                if (declaredType instanceof Class<?>) {
-                    Class<?> clazz = (Class<?>) declaredType;
-                    if (clazz.isInstance(attribute)) {
-                        return attribute;
-                    } else {
-                        return null;
-                    }
-                } else if (declaredType instanceof ParameterizedType) {
-                    ParameterizedType parameterizedType = (ParameterizedType) declaredType;
-                    Type rawType = parameterizedType.getRawType();
-                    if (rawType instanceof Class<?>) {
-                        Class<?> clazz = (Class<?>) rawType;
-                        if (clazz.isInstance(attribute)) {
-                            return attribute;
-                        } else {
-                            return null;
-                        }
-                    }
-                }
-                log.debug("RequestAttributeInjector doesn't support type {}, type class {}.", declaredType, declaredType.getClass());
-            }
-            return null;
+            return ((ServletRequest) adaptable).getAttribute(name);
         }
     }
 

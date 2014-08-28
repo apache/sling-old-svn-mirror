@@ -48,12 +48,7 @@ public class BindingsInjector implements Injector, InjectAnnotationProcessorFact
     }
 
     private static Object getValue(SlingBindings bindings, String name, Class<?> type) {
-        Object value = bindings.get(name);
-        if (type.isInstance(value)) {
-            return value;
-        } else {
-            return null;
-        }
+        return bindings.get(name);
     }
 
     public Object getValue(Object adaptable, String name, Type type, AnnotatedElement element,
