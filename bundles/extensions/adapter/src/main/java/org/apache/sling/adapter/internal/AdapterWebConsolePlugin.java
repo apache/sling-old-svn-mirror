@@ -84,7 +84,7 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
     private final Logger logger = LoggerFactory.getLogger(AdapterWebConsolePlugin.class);
 
     private List<AdaptableDescription> allAdaptables;
-    private Map<Object, List<AdaptableDescription>> adapterServices;
+    private Map<ServiceReference, List<AdaptableDescription>> adapterServices;
     private Map<Bundle, List<AdaptableDescription>> adapterBundles;
 
     private ServiceTracker adapterTracker;
@@ -107,7 +107,7 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
             descriptions.add(new AdaptableDescription(reference.getBundle(), adaptable, adapters, condition, deprecated));
         }
         synchronized (this) {
-            adapterServices.put(service, descriptions);
+            adapterServices.put(reference, descriptions);
             update();
         }
     }
@@ -126,7 +126,7 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
 
     public void removedService(final ServiceReference reference, final Object service) {
         synchronized (this) {
-            adapterServices.remove(service);
+            adapterServices.remove(reference);
             update();
         }
     }
@@ -202,7 +202,7 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
 
     protected void activate(final ComponentContext ctx) throws InvalidSyntaxException {
         this.bundleContext = ctx.getBundleContext();
-        this.adapterServices = new HashMap<Object, List<AdaptableDescription>>();
+        this.adapterServices = new HashMap<ServiceReference, List<AdaptableDescription>>();
         this.adapterBundles = new HashMap<Bundle, List<AdaptableDescription>>();
         for (final Bundle bundle : this.bundleContext.getBundles()) {
             if (bundle.getState() == Bundle.ACTIVE) {
