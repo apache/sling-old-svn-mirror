@@ -687,7 +687,7 @@ public class ResourceUtil {
      * @return A new batch resource remover.
      * Since 2.6
      */
-    public static BatchResourceRemover getBatchResourceResourceRemover(final int threshold) {
+    public static BatchResourceRemover getBatchResourceRemover(final int threshold) {
         return new BatchResourceRemover(threshold);
     }
 }
