@@ -348,9 +348,10 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             // SLING-864: if the path contains a dot we assume this to be
             // the start for any selectors, extension, suffix, which may be
             // used for further request processing.
+            // the resolution path must be the full path and is already set within
+            // the non existing resource
             final int index = resourcePath.indexOf('.');
             if (index != -1) {
-                res.getResourceMetadata().setResolutionPath(resourcePath.substring(0, index));
                 res.getResourceMetadata().setResolutionPathInfo(resourcePath.substring(index));
             }
         } else {
