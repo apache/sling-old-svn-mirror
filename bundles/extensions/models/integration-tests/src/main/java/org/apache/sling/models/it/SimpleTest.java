@@ -36,7 +36,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(SlingAnnotationsTestRunner.class)
-@SuppressWarnings("javadoc")
 public class SimpleTest {
 
     @TestReference

@@ -23,9 +23,9 @@ import javax.servlet.Filter;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.Model;
+import org.apache.sling.models.annotations.injectorspecific.Self;
 
 @Model(adaptables=Resource.class)
-@SuppressWarnings("javadoc")
 public interface InterfaceInjectionTestModel {
 
     @Inject
@@ -34,7 +34,7 @@ public interface InterfaceInjectionTestModel {
     @Inject
     List<Filter> getFilters();
 
-    @Inject
+    @Self
     Resource getResource();
 
 }

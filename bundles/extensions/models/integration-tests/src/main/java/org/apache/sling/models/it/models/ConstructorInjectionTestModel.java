@@ -24,9 +24,9 @@ import javax.servlet.Filter;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.Model;
+import org.apache.sling.models.annotations.injectorspecific.Self;
 
 @Model(adaptables=Resource.class)
-@SuppressWarnings("javadoc")
 public class ConstructorInjectionTestModel {
 
     private final String testProperty;
@@ -34,8 +34,10 @@ public class ConstructorInjectionTestModel {
     private final Resource resource;
     
     @Inject
-    public ConstructorInjectionTestModel(@Named("testProperty") String testProperty,
-            @Named("filters") List<Filter> filters, Resource resource) {
+    public ConstructorInjectionTestModel(
+            @Named("testProperty") String testProperty,
+            @Named("filters") List<Filter> filters,
+            @Self Resource resource) {
         this.testProperty = testProperty;
         this.filters = filters;
         this.resource = resource;
