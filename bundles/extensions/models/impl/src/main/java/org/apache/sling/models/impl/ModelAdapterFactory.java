@@ -958,7 +958,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
     protected void unbindInjectAnnotationProcessorFactory(final InjectAnnotationProcessorFactory injector, final Map<String, Object> props) {
         synchronized (injectors) {
             injectAnnotationProcessorFactories.remove(ServiceUtil.getComparableForServiceRanking(props));
-            sortedInjectAnnotationProcessorFactories = injectors.values().toArray(new InjectAnnotationProcessorFactory[injectAnnotationProcessorFactories.size()]);
+            sortedInjectAnnotationProcessorFactories = injectAnnotationProcessorFactories.values().toArray(new InjectAnnotationProcessorFactory[injectAnnotationProcessorFactories.size()]);
         }
     }
 
