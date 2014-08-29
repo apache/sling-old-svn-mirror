@@ -18,6 +18,7 @@ package org.apache.sling.models.impl;
 
 import java.io.PrintWriter;
 
+import org.apache.sling.models.spi.ImplementationPicker;
 import org.apache.sling.models.spi.Injector;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
 
@@ -30,9 +31,11 @@ public class ModelConfigurationPrinter {
     }
 
     public void printConfiguration(PrintWriter printWriter) {
+        
+        // injectors
         printWriter.println("Sling Models Injectors:");
         Injector[] injectors = modelAdapterFactory.getInjectors();
-        if (injectors == null) {
+        if (injectors == null || injectors.length == 0) {
             printWriter.println("none");
         } else {
             for (Injector injector : injectors) {
@@ -41,13 +44,28 @@ public class ModelConfigurationPrinter {
             }
         }
         printWriter.println();
+        
+        // inject annotations processor factories
         printWriter.println("Sling Models Inject Annotation Processor Factories:");
         InjectAnnotationProcessorFactory[] factories = modelAdapterFactory.getInjectAnnotationProcessorFactories();
-        if (factories == null) {
+        if (factories == null || factories.length == 0) {
             printWriter.println("none");
         } else {
             for (InjectAnnotationProcessorFactory factory : factories) {
                 printWriter.printf("%s", factory.getClass().getName());
+                printWriter.println();
+            }
+        }
+        printWriter.println();
+        
+        // implementation pickers
+        printWriter.println("Sling Models Implementation Pickers:");
+        ImplementationPicker[] pickers = modelAdapterFactory.getImplementationPickers();
+        if (pickers == null || pickers.length == 0) {
+            printWriter.println("none");
+        } else {
+            for (ImplementationPicker picker : pickers) {
+                printWriter.printf("%s", picker.getClass().getName());
                 printWriter.println();
             }
         }
