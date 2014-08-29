@@ -949,14 +949,14 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
     }
 
     protected void bindInjectAnnotationProcessorFactory(final InjectAnnotationProcessorFactory injector, final Map<String, Object> props) {
-        synchronized (injectors) {
+        synchronized (injectAnnotationProcessorFactories) {
             injectAnnotationProcessorFactories.put(ServiceUtil.getComparableForServiceRanking(props), injector);
             sortedInjectAnnotationProcessorFactories = injectAnnotationProcessorFactories.values().toArray(new InjectAnnotationProcessorFactory[injectAnnotationProcessorFactories.size()]);
         }
     }
 
     protected void unbindInjectAnnotationProcessorFactory(final InjectAnnotationProcessorFactory injector, final Map<String, Object> props) {
-        synchronized (injectors) {
+        synchronized (injectAnnotationProcessorFactories) {
             injectAnnotationProcessorFactories.remove(ServiceUtil.getComparableForServiceRanking(props));
             sortedInjectAnnotationProcessorFactories = injectAnnotationProcessorFactories.values().toArray(new InjectAnnotationProcessorFactory[injectAnnotationProcessorFactories.size()]);
         }
