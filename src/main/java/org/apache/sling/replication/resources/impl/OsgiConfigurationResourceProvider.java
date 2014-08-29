@@ -53,20 +53,17 @@ public class OsgiConfigurationResourceProvider extends AbstractModifyingResource
     private final ConfigurationAdmin configurationAdmin;
     private final String configFactory;
     private final String friendlyNameProperty;
-    private final String groupPrefix;
 
     public OsgiConfigurationResourceProvider(ConfigurationAdmin configurationAdmin,
                                              String configFactory,
                                              String friendlyNameProperty,
                                              String resourceRoot,
-                                             String groupPrefix,
                                              Map<String, String> additionalResourceProperties) {
         super(resourceRoot, additionalResourceProperties);
 
         this.configurationAdmin = configurationAdmin;
         this.configFactory = configFactory;
         this.friendlyNameProperty = friendlyNameProperty;
-        this.groupPrefix = groupPrefix;
     }
 
     @Override
@@ -275,6 +272,6 @@ public class OsgiConfigurationResourceProvider extends AbstractModifyingResource
     }
 
     private String getConfigName(String configName) {
-        return groupPrefix == null? configName : groupPrefix + "/" + configName;
+        return configName;
     }
 }

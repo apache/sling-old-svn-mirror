@@ -28,7 +28,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 
 /**
- * Testcase for {@link FileVaultReplicationPackageBuilder}
+ * Testcase for {@link FileVaultReplicationPackageBuilderFactory}
  */
 public class FileVaultReplicationPackageBuilderTest {
 
@@ -36,15 +36,10 @@ public class FileVaultReplicationPackageBuilderTest {
     public void testCreatePackageForAddWithoutPermissions() throws Exception {
         try {
             SlingRepository repository = mock(SlingRepository.class);
-            FileVaultReplicationPackageBuilder fileVaultReplicationPackageBuilder = new FileVaultReplicationPackageBuilder();
-            Field repositoryField = fileVaultReplicationPackageBuilder.getClass().getDeclaredField("repository");
-            repositoryField.setAccessible(true);
-            repositoryField.set(fileVaultReplicationPackageBuilder, repository);
-
             Packaging packaging = mock(Packaging.class);
-            Field packagingField = fileVaultReplicationPackageBuilder.getClass().getDeclaredField("packaging");
-            packagingField.setAccessible(true);
-            packagingField.set(fileVaultReplicationPackageBuilder, packaging);
+
+            FileVaultReplicationPackageBuilder fileVaultReplicationPackageBuilder = new FileVaultReplicationPackageBuilder("vlt",
+                    null, null, repository, packaging);
 
             ReplicationRequest request = mock(ReplicationRequest.class);
             fileVaultReplicationPackageBuilder.createPackageForAdd(request);

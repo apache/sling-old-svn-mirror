@@ -16,28 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.serialization;
+package org.apache.sling.replication.agent.impl;
 
-import java.util.Collection;
+import java.util.Map;
 
-/**
- * A provider for {@link ReplicationPackageBuilder}s
- */
-public interface ReplicationPackageBuilderProvider {
+public interface ReplicationComponentProvider {
 
     /**
-     * get all the available {@link ReplicationPackageBuilder}s in the system
-     *
-     * @return a {@link Collection} of {@link ReplicationPackageBuilder}
+     * Retrieves an already existing component.
+     * @param type
+     * @param componentName
+     * @param <ComponentType>
+     * @return
      */
-    Collection<ReplicationPackageBuilder> getAvailableReplicationPackageBuilders();
+    <ComponentType> ComponentType getComponent(java.lang.Class<ComponentType> type, String componentName);
 
     /**
-     * get the {@link ReplicationPackageBuilder} with the specified name
-     *
-     * @param name the name of the {@link ReplicationPackageBuilder} as a <code>String</code>
-     * @return the {@link ReplicationPackageBuilder} with the given name, if it exists, <code>null</code> otherwise
+     * Creates a new component.
+     * @param type
+     * @param properties
+     * @param <ComponentType>
+     * @return
      */
-    ReplicationPackageBuilder getReplicationPackageBuilder(String name);
+    <ComponentType> ComponentType createComponent(java.lang.Class<ComponentType> type, Map<String, Object> properties);
+
+
 
 }

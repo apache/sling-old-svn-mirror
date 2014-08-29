@@ -1,0 +1,43 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "name" : "publish-reverse",
+    "type" : "simple",
+
+    "packageExporter" : [
+        "type=remote",
+        "authentication.properties[user]=admin",
+        "authentication.properties[password]=admin",
+        "endpoints[0]=http://localhost:4503/libs/sling/replication/services/exporters/reverse",
+
+        "authenticationFactory/type=service",
+        "authenticationFactory/name=user",
+
+        "packageBuilder/type=vlt",
+        "packageBuilder/username=admin",
+        "packageBuilder/password=admin"
+    ],
+
+    "packageImporter": [
+        "type=local",
+
+        "packageBuilder/type=vlt",
+        "packageBuilder/username=admin",
+        "packageBuilder/password=admin"
+    ],
+
+    "queueProvider" : [
+        "type=service",
+        "name=sjh"
+    ],
+
+    "queueDistributionStrategy" : [
+        "type=service",
+        "name=error"
+    ],
+
+    "rules" : [
+        "scheduled poll every 30 sec",
+        "remote trigger on http://localhost:4503/libs/sling/replication/services/triggers/content-event?3600000 with user admin and password admin"
+    ]
+
+}

@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * An OSGi service factory for {@link ReplicationAgent}s
  */
 @Component(metatype = true,
-        label = "Replication Agents Factory",
+        label = "Simple Replication Agents Factory",
         description = "OSGi configuration based ReplicationAgent service factory",
         name = SimpleReplicationAgentFactory.SERVICE_PID,
         configurationFactory = true,
@@ -71,13 +71,16 @@ public class SimpleReplicationAgentFactory {
     private static final String ENABLED = "enabled";
 
     @Property(label = "Name")
-    private static final String NAME = "name";
+    public static final String NAME = "name";
 
     @Property(label = "Rules")
-    private static final String RULES = "rules";
+    public static final String RULES = "rules";
 
     @Property(boolValue = true, label = "Replicate using aggregated paths")
-    private static final String USE_AGGREGATE_PATHS = "useAggregatePaths";
+    public static final String USE_AGGREGATE_PATHS = "useAggregatePaths";
+
+    @Property(boolValue = false, label = "Replicate using aggregated paths")
+    public static final String IS_PASSIVE = "isPassive";
 
     @Property(label = "Target ReplicationPackageExporter", name = PACKAGE_EXPORTER_TARGET)
     @Reference(name = "ReplicationPackageExporter", policy = ReferencePolicy.DYNAMIC)
@@ -141,21 +144,19 @@ public class SimpleReplicationAgentFactory {
             boolean useAggregatePaths = PropertiesUtil.toBoolean(config.get(USE_AGGREGATE_PATHS), true);
             props.put(USE_AGGREGATE_PATHS, useAggregatePaths);
 
-            boolean isPassive = PropertiesUtil.toBoolean(config.get("isPassive"), false);
-            props.put(USE_AGGREGATE_PATHS, useAggregatePaths);
+            boolean isPassive = PropertiesUtil.toBoolean(config.get(IS_PASSIVE), false);
+            props.put(IS_PASSIVE, isPassive);
 
             // check configuration is valid
             if (name == null || packageExporter == null || packageImporter == null || queueProvider == null || queueDistributionStrategy == null) {
                 throw new Exception("configuration for this agent is not valid");
             }
 
-
             log.info("bound services for {} :  {} - {} - {} - {} - {} - {}", new Object[]{name,
                     packageImporter, packageExporter, queueProvider, queueDistributionStrategy});
 
             SimpleReplicationAgent agent = new SimpleReplicationAgent(name, rules, useAggregatePaths, isPassive,
                     packageImporter, packageExporter, queueProvider, queueDistributionStrategy, replicationEventFactory, replicationRuleEngine);
-
 
             // only enable if instance runmodes match configured ones
             if (matchRunmodes(runModes)) {

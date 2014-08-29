@@ -1,0 +1,34 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "name" : "publish",
+    "type" : "simple",
+
+    "packageExporter" : [
+        "type=local",
+        "packageBuilder/type=vlt",
+        "packageBuilder/username=admin",
+        "packageBuilder/password=admin"
+    ],
+
+    "packageImporter": [
+        "type=remote",
+        "authentication.properties[user]=admin",
+        "authentication.properties[password]=admin",
+        "endpoints[0]=http://localhost:4503/libs/sling/replication/services/importers/default",
+        "authenticationFactory/type=service",
+        "authenticationFactory/name=user",
+        "packageBuilder/type=vlt",
+        "packageBuilder/username=admin",
+        "packageBuilder/password=admin"
+    ],
+
+    "queueProvider" : [
+        "type=service",
+        "name=sjh"
+    ],
+
+    "queueDistributionStrategy" : [
+        "type=service",
+        "name=error"
+    ]
+}

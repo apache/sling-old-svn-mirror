@@ -18,83 +18,42 @@
  */
 package org.apache.sling.replication.packaging.impl.exporter;
 
-import org.apache.felix.scr.annotations.*;
-import org.apache.http.client.fluent.Executor;
-import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.replication.communication.ReplicationEndpoint;
-import org.apache.sling.replication.communication.ReplicationRequest;
-import org.apache.sling.replication.packaging.ReplicationPackage;
-import org.apache.sling.replication.packaging.ReplicationPackageExporter;
-import org.apache.sling.replication.serialization.*;
-import org.apache.sling.replication.transport.ReplicationTransportHandler;
-import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
-import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
-import org.apache.sling.replication.transport.impl.MultipleEndpointReplicationTransportHandler;
-import org.apache.sling.replication.transport.impl.ReplicationTransportConstants;
-import org.apache.sling.replication.transport.impl.SimpleHttpReplicationTransportHandler;
-import org.apache.sling.replication.transport.impl.TransportEndpointStrategyType;
-import org.osgi.framework.BundleContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.http.client.fluent.Executor;
+import org.apache.sling.replication.communication.ReplicationEndpoint;
+import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.packaging.ReplicationPackage;
+import org.apache.sling.replication.packaging.ReplicationPackageExporter;
+import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
+import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
+import org.apache.sling.replication.transport.ReplicationTransportHandler;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
+import org.apache.sling.replication.transport.impl.MultipleEndpointReplicationTransportHandler;
+import org.apache.sling.replication.transport.impl.SimpleHttpReplicationTransportHandler;
+import org.apache.sling.replication.transport.impl.TransportEndpointStrategyType;
+
 /**
  * Default implementation of {@link org.apache.sling.replication.packaging.ReplicationPackageExporter}
  */
-@Component(label = "Remote Replication Package Exporter", configurationFactory = true)
-@Service(value = ReplicationPackageExporter.class)
 public class RemoteReplicationPackageExporter implements ReplicationPackageExporter {
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property
-    private static final String NAME = "name";
+    private final ReplicationPackageBuilder packageBuilder;
 
-    @Property(value = "exporters/remote", propertyPrivate = true)
-    private static final String FACTORY_NAME = "factoryName";
-
-    @Property(name = ReplicationTransportConstants.TRANSPORT_AUTHENTICATION_FACTORY)
-    @Reference(name = "TransportAuthenticationProviderFactory", policy = ReferencePolicy.DYNAMIC)
-    private TransportAuthenticationProviderFactory transportAuthenticationProviderFactory;
-
-
-    @Property(label = "Target ReplicationPackageBuilder", name = "ReplicationPackageBuilder.target")
-    @Reference(name = "ReplicationPackageBuilder", policy = ReferencePolicy.DYNAMIC)
-    private ReplicationPackageBuilder packageBuilder;
-
-    @Property(name = "poll items", description = "number of subsequent poll requests to make", intValue = 1)
-    private static final String POLL_ITEMS = "poll.items";
-
-    @Property(options = {
-            @PropertyOption(name = "All",
-                    value = "all endpoints"
-            ),
-            @PropertyOption(name = "One",
-                    value = "one endpoint"
-            )},
-            value = "One"
-    )
-    private static final String ENDPOINT_STRATEGY = ReplicationTransportConstants.ENDPOINT_STRATEGY;
-
-    int pollItems;
     ReplicationTransportHandler transportHandler;
 
-    @Activate
-    protected void activate(BundleContext context, Map<String, ?> config) throws Exception {
-
-        Map<String, String> authenticationProperties = PropertiesUtil.toMap(config.get(ReplicationTransportConstants.AUTHENTICATION_PROPERTIES), new String[0]);
+    public RemoteReplicationPackageExporter(ReplicationPackageBuilder packageBuilder, TransportAuthenticationProviderFactory transportAuthenticationProviderFactory,
+                                            Map<String, String> authenticationProperties,
+                                            String[] endpoints,
+                                            TransportEndpointStrategyType transportEndpointStrategyType,
+                                            int pollItems) {
+        this.packageBuilder = packageBuilder;
 
         TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider = (TransportAuthenticationProvider<Executor, Executor>) transportAuthenticationProviderFactory.createAuthenticationProvider(authenticationProperties);
-
-        String[] endpoints = PropertiesUtil.toStringArray(config.get(ReplicationTransportConstants.ENDPOINTS), new String[0]);
-
-        pollItems = PropertiesUtil.toInteger(config.get(POLL_ITEMS), 1);
-
-        String endpointStrategyName = PropertiesUtil.toString(config.get(ReplicationTransportConstants.ENDPOINT_STRATEGY), "One");
-        TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(endpointStrategyName);
-
         List<ReplicationTransportHandler> transportHandlers = new ArrayList<ReplicationTransportHandler>();
 
         for (String endpoint : endpoints) {

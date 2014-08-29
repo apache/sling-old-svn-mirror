@@ -18,14 +18,6 @@
  */
 package org.apache.sling.replication.serialization.impl.vlt;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.util.Properties;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.felix.scr.annotations.*;
 import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
@@ -48,41 +40,43 @@ import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.util.Properties;
+
 /**
- * a {@link ReplicationPackageBuilder} based on Apache Jackrabbit FileVault.
+ * a {@link org.apache.sling.replication.serialization.ReplicationPackageBuilder} based on Apache Jackrabbit FileVault.
  * <p/>
- * Each {@link ReplicationPackage} created by <code>FileVaultReplicationPackageBuilder</code> is
- * backed by a {@link VaultPackage}. 
+ * Each {@link org.apache.sling.replication.packaging.ReplicationPackage} created by <code>FileVaultReplicationPackageBuilder</code> is
+ * backed by a {@link org.apache.jackrabbit.vault.packaging.VaultPackage}. 
  */
-@Component(metatype = true,
-        label = "FileVault based Replication Package Builder",
-        description = "OSGi configuration based PackageBuilder service factory",
-        name = FileVaultReplicationPackageBuilder.SERVICE_PID)
-@Service(value = ReplicationPackageBuilder.class)
-@Property(name = "name", value = FileVaultReplicationPackageBuilder.NAME)
 public class FileVaultReplicationPackageBuilder extends AbstractReplicationPackageBuilder implements
         ReplicationPackageBuilder {
 
-    static final String SERVICE_PID = "org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilder";
 
-    public static final String NAME = "vlt";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-
-    @Property
-    private static final String USERNAME = "username";
-
-    @Property
-    private static final String PASSWORD = "password";
-
-    @Reference
     private SlingRepository repository;
 
-    @Reference
     private Packaging packaging;
 
     private String username;
     private String password;
+    private String type;
+
+    public FileVaultReplicationPackageBuilder(String type, String username, String password,
+                                              SlingRepository repository, Packaging packaging) {
+        this.type = type;
+
+        this.username = username;
+        this.password = password;
+        this.repository = repository;
+        this.packaging = packaging;
+    }
 
     protected ReplicationPackage createPackageForAdd(ReplicationRequest request)
             throws ReplicationPackageBuildingException {
@@ -125,7 +119,7 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
 
     @Override
     protected String getName() {
-        return NAME;
+        return type;
     }
 
     @Override
@@ -179,12 +173,7 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
         return replicationPackage;
     }
 
-    @Activate
-    @Modified
-    protected void activate(ComponentContext ctx) {
-        username = PropertiesUtil.toString(ctx.getProperties().get(USERNAME), "").trim();
-        password = PropertiesUtil.toString(ctx.getProperties().get(PASSWORD), "").trim();
-    }
+
 
 
     @Override

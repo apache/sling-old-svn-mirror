@@ -18,37 +18,54 @@
  */
 package org.apache.sling.replication.packaging.impl.exporter;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import org.apache.felix.scr.annotations.*;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * {@link org.apache.sling.replication.packaging.ReplicationPackageExporter} implementation which creates a FileVault based
  * {@link org.apache.sling.replication.packaging.ReplicationPackage} locally.
  */
-public class LocalReplicationPackageExporter implements ReplicationPackageExporter {
+@Component(label = "Local Replication Package Exporter", configurationFactory = true)
+@Service(value = ReplicationPackageExporter.class)
+public class LocalReplicationPackageExporterFactory implements ReplicationPackageExporter {
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
+    @Property
+    private static final String NAME = "name";
+
+
+    @Property(label = "Target ReplicationPackageBuilder", name = "ReplicationPackageBuilder.target")
+    @Reference(name = "ReplicationPackageBuilder", policy = ReferencePolicy.STATIC)
     private ReplicationPackageBuilder packageBuilder;
 
-    public LocalReplicationPackageExporter(ReplicationPackageBuilder packageBuilder) {
-        this.packageBuilder = packageBuilder;
+
+    ReplicationPackageExporter exporter;
+
+    @Activate
+    public void activate() {
+        exporter = getInstance(packageBuilder);
     }
 
+    public static ReplicationPackageExporter getInstance(ReplicationPackageBuilder packageBuilder) {
+        return new LocalReplicationPackageExporter(packageBuilder);
+    }
+
+
     public List<ReplicationPackage> exportPackage(ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
-        List<ReplicationPackage> result = new ArrayList<ReplicationPackage>();
-
-        ReplicationPackage createdPackage = packageBuilder.createPackage(replicationRequest);
-        result.add(createdPackage);
-
-        return result;
+        return exporter.exportPackage(replicationRequest);
     }
 
     public ReplicationPackage exportPackageById(String replicationPackageId) {
-        return packageBuilder.getPackage(replicationPackageId);
+        return exporter.exportPackageById(replicationPackageId);
     }
 }

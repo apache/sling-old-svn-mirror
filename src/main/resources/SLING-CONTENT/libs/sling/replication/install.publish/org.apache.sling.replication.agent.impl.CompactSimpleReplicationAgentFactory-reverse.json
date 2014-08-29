@@ -1,0 +1,34 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "name" : "reverse",
+    "type" : "simple",
+
+    "isPassive" : true,
+
+    "packageExporter" : [
+        "type=local",
+        "packageBuilder/type=vlt",
+        "packageBuilder/username=admin",
+        "packageBuilder/password=admin"
+    ],
+
+    "packageImporter": [
+        "type=local",
+        "packageBuilder/type=vlt",
+        "packageBuilder/username=admin",
+        "packageBuilder/password=admin"
+    ],
+
+    "queueProvider" : [
+        "type=service",
+        "name=sjh"
+    ],
+
+    "queueDistributionStrategy" : [
+        "type=service",
+        "name=error"
+    ],
+
+    "rules" : ["trigger on path: /content/usergenerated"]
+
+}

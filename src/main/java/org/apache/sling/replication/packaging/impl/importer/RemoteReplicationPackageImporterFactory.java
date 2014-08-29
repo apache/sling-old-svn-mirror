@@ -34,23 +34,25 @@ import org.apache.sling.replication.serialization.ReplicationPackageReadingExcep
 import org.apache.sling.replication.transport.ReplicationTransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
-import org.apache.sling.replication.transport.impl.AdvancedHttpReplicationTransportHandler;
 import org.apache.sling.replication.transport.impl.MultipleEndpointReplicationTransportHandler;
 import org.apache.sling.replication.transport.impl.ReplicationTransportConstants;
+import org.apache.sling.replication.transport.impl.SimpleHttpReplicationTransportHandler;
 import org.apache.sling.replication.transport.impl.TransportEndpointStrategyType;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Implementation of {@link org.apache.sling.replication.packaging.ReplicationPackageImporter} supporting multiple
- * endpoints and custom HTTP headers and body.
+ * Remote implementation of {@link org.apache.sling.replication.packaging.ReplicationPackageImporter}
  */
-@Component(label = "Advanced Remote Replication Package Importer", configurationFactory = true)
+@Component(label = "Remote Replication Package Importer", configurationFactory = true)
 @Service(value = ReplicationPackageImporter.class)
-public class AdvancedRemoteReplicationPackageImporter implements ReplicationPackageImporter {
+public class RemoteReplicationPackageImporterFactory implements ReplicationPackageImporter {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
+
+    @Property
+    private static final String NAME = "name";
 
     @Property(name = ReplicationTransportConstants.TRANSPORT_AUTHENTICATION_FACTORY)
     @Reference(name = "TransportAuthenticationProviderFactory", policy = ReferencePolicy.DYNAMIC)
@@ -67,71 +69,45 @@ public class AdvancedRemoteReplicationPackageImporter implements ReplicationPack
     )
     private static final String ENDPOINT_STRATEGY = ReplicationTransportConstants.ENDPOINT_STRATEGY;
 
-    @Property(boolValue = false)
-    private static final String USE_CUSTOM_HEADERS = "useCustomHeaders";
-
-    @Property(cardinality = 50)
-    private static final String CUSTOM_HEADERS = "customHeaders";
-
-    @Property(boolValue = false)
-    private static final String USE_CUSTOM_BODY = "useCustomBody";
-
-    @Property
-    private static final String CUSTOM_BODY = "customBody";
-
     @Reference
     private ReplicationEventFactory replicationEventFactory;
 
-    ReplicationTransportHandler transportHandler;
+    private RemoteReplicationPackageImporter importer;
 
     @Activate
-    protected void activate(BundleContext context, Map<String, ?> config) throws Exception {
+    protected void activate(BundleContext context, Map<String, Object> config) throws Exception {
+
+       importer = getInstance(config, transportAuthenticationProviderFactory);
+
+    }
+
+    public static RemoteReplicationPackageImporter getInstance(Map<String, Object> config, TransportAuthenticationProviderFactory transportAuthenticationProviderFactory) {
+
+        if (transportAuthenticationProviderFactory == null) {
+            throw new IllegalArgumentException("transportAuthenticationProviderFactory is required");
+        }
 
         Map<String, String> authenticationProperties = PropertiesUtil.toMap(config.get(ReplicationTransportConstants.AUTHENTICATION_PROPERTIES), new String[0]);
 
-        TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider = (TransportAuthenticationProvider<Executor, Executor>)
-                transportAuthenticationProviderFactory.createAuthenticationProvider(authenticationProperties);
         String[] endpoints = PropertiesUtil.toStringArray(config.get(ReplicationTransportConstants.ENDPOINTS), new String[0]);
-        String endpointStrategyName = PropertiesUtil.toString(config.get(ReplicationTransportConstants.ENDPOINT_STRATEGY),
+
+        String endpointStrategyName = PropertiesUtil.toString(config.get(ENDPOINT_STRATEGY),
                 TransportEndpointStrategyType.One.name());
         TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(endpointStrategyName);
 
 
-        boolean useCustomHeaders = PropertiesUtil.toBoolean(config.get(USE_CUSTOM_HEADERS), false);
-        String[] customHeaders = PropertiesUtil.toStringArray(config.get(CUSTOM_HEADERS), new String[0]);
-        boolean useCustomBody = PropertiesUtil.toBoolean(config.get(USE_CUSTOM_BODY), false);
-        String customBody = PropertiesUtil.toString(config.get(CUSTOM_BODY), "");
-
-
-        List<ReplicationTransportHandler> transportHandlers = new ArrayList<ReplicationTransportHandler>();
-
-        for (String endpoint : endpoints) {
-            if (endpoint != null && endpoint.length() > 0) {
-                transportHandlers.add(new AdvancedHttpReplicationTransportHandler(useCustomHeaders, customHeaders,
-                        useCustomBody, customBody,
-                        transportAuthenticationProvider,
-                        new ReplicationEndpoint(endpoint), null, -1));
-            }
-        }
-        transportHandler = new MultipleEndpointReplicationTransportHandler(transportHandlers,
-                transportEndpointStrategyType);
+        return new RemoteReplicationPackageImporter(transportAuthenticationProviderFactory,
+                authenticationProperties, endpoints, transportEndpointStrategyType);
 
     }
 
 
     public boolean importPackage(ReplicationPackage replicationPackage) {
-        boolean result = false;
-        try {
-            transportHandler.deliverPackage(replicationPackage);
-            result = true;
-        } catch (Exception e) {
-            log.error("failed delivery", e);
-        }
-        return result;
+       return importer.importPackage(replicationPackage);
     }
 
     public ReplicationPackage readPackage(InputStream stream) throws ReplicationPackageReadingException {
-        return null;
+        return importer.readPackage(stream);
     }
 
 }
