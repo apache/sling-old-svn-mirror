@@ -28,10 +28,13 @@ public class ReplicationPackageExporterImporterTest extends ReplicationIntegrati
 
     @Test
     public void testAddExportImport() throws Exception {
-        String nodePath = createRandomNode(authorClient, "/content/export_" + System.nanoTime());
-        assertExists(authorClient, nodePath);
+        String nodePath = createRandomNode(publishClient, "/content/export_" + System.nanoTime());
+        assertExists(publishClient, nodePath);
 
-        String content = doExport(author, "default", ReplicationActionType.ADD, nodePath);
+        String content = doExport(publish, "default", ReplicationActionType.ADD, nodePath);
+
+        publishClient.delete(nodePath);
+        assertNotExits(publishClient, nodePath);
 
         doImport(publish, "default", content.getBytes(HTTP.DEFAULT_CONTENT_CHARSET));
         assertExists(publishClient, nodePath);
@@ -43,7 +46,7 @@ public class ReplicationPackageExporterImporterTest extends ReplicationIntegrati
         String nodePath = createRandomNode(publishClient, "/content/export_" + System.nanoTime());
         assertExists(publishClient, nodePath);
 
-        String content = doExport(author, "default", ReplicationActionType.DELETE, nodePath);
+        String content = doExport(publish, "default", ReplicationActionType.DELETE, nodePath);
 
         doImport(publish, "default", content.getBytes(HTTP.DEFAULT_CONTENT_CHARSET));
         assertNotExits(publishClient, nodePath);

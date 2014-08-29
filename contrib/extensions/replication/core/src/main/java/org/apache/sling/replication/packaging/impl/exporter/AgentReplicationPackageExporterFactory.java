@@ -31,13 +31,12 @@ import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
-import org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component(label = "Agent Based Replication Package Exporter", configurationFactory = true)
 @Service(value = ReplicationPackageExporter.class)
-public class AgentReplicationPackageExporter implements ReplicationPackageExporter {
+public class AgentReplicationPackageExporterFactory implements ReplicationPackageExporter {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Property

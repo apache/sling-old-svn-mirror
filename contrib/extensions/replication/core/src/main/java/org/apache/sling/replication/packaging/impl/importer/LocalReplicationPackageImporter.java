@@ -18,11 +18,6 @@
  */
 package org.apache.sling.replication.packaging.impl.importer;
 
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Dictionary;
-import java.util.Hashtable;
-
 import org.apache.felix.scr.annotations.*;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.event.ReplicationEventType;
@@ -33,27 +28,30 @@ import org.apache.sling.replication.serialization.ReplicationPackageReadingExcep
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Dictionary;
+import java.util.Hashtable;
+
 /**
  * {@link org.apache.sling.replication.packaging.ReplicationPackageImporter} implementation which imports a FileVault
- * based {@link ReplicationPackage} locally.
+ * based {@link org.apache.sling.replication.packaging.ReplicationPackage} locally.
  */
-@Component(label = "Default Replication Package Importer", configurationFactory = true)
-@Service(value = ReplicationPackageImporter.class)
+
 public class LocalReplicationPackageImporter implements ReplicationPackageImporter {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property
-    private static final String NAME = "name";
+    private final ReplicationPackageBuilder packageBuilder;
 
-    @Property(value = "importers/local", propertyPrivate = true)
-    private static final String FACTORY_NAME = "factoryName";
+    private final ReplicationEventFactory replicationEventFactory;
 
-    @Property(label = "Target ReplicationPackageBuilder", name = "ReplicationPackageBuilder.target")
-    @Reference(name = "ReplicationPackageBuilder", policy = ReferencePolicy.STATIC)
-    private ReplicationPackageBuilder packageBuilder;
 
-    @Reference
-    private ReplicationEventFactory replicationEventFactory;
+    public LocalReplicationPackageImporter(ReplicationPackageBuilder packageBuilder,
+                                           ReplicationEventFactory replicationEventFactory) {
+
+        this.replicationEventFactory = replicationEventFactory;
+        this.packageBuilder = packageBuilder;
+    }
 
 
     public boolean importPackage(ReplicationPackage replicationPackage) {

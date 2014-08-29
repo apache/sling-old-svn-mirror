@@ -1,7 +1,7 @@
 {
     "jcr:primaryType" : "sling:OsgiConfig",
-    "name": "exporters/agent/reverse",
+    "name": "reverse",
 
     "ReplicationPackageBuilder.target" : "(name=vlt)",
-    "ReplicationAgent.target" : "(name=agents/reverse)"
+    "ReplicationAgent.target" : "(name=reverse)"
 }

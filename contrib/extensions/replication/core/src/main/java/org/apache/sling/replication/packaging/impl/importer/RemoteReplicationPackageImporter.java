@@ -18,11 +18,6 @@
  */
 package org.apache.sling.replication.packaging.impl.importer;
 
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.felix.scr.annotations.*;
 import org.apache.http.client.fluent.Executor;
 import org.apache.sling.commons.osgi.PropertiesUtil;
@@ -42,54 +37,33 @@ import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Remote implementation of {@link org.apache.sling.replication.packaging.ReplicationPackageImporter}
  */
-@Component(label = "Remote Replication Package Importer", configurationFactory = true)
-@Service(value = ReplicationPackageImporter.class)
 public class RemoteReplicationPackageImporter implements ReplicationPackageImporter {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property
-    private static final String NAME = "name";
-
-    @Property(value = "importers/remote", propertyPrivate = true)
-    private static final String FACTORY_NAME = "factoryName";
-
-    @Property(name = ReplicationTransportConstants.TRANSPORT_AUTHENTICATION_FACTORY)
-    @Reference(name = "TransportAuthenticationProviderFactory", policy = ReferencePolicy.DYNAMIC)
     private TransportAuthenticationProviderFactory transportAuthenticationProviderFactory;
 
-    @Property(options = {
-            @PropertyOption(name = "All",
-                    value = "all endpoints"
-            ),
-            @PropertyOption(name = "One",
-                    value = "one endpoint"
-            )},
-            value = "One"
-    )
-    private static final String ENDPOINT_STRATEGY = ReplicationTransportConstants.ENDPOINT_STRATEGY;
-
-    @Reference
     private ReplicationEventFactory replicationEventFactory;
 
     private ReplicationTransportHandler transportHandler;
 
-    @Activate
-    protected void activate(BundleContext context, Map<String, ?> config) throws Exception {
+    public RemoteReplicationPackageImporter(TransportAuthenticationProviderFactory transportAuthenticationProviderFactory,
+                                            Map<String, String> authenticationProperties,
+                                            String[] endpoints,
+                                            TransportEndpointStrategyType transportEndpointStrategyType) {
 
-        Map<String, String> authenticationProperties = PropertiesUtil.toMap(config.get(ReplicationTransportConstants.AUTHENTICATION_PROPERTIES), new String[0]);
 
         TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider = (TransportAuthenticationProvider<Executor, Executor>)
                 transportAuthenticationProviderFactory.createAuthenticationProvider(authenticationProperties);
 
-        String[] endpoints = PropertiesUtil.toStringArray(config.get(ReplicationTransportConstants.ENDPOINTS), new String[0]);
-
-        String endpointStrategyName = PropertiesUtil.toString(config.get(ENDPOINT_STRATEGY),
-                TransportEndpointStrategyType.One.name());
-        TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(endpointStrategyName);
 
         List<ReplicationTransportHandler> transportHandlers = new ArrayList<ReplicationTransportHandler>();
 

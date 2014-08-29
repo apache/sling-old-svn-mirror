@@ -126,7 +126,7 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
     public void testAgentConfigurationResourceDelete() throws Exception {
         String agentName = "sample-delete-config" + UUID.randomUUID();
         String newConfigResource = agentConfigUrl(agentName);
-        authorClient.createNode(newConfigResource, "name", agentName, "transportHandler", "(name=author)");
+        authorClient.createNode(newConfigResource, "name", agentName);
         assertExists(authorClient, newConfigResource);
 
         deleteNode(author, newConfigResource);

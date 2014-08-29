@@ -23,8 +23,6 @@ import org.apache.sling.testing.tools.sling.SlingInstance;
 import org.apache.sling.testing.tools.sling.SlingInstanceManager;
 
 import static org.apache.sling.replication.it.ReplicationUtils.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Integration test base class for replication
@@ -48,16 +46,46 @@ public abstract class ReplicationIntegrationTestBase {
         try {
             // change the url for publish agent and wait for it to start
             String remoteImporterUrl = publish.getServerBaseUrl() + importerUrl("default");
-            authorClient.setProperties(importerConfigUrl("remote/publish"), "endpoints", remoteImporterUrl);
+
+            setAgentProperties(author, "publish",
+                    "packageImporter", "type=remote",
+                    "packageImporter", "authentication.properties[user]=admin",
+                    "packageImporter", "authentication.properties[password]=admin",
+                    "packageImporter", "endpoints[0]=" + remoteImporterUrl,
+                    "packageImporter", "authenticationFactory/type=service",
+                    "packageImporter", "authenticationFactory/name=user",
+
+                    "packageImporter", "packageBuilder/type=vlt",
+                    "packageImporter", "packageBuilder/username=admin",
+                    "packageImporter", "packageBuilder/password=admin");
+
+
+
 
             String remoteExporterUrl = publish.getServerBaseUrl() + exporterUrl("reverse");
-            authorClient.setProperties(exporterConfigUrl("remote/publish"),"endpoints", remoteExporterUrl);
+
+            setAgentProperties(author, "publish-reverse",
+                    "packageExporter", "type=remote",
+                    "packageExporter", "authentication.properties[user]=admin",
+                    "packageExporter", "authentication.properties[password]=admin",
+                    "packageExporter", "endpoints[0]=" + remoteExporterUrl,
+                    "packageExporter", "authenticationFactory/type=service",
+                    "packageExporter", "authenticationFactory/name=user",
+
+                    "packageExporter", "packageBuilder/type=vlt",
+                    "packageExporter", "packageBuilder/username=admin",
+                    "packageExporter", "packageBuilder/password=admin");
+
 
             assertExists(authorClient, agentUrl("publish"));
+            assertExists(authorClient, agentUrl("publish-reverse"));
+
         }
         catch (Exception ex) {
             throw new RuntimeException(ex);
         }
+
+
 
     }
 

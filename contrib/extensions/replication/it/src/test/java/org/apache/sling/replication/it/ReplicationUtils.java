@@ -74,11 +74,16 @@ public class ReplicationUtils {
             ByteArrayEntity entity = new ByteArrayEntity(bytes);
             request.withEntity(entity);
         }
-        String content = slingInstance.getRequestExecutor().execute(
+
+        return slingInstance.getRequestExecutor().execute(
                 request.withCredentials(slingInstance.getServerUsername(), slingInstance.getServerPassword())
         ).assertStatus(status).getContent();
+    }
 
-        return content;
+
+    public static void setAgentProperties(SlingInstance slingInstance, String agentName, String... properties) throws IOException {
+        assertPostResourceWithParameters(slingInstance, 200, agentConfigUrl(agentName),
+                properties);
     }
 
 

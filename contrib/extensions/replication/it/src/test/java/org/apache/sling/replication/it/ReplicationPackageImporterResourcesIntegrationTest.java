@@ -30,8 +30,8 @@ public class ReplicationPackageImporterResourcesIntegrationTest extends Replicat
     @Test
     public void testImporterRootResource() throws Exception {
         String rootResource = importerRootUrl();
-        assertExists(authorClient, rootResource);
-        assertResponseContains(author, rootResource,
+        assertExists(publishClient, rootResource);
+        assertResponseContains(publish, rootResource,
                 "sling:resourceType", "sling/replication/service/importer/list",
                 "items", "default");
     }
@@ -39,8 +39,8 @@ public class ReplicationPackageImporterResourcesIntegrationTest extends Replicat
     @Test
     public void testLocalImporterResource() throws Exception {
         String rootResource = importerUrl("default");
-        assertExists(authorClient, rootResource);
-        assertResponseContains(author, rootResource,
+        assertExists(publishClient, rootResource);
+        assertResponseContains(publish, rootResource,
                 "sling:resourceType", "sling/replication/service/importer",
                 "name", "default");
     }
