@@ -69,9 +69,10 @@ import org.apache.sling.models.annotations.Optional;
 import org.apache.sling.models.annotations.Required;
 import org.apache.sling.models.annotations.Source;
 import org.apache.sling.models.annotations.Via;
+import org.apache.sling.models.spi.AcceptsNullName;
 import org.apache.sling.models.spi.DisposalCallback;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
-import org.apache.sling.models.spi.AcceptsNullName;
+import org.apache.sling.models.spi.ImplementationPicker;
 import org.apache.sling.models.spi.Injector;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotation;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
@@ -141,7 +142,13 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
     private volatile InjectAnnotationProcessorFactory[] sortedInjectAnnotationProcessorFactories = new InjectAnnotationProcessorFactory[0];
 
-    private ModelPackageBundleListener listener;
+    @Reference(name = "implementationPicker", referenceInterface = ImplementationPicker.class,
+            cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
+    private final Map<Object, ImplementationPicker> implementationPickers = new TreeMap<Object, ImplementationPicker>();
+
+    ModelPackageBundleListener listener;
+    
+    final AdapterImplementations adapterImplementations = new AdapterImplementations();
 
     private ServiceRegistration jobRegistration;
 
@@ -160,6 +167,12 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         };
         threadInvocationCounter.increase();
         try {
+            // check if a different implementation class was registered for this adapter type
+            Class<?> implementationType = this.adapterImplementations.lookup(type, adaptable);
+            if (implementationType != null) {
+                type = (Class<AdapterType>) implementationType;
+            }
+
             Model modelAnnotation = type.getAnnotation(Model.class);
             if (modelAnnotation == null) {
                 return null;
@@ -908,7 +921,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
         this.jobRegistration = bundleContext.registerService(Runnable.class.getName(), this, properties);
 
-        this.listener = new ModelPackageBundleListener(ctx.getBundleContext(), this);
+        this.listener = new ModelPackageBundleListener(ctx.getBundleContext(), this, this.adapterImplementations);
 
         Hashtable<Object, Object> printerProps = new Hashtable<Object, Object>();
         printerProps.put(Constants.SERVICE_VENDOR, "Apache Software Foundation");
@@ -924,6 +937,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
     @Deactivate
     protected void deactivate() {
         this.listener.unregisterAll();
+        this.adapterImplementations.removeAll();
         if (jobRegistration != null) {
             jobRegistration.unregister();
             jobRegistration = null;
@@ -962,12 +976,30 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         }
     }
 
+    protected void bindImplementationPicker(final ImplementationPicker implementationPicker, final Map<String, Object> props) {
+        synchronized (implementationPickers) {
+            implementationPickers.put(ServiceUtil.getComparableForServiceRanking(props), implementationPicker);
+            this.adapterImplementations.setImplementationPickers(implementationPickers.values());
+        }
+    }
+
+    protected void unbindImplementationPicker(final ImplementationPicker implementationPicker, final Map<String, Object> props) {
+        synchronized (implementationPickers) {
+            implementationPickers.remove(ServiceUtil.getComparableForServiceRanking(props));
+            this.adapterImplementations.setImplementationPickers(implementationPickers.values());
+        }
+    }
+
     Injector[] getInjectors() {
         return sortedInjectors;
     }
 
     InjectAnnotationProcessorFactory[] getInjectAnnotationProcessorFactories() {
         return sortedInjectAnnotationProcessorFactories;
+    }
+
+    ImplementationPicker[] getImplementationPickers() {
+        return adapterImplementations.getImplementationPickers();
     }
 
 }
