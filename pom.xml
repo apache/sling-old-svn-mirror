@@ -13,7 +13,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.crankstart.api</artifactId>
     <packaging>bundle</packaging>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
 
     <name>Apache Sling Crankstart API</name>
     <inceptionYear>2014</inceptionYear>
@@ -57,4 +57,10 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.crankstart.api-1.0.0</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.crankstart.api-1.0.0</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.crankstart.api-1.0.0</url>
+  </scm>
 </project>
