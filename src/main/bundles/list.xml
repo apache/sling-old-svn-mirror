@@ -404,7 +404,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.extensions.explorer</artifactId>
-            <version>1.0.3-SNAPSHOT</version>
+            <version>1.0.4</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
