@@ -13,7 +13,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.crankstart.launcher</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
 
     <name>Apache Sling Crankstart Launcher</name>
     <inceptionYear>2014</inceptionYear>
@@ -23,9 +23,9 @@
     </description>
 
     <scm>
-      <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.crankstart.launcher-1.0.0</connection>
-      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.crankstart.launcher-1.0.0</developerConnection>
-      <url>http://sling.apache.org/tags/org.apache.sling.crankstart.launcher-1.0.0</url>
+      <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/crankstart/launcher</connection>
+      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/crankstart/launcher</developerConnection>
+      <url>http://sling.apache.org</url>
     </scm>
 
     <properties>
