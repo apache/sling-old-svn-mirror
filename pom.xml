@@ -11,7 +11,7 @@
     </parent>
 
     <properties>
-        <api.version>0.0.0.api_xml</api.version>
+        <api.version>1.0.0</api.version>
     </properties>
 
     <groupId>org.apache.sling</groupId>
