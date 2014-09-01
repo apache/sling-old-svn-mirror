@@ -22,6 +22,12 @@
         A different way of starting Sling
     </description>
 
+    <scm>
+      <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/crankstart/launcher</connection>
+      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/crankstart/launcher</developerConnection>
+      <url>http://sling.apache.org</url>
+    </scm>
+
     <properties>
         <pax.url.version>2.1.0</pax.url.version>
     </properties>
