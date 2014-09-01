@@ -9,8 +9,8 @@ defaults felix.http.jetty.version 2.2.0
 classpath mvn:org.apache.felix/org.apache.felix.framework/4.4.0
 classpath mvn:org.slf4j/slf4j-api/1.6.2
 classpath mvn:org.slf4j/slf4j-simple/1.6.2
-classpath mvn:org.apache.sling/org.apache.sling.crankstart.core/1.0.0
-classpath mvn:org.apache.sling/org.apache.sling.crankstart.api/1.0.0
+classpath mvn:org.apache.sling/org.apache.sling.crankstart.core/1.0.1-SNAPSHOT
+classpath mvn:org.apache.sling/org.apache.sling.crankstart.api/1.0.1-SNAPSHOT
 
 # OSGi properties
 osgi.property org.osgi.service.http.port ${http.port}
@@ -33,15 +33,15 @@ bundle mvn:org.apache.felix/org.apache.felix.webconsole/3.1.6
 # The crankstart.api.fragment bundle makes the crankstart.api package available
 # to bundles, required for bundles to provide crankstart extension commands like
 # the test.system.property command below
-bundle mvn:org.apache.sling/org.apache.sling.crankstart.api.fragment/1.0.2
-bundle mvn:org.apache.sling/org.apache.sling.crankstart.test.services/1.0.0
+bundle mvn:org.apache.sling/org.apache.sling.crankstart.api.fragment/1.0.3-SNAPSHOT
+bundle mvn:org.apache.sling/org.apache.sling.crankstart.test.services/1.0.1-SNAPSHOT
 
 # Test our Sling extension commands, that add a bundle via the Sling installer
 # (which requires commons.json and jcr-wrapper)
 bundle mvn:org.apache.sling/org.apache.sling.installer.core/3.5.0
 bundle mvn:org.apache.sling/org.apache.sling.commons.json/2.0.6
 bundle mvn:org.apache.sling/org.apache.sling.jcr.jcr-wrapper/2.0.0
-bundle mvn:org.apache.sling/org.apache.sling.crankstart.sling.extensions/1.0.0
+bundle mvn:org.apache.sling/org.apache.sling.crankstart.sling.extensions/1.0.1-SNAPSHOT
 bundle mvn:commons-io/commons-io/2.4
 
 # Install a bundle at a start level higher than the current one
