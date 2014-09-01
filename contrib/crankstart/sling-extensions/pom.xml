@@ -10,15 +10,15 @@
     
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.crankstart.sling.extensions</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>Apache Sling Crankstart Sling Extensions</name>
     <description>Sling-specific extension commands for the Crankstart launcher</description>
 
     <scm>
-      <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.crankstart.sling.extensions-1.0.0</connection>
-      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.crankstart.sling.extensions-1.0.0</developerConnection>
-      <url>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.crankstart.sling.extensions-1.0.0</url>
+      <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/crankstart/sling-extensions</connection>
+      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/crankstart/sling-extensions</developerConnection>
+      <url>http://sling.apache.org</url>
     </scm>
 
     <build>
