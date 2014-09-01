@@ -14,7 +14,13 @@
     <packaging>bundle</packaging>
     <name>Apache Sling Crankstart Sling Extensions</name>
     <description>Sling-specific extension commands for the Crankstart launcher</description>
-    
+
+    <scm>
+      <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/crankstart/sling-extensions</connection>
+      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/crankstart/sling-extensions</developerConnection>
+      <url>http://sling.apache.org</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>

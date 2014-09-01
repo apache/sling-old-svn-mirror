@@ -22,6 +22,12 @@
         A different way of starting Sling - reactor pom
     </description>
 
+    <scm>
+      <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/crankstart</connection>
+      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/crankstart</developerConnection>
+      <url>http://sling.apache.org</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>

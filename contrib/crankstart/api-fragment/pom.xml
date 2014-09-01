@@ -27,6 +27,12 @@
         package to the system bundle exports.
     </description>
 
+    <scm>
+      <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/crankstart/api-fragment</connection>
+      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/crankstart/api-fragment</developerConnection>
+      <url>http://sling.apache.org</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>

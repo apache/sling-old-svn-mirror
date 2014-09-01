@@ -14,7 +14,13 @@
     <packaging>bundle</packaging>
     <name>Apache Sling Crankstart Test Services</name>
     <description>Bundle used to test the Crankstart launcher</description>
-    
+
+    <scm>
+      <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/crankstart/test-services</connection>
+      <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/crankstart/test-services</developerConnection>
+      <url>http://sling.apache.org</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>
