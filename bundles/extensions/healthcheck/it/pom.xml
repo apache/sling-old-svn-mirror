@@ -24,8 +24,8 @@
         <org.ops4j.pax.logging.DefaultServiceLog.level>INFO</org.ops4j.pax.logging.DefaultServiceLog.level>
         <felix.shell>false</felix.shell>
         <sling.java.version>6</sling.java.version>
-        <sling.hc.samples.version>1.0.5-SNAPSHOT</sling.hc.samples.version>
-        <sling.hc.core.version>${project.version}</sling.hc.core.version>
+        <sling.hc.samples.version>1.0.7-SNAPSHOT</sling.hc.samples.version>
+        <sling.hc.core.version>1.1.3-SNAPSHOT</sling.hc.core.version>
     </properties>
 
     <scm>
@@ -55,7 +55,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.hc.core</artifactId>
-            <version>${project.version}</version>
+            <version>${sling.hc.core.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
