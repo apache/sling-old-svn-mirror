@@ -189,7 +189,7 @@
     <!-- (not using org.apache.sling.jcr.jcr-wrapper) -->
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.ocm/2.0.4-incubator</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.registration/1.0.0</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.resource/2.3.8</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.resource/2.3.6</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.webconsole/1.0.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.webdav/2.2.2</bundle>
   </feature>
