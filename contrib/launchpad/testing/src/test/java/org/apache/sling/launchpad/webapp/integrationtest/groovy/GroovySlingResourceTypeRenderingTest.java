@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.launchpad.webapp.integrationtest;
+package org.apache.sling.launchpad.webapp.integrationtest.groovy;
 
 import java.io.IOException;
 
