@@ -119,6 +119,7 @@
           <module>scripting/script-console</module>
           <module>scripting/jsp-taglib-atom</module>
           <module>scripting/freemarker</module>
+          <module>scripting/groovy</module>
           <module>scripting/java</module>
           <module>scripting/jst</module>
           <module>scripting/python</module>

@@ -177,7 +177,6 @@
         <module>bundles/extensions/settings</module>
         <module>bundles/extensions/webconsolebranding</module>
         <module>bundles/extensions/webconsolesecurityprovider</module>
-        <module>bundles/extensions/groovy</module>
         <module>bundles/extensions/explorer</module>
         <module>bundles/extensions/healthcheck</module>
         <module>bundles/resourceaccesssecurity/core</module>
