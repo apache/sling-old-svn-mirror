@@ -29,7 +29,7 @@
 
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.scripting.groovy</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Scripting Groovy Support</name>
