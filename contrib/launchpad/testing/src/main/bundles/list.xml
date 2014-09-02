@@ -56,7 +56,7 @@
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.extensions.groovy</artifactId>
+            <artifactId>org.apache.sling.scripting.groovy</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </bundle>
         <bundle>

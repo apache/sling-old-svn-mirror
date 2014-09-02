@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.extensions.groovy.scripting.internal;
+package org.apache.sling.scripting.groovy.scripting.internal;
 
 import java.util.Collections;
 import java.util.List;

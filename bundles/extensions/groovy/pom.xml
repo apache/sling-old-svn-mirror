@@ -28,13 +28,13 @@
     </parent>
 
     <groupId>org.apache.sling</groupId>
-    <artifactId>org.apache.sling.extensions.groovy</artifactId>
+    <artifactId>org.apache.sling.scripting.groovy</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling Groovy Extensions</name>
+    <name>Apache Sling Scripting Groovy Support</name>
     <description>
-        Various extensions for Apache Sling to faciliate Groovy scripts.
+        Support for scripting with Groovy
     </description>
 
     <scm>
