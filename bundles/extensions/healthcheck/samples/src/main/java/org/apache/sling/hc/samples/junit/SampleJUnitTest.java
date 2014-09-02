@@ -43,8 +43,9 @@ public class SampleJUnitTest {
     }
     
     @Test
-    public void checkGroovyBundleActive() {
-        final String symbolicName = "org.apache.sling.extensions.groovy";
+    public void checkSlingAPIBundleActive() {
+        // TODO - adjust
+        final String symbolicName = "org.apache.sling.api";
         for(Bundle b : bundleContext.getBundles()) {
             if(symbolicName.equals(b.getSymbolicName())) {
                 assertEquals("Expecting " + symbolicName + " to be active", Bundle.ACTIVE, b.getState());
