@@ -102,7 +102,6 @@ bundle mvn:org.apache.sling/org.apache.sling.scripting.javascript/2.0.12
 bundle mvn:org.apache.sling/org.apache.sling.scripting.jsp/2.0.29-SNAPSHOT
 bundle mvn:org.apache.sling/org.apache.sling.scripting.jsp.taglib/2.2.0
 bundle mvn:org.apache.geronimo.bundles/jstl/1.2_1
-bundle mvn:org.codehaus.groovy/groovy-all/1.8.2
 bundle mvn:org.apache.felix/org.apache.felix.http.whiteboard/2.2.0
 bundle mvn:org.apache.sling/org.apache.sling.installer.console/1.0.0
 bundle mvn:org.apache.sling/org.apache.sling.installer.factory.configuration/1.0.12
@@ -121,7 +120,6 @@ bundle mvn:org.apache.felix/org.apache.felix.bundlerepository/1.6.4
 bundle mvn:org.apache.sling/org.apache.sling.extensions.threaddump/0.2.2
 bundle mvn:org.apache.sling/org.apache.sling.jcr.webconsole/1.0.0
 bundle mvn:org.apache.sling/org.apache.sling.extensions.explorer/1.0.2
-bundle mvn:org.apache.sling/org.apache.sling.extensions.groovy/1.0.0-SNAPSHOT
 bundle mvn:org.apache.aries.jmx/org.apache.aries.jmx.api/0.3
 bundle mvn:org.apache.aries/org.apache.aries.util/0.3
 bundle mvn:org.apache.aries.jmx/org.apache.aries.jmx.core/0.3
