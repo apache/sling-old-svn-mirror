@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.security.auth.login.CredentialExpiredException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletRequestEvent;
 import javax.servlet.ServletRequestListener;
@@ -439,6 +440,7 @@ public class SlingAuthenticator implements Authenticator,
         if (process && expectAuthenticationHandler(request)) {
             log.warn("handleSecurity: AuthenticationHandler did not block request; access denied");
             request.removeAttribute(AuthenticationHandler.FAILURE_REASON);
+            request.removeAttribute(AuthenticationHandler.FAILURE_REASON_CODE);
             AuthUtil.sendInvalid(request, response);
             return false;
         }
@@ -938,11 +940,21 @@ public class SlingAuthenticator implements Authenticator,
             // if no handler can request authentication information.
             log.info("handleLoginFailure: Unable to authenticate {}: {}", user,
                 reason.getMessage());
-            log.debug("handleLoginFailure", reason);
 
-            // preset a reason for the login failure (if not done already)
-            ensureAttribute(request, AuthenticationHandler.FAILURE_REASON,
-                "User name and password do not match");
+            if (reason.getCause() instanceof CredentialExpiredException) {
+                // force failure attribute to be set so handlers can
+                // react to this special circumstance
+                request.setAttribute(AuthenticationHandler.FAILURE_REASON_CODE,
+                        AuthenticationHandler.FAILURE_REASON_CODES.PASSWORD_EXPIRED);
+                ensureAttribute(request, AuthenticationHandler.FAILURE_REASON,
+                        "Password expired");
+            } else {
+                // preset a reason for the login failure (if not done already)
+                request.setAttribute(AuthenticationHandler.FAILURE_REASON_CODE,
+                        AuthenticationHandler.FAILURE_REASON_CODES.INVALID_LOGIN);
+                ensureAttribute(request, AuthenticationHandler.FAILURE_REASON,
+                        "User name and password do not match");
+            }
 
             doLogin(request, response);
 
