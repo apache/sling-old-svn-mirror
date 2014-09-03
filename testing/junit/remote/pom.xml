@@ -59,6 +59,7 @@
                         <Import-Package>
                             org.apache.http.*; resolution:=optional,
                             org.apache.sling.testing.tools.http; resolution:=optional,
+                            org.apache.sling.testing.tools.sling; resolution:=optional,
                             org.junit.internal.*; resolution:=optional,
                             *
                         </Import-Package>
