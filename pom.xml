@@ -130,6 +130,12 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
+      <groupId>ognl</groupId>
+      <artifactId>ognl</artifactId>
+      <version>3.0.8</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
       <groupId>xerces</groupId>
       <artifactId>xercesImpl</artifactId>
       <version>2.11.0</version>
@@ -168,6 +174,9 @@
               org.apache.commons.io.input;version="1.4.9999",
               *
             </Import-Package>
+            <DynamicImport-Package>
+              *
+            </DynamicImport-Package>
             <Embed-Dependency>
               *;scope=compile;inline=true
             </Embed-Dependency>
