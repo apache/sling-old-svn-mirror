@@ -20,6 +20,8 @@ package org.apache.sling.resourcemerger.impl;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -29,6 +31,7 @@ import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
@@ -41,8 +44,10 @@ public class MergedResourcePickerWhiteboard implements ServiceTrackerCustomizer 
 
     private BundleContext bundleContext;
 
+    private final Map<Long, ServiceRegistration> serviceRegistrations = new ConcurrentHashMap<Long, ServiceRegistration>();
+
     @Activate
-    protected void activate(BundleContext bundleContext) {
+    protected void activate(final BundleContext bundleContext) {
         this.bundleContext = bundleContext;
         tracker = new ServiceTracker(bundleContext, MergedResourcePicker.class.getName(), this);
         tracker.open();
@@ -53,28 +58,38 @@ public class MergedResourcePickerWhiteboard implements ServiceTrackerCustomizer 
         tracker.close();
     }
 
-    public Object addingService(ServiceReference reference) {
-        MergedResourcePicker picker = (MergedResourcePicker) bundleContext.getService(reference);
-        String mergeRoot = PropertiesUtil.toString(reference.getProperty(MergedResourcePicker.MERGE_ROOT), null);
-        if (mergeRoot != null) {
-            ResourceProviderFactory providerFactory = new MergingResourceProviderFactory(mergeRoot, picker);
-            Dictionary<Object, Object> props = new Hashtable<Object, Object>();
-            props.put(ResourceProvider.ROOTS, mergeRoot);
-            props.put(ResourceProvider.OWNS_ROOTS, true);
-            return bundleContext.registerService(ResourceProviderFactory.class.getName(), providerFactory, props);
-        } else {
-            return null;
+    public Object addingService(final ServiceReference reference) {
+        final MergedResourcePicker picker = (MergedResourcePicker) bundleContext.getService(reference);
+        if ( picker != null ) {
+            final String mergeRoot = PropertiesUtil.toString(reference.getProperty(MergedResourcePicker.MERGE_ROOT), null);
+            if (mergeRoot != null) {
+                final ResourceProviderFactory providerFactory = new MergingResourceProviderFactory(mergeRoot, picker);
+                final Dictionary<Object, Object> props = new Hashtable<Object, Object>();
+                props.put(ResourceProvider.ROOTS, mergeRoot);
+                props.put(ResourceProvider.OWNS_ROOTS, true);
+
+                final Long key = (Long) reference.getProperty(Constants.SERVICE_ID);
+                final ServiceRegistration reg = bundleContext.registerService(ResourceProviderFactory.class.getName(), providerFactory, props);
+
+                serviceRegistrations.put(key, reg);
+
+            }
+            return picker;
         }
+        return null;
     }
 
-    public void modifiedService(ServiceReference reference, Object service) {
-        // TODO Auto-generated method stub
-
+    public void modifiedService(final ServiceReference reference, final Object service) {
+        removedService(reference, service);
+        addingService(reference);
     }
 
-    public void removedService(ServiceReference reference, Object service) {
-        if (service instanceof ServiceRegistration) {
-            ((ServiceRegistration) service).unregister();
+    public void removedService(final ServiceReference reference, final Object service) {
+        final Long key = (Long) reference.getProperty(Constants.SERVICE_ID);
+        final ServiceRegistration reg = serviceRegistrations.get(key);
+        if ( reg != null ) {
+            reg.unregister();
+            this.bundleContext.ungetService(reference);
         }
     }
 
