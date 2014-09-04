@@ -31,10 +31,15 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
 
-@Component
+@Component(label = "Apache Sling Overriding Resource Picker",
+    description = "This resource picker delivers merged resources based on the resource type hierarchy.",
+    metatype=true)
 @Service
-@Property(name = MergedResourcePicker.MERGE_ROOT, value = "/mnt/override")
+@Property(name = MergedResourcePicker.MERGE_ROOT, value = OverridingResourcePicker.DEFAULT_ROOT,
+    label = "Root", description = "Root path at which merged resources will be available.")
 public class OverridingResourcePicker implements MergedResourcePicker {
+    
+    public static final String DEFAULT_ROOT = "/mnt/override";
 
     public Iterator<Resource> pickResources(ResourceResolver resolver, String relativePath) {
         String absPath = "/" + relativePath;
