@@ -114,8 +114,6 @@
           <module>jcr/ocm</module>
           <module>jcr/prefs</module>
           <module>jcr/resourcesecurity</module>
-          <module>launchpad/karaf</module>
-          <module>launchpad/testing</module>
           <module>scripting/script-console</module>
           <module>scripting/jsp-taglib-atom</module>
           <module>scripting/freemarker</module>
@@ -126,6 +124,8 @@
           <module>scripting/ruby</module>
           <module>scripting/velocity</module>
           <module>scripting/xproc</module>
+          <module>launchpad/karaf</module>
+          <module>launchpad/testing</module>
     </modules>
     <profiles>
         <profile>
