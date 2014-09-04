@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
@@ -41,7 +42,7 @@ public class MergedResourceProviderTest {
 
     private ResourceResolver resolver;
 
-    private MergedResourceProvider provider;
+    private ResourceProvider provider;
 
     @Before public void setup() throws Exception {
         final MockResourceResolverFactoryOptions options = new MockResourceResolverFactoryOptions();
@@ -71,7 +72,7 @@ public class MergedResourceProviderTest {
                                             .resource(".Z")
                                         .commit();
 
-        this.provider = new MergedResourceProvider("/merged");
+        this.provider = new MergingResourceProvider("/merged", new MergedResourceProviderFactory());
     }
 
     @Test public void testHideChildren() {

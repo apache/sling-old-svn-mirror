@@ -18,55 +18,54 @@
  */
 package org.apache.sling.resourcemerger.impl;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
-import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.resourcemerger.api.ResourceMergerService;
+import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
 
 @Component(label = "Apache Sling Merged Resource Provider Factory",
            description = "This resource provider delivers merged resources based on the search paths.",
            metatype=true)
-@Service(value = {ResourceProviderFactory.class, ResourceMergerService.class})
-@Properties({
-    @Property(name = ResourceProvider.ROOTS, value=MergedResourceProviderFactory.DEFAULT_ROOT,
-            label="Root",
-            description="The mount point of merged resources"),
-    @Property(name = ResourceProvider.OWNS_ROOTS, boolValue=true, propertyPrivate=true)
-})
+@Service
+@Property(name=MergedResourcePicker.MERGE_ROOT, value=MergedResourceProviderFactory.DEFAULT_ROOT,
+    label="Root",
+    description="The mount point of merged resources")
 /**
  * The <code>MergedResourceProviderFactory</code> creates merged resource
  * providers and implements the <code>ResourceMergerService</code>.
  */
-public class MergedResourceProviderFactory implements ResourceProviderFactory, ResourceMergerService {
+public class MergedResourceProviderFactory implements MergedResourcePicker, ResourceMergerService {
 
     public static final String DEFAULT_ROOT = "/mnt/overlay";
 
     private String mergeRootPath;
 
-    /**
-     * {@inheritDoc}
-     */
-    public ResourceProvider getResourceProvider(final Map<String, Object> stringObjectMap)
-    throws LoginException {
-        return new MergedResourceProvider(mergeRootPath);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public ResourceProvider getAdministrativeResourceProvider(final Map<String, Object> stringObjectMap)
-    throws LoginException {
-        return new MergedResourceProvider(mergeRootPath);
+    public Iterator<Resource> pickResources(ResourceResolver resolver, String relativePath) {
+        List<Resource> resources = new ArrayList<Resource>();
+        final String[] searchPaths = resolver.getSearchPath();
+        for (int i = searchPaths.length - 1; i >= 0; i--) {
+            final String basePath = searchPaths[i];
+            final String fullPath = basePath + relativePath;
+            Resource resource = resolver.getResource(fullPath);
+            if (resource != null) {
+                resources.add(resource);
+            } else {
+                resources.add(new NonExistingResource(resolver, fullPath));
+            }
+        }
+        return resources.iterator();
     }
 
     /**
@@ -128,8 +127,5 @@ public class MergedResourceProviderFactory implements ResourceProviderFactory, R
     @Activate
     protected void configure(final Map<String, Object> properties) {
         mergeRootPath = PropertiesUtil.toString(properties.get(ResourceProvider.ROOTS), DEFAULT_ROOT);
-        if (mergeRootPath.endsWith("/")) {
-            mergeRootPath = mergeRootPath.substring(0, mergeRootPath.length() - 1);
-        }
     }
 }
