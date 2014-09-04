@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.NonExistingResource;
@@ -33,7 +34,7 @@ import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
 
 @Component(label = "Apache Sling Overriding Resource Picker",
     description = "This resource picker delivers merged resources based on the resource type hierarchy.",
-    metatype=true)
+    metatype = true, policy = ConfigurationPolicy.REQUIRE)
 @Service
 @Property(name = MergedResourcePicker.MERGE_ROOT, value = OverridingResourcePicker.DEFAULT_ROOT,
     label = "Root", description = "Root path at which merged resources will be available.")
