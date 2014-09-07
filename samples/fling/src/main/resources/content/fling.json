@@ -1,0 +1,36 @@
+{
+    "jcr:primaryType": "nt:unstructured",
+    "sling:resourceType": "fling:page:simple",
+    "title": "Sling Fling Sample",
+    "content": "<p>This is a sample using <em>Sling Models</em>, <em>Sling Query</em> and <em>Sling Scripting Thymeleaf</em>. Pages under <em>Authentication</em> (<code>/auth</code>) need authentication.</p><ul><li><a href=\"http://sling.apache.org/documentation/bundles/models.html\">Sling Models</a></li><li><a href=\"https://github.com/Cognifide/Sling-Query\">Sling Query</a></li><li><a href=\"http://www.thymeleaf.org\">Thymeleaf</a></li></ul>",
+    "models": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "fling:page:simple",
+        "title": "Sling Models",
+        "content": "<p><em>Sling Models</em> for mapping resources to <code>Page.class</code>:</p><pre>[...]\n@Model(adaptables = Resource.class)\npublic class Page {\n\n    private final Resource resource;\n\n    @Inject\n    private String title;\n\n    [...]\n\n    public Page(final Resource resource) {\n        this.resource = resource;\n    }\n\n    public String getName() {\n        return resource.getName();\n    }\n\n    [...]\n\n    public String getTitle() {\n        return title;\n    }\n\n    [...]\n\n}</pre>"
+    },
+    "query": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "fling:page:simple",
+        "title": "Sling Query",
+        "content": "<p><em>Sling Query</em> for collecting resources to build the navigation:</p><pre>[...]\npublic class Page {\n\n    [...]\n\n    public Iterable&lt;Page&gt; getParents() {\n      return $(resource).parents().map(Page.class);\n    }\n\n    public Iterable&lt;Page&gt; getChildren() {\n      return $(resource).children().map(Page.class);\n    }\n\n    [...]\n\n}</pre>"
+    },
+    "thymeleaf": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "fling:page:simple",
+        "title": "Sling Scripting Thymeleaf",
+        "content": "<p><em>Sling Scripting Thymeleaf</em> with <em>Sling Models</em> and <code>adaptTo()</code> to render resources:</p><pre>&lt;html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\"\n      th:with=\"page=${resource.adaptTo(@org.apache.sling.samples.fling.Page@class)}\"&gt;\n&lt;head&gt;\n  &lt;meta charset=\"UTF-8\"/&gt;\n  &lt;meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"/&gt;\n  &lt;title th:text=\"${page.title}\"&gt;Page Title&lt;/title&gt;\n[...]</pre><p><em>Sling Scripting Thymeleaf</em> with <em>Sling i18n</em> for localized messages:</p><pre>&lt;a href=\"/system/sling/logout.html\" th:text=\"#{action.logout}\"&gt;logout&lt;/a&gt;</pre><pre>{\n    \"en\": {\n        \"jcr:mixinTypes\": [\n            \"mix:language\"\n        ],\n        \"jcr:language\": \"en\",\n        \"sling:basename\": \"org.apache.sling.samples.fling\",\n        \"action.logout\": {\n            \"jcr:primaryType\": \"sling:MessageEntry\",\n            \"sling:key\": \"action.logout\",\n            \"sling:message\": \"logout\"\n        },\n        [...]\n    }\n}\n</pre>"
+    },
+    "auth": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "fling:page:simple",
+        "title": "Authentication",
+        "content": "<p>Authentication</p>",
+        "user": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "fling:page:simple",
+            "title": "User Profile",
+            "content": "<p>User Profile</p>"
+        }
+    }
+}
