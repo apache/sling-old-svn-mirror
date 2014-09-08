@@ -75,7 +75,7 @@ final class AdapterImplementations {
         synchronized (adapterImplementations) {
             String key = adapterTypeName;
             ConcurrentNavigableMap<String,Class<?>> implementations = adapterImplementations.get(key);
-            if (implementations!=null) {
+            if (implementations != null) {
                 implementations.remove(implTypeName);
                 if (implementations.isEmpty()) {
                     adapterImplementations.remove(key);

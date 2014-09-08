@@ -147,7 +147,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
     private final Map<Object, ImplementationPicker> implementationPickers = new TreeMap<Object, ImplementationPicker>();
 
     ModelPackageBundleListener listener;
-    
+
     final AdapterImplementations adapterImplementations = new AdapterImplementations();
 
     private ServiceRegistration jobRegistration;
