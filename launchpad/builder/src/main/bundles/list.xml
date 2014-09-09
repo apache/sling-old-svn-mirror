@@ -169,7 +169,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.discovery.impl</artifactId>
-            <version>1.0.8</version>
+            <version>1.0.10</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
