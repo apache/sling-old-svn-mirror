@@ -265,7 +265,7 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
             throw new PersistenceException("Path already exists: " + path);
         }
         synchronized ( this.resources ) {
-            if ( this.resources.containsKey(path) ) {
+            if ( this.resources.containsKey(path) && !this.deletedResources.contains(path) ) {
                 throw new PersistenceException("Path already exists: " + path);
             }
         }
