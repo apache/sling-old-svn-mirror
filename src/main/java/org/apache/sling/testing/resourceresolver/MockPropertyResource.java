@@ -18,33 +18,29 @@
  */
 package org.apache.sling.testing.resourceresolver;
 
-import java.util.Map;
-
 import org.apache.sling.api.resource.AbstractResource;
-import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.api.wrappers.ModifiableValueMapDecorator;
-import org.apache.sling.api.wrappers.ValueMapDecorator;
 
-public class MockResource extends AbstractResource {
-
+/**
+ * Resource that wraps a property value.
+ */
+class MockPropertyResource extends AbstractResource {
+    
     private final String path;
-
     private final ValueMap props;
-
+    private final String key;
+    private final ResourceResolver resolver;
     private final ResourceMetadata rm = new ResourceMetadata();
 
-    private final ResourceResolver resolver;
-
-    static final String JCR_PRIMARYTYPE = "jcr:primaryType";
-    
-    public MockResource(final String path,
-            final Map<String, Object> props,
+    public MockPropertyResource(final String path,
+            final ValueMap props,
             final ResourceResolver resolver) {
         this.path = path;
-        this.props = (props instanceof MockValueMap) ? (MockValueMap)props : new MockValueMap(props);
+        this.props = props;
+        this.key = ResourceUtil.getName(path);
         this.resolver = resolver;
     }
 
@@ -55,17 +51,12 @@ public class MockResource extends AbstractResource {
 
     @Override
     public String getResourceType() {
-        String resourceType = this.props.get(ResourceResolver.PROPERTY_RESOURCE_TYPE, String.class);
-        if (resourceType == null) {
-            // fallback to jcr:primaryType if not resouce type exists (to mimick JCR resource behavior)
-            resourceType = this.props.get(JCR_PRIMARYTYPE, String.class);
-        }
-        return resourceType;
+        return null;
     }
 
     @Override
     public String getResourceSuperType() {
-        return this.props.get("sling:resourceSuperType", String.class);
+        return null;
     }
 
     @Override
@@ -78,26 +69,13 @@ public class MockResource extends AbstractResource {
         return this.resolver;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public <AdapterType> AdapterType adaptTo(final Class<AdapterType> type) {
-        if ( type == ValueMap.class ) {
-            return (AdapterType)new ValueMapDecorator(this.props);
-        } else if ( type == ModifiableValueMap.class ) {
-            ((MockResourceResolver)this.resolver).addChanged(this.path, this.props);
-            return (AdapterType)new ModifiableValueMapDecorator(this.props);
+    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+        AdapterType value = props.get(key, type);
+        if (value!=null) {
+            return value;
         }
         return super.adaptTo(type);
-    }
-
-    @Override
-    public ValueMap getValueMap() {
-        return this.props;
-    }
-
-    @Override
-    public String toString() {
-        return "MockResource [path=" + path + ", props=" + props + "]";
     }
 
 }

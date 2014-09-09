@@ -36,6 +36,8 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.resource.ValueMap;
 import org.osgi.service.event.Event;
 
 public class MockResourceResolver extends SlingAdaptable implements ResourceResolver {
@@ -86,6 +88,25 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
 
     @Override
     public Resource getResource(final String path) {
+        Resource resource = getResourceInternal(path);
+        
+        // if not resource found check if this is a reference to a property
+        if (resource == null) {
+            String name = ResourceUtil.getName(path);
+            String parentPath = ResourceUtil.getParent(path);
+            Resource parentResource = getResourceInternal(parentPath);
+            if (parentResource!=null) {
+                ValueMap props = parentResource.getValueMap();
+                if (props.containsKey(name)) {
+                    return new MockPropertyResource(path, props, this);
+                }
+            }
+        }
+        
+        return resource;
+    }
+    
+    private Resource getResourceInternal(final String path) {
         if ( path.startsWith("/") ) {
             if ( this.deletedResources.contains(path) ) {
                 return null;
@@ -186,7 +207,6 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
     @Override
     public ResourceResolver clone(Map<String, Object> authenticationInfo)
             throws LoginException {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -202,7 +222,6 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
 
     @Override
     public String getUserID() {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -254,9 +273,10 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
         if ( properties == null ) {
             properties = new HashMap<String, Object>();
         }
-        this.temporaryResources.put(path, properties);
-
-        return new MockResource(path, properties, this);
+        
+        Resource mockResource = new MockResource(path, properties, this);
+        this.temporaryResources.put(path, mockResource.getValueMap());
+        return mockResource;
     }
 
     @Override
