@@ -28,6 +28,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceProvider;
+import org.apache.sling.api.resource.QueriableResourceProvider;
 import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.service.event.EventAdmin;
@@ -50,7 +51,8 @@ policy=ConfigurationPolicy.REQUIRE,
 metatype=true)
 @Service(value=ResourceProviderFactory.class)
 @Properties({
-    @Property(name=ResourceProvider.ROOTS, value="/mongo")
+    @Property(name=ResourceProvider.ROOTS, value="/mongo"),
+    @Property(name=QueriableResourceProvider.LANGUAGES, value="mongodb")
 })
 public class MongoDBResourceProviderFactory implements ResourceProviderFactory {
 

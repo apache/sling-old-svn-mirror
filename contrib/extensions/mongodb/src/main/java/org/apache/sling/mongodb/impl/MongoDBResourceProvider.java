@@ -37,10 +37,12 @@ import org.slf4j.LoggerFactory;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.CommandResult;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.QueryBuilder;
+import com.mongodb.util.JSON;
 
 /**
  * The MongoDB resource provider creates resources based on MongoDB entries.
@@ -435,8 +437,52 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
         return PROP_PATH;
     }
 
-    public Iterator<Resource> findResources(ResourceResolver resolver, String query, String language) {
-        return null;
+    public Iterator<Resource> findResources(final ResourceResolver resolver, String query, String language) {
+        if ( !language.equals( "mongodb") || query == null || query.length() == 0 || query.indexOf( ".find(" ) <= 0 )
+        {
+            return null;
+        }
+        Iterator<Resource> returnValue = null;
+        final String collectionName = query.substring( 0, query.indexOf( ".find(" ) );
+        DBCollection col = this.getCollection( collectionName );
+        if ( col != null )
+        {
+            String criteria = query.trim().substring( query.indexOf( ".find(" ) + 6, query.length() - 1 );
+            DBObject dbObject = (DBObject) JSON.parse( criteria );
+            final DBCursor cur = col.find( dbObject );
+            final String rootPath = context.getRootWithSlash();
+            
+            return new Iterator<Resource>() {
+
+                public boolean hasNext() {
+                    return cur.hasNext();
+                }
+
+                public Resource next() {
+                    final DBObject obj = cur.next();
+                    final String objPath = obj.get(getPROP_PATH()).toString();
+                    final int lastSlash = objPath.lastIndexOf('/');
+                    final String name;
+                    if (lastSlash == -1) {
+                        name = objPath;
+                    } else {
+                        name = objPath.substring(lastSlash + 1);
+                    }
+                    return new MongoDBResource(resolver,
+                            rootPath + collectionName + "/" + name,
+                            collectionName,
+                            obj,
+                            MongoDBResourceProvider.this);
+                }
+
+                public void remove() {
+                    throw new UnsupportedOperationException("remove");
+                }
+
+            };
+        }
+        
+        return returnValue;
     }
 
     public Iterator<ValueMap> queryResources(ResourceResolver resolver, String query, String language) {
