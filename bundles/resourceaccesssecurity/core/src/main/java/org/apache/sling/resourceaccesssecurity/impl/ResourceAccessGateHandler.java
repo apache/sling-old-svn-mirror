@@ -87,8 +87,14 @@ public class ResourceAccessGateHandler implements Comparable<ResourceAccessGateH
         boolean returnValue = false;
 
         if ( operations.contains( operation ) ) {
-            final Matcher match = pathPattern.matcher(path);
-            returnValue = match.matches();
+            if (path != null) {
+                final Matcher match = pathPattern.matcher(path);
+                returnValue = match.matches();
+            } else {
+                // if no path is given just add every ResourceAccessGate for
+                // security reason
+                return true;
+            }
         }
 
         return returnValue;
