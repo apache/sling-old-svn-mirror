@@ -109,7 +109,6 @@
                     <includeDefaultBundles>false</includeDefaultBundles>
                     <bundlesDirectory>install</bundlesDirectory>
                     <bootDirectory>bundles</bootDirectory>
-                    <configDirectory>${empty.config.directory}</configDirectory>
                     <jarWebSupport>
                         <bundles>
                           <bundle>
@@ -168,24 +167,6 @@
                                 </resource>
                             </resources>
                         </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>generate-sources</id>
-                        <phase>generate-sources</phase>
-                        <configuration>
-                            <tasks>
-                                <mkdir dir="${empty.config.directory}"/>
-                            </tasks>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
                     </execution>
                 </executions>
             </plugin>
