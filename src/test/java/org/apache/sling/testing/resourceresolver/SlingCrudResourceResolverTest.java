@@ -20,7 +20,6 @@ package org.apache.sling.testing.resourceresolver;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.ByteArrayInputStream;
@@ -28,9 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.resource.LoginException;
@@ -38,12 +35,14 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+
 /**
- * Implements simple write and read resource and values test
+ * Implements simple write and read resource and values test.
  * Sling CRUD API is used to create the test data.
  */
 public class SlingCrudResourceResolverTest {
@@ -60,53 +59,37 @@ public class SlingCrudResourceResolverTest {
     private static final String NT_UNSTRUCTURED = "nt:unstructured";
 
     private ResourceResolver resourceResolver;
-    protected Resource testRoot;
+    private Resource testRoot;
 
     @Before
     public final void setUp() throws IOException, LoginException {
-        this.resourceResolver = new MockResourceResolverFactory().getResourceResolver(null);
+        resourceResolver = new MockResourceResolverFactory().getResourceResolver(null);
 
-        // prepare some test data using Sling CRUD API
-        Resource rootNode = getTestRootResource();
+        Resource root = resourceResolver.getResource("/");
+        testRoot = resourceResolver.create(root, "test", ValueMap.EMPTY);
 
-        Map<String, Object> props = new HashMap<String, Object>();
-        props.put(MockResource.JCR_PRIMARYTYPE, NT_UNSTRUCTURED);
-        props.put("stringProp", STRING_VALUE);
-        props.put("stringArrayProp", STRING_ARRAY_VALUE);
-        props.put("integerProp", INTEGER_VALUE);
-        props.put("doubleProp", DOUBLE_VALUE);
-        props.put("booleanProp", BOOLEAN_VALUE);
-        props.put("dateProp", DATE_VALUE);
-        props.put("calendarProp", CALENDAR_VALUE);
-        props.put("binaryProp", new ByteArrayInputStream(BINARY_VALUE));
-        Resource node1 = this.resourceResolver.create(rootNode, "node1", props);
+        Resource node1 = resourceResolver.create(testRoot, "node1",
+            ImmutableMap.<String, Object>builder()
+                .put(MockResource.JCR_PRIMARYTYPE, NT_UNSTRUCTURED)
+                .put("stringProp", STRING_VALUE)
+                .put("stringArrayProp", STRING_ARRAY_VALUE)
+                .put("integerProp", INTEGER_VALUE)
+                .put("doubleProp", DOUBLE_VALUE)
+                .put("booleanProp", BOOLEAN_VALUE)
+                .put("dateProp", DATE_VALUE)
+                .put("calendarProp", CALENDAR_VALUE)
+                .put("binaryProp", new ByteArrayInputStream(BINARY_VALUE))
+                .build());
 
-        this.resourceResolver.create(node1, "node11", ValueMap.EMPTY);
-        this.resourceResolver.create(node1, "node12", ValueMap.EMPTY);
+        resourceResolver.create(node1, "node11", ValueMap.EMPTY);
+        resourceResolver.create(node1, "node12", ValueMap.EMPTY);
 
-        this.resourceResolver.commit();
-    }
-
-    @After
-    public final void tearDown() {
-        this.testRoot = null;
-    }
-
-    /**
-     * Return a test root resource, created on demand, with a unique path
-     * @throws PersistenceException
-     */
-    private Resource getTestRootResource() throws PersistenceException {
-        if (this.testRoot == null) {
-            final Resource root = this.resourceResolver.getResource("/");
-            this.testRoot = this.resourceResolver.create(root, "test", ValueMap.EMPTY);
-        }
-        return this.testRoot;
+        resourceResolver.commit();
     }
 
     @Test
     public void testSimpleProperties() throws IOException {
-        Resource resource1 = this.resourceResolver.getResource(getTestRootResource().getPath() + "/node1");
+        Resource resource1 = resourceResolver.getResource(testRoot.getPath() + "/node1");
         assertNotNull(resource1);
         assertEquals("node1", resource1.getName());
 
@@ -120,14 +103,14 @@ public class SlingCrudResourceResolverTest {
 
     @Test
     public void testDateProperty() throws IOException {
-        Resource resource1 = this.resourceResolver.getResource(getTestRootResource().getPath() + "/node1");
+        Resource resource1 = resourceResolver.getResource(testRoot.getPath() + "/node1");
         ValueMap props = resource1.getValueMap();
         assertEquals(DATE_VALUE, props.get("dateProp", Date.class));
     }
 
     @Test
     public void testDatePropertyToCalendar() throws IOException {
-        Resource resource1 = this.resourceResolver.getResource(getTestRootResource().getPath() + "/node1");
+        Resource resource1 = resourceResolver.getResource(testRoot.getPath() + "/node1");
         ValueMap props = resource1.getValueMap();
         Calendar calendarValue = props.get("dateProp", Calendar.class);
         assertNotNull(calendarValue);
@@ -136,14 +119,14 @@ public class SlingCrudResourceResolverTest {
     
     @Test
     public void testCalendarProperty() throws IOException {
-        Resource resource1 = this.resourceResolver.getResource(getTestRootResource().getPath() + "/node1");
+        Resource resource1 = resourceResolver.getResource(testRoot.getPath() + "/node1");
         ValueMap props = resource1.getValueMap();
         assertEquals(CALENDAR_VALUE.getTime(), props.get("calendarProp", Calendar.class).getTime());
     }
 
     @Test
     public void testCalendarPropertyToDate() throws IOException {
-        Resource resource1 = this.resourceResolver.getResource(getTestRootResource().getPath() + "/node1");
+        Resource resource1 = resourceResolver.getResource(testRoot.getPath() + "/node1");
         ValueMap props = resource1.getValueMap();
         Date dateValue = props.get("calendarProp", Date.class);
         assertNotNull(dateValue);
@@ -152,17 +135,17 @@ public class SlingCrudResourceResolverTest {
     
     @Test
     public void testListChildren() throws IOException {
-        Resource resource1 = this.resourceResolver.getResource(getTestRootResource().getPath() + "/node1");
+        Resource resource1 = resourceResolver.getResource(testRoot.getPath() + "/node1");
 
-        Iterator<Resource> children = resource1.listChildren();
-        assertEquals("node11", children.next().getName());
-        assertEquals("node12", children.next().getName());
-        assertFalse(children.hasNext());
+        List<Resource> children = Lists.newArrayList(resource1.listChildren());
+        assertEquals(2, children.size());
+        assertEquals("node11", children.get(0).getName());
+        assertEquals("node12", children.get(1).getName());
     }
 
     @Test
     public void testBinaryData() throws IOException {
-        Resource resource1 = this.resourceResolver.getResource(getTestRootResource().getPath() + "/node1");
+        Resource resource1 = resourceResolver.getResource(testRoot.getPath() + "/node1");
 
         Resource binaryPropResource = resource1.getChild("binaryProp");
         InputStream is = binaryPropResource.adaptTo(InputStream.class);
@@ -180,7 +163,7 @@ public class SlingCrudResourceResolverTest {
 
     @Test
     public void testPrimaryTypeResourceType() throws PersistenceException {
-        Resource resource1 = this.resourceResolver.getResource(getTestRootResource().getPath() + "/node1");
+        Resource resource1 = resourceResolver.getResource(testRoot.getPath() + "/node1");
         assertEquals(NT_UNSTRUCTURED, resource1.getResourceType());
     }
 
