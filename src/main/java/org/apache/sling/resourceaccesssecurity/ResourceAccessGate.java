@@ -187,7 +187,8 @@ public interface ResourceAccessGate {
      *            the language in which the query is expressed
      * @param resourceResolver
      *            the resource resolver which resolves the query
-     * @return the transformed query
+     * @return the transformed query or the original query if no tranformation
+     *      took place. This method should never return <code>null</code>
      * @throws AccessSecurityException
      */
     public String transformQuery(String query, String language,

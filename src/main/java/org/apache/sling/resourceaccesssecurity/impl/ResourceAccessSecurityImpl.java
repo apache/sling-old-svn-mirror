@@ -339,7 +339,20 @@ public abstract class ResourceAccessSecurityImpl implements ResourceAccessSecuri
             final String language,
             final ResourceResolver resourceResolver)
     throws AccessSecurityException {
-        return query;
+        String returnValue = query;
+
+        for (ResourceAccessGateHandler handler : allHandlers) {
+            returnValue = handler.getResourceAccessGate().transformQuery(
+                    returnValue, language, resourceResolver);
+            if (returnValue == null) {
+                throw new AccessSecurityException(
+                        "Method transformQuery in ResourceAccessGate "
+                                + handler.getResourceAccessGate().getClass()
+                                        .getName() + " returned null.");
+            }
+        }
+
+        return returnValue;
     }
 
     /**
