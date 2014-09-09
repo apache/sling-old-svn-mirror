@@ -9,16 +9,16 @@ customized Launchpad packages.
 Getting Started
 ===============
 
-This component uses a Maven 2 (http://maven.apache.org/) build environment. 
+This component uses a Maven (http://maven.apache.org/) build environment. 
 It requires a Java 5 JDK (or higher) and Maven (http://maven.apache.org/)
-2.2.1 or later. We recommend to use the latest Maven version.
+3.0.4 or later. We recommend to use the latest Maven version.
 
-If you have Maven 2 installed, you can compile and
+If you have Maven installed, you can compile and
 package the jar using the following command:
 
     mvn package
 
-See the Maven 2 documentation for other build features.
+See the Maven documentation for other build features.
 
 The latest source code for this component is available in the
 Subversion (http://subversion.tigris.org/) source repository of
@@ -45,9 +45,9 @@ in the top-level directory of the Sling source code.
 
 2) Start the generated jar with
 
-	 java -jar target/org.apache.sling.launchpad-6-standalone.jar 
+	 java -jar target/org.apache.sling.launchpad-7-standalone.jar 
 	 
-Use the correct version number instead of 6, if needed.
+Use the correct version number instead of 7, if needed.
 
 3) Browse Sling in:
 
@@ -72,5 +72,5 @@ in the top-level directory of the Sling source code.
         
   OR
   
-   Deploy target/org.apache.sling.launchpad-6.war to your favorite application
+   Deploy target/org.apache.sling.launchpad-7.war to your favorite application
    server or servlet container.
