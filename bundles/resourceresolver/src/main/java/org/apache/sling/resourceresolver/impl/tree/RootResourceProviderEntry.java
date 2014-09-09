@@ -143,8 +143,9 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
                     nextResourceIter = null;
                     while ( i.hasNext() && nextResourceIter == null ) {
                         final QueriableResourceProvider adap = i.next();
-                        nextResourceIter = adap.findResources(resolver, query, language);
                         actProviderHandler = queriableProviders.getProviderHandler(ctx, adap);
+                        String transformedQuery = actProviderHandler.transformQuery(ctx, resolver, query, language);
+                        nextResourceIter = adap.findResources(resolver, transformedQuery, language);
                     }
                 }
                 if ( nextResourceIter != null ) {

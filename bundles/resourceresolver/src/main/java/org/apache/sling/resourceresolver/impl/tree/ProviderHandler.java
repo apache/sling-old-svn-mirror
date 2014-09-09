@@ -30,11 +30,14 @@ import org.apache.sling.api.resource.QueriableResourceProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.security.AccessSecurityException;
 import org.apache.sling.api.security.ResourceAccessSecurity;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.osgi.framework.Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The provider handler is the common base class for the
@@ -43,6 +46,9 @@ import org.osgi.framework.Constants;
  */
 public abstract class ProviderHandler implements Comparable<ProviderHandler> {
 
+    /** Default logger */
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+    
     /** Service properties. */
     private final Map<String, Object> properties;
 
@@ -174,6 +180,45 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
             final ResourceAccessSecurity resourceAccessSecurity = tracker.getApplicationResourceAccessSecurity();
             if (resourceAccessSecurity != null) {
                 returnValue = resourceAccessSecurity.getReadableResource(returnValue);
+            }
+        }
+
+        return returnValue;
+    }
+
+    /**
+     * applies resource access security if configured
+     */
+    protected String transformQuery ( final ResourceResolverContext ctx, final ResourceResolver resolver, final String query, final String language ) {
+        final ResourceAccessSecurityTracker tracker = ctx.getResourceAccessSecurityTracker();
+
+        String returnValue = query;
+
+        if (useResourceAccessSecurity) {
+            final ResourceAccessSecurity resourceAccessSecurity = tracker
+                    .getProviderResourceAccessSecurity();
+            if (resourceAccessSecurity != null) {
+                try {
+                    returnValue = resourceAccessSecurity.transformQuery(
+                            returnValue, language, resolver);
+                } catch (AccessSecurityException e) {
+                    logger.error(
+                            "AccessSecurityException occurred while trying to transform the query {} (language {}).",
+                            new Object[] { query, language }, e);
+                }
+            }
+        }
+
+        final ResourceAccessSecurity resourceAccessSecurity = tracker
+                .getApplicationResourceAccessSecurity();
+        if (resourceAccessSecurity != null) {
+            try {
+                returnValue = resourceAccessSecurity.transformQuery(
+                        returnValue, language, resolver);
+            } catch (AccessSecurityException e) {
+                logger.error(
+                        "AccessSecurityException occurred while trying to transform the query {} (language {}).",
+                        new Object[] { query, language }, e);
             }
         }
 
