@@ -54,19 +54,19 @@ public class PriorityPathDistributionStrategy implements ReplicationQueueDistrib
         priorityPaths = PropertiesUtil.toStringArray(context.getProperties().get(PRIORITYPATHS));
     }
 
-    public ReplicationQueueItemState add(String agentName, ReplicationQueueItem replicationPackage,
+    public ReplicationQueueItemState add(String agentName, ReplicationQueueItem item,
                                          ReplicationQueueProvider queueProvider)
             throws ReplicationQueueException {
         log.info("using path priority based queue distribution");
         ReplicationQueueItemState state = new ReplicationQueueItemState();
 
-        ReplicationQueue queue = getQueue(agentName, replicationPackage, queueProvider);
+        ReplicationQueue queue = getQueue(agentName, item, queueProvider);
         log.info("obtained queue {}", queue);
 
         if (queue != null) {
-            if (queue.add(replicationPackage)) {
+            if (queue.add(item)) {
                 log.info("replication status: {}", state);
-                state = queue.getStatus(replicationPackage);
+                state = queue.getStatus(item);
             } else {
                 log.error("could not add the item to the queue {}", queue);
                 state.setItemState(ItemState.ERROR);

@@ -56,11 +56,11 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
         return name;
     }
 
-    public boolean add(ReplicationQueueItem replicationPackage) {
+    public boolean add(ReplicationQueueItem item) {
         boolean result = true;
         try {
             Map<String, Object> properties = JobHandlingUtils
-                    .createFullPropertiesFromPackage(replicationPackage);
+                    .createFullPropertiesFromPackage(item);
 
             Job job = jobManager.createJob(topic).properties(properties).add();
             log.info("job {} added", job.getId());

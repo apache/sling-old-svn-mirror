@@ -26,9 +26,8 @@ import java.util.Collection;
 public interface ReplicationQueueProvider {
 
     /**
-     * provide the queue to be used for a certain agent and package or creates it if it doesn't
+     * provide a named queue for the given agent or creates it if the agent doesn't
      * exist
-     * 
      *
      * @param agentName
      *            the replication agent needing the queue
@@ -43,7 +42,6 @@ public interface ReplicationQueueProvider {
 
     /**
      * get the default queue to be used for a certain agent
-     * 
      *
      * @param agentName
      *            a replication agent

@@ -40,7 +40,7 @@ public class ReplicationResponse {
     }
 
     public String getStatus() {
-        return status;
+        return status != null ? status : "done nothing";
     }
 
     public void setStatus(String status) {

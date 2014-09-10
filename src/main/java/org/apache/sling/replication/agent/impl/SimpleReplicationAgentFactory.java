@@ -39,7 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * An OSGi service factory for {@link ReplicationAgent}s
+ * An OSGi service factory for {@link ReplicationAgent}s which references already existing OSGi services.
  */
 @Component(metatype = true,
         label = "Simple Replication Agents Factory",

@@ -19,33 +19,32 @@
 package org.apache.sling.replication.queue;
 
 import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.packaging.ReplicationPackage;
 
 /**
  * a {@link ReplicationQueueDistributionStrategy} implements an algorithm for the distribution of
- * replication packages among the available queues for a certain agent
+ * {@link org.apache.sling.replication.queue.ReplicationQueueItem}s among the available queues for a certain agent
  */
 public interface ReplicationQueueDistributionStrategy {
 
     /**
-     * synchronously distribute a {@link ReplicationPackage} to a {@link ReplicationAgent} to a {@link ReplicationQueue}
-     * provided by the given {@link ReplicationQueueProvider}
+     * synchronously distribute a {@link org.apache.sling.replication.queue.ReplicationQueueItem} to a {@link ReplicationAgent}
+     * to a {@link ReplicationQueue} provided by the given {@link ReplicationQueueProvider}
      *
-     * @param agentName the name of a {@link ReplicationAgent}
-     * @param replicationPackage a {@link org.apache.sling.replication.packaging.ReplicationPackage} to distribute
-     * @param queueProvider      the {@link ReplicationQueueProvider} used to provide the queue to be used for the given package
+     * @param agentName     the name of a {@link ReplicationAgent}
+     * @param item          a {@link org.apache.sling.replication.queue.ReplicationQueueItem} to distribute
+     * @param queueProvider the {@link ReplicationQueueProvider} used to provide the queue to be used for the given package
      * @return a {@link ReplicationQueueItemState} representing the state of the package in the queue after its distribution
      * @throws ReplicationQueueException
      */
-    ReplicationQueueItemState add(String agentName, ReplicationQueueItem replicationPackage,
+    ReplicationQueueItemState add(String agentName, ReplicationQueueItem item,
                                   ReplicationQueueProvider queueProvider) throws ReplicationQueueException;
 
     /**
-     * asynchronously distribute a {@link ReplicationPackage} to a {@link ReplicationAgent} to a {@link ReplicationQueue}
-     * provided by the given {@link ReplicationQueueProvider}
+     * asynchronously distribute a {@link org.apache.sling.replication.queue.ReplicationQueueItem} to a {@link ReplicationAgent}
+     * to a {@link ReplicationQueue} provided by the given {@link ReplicationQueueProvider}
      *
-     * @param agentName the name of a {@link ReplicationAgent}
-     * @param replicationPackage a {@link org.apache.sling.replication.packaging.ReplicationPackage} to distribute
+     * @param agentName          the name of a {@link ReplicationAgent}
+     * @param replicationPackage a {@link org.apache.sling.replication.queue.ReplicationQueueItem} to distribute
      * @param queueProvider      the {@link ReplicationQueueProvider} used to provide the queue to be used for the given package
      * @return <code>true</code> if the package could be distributed to a {@link ReplicationQueue}, <code>false</code> otherwise
      * @throws ReplicationQueueException
