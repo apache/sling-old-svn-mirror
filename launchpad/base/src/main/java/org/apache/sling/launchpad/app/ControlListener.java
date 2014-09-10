@@ -27,11 +27,20 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.OutputStreamWriter;
+import java.lang.management.LockInfo;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MonitorInfo;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 
 /**
  * The <code>ControlListener</code> class is a helper class for the {@link Main}
@@ -67,8 +76,14 @@ class ControlListener implements Runnable {
     // command sent by the client to check for the status of the server
     static final String COMMAND_STATUS = "status";
 
+    // command sent by the client to request a thread dump
+    static final String COMMAND_THREADS = "threads";
+
     // the response sent by the server if the command executed successfully
     private static final String RESPONSE_OK = "OK";
+
+    // the status response sent by the server when shutting down
+    private static final String RESPONSE_STOPPING = "STOPPING";
 
     // The default interface to listen on
     private static final String DEFAULT_LISTEN_INTERFACE = "127.0.0.1";
@@ -83,6 +98,8 @@ class ControlListener implements Runnable {
 
     private String secretKey;
     private InetSocketAddress socketAddress;
+
+    private volatile Thread shutdownThread = null;
 
     /**
      * Creates an instance of this control support class.
@@ -140,6 +157,14 @@ class ControlListener implements Runnable {
         return sendCommand(COMMAND_STATUS);
     }
 
+    /**
+     * Implements the client side of the control connection sending the command
+     * to retrieve a thread dump.
+     */
+    int dumpThreads() {
+        return sendCommand(COMMAND_THREADS);
+    }
+
     // ---------- Runnable interface
 
     /**
@@ -149,7 +174,7 @@ class ControlListener implements Runnable {
     public void run() {
         this.configure(false);
 
-        ServerSocket server = null;
+        final ServerSocket server;
         try {
             server = new ServerSocket();
             server.bind(this.socketAddress);
@@ -168,7 +193,14 @@ class ControlListener implements Runnable {
         try {
             while (true) {
 
-                final Socket s = server.accept();
+                final Socket s;
+                try {
+                    s = server.accept();
+                } catch (IOException ioe) {
+                    // accept terminated, most probably due to Socket.close()
+                    // just end the loop and exit
+                    break;
+                }
 
                 // delay processing after unsuccessfull attempts
                 if (delay > 0) {
@@ -183,7 +215,6 @@ class ControlListener implements Runnable {
                     final String commandLine = readLine(s);
                     if (commandLine == null) {
                         final String msg = "ERR: missing command";
-                        Main.info(s.getRemoteSocketAddress() + "<" + msg, null);
                         writeLine(s, msg);
                         continue;
                     }
@@ -191,14 +222,12 @@ class ControlListener implements Runnable {
                     final int blank = commandLine.indexOf(' ');
                     if (blank < 0) {
                         final String msg = "ERR: missing key";
-                        Main.info(s.getRemoteSocketAddress() + "<" + msg, null);
                         writeLine(s, msg);
                         continue;
                     }
 
                     if (!secretKey.equals(commandLine.substring(0, blank))) {
                         final String msg = "ERR: wrong key";
-                        Main.info(s.getRemoteSocketAddress() + "<" + msg, null);
                         writeLine(s, msg);
                         delay = (delay > 0) ? delay * 2 : 1000L;
                         continue;
@@ -208,18 +237,30 @@ class ControlListener implements Runnable {
                     Main.info(s.getRemoteSocketAddress() + ">" + command, null);
 
                     if (COMMAND_STOP.equals(command)) {
-                        slingMain.doStop();
-                        Main.info(s.getRemoteSocketAddress() + "<" + RESPONSE_OK, null);
-                        writeLine(s, RESPONSE_OK);
-                        break;
+                        if (this.shutdownThread != null) {
+                            writeLine(s, RESPONSE_STOPPING);
+                        } else {
+                            this.shutdownThread = new Thread("Apache Sling Control Listener: Shutdown") {
+                                public void run() {
+                                    slingMain.doStop();
+                                    try {
+                                        server.close();
+                                    } catch (final IOException ignore) {
+                                    }
+                                }
+                            };
+                            this.shutdownThread.start();
+                            writeLine(s, RESPONSE_OK);
+                        }
 
                     } else if (COMMAND_STATUS.equals(command)) {
-                        Main.info(s.getRemoteSocketAddress() + "<" + RESPONSE_OK, null);
-                        writeLine(s, RESPONSE_OK);
+                        writeLine(s, (this.shutdownThread == null) ? RESPONSE_OK : RESPONSE_STOPPING);
+
+                    } else if (COMMAND_THREADS.equals(command)) {
+                        dumpThreads(s);
 
                     } else {
                         final String msg = "ERR:" + command;
-                        Main.info(s.getRemoteSocketAddress() + "<" + msg, null);
                         writeLine(s, msg);
 
                     }
@@ -250,7 +291,166 @@ class ControlListener implements Runnable {
 
     // ---------- socket support
 
+    private void dumpThreads(final Socket socket) throws IOException {
 
+        final ThreadMXBean threadBean = ManagementFactory.getThreadMXBean();
+        final ThreadInfo[] threadInfos = threadBean.dumpAllThreads(true, true);
+
+        for (ThreadInfo thread : threadInfos) {
+            printThread(socket, thread);
+
+            // add locked synchronizers
+            final LockInfo[] locks = thread.getLockedSynchronizers();
+            writeLine(socket, "-");
+            writeLine(socket, "-   Locked ownable synchronizers:");
+            if (locks.length > 0) {
+                for (LockInfo li : locks) {
+                    writeLine(socket, String.format("-        - locked %s",
+                        formatLockInfo(
+                            li.getClassName(),
+                            li.getIdentityHashCode()
+                        )
+                    ));
+                }
+            } else {
+                writeLine(socket, "-        - None");
+            }
+
+            // empty separator line
+            writeLine(socket, "-");
+        }
+
+        final long[] deadLocked;
+        if (threadBean.isSynchronizerUsageSupported()) {
+            deadLocked = threadBean.findDeadlockedThreads();
+        } else {
+            deadLocked = threadBean.findMonitorDeadlockedThreads();
+        }
+        if (deadLocked != null) {
+            final ThreadInfo[] dl = threadBean.getThreadInfo(deadLocked, true, true);
+            final Set<ThreadInfo> dlSet = new HashSet<ThreadInfo>(Arrays.asList(dl));
+            int deadlockCount = 0;
+            for (ThreadInfo current : dl) {
+                if (dlSet.remove(current)) {
+
+                    // find and record a single deadlock
+                    ArrayList<ThreadInfo> loop = new ArrayList<ThreadInfo>();
+                    do {
+                        loop.add(current);
+                        for (ThreadInfo cand : dl) {
+                            if (cand.getThreadId() == current.getLockOwnerId()) {
+                                current = (dlSet.remove(cand)) ? cand : null;
+                                break;
+                            }
+                        }
+                    } while (current != null);
+
+                    deadlockCount++;
+
+                    // print the deadlock
+                    writeLine(socket, "-Found one Java-level deadlock:");
+                    writeLine(socket, "-=============================");
+                    for (ThreadInfo thread : loop) {
+                        writeLine(socket, String.format("-\"%s\" #%d",
+                            thread.getThreadName(),
+                            thread.getThreadId()
+                        ));
+                        writeLine(socket, String.format("-  waiting on %s",
+                            formatLockInfo(
+                                thread.getLockInfo().getClassName(),
+                                thread.getLockInfo().getIdentityHashCode()
+                            )
+                        ));
+                        writeLine(socket, String.format("-  which is held by \"%s\" #%d",
+                            thread.getLockOwnerName(),
+                            thread.getLockOwnerId()
+                        ));
+                    }
+                    writeLine(socket, "-");
+
+                    writeLine(socket, "-Java stack information for the threads listed above:");
+                    writeLine(socket, "-===================================================");
+
+                    for (ThreadInfo thread : loop) {
+                        printThread(socket, thread);
+                    }
+                    writeLine(socket, "-");
+                }
+            }
+
+//            "Thread-8":
+//                waiting to lock monitor 7f89fb80da08 (object 7f37a0968, a java.lang.Object),
+//                which is held by "Thread-7"
+//              "Thread-7":
+//                waiting to lock monitor 7f89fb80b0b0 (object 7f37a0958, a java.lang.Object),
+//                which is held by "Thread-8"
+
+            writeLine(socket, String.format("-Found %d deadlocks.",
+                deadlockCount
+            ));
+        }
+
+        writeLine(socket, RESPONSE_OK);
+    }
+
+    private String formatLockInfo(final String className, final int objectId) {
+        return String.format("<%08x> (a %s)", objectId, className);
+    }
+
+    private void printThread(final Socket socket, final ThreadInfo thread) throws IOException {
+        writeLine(socket, String.format("-\"%s\" #%d",
+            thread.getThreadName(),
+            thread.getThreadId()
+        ));
+
+        writeLine(socket, String.format("-    java.lang.Thread.State: %s",
+            thread.getThreadState()
+        ));
+
+        final MonitorInfo[] monitors = thread.getLockedMonitors();
+        final StackTraceElement[] trace = thread.getStackTrace();
+        for (int i=0; i < trace.length; i++) {
+            StackTraceElement ste = trace[i];
+            if (ste.isNativeMethod()) {
+                writeLine(socket, String.format("-        at %s.%s(Native Method)",
+                    ste.getClassName(),
+                    ste.getMethodName()
+                ));
+            } else {
+                writeLine(socket, String.format("-        at %s.%s(%s:%d)",
+                    ste.getClassName(),
+                    ste.getMethodName(),
+                    ste.getFileName(),
+                    ste.getLineNumber()
+                ));
+            }
+
+            if (i == 0 && thread.getLockInfo() != null) {
+                writeLine(socket, String.format("-        - waiting on %s%s",
+                    formatLockInfo(
+                        thread.getLockInfo().getClassName(),
+                        thread.getLockInfo().getIdentityHashCode()
+                    ),
+                    (thread.getLockOwnerId() >= 0)
+                        ? String.format(" owned by \"%s\" #%d",
+                            thread.getLockOwnerName(),
+                            thread.getLockOwnerId()
+                        ):""
+                ));
+            }
+
+            for (MonitorInfo mi : monitors) {
+                if (i == mi.getLockedStackDepth()) {
+                    writeLine(socket, String.format("-        - locked %s",
+                        formatLockInfo(
+                            mi.getClassName(),
+                            mi.getIdentityHashCode()
+                        )
+                    ));
+                }
+            }
+        }
+    }
 
     /**
      * Sends the given command to the server indicated by the configured
@@ -271,7 +471,7 @@ class ControlListener implements Runnable {
             try {
                 socket = new Socket();
                 socket.connect(this.socketAddress);
-                writeLine(socket, this.secretKey + " " + command);
+                writeLine0(socket, this.secretKey + " " + command);
                 final String result = readLine(socket);
                 Main.info("Sent '" + command + "' to " + this.socketAddress + ": " + result, null);
                 return 0; // LSB code for everything's fine
@@ -297,12 +497,32 @@ class ControlListener implements Runnable {
     private String readLine(final Socket socket) throws IOException {
         final BufferedReader br = new BufferedReader(new InputStreamReader(
             socket.getInputStream(), "UTF-8"));
-        return br.readLine();
+
+        StringBuilder b = new StringBuilder();
+        boolean more = true;
+        while (more) {
+            String s = br.readLine();
+            if (s != null && s.startsWith("-")) {
+                s = s.substring(1);
+            } else {
+                more = false;
+            }
+            if (b.length() > 0) {
+                b.append("\r\n");
+            }
+            b.append(s);
+        }
+
+        return b.toString();
     }
 
     private void writeLine(final Socket socket, final String line) throws IOException {
-        final BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
-            socket.getOutputStream(), "UTF-8"));
+        Main.info(socket.getRemoteSocketAddress() + "<" + line, null);
+        this.writeLine0(socket, line);
+    }
+
+    private void writeLine0(final Socket socket, final String line) throws IOException {
+        final BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
         bw.write(line);
         bw.write("\r\n");
         bw.flush();

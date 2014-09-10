@@ -293,6 +293,8 @@ public class Main {
                     return sl.statusServer();
                 case STOP:
                     return sl.shutdownServer();
+                case THREADS:
+                    return sl.dumpThreads();
             }
         }
 
@@ -692,6 +694,7 @@ public class Main {
             System.out.println("    start         listen for control connection (uses -j)");
             System.out.println("    stop          terminate running Apache Sling (uses -j)");
             System.out.println("    status        check whether Apache Sling is running (uses -j)");
+            System.out.println("    threads       request a thread dump from Apache Sling (uses -j)");
             System.out.println("    -j adr        host and port to use for control connection in the format '[host:]port' (default 127.0.0.1:0)");
             System.out.println("    -l loglevel   the initial loglevel (0..4, FATAL, ERROR, WARN, INFO, DEBUG)");
             System.out.println("    -f logfile    the log file, \"-\" for stdout (default logs/error.log)");
@@ -837,7 +840,9 @@ public class Main {
                         break;
                 }
             } else if ("start".equals(arg.getKey())
-                || "stop".equals(arg.getKey()) || "status".equals(arg.getKey())) {
+                    || "stop".equals(arg.getKey())
+                    || "status".equals(arg.getKey())
+                    || "threads".equals(arg.getKey())) {
                 props.put(PROP_CONTROL_ACTION, arg.getValue());
             } else {
                 errorArg(arg.getKey(), "Unrecognized option");
