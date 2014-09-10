@@ -370,8 +370,12 @@ public final class AuthUtil {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 
             Object reason = request.getAttribute(AuthenticationHandler.FAILURE_REASON);
+            Object reasonCode = request.getAttribute(AuthenticationHandler.FAILURE_REASON_CODE);
             if (reason != null) {
                 response.setHeader(AuthConstants.X_REASON, reason.toString());
+                if ( reasonCode != null ) {
+                    response.setHeader(AuthConstants.X_REASON_CODE, reasonCode.toString());
+                }
                 response.setContentType("text/plain");
                 response.setCharacterEncoding("UTF-8");
                 response.getWriter().println(reason);
