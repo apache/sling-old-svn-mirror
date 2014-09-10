@@ -356,12 +356,12 @@ public class ResourceUtil {
      * <code>Resource</code>. This method calls {@link Resource#getValueMap()}.
      * If <code>null</code> is provided as the resource an empty map is returned as
      * well.
+     * <p>For backward compatibility reasons the map returned is not immutable,
+     * but it is not recommend to rely on this behavior.</p>
      *
      * @param res The <code>Resource</code> to adapt to the value map.
      * @return A value map.
-     * @deprecated Use {@link Resource#getValueMap()}.
      */
-    @Deprecated
     public static ValueMap getValueMap(final Resource res) {
         if ( res == null ) {
             // use empty map
