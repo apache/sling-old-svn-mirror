@@ -69,7 +69,7 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
         timeThreshold = PropertiesUtil.toInteger(ctx.getProperties().get(TIME_THRESHOLD), 600000);
     }
 
-    public ReplicationQueueItemState add(String agentName, ReplicationQueueItem replicationPackage,
+    public ReplicationQueueItemState add(String agentName, ReplicationQueueItem item,
                                          ReplicationQueueProvider queueProvider)
             throws ReplicationQueueException {
         try {
@@ -78,9 +78,9 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
             ReplicationQueue queue = queueProvider.getDefaultQueue(agentName);
             log.info("obtained queue {}", queue);
             if (queue != null) {
-                if (queue.add(replicationPackage)) {
+                if (queue.add(item)) {
                     log.info("replication status: {}", state);
-                    state = queue.getStatus(replicationPackage);
+                    state = queue.getStatus(item);
                 } else {
                     log.error("could not add the item to the queue {}", queue);
                     state.setItemState(ItemState.ERROR);

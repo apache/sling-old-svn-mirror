@@ -71,10 +71,10 @@ public class AgentReplicationPackageExporterFactory implements ReplicationPackag
 
             ReplicationQueue queue = agent.getQueue(queueName);
             ReplicationQueueItem info = queue.getHead();
-            ReplicationPackage replicationPackage = null;
+            ReplicationPackage replicationPackage;
             if (info != null) {
-                queue.removeHead();
                 replicationPackage = replicationPackageBuilder.getPackage(info.getId());
+                queue.remove(info.getId());
                 if (replicationPackage != null) {
                     result.add(replicationPackage);
                 }

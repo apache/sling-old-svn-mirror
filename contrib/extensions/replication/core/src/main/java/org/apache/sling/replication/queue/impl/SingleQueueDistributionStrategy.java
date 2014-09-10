@@ -40,7 +40,7 @@ public class SingleQueueDistributionStrategy implements ReplicationQueueDistribu
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public ReplicationQueueItemState add(String agentName, ReplicationQueueItem replicationPackage,
+    public ReplicationQueueItemState add(String agentName, ReplicationQueueItem item,
                                          ReplicationQueueProvider queueProvider)
                     throws ReplicationQueueException {
         log.info("using single queue distribution");
@@ -50,8 +50,8 @@ public class SingleQueueDistributionStrategy implements ReplicationQueueDistribu
         log.info("obtained queue {}", queue);
 
         if (queue != null) {
-            if (queue.add(replicationPackage)) {
-                state = queue.getStatus(replicationPackage);
+            if (queue.add(item)) {
+                state = queue.getStatus(item);
                 log.info("replication status: {}", state);
             } else {
                 log.error("could not add the item to the queue {}", queue);

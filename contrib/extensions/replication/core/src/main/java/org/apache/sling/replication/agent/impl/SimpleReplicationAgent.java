@@ -32,9 +32,16 @@ import org.apache.sling.replication.event.ReplicationEventType;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
-import org.apache.sling.replication.queue.*;
+import org.apache.sling.replication.queue.ReplicationQueue;
+import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
+import org.apache.sling.replication.queue.ReplicationQueueException;
+import org.apache.sling.replication.queue.ReplicationQueueItem;
+import org.apache.sling.replication.queue.ReplicationQueueItemState;
+import org.apache.sling.replication.queue.ReplicationQueueProcessor;
+import org.apache.sling.replication.queue.ReplicationQueueProvider;
 import org.apache.sling.replication.rule.ReplicationRuleEngine;
-import org.apache.sling.replication.serialization.*;
+import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
+import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,13 +92,8 @@ public class SimpleReplicationAgent implements ReplicationAgent {
 
     public ReplicationResponse execute(ReplicationRequest replicationRequest)
             throws AgentReplicationException {
-
-        // create packages from request
-        List<ReplicationPackage> replicationPackages;
         try {
-            replicationPackages = buildPackages(replicationRequest);
-            return schedule(replicationPackages);
-
+            return schedule(buildPackages(replicationRequest));
         } catch (ReplicationPackageBuildingException e) {
             log.error("Error building packages", e);
             throw new AgentReplicationException(e);
@@ -102,7 +104,6 @@ public class SimpleReplicationAgent implements ReplicationAgent {
     public boolean isPassive() {
         return passive;
     }
-
 
     private List<ReplicationPackage> buildPackages(ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
 
@@ -125,6 +126,7 @@ public class SimpleReplicationAgent implements ReplicationAgent {
     }
 
     private ReplicationResponse schedule(List<ReplicationPackage> replicationPackages) {
+        // TODO : create a composite replication response otherwise only the last response will be returned
         ReplicationResponse replicationResponse = new ReplicationResponse();
 
         for (ReplicationPackage replicationPackage : replicationPackages) {
@@ -150,8 +152,13 @@ public class SimpleReplicationAgent implements ReplicationAgent {
         try {
             ReplicationQueueItemState state = queueDistributionStrategy.add(getName(), replicationQueueItem,
                     queueProvider);
+
+            // TODO : it probably makes sense to always generate the package queued event
             if (isPassive()) {
-                generatePackageQueuedEvent(replicationQueueItem);
+                Dictionary<Object, Object> properties = new Properties();
+                properties.put("replication.package.paths", replicationQueueItem.getPaths());
+                properties.put("replication.agent.name", name);
+                replicationEventFactory.generateEvent(ReplicationEventType.PACKAGE_QUEUED, properties);
             }
             if (state != null) {
                 replicationResponse.setStatus(state.getItemState().toString());
@@ -168,14 +175,6 @@ public class SimpleReplicationAgent implements ReplicationAgent {
 
         return replicationResponse;
     }
-
-    private void generatePackageQueuedEvent(ReplicationQueueItem replicationQueueItem) {
-        Dictionary<Object, Object> properties = new Properties();
-        properties.put("replication.package.paths", replicationQueueItem.getPaths());
-        properties.put("replication.agent.name", name);
-        replicationEventFactory.generateEvent(ReplicationEventType.PACKAGE_QUEUED, properties);
-    }
-
 
     public String getName() {
         return name;

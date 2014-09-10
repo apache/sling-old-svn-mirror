@@ -33,18 +33,18 @@ public interface ReplicationQueue {
     String getName();
 
     /**
-     * add a replication package to this queue
+     * add a replication item to this queue
      *
-     * @param replicationPackage a replication package to replicate
-     * @return <code>true</code> if the replication package was added correctly to the queue,
+     * @param item a replication item representing the package to replicate
+     * @return <code>true</code> if the replication item was added correctly to the queue,
      * <code>false</code otherwise
      */
-    boolean add(ReplicationQueueItem replicationPackage);
+    boolean add(ReplicationQueueItem item);
 
     /**
-     * get the status of a certain package in the queue
+     * get the status of a certain item in the queue
      *
-     * @param item the replication package to get the status for
+     * @param item the replication item to get the status for
      * @return the item status in the queue
      * @throws ReplicationQueueException
      */
@@ -59,7 +59,7 @@ public interface ReplicationQueue {
     ReplicationQueueItem getHead();
 
     /**
-     * remove the first package into the queue from it
+     * remove the first item into the queue from it
      */
     void removeHead();
 

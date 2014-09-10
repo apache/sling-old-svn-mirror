@@ -31,7 +31,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * An OSGi service factory for {@link ReplicationAgent}s
+ * An OSGi service factory for {@link ReplicationAgent}s using a compact configuration, already existing OSGi services
+ * for the components to be wired can be used as well as directly instantiated components (called by type name).
  */
 @Component(metatype = true,
         label = "Compact Replication Agents Factory",

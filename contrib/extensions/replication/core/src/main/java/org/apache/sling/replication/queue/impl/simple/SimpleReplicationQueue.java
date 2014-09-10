@@ -60,17 +60,17 @@ public class SimpleReplicationQueue implements ReplicationQueue {
         return name;
     }
 
-    public boolean add(ReplicationQueueItem replicationPackage) {
+    public boolean add(ReplicationQueueItem item) {
         ReplicationQueueItemState status = new ReplicationQueueItemState();
         boolean result = false;
         try {
-            result = queue.offer(replicationPackage, 10, TimeUnit.SECONDS);
+            result = queue.offer(item, 10, TimeUnit.SECONDS);
             status.setEntered(Calendar.getInstance());
         } catch (InterruptedException e) {
             log.error("cannot add an item to the queue", e);
             status.setSuccessful(false);
         } finally {
-            statusMap.put(replicationPackage, status);
+            statusMap.put(item, status);
         }
         return result;
     }

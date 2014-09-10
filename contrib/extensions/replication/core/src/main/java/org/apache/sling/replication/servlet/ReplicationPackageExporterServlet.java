@@ -44,7 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Servlet to handle reception of replication content.
+ * Servlet to handle fetching of replication content.
  */
 @SuppressWarnings("serial")
 @Component(metatype = false)
