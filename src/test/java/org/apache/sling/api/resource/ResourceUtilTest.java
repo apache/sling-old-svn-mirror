@@ -258,7 +258,6 @@ public class ResourceUtilTest {
         assertEquals("a/b", ResourceUtil.resourceTypeToPath("a:b"));
     }
 
-    @SuppressWarnings("unchecked")
     @Test public void test_adaptTo() {
         // we define three resources
         // a and b are adaptable to List
@@ -408,10 +407,12 @@ public class ResourceUtilTest {
         assertEquals("/", ResourceUtil.getParent("/b///", 1));
     }
 
+    @SuppressWarnings("deprecation")
     @Test public void testIsA() {
         assertFalse(ResourceUtil.isA(null, "something"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test public void testFindResourceSuperType() {
         assertNull(ResourceUtil.findResourceSuperType(null));
     }

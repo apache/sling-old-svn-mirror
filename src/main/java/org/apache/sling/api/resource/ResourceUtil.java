@@ -602,8 +602,8 @@ public class ResourceUtil {
      * @param name   The name of the child resource
      * @return a unique non-existing name for child resource for a given <code>parent</code>
      *
-     * @throws {@link PersistenceException} if it can not find unique name for child resource.
-     * @throws {@link NullPointerException} if <code>parent</code> is null
+     * @throws PersistenceException if it can not find unique name for child resource.
+     * @throws NullPointerException if <code>parent</code> is null
      * @since 2.5.0
      */
     public static String createUniqueChildName(final Resource parent, final String name)
