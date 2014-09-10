@@ -22,9 +22,9 @@
  * of utility functions in the {@link org.apache.sling.auth.core.AuthUtil}
  * class.
  *
- * @version 1.1
+ * @version 1.2
  */
-@Version("1.1")
+@Version("1.2")
 @Export(optional = "provide:=true")
 package org.apache.sling.auth.core;
 

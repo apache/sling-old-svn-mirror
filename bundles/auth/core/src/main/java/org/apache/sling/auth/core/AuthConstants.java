@@ -55,6 +55,18 @@ public final class AuthConstants {
     public static final String X_REASON = "X-Reason";
 
     /**
+     * The name of the request header set by the
+     * {@link #sendInvalid(HttpServletRequest, HttpServletResponse)} method if the provided
+     * credentials cannot be used for login.
+     * <p>
+     * This header may be inspected by clients for a a detailed reason code why the request
+     * failed.
+     *
+     * @see #sendInvalid(HttpServletRequest, HttpServletResponse)
+     */
+    public static final String X_REASON_CODE = "X-Reason-Code";
+
+    /**
      * Service Registration property which may be set by an
      * {@link org.apache.sling.auth.core.spi.AuthenticationHandler} service to
      * indicate whether its
