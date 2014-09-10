@@ -40,6 +40,12 @@ public enum ControlAction {
      * Indicates to connect to a running Sling application having installed a
      * listener and ask that application about its state.
      */
-    STATUS;
+    STATUS,
+
+    /**
+     * Indicates to connect to a running Sling application having installed a
+     * listener and ask for a thread dump.
+     */
+    THREADS;
 
 }

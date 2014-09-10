@@ -43,6 +43,7 @@
 
     <properties>
         <felix.httpservice.version>2.2.0</felix.httpservice.version>
+        <sling.java.version>6</sling.java.version>
     </properties>
 
     <scm>
