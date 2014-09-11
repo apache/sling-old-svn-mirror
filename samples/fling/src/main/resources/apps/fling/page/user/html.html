@@ -18,7 +18,7 @@
     under the License.
 -->
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" th:with="page=${resource.adaptTo(@org.apache.sling.samples.fling.Page@class)}">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" th:with="page=${resource.adaptTo(@org.apache.sling.samples.fling.UserPage@class)}">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -38,8 +38,21 @@
     <div class="panel-heading">
       <span th:text="${page.title}"></span>
     </div>
-    <div class="panel-body">
-      <div th:utext="${page.content}"></div>
+    <div class="panel-body" th:with="user=${page.user}">
+      <form role="form">
+        <div class="form-group">
+          <label>User ID of current JCR session</label>
+          <input type="text" class="form-control" readonly="readonly" th:attr="value=${user.getID()}"/>
+        </div>
+        <div class="form-group">
+          <label>principal name</label>
+          <input type="text" class="form-control" readonly="readonly" th:attr="value=${user.getPrincipal().getName()}"/>
+        </div>
+        <div class="form-group" th:each="property : ${page.userProperties}">
+          <label th:text="${property.key}">key</label>
+          <input type="text" class="form-control" readonly="readonly" th:attr="value=${property.value}"/>
+        </div>
+      </form>
       <img src="/fling/assets/images/feather.png" width="355" height="111"/>
     </div>
     <div class="panel-footer" th:replace="/apps/fling/page/fragments/panel.html::footer">

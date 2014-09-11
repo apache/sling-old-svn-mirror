@@ -22,6 +22,7 @@ import javax.inject.Inject;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.Model;
+import org.apache.sling.models.annotations.Optional;
 
 import static org.apache.sling.query.SlingQuery.$;
 
@@ -34,6 +35,7 @@ public class Page {
     private String title;
 
     @Inject
+    @Optional
     private String content;
 
     public Page(final Resource resource) {

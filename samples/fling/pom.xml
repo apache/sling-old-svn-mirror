@@ -43,27 +43,57 @@
   </properties>
 
   <dependencies>
-    <!-- Sling -->
+    <!-- javax -->
     <dependency>
-      <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.api</artifactId>
-      <version>2.7.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.models.api</artifactId>
-      <version>1.0.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.sling</groupId>
-      <artifactId>org.apache.sling.query</artifactId>
-      <version>2.0.0</version>
+      <groupId>javax.jcr</groupId>
+      <artifactId>jcr</artifactId>
+      <scope>provided</scope>
     </dependency>
     <!-- OSGi -->
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
       <version>4.3.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <!-- Apache Commons -->
+    <dependency>
+      <groupId>commons-collections</groupId>
+      <artifactId>commons-collections</artifactId>
+      <version>3.2.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <!-- Apache Sling -->
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.api</artifactId>
+      <version>2.7.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.models.api</artifactId>
+      <version>1.1.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.query</artifactId>
+      <version>2.0.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.jcr.base</artifactId>
+      <version>2.2.2</version>
+      <scope>provided</scope>
+    </dependency>
+    <!-- Apache Jackrabbit -->
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-api</artifactId>
+      <version>2.0.0</version>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 
@@ -81,11 +111,9 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <version>2.5.3</version>
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Bundle-Activator>org.apache.sling.samples.fling.internal.Activator</Bundle-Activator>
             <Sling-Bundle-Resources>
               /fling/assets;path:=/assets
