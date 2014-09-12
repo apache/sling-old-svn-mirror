@@ -278,7 +278,7 @@
     <bundle dependency="true">mvn:org.apache.sling/org.apache.sling.auth.xing.api/0.0.2</bundle>
   </feature>
   <!-- Apache Sling Extensions (contrib) -->
-  <feature name="sling-extension-i18n" version="2.2.8">
+  <feature name="sling-extension-i18n" version="2.2.10">
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">jackrabbit-sling</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.i18n/2.2.10</bundle>
@@ -287,7 +287,7 @@
   <feature name="sling-scripting-thymeleaf" version="0.0.2">
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-scripting</feature>
-    <feature version="2.2.8">sling-extension-i18n</feature>
+    <feature version="2.2.10">sling-extension-i18n</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.thymeleaf/0.0.2</bundle>
     <!-- bundle dependencies -->
     <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.ognl/3.0.8_1</bundle>
