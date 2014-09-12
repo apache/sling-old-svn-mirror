@@ -259,6 +259,8 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
             }
         }
 
+        interpolateProperties(initializedBundleList, project, mavenSession);
+
         // check for partial bundle lists
         final Set<Artifact> dependencies = project.getDependencyArtifacts();
         for (Artifact artifact : dependencies) {
