@@ -22,10 +22,5 @@
 #
 
 application/compress           z
-application/msexcel            xls xlsx
-application/mspowerpoint       ppt pptx
-application/octet-stream       class exe msi
-application/photoshop          psd
 image/pict                     pict
 text/plain                     apt
-text/rtf                       rtf
