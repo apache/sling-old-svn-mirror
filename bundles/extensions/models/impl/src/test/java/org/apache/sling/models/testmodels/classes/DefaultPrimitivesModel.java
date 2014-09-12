@@ -28,7 +28,7 @@ public class DefaultPrimitivesModel {
     @Inject
     @Default(booleanValues = true)
     private boolean booleanProperty;
-    
+
     @Inject
     @Default(booleanValues = { true, true })
     private boolean[] booleanArrayProperty;
@@ -36,7 +36,7 @@ public class DefaultPrimitivesModel {
     @Inject
     @Default(longValues = 1L)
     private long longProperty;
-    
+
     @Inject
     @Default(longValues = { 1L, 1L })
     private long[] longArrayProperty;
