@@ -100,12 +100,12 @@ public class NonCachingTemplateResolver implements ITemplateResolver {
         logger.debug("deactivate");
     }
 
-    protected void bindTemplateModeHandlers(final SlingTemplateModeHandler templateModeHandler) {
+    protected synchronized void bindTemplateModeHandlers(final SlingTemplateModeHandler templateModeHandler) {
         logger.debug("binding template mode handler '{}'", templateModeHandler.getTemplateModeName());
         templateModeHandlers.add(templateModeHandler);
     }
 
-    protected void unbindTemplateModeHandlers(final SlingTemplateModeHandler templateModeHandler) {
+    protected synchronized void unbindTemplateModeHandlers(final SlingTemplateModeHandler templateModeHandler) {
         logger.debug("unbinding template mode handler '{}'", templateModeHandler.getTemplateModeName());
         templateModeHandlers.remove(templateModeHandler);
     }
