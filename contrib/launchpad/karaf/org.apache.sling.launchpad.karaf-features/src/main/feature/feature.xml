@@ -283,6 +283,10 @@
     <feature version="${project.version}">jackrabbit-sling</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.i18n/2.2.10</bundle>
   </feature>
+  <feature name="sling-extension-query" version="2.0.0">
+    <feature version="${project.version}">sling</feature>
+    <bundle>mvn:org.apache.sling/org.apache.sling.query/2.0.0</bundle>
+  </feature>
   <!-- Apache Sling Scripting (contrib) -->
   <feature name="sling-scripting-thymeleaf" version="0.0.2">
     <feature version="${project.version}">sling</feature>
