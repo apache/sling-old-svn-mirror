@@ -107,25 +107,25 @@ public class ThymeleafScriptEngineFactory extends AbstractScriptEngineFactory {
         templateEngine = null;
     }
 
-    protected void bindTemplateResolvers(final ITemplateResolver templateResolver) {
+    protected synchronized void bindTemplateResolvers(final ITemplateResolver templateResolver) {
         logger.debug("binding template resolver '{}'", templateResolver.getName());
         templateResolvers.add(templateResolver);
         configureTemplateEngine();
     }
 
-    protected void unbindTemplateResolvers(final ITemplateResolver templateResolver) {
+    protected synchronized void unbindTemplateResolvers(final ITemplateResolver templateResolver) {
         logger.debug("unbinding template resolver '{}'", templateResolver.getName());
         templateResolvers.remove(templateResolver);
         configureTemplateEngine();
     }
 
-    protected void bindMessageResolvers(final IMessageResolver messageResolver) {
+    protected synchronized void bindMessageResolvers(final IMessageResolver messageResolver) {
         logger.debug("binding message resolver '{}'", messageResolver.getName());
         messageResolvers.add(messageResolver);
         configureTemplateEngine();
     }
 
-    protected void unbindMessageResolvers(final IMessageResolver messageResolver) {
+    protected synchronized void unbindMessageResolvers(final IMessageResolver messageResolver) {
         logger.debug("unbinding message resolver '{}'", messageResolver.getName());
         messageResolvers.remove(messageResolver);
         configureTemplateEngine();
