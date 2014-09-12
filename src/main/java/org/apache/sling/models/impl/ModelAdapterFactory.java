@@ -608,19 +608,19 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
                 }
             } else {
                 if (injectedClass == String.class) {
-                    value = defaultAnnotation.values()[0];
+                    value = defaultAnnotation.values().length == 0 ? "" : defaultAnnotation.values()[0];
                 } else if (injectedClass == Integer.class) {
-                    value = defaultAnnotation.intValues()[0];
+                    value = defaultAnnotation.intValues().length == 0 ? 0 : defaultAnnotation.intValues()[0];
                 } else if (injectedClass == Long.class) {
-                    value = defaultAnnotation.longValues()[0];
+                    value = defaultAnnotation.longValues().length == 0 ? 0l : defaultAnnotation.longValues()[0];
                 } else if (injectedClass == Boolean.class) {
-                    value = defaultAnnotation.booleanValues()[0];
+                    value = defaultAnnotation.booleanValues().length == 0 ? false : defaultAnnotation.booleanValues()[0];
                 } else if (injectedClass == Short.class) {
-                    value = defaultAnnotation.shortValues()[0];
+                    value = defaultAnnotation.shortValues().length == 0 ? ((short) 0) : defaultAnnotation.shortValues()[0];
                 } else if (injectedClass == Float.class) {
-                    value = defaultAnnotation.floatValues()[0];
+                    value = defaultAnnotation.floatValues().length == 0 ? 0f : defaultAnnotation.floatValues()[0];
                 } else if (injectedClass == Double.class) {
-                    value = defaultAnnotation.doubleValues()[0];
+                    value = defaultAnnotation.doubleValues().length == 0 ? 0d : defaultAnnotation.doubleValues()[0];
                 } else {
                     log.warn("Default values for {} are not supported", injectedClass);
                     return false;
