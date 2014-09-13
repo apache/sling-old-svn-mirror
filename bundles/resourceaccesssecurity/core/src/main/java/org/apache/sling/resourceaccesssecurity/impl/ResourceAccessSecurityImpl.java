@@ -119,7 +119,10 @@ public abstract class ResourceAccessSecurityImpl implements ResourceAccessSecuri
                 noGateMatched = false;
                 final ResourceAccessGateHandler resourceAccessGateHandler  = accessGateHandlers.next();
 
-                final GateResult gateResult = resourceAccessGateHandler.getResourceAccessGate().canRead(resource);
+                final GateResult gateResult = !resourceAccessGateHandler
+                        .getResourceAccessGate().hasReadRestrictions(resource.getResourceResolver()) ? GateResult.GRANTED
+                        : resourceAccessGateHandler.getResourceAccessGate()
+                                .canRead(resource);
                 if (!canReadAllValues && gateResult == GateResult.GRANTED) {
                     if (resourceAccessGateHandler.getResourceAccessGate().canReadAllValues(resource)) {
                         canReadAllValues = true;
@@ -136,7 +139,7 @@ public abstract class ResourceAccessSecurityImpl implements ResourceAccessSecuri
                 } else if (finalGateResult != GateResult.GRANTED && gateResult != GateResult.CANT_DECIDE) {
                     finalGateResult = gateResult;
                 }
-                // stop checking if the operation is final and the result not GateResult.DONTCARE
+                // stop checking if the operation is final and the result not GateResult.CANT_DECIDE
                 if (gateResult != GateResult.CANT_DECIDE  && resourceAccessGateHandler.isFinalOperation(ResourceAccessGate.Operation.READ)) {
                     break;
                 }
@@ -182,7 +185,10 @@ public abstract class ResourceAccessSecurityImpl implements ResourceAccessSecuri
                 noGateMatched = false;
                 final ResourceAccessGateHandler resourceAccessGateHandler  = handlers.next();
 
-                final GateResult gateResult = resourceAccessGateHandler.getResourceAccessGate().canCreate(path, resolver);
+                final GateResult gateResult = !resourceAccessGateHandler
+                        .getResourceAccessGate().hasCreateRestrictions(resolver) ? GateResult.GRANTED
+                        : resourceAccessGateHandler.getResourceAccessGate()
+                                .canCreate(path, resolver);
                 if (finalGateResult == null) {
                     finalGateResult = gateResult;
                 } else if (finalGateResult != GateResult.GRANTED && gateResult != GateResult.CANT_DECIDE) {
@@ -219,7 +225,10 @@ public abstract class ResourceAccessSecurityImpl implements ResourceAccessSecuri
                 noGateMatched = false;
                 final ResourceAccessGateHandler resourceAccessGateHandler  = handlers.next();
 
-                final GateResult gateResult = resourceAccessGateHandler.getResourceAccessGate().canUpdate(resource);
+                final GateResult gateResult = !resourceAccessGateHandler
+                        .getResourceAccessGate().hasUpdateRestrictions(resource.getResourceResolver()) ? GateResult.GRANTED
+                        : resourceAccessGateHandler.getResourceAccessGate()
+                                .canUpdate(resource);
                 if (finalGateResult == null) {
                     finalGateResult = gateResult;
                 } else if (finalGateResult != GateResult.GRANTED && gateResult != GateResult.CANT_DECIDE) {
@@ -256,7 +265,10 @@ public abstract class ResourceAccessSecurityImpl implements ResourceAccessSecuri
                 noGateMatched = false;
                 final ResourceAccessGateHandler resourceAccessGateHandler  = handlers.next();
 
-                final GateResult gateResult = resourceAccessGateHandler.getResourceAccessGate().canDelete(resource);
+                final GateResult gateResult = !resourceAccessGateHandler
+                        .getResourceAccessGate().hasDeleteRestrictions(resource.getResourceResolver()) ? GateResult.GRANTED
+                        : resourceAccessGateHandler.getResourceAccessGate()
+                                .canDelete(resource);
                 if (finalGateResult == null) {
                     finalGateResult = gateResult;
                 } else if (finalGateResult != GateResult.GRANTED && gateResult != GateResult.CANT_DECIDE) {
@@ -293,7 +305,10 @@ public abstract class ResourceAccessSecurityImpl implements ResourceAccessSecuri
                 noGateMatched = false;
                 final ResourceAccessGateHandler resourceAccessGateHandler  = handlers.next();
 
-                final GateResult gateResult = resourceAccessGateHandler.getResourceAccessGate().canExecute(resource);
+                final GateResult gateResult = !resourceAccessGateHandler
+                        .getResourceAccessGate().hasExecuteRestrictions(resource.getResourceResolver()) ? GateResult.GRANTED
+                        : resourceAccessGateHandler.getResourceAccessGate()
+                                .canExecute(resource);
                 if (finalGateResult == null) {
                     finalGateResult = gateResult;
                 } else if (finalGateResult != GateResult.GRANTED && gateResult != GateResult.CANT_DECIDE) {
