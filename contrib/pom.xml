@@ -122,6 +122,7 @@
           <module>scripting/jst</module>
           <module>scripting/python</module>
           <module>scripting/ruby</module>
+          <module>scripting/thymeleaf</module>
           <module>scripting/velocity</module>
           <module>scripting/xproc</module>
           <module>launchpad/karaf</module>
