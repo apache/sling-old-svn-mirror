@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.resourcemerger.impl;
+package org.apache.sling.resourcemerger.impl.picker;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -34,14 +34,16 @@ import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.resourcemerger.api.ResourceMergerService;
+import org.apache.sling.resourcemerger.impl.MergedResourceConstants;
 import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
 
-@Component(label = "Apache Sling Merged Resource Provider Factory",
+@Component(name="org.apache.sling.resourcemerger.impl.MergedResourceProviderFactory",
+           label = "Apache Sling Merged Resource Provider Factory",
            description = "This resource provider delivers merged resources based on the search paths.",
            metatype=true)
 @Service(value={MergedResourcePicker.class, ResourceMergerService.class})
 @Properties({
-    @Property(name=MergedResourcePicker.MERGE_ROOT, value=MergedResourceProviderFactory.DEFAULT_ROOT,
+    @Property(name=MergedResourcePicker.MERGE_ROOT, value=MergingResourcePicker.DEFAULT_ROOT,
             label="Root",
             description="The mount point of merged resources"),
     @Property(name=MergedResourcePicker.READ_ONLY, boolValue=true,
@@ -53,7 +55,7 @@ import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
  * The <code>MergedResourceProviderFactory</code> creates merged resource
  * providers and implements the <code>ResourceMergerService</code>.
  */
-public class MergedResourceProviderFactory implements MergedResourcePicker, ResourceMergerService {
+public class MergingResourcePicker implements MergedResourcePicker, ResourceMergerService {
 
     public static final String DEFAULT_ROOT = "/mnt/overlay";
 

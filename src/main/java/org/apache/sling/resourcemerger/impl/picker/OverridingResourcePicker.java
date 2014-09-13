@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.resourcemerger.impl;
+package org.apache.sling.resourcemerger.impl.picker;
 
 import java.util.ArrayList;
 import java.util.Collections;
