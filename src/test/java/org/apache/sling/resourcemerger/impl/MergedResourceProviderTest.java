@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -66,6 +67,7 @@ public class MergedResourceProviderTest {
                                             .resource(".X")
                                         .resource("/libs")
                                           .resource("deleteTest")
+                                          .resource(".mvmTest").p("a", "1").p("b", "2")
                                           .resource(".a")
                                             .resource("1").p("a", "5").p("c", "2")
                                             .resource(".2").p(ResourceResolver.PROPERTY_RESOURCE_TYPE, "libs")
@@ -227,5 +229,55 @@ public class MergedResourceProviderTest {
         } finally {
             this.resolver.revert();
         }
+    }
+
+    @Test public void testModifiableValueMap() throws PersistenceException {
+        final String path = "/merged/mvmTest";
+        try {
+            assertNotNull(this.resolver.getResource("/libs/mvmTest"));
+            assertNull(this.resolver.getResource("/apps/mvmTest"));
+
+            final Resource rsrc = this.provider.getResource(this.resolver, path);
+            assertNotNull(rsrc);
+            final ValueMap beforeVM = rsrc.getValueMap();
+            assertEquals("1", beforeVM.get("a"));
+            assertEquals("2", beforeVM.get("b"));
+
+            final ModifiableValueMap mvm = rsrc.adaptTo(ModifiableValueMap.class);
+            assertNotNull(mvm);
+            assertEquals("1", mvm.get("a"));
+            assertEquals("2", mvm.get("b"));
+
+            mvm.put("c", "3");
+            mvm.remove("a");
+
+            assertNotNull(this.resolver.getResource("/libs/mvmTest"));
+            assertNotNull(this.resolver.getResource("/apps/mvmTest"));
+
+            final Resource rsrc2 = this.provider.getResource(this.resolver, path);
+            assertNotNull(rsrc2);
+            final ValueMap afterVM = rsrc2.getValueMap();
+            assertNull(afterVM.get("a"));
+            assertEquals("2", afterVM.get("b"));
+            assertEquals("3", afterVM.get("c"));
+
+            final Resource rsrcL = this.resolver.getResource("/libs/mvmTest");
+            assertEquals("1", rsrcL.getValueMap().get("a"));
+            assertEquals("2", rsrcL.getValueMap().get("b"));
+            assertNull(rsrcL.getValueMap().get("c"));
+
+            final Resource rsrcA = this.resolver.getResource("/apps/mvmTest");
+            assertNull(rsrcA.getValueMap().get("a"));
+            assertNull(rsrcA.getValueMap().get("b"));
+            assertEquals("3", rsrcA.getValueMap().get("c"));
+            final String[] hidden = rsrcA.getValueMap().get(MergedResourceConstants.PN_HIDE_PROPERTIES, String[].class);
+            assertNotNull(hidden);
+            assertEquals(1, hidden.length);
+            assertEquals("a", hidden[0]);
+
+        } finally {
+            this.resolver.revert();
+        }
+
     }
 }
