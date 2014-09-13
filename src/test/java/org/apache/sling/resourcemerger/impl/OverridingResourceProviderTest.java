@@ -18,7 +18,11 @@
  */
 package org.apache.sling.resourcemerger.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -35,7 +39,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class OverridingResourceProviderTest {
-    
+
     private static final String SUPER_TYPE = "sling:resourceSuperType";
 
     private ResourceResolver resolver;
@@ -68,7 +72,7 @@ public class OverridingResourceProviderTest {
                     .resource("c").p("1", "c")
                     .commit();
 
-        this.provider = new MergingResourceProvider("/override", new OverridingResourcePicker());
+        this.provider = new MergingResourceProvider("/override", new OverridingResourcePicker(), true);
     }
 
     @Test

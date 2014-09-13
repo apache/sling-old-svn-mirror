@@ -24,13 +24,15 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.testing.resourceresolver.MockHelper;
 import org.apache.sling.testing.resourceresolver.MockResourceResolverFactory;
@@ -42,7 +44,7 @@ public class MergedResourceProviderTest {
 
     private ResourceResolver resolver;
 
-    private ResourceProvider provider;
+    private CRUDMergedResourceProvider provider;
 
     @Before public void setup() throws Exception {
         final MockResourceResolverFactoryOptions options = new MockResourceResolverFactoryOptions();
@@ -63,7 +65,8 @@ public class MergedResourceProviderTest {
                                                            .p("d", "1")
                                             .resource(".X")
                                         .resource("/libs")
-                                          .resource("a")
+                                          .resource("deleteTest")
+                                          .resource(".a")
                                             .resource("1").p("a", "5").p("c", "2")
                                             .resource(".2").p(ResourceResolver.PROPERTY_RESOURCE_TYPE, "libs")
                                             .resource(".3").p("a", "1").p("b", "2").p("c", "3")
@@ -72,7 +75,7 @@ public class MergedResourceProviderTest {
                                             .resource(".Z")
                                         .commit();
 
-        this.provider = new MergingResourceProvider("/merged", new MergedResourceProviderFactory());
+        this.provider = new CRUDMergedResourceProvider("/merged", new MergedResourceProviderFactory());
     }
 
     @Test public void testHideChildren() {
@@ -150,5 +153,79 @@ public class MergedResourceProviderTest {
         assertEquals("1", vm.get("d"));
         assertEquals("2", vm.get("e"));
         assertEquals("x", vm.get("b"));
+    }
+
+    @Test public void testSimpleCreateAndDelete() throws PersistenceException {
+        final String path = "/merged/a/new";
+        try {
+            final Resource rsrc = this.provider.create(this.resolver, path, Collections.singletonMap("foo", (Object)"bla"));
+            assertNotNull(rsrc);
+            assertEquals(path, rsrc.getPath());
+            final ValueMap vm = ResourceUtil.getValueMap(rsrc);
+            assertEquals("bla", vm.get("foo"));
+
+            final Resource realResource = this.resolver.getResource("/apps/a/new");
+            assertNotNull(realResource);
+            final ValueMap vmReal = ResourceUtil.getValueMap(realResource);
+            assertEquals("bla", vmReal.get("foo"));
+            assertNull(this.resolver.getResource("/libs/a/new"));
+
+            this.provider.delete(this.resolver, path);
+            assertNull(this.provider.getResource(this.resolver, path));
+            assertNull(this.resolver.getResource("/libs/a/new"));
+            assertNull(this.resolver.getResource("/apps/a/new"));
+
+        } finally {
+            this.resolver.revert();
+        }
+    }
+
+    @Test public void testDeleteByHiding() throws PersistenceException {
+        final String path = "/merged/deleteTest";
+        try {
+            assertNotNull(this.resolver.getResource("/libs/deleteTest"));
+            assertNull(this.resolver.getResource("/apps/deleteTest"));
+
+            final Resource rsrc = this.provider.getResource(this.resolver, path);
+            assertNotNull(rsrc);
+            assertEquals(path, rsrc.getPath());
+
+            this.provider.delete(this.resolver, path);
+
+            assertNull(this.provider.getResource(this.resolver, path));
+            assertNotNull(this.resolver.getResource("/libs/deleteTest"));
+            final Resource hidingRsrc = this.resolver.getResource("/apps/deleteTest");
+            assertNotNull(hidingRsrc);
+            final ValueMap vm = hidingRsrc.getValueMap();
+            assertEquals(Boolean.TRUE, vm.get(MergedResourceConstants.PN_HIDE_RESOURCE));
+
+        } finally {
+            this.resolver.revert();
+        }
+    }
+
+    @Test public void testDeleteByHidingAndCreate() throws PersistenceException {
+        final String path = "/merged/deleteTest";
+        try {
+            assertNotNull(this.resolver.getResource("/libs/deleteTest"));
+            assertNull(this.resolver.getResource("/apps/deleteTest"));
+
+            final Resource rsrc = this.provider.getResource(this.resolver, path);
+            assertNotNull(rsrc);
+            assertEquals(path, rsrc.getPath());
+
+            this.provider.delete(this.resolver, path);
+            this.provider.create(this.resolver, path, Collections.singletonMap("foo", (Object)"bla"));
+
+            assertNotNull(this.provider.getResource(this.resolver, path));
+            assertNotNull(this.resolver.getResource("/libs/deleteTest"));
+            final Resource hidingRsrc = this.resolver.getResource("/apps/deleteTest");
+            assertNotNull(hidingRsrc);
+            final ValueMap vm = hidingRsrc.getValueMap();
+            assertEquals("bla", vm.get("foo"));
+
+        } finally {
+            this.resolver.revert();
+        }
     }
 }

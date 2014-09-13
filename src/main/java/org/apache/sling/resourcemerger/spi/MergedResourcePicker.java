@@ -41,10 +41,18 @@ public interface MergedResourcePicker {
     String MERGE_ROOT = "merge.root";
 
     /**
+     * Service property name specifying whether the resources are read-only
+     * or support CRUD operations. If not specified this property defaults
+     * to <code>true</code>. The value of this property must be of type
+     * Boolean.
+     */
+    String READ_ONLY = "merge.readOnly";
+
+    /**
      * Method invoked by the MergingResourceProvider to identify the resources to be merged for a given
      * relative path. The resources returned may be either resources returned from the ResourceResolver
      * directory or an instance of NonExistingResource.
-     * 
+     *
      * @param resolver the ResourceResolver
      * @param relativePath the path relative to the merge root
      * @return an iterator of Resource objects

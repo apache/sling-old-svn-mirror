@@ -33,34 +33,61 @@ import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
 
 class MergingResourceProvider implements ResourceProvider {
 
-    private final String mergeRootPath;
+    protected final String mergeRootPath;
 
-    private final MergedResourcePicker picker;
+    protected final MergedResourcePicker picker;
 
-    MergingResourceProvider(String mergeRootPath, MergedResourcePicker picker) {
+    private final boolean readOnly;
+
+    MergingResourceProvider(final String mergeRootPath,
+            final MergedResourcePicker picker,
+            final boolean readOnly) {
         this.mergeRootPath = mergeRootPath;
         this.picker = picker;
+        this.readOnly = readOnly;
     }
 
-    private static final class ParentHidingHandler {
+    protected static final class ExcludeEntry {
 
-        private final String[] childrenToHideArray;
+        public final String name;
+        public final boolean exclude;
+
+        public ExcludeEntry(final String value) {
+            if ( value.startsWith("!!") ) {
+                this.name = value.substring(1);
+                this.exclude = false;
+            } else if ( value.startsWith("!") ) {
+                this.name = value.substring(1);
+                this.exclude = true;
+            } else {
+                this.name = value;
+                this.exclude = false;
+            }
+        }
+    }
+
+    protected static final class ParentHidingHandler {
+
+        private List<ExcludeEntry> entries;
 
         public ParentHidingHandler(final Resource parent) {
-            if (parent == null) {
-                this.childrenToHideArray = null;
-            } else {
-                final ValueMap parentProps = parent.getValueMap();
-                this.childrenToHideArray = parentProps.get(MergedResourceConstants.PN_HIDE_CHILDREN, String[].class);
+            final ValueMap parentProps = ResourceUtil.getValueMap(parent);
+            final String[] childrenToHideArray = parentProps.get(MergedResourceConstants.PN_HIDE_CHILDREN, String[].class);
+            if ( childrenToHideArray != null ) {
+                this.entries = new ArrayList<ExcludeEntry>();
+                for(final String value : childrenToHideArray) {
+                    final ExcludeEntry entry = new ExcludeEntry(value);
+                    this.entries.add(entry);
+                }
             }
         }
 
         public boolean isHidden(final String name) {
             boolean hidden = false;
-            if (this.childrenToHideArray != null) {
-                for (final String entry : childrenToHideArray) {
-                    if (entry.equals("*") || entry.equals(name)) {
-                        hidden = true;
+            if ( this.entries != null ) {
+                for(final ExcludeEntry entry : this.entries) {
+                    if ( entry.name.equals("*") || entry.name.equals(name) ) {
+                        hidden = !entry.exclude;
                         break;
                     }
                 }
@@ -69,7 +96,7 @@ class MergingResourceProvider implements ResourceProvider {
         }
     }
 
-    private static final class ResourceHolder {
+    protected static final class ResourceHolder {
         public final String name;
         public final List<Resource> resources = new ArrayList<Resource>();
         public final List<ValueMap> valueMaps = new ArrayList<ValueMap>();
@@ -104,7 +131,10 @@ class MergingResourceProvider implements ResourceProvider {
 
         if (!holder.resources.isEmpty()) {
             // create a new merged resource based on the list of mapped physical resources
-            return new MergedResource(resolver, mergeRootPath, relativePath, holder.resources, holder.valueMaps);
+            if ( this.readOnly ) {
+                return new MergedResource(resolver, mergeRootPath, relativePath, holder.resources, holder.valueMaps);
+            }
+            return new CRUDMergedResource(resolver, mergeRootPath, relativePath, holder.resources, holder.valueMaps, this.picker);
         }
         return null;
     }
@@ -115,7 +145,7 @@ class MergingResourceProvider implements ResourceProvider {
      * @param path Absolute path
      * @return Relative path
      */
-    private String getRelativePath(String path) {
+    protected String getRelativePath(String path) {
         if (path.startsWith(mergeRootPath)) {
             path = path.substring(mergeRootPath.length());
             if (path.length() == 0) {
@@ -130,7 +160,7 @@ class MergingResourceProvider implements ResourceProvider {
     /**
      * {@inheritDoc}
      */
-    public Resource getResource(ResourceResolver resolver, String path) {
+    public Resource getResource(final ResourceResolver resolver, final String path) {
         final String relativePath = getRelativePath(path);
 
         if (relativePath != null) {
@@ -143,7 +173,7 @@ class MergingResourceProvider implements ResourceProvider {
             }
 
             while (resources.hasNext()) {
-                Resource resource = resources.next();
+                final Resource resource = resources.next();
                 // check parent for hiding
                 // SLING 3521 : if parent is not readable, nothing is hidden
                 final Resource parent = resource.getParent();
