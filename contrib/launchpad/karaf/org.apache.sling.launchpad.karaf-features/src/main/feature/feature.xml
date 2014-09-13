@@ -288,6 +288,13 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.query/2.0.0</bundle>
   </feature>
   <!-- Apache Sling Scripting (contrib) -->
+  <feature name="sling-scripting-groovy" version="1.0.0">
+    <feature version="${project.version}">sling</feature>
+    <feature version="${project.version}">sling-scripting</feature>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.groovy/1.0.0</bundle>
+    <!-- bundle dependencies -->
+    <bundle dependency="true">mvn:org.codehaus.groovy/groovy-all/1.8.0</bundle>
+  </feature>
   <feature name="sling-scripting-thymeleaf" version="0.0.2">
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-scripting</feature>
