@@ -31,18 +31,30 @@ class MergingResourceProviderFactory implements ResourceProviderFactory {
 
     private final MergedResourcePicker picker;
 
-    MergingResourceProviderFactory(String mergeRootPath, MergedResourcePicker picker) {
+    private final boolean readOnly;
+
+    MergingResourceProviderFactory(final String mergeRootPath,
+            final MergedResourcePicker picker,
+            final boolean readOnly) {
         this.mergeRootPath = mergeRootPath;
         this.picker = picker;
+        this.readOnly = readOnly;
     }
 
-    public ResourceProvider getResourceProvider(Map<String, Object> authenticationInfo) throws LoginException {
-        return new MergingResourceProvider(mergeRootPath, picker);
+    public ResourceProvider getResourceProvider(final Map<String, Object> authenticationInfo)
+    throws LoginException {
+        if ( this.readOnly ) {
+            return new MergingResourceProvider(mergeRootPath, picker, this.readOnly);
+        }
+        return new CRUDMergedResourceProvider(mergeRootPath, picker);
     }
 
-    public ResourceProvider getAdministrativeResourceProvider(Map<String, Object> authenticationInfo)
-            throws LoginException {
-        return new MergingResourceProvider(mergeRootPath, picker);
+    public ResourceProvider getAdministrativeResourceProvider(final Map<String, Object> authenticationInfo)
+    throws LoginException {
+        if ( this.readOnly ) {
+            return new MergingResourceProvider(mergeRootPath, picker, this.readOnly);
+        }
+        return new CRUDMergedResourceProvider(mergeRootPath, picker);
     }
 
 }

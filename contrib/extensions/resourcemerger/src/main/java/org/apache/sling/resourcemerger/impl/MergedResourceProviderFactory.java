@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.NonExistingResource;
@@ -38,10 +39,16 @@ import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
 @Component(label = "Apache Sling Merged Resource Provider Factory",
            description = "This resource provider delivers merged resources based on the search paths.",
            metatype=true)
-@Service
-@Property(name=MergedResourcePicker.MERGE_ROOT, value=MergedResourceProviderFactory.DEFAULT_ROOT,
-    label="Root",
-    description="The mount point of merged resources")
+@Service(value={MergedResourcePicker.class, ResourceMergerService.class})
+@Properties({
+    @Property(name=MergedResourcePicker.MERGE_ROOT, value=MergedResourceProviderFactory.DEFAULT_ROOT,
+            label="Root",
+            description="The mount point of merged resources"),
+    @Property(name=MergedResourcePicker.READ_ONLY, boolValue=true,
+    label="Read Only",
+    description="Specifies if the resources are read-only or can be modified.")
+
+})
 /**
  * The <code>MergedResourceProviderFactory</code> creates merged resource
  * providers and implements the <code>ResourceMergerService</code>.
@@ -52,13 +59,13 @@ public class MergedResourceProviderFactory implements MergedResourcePicker, Reso
 
     private String mergeRootPath;
 
-    public Iterator<Resource> pickResources(ResourceResolver resolver, String relativePath) {
-        List<Resource> resources = new ArrayList<Resource>();
+    public Iterator<Resource> pickResources(final ResourceResolver resolver, final String relativePath) {
+        final List<Resource> resources = new ArrayList<Resource>();
         final String[] searchPaths = resolver.getSearchPath();
         for (int i = searchPaths.length - 1; i >= 0; i--) {
             final String basePath = searchPaths[i];
             final String fullPath = basePath + relativePath;
-            Resource resource = resolver.getResource(fullPath);
+            final Resource resource = resolver.getResource(fullPath);
             if (resource != null) {
                 resources.add(resource);
             } else {

@@ -63,7 +63,8 @@ public class MergedResourcePickerWhiteboard implements ServiceTrackerCustomizer 
         if ( picker != null ) {
             final String mergeRoot = PropertiesUtil.toString(reference.getProperty(MergedResourcePicker.MERGE_ROOT), null);
             if (mergeRoot != null) {
-                final ResourceProviderFactory providerFactory = new MergingResourceProviderFactory(mergeRoot, picker);
+                final ResourceProviderFactory providerFactory = new MergingResourceProviderFactory(mergeRoot, picker,
+                        PropertiesUtil.toBoolean(reference.getProperty(MergedResourcePicker.READ_ONLY), true));
                 final Dictionary<Object, Object> props = new Hashtable<Object, Object>();
                 props.put(ResourceProvider.ROOTS, mergeRoot);
                 props.put(ResourceProvider.OWNS_ROOTS, true);
