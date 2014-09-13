@@ -35,6 +35,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.resourcemerger.impl.picker.MergingResourcePicker;
 import org.apache.sling.testing.resourceresolver.MockHelper;
 import org.apache.sling.testing.resourceresolver.MockResourceResolverFactory;
 import org.apache.sling.testing.resourceresolver.MockResourceResolverFactoryOptions;
@@ -45,7 +46,7 @@ public class MergedResourceProviderTest {
 
     private ResourceResolver resolver;
 
-    private CRUDMergedResourceProvider provider;
+    private CRUDMergingResourceProvider provider;
 
     @Before public void setup() throws Exception {
         final MockResourceResolverFactoryOptions options = new MockResourceResolverFactoryOptions();
@@ -77,7 +78,7 @@ public class MergedResourceProviderTest {
                                             .resource(".Z")
                                         .commit();
 
-        this.provider = new CRUDMergedResourceProvider("/merged", new MergedResourceProviderFactory());
+        this.provider = new CRUDMergingResourceProvider("/merged", new MergingResourcePicker());
     }
 
     @Test public void testHideChildren() {

@@ -46,7 +46,7 @@ class MergingResourceProviderFactory implements ResourceProviderFactory {
         if ( this.readOnly ) {
             return new MergingResourceProvider(mergeRootPath, picker, this.readOnly);
         }
-        return new CRUDMergedResourceProvider(mergeRootPath, picker);
+        return new CRUDMergingResourceProvider(mergeRootPath, picker);
     }
 
     public ResourceProvider getAdministrativeResourceProvider(final Map<String, Object> authenticationInfo)
@@ -54,7 +54,7 @@ class MergingResourceProviderFactory implements ResourceProviderFactory {
         if ( this.readOnly ) {
             return new MergingResourceProvider(mergeRootPath, picker, this.readOnly);
         }
-        return new CRUDMergedResourceProvider(mergeRootPath, picker);
+        return new CRUDMergingResourceProvider(mergeRootPath, picker);
     }
 
 }

@@ -21,13 +21,14 @@ package org.apache.sling.resourcemerger.spi;
 import java.util.Iterator;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.api.resource.ResourceResolver;
 
 import aQute.bnd.annotation.ConsumerType;
 
 /**
  * Service interface which can be implemented to define an algorithm used to pick
- * resources to be merged. For each picker service, a separate ResourceProviderFactory
+ * resources to be merged. For each picker service, a separate {@link ResourceProviderFactory}
  * will be exposed at the MERGE_ROOT of the picker.
  */
 @ConsumerType
@@ -36,7 +37,8 @@ public interface MergedResourcePicker {
     /**
      * Service property name identifying the root path for the merged resources.
      * By convention, starts, with /mnt, although this is by no means required.
-     * The value of this service property must not end in a slash.
+     * The value of this service property must be of type String and must not end
+     * in a slash.
      */
     String MERGE_ROOT = "merge.root";
 

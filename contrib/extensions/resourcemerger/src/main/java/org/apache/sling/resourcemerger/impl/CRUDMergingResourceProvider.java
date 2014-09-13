@@ -33,11 +33,11 @@ import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
 /**
  * This is a modifiable resource provider.
  */
-public class CRUDMergedResourceProvider
+public class CRUDMergingResourceProvider
     extends MergingResourceProvider
     implements ModifyingResourceProvider {
 
-    public CRUDMergedResourceProvider(final String mergeRootPath,
+    public CRUDMergingResourceProvider(final String mergeRootPath,
             final MergedResourcePicker picker) {
         super(mergeRootPath, picker, false);
     }
