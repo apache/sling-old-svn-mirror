@@ -151,9 +151,9 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
                 if ( nextResourceIter != null ) {
                     while ( nextResourceIter.hasNext() && result == null ) {
                         result = nextResourceIter.next();
-                    }
-                    if ( actProviderHandler != null ) {
-                        result = actProviderHandler.getReadableResource(ctx, result);
+                        if ( actProviderHandler != null ) {
+                            result = actProviderHandler.getReadableResource(ctx, result);
+                        }
                     }
                     if ( result == null ) {
                         result = seek();
