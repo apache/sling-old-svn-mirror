@@ -44,4 +44,39 @@ public class UnsecuredProviderResourceAccessSecurityTest extends ResourceAccessS
 
         testRead(getTestUsername(), getTestPassword(), path, 404);
     }
+    
+    @Test
+    public void testReadOnlyApplicationAccessGatePresent() throws Exception {
+        String path = "/test/unsecured-provider/read/app/appgate1-allowread/test.json";
+
+        testRead(getTestUsername(), getTestPassword(), path, 200);
+    }
+    
+    @Test
+    public void testCantReadOnlyApplicationAccessGatePresent() throws Exception {
+        String path = "/test/unsecured-provider/read/app/appgate1-denyread/test.json";
+
+        testRead(getTestUsername(), getTestPassword(), path, 404);
+    }
+    
+    @Test
+    public void testServiceRanking() throws Exception {
+        String path1 = "/test/unsecured-provider/read/app/appgate1-allowread_finalappgate1ranking1000-denyread/test.json";
+        String path2 = "/test/unsecured-provider/read/app/appgate1-allowread_finalappgate1ranking100-denyread/test.json";
+        String path3 = "/test/unsecured-provider/read/app/finalappgate1-allowread_finalappgate1ranking1000-denyread/test.json";
+        String path4 = "/test/unsecured-provider/read/app/appgate1ranking1000-allowread_finalappgate1ranking100-denyread/test.json";
+        String path5 = "/test/unsecured-provider/read/app/appgate1ranking100-allowread_finalappgate1-denyread/test.json";
+        String path6 = "/test/unsecured-provider/read/app/appgate1-allowread_appgate1ranking1000-denyread/test.json";
+        String path7 = "/test/unsecured-provider/read/app/appgate1ranking100-allowread_appgate1ranking1000-denyread/test.json";
+
+        testRead(getTestUsername(), getTestPassword(), path1, 404);
+        testRead(getTestUsername(), getTestPassword(), path2, 404);
+        testRead(getTestUsername(), getTestPassword(), path3, 404);
+        testRead(getTestUsername(), getTestPassword(), path4, 200);
+        testRead(getTestUsername(), getTestPassword(), path5, 200);
+        testRead(getTestUsername(), getTestPassword(), path6, 200);
+        testRead(getTestUsername(), getTestPassword(), path7, 200);
+    }
+    
+    
 }

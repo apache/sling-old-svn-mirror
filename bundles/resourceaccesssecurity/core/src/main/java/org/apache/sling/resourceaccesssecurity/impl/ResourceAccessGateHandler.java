@@ -110,7 +110,8 @@ public class ResourceAccessGateHandler implements Comparable<ResourceAccessGateH
 
     @Override
     public int compareTo(final ResourceAccessGateHandler o) {
-        return this.reference.compareTo(o.reference);
+        // services with higher service ranking should be the first in a list
+        return -this.reference.compareTo(o.reference);
     }
 
     @Override
