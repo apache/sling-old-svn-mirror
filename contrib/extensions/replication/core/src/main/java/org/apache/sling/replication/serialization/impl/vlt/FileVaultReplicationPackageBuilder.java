@@ -57,9 +57,8 @@ import java.util.Properties;
 public class FileVaultReplicationPackageBuilder extends AbstractReplicationPackageBuilder implements
         ReplicationPackageBuilder {
 
-
-
     private final Logger log = LoggerFactory.getLogger(getClass());
+
     private SlingRepository repository;
 
     private Packaging packaging;
