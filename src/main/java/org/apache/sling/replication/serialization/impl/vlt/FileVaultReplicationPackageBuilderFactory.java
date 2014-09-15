@@ -18,34 +18,25 @@
  */
 package org.apache.sling.replication.serialization.impl.vlt;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Map;
-import java.util.Properties;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.felix.scr.annotations.*;
-import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
-import org.apache.jackrabbit.vault.fs.config.DefaultMetaInf;
-import org.apache.jackrabbit.vault.fs.config.DefaultWorkspaceFilter;
-import org.apache.jackrabbit.vault.fs.io.ImportOptions;
-import org.apache.jackrabbit.vault.packaging.ExportOptions;
-import org.apache.jackrabbit.vault.packaging.JcrPackage;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
-import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
-import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
-import org.apache.sling.replication.serialization.impl.AbstractReplicationPackageBuilder;
-import org.osgi.service.component.ComponentContext;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,14 +49,18 @@ import org.slf4j.LoggerFactory;
 @Component(metatype = true,
         label = "FileVault based Replication Package Builder",
         description = "OSGi configuration based PackageBuilder service factory",
-        name = FileVaultReplicationPackageBuilderFactory.SERVICE_PID)
-@Service(value = ReplicationPackageBuilder.class)
-@Property(name = "name", value = FileVaultReplicationPackageBuilderFactory.NAME)
-public class FileVaultReplicationPackageBuilderFactory  implements ReplicationPackageBuilder {
+        name = FileVaultReplicationPackageBuilderFactory.SERVICE_PID,
+        configurationFactory = true,
+        specVersion = "1.1",
+        policy = ConfigurationPolicy.REQUIRE)
+public class FileVaultReplicationPackageBuilderFactory {
+
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     static final String SERVICE_PID = "org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilder";
 
-    public static final String NAME = "vlt";
+    @Property
+    public static final String NAME = "name";
 
     @Property
     public static final String USERNAME = "username";
@@ -79,16 +74,43 @@ public class FileVaultReplicationPackageBuilderFactory  implements ReplicationPa
     @Reference
     private Packaging packaging;
 
-    private FileVaultReplicationPackageBuilder packageBuilder;
+    private ServiceRegistration builderReg;
 
     @Activate
-    @Modified
-    protected void activate(Map<String, Object> config) {
-        packageBuilder = getInstance(config, repository, packaging);
+    protected void activate(BundleContext context, Map<String, Object> config) {
+        log.info("activating FileVault package builder with config {}", config);
+
+        String name = PropertiesUtil.toString(config.get(NAME), "").trim();
+
+        String username = PropertiesUtil.toString(config.get(USERNAME), "").trim();
+        String password = PropertiesUtil.toString(config.get(PASSWORD), "").trim();
+        if (name.length() == 0) {
+            throw new IllegalArgumentException("name must not be empty");
+        }
+        if (username.length() == 0 || password.length() == 0) {
+            throw new IllegalArgumentException("Username and password cannot be empty");
+        }
+        Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(NAME, name);
+        props.put(USERNAME, username);
+        props.put(PASSWORD, password);
+
+        ReplicationPackageBuilder replicationPackageBuilder = new FileVaultReplicationPackageBuilder(name, username, password, repository, packaging);
+
+        builderReg = context.registerService(ReplicationPackageBuilder.class.getName(), replicationPackageBuilder, props);
+    }
+
+    @Deactivate
+    protected void deactivate() throws Exception {
+        log.info("deactivating FileVault package builder");
+        if (builderReg != null) {
+            builderReg.unregister();
+            builderReg = null;
+        }
     }
 
     public static FileVaultReplicationPackageBuilder getInstance(Map<String, Object> config,
-                                                   SlingRepository repository, Packaging packaging) {
+                                                                 SlingRepository repository, Packaging packaging) {
         String username = PropertiesUtil.toString(config.get(USERNAME), "").trim();
         String password = PropertiesUtil.toString(config.get(PASSWORD), "").trim();
         if (username.length() == 0 || password.length() == 0) {
@@ -98,19 +120,5 @@ public class FileVaultReplicationPackageBuilderFactory  implements ReplicationPa
 
     }
 
-    public ReplicationPackage createPackage(ReplicationRequest request) throws ReplicationPackageBuildingException {
-        return packageBuilder.createPackage(request);
-    }
 
-    public ReplicationPackage readPackage(InputStream stream) throws ReplicationPackageReadingException {
-        return packageBuilder.readPackage(stream);
-    }
-
-    public ReplicationPackage getPackage(String id) {
-        return packageBuilder.getPackage(id);
-    }
-
-    public boolean installPackage(ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {
-        return packageBuilder.installPackage(replicationPackage);
-    }
 }
