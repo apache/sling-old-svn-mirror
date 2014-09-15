@@ -18,7 +18,7 @@
  */
 package org.apache.sling.resourcemerger.spi;
 
-import java.util.Iterator;
+import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProviderFactory;
@@ -57,8 +57,7 @@ public interface MergedResourcePicker {
      *
      * @param resolver the ResourceResolver
      * @param relativePath the path relative to the merge root
-     * @return an iterator of Resource objects
+     * @return a List of Resource objects
      */
-    Iterator<Resource> pickResources(ResourceResolver resolver, String relativePath);
-
+    List<Resource> pickResources(ResourceResolver resolver, String relativePath);
 }
