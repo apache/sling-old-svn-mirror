@@ -1,6 +1,6 @@
 {
     "jcr:primaryType" : "sling:OsgiConfig",
-    "name": "triggers/rule/content-event",
+    "name": "content-event",
 
     "ReplicationRule.target" : "(name=trigger)",
     "ruleString" : "trigger on path: /content/usergenerated"
