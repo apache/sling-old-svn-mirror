@@ -159,7 +159,6 @@
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/JUnitCategoriesTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/JspForwardTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/LaunchpadConfigInstallerTest.*</exclude>
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/ServerSideScriptsTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/ServletResolverConfigTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/resolution/WarSelectorServletTest.*</exclude>
               </excludes>
