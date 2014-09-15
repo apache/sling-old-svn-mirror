@@ -142,7 +142,6 @@
               <excludes>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/post/PostServletPrivilegesUpdateTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/auth/AuthenticationResponseCodeTest.*</exclude>
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/scripting/SlingJSPTaglibTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/userManager/CreateUserTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/userManager/UpdateUserTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/userManager/UserPrivilegesInfoTest.*</exclude>
@@ -153,20 +152,14 @@
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/DavExDisabledAnonAccessTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/DavExIntegrationTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/FiltersTest.*</exclude>
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/GroovySlingResourceTypeRenderingTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/InitialContentTest.*</exclude>
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/JSONGroovyBuilderTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/JUnitCategoriesTest.*</exclude>
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/JsonRenderingTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/JspForwardTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/LaunchpadConfigInstallerTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/ResourceResolverProxyTest.*</exclude>
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/ScriptBindingsValuesProviderTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/ServerSideScriptsTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/ServletResolverConfigTest.*</exclude>
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/SlingWebDavServletTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/WriteableResourcesProxyTest.*</exclude>
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/login/RedirectOnLoginErrorTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/resolution/WarSelectorServletTest.*</exclude>
               </excludes>
               <forkMode>always</forkMode>

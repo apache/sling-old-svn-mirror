@@ -100,7 +100,7 @@ public class SlingLaunchpadConfiguration {
             addBootFeature("sling-auth-form"),
             addBootFeature("sling-auth-openid"),
             addBootFeature("sling-auth-selector"),
-            addBootFeature("sling-extension-adapter"),
+            addBootFeature("sling-scripting-groovy"),
             // misc (legacy, snapshots, ...) stuff
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.servlets.compat").version("1.0.3-SNAPSHOT"),
             // test support
