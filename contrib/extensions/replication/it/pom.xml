@@ -267,7 +267,7 @@
                         <sling.additional.bundle.2>httpclient-osgi</sling.additional.bundle.2>
                         <sling.additional.bundle.3>org.apache.sling.hc.core</sling.additional.bundle.3>
                         <sling.additional.bundle.4>org.apache.jackrabbit.vault</sling.additional.bundle.4>
-                        <sling.additional.bundle.5>org.apache.sling.replication-</sling.additional.bundle.5>
+                        <sling.additional.bundle.5>org.apache.sling.replication.core</sling.additional.bundle.5>
                         <sling.additional.bundle.7>${project.build.finalName}.jar</sling.additional.bundle.7>
                     </systemPropertyVariables>
                 </configuration>
@@ -348,7 +348,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.8.2</version>
+            <version>4.11</version>
             <scope>test</scope>
         </dependency>
         <dependency>

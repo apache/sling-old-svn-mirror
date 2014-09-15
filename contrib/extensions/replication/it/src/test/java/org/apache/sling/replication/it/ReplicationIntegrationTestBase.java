@@ -22,7 +22,12 @@ import org.apache.sling.testing.tools.sling.SlingClient;
 import org.apache.sling.testing.tools.sling.SlingInstance;
 import org.apache.sling.testing.tools.sling.SlingInstanceManager;
 
-import static org.apache.sling.replication.it.ReplicationUtils.*;
+import static org.apache.sling.replication.it.ReplicationUtils.agentConfigUrl;
+import static org.apache.sling.replication.it.ReplicationUtils.agentUrl;
+import static org.apache.sling.replication.it.ReplicationUtils.assertExists;
+import static org.apache.sling.replication.it.ReplicationUtils.exporterUrl;
+import static org.apache.sling.replication.it.ReplicationUtils.importerUrl;
+import static org.apache.sling.replication.it.ReplicationUtils.setAgentProperties;
 
 /**
  * Integration test base class for replication
@@ -44,6 +49,21 @@ public abstract class ReplicationIntegrationTestBase {
         publishClient = new SlingClient(publish.getServerBaseUrl(), publish.getServerUsername(), publish.getServerPassword());
 
         try {
+            assertExists(authorClient, agentConfigUrl("publish"));
+            assertExists(authorClient, agentConfigUrl("publish-reverse"));
+
+            // hack until SLING-3618 is solved
+            if (authorClient.exists("/var/discovery")) {
+                authorClient.delete("/var/discovery");
+            }
+            authorClient.mkdir("/var/discovery");
+            if (publishClient.exists("/var/discovery")) {
+                publishClient.delete("/var/discovery");
+            }
+            publishClient.mkdir("/var/discovery");
+
+            assertExists(authorClient, agentConfigUrl("publish"));
+
             // change the url for publish agent and wait for it to start
             String remoteImporterUrl = publish.getServerBaseUrl() + importerUrl("default");
 
@@ -54,16 +74,15 @@ public abstract class ReplicationIntegrationTestBase {
                     "packageImporter", "endpoints[0]=" + remoteImporterUrl,
                     "packageImporter", "authenticationFactory/type=service",
                     "packageImporter", "authenticationFactory/name=user",
-
                     "packageImporter", "packageBuilder/type=vlt",
                     "packageImporter", "packageBuilder/username=admin",
                     "packageImporter", "packageBuilder/password=admin");
 
 
+            assertExists(authorClient, agentUrl("publish"));
 
-
+            assertExists(authorClient, agentConfigUrl("publish-reverse"));
             String remoteExporterUrl = publish.getServerBaseUrl() + exporterUrl("reverse");
-
             setAgentProperties(author, "publish-reverse",
                     "packageExporter", "type=remote",
                     "packageExporter", "authentication.properties[user]=admin",
@@ -71,20 +90,14 @@ public abstract class ReplicationIntegrationTestBase {
                     "packageExporter", "endpoints[0]=" + remoteExporterUrl,
                     "packageExporter", "authenticationFactory/type=service",
                     "packageExporter", "authenticationFactory/name=user",
-
                     "packageExporter", "packageBuilder/type=vlt",
                     "packageExporter", "packageBuilder/username=admin",
                     "packageExporter", "packageBuilder/password=admin");
-
-
-            assertExists(authorClient, agentUrl("publish"));
             assertExists(authorClient, agentUrl("publish-reverse"));
 
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-
 
 
     }
