@@ -57,7 +57,7 @@ public class FileVaultReplicationPackageBuilderFactory {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    static final String SERVICE_PID = "org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilder";
+    static final String SERVICE_PID = "org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilderFactory";
 
     @Property
     public static final String NAME = "name";
