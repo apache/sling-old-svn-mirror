@@ -52,7 +52,7 @@ public class MergedResourceProviderTest {
         final MockResourceResolverFactoryOptions options = new MockResourceResolverFactoryOptions();
         options.setSearchPaths(new String[] {"/apps/", "/libs/"});
         final ResourceResolverFactory factory = new MockResourceResolverFactory(options);
-        this.resolver = factory.getAdministrativeResourceResolver(null);
+        this.resolver = factory.getResourceResolver(null);
         MockHelper.create(this.resolver).resource("/apps")
                                           .resource("a").p(MergedResourceConstants.PN_HIDE_CHILDREN, new String[] {"Z", "x", "y"})
                                             .resource("1").p("a", "1").p("b", "2")

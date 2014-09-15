@@ -19,7 +19,6 @@
 package org.apache.sling.resourcemerger.impl.picker;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -61,7 +60,7 @@ public class MergingResourcePicker implements MergedResourcePicker, ResourceMerg
 
     private String mergeRootPath;
 
-    public Iterator<Resource> pickResources(final ResourceResolver resolver, final String relativePath) {
+    public List<Resource> pickResources(final ResourceResolver resolver, final String relativePath) {
         final List<Resource> resources = new ArrayList<Resource>();
         final String[] searchPaths = resolver.getSearchPath();
         for (int i = searchPaths.length - 1; i >= 0; i--) {
@@ -74,7 +73,7 @@ public class MergingResourcePicker implements MergedResourcePicker, ResourceMerg
                 resources.add(new NonExistingResource(resolver, fullPath));
             }
         }
-        return resources.iterator();
+        return resources;
     }
 
     /**

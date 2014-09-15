@@ -70,7 +70,7 @@ public class CRUDMergedResource extends MergedResource {
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType adaptTo(final Class<AdapterType> type) {
         if (type == ModifiableValueMap.class) {
-            final Iterator<Resource> iter = this.picker.pickResources(this.getResourceResolver(), this.relativePath);
+            final Iterator<Resource> iter = this.picker.pickResources(this.getResourceResolver(), this.relativePath).iterator();
             Resource highestRsrc = null;
             while ( iter.hasNext() ) {
                 highestRsrc = iter.next();

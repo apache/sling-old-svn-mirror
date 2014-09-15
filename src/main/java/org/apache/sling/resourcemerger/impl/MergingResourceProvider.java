@@ -166,7 +166,7 @@ class MergingResourceProvider implements ResourceProvider {
         if (relativePath != null) {
             final ResourceHolder holder = new ResourceHolder(ResourceUtil.getName(path));
 
-            final Iterator<Resource> resources = picker.pickResources(resolver, relativePath);
+            final Iterator<Resource> resources = picker.pickResources(resolver, relativePath).iterator();
 
             if (!resources.hasNext()) {
                 return null;
@@ -201,7 +201,7 @@ class MergingResourceProvider implements ResourceProvider {
         if (relativePath != null) {
             final List<ResourceHolder> candidates = new ArrayList<ResourceHolder>();
 
-            final Iterator<Resource> resources = picker.pickResources(resolver, relativePath);
+            final Iterator<Resource> resources = picker.pickResources(resolver, relativePath).iterator();
 
             while (resources.hasNext()) {
                 Resource parentResource = resources.next();

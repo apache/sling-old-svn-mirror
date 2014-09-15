@@ -20,7 +20,6 @@ package org.apache.sling.resourcemerger.impl.picker;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.felix.scr.annotations.Component;
@@ -39,10 +38,10 @@ import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
 @Property(name = MergedResourcePicker.MERGE_ROOT, value = OverridingResourcePicker.DEFAULT_ROOT,
     label = "Root", description = "Root path at which merged resources will be available.")
 public class OverridingResourcePicker implements MergedResourcePicker {
-    
+
     public static final String DEFAULT_ROOT = "/mnt/override";
 
-    public Iterator<Resource> pickResources(ResourceResolver resolver, String relativePath) {
+    public List<Resource> pickResources(ResourceResolver resolver, String relativePath) {
         String absPath = "/" + relativePath;
         final List<Resource> resources = new ArrayList<Resource>();
 
@@ -77,7 +76,7 @@ public class OverridingResourcePicker implements MergedResourcePicker {
 
             Collections.reverse(resources);
         }
-        return resources.iterator();
+        return resources;
     }
 
     private Resource findInheritanceRoot(Resource target) {

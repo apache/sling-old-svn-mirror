@@ -57,7 +57,7 @@ public class CRUDMergingResourceProvider
         holder.count = 0;
 
         // Loop over resources
-        final Iterator<Resource> iter = this.picker.pickResources(resolver, relativePath);
+        final Iterator<Resource> iter = this.picker.pickResources(resolver, relativePath).iterator();
         while ( iter.hasNext() ) {
             final Resource rsrc = iter.next();
             holder.count++;
