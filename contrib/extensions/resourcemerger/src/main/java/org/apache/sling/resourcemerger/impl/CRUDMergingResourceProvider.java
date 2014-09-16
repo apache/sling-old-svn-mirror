@@ -63,8 +63,9 @@ public class CRUDMergingResourceProvider
             holder.count++;
             if ( holder.count == 1 ) {
                 holder.lowestResourcePath = rsrc.getPath();
+            } else if ( holder.count == 2 ) {
+                holder.highestResourcePath = rsrc.getPath();
             }
-            holder.highestResourcePath = rsrc.getPath();
             if ( !ResourceUtil.isNonExistingResource(rsrc) ) {
                 // check parent for hiding
                 final Resource parent = rsrc.getParent();
@@ -94,7 +95,7 @@ public class CRUDMergingResourceProvider
         if ( mountResource != null ) {
             throw new PersistenceException("Resource at " + path + " already exists.", null, path, null);
         }
-        // creating of the root mount resource is not supported
+        // creation of the root mount resource is not supported
         final String relativePath = getRelativePath(path);
         if ( relativePath == null || relativePath.length() == 0 ) {
             throw new PersistenceException("Resource at " + path + " can't be created.", null, path, null);
