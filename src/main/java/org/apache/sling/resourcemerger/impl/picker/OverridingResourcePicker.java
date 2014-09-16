@@ -31,7 +31,8 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
 
-@Component(label = "Apache Sling Overriding Resource Picker",
+@Component(name = "org.apache.sling.resourcemerger.picker.overriding",
+        label = "Apache Sling Overriding Resource Picker",
     description = "This resource picker delivers merged resources based on the resource type hierarchy.",
     metatype = true, policy = ConfigurationPolicy.REQUIRE)
 @Service
