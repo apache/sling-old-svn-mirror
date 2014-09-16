@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.sling.jcr.registration</artifactId>
     <packaging>bundle</packaging>
-    <version>1.0.2</version>
+    <version>1.0.3-SNAPSHOT</version>
 
     <name>Apache Sling JCR Repository Registration</name>
     <description>
@@ -36,9 +36,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.jcr.registration-1.0.2</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.jcr.registration-1.0.2</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.jcr.registration-1.0.2</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/registration</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/registration</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/jcr/registration</url>
     </scm>
 
     <build>
