@@ -18,10 +18,12 @@
  */
 package org.apache.sling.testing.resourceresolver;
 
+import java.io.InputStream;
 import java.util.Map;
 
 import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.ModifiableValueMap;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
@@ -39,6 +41,10 @@ public class MockResource extends AbstractResource {
     private final ResourceResolver resolver;
 
     static final String JCR_PRIMARYTYPE = "jcr:primaryType";
+    static final String JCR_CONTENT = "jcr:content";
+    static final String JCR_DATA = "jcr:data";
+    static final String NT_RESOURCE = "nt:resource";
+    static final String NT_FILE = "nt:file";
     
     public MockResource(final String path,
             final Map<String, Object> props,
@@ -83,11 +89,36 @@ public class MockResource extends AbstractResource {
     public <AdapterType> AdapterType adaptTo(final Class<AdapterType> type) {
         if ( type == ValueMap.class ) {
             return (AdapterType)new ValueMapDecorator(this.props);
-        } else if ( type == ModifiableValueMap.class ) {
+        }
+        else if ( type == ModifiableValueMap.class ) {
             ((MockResourceResolver)this.resolver).addChanged(this.path, this.props);
             return (AdapterType)new ModifiableValueMapDecorator(this.props);
         }
+        else if ( type == InputStream.class ) {
+            InputStream is = getFileResourceInputStream();
+            if (is!=null) {
+                return (AdapterType)is;
+            }
+        }
         return super.adaptTo(type);
+    }
+    
+    /**
+     * Emulate feature of JCR resource implementation that allows adapting to InputStream for nt:file and nt:resource nodes.
+     * @return InputStream or null if adaption not possible.
+     */
+    private InputStream getFileResourceInputStream() {
+        String resourceType = getResourceType();
+        if (NT_RESOURCE.equals(resourceType)) {
+            return getValueMap().get(JCR_DATA, InputStream.class);
+        }
+        else if (NT_FILE.equals(resourceType)) {
+            Resource contentResource = getChild(JCR_CONTENT);
+            if (contentResource != null) {
+                return contentResource.getValueMap().get(JCR_DATA, InputStream.class);
+            }
+        }
+        return null;
     }
 
     @Override
