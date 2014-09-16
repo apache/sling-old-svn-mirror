@@ -36,6 +36,13 @@
   <description>Launchpad Integration Tests for Apache Sling Launchpad Karaf</description>
 
   <dependencies>
+    <!-- javax -->
+    <dependency>
+      <groupId>javax.jcr</groupId>
+      <artifactId>jcr</artifactId>
+      <version>2.0</version>
+      <scope>test</scope>
+    </dependency>
     <!-- logging -->
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -145,15 +152,8 @@
               <excludes>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/post/PostServletPrivilegesUpdateTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/auth/AuthenticationResponseCodeTest.*</exclude>
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/userManager/CreateUserTest.*</exclude>
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/userManager/UpdateUserTest.*</exclude>
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/userManager/UserPrivilegesInfoTest.*</exclude>
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/accessManager/AccessPrivilegesInfoTest.*</exclude>
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/accessManager/GetAclTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/repository/OakRepositoryNameTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/ContentLoaderMiscPropertyTest.*</exclude>
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/DavExDisabledAnonAccessTest.*</exclude>
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/DavExIntegrationTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/FiltersTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/InitialContentTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/JUnitCategoriesTest.*</exclude>
