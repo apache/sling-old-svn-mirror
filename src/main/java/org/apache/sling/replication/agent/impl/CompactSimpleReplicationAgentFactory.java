@@ -18,9 +18,17 @@
  */
 package org.apache.sling.replication.agent.impl;
 
-import java.util.*;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Map;
 
-import org.apache.felix.scr.annotations.*;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.settings.SlingSettingsService;
@@ -42,8 +50,8 @@ import org.slf4j.LoggerFactory;
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE
 )
-
 public class CompactSimpleReplicationAgentFactory implements ReplicationComponentListener {
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     static final String SERVICE_PID = "org.apache.sling.replication.agent.impl.CompactSimpleReplicationAgentFactory";
@@ -67,29 +75,29 @@ public class CompactSimpleReplicationAgentFactory implements ReplicationComponen
     public static final String PACKAGE_EXPORTER = "packageExporter";
 
     @Property(label = "Package Importer", cardinality = 100)
-    public static final String PACKAGE_IMPORTER= "packageImporter";
+    public static final String PACKAGE_IMPORTER = "packageImporter";
 
     @Property(label = "Queue Provider", cardinality = 100)
-    public static final String QUEUE_PROVIDER= "queueProvider";
+    public static final String QUEUE_PROVIDER = "queueProvider";
 
     @Property(label = "Queue Distribution Strategy", cardinality = 100)
-    public static final String QUEUE_DISTRIBUTION_STRATEGY= "queueDistributionStrategy";
+    public static final String QUEUE_DISTRIBUTION_STRATEGY = "queueDistributionStrategy";
 
     @Reference
     private SlingSettingsService settingsService;
 
-
     @Reference(target = "(name=default)")
-    ReplicationComponentProvider componentProvider;
+    private ReplicationComponentProvider componentProvider;
 
     private ServiceRegistration agentReg;
+    private ServiceRegistration listenerReg;
 
-    BundleContext savedContext;
-    Map<String, Object> savedConfig;
-
+    private BundleContext savedContext;
+    private Map<String, Object> savedConfig;
 
     @Activate
     public void activate(BundleContext context, Map<String, Object> config) throws Exception {
+        log.debug("activating agent with config {}", config);
 
         savedContext = context;
         savedConfig = config;
@@ -98,34 +106,39 @@ public class CompactSimpleReplicationAgentFactory implements ReplicationComponen
         Dictionary<String, Object> props = new Hashtable<String, Object>();
 
         boolean enabled = PropertiesUtil.toBoolean(config.get(ENABLED), true);
+        String name = PropertiesUtil.toString(config.get(NAME), null);
 
         if (enabled) {
             props.put(ENABLED, true);
+            props.put(NAME, name);
 
+            if (listenerReg == null) {
+                listenerReg = context.registerService(ReplicationComponentListener.class.getName(), this, props);
+            }
 
-            Map<String, Object> properties = new HashMap<String, Object>();
-            properties.putAll(config);
-            SimpleReplicationAgent agent = null;
+            if (agentReg == null) {
+                Map<String, Object> properties = new HashMap<String, Object>();
+                properties.putAll(config);
 
+                properties.put("type", "simple");
+                SimpleReplicationAgent agent = (SimpleReplicationAgent) componentProvider.createComponent(ReplicationAgent.class, properties);
 
-            properties.put("type","simple");
-            agent = (SimpleReplicationAgent) componentProvider.createComponent(ReplicationAgent.class, properties);
+                log.debug("activated agent {}", agent != null ? agent.getName() : null);
 
+                if (agent != null) {
+                    props.put(NAME, agent.getName());
 
-            // only enable if instance runmodes match configured ones
-            if (agent != null) {
-                props.put(NAME, agent.getName());
-
-                // register agent service
-                agentReg = context.registerService(ReplicationAgent.class.getName(), agent, props);
-                agent.enable();
+                    // register agent service
+                    agentReg = context.registerService(ReplicationAgent.class.getName(), agent, props);
+                    agent.enable();
+                }
             }
         }
     }
 
-
     @Deactivate
     private void deactivate(BundleContext context) {
+        log.debug("deactivating agent");
         if (agentReg != null) {
             ServiceReference reference = agentReg.getReference();
             SimpleReplicationAgent replicationAgent = (SimpleReplicationAgent) context.getService(reference);
@@ -133,17 +146,18 @@ public class CompactSimpleReplicationAgentFactory implements ReplicationComponen
             agentReg.unregister();
             agentReg = null;
         }
-
+        if (listenerReg != null) {
+            listenerReg.unregister();
+            listenerReg = null;
+        }
     }
-
 
     private void refresh(boolean isBinding) {
         try {
             if (savedContext != null && savedConfig != null) {
                 if (isBinding && agentReg == null) {
                     activate(savedContext, savedConfig);
-                }
-                else if (!isBinding && agentReg != null) {
+                } else if (!isBinding && agentReg != null) {
                     deactivate(savedContext);
                 }
             }
@@ -152,7 +166,6 @@ public class CompactSimpleReplicationAgentFactory implements ReplicationComponen
             log.error("Cannot refresh agent", e);
         }
     }
-
 
     public <ComponentType> void componentBind(ComponentType component, String componentName) {
         refresh(true);
