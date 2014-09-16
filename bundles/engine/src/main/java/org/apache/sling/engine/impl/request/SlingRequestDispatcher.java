@@ -191,7 +191,7 @@ public class SlingRequestDispatcher implements RequestDispatcher {
         if (resource == null) {
             String timerName = "resolveIncludedResource(" + absPath + ")";
             requestProgressTracker.startTimer(timerName);
-            
+
             // resolve the absolute path in the resource resolver, using
             // only those parts of the path as if it would be request path
             resource = cRequest.getResourceResolver().resolve(absPath);
@@ -203,7 +203,7 @@ public class SlingRequestDispatcher implements RequestDispatcher {
                     absPath);
                 return;
             }
-            
+
             requestProgressTracker.logTimer(timerName,
                     "path={0} resolves to Resource={1}",
                     absPath, resource);
@@ -263,6 +263,7 @@ public class SlingRequestDispatcher implements RequestDispatcher {
             this.resourceType = resourceType;
         }
 
+        @Override
         public String getResourceType() {
             return resourceType;
         }
@@ -275,5 +276,11 @@ public class SlingRequestDispatcher implements RequestDispatcher {
         public String getResourceSuperType() {
             return null;
         }
+
+        @Override
+        public boolean isResourceType(final String resourceType) {
+            return this.getResourceResolver().isResourceType(this, resourceType);
+        }
+
     }
 }
