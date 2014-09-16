@@ -82,12 +82,6 @@ public abstract class JsonObjectCreator {
                 }
 
             }
-            if ( resource.getResourceType() != null ) {
-                obj.put("sling:resourceType", resource.getResourceType());
-            }
-            if ( resource.getResourceSuperType() != null ) {
-                obj.put("sling:resourceSuperType", resource.getResourceSuperType());
-            }
 
         } else {
 
