@@ -18,6 +18,9 @@
  */
 package org.apache.sling.testing.resourceresolver;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -62,12 +65,30 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
 
     @Override
     public Resource resolve(final HttpServletRequest request, final String absPath) {
-        return this.getResource(absPath);
+        String path = absPath;
+
+        // split off query string or fragment that may be appendend to the URL
+        String urlRemainder = null;
+        int urlRemainderPos = Math.min(path.indexOf('?'), path.indexOf('#'));
+        if (urlRemainderPos >= 0) {
+          urlRemainder = path.substring(urlRemainderPos);
+          path = path.substring(0, urlRemainderPos);
+        }
+        
+        // unmangle namespaces
+        if (options.isMangleNamespacePrefixes()) {
+            path = NamespaceMangler.unmangleNamespaces(path);
+        }
+
+        // build full path again
+        path = path + (urlRemainder != null ? urlRemainder : "");
+
+        return this.getResource(path);
     }
 
     @Override
     public Resource resolve(final String absPath) {
-        return this.getResource(absPath);
+        return resolve(null, absPath);
     }
 
     @Override
@@ -78,14 +99,30 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
 
     @Override
     public String map(final String resourcePath) {
-        return resourcePath;
+        return map(null, resourcePath);
     }
 
     @Override
     public String map(final HttpServletRequest request, final String resourcePath) {
-        return resourcePath;
-    }
+        String path = resourcePath;
 
+        // split off query string or fragment that may be appendend to the URL
+        String urlRemainder = null;
+        int urlRemainderPos = Math.min(path.indexOf('?'), path.indexOf('#'));
+        if (urlRemainderPos >= 0) {
+          urlRemainder = path.substring(urlRemainderPos);
+          path = path.substring(0, urlRemainderPos);
+        }
+        
+        // mangle namespaces
+        if (options.isMangleNamespacePrefixes()) {
+            path = NamespaceMangler.mangleNamespaces(path);
+        }
+
+        // build full path again
+        return path + (urlRemainder != null ? urlRemainder : "");
+    }
+    
     @Override
     public Resource getResource(final String path) {
         Resource resource = getResourceInternal(path);
