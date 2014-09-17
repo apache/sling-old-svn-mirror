@@ -126,9 +126,14 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      * Make sure to remove it from the current thread context.
      */
     public void closed(final ResourceResolverImpl resourceResolverImpl) {
-        final Stack<ResourceResolver> resolverStack = resolverStackHolder.get();
-        if ( resolverStack != null ) {
-            resolverStack.remove(resourceResolverImpl);
+        // on shutdown, the factory might already be closed before the resolvers close
+        // therefore we have to check for null
+        final ThreadLocal<Stack<ResourceResolver>> tl = resolverStackHolder;
+        if ( tl != null ) {
+            final Stack<ResourceResolver> resolverStack = tl.get();
+            if ( resolverStack != null ) {
+                resolverStack.remove(resourceResolverImpl);
+            }
         }
     }
 
