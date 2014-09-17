@@ -23,11 +23,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.jcr.Repository;
-
 import org.apache.felix.webconsole.WebConsoleSecurityProvider;
-import org.apache.sling.api.auth.Authenticator;
-import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.launchpad.api.StartupListener;
 import org.apache.sling.launchpad.api.StartupMode;
 import org.osgi.framework.BundleContext;
@@ -45,9 +41,9 @@ import org.osgi.service.cm.ManagedService;
  */
 public class ServicesListener implements StartupListener {
 
-    private static final String AUTH_SUPPORT_CLASS = AuthenticationSupport.class.getName();
-    private static final String AUTHENTICATOR_CLASS = Authenticator.class.getName();
-    private static final String REPO_CLASS = Repository.class.getName();
+    private static final String AUTH_SUPPORT_CLASS = "org.apache.sling.auth.core.AuthenticationSupport";
+    private static final String AUTHENTICATOR_CLASS = "org.apache.sling.api.auth.Authenticator";
+    private static final String REPO_CLASS = "javax.jcr.Repository";
 
     /** The bundle context. */
     private final BundleContext bundleContext;
