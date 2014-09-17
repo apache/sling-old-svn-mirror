@@ -28,6 +28,8 @@ public class MockResourceResolverFactoryOptions {
     private EventAdmin eventAdmin;
 
     private String[] searchPaths = new String[] {"/apps/", "/libs/"};
+    
+    private boolean mangleNamespacePrefixes;
 
     public EventAdmin getEventAdmin() {
         return eventAdmin;
@@ -49,4 +51,13 @@ public class MockResourceResolverFactoryOptions {
         this.searchPaths = searchPaths;
         return this;
     }
+
+    public boolean isMangleNamespacePrefixes() {
+        return mangleNamespacePrefixes;
+    }
+
+    public void setMangleNamespacePrefixes(boolean mangleNamespacePrefixes) {
+        this.mangleNamespacePrefixes = mangleNamespacePrefixes;
+    }
+    
 }
