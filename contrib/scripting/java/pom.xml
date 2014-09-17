@@ -57,7 +57,7 @@
                         </Private-Package>
                         <ScriptEngine-Name>${project.name}</ScriptEngine-Name>
                         <ScriptEngine-Version>${project.version}</ScriptEngine-Version>
-                        <Export-Package>javax.inject</Export-Package>
+                        <Export-Package>javax.inject;version=0</Export-Package>
                     </instructions>
                 </configuration>
             </plugin>
