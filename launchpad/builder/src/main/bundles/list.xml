@@ -539,7 +539,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.davex</artifactId>
-            <version>1.2.1-SNAPSHOT</version>
+            <version>1.2.3-SNAPSHOT</version>
         </bundle>
     </startLevel>
 
