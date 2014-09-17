@@ -51,13 +51,6 @@ public class SlingScriptingJavaIT extends KarafTestSupport {
     }
 
     @Test
-    public void testOrgApacheGeronimoSpecsGeronimoAtinject_1_0_Spec() {
-        final Bundle bundle = findBundle("org.apache.geronimo.specs.geronimo-atinject_1.0_spec");
-        assertNotNull(bundle);
-        assertEquals(Bundle.ACTIVE, bundle.getState());
-    }
-
-    @Test
     public void testOrgApacheGeronimoSpecsGeronimoServlet_3_0_Spec() {
         final Bundle bundle = findBundle("org.apache.geronimo.specs.geronimo-servlet_3.0_spec");
         assertNotNull(bundle);

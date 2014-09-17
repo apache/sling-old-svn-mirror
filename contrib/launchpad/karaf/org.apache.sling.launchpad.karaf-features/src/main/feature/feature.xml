@@ -295,12 +295,11 @@
     <!-- bundle dependencies -->
     <bundle dependency="true">mvn:org.codehaus.groovy/groovy-all/1.8.0</bundle>
   </feature>
-  <feature name="sling-scripting-java" version="2.0.11-SNAPSHOT">
+  <feature name="sling-scripting-java" version="2.0.6">
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-scripting</feature>
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.java/2.0.11-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.java/2.0.6</bundle>
     <!-- bundle dependencies -->
-    <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-atinject_1.0_spec/1.0</bundle>
     <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
   </feature>
   <feature name="sling-scripting-thymeleaf" version="0.0.2">
