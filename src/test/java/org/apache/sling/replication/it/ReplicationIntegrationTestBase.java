@@ -21,6 +21,7 @@ package org.apache.sling.replication.it;
 import org.apache.sling.testing.tools.sling.SlingClient;
 import org.apache.sling.testing.tools.sling.SlingInstance;
 import org.apache.sling.testing.tools.sling.SlingInstanceManager;
+import org.junit.BeforeClass;
 
 import static org.apache.sling.replication.it.ReplicationUtils.agentConfigUrl;
 import static org.apache.sling.replication.it.ReplicationUtils.agentUrl;
@@ -40,7 +41,8 @@ public abstract class ReplicationIntegrationTestBase {
     static SlingClient authorClient;
     static SlingClient publishClient;
 
-    static {
+    @BeforeClass
+    public static void setUpBefore() {
         SlingInstanceManager slingInstances = new SlingInstanceManager("author", "publish");
         author = slingInstances.getInstance("author");
         publish = slingInstances.getInstance("publish");
@@ -78,10 +80,12 @@ public abstract class ReplicationIntegrationTestBase {
                     "packageImporter", "packageBuilder/username=admin",
                     "packageImporter", "packageBuilder/password=admin");
 
+            Thread.sleep(3000);
 
             assertExists(authorClient, agentUrl("publish"));
 
             assertExists(authorClient, agentConfigUrl("publish-reverse"));
+
             String remoteExporterUrl = publish.getServerBaseUrl() + exporterUrl("reverse");
             setAgentProperties(author, "publish-reverse",
                     "packageExporter", "type=remote",
@@ -93,12 +97,13 @@ public abstract class ReplicationIntegrationTestBase {
                     "packageExporter", "packageBuilder/type=vlt",
                     "packageExporter", "packageBuilder/username=admin",
                     "packageExporter", "packageBuilder/password=admin");
+
+            Thread.sleep(3000);
             assertExists(authorClient, agentUrl("publish-reverse"));
 
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-
 
     }
 

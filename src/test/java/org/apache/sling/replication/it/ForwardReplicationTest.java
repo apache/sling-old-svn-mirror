@@ -21,7 +21,10 @@ package org.apache.sling.replication.it;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.junit.Test;
 
-import static org.apache.sling.replication.it.ReplicationUtils.*;
+import static org.apache.sling.replication.it.ReplicationUtils.assertExists;
+import static org.apache.sling.replication.it.ReplicationUtils.assertNotExits;
+import static org.apache.sling.replication.it.ReplicationUtils.createRandomNode;
+import static org.apache.sling.replication.it.ReplicationUtils.replicate;
 
 /**
  * Integration test for forward replication
