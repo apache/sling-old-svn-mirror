@@ -114,7 +114,7 @@
           <plugin>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>exam-maven-plugin</artifactId>
-            <version>3.4.0</version>
+            <version>4.2.0</version>
             <configuration>
               <configClass>org.apache.sling.launchpad.karaf.tests.configuration.SlingLaunchpadConfiguration</configClass>
             </configuration>
