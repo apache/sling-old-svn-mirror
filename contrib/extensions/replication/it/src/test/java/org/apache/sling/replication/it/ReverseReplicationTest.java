@@ -22,12 +22,16 @@ package org.apache.sling.replication.it;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.junit.Test;
 
-import static org.apache.sling.replication.it.ReplicationUtils.*;
+import static org.apache.sling.replication.it.ReplicationUtils.assertExists;
+import static org.apache.sling.replication.it.ReplicationUtils.assertNotExits;
+import static org.apache.sling.replication.it.ReplicationUtils.createRandomNode;
+import static org.apache.sling.replication.it.ReplicationUtils.replicate;
 
 /**
  * Integration test for reverse replication
  */
 public class ReverseReplicationTest extends ReplicationIntegrationTestBase {
+
     @Test
     public void testAddContent() throws Exception {
         String nodePath = createRandomNode(publishClient, "/content/reverse_add_" + System.nanoTime());
@@ -35,7 +39,6 @@ public class ReverseReplicationTest extends ReplicationIntegrationTestBase {
         replicate(publish, "reverse", ReplicationActionType.ADD, nodePath);
         assertExists(authorClient, nodePath);
     }
-
 
     @Test
     public void testDeleteContent() throws Exception {
