@@ -27,7 +27,7 @@
     </parent>
 
     <artifactId>org.apache.sling.resourceaccesssecurity</artifactId>
-    <version>1.0.0</version>
+    <version>0.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Resource Access Security</name>
@@ -37,13 +37,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.resourceaccesssecurity-1.0.0
+            scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/resourceaccesssecurity/core
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.resourceaccesssecurity-1.0.0
+            scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/resourceaccesssecurity/core
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/sling/tags/org.apache.sling.resourceaccesssecurity-1.0.0
+            http://svn.apache.org/viewvc/sling/trunk/bundles/resourceaccesssecurity/core
         </url>
     </scm>
 
