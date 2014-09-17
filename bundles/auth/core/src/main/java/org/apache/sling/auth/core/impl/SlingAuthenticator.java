@@ -20,6 +20,7 @@ package org.apache.sling.auth.core.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -513,14 +514,14 @@ public class SlingAuthenticator implements Authenticator,
         }
 
         // select path used for authentication handler selection
-        final List<AbstractAuthenticationHandlerHolder>[] holderListArray = this.authHandlerCache.findApplicableHolder(request);
+        final Collection<AbstractAuthenticationHandlerHolder>[] holdersArray = this.authHandlerCache
+                .findApplicableHolder(request);
         final String path = getHandlerSelectionPath(request);
         boolean done = false;
-        for(int m = 0; !done && m < holderListArray.length; m++) {
-            final List<AbstractAuthenticationHandlerHolder> holderList = holderListArray[m];
+        for (int m = 0; !done && m < holdersArray.length; m++) {
+            final Collection<AbstractAuthenticationHandlerHolder> holderList = holdersArray[m];
             if ( holderList != null ) {
-                for (int i = 0; !done && i < holderList.size(); i++) {
-                    final AbstractAuthenticationHandlerHolder holder = holderList.get(i);
+                for (AbstractAuthenticationHandlerHolder holder : holderList) {
                     if (path.startsWith(holder.path)) {
                         log.debug("login: requesting authentication using handler: {}",
                             holder);
@@ -546,9 +547,9 @@ public class SlingAuthenticator implements Authenticator,
         // no handler could send an authentication request, throw
         if (!done) {
             int size = 0;
-            for (int m = 0; m < holderListArray.length; m++) {
-                if ( holderListArray[m] != null ) {
-                    size += holderListArray[m].size();
+            for (int m = 0; m < holdersArray.length; m++) {
+                if (holdersArray[m] != null) {
+                    size += holdersArray[m].size();
                 }
             }
             log.info("login: No handler for request ({} handlers available)", size);
@@ -572,12 +573,12 @@ public class SlingAuthenticator implements Authenticator,
         setSudoCookie(request, response, new AuthenticationInfo("dummy", request.getRemoteUser()));
 
         final String path = getHandlerSelectionPath(request);
-        final List<AbstractAuthenticationHandlerHolder>[] holderListArray = this.authHandlerCache.findApplicableHolder(request);
-        for (int m = 0; m < holderListArray.length; m++) {
-            final List<AbstractAuthenticationHandlerHolder> holderList = holderListArray[m];
-            if (holderList != null) {
-                for (int i = 0; i < holderList.size(); i++) {
-                    AbstractAuthenticationHandlerHolder holder = holderList.get(i);
+        final Collection<AbstractAuthenticationHandlerHolder>[] holdersArray = this.authHandlerCache
+                .findApplicableHolder(request);
+        for (int m = 0; m < holdersArray.length; m++) {
+            final Collection<AbstractAuthenticationHandlerHolder> holderSet = holdersArray[m];
+            if (holderSet != null) {
+                for (AbstractAuthenticationHandlerHolder holder : holderSet) {
                     if (path.startsWith(holder.path)) {
                         log.debug("logout: dropping authentication using handler: {}",
                             holder);
@@ -689,12 +690,12 @@ public class SlingAuthenticator implements Authenticator,
             path = "/";
         }
 
-        final List<AbstractAuthenticationHandlerHolder>[] localArray = this.authHandlerCache.findApplicableHolder(request);
+        final Collection<AbstractAuthenticationHandlerHolder>[] localArray = this.authHandlerCache
+                .findApplicableHolder(request);
         for (int m = 0; m < localArray.length; m++) {
-            final List<AbstractAuthenticationHandlerHolder> local = localArray[m];
+            final Collection<AbstractAuthenticationHandlerHolder> local = localArray[m];
             if (local != null) {
-                for (int i = 0; i < local.size(); i++) {
-                    AbstractAuthenticationHandlerHolder holder = local.get(i);
+                for (AbstractAuthenticationHandlerHolder holder : local) {
                     if (path.startsWith(holder.path)) {
                         final AuthenticationInfo authInfo = holder.extractCredentials(
                             request, response);
@@ -882,12 +883,12 @@ public class SlingAuthenticator implements Authenticator,
             return false;
         }
 
-        final List<AuthenticationRequirementHolder>[] holderListArray = authRequiredCache.findApplicableHolder(request);
-        for(int m = 0; m < holderListArray.length; m++) {
-            final List<AuthenticationRequirementHolder> holderList = holderListArray[m];
-            if ( holderList != null ) {
-                for (int i = 0; i < holderList.size(); i++) {
-                    final AuthenticationRequirementHolder holder = holderList.get(i);
+        final Collection<AuthenticationRequirementHolder>[] holderSetArray = authRequiredCache
+                .findApplicableHolder(request);
+        for (int m = 0; m < holderSetArray.length; m++) {
+            final Collection<AuthenticationRequirementHolder> holders = holderSetArray[m];
+            if (holders != null) {
+                for (AuthenticationRequirementHolder holder : holders) {
                     if (path.startsWith(holder.path)) {
                         return !holder.requiresAuthentication();
                     }

@@ -19,17 +19,19 @@
 package org.apache.sling.auth.core.impl;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.servlet.http.HttpServletRequest;
 
 public class PathBasedHolderCache<Type extends PathBasedHolder> {
 
-    private final Map<String, Map<String, List<Type>>> cache = new HashMap<String, Map<String, List<Type>>>();
+    private final Map<String, Map<String, SortedSet<Type>>> cache = new HashMap<String, Map<String, SortedSet<Type>>>();
 
     /** Read/write lock to synchronize the cache access. */
     private final ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
@@ -47,28 +49,25 @@ public class PathBasedHolderCache<Type extends PathBasedHolder> {
         this.rwLock.writeLock().lock();
         try {
 
-            Map<String, List<Type>> byHostMap = cache.get(holder.protocol);
+            Map<String, SortedSet<Type>> byHostMap = cache.get(holder.protocol);
             if (byHostMap == null) {
-                byHostMap = new HashMap<String, List<Type>>();
+                byHostMap = new HashMap<String, SortedSet<Type>>();
                 cache.put(holder.protocol, byHostMap);
             }
 
-            final List<Type> byPathList = new ArrayList<Type>();
+            final SortedSet<Type> byPathSet = new TreeSet<Type>();
 
             // preset with current list
-            final List<Type> currentPathList = byHostMap.get(holder.host);
-            if (currentPathList != null) {
-                byPathList.addAll(currentPathList);
+            final SortedSet<Type> currentPathSet = byHostMap.get(holder.host);
+            if (currentPathSet != null) {
+                byPathSet.addAll(currentPathSet);
             }
 
             // add the new holder
-            byPathList.add(holder);
+            byPathSet.add(holder);
 
-            // sort the list according to the path length (longest path first)
-            Collections.sort(byPathList);
-
-            // replace old list with new list
-            byHostMap.put(holder.host, byPathList);
+            // replace old set with new set
+            byHostMap.put(holder.host, byPathSet);
         } finally {
             this.rwLock.writeLock().unlock();
         }
@@ -77,21 +76,21 @@ public class PathBasedHolderCache<Type extends PathBasedHolder> {
     public void removeHolder(final Type holder) {
         this.rwLock.writeLock().lock();
         try {
-            final Map<String, List<Type>> byHostMap = cache.get(holder.protocol);
+            final Map<String, SortedSet<Type>> byHostMap = cache.get(holder.protocol);
             if (byHostMap != null) {
-                final List<Type> byPathList = byHostMap.get(holder.host);
-                if (byPathList != null) {
+                final SortedSet<Type> byPathSet = byHostMap.get(holder.host);
+                if (byPathSet != null) {
 
-                    // create a new list without the removed holder
-                    final List<Type> list = new ArrayList<Type>();
-                    list.addAll(byPathList);
-                    list.remove(holder);
+                    // create a new set without the removed holder
+                    final SortedSet<Type> set = new TreeSet<Type>();
+                    set.addAll(byPathSet);
+                    set.remove(holder);
 
-                    // replace the old list with the new one (or remove if empty)
-                    if (list.isEmpty()) {
+                    // replace the old set with the new one (or remove if empty)
+                    if (set.isEmpty()) {
                         byHostMap.remove(holder.host);
                     } else {
-                        byHostMap.put(holder.host, list);
+                        byHostMap.put(holder.host, set);
                     }
                 }
             }
@@ -100,7 +99,7 @@ public class PathBasedHolderCache<Type extends PathBasedHolder> {
         }
     }
 
-    public List<Type>[] findApplicableHolder(final HttpServletRequest request) {
+    public Collection<Type>[] findApplicableHolder(final HttpServletRequest request) {
         this.rwLock.readLock().lock();
         try {
             final String hostname = request.getServerName()
@@ -109,14 +108,14 @@ public class PathBasedHolderCache<Type extends PathBasedHolder> {
                     : "");
 
             @SuppressWarnings("unchecked")
-            final List<Type>[] result = new ArrayList[4];
+            final SortedSet<Type>[] result = new SortedSet[4];
 
-            final Map<String, List<Type>> byHostMap = cache.get(request.getScheme());
+            final Map<String, SortedSet<Type>> byHostMap = cache.get(request.getScheme());
             if ( byHostMap != null ) {
                 result[0] = byHostMap.get(hostname);
                 result[1] = byHostMap.get("");
             }
-            final Map<String, List<Type>> defaultByHostMap = cache.get("");
+            final Map<String, SortedSet<Type>> defaultByHostMap = cache.get("");
             if ( defaultByHostMap != null ) {
                 result[2] = defaultByHostMap.get(hostname);
                 result[3] = defaultByHostMap.get("");
@@ -131,9 +130,9 @@ public class PathBasedHolderCache<Type extends PathBasedHolder> {
         this.rwLock.readLock().lock();
         try {
             final List<Type> result = new ArrayList<Type>();
-            for (Map<String, List<Type>> byHostEntry : cache.values()) {
-                for (List<Type> holderList : byHostEntry.values()) {
-                    result.addAll(holderList);
+            for (Map<String, SortedSet<Type>> byHostEntry : cache.values()) {
+                for (SortedSet<Type> holderSet : byHostEntry.values()) {
+                    result.addAll(holderSet);
                 }
             }
             return result;
