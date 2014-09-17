@@ -51,13 +51,6 @@ public class SlingScriptingThymeleafIT extends KarafTestSupport {
     }
 
     @Test
-    public void testOrgApacheServicemixBundlesOgnl() {
-        final Bundle bundle = findBundle("org.apache.servicemix.bundles.ognl");
-        assertNotNull(bundle);
-        assertEquals(Bundle.ACTIVE, bundle.getState());
-    }
-
-    @Test
     public void testJavassist() {
         final Bundle bundle = findBundle("javassist");
         assertNotNull(bundle);

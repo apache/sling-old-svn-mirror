@@ -302,13 +302,12 @@
     <!-- bundle dependencies -->
     <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
   </feature>
-  <feature name="sling-scripting-thymeleaf" version="0.0.2">
+  <feature name="sling-scripting-thymeleaf" version="0.0.4">
     <feature version="${project.version}">sling</feature>
     <feature version="${project.version}">sling-scripting</feature>
     <feature version="2.2.10">sling-extension-i18n</feature>
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.thymeleaf/0.0.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.thymeleaf/0.0.4</bundle>
     <!-- bundle dependencies -->
-    <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.ognl/3.0.8_1</bundle>
     <bundle dependency="true">mvn:org.javassist/javassist/3.18.2-GA</bundle>
     <bundle dependency="true">mvn:commons-io/commons-io/2.4</bundle>
   </feature>
