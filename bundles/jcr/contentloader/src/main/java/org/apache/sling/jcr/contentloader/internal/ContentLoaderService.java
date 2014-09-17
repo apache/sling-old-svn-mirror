@@ -37,7 +37,6 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.commons.mime.MimeTypeService;
-import org.apache.sling.engine.SlingSettingsService;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
@@ -105,7 +104,7 @@ public class ContentLoaderService implements SynchronousBundleListener, JcrConte
 
     /** Sling settings service. */
     @Reference
-    protected SlingSettingsService settingsService;
+    protected org.apache.sling.settings.SlingSettingsService settingsService;
 
     // ---------- BundleListener -----------------------------------------------
 
