@@ -1179,8 +1179,13 @@ public class SlingServletResolver
                 tdLabel(pw, "URL");
                 tdContent(pw);
 
-                pw.println("<input type='text' name='" + PARAMETER_URL + "' value='" +
-                         (url != null ? url : "") + "' class='input' size='50'>");
+                pw.print("<input type='text' name='");
+                pw.print(PARAMETER_URL);
+                pw.print("' value='");
+                if ( url != null ) {
+                    pw.print(url);
+                }
+                pw.println("' class='input' size='50'>");
                 closeTd(pw);
                 closeTr(pw);
                 closeTr(pw);
@@ -1188,12 +1193,13 @@ public class SlingServletResolver
                 tr(pw);
                 tdLabel(pw, "Method");
                 tdContent(pw);
-                pw.println("<select name='" + PARAMETER_METHOD + "'>");
+                pw.print("<select name='");
+                pw.print(PARAMETER_METHOD);
+                pw.println("'>");
                 pw.println("<option value='GET'>GET</option>");
                 pw.println("<option value='POST'>POST</option>");
                 pw.println("</select>");
-                pw.println("&nbsp;&nbsp;<input type='submit'" +
-                         "' value='Resolve' class='submit'>");
+                pw.println("&nbsp;&nbsp;<input type='submit' value='Resolve' class='submit'>");
 
                 closeTd(pw);
                 closeTr(pw);
@@ -1204,7 +1210,11 @@ public class SlingServletResolver
                     tdContent(pw);
                     pw.println("<dl>");
                     pw.println("<dt>Path</dt>");
-                    pw.println("<dd>" + requestPathInfo.getResourcePath() + "<br/>" + CONSOLE_PATH_WARNING + "</dd>");
+                    pw.print("<dd>");
+                    pw.print(requestPathInfo.getResourcePath());
+                    pw.print("<br/>");
+                    pw.print(CONSOLE_PATH_WARNING);
+                    pw.println("</dd>");
                     pw.println("<dt>Selectors</dt>");
                     pw.print("<dd>");
                     if (requestPathInfo.getSelectors().length == 0) {
@@ -1216,11 +1226,15 @@ public class SlingServletResolver
                     }
                     pw.println("</dd>");
                     pw.println("<dt>Extension</dt>");
-                    pw.println("<dd>" + requestPathInfo.getExtension() + "</dd>");
+                    pw.print("<dd>");
+                    pw.print(requestPathInfo.getExtension());
+                    pw.println("</dd>");
                     pw.println("</dl>");
                     pw.println("</dd>");
                     pw.println("<dt>Suffix</dt>");
-                    pw.println("<dd>" + requestPathInfo.getSuffix() + "</dd>");
+                    pw.print("<dd>");
+                    pw.print(requestPathInfo.getSuffix());
+                    pw.println("</dd>");
                     pw.println("</dl>");
                     closeTd(pw);
                     closeTr(pw);
@@ -1248,10 +1262,11 @@ public class SlingServletResolver
                     if (servlets == null || servlets.isEmpty()) {
                         pw.println("Could not find a suitable servlet for this request!");
                     } else {
-                        pw.println("Candidate servlets and scripts in order of preference for method " + method + ":<br/>");
+                        pw.print("Candidate servlets and scripts in order of preference for method ");
+                        pw.print(method);
+                        pw.println(":<br/>");
                         pw.println("<ol class='servlets'>");
-                        Iterator<Resource> iterator = servlets.iterator();
-                        outputServlets(pw, iterator);
+                        outputServlets(pw, servlets.iterator());
                         pw.println("</ol>");
                     }
                     pw.println("</td>");
@@ -1291,7 +1306,9 @@ public class SlingServletResolver
         }
 
         private void tdLabel(final PrintWriter pw, final String label) {
-            pw.println("<td class='content'>" + label + "</td>");
+            pw.print("<td class='content'>");
+            pw.print(label);
+            pw.println("</td>");
         }
 
         private void tr(final PrintWriter pw) {
@@ -1303,30 +1320,42 @@ public class SlingServletResolver
                 Resource candidateResource = iterator.next();
                 Servlet candidate = candidateResource.adaptTo(Servlet.class);
                 if (candidate != null) {
-                    boolean isOptingServlet = false;
+                    final boolean allowed = isPathAllowed(candidateResource.getPath());
+                    pw.print("<li>");
+                    if ( !allowed ) {
+                        pw.print("<del>");
+                    }
 
                     if (candidate instanceof SlingScript) {
-                        pw.println("<li>" + candidateResource.getPath() + "</li>");
+                        pw.print(candidateResource.getPath());
                     } else {
-                        if (candidate instanceof OptingServlet) {
-                            isOptingServlet = true;
+                        final boolean isOptingServlet = candidate instanceof OptingServlet;
+                        pw.print(candidate.getClass().getName());
+                        if ( isOptingServlet ) {
+                            pw.print(" (OptingServlet)");
                         }
-                        pw.println("<li>" + candidate.getClass().getName() + (isOptingServlet ? " (OptingServlet)" : "") + "</li>");
                     }
+
+                    if ( !allowed ) {
+                        pw.print("</del>");
+                    }
+                    pw.println("</li>");
                 }
             }
         }
 
         private void titleHtml(final PrintWriter pw, final String title, final String description) {
             tr(pw);
-            pw.println("<th colspan='3' class='content container'>" + title +
-                     "</th>");
+            pw.print("<th colspan='3' class='content container'>");
+            pw.print(title);
+            pw.println("</th>");
             closeTr(pw);
 
             if (description != null) {
                 tr(pw);
-                pw.println("<td colspan='3' class='content'>" + description +
-                         "</th>");
+                pw.print("<td colspan='3' class='content'>");
+                pw.print(description);
+                pw.println("</th>");
                 closeTr(pw);
             }
         }
