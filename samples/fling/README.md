@@ -5,7 +5,7 @@ This is a sample using _Sling Models_, _Sling Query_ and _Sling Scripting Thymel
 
 * [Sling Models](http://sling.apache.org/documentation/bundles/models.html)
 * [Sling Query](https://github.com/Cognifide/Sling-Query)
-* Sling Scripting Thymeleaf ([Thymeleaf](http://www.thymeleaf.org/), [Sling i18n](http://sling.apache.org/documentation/bundles/internationalization-support-i18n.html))
+* [Sling Scripting Thymeleaf](http://sling.apache.org/documentation/bundles/scripting/scripting-thymeleaf.html) ([Thymeleaf](http://www.thymeleaf.org/), [Sling i18n](http://sling.apache.org/documentation/bundles/internationalization-support-i18n.html))
 
 Additional features used in this sample:
 
