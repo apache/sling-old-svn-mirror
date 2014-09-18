@@ -54,18 +54,6 @@ public abstract class ReplicationIntegrationTestBase {
             assertExists(authorClient, agentConfigUrl("publish"));
             assertExists(authorClient, agentConfigUrl("publish-reverse"));
 
-            // hack until SLING-3618 is solved
-            if (authorClient.exists("/var/discovery")) {
-                authorClient.delete("/var/discovery");
-            }
-            authorClient.mkdir("/var/discovery");
-            if (publishClient.exists("/var/discovery")) {
-                publishClient.delete("/var/discovery");
-            }
-            publishClient.mkdir("/var/discovery");
-
-            assertExists(authorClient, agentConfigUrl("publish"));
-
             // change the url for publish agent and wait for it to start
             String remoteImporterUrl = publish.getServerBaseUrl() + importerUrl("default");
 
