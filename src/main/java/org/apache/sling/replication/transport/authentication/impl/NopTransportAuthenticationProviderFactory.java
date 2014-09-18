@@ -26,11 +26,11 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
 
-
 @Component(immediate = true, label = "Factory for Nop Authentication Providers")
 @Service(value = TransportAuthenticationProviderFactory.class)
 @Property(name = "name", value = NopTransportAuthenticationProviderFactory.TYPE)
 public class NopTransportAuthenticationProviderFactory implements TransportAuthenticationProviderFactory {
+
     public static final String TYPE = "nop";
 
     private static final TransportAuthenticationProvider<Object, Object> NOP_TRANSPORT_AUTHENTICATION_PROVIDER = new NopTransportAuthenticationProvider();

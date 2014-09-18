@@ -19,7 +19,6 @@
 
     "packageImporter": [
         "type=local",
-
         "packageBuilder/type=vlt",
         "packageBuilder/username=admin",
         "packageBuilder/password=admin"

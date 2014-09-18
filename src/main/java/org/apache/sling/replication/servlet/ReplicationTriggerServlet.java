@@ -77,6 +77,7 @@ public class ReplicationTriggerServlet extends SlingAllMethodsServlet {
         response.setCharacterEncoding("UTF-8");
         response.setHeader("Cache-Control", "no-cache");
         response.setHeader("Connection", "keep-alive");
+
         // needed to allow the JavaScript EventSource API to make a call from author to this server and listen for the events
         response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
         response.setHeader("Access-Control-Allow-Credentials", "true");

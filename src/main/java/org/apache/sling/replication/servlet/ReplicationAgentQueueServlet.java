@@ -88,7 +88,8 @@ public class ReplicationAgentQueueServlet extends SlingAllMethodsServlet {
         ReplicationQueue queue = request.getResource().adaptTo(ReplicationQueue.class);
 
         while (!queue.isEmpty()) {
-            queue.removeHead();
+            ReplicationQueueItem queueItem = queue.getHead();
+            queue.remove(queueItem.getId());
         }
     }
 

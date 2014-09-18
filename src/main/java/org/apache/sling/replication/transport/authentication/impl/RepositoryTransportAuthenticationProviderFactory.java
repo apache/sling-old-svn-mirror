@@ -18,8 +18,8 @@
  */
 package org.apache.sling.replication.transport.authentication.impl;
 
-import java.util.Map;
 import javax.jcr.Session;
+import java.util.Map;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
@@ -28,11 +28,11 @@ import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
 
-
 @Component(immediate = true, label = "Factory for Repository Transport Authentication Providers")
 @Service(value = TransportAuthenticationProviderFactory.class)
 @Property(name = "name", value = RepositoryTransportAuthenticationProviderFactory.TYPE)
 public class RepositoryTransportAuthenticationProviderFactory implements TransportAuthenticationProviderFactory {
+
     public static final String TYPE = "repo-user";
 
     public TransportAuthenticationProvider<SlingRepository, Session> createAuthenticationProvider(Map<String, String> properties) {

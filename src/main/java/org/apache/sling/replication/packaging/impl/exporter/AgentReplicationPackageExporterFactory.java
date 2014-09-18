@@ -34,7 +34,10 @@ import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(label = "Agent Based Replication Package Exporter", configurationFactory = true)
+@Component(label = "Agent Based Replication Package Exporter",
+        configurationFactory = true,
+        specVersion = "1.1",
+        policy = ConfigurationPolicy.REQUIRE)
 @Service(value = ReplicationPackageExporter.class)
 public class AgentReplicationPackageExporterFactory implements ReplicationPackageExporter {
     private final Logger log = LoggerFactory.getLogger(getClass());

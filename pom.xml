@@ -35,9 +35,9 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling Replication</name>
+    <name>Apache Sling Replication Core</name>
     <description>
-        The Apache Sling Replication bundle provides a set of utilities to replicate content from / to other Sling instances.
+        The Apache Sling Replication core bundle provides a set of utilities to replicate content from / to other Sling instances.
     </description>
 
     <scm>

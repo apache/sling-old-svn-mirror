@@ -34,14 +34,17 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
 
 @Component(label="Osgi Service Properties Resource Provider Factory",
         description="Osgi Service Properties Resource Provider Factory",
-        configurationFactory=true,
-        policy= ConfigurationPolicy.REQUIRE,
+        configurationFactory = true,
+        specVersion = "1.1",
+        policy = ConfigurationPolicy.REQUIRE,
         name = OsgiPropertiesResourceProviderFactory.SERVICE_PID,
         metatype=true)
 @Service(value=ResourceProviderFactory.class)
@@ -50,6 +53,9 @@ import java.util.Map;
         @Property(name = ResourceProvider.OWNS_ROOTS, boolValue=true, propertyPrivate=true)
 })
 public class OsgiPropertiesResourceProviderFactory implements ResourceProviderFactory {
+
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     public final static String SERVICE_PID = "org.apache.sling.replication.resources.impl.OsgiPropertiesResourceProviderFactory";
 
     /**
@@ -107,6 +113,9 @@ public class OsgiPropertiesResourceProviderFactory implements ResourceProviderFa
 
     @Activate
     public void activate(BundleContext context, Map<String, Object> properties) {
+
+        log.debug("activating resource provider with config {}", properties);
+
         String friendlyNameProperty = PropertiesUtil.toString(properties.get(FRIENDLY_NAME_PROPERTY), DEFAULT_FRIENDLY_NAME_PROPERTY);
         String type = PropertiesUtil.toString(properties.get(SERVICE_INTERFACE), null);
         String resourceRoot = PropertiesUtil.toString(properties.get(ResourceProvider.ROOTS), null);
@@ -136,6 +145,7 @@ public class OsgiPropertiesResourceProviderFactory implements ResourceProviderFa
             serviceTracker = new ServiceTracker(context, type, servicePropertiesResourceProvider);
             serviceTracker.open();
         }
+        log.debug("created resource provider {}", resourceProvider);
     }
 
     @Deactivate

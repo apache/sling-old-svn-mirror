@@ -136,9 +136,7 @@ public class SettingsUtils {
 
             }
             else {
-                if (value != null) {
-                    result.add(key + "=" + value.toString());
-                }
+                result.add(key + "=" + value.toString());
             }
         }
 

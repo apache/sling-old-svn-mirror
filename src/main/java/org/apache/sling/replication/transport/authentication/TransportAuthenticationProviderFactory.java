@@ -25,7 +25,19 @@ import java.util.Map;
  */
 public interface TransportAuthenticationProviderFactory {
 
+    /**
+     * create a {@link org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider}
+     *
+     * @param properties the provider properties
+     * @return a {@link org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider}
+     */
     TransportAuthenticationProvider<?, ?> createAuthenticationProvider(Map<String, String> properties);
 
+    /**
+     * get the type of the {@link org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider}s created
+     * via this factory
+     *
+     * @return a <code>String</code> representing the type of providers created via this factory
+     */
     String getType();
 }

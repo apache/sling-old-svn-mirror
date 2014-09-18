@@ -59,8 +59,7 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
     public boolean add(ReplicationQueueItem item) {
         boolean result = true;
         try {
-            Map<String, Object> properties = JobHandlingUtils
-                    .createFullPropertiesFromPackage(item);
+            Map<String, Object> properties = JobHandlingUtils.createFullProperties(item);
 
             Job job = jobManager.createJob(topic).properties(properties).add();
             log.info("job {} added", job.getId());
@@ -75,8 +74,7 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
             throws ReplicationQueueException {
         ReplicationQueueItemState itemStatus = new ReplicationQueueItemState();
         try {
-            Map<String, Object> properties = JobHandlingUtils
-                    .createIdPropertiesFromPackage(replicationPackage);
+            Map<String, Object> properties = JobHandlingUtils.createIdProperties(replicationPackage.getId());
             Job job = jobManager.getJob(topic, properties);
             if (job != null) {
                 itemStatus.setAttempts(job.getRetryCount());
@@ -93,7 +91,7 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
     }
 
     public ReplicationQueueItem getHead() {
-        Job firstItem = getFirstItem();
+        Job firstItem = getFirstJob();
         if (firstItem != null) {
             return JobHandlingUtils.getPackage(firstItem);
         } else {
@@ -101,50 +99,52 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
         }
     }
 
-    public void removeHead() {
-        Job firstItem = getFirstItem();
-        if (firstItem != null) {
-            jobManager.removeJobById(firstItem.getId());
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private Job getFirstItem() {
+    private Job getFirstJob() {
         log.info("getting first item in the queue");
 
-        Collection<Job> jobs = jobManager.findJobs(QueryType.QUEUED, topic, -1);
-        jobs.addAll(jobManager.findJobs(QueryType.ACTIVE, topic, -1));
+        Collection<Job> jobs = getJobs(1);
         if (jobs.size() > 0) {
-            ArrayList<Job> list = new ArrayList<Job>(jobs);
-            Collections.sort(list, new Comparator<Job>() {
-                public int compare(Job o1, Job o2) {
-                    return o2.getRetryCount() - o1.getRetryCount();
-                }
-            });
-            Job firstItem = list.get(0);
-            log.info("first item in the queue is {}, retried {} times", firstItem.getId(),
-                    firstItem.getRetryCount());
+            Job firstItem = jobs.toArray(new Job[jobs.size()])[0];
+            log.info("first item in the queue is {}, retried {} times", firstItem.getId(), firstItem.getRetryCount());
             return firstItem;
         }
         return null;
+    }
+
+    private Job getJob(String itemId) {
+        Map<String, Object> properties = JobHandlingUtils.createIdProperties(itemId);
+        Job job = jobManager.getJob(topic, properties);
+
+        if (job == null) {
+            log.warn("item with id {} cannot be found", itemId);
+        }
+
+        return job;
+    }
+
+    private Collection<Job> getJobs(int limit) {
+        return jobManager.findJobs(QueryType.ALL, topic, limit);
     }
 
     public boolean isEmpty() {
         return getItems().isEmpty();
     }
 
-    public Collection<ReplicationQueueItem> getItems() {
-        Collection<ReplicationQueueItem> items = new LinkedList<ReplicationQueueItem>();
-        Collection<Job> jobs = jobManager.findJobs(QueryType.ALL, topic, -1);
+    public List<ReplicationQueueItem> getItems() {
+        List<ReplicationQueueItem> items = new ArrayList<ReplicationQueueItem>();
+        Collection<Job> jobs = getJobs(-1);
         for (Job job : jobs) {
             items.add(JobHandlingUtils.getPackage(job));
         }
-        return Collections.unmodifiableCollection(items);
+
+        return items;
     }
 
     public void remove(String id) {
-        boolean removed = jobManager.removeJobById(id);
-        if (log.isInfoEnabled()) {
+        Job job = getJob(id);
+
+        if (job != null) {
+            boolean removed = jobManager.removeJobById(job.getId());
             log.info("item with id {} removed from the queue: {}", id, removed);
         }
     }

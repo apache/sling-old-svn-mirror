@@ -18,13 +18,10 @@
  */
 package org.apache.sling.replication.queue.impl.jobhandling;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.replication.queue.ReplicationQueueItem;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class JobHandlingUtils {
 
@@ -43,42 +40,41 @@ public class JobHandlingUtils {
                 String.valueOf(job.getProperty(TYPE)));
     }
 
-    public static Map<String, Object> createFullPropertiesFromPackage(
-            ReplicationQueueItem replicationPackage) {
+    public static Map<String, Object> createFullProperties(
+            ReplicationQueueItem replicationQueueItem) {
         Map<String, Object> properties = new HashMap<String, Object>();
 
-        properties.put(ID, replicationPackage.getId());
-        properties.put(PATHS, replicationPackage.getPaths());
-        properties.put(ACTION, replicationPackage.getAction());
-        properties.put(TYPE, replicationPackage.getType());
+        properties.put(ID, replicationQueueItem.getId());
+        properties.put(PATHS, replicationQueueItem.getPaths());
+        properties.put(ACTION, replicationQueueItem.getAction());
+        properties.put(TYPE, replicationQueueItem.getType());
 
         return properties;
     }
 
-    public static Map<String, Object> createIdPropertiesFromPackage(
-            ReplicationQueueItem replicationPackage) {
+    public static Map<String, Object> createIdProperties(String itemId) {
         Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put(ID, replicationPackage.getId());
+        properties.put(ID, itemId);
         return properties;
     }
 
-    public static Byte[] box(byte[] bytes) {
-        if (bytes == null) return null;
-        Byte[] result = new Byte[bytes.length];
-        for (int i = 0; i < bytes.length; i++) {
-            result[i] = bytes[i];
-        }
-        return result;
-    }
-
-    public static byte[] unBox(Byte[] bytes) {
-        if (bytes == null) return null;
-        byte[] result = new byte[bytes.length];
-        for (int i = 0; i < bytes.length; i++) {
-            result[i] = bytes[i];
-        }
-        return result;
-    }
+//    public static Byte[] box(byte[] bytes) {
+//        if (bytes == null) return null;
+//        Byte[] result = new Byte[bytes.length];
+//        for (int i = 0; i < bytes.length; i++) {
+//            result[i] = bytes[i];
+//        }
+//        return result;
+//    }
+//
+//    public static byte[] unBox(Byte[] bytes) {
+//        if (bytes == null) return null;
+//        byte[] result = new byte[bytes.length];
+//        for (int i = 0; i < bytes.length; i++) {
+//            result[i] = bytes[i];
+//        }
+//        return result;
+//    }
 
     public static String getQueueName(Job job) {
 

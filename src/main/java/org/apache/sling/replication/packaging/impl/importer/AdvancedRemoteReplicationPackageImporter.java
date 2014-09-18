@@ -46,7 +46,10 @@ import org.slf4j.LoggerFactory;
  * Implementation of {@link org.apache.sling.replication.packaging.ReplicationPackageImporter} supporting multiple
  * endpoints and custom HTTP headers and body.
  */
-@Component(label = "Advanced Remote Replication Package Importer", configurationFactory = true)
+@Component(label = "Advanced Remote Replication Package Importer",
+        configurationFactory = true,
+        specVersion = "1.1",
+        policy = ConfigurationPolicy.REQUIRE)
 @Service(value = ReplicationPackageImporter.class)
 public class AdvancedRemoteReplicationPackageImporter implements ReplicationPackageImporter {
 

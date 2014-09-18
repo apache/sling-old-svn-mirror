@@ -46,7 +46,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class SimpleHttpReplicationTransportHandler implements ReplicationTransportHandler {
 
     private static final Logger log = LoggerFactory.getLogger(SimpleHttpReplicationTransportHandler.class);
@@ -85,11 +84,9 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
 
                 inputStream = replicationPackage.createInputStream();
 
-
                 if(inputStream != null) {
                     req = req.bodyStream(inputStream, ContentType.APPLICATION_OCTET_STREAM);
                 }
-
                 response = executor.execute(req);
             }
             finally {
@@ -104,7 +101,6 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
             else {
                 throw new IOException("response is empty");
             }
-
         }
         catch (Exception ex) {
             throw new ReplicationTransportException(ex);
@@ -124,8 +120,8 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
             context.addAttribute("endpoint", replicationEndpoint);
             executor = transportAuthenticationProvider.authenticate(executor, context);
 
-            Request req = Request.Post(replicationURI)
-                    .useExpectContinue();
+            Request req = Request.Post(replicationURI).useExpectContinue();
+
             // TODO : add queue parameter
 
             // continuously requests package streams as long as type header is received with the response (meaning there's a package of a certain type)

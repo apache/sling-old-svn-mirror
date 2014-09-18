@@ -38,7 +38,10 @@ import org.slf4j.LoggerFactory;
  * {@link org.apache.sling.replication.packaging.ReplicationPackageImporter} implementation which imports a FileVault
  * based {@link ReplicationPackage} locally.
  */
-@Component(label = "Default Replication Package Importer", configurationFactory = true)
+@Component(label = "Default Replication Package Importer",
+        configurationFactory = true,
+        specVersion = "1.1",
+        policy = ConfigurationPolicy.REQUIRE)
 @Service(value = ReplicationPackageImporter.class)
 public class LocalReplicationPackageImporterFactory implements ReplicationPackageImporter {
     private final Logger log = LoggerFactory.getLogger(getClass());

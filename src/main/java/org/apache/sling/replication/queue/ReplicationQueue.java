@@ -59,11 +59,6 @@ public interface ReplicationQueue {
     ReplicationQueueItem getHead();
 
     /**
-     * remove the first item into the queue from it
-     */
-    void removeHead();
-
-    /**
      * check if the queue is empty
      *
      * @return <code>true</code> if the queue is empty, <code>false</code> otherwise
