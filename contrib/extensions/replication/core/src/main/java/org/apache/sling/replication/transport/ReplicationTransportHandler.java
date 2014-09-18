@@ -44,6 +44,6 @@ public interface ReplicationTransportHandler {
      * @param replicationRequest the replication request
      * @throws ReplicationTransportException if any error occurs during the transport
      */
-    public List<ReplicationPackage> retrievePackages(ReplicationRequest replicationRequest) throws ReplicationTransportException;
+    List<ReplicationPackage> retrievePackages(ReplicationRequest replicationRequest) throws ReplicationTransportException;
 
 }

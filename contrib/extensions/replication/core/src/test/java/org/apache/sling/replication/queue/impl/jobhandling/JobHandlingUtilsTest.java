@@ -35,12 +35,12 @@ import static org.mockito.Mockito.when;
 public class JobHandlingUtilsTest {
     @Test
     public void testFullPropertiesFromPackageCreation() throws Exception {
-        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
-        when(replicationPackage.getAction()).thenReturn("ADD");
-        when(replicationPackage.getId()).thenReturn("an-id");
-        when(replicationPackage.getPaths()).thenReturn(new String[]{"/content", "/apps"});
-        when(replicationPackage.getType()).thenReturn("vlt");
-        Map<String,Object> fullPropertiesFromPackage = JobHandlingUtils.createFullPropertiesFromPackage(replicationPackage);
+        ReplicationQueueItem replicationQueueItem = mock(ReplicationQueueItem.class);
+        when(replicationQueueItem.getAction()).thenReturn("ADD");
+        when(replicationQueueItem.getId()).thenReturn("an-id");
+        when(replicationQueueItem.getPaths()).thenReturn(new String[]{"/content", "/apps"});
+        when(replicationQueueItem.getType()).thenReturn("vlt");
+        Map<String,Object> fullPropertiesFromPackage = JobHandlingUtils.createFullProperties(replicationQueueItem);
         assertNotNull(fullPropertiesFromPackage);
         assertEquals(4, fullPropertiesFromPackage.size());
         assertNotNull(fullPropertiesFromPackage.get("replication.package.paths"));
@@ -53,7 +53,7 @@ public class JobHandlingUtilsTest {
     public void testIdPropertiesFromPackageCreation() throws Exception {
         ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         when(replicationPackage.getId()).thenReturn("an-id");
-        Map<String,Object> idPropertiesFromPackage = JobHandlingUtils.createIdPropertiesFromPackage(replicationPackage);
+        Map<String,Object> idPropertiesFromPackage = JobHandlingUtils.createIdProperties(replicationPackage.getId());
         assertNotNull(idPropertiesFromPackage);
         assertEquals(1, idPropertiesFromPackage.size());
         assertNotNull(idPropertiesFromPackage.get("replication.package.id"));

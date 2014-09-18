@@ -130,7 +130,7 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
                     }
                 }
                 log.warn("item {} dropped from the default queue", firstItem);
-                defaultQueue.removeHead();
+                defaultQueue.remove(firstItem.getId());
             }
         }
     }

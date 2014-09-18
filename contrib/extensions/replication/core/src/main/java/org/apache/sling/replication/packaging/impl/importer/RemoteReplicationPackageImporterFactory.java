@@ -45,7 +45,10 @@ import org.slf4j.LoggerFactory;
 /**
  * Remote implementation of {@link org.apache.sling.replication.packaging.ReplicationPackageImporter}
  */
-@Component(label = "Remote Replication Package Importer", configurationFactory = true)
+@Component(label = "Remote Replication Package Importer",
+        configurationFactory = true,
+        specVersion = "1.1",
+        policy = ConfigurationPolicy.REQUIRE)
 @Service(value = ReplicationPackageImporter.class)
 public class RemoteReplicationPackageImporterFactory implements ReplicationPackageImporter {
 

@@ -18,33 +18,37 @@
  */
 package org.apache.sling.replication.packaging.impl.exporter;
 
-import org.apache.felix.scr.annotations.*;
-import org.apache.http.client.fluent.Executor;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyOption;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
-import org.apache.sling.replication.serialization.*;
-import org.apache.sling.replication.transport.ReplicationTransportHandler;
-import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
+import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
-import org.apache.sling.replication.transport.impl.MultipleEndpointReplicationTransportHandler;
 import org.apache.sling.replication.transport.impl.ReplicationTransportConstants;
-import org.apache.sling.replication.transport.impl.SimpleHttpReplicationTransportHandler;
 import org.apache.sling.replication.transport.impl.TransportEndpointStrategyType;
-import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Default implementation of {@link org.apache.sling.replication.packaging.ReplicationPackageExporter}
  */
-@Component(label = "Remote Replication Package Exporter", configurationFactory = true)
+@Component(label = "Remote Replication Package Exporter",
+        configurationFactory = true,
+        specVersion = "1.1",
+        policy = ConfigurationPolicy.REQUIRE)
 @Service(value = ReplicationPackageExporter.class)
 public class RemoteReplicationPackageExporterFactory implements ReplicationPackageExporter {
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -58,7 +62,6 @@ public class RemoteReplicationPackageExporterFactory implements ReplicationPacka
     @Property(name = ReplicationTransportConstants.TRANSPORT_AUTHENTICATION_FACTORY)
     @Reference(name = "TransportAuthenticationProviderFactory", policy = ReferencePolicy.DYNAMIC)
     private TransportAuthenticationProviderFactory transportAuthenticationProviderFactory;
-
 
     @Property(label = "Target ReplicationPackageBuilder", name = "ReplicationPackageBuilder.target")
     @Reference(name = "ReplicationPackageBuilder", policy = ReferencePolicy.DYNAMIC)

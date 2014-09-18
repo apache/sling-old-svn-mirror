@@ -28,6 +28,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Testcase for {@link SimpleReplicationQueue}
@@ -46,9 +47,10 @@ public class SimpleReplicationQueueTest {
     public void testPackageAdditionAndRemoval() throws Exception {
         ReplicationQueue queue = new SimpleReplicationQueue("agentName", "default");
         ReplicationQueueItem pkg = mock(ReplicationQueueItem.class);
+        when(pkg.getId()).thenReturn("id");
         assertTrue(queue.add(pkg));
         assertFalse(queue.isEmpty());
-        queue.removeHead();
+        queue.remove(pkg.getId());
         assertTrue(queue.isEmpty());
         ReplicationQueueItemState status = queue.getStatus(pkg);
         assertNotNull(status);
@@ -59,11 +61,12 @@ public class SimpleReplicationQueueTest {
     public void testPackageAdditionRetrievalAndRemoval() throws Exception {
         ReplicationQueue queue = new SimpleReplicationQueue("agentName", "default");
         ReplicationQueueItem pkg = mock(ReplicationQueueItem.class);
+        when(pkg.getId()).thenReturn("id");
         assertTrue(queue.add(pkg));
         assertFalse(queue.isEmpty());
         assertEquals(pkg, queue.getHead());
         assertFalse(queue.isEmpty());
-        queue.removeHead();
+        queue.remove(pkg.getId());
         assertTrue(queue.isEmpty());
         ReplicationQueueItemState status = queue.getStatus(pkg);
         assertNotNull(status);

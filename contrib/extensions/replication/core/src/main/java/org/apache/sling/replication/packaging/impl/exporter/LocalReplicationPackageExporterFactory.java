@@ -34,7 +34,10 @@ import java.util.List;
  * {@link org.apache.sling.replication.packaging.ReplicationPackageExporter} implementation which creates a FileVault based
  * {@link org.apache.sling.replication.packaging.ReplicationPackage} locally.
  */
-@Component(label = "Local Replication Package Exporter", configurationFactory = true)
+@Component(label = "Local Replication Package Exporter",
+        configurationFactory = true,
+        specVersion = "1.1",
+        policy = ConfigurationPolicy.REQUIRE)
 @Service(value = ReplicationPackageExporter.class)
 public class LocalReplicationPackageExporterFactory implements ReplicationPackageExporter {
 

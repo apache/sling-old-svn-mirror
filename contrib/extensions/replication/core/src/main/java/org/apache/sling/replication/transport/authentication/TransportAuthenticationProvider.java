@@ -18,16 +18,29 @@
  */
 package org.apache.sling.replication.transport.authentication;
 
-
 /**
  * A <code>TransportAuthenticationProvider</code> is responsible for authentication of instances sending and
  * receiving replication items via {@link org.apache.sling.replication.transport.ReplicationTransportHandler}s
  */
 public interface TransportAuthenticationProvider<A, T> {
 
+    /**
+     * check if this provider is able to authenticate objects belonging to given 'authenticable' class.
+     *
+     * @param authenticable class of objects to be authenticated
+     * @return <code>true</code> if this provider can check authentication on instances of this class, <code>false</code>
+     * otherwise
+     */
     boolean canAuthenticate(Class<?> authenticable);
 
+    /**
+     *
+     * @param authenticable
+     * @param context
+     * @return
+     * @throws TransportAuthenticationException
+     */
     T authenticate(A authenticable, TransportAuthenticationContext context)
-                    throws TransportAuthenticationException;
+            throws TransportAuthenticationException;
 
 }

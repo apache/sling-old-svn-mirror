@@ -27,11 +27,11 @@ import org.apache.http.client.fluent.Executor;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
 
-
 @Component(immediate = true, label = "Factory for User based Transport Authentication Providers")
 @Service(value = TransportAuthenticationProviderFactory.class)
 @Property(name = "name", value = UserCredentialsTransportAuthenticationProviderFactory.TYPE)
 public class UserCredentialsTransportAuthenticationProviderFactory implements TransportAuthenticationProviderFactory {
+
     public static final String TYPE = "user";
 
     public TransportAuthenticationProvider<Executor, Executor> createAuthenticationProvider(

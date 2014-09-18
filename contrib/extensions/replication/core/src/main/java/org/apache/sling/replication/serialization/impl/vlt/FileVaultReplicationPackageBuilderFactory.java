@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
  * backed by a {@link VaultPackage}. 
  */
 @Component(metatype = true,
+        immediate = true,
         label = "FileVault based Replication Package Builder",
         description = "OSGi configuration based PackageBuilder service factory",
         name = FileVaultReplicationPackageBuilderFactory.SERVICE_PID,
