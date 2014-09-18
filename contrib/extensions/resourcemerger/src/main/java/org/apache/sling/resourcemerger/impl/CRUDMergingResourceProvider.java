@@ -63,9 +63,8 @@ public class CRUDMergingResourceProvider
             holder.count++;
             if ( holder.count == 1 ) {
                 holder.lowestResourcePath = rsrc.getPath();
-            } else if ( holder.count == 2 ) {
-                holder.highestResourcePath = rsrc.getPath();
             }
+            holder.highestResourcePath = rsrc.getPath();
             if ( !ResourceUtil.isNonExistingResource(rsrc) ) {
                 // check parent for hiding
                 final Resource parent = rsrc.getParent();
@@ -145,15 +144,10 @@ public class CRUDMergingResourceProvider
             throw new PersistenceException("Modifying is only supported with at least two potentially merged resources.", null, path, null);
         }
 
-        int deleted = 0;
-        for(final Resource rsrc : holder.holder.resources) {
-            final String p = rsrc.getPath();
-            if ( !p.equals(holder.lowestResourcePath) ) {
-                resolver.delete(rsrc);
-                deleted++;
-            }
-        }
-        if ( deleted < holder.holder.resources.size() ) {
+        if ( holder.holder.resources.size() == 1 && holder.holder.resources.get(0).getPath().equals(holder.highestResourcePath) ) {
+            // delete the only resource which is the highest one
+            resolver.delete(holder.holder.resources.get(0));
+        } else {
             // create overlay resource which is hiding the other
             final String createPath = holder.highestResourcePath;
             final Resource parentResource = ResourceUtil.getOrCreateResource(resolver, ResourceUtil.getParent(createPath), (String)null, null, false);
