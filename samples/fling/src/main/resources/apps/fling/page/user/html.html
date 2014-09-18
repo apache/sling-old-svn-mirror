@@ -19,48 +19,72 @@
 -->
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" th:with="page=${resource.adaptTo(@org.apache.sling.samples.fling.UserPage@class)}">
-<head>
+<head th:replace="/apps/fling/page/fragments/head.html::default">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title th:text="${page.title}">Page Title</title>
-  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"/>
-  <link rel="stylesheet" href="/fling/assets/css/fling.css"/>
+  <title>USER PAGE</title>
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="../../../../assets/css/fling.css"/>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js" type="text/javascript"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js" type="text/javascript"></script>
 </head>
 <body>
 <div class="container">
   <nav class="nav-main">
     <div class="pull-left">
-      <div th:replace="/apps/fling/page/fragments/navigation.html::breadcrumb"></div>
+      <ul class="breadcrumb" style="direction: rtl" th:replace="/apps/fling/page/fragments/navigation.html::breadcrumb">
+        <li class="active dropdown">
+          <span>2rd BAR</span>
+        </li>
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" role="button" data-toggle="dropdown"><span class="caret"></span></a>
+          <a href="../simple/html.html">1st FOO</a>
+          <ul class="dropdown-menu" role="menu">
+            <li role="presentation"><a role="menuitem" tabindex="-1" href="../simple/html.html">1st FOO CHILD</a></li>
+            <li role="presentation"><a role="menuitem" tabindex="-1" href="../simple/html.html">2nd FOO CHILD</a></li>
+            <li role="presentation"><a role="menuitem" tabindex="-1" href="../simple/html.html">3rd FOO CHILD</a></li>
+            <li role="presentation"><a role="menuitem" tabindex="-1" href="../simple/html.html">4th FOO CHILD</a></li>
+          </ul>
+        </li>
+      </ul>
     </div>
-    <div th:replace="/apps/fling/page/fragments/navigation.html::children"></div>
+    <ul class="nav nav-pills" role="tablist" th:replace="/apps/fling/page/fragments/navigation.html::children">
+      <li><a href="../user/html.html">3rd BAZ</a></li>
+    </ul>
   </nav>
   <div class="panel panel-primary">
     <div class="panel-heading">
-      <span th:text="${page.title}"></span>
+      <span th:text="${page.title}">USER PAGE</span>
     </div>
     <div class="panel-body" th:with="user=${page.user}">
       <form role="form">
         <div class="form-group">
           <label>User ID of current JCR session</label>
-          <input type="text" class="form-control" readonly="readonly" th:attr="value=${user.getID()}"/>
+          <input type="text" class="form-control" readonly="readonly" value="dummy" th:attr="value=${user.getID()}"/>
         </div>
         <div class="form-group">
           <label>principal name</label>
-          <input type="text" class="form-control" readonly="readonly" th:attr="value=${user.getPrincipal().getName()}"/>
+          <input type="text" class="form-control" readonly="readonly" value="dummy" th:attr="value=${user.getPrincipal().getName()}"/>
         </div>
         <div class="form-group" th:each="property : ${page.userProperties}">
           <label th:text="${property.key}">key</label>
-          <input type="text" class="form-control" readonly="readonly" th:attr="value=${property.value}"/>
+          <input type="text" class="form-control" readonly="readonly" value="value" th:attr="value=${property.value}"/>
+        </div>
+        <div class="form-group" th:remove="all">
+          <label>firstName</label>
+          <input type="text" class="form-control" readonly="readonly" value="Foo"/>
+        </div>
+        <div class="form-group" th:remove="all">
+          <label>lastName</label>
+          <input type="text" class="form-control" readonly="readonly" value="Bar"/>
         </div>
       </form>
-      <img src="/fling/assets/images/feather.png" width="355" height="111"/>
+      <img src="../../../../assets/images/feather.png" width="355" height="111" th:attr="src='/fling/assets/images/feather.png'"/>
     </div>
     <div class="panel-footer" th:replace="/apps/fling/page/fragments/panel.html::footer">
       <span>user | auth type</span>
     </div>
   </div>
 </div>
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js" type="text/javascript"></script>
-<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js" type="text/javascript"></script>
 </body>
 </html>

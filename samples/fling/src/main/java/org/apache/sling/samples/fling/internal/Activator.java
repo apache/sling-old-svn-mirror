@@ -41,6 +41,7 @@ public class Activator implements BundleActivator {
     public void stop(BundleContext bundleContext) throws Exception {
         if (serviceRegistration != null) {
             serviceRegistration.unregister();
+            serviceRegistration = null;
         }
     }
 
