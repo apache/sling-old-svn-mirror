@@ -42,6 +42,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.management.NotCompliantMBeanException;
+import javax.management.StandardMBean;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -88,6 +90,7 @@ import org.apache.sling.servlets.resolver.internal.helper.ResourceCollector;
 import org.apache.sling.servlets.resolver.internal.helper.SlingServletConfig;
 import org.apache.sling.servlets.resolver.internal.resource.ServletResourceProvider;
 import org.apache.sling.servlets.resolver.internal.resource.ServletResourceProviderFactory;
+import org.apache.sling.servlets.resolver.jmx.SlingServletResolverCacheMBean;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -510,6 +513,8 @@ public class SlingServletResolver
 
     private final ThreadLocal<ResourceResolver> perThreadScriptResolver = new ThreadLocal<ResourceResolver>();
 
+    private ServiceRegistration mbeanRegistration;
+
     /**
      * @see org.apache.sling.api.request.SlingRequestListener#onEvent(org.apache.sling.api.request.SlingRequestEvent)
      */
@@ -845,6 +850,16 @@ public class SlingServletResolver
                 properties);
 
         this.plugin = new ServletResolverWebConsolePlugin(context.getBundleContext());
+        
+        try {
+            Dictionary<String, String> mbeanProps = new Hashtable<String, String>();
+            mbeanProps.put("jmx.objectname", "org.apache.sling:type=servletResolver,service=SlingServletResolverCache");
+
+            ServletResolverCacheMBeanImpl mbean = new ServletResolverCacheMBeanImpl();
+            mbeanRegistration = context.getBundleContext().registerService(SlingServletResolverCacheMBean.class.getName(), mbean, mbeanProps);
+        } catch (Throwable t) {
+            LOGGER.debug("Unable to register mbean");
+        }
     }
 
     /**
@@ -896,6 +911,11 @@ public class SlingServletResolver
 
         this.cache = null;
         this.servletResourceProviderFactory = null;
+
+        if (this.mbeanRegistration != null) {
+            this.mbeanRegistration.unregister();
+            this.mbeanRegistration = null;
+        }
     }
 
     protected void bindServlet(final ServiceReference reference) {
@@ -1048,10 +1068,14 @@ public class SlingServletResolver
                 }
             }
             if (flushCache) {
-                this.cache.clear();
-                this.logCacheSizeWarning = true;
+                flushCache();
             }
         }
+    }
+
+    private void flushCache() {
+        this.cache.clear();
+        this.logCacheSizeWarning = true;
     }
 
     /** The list of property names checked by {@link #getName(ServiceReference)} */
@@ -1305,6 +1329,26 @@ public class SlingServletResolver
                          "</th>");
                 closeTr(pw);
             }
+        }
+
+    }
+
+    class ServletResolverCacheMBeanImpl extends StandardMBean implements SlingServletResolverCacheMBean {
+
+        ServletResolverCacheMBeanImpl() throws NotCompliantMBeanException {
+            super(SlingServletResolverCacheMBean.class);
+        }
+
+        public int getCacheSize() {
+            return cache.size();
+        }
+
+        public void flushCache() {
+            SlingServletResolver.this.flushCache();
+        }
+
+        public int getMaximumCacheSize() {
+            return cacheSize;
         }
 
     }
