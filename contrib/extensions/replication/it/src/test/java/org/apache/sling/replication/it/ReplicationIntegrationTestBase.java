@@ -65,8 +65,7 @@ public abstract class ReplicationIntegrationTestBase {
                     "packageImporter", "authenticationFactory/type=service",
                     "packageImporter", "authenticationFactory/name=user",
                     "packageImporter", "packageBuilder/type=vlt",
-                    "packageImporter", "packageBuilder/username=admin",
-                    "packageImporter", "packageBuilder/password=admin");
+                    "packageImporter", "packageBuilder/servicename=replicationService");
 
             Thread.sleep(3000);
 
@@ -83,8 +82,7 @@ public abstract class ReplicationIntegrationTestBase {
                     "packageExporter", "authenticationFactory/type=service",
                     "packageExporter", "authenticationFactory/name=user",
                     "packageExporter", "packageBuilder/type=vlt",
-                    "packageExporter", "packageBuilder/username=admin",
-                    "packageExporter", "packageBuilder/password=admin");
+                    "packageExporter", "packageBuilder/servicename=replicationService");
 
             Thread.sleep(3000);
             assertExists(authorClient, agentUrl("publish-reverse"));

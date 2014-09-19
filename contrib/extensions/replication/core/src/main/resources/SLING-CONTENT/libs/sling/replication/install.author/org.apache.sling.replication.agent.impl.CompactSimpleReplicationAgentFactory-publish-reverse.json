@@ -13,15 +13,13 @@
         "authenticationFactory/name=user",
 
         "packageBuilder/type=vlt",
-        "packageBuilder/username=admin",
-        "packageBuilder/password=admin"
+        "packageBuilder/servicename=replicationService"
     ],
 
     "packageImporter": [
         "type=local",
         "packageBuilder/type=vlt",
-        "packageBuilder/username=admin",
-        "packageBuilder/password=admin"
+        "packageBuilder/servicename=replicationService"
     ],
 
     "queueProvider" : [

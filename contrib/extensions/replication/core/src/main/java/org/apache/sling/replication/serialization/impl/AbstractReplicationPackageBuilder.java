@@ -40,6 +40,11 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractReplicationPackageBuilder implements ReplicationPackageBuilder {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
+    private final String type;
+
+    public AbstractReplicationPackageBuilder(String type) {
+        this.type = type;
+    }
 
     public ReplicationPackage createPackage(ReplicationRequest request)
             throws ReplicationPackageBuildingException {
@@ -47,9 +52,9 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
         if (ReplicationActionType.ADD.equals(request.getAction())) {
             replicationPackage = createPackageForAdd(request);
         } else if (ReplicationActionType.DELETE.equals(request.getAction())) {
-            replicationPackage = new VoidReplicationPackage(request, getName());
+            replicationPackage = new VoidReplicationPackage(request, type);
         } else if (ReplicationActionType.POLL.equals(request.getAction())) {
-            replicationPackage = new VoidReplicationPackage(request, getName()); // TODO : change this
+            replicationPackage = new VoidReplicationPackage(request, type); // TODO : change this
         } else {
             throw new ReplicationPackageBuildingException("unknown action type "
                     + request.getAction());
@@ -133,8 +138,6 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
         }
         return replicationPackage;
     }
-
-    protected abstract String getName();
 
     protected abstract Session getSession() throws RepositoryException;
 

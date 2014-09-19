@@ -1,6 +1,5 @@
 {
     "jcr:primaryType" : "sling:OsgiConfig",
     "name" : "vlt",
-    "username" : "admin",
-    "password" : "admin"
+    "servicename" : "replicationService"
 }

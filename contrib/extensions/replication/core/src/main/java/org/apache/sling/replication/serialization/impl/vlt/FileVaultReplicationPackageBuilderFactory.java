@@ -64,10 +64,7 @@ public class FileVaultReplicationPackageBuilderFactory {
     public static final String NAME = "name";
 
     @Property
-    public static final String USERNAME = "username";
-
-    @Property
-    public static final String PASSWORD = "password";
+    public static final String SERVICENAME = "servicename";
 
     @Reference
     private SlingRepository repository;
@@ -83,20 +80,14 @@ public class FileVaultReplicationPackageBuilderFactory {
 
         String name = PropertiesUtil.toString(config.get(NAME), "").trim();
 
-        String username = PropertiesUtil.toString(config.get(USERNAME), "").trim();
-        String password = PropertiesUtil.toString(config.get(PASSWORD), "").trim();
         if (name.length() == 0) {
             throw new IllegalArgumentException("name must not be empty");
         }
-        if (username.length() == 0 || password.length() == 0) {
-            throw new IllegalArgumentException("Username and password cannot be empty");
-        }
+
         Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(NAME, name);
-        props.put(USERNAME, username);
-        props.put(PASSWORD, password);
 
-        ReplicationPackageBuilder replicationPackageBuilder = new FileVaultReplicationPackageBuilder(name, username, password, repository, packaging);
+        ReplicationPackageBuilder replicationPackageBuilder = getInstance(config, repository, packaging);
 
         builderReg = context.registerService(ReplicationPackageBuilder.class.getName(), replicationPackageBuilder, props);
     }
@@ -112,12 +103,15 @@ public class FileVaultReplicationPackageBuilderFactory {
 
     public static FileVaultReplicationPackageBuilder getInstance(Map<String, Object> config,
                                                                  SlingRepository repository, Packaging packaging) {
-        String username = PropertiesUtil.toString(config.get(USERNAME), "").trim();
-        String password = PropertiesUtil.toString(config.get(PASSWORD), "").trim();
-        if (username.length() == 0 || password.length() == 0) {
-            throw new IllegalArgumentException("Username and password cannot be empty");
+
+
+        String serviceName = PropertiesUtil.toString(config.get(SERVICENAME), "").trim();
+
+        if (serviceName.length() == 0) {
+            throw new IllegalArgumentException("Service Name cannot be empty");
         }
-        return new FileVaultReplicationPackageBuilder(NAME, username, password, repository, packaging);
+
+        return new FileVaultReplicationPackageBuilder(serviceName, repository, packaging);
 
     }
 

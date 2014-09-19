@@ -61,18 +61,16 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
 
     private SlingRepository repository;
 
-    private Packaging packaging;
+    private final Packaging packaging;
 
-    private String username;
-    private String password;
-    private String type;
+    private final String subServiceName;
 
-    public FileVaultReplicationPackageBuilder(String type, String username, String password,
-                                              SlingRepository repository, Packaging packaging) {
-        this.type = type;
+    private static final String TYPE = "vlt";
 
-        this.username = username;
-        this.password = password;
+    public FileVaultReplicationPackageBuilder(String subServiceName, SlingRepository repository, Packaging packaging) {
+        super(TYPE);
+
+        this.subServiceName = subServiceName;
         this.repository = repository;
         this.packaging = packaging;
     }
@@ -117,13 +115,8 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
     }
 
     @Override
-    protected String getName() {
-        return type;
-    }
-
-    @Override
     protected Session getSession() throws RepositoryException {
-        return repository.login(new SimpleCredentials(username, password.toCharArray()));
+        return repository.loginService(subServiceName, null);
     }
 
     @Override
