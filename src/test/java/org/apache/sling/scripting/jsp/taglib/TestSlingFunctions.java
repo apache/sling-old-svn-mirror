@@ -87,36 +87,36 @@ public class TestSlingFunctions {
 	}
 
 	@Test
-	public void testEscape() {
+	public void testEncode() {
 		log.info("testEncode");
 
-		log.info("Testing HTML Escaping");
+		log.info("Testing HTML Encoding");
 		assertEquals("&amp;nbsp&#x3b;Here is some text&#x21;",
-				SlingFunctions.escape("&nbsp;Here is some text!", "HTML"));
+				SlingFunctions.encode("&nbsp;Here is some text!", "HTML"));
 
-		log.info("Testing HTML Attr Escaping");
+		log.info("Testing HTML Attr Encoding");
 		assertEquals(
 				"&amp;nbsp&#x3b;Here&#x20;is&#x20;some&#x20;text&#x21;&quot;",
 				SlingFunctions
-						.escape("&nbsp;Here is some text!\"", "HTML_ATTR"));
+						.encode("&nbsp;Here is some text!\"", "HTML_ATTR"));
 
 		log.info("Testing invalid values");
 		try {
-			SlingFunctions.escape(null, null);
+			SlingFunctions.encode(null, null);
 			fail("Expected null pointer exception");
 		} catch (NullPointerException npe) {
 			log.info("Encountered expected exception");
 		}
 		try {
-			SlingFunctions.escape(null, "Invalid");
+			SlingFunctions.encode(null, "Invalid");
 			fail("Expected invalid argument exception");
 		} catch (IllegalArgumentException iae) {
 			log.info("Encountered expected exception");
 		}
 
 		log.info("Testing null/empty values");
-		assertNull(SlingFunctions.escape(null, "html"));
-		assertEquals("", SlingFunctions.escape("", "html"));
+		assertNull(SlingFunctions.encode(null, "html"));
+		assertEquals("", SlingFunctions.encode("", "html"));
 
 		log.info("Tests successful!");
 	}
