@@ -72,10 +72,15 @@ public class SlingJUnitServlet extends JUnitServlet {
     
     /** Return path to which to POST to execute specified test */
     protected String getTestExecutionPath(HttpServletRequest request, TestSelector selector, String extension) {
+    	String selectedTestMethodName = selector.getSelectedTestMethodName();
+    	String methodStr = "";
+    	if (selectedTestMethodName != null && !"".equals(selectedTestMethodName)) {
+    		methodStr = "/" + selectedTestMethodName;
+    	}
         return  "./"
         + selector.getTestSelectorString()
+        + methodStr
         + "."
-        + extension
-        ;
+        + extension;
     }
 }

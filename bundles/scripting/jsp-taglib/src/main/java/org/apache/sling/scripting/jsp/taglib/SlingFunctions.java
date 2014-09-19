@@ -66,15 +66,15 @@ public class SlingFunctions {
 	}
 
 	/**
-	 * Loads the Class for the name from the current thread's classload.
+	 * XSS encodes the specified text using the specified mode.
 	 * 
-	 * @param className
-	 *            The name of the class to load
-	 * @return the class
-	 * @throws ClassNotFoundException
-	 *             a class with the specified name could not be found
+	 * @param value
+	 *            The text to encode
+	 * @param mode
+	 *            The XSS mode to use, see XSSSupport for the list of available modes
+	 * @return the encoded text
 	 */
-	public static String escape(String value, String mode) {
+	public static String encode(String value, String mode) {
 		return XSSSupport.encode(value, XSSSupport.getEncodingMode(mode));
 	}
 

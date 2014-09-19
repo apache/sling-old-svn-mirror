@@ -89,6 +89,9 @@ public class LaunchpadConfigInstaller {
                     count++;
 
                     final URL url = resourceProvider.getResource(path);
+                    if(url == null){
+                    	throw new RuntimeException("Retrieved null resource for path: "+path);
+                    }
                     Dictionary<String, Object> dict = null;
                     if ( InstallableResource.TYPE_FILE.equals(resourceType) ) {
                         dict = new Hashtable<String, Object>();
