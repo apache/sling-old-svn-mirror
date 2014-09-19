@@ -252,7 +252,7 @@ public class ResourceChangeCommandFactory {
 
         String resourceLocation = '/' + changedResource.getFullPath().makeRelativeTo(syncDirectory.getFullPath())
                 .toPortableString();
-        IPath serializationFilePath = Path.fromPortableString(serializationManager.getSerializationFilePath(
+        IPath serializationFilePath = Path.fromOSString(serializationManager.getSerializationFilePath(
                 resourceLocation, serializationKind));
         IResource serializationResource = syncDirectory.findMember(serializationFilePath);
 
@@ -505,7 +505,7 @@ public class ResourceChangeCommandFactory {
         // make sure that a 'plain' folder being deleted does not signal that the content structure
         // was rearranged under a covering parent aggregate
         if (resource.getType() == IResource.FOLDER) {
-            IPath serializationFilePath = Path.fromPortableString(serializationManager.getSerializationFilePath(
+            IPath serializationFilePath = Path.fromOSString(serializationManager.getSerializationFilePath(
                     resourceLocation, SerializationKind.FOLDER));
 
             ResourceProxy coveringParentData = findSerializationDataFromCoveringParent(resource, syncDirectory,
