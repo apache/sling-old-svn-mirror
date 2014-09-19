@@ -289,7 +289,7 @@ public class InstallEditorSection extends ServerEditorSection {
     private void updateActionArea(Version serverVersion, final Version embeddedVersion) {
         if (serverVersion == null || embeddedVersion.compareTo(serverVersion) > 0) {
             supportBundleVersionLabel
-                    .setText("Installation support bundle is not present our outdated, deployment will not work");
+                    .setText("Installation support bundle is not present or outdated, deployment will not work");
             installOrUpdateSupportBundleLink.setText("(Install)");
             installOrUpdateSupportBundleLink.setEnabled(true);
         } else {
