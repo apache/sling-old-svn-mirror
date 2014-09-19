@@ -223,12 +223,15 @@ public class JUnitServlet extends HttpServlet {
     
     /** Return path to which to POST to execute specified test */
     protected String getTestExecutionPath(HttpServletRequest request, TestSelector selector, String extension) {
-        return request.getContextPath() 
-        + servletPath
-        + "/"
+    	String selectedTestMethodName = selector.getSelectedTestMethodName();
+    	String methodStr = "";
+    	if (selectedTestMethodName != null && !"".equals(selectedTestMethodName)) {
+    		methodStr = "/" + selectedTestMethodName;
+    	}
+        return  "./"
         + selector.getTestSelectorString()
+        + methodStr
         + "."
-        + extension
-        ;
+        + extension;
     }
 }
