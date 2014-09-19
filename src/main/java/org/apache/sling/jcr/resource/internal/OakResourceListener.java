@@ -220,7 +220,7 @@ public class OakResourceListener extends NodeObserver implements Closeable {
                         if ( !sendEvent ) {
                             // take a quite silent note of not being able to
                             // resolve the resource
-                            logger.warn(
+                            logger.debug(
                                 "processOsgiEventQueue: Resource at {} not found, which is not expected for an added or modified node",
                                         changePath);
                         }
