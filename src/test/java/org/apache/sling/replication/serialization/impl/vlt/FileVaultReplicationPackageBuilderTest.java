@@ -38,8 +38,7 @@ public class FileVaultReplicationPackageBuilderTest {
             SlingRepository repository = mock(SlingRepository.class);
             Packaging packaging = mock(Packaging.class);
 
-            FileVaultReplicationPackageBuilder fileVaultReplicationPackageBuilder = new FileVaultReplicationPackageBuilder("vlt",
-                    null, null, repository, packaging);
+            FileVaultReplicationPackageBuilder fileVaultReplicationPackageBuilder = new FileVaultReplicationPackageBuilder(null, repository, packaging);
 
             ReplicationRequest request = mock(ReplicationRequest.class);
             fileVaultReplicationPackageBuilder.createPackageForAdd(request);

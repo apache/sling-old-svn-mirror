@@ -6,8 +6,7 @@
     "packageExporter" : [
         "type=local",
         "packageBuilder/type=vlt",
-        "packageBuilder/username=admin",
-        "packageBuilder/password=admin"
+        "packageBuilder/servicename=replicationService"
     ],
 
     "packageImporter": [
@@ -18,8 +17,7 @@
         "authenticationFactory/type=service",
         "authenticationFactory/name=user",
         "packageBuilder/type=vlt",
-        "packageBuilder/username=admin",
-        "packageBuilder/password=admin"
+        "packageBuilder/servicename=replicationService"
     ],
 
     "queueProvider" : [
