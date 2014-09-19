@@ -117,14 +117,21 @@ User/client makes an `HTTP POST`request to `http://localhost:8080/libs/sling/rep
 
 - install the dependency bundles on all Sling instances
 - install Sling Replication core on all Sling instances
-- create some content on author (e.g. /content/sample1)
-- activate 'content' by sending an HTTP POST on sender: 
 
-```http -a admin:admin -v -f POST http://localhost:8080/libs/sling/replication/services/agents/publish action=ADD path=/content```
+### Push resources
 
-- deactivate 'content' by sending an HTTP POST on sender:
+#### Push changes
+
+- create/update some content on author (e.g. /content/sample1)
+- add 'content/sample1' by sending an HTTP POST on sender instance: 
+
+```http -a admin:admin -v -f POST http://localhost:8080/libs/sling/replication/services/agents/publish action=ADD path=/content/sample1```
+
+#### Push deletions
+
+- delete 'content' by sending an HTTP POST on sender instance:
  
-```http -a admin:admin -v -f POST http://localhost:8080/libs/sling/replication/services/agents/publish action=DELETE path=/content```
+```http -a admin:admin -v -f POST http://localhost:8080/libs/sling/replication/services/agents/publish action=DELETE path=/content/sample1```
 
 # Open Tasks
 
