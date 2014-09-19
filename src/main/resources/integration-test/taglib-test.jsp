@@ -88,6 +88,11 @@ AdaptTo Function
     Test 3: Test Non-Adaptable Handling
     result: <c:catch var="adaptionException2"><c:set var="props7" value="${sling:adaptTo('res','org.apache.sling.api.resource.ValueMap')}" /></c:catch><c:choose><c:when test="${not empty adaptionException2}">SUCCESS: ${adaptionException}</c:when><c:otherwise>ERROR<c:set var="success" value="false" /></c:otherwise></c:choose>
 
+Encode Function
+    Test 1: HTML Encode
+    Result: HTML_ENCODE:<c:set var="htmlTest" value="&amp;Hello World!<script></script>" />${sling:encode(htmlTest,'HTML')}
+    
+
 Find Resources Function
     Test 1: Find Resources
     Result: <c:set var="foundResources4" value="${sling:findResources(resourceResolver, '/jcr:root//element(*, nt:file) order by @jcr:score', 'xpath')}" /><c:choose><c:when test="${not empty foundResources4}">SUCCESS</c:when><c:otherwise>ERROR<c:set var="success" value="false" /></c:otherwise></c:choose>
