@@ -48,6 +48,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
+import org.osgi.service.packageadmin.PackageAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,6 +111,9 @@ public class AdapterManagerImpl implements AdapterManager {
      */
     @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
     private volatile EventAdmin eventAdmin;
+
+    @Reference
+    private PackageAdmin packageAdmin;
 
     // ---------- AdapterManager interface -------------------------------------
 
@@ -247,6 +251,18 @@ public class AdapterManagerImpl implements AdapterManager {
             return;
         }
 
+        for (String clazz : adaptables) {
+            if (!checkPackage(packageAdmin, clazz)) {
+                log.warn("Adaptable class {} in factory service {} is not in an exported package.", clazz, reference.getProperty(Constants.SERVICE_ID));
+            }
+        }
+
+        for (String clazz : adapters) {
+            if (!checkPackage(packageAdmin, clazz)) {
+                log.warn("Adapter class {} in factory service {} is not in an exported package.", clazz, reference.getProperty(Constants.SERVICE_ID));
+            }
+        }
+
         final AdapterFactoryDescriptor factoryDesc = new AdapterFactoryDescriptor(context,
                 reference, adapters);
 
@@ -276,6 +292,22 @@ public class AdapterManagerImpl implements AdapterManager {
             localEA.postEvent(new Event(SlingConstants.TOPIC_ADAPTER_FACTORY_ADDED,
                     props));
         }
+    }
+
+    /**
+     * Check that the package containing the class is exported or is a java.*
+     * class.
+     * 
+     * @param packageAdmin the PackageAdmin service
+     * @param clazz the class name
+     * @return true if the package is exported
+     */
+    static boolean checkPackage(PackageAdmin packageAdmin, String clazz) {
+        String packageName = clazz.substring(0, clazz.lastIndexOf('.'));
+        if (packageName.startsWith("java.")) {
+            return true;
+        }
+        return packageAdmin.getExportedPackage(packageName) != null;
     }
 
     /**

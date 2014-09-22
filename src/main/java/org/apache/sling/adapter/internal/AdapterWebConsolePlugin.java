@@ -43,6 +43,7 @@ import org.apache.commons.lang.builder.CompareToBuilder;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.commons.json.JSONArray;
@@ -58,6 +59,7 @@ import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 import org.slf4j.Logger;
@@ -82,6 +84,9 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
     private static final String ADAPTER_DEPRECATED = "adapter.deprecated";
 
     private final Logger logger = LoggerFactory.getLogger(AdapterWebConsolePlugin.class);
+    
+    @Reference
+    private PackageAdmin packageAdmin;
 
     private List<AdaptableDescription> allAdaptables;
     private Map<ServiceReference, List<AdaptableDescription>> adapterServiceReferences;
@@ -266,10 +271,26 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
         writer.println("<thead><tr><th class=\"header\">${Adaptable Class}</th><th class=\"header\">${Adapter Class}</th><th class=\"header\">${Condition}</th><th class=\"header\">${Deprecated}</th><th class=\"header\">${Providing Bundle}</th></tr></thead>");
         String rowClass = "odd";
         for (final AdaptableDescription desc : allAdaptables) {
-            writer.printf("<tr class=\"%s ui-state-default\"><td>%s</td>", rowClass, desc.adaptable);
+            writer.printf("<tr class=\"%s ui-state-default\"><td>", rowClass);
+            boolean packageExported = AdapterManagerImpl.checkPackage(packageAdmin, desc.adaptable);
+            if (!packageExported) {
+                writer.print("<span class='error'>");
+            }
+            writer.print(desc.adaptable);
+            if (!packageExported) {
+                writer.print("</span>");
+            }
+            writer.print("</td>");
             writer.print("<td>");
             for (final String adapter : desc.adapters) {
+                packageExported = AdapterManagerImpl.checkPackage(packageAdmin, adapter);
+                if (!packageExported) {
+                    writer.print("<span class='error'>");
+                }
                 writer.print(adapter);
+                if (!packageExported) {
+                    writer.print("</span>");
+                }
                 writer.print("<br/>");
             }
             writer.print("</td>");

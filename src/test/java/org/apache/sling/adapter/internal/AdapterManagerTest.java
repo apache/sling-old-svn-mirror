@@ -35,9 +35,12 @@ import org.osgi.framework.Filter;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.packageadmin.ExportedPackage;
+import org.osgi.service.packageadmin.PackageAdmin;
 
 import java.util.Map;
 
+import junitx.util.PrivateAccessor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -50,8 +53,15 @@ public class AdapterManagerTest {
 
     protected final Mockery context = new JUnit4Mockery();
 
-    @org.junit.Before public void setUp() {
+    @org.junit.Before public void setUp() throws Exception {
         am = new AdapterManagerImpl();
+        final PackageAdmin pa = this.context.mock(PackageAdmin.class);
+        final ExportedPackage ep = this.context.mock(ExportedPackage.class);
+        this.context.checking(new Expectations(){{
+            allowing(pa).getExportedPackage(with(any(String.class)));
+            will(returnValue(ep));
+        }});
+        PrivateAccessor.setField(am, "packageAdmin", pa);
     }
 
     @org.junit.After public void tearDown() {
