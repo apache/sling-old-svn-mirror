@@ -51,7 +51,7 @@ import org.codehaus.plexus.util.FileUtils;
         requiresDependencyResolution = ResolutionScope.TEST,
         threadSafe = true
     )
-public class PreparePackageMojo extends AbstractSubsystemMojo {
+public class PreparePackageMojo extends AbstractSlingStartMojo {
 
     private static final String BASE_DESTINATION = "resources";
 
@@ -171,7 +171,7 @@ public class PreparePackageMojo extends AbstractSubsystemMojo {
     throws MojoExecutionException{
         for(final SSMStartLevel sl : runMode.startLevels) {
             for(final SSMArtifact a : sl.artifacts) {
-                final Artifact artifact = SubsystemUtils.getArtifact(this.project, a.groupId, a.artifactId, model.getValue(a.version), a.type, a.classifier);
+                final Artifact artifact = ModelUtils.getArtifact(this.project, a.groupId, a.artifactId, model.getValue(a.version), a.type, a.classifier);
                 final File artifactFile = artifact.getFile();
                 contentsMap.put(getPathForArtifact(sl.level, artifactFile.getName(), runMode), artifactFile);
             }
@@ -275,9 +275,9 @@ public class PreparePackageMojo extends AbstractSubsystemMojo {
      * Return the base artifact
      */
     private Artifact getBaseArtifact(final SSMDeliverable model, final String classifier, final String type) throws MojoExecutionException {
-        final SSMArtifact baseArtifact = SubsystemUtils.getBaseArtifact(model);
+        final SSMArtifact baseArtifact = ModelUtils.getBaseArtifact(model);
 
-        final Artifact a = SubsystemUtils.getArtifact(this.project, baseArtifact.groupId,
+        final Artifact a = ModelUtils.getArtifact(this.project, baseArtifact.groupId,
                 baseArtifact.artifactId,
                 model.getValue(baseArtifact.version),
                 type,

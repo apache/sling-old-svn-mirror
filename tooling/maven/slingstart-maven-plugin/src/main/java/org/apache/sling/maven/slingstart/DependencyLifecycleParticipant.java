@@ -109,14 +109,14 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
 
         final String directory = nodeValue((Xpp3Dom) plugin.getConfiguration(),
                 "systemsDirectory", new File(project.getBasedir(), "src/main/systems").getAbsolutePath());
-        final SSMDeliverable model = SubsystemUtils.readFullModel(new File(directory), dependencies, project, session, log);
+        final SSMDeliverable model = ModelUtils.readFullModel(new File(directory), dependencies, project, session, log);
 
         final StringWriter w = new StringWriter();
         XMLSSMModelWriter.write(w, model);
         project.setContextValue(SSMDeliverable.class.getName() + "/text", w.toString());
 
         // start with base artifact
-        final SSMArtifact base = SubsystemUtils.getBaseArtifact(model);
+        final SSMArtifact base = ModelUtils.getBaseArtifact(model);
         final String[] classifiers = new String[] {null, BuildConstants.CLASSIFIER_APP, BuildConstants.CLASSIFIER_WEBAPP};
         for(final String c : classifiers) {
             final Dependency dep = new Dependency();
