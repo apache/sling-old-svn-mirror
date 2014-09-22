@@ -16,5 +16,9 @@
  */
  
 table.adapters tr .header {
-	background-image: none;
+    background-image: none;
+}
+
+table.adapters tr .error {
+    color: red;
 }
