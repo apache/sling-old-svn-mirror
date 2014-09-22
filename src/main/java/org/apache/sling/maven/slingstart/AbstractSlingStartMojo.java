@@ -30,7 +30,7 @@ import org.apache.maven.project.MavenProjectHelper;
 import org.apache.sling.slingstart.model.SSMDeliverable;
 import org.apache.sling.slingstart.model.xml.XMLSSMModelReader;
 
-public abstract class AbstractSubsystemMojo extends AbstractMojo {
+public abstract class AbstractSlingStartMojo extends AbstractMojo {
 
     @Parameter(defaultValue="${basedir}/src/main/systems")
     protected File systemsDirectory;

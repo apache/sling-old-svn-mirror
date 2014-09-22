@@ -41,7 +41,7 @@ import org.codehaus.plexus.archiver.jar.JarArchiver;
         requiresDependencyResolution = ResolutionScope.TEST,
         threadSafe = true
     )
-public class PackageMojo extends AbstractSubsystemMojo {
+public class PackageMojo extends AbstractSlingStartMojo {
 
     private static final String[] EXCLUDES_MANIFEST = new String[] {"META-INF/MANIFEST.MF"};
 

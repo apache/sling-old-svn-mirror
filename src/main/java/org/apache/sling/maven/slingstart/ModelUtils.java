@@ -35,7 +35,7 @@ import org.apache.sling.slingstart.model.SSMDeliverable;
 import org.apache.sling.slingstart.model.xml.XMLSSMModelReader;
 import org.codehaus.plexus.logging.Logger;
 
-public abstract class SubsystemUtils {
+public abstract class ModelUtils {
 
     /**
      * Read all model files from the directory in alphabetical order

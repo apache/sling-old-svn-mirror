@@ -40,7 +40,7 @@ import org.apache.sling.slingstart.model.xml.XMLSSMModelWriter;
         requiresDependencyResolution = ResolutionScope.TEST,
         threadSafe = true
     )
-public class AttachSlingSubsystem extends AbstractSubsystemMojo {
+public class AttachSlingStartModel extends AbstractSlingStartMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
