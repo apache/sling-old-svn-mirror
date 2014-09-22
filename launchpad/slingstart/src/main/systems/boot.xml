@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<subsystem>
+<properties>
+ws.version=1.0.2
+</properties>
+    <runMode modes=":base">
+        <artifact groupId="org.apache.sling" artifactId="org.apache.sling.launchpad.base" version="4.4.1-2.5.2"/>
+    </runMode>
+
+    <runMode modes=":boot">
+        <!-- bootstrap bundles, must allow the installer core to start -->
+        <artifact groupId="org.slf4j" artifactId="slf4j-api" version="1.7.6"/>
+        <artifact groupId="org.apache.sling" artifactId="org.apache.sling.commons.log" version="4.0.0"/>
+        <artifact groupId="org.apache.sling" artifactId="org.apache.sling.commons.logservice" version="1.0.2"/>
+        <artifact groupId="org.slf4j" artifactId="jcl-over-slf4j" version="1.7.6"/>
+        <artifact groupId="org.slf4j" artifactId="log4j-over-slf4j" version="1.7.6"/>
+        <artifact groupId="org.apache.sling" artifactId="org.apache.sling.settings" version="1.3.2"/>
+        <artifact groupId="org.apache.sling" artifactId="org.apache.sling.fragment.xml" version="1.0.2"/>
+        <artifact groupId="org.apache.sling" artifactId="org.apache.sling.fragment.transaction" version="1.0.0"/>
+        <artifact groupId="org.apache.sling" artifactId="org.apache.sling.javax.activation" version="0.1.0"/>
+        <artifact groupId="org.apache.sling" artifactId="org.apache.sling.fragment.ws" version="${ws.version}"/>
+        <artifact groupId="org.apache.sling" artifactId="org.apache.sling.launchpad.installer" version="1.2.0"/>
+        <artifact groupId="org.apache.sling" artifactId="org.apache.sling.installer.core" version="3.5.4"/>
+        <artifact groupId="org.apache.sling" artifactId="org.apache.sling.installer.provider.file" version="1.0.4"/>
+        <artifact groupId="org.apache.felix" artifactId="org.apache.felix.configadmin" version="1.6.0"/>
+        <artifact groupId="org.apache.felix" artifactId="org.apache.felix.eventadmin" version="1.4.2"/>
+
+        <settings>
+# additional entries for sling.properties
+# ---------------------------------------
+
+# jackrabbit and oak run modes are mutually exclusive,
+# and cannot be changed after the first startup
+sling.run.mode.install.options=jackrabbit,oak
+        </settings>
+    </runMode>
+    
+    <runMode modes=":standalone">
+        <startLevel level="5">
+            <artifact groupId="org.apache.felix" artifactId="org.apache.felix.http.api" version="2.3.0"/>
+            <artifact groupId="org.apache.felix" artifactId="org.apache.felix.http.servlet-api" version="1.0.0"/>
+            <artifact groupId="org.apache.felix" artifactId="org.apache.felix.http.jetty" version="2.3.0"/>
+        </startLevel>
+    </runMode>
+</subsystem>

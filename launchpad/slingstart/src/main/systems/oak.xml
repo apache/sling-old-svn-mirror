@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<subsystem>
+    <runMode modes="oak">
+        <startLevel level="15">
+            <artifact groupId="org.apache.sling" artifactId="org.apache.sling.jcr.oak.server" version="0.0.2-SNAPSHOT"/>
+            <artifact groupId="com.google.guava" artifactId="guava" version="15.0"/>
+            <artifact groupId="org.apache.jackrabbit" artifactId="oak-core" version="1.0.0"/>
+            <artifact groupId="org.apache.jackrabbit" artifactId="oak-commons" version="1.0.0"/>
+            <artifact groupId="org.apache.jackrabbit" artifactId="oak-mk" version="1.0.0"/>
+            <artifact groupId="org.apache.jackrabbit" artifactId="oak-mk-api" version="1.0.0"/>
+            <artifact groupId="org.apache.jackrabbit" artifactId="oak-mk-remote" version="1.0.0"/>
+            <artifact groupId="org.apache.jackrabbit" artifactId="oak-lucene" version="1.0.0"/>
+            <artifact groupId="org.apache.jackrabbit" artifactId="oak-blob" version="1.0.0"/>
+        </startLevel>
+        <configuration pid="org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService"><![CDATA[
+name=Default NodeStore
+repository.home=sling/oak/repository
+        ]]></configuration>
+    </runMode>
+</subsystem>
