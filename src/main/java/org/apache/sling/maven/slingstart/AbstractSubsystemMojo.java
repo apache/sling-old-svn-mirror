@@ -27,7 +27,7 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
-import org.apache.sling.slingstart.model.SSMSubsystem;
+import org.apache.sling.slingstart.model.SSMDeliverable;
 import org.apache.sling.slingstart.model.xml.XMLSSMModelReader;
 
 public abstract class AbstractSubsystemMojo extends AbstractMojo {
@@ -50,15 +50,15 @@ public abstract class AbstractSubsystemMojo extends AbstractMojo {
     /**
      * Read the model prepared by the lifecycle plugin
      */
-    protected SSMSubsystem readModel()
+    protected SSMDeliverable readModel()
     throws MojoExecutionException {
-        SSMSubsystem result = (SSMSubsystem)this.project.getContextValue(SSMSubsystem.class.getName());
+        SSMDeliverable result = (SSMDeliverable)this.project.getContextValue(SSMDeliverable.class.getName());
         if ( result == null ) {
             try {
-                final String contents = (String)this.project.getContextValue(SSMSubsystem.class.getName() + "/text");
+                final String contents = (String)this.project.getContextValue(SSMDeliverable.class.getName() + "/text");
                 result = XMLSSMModelReader.read(new StringReader(contents));
 
-                this.project.setContextValue(SSMSubsystem.class.getName(), result);
+                this.project.setContextValue(SSMDeliverable.class.getName(), result);
             } catch ( final IOException ioe) {
                 throw new MojoExecutionException("Unable to cache model", ioe);
             }

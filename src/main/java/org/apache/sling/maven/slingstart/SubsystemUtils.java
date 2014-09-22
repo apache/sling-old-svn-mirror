@@ -30,8 +30,8 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.sling.slingstart.model.SSMArtifact;
-import org.apache.sling.slingstart.model.SSMRunMode;
-import org.apache.sling.slingstart.model.SSMSubsystem;
+import org.apache.sling.slingstart.model.SSMFeature;
+import org.apache.sling.slingstart.model.SSMDeliverable;
 import org.apache.sling.slingstart.model.xml.XMLSSMModelReader;
 import org.codehaus.plexus.logging.Logger;
 
@@ -41,9 +41,9 @@ public abstract class SubsystemUtils {
      * Read all model files from the directory in alphabetical order
      * @param logger
      */
-    private static SSMSubsystem readLocalModel(final File systemsDirectory, final MavenProject project, final MavenSession session, final Logger logger)
+    private static SSMDeliverable readLocalModel(final File systemsDirectory, final MavenProject project, final MavenSession session, final Logger logger)
     throws MojoExecutionException {
-        final SSMSubsystem result = new SSMSubsystem();
+        final SSMDeliverable result = new SSMDeliverable();
         final List<String> candidates = new ArrayList<String>();
         if ( systemsDirectory != null && systemsDirectory.exists() ) {
             for(final File f : systemsDirectory.listFiles() ) {
@@ -61,7 +61,7 @@ public abstract class SubsystemUtils {
             try {
                 final FileReader reader = new FileReader(new File(systemsDirectory, name));
                 try {
-                    final SSMSubsystem current = XMLSSMModelReader.read(reader);
+                    final SSMDeliverable current = XMLSSMModelReader.read(reader);
                     try {
                         current.validate();
                     } catch ( final IllegalStateException ise) {
@@ -88,25 +88,25 @@ public abstract class SubsystemUtils {
     /**
      * Read the full model
      */
-    public static SSMSubsystem readFullModel(final File systemsDirectory,
+    public static SSMDeliverable readFullModel(final File systemsDirectory,
             final List<File> dependentModels,
             final MavenProject project,
             final MavenSession session,
             final Logger logger)
     throws MojoExecutionException {
         try {
-            final SSMSubsystem localModel = readLocalModel(systemsDirectory, project, session, logger);
+            final SSMDeliverable localModel = readLocalModel(systemsDirectory, project, session, logger);
 
             // check dependent models
-            SSMSubsystem depModel = null;
+            SSMDeliverable depModel = null;
             for(final File file : dependentModels) {
                 FileReader r = null;
                 try {
                     r = new FileReader(file);
                     if ( depModel == null ) {
-                        depModel = new SSMSubsystem();
+                        depModel = new SSMDeliverable();
                     }
-                    final SSMSubsystem readModel = XMLSSMModelReader.read(r);
+                    final SSMDeliverable readModel = XMLSSMModelReader.read(r);
                     try {
                         readModel.validate();
                     } catch ( final IllegalStateException ise) {
@@ -117,7 +117,7 @@ public abstract class SubsystemUtils {
                     IOUtils.closeQuietly(r);
                 }
             }
-            final SSMSubsystem result;
+            final SSMDeliverable result;
             if ( depModel != null ) {
                 try {
                     depModel.validate();
@@ -136,9 +136,9 @@ public abstract class SubsystemUtils {
         }
     }
 
-    public static SSMArtifact getBaseArtifact(final SSMSubsystem model) throws MojoExecutionException {
+    public static SSMArtifact getBaseArtifact(final SSMDeliverable model) throws MojoExecutionException {
         // get base run mode
-        final SSMRunMode base = model.getRunMode(SSMRunMode.RUN_MODE_BASE);
+        final SSMFeature base = model.getRunMode(SSMFeature.RUN_MODE_BASE);
         if ( base == null ) {
             throw new MojoExecutionException("No base run mode found.");
         }

@@ -37,9 +37,9 @@ import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
 import org.apache.sling.slingstart.model.SSMArtifact;
-import org.apache.sling.slingstart.model.SSMRunMode;
+import org.apache.sling.slingstart.model.SSMDeliverable;
+import org.apache.sling.slingstart.model.SSMFeature;
 import org.apache.sling.slingstart.model.SSMStartLevel;
-import org.apache.sling.slingstart.model.SSMSubsystem;
 import org.apache.sling.slingstart.model.xml.XMLSSMModelWriter;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
@@ -109,11 +109,11 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
 
         final String directory = nodeValue((Xpp3Dom) plugin.getConfiguration(),
                 "systemsDirectory", new File(project.getBasedir(), "src/main/systems").getAbsolutePath());
-        final SSMSubsystem model = SubsystemUtils.readFullModel(new File(directory), dependencies, project, session, log);
+        final SSMDeliverable model = SubsystemUtils.readFullModel(new File(directory), dependencies, project, session, log);
 
         final StringWriter w = new StringWriter();
         XMLSSMModelWriter.write(w, model);
-        project.setContextValue(SSMSubsystem.class.getName() + "/text", w.toString());
+        project.setContextValue(SSMDeliverable.class.getName() + "/text", w.toString());
 
         // start with base artifact
         final SSMArtifact base = SubsystemUtils.getBaseArtifact(model);
@@ -137,13 +137,13 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
         addDependencies(model, log, project);
     }
 
-    private static void addDependencies(final SSMSubsystem model, final Logger log, final MavenProject project) {
-        for(final SSMRunMode runMode : model.runModes) {
+    private static void addDependencies(final SSMDeliverable model, final Logger log, final MavenProject project) {
+        for(final SSMFeature feature : model.features) {
             // skip base
-            if ( runMode.isRunMode(SSMRunMode.RUN_MODE_BASE) ) {
+            if ( feature.isRunMode(SSMFeature.RUN_MODE_BASE) ) {
                 continue;
             }
-            for(final SSMStartLevel sl : runMode.startLevels) {
+            for(final SSMStartLevel sl : feature.startLevels) {
                 for(final SSMArtifact a : sl.artifacts) {
                     final Dependency dep = new Dependency();
                     dep.setGroupId(a.groupId);
