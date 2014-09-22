@@ -23,16 +23,16 @@ import java.util.Map;
 
 import org.apache.sling.slingstart.model.SSMArtifact;
 import org.apache.sling.slingstart.model.SSMConfiguration;
-import org.apache.sling.slingstart.model.SSMRunMode;
+import org.apache.sling.slingstart.model.SSMDeliverable;
+import org.apache.sling.slingstart.model.SSMFeature;
 import org.apache.sling.slingstart.model.SSMStartLevel;
-import org.apache.sling.slingstart.model.SSMSubsystem;
 
 /**
  * Simple writer for the a model
  */
 public class XMLSSMModelWriter {
 
-    private static void printRunModeAttribute(final PrintWriter pw, final SSMRunMode rmd) {
+    private static void printRunModeAttribute(final PrintWriter pw, final SSMFeature rmd) {
         if ( rmd.runModes != null && rmd.runModes.length > 0 ) {
             pw.print(" modes=\"");
             boolean first = true;
@@ -59,11 +59,11 @@ public class XMLSSMModelWriter {
      * @param subystem
      * @throws IOException
      */
-    public static void write(final Writer writer, final SSMSubsystem subsystem)
+    public static void write(final Writer writer, final SSMDeliverable subsystem)
     throws IOException {
         final PrintWriter pw = new PrintWriter(writer);
         pw.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-        pw.println("<subsystem>");
+        pw.println("<deliverable>");
 
         // properties
         if ( subsystem.properties.size() > 0 ) {
@@ -79,18 +79,18 @@ public class XMLSSMModelWriter {
             pw.print(INDENT);
             pw.println("]]></properties>");
         }
-        for(final SSMRunMode runMode : subsystem.runModes) {
-            // TODO - don't write out empty run modes
+        for(final SSMFeature feature : subsystem.features) {
+            // TODO - don't write out empty features
             String indent = INDENT;
-            if ( runMode.runModes != null ) {
+            if ( feature.runModes != null ) {
                 pw.print(indent);
-                pw.print("<runMode");
-                printRunModeAttribute(pw, runMode);
+                pw.print("<feature");
+                printRunModeAttribute(pw, feature);
                 pw.println(">");
                 indent = indent + INDENT;
             }
 
-            for(final SSMStartLevel startLevel : runMode.startLevels) {
+            for(final SSMStartLevel startLevel : feature.startLevels) {
                 if ( startLevel.artifacts.size() == 0 ) {
                     continue;
                 }
@@ -131,7 +131,7 @@ public class XMLSSMModelWriter {
                 }
             }
 
-            for(final SSMConfiguration config : runMode.configurations) {
+            for(final SSMConfiguration config : feature.configurations) {
                 pw.print(indent);
                 pw.print("<configuration ");
                 if ( config.factoryPid != null ) {
@@ -147,22 +147,22 @@ public class XMLSSMModelWriter {
                 pw.println("]]></configuration>");
             }
 
-            if ( runMode.settings != null ) {
+            if ( feature.settings != null ) {
                 pw.print(indent);
                 pw.println("<settings><![CDATA[");
-                pw.println(runMode.settings.properties);
+                pw.println(feature.settings.properties);
                 pw.print(indent);
                 pw.println("]]></settings>");
             }
 
-            if ( runMode.runModes != null ) {
+            if ( feature.runModes != null ) {
                 indent = indent.substring(0, indent.length() - INDENT.length());
                 pw.print(indent);
-                pw.println("</runMode>");
+                pw.println("</feature>");
             }
         }
 
-        pw.println("</subsystem>");
+        pw.println("</deliverable>");
     }
 
     /** Escape xml text */

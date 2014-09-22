@@ -28,9 +28,9 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.sling.slingstart.model.SSMArtifact;
 import org.apache.sling.slingstart.model.SSMConfiguration;
-import org.apache.sling.slingstart.model.SSMRunMode;
+import org.apache.sling.slingstart.model.SSMDeliverable;
+import org.apache.sling.slingstart.model.SSMFeature;
 import org.apache.sling.slingstart.model.SSMSettings;
-import org.apache.sling.slingstart.model.SSMSubsystem;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
@@ -46,25 +46,25 @@ public class XMLSSMModelReader {
 
     public enum MODE {
         INIT(null, null),
-        SUBSYSTEM(INIT, "subsystem"),
+        DELIVERABLE(INIT, "deliverable"),
 
-        PROPERTIES(SUBSYSTEM, "properties"),
+        PROPERTIES(DELIVERABLE, "properties"),
 
-        STARTLEVEL(SUBSYSTEM, "startLevel"),
-        ARTIFACT(SUBSYSTEM, "artifact"),
+        STARTLEVEL(DELIVERABLE, "startLevel"),
+        ARTIFACT(DELIVERABLE, "artifact"),
 
         STARTLEVEL_ARTIFACT(STARTLEVEL, "artifact"),
 
-        CONFIGURATION(SUBSYSTEM, "configuration"),
-        SETTINGS(SUBSYSTEM, "settings"),
+        CONFIGURATION(DELIVERABLE, "configuration"),
+        SETTINGS(DELIVERABLE, "settings"),
 
-        RUNMODE(SUBSYSTEM, "runMode"),
-        RUNMODE_STARTLEVEL(RUNMODE, "startLevel"),
-        RUNMODE_ARTIFACT(RUNMODE, "artifact"),
-        RUNMODE_STARTLEVEL_ARTIFACT(RUNMODE_STARTLEVEL, "artifact"),
+        FEATURE(DELIVERABLE, "feature"),
+        FEATURE_STARTLEVEL(FEATURE, "startLevel"),
+        FEATURE_ARTIFACT(FEATURE, "artifact"),
+        FEATURE_STARTLEVEL_ARTIFACT(FEATURE_STARTLEVEL, "artifact"),
 
-        RUNMODE_CONFIGURATION(RUNMODE, "configuration"),
-        RUNMODE_SETTINGS(RUNMODE, "settings");
+        FEATURE_CONFIGURATION(FEATURE, "configuration"),
+        FEATURE_SETTINGS(FEATURE, "settings");
 
         public final MODE fromMode;
         public final String elementName;
@@ -80,10 +80,10 @@ public class XMLSSMModelReader {
      * The reader is not closed.
      * @throws IOException
      */
-    public static SSMSubsystem read(final Reader reader)
+    public static SSMDeliverable read(final Reader reader)
     throws IOException {
         try {
-            final SSMSubsystem result = new SSMSubsystem();
+            final SSMDeliverable result = new SSMDeliverable();
 
             final SAXParserFactory spf = SAXParserFactory.newInstance();
             spf.setNamespaceAware(true);
@@ -102,8 +102,8 @@ public class XMLSSMModelReader {
                 /** The namespace for the read xml elements. */
                 private String namespace;
 
-                /** The run mode */
-                private SSMRunMode runMode;
+                /** The current feature */
+                private SSMFeature feature;
 
                 /** Current startlevel */
                 private int startLevel;
@@ -118,13 +118,13 @@ public class XMLSSMModelReader {
                         final Attributes atts)
                 throws SAXException {
                     if ( this.mode == MODE.INIT ) {
-                        if ( MODE.SUBSYSTEM.elementName.equals(localName) ) {
+                        if ( MODE.DELIVERABLE.elementName.equals(localName) ) {
                             this.namespace = uri;
-                            this.mode = MODE.SUBSYSTEM;
-                            this.runMode = result.getOrCreateRunMode(null);
+                            this.mode = MODE.DELIVERABLE;
+                            this.feature = result.getOrCreateFeature(null);
                             this.startLevel = 0;
                         } else {
-                            throw new SAXException("Unknown root element (" + localName + "). Document must start with " + MODE.SUBSYSTEM.elementName);
+                            throw new SAXException("Unknown root element (" + localName + "). Document must start with " + MODE.DELIVERABLE.elementName);
                         }
                     } else {
                         if ( (uri == null && this.namespace == null) || (uri != null && uri.equals(this.namespace)) ) {
@@ -140,40 +140,40 @@ public class XMLSSMModelReader {
                                 throw new SAXException("Unknown element " + localName);
                             }
 
-                            if ( this.mode == MODE.STARTLEVEL || this.mode == MODE.RUNMODE_STARTLEVEL) {
+                            if ( this.mode == MODE.STARTLEVEL || this.mode == MODE.FEATURE_STARTLEVEL) {
                                 int level = 0;
                                 final String levelVal = atts.getValue("level");
                                 if ( levelVal != null ) {
                                     level = Integer.valueOf(levelVal);
                                 }
                                 this.startLevel = level;
-                            } else if ( this.mode == MODE.ARTIFACT || this.mode == MODE.RUNMODE_ARTIFACT || this.mode == MODE.STARTLEVEL_ARTIFACT || this.mode == MODE.RUNMODE_STARTLEVEL_ARTIFACT) {
+                            } else if ( this.mode == MODE.ARTIFACT || this.mode == MODE.FEATURE_ARTIFACT || this.mode == MODE.STARTLEVEL_ARTIFACT || this.mode == MODE.FEATURE_STARTLEVEL_ARTIFACT) {
                                 final SSMArtifact artifact = new SSMArtifact();
-                                this.runMode.getOrCreateStartLevel(this.startLevel).artifacts.add(artifact);
+                                this.feature.getOrCreateStartLevel(this.startLevel).artifacts.add(artifact);
                                 artifact.groupId = atts.getValue("groupId");
                                 artifact.artifactId = atts.getValue("artifactId");
                                 artifact.version = atts.getValue("version");
                                 artifact.type = atts.getValue("type");
                                 artifact.classifier = atts.getValue("classifier");
-                            } else if ( this.mode == MODE.CONFIGURATION || this.mode == MODE.RUNMODE_CONFIGURATION) {
+                            } else if ( this.mode == MODE.CONFIGURATION || this.mode == MODE.FEATURE_CONFIGURATION) {
                                 this.configuration = new SSMConfiguration();
                                 this.configuration.pid = atts.getValue("pid");
                                 this.configuration.factoryPid = atts.getValue("factory");
-                                this.runMode.configurations.add(this.configuration);
+                                this.feature.configurations.add(this.configuration);
                                 this.text = new StringBuilder();
-                            } else if ( this.mode == MODE.SETTINGS || this.mode == MODE.RUNMODE_SETTINGS) {
-                                if ( this.runMode.settings != null ) {
+                            } else if ( this.mode == MODE.SETTINGS || this.mode == MODE.FEATURE_SETTINGS) {
+                                if ( this.feature.settings != null ) {
                                     throw new SAXException("Duplicate settings section");
                                 }
-                                this.runMode.settings = new SSMSettings();
+                                this.feature.settings = new SSMSettings();
                                 this.text = new StringBuilder();
 
-                            } else if ( this.mode == MODE.RUNMODE ) {
+                            } else if ( this.mode == MODE.FEATURE ) {
                                 final String runMode = atts.getValue("modes");
                                 if ( runMode == null || runMode.trim().length() == 0 ) {
                                     throw new SAXException("Required attribute runModes missing for runMode element");
                                 }
-                                this.runMode = result.getOrCreateRunMode(runMode.split(","));
+                                this.feature = result.getOrCreateFeature(runMode.split(","));
                                 this.startLevel = 0;
 
                             } else {
@@ -212,15 +212,15 @@ public class XMLSSMModelReader {
                         if ( !found ) {
                             throw new SAXException("Unknown element " + localName);
                         }
-                        if ( prevMode == MODE.STARTLEVEL || prevMode == MODE.RUNMODE_STARTLEVEL ) {
+                        if ( prevMode == MODE.STARTLEVEL || prevMode == MODE.FEATURE_STARTLEVEL ) {
                             this.startLevel = 0;
-                        } else if ( prevMode == MODE.CONFIGURATION || prevMode == MODE.RUNMODE_CONFIGURATION ) {
+                        } else if ( prevMode == MODE.CONFIGURATION || prevMode == MODE.FEATURE_CONFIGURATION ) {
                             this.configuration.properties = textValue;
                             this.configuration = null;
-                        } else if ( prevMode == MODE.SETTINGS || prevMode == MODE.RUNMODE_SETTINGS) {
-                            this.runMode.settings.properties = textValue;
-                        } else if ( prevMode == MODE.RUNMODE ) {
-                            this.runMode = result.getOrCreateRunMode(null);
+                        } else if ( prevMode == MODE.SETTINGS || prevMode == MODE.FEATURE_SETTINGS) {
+                            this.feature.settings.properties = textValue;
+                        } else if ( prevMode == MODE.FEATURE ) {
+                            this.feature = result.getOrCreateFeature(null);
                             this.startLevel = 0;
                         } else if ( prevMode == MODE.PROPERTIES ) {
                             final LineNumberReader reader = new LineNumberReader(new StringReader(textValue));

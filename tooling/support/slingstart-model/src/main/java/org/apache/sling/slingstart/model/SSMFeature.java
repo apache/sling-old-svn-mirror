@@ -24,12 +24,17 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * A run mode is a collection of
+ * A feature is a collection of
  * - artifacts (through start levels)
  * - configurations
  * - settings
+ *
+ * A feature might be tied to run modes. Only if all run modes are active,
+ * this feature is active.
+ * In addition to custom, user defined run modes, special run modes exists.
+ * A special run mode name starts with a colon.
  */
-public class SSMRunMode {
+public class SSMFeature {
 
     public static final String RUN_MODE_BASE = ":base";
 
@@ -89,7 +94,7 @@ public class SSMRunMode {
     }
 
     /**
-     * Check if this run mode is active wrt the given set of active run modes.
+     * Check if this feature is active wrt the given set of active run modes.
      */
     public boolean isActive(final Set<String> activeRunModes) {
         boolean active = true;
@@ -105,7 +110,7 @@ public class SSMRunMode {
     }
 
     /**
-     * Check whether this run mode is a special run mode
+     * Check whether this feature is a special one
      */
     public boolean isSpecial() {
         if ( runModes != null && runModes.length == 1 && runModes[0].startsWith(":") ) {
@@ -115,7 +120,7 @@ public class SSMRunMode {
     }
 
     /**
-     * Check if this run mode is a specific, single run mode.
+     * Check if this feature is tied to a single specific run mode.
      */
     public boolean isRunMode(final String mode) {
         if ( mode == null && this.runModes == null ) {
@@ -158,9 +163,9 @@ public class SSMRunMode {
     }
 
     /**
-     * Merge another run mode with this one.
+     * Merge another feature with this one.
      */
-    public void merge(final SSMRunMode mode) {
+    public void merge(final SSMFeature mode) {
         for(final SSMStartLevel sl : mode.startLevels) {
             // search for duplicates in other start levels
             for(final SSMArtifact artifact : sl.artifacts) {
@@ -221,7 +226,7 @@ public class SSMRunMode {
 
     @Override
     public String toString() {
-        return "CSRunMode [runModes=" + Arrays.toString(runModes)
+        return "SSMFeature [runModes=" + Arrays.toString(runModes)
                 + ", startLevels=" + startLevels + ", configurations="
                 + configurations + ", settings=" + settings + "]";
     }

@@ -20,7 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A start level holds a set of bundles.
+ * A start level holds a set of artifacts.
+ * A valid start level is positive, start level 0 means the default OSGi start level.
  */
 public class SSMStartLevel {
 
@@ -73,7 +74,7 @@ public class SSMStartLevel {
 
     @Override
     public String toString() {
-        return "CSStartLevel [level=" + level + ", artifacts=" + artifacts
+        return "SSMStartLevel [level=" + level + ", artifacts=" + artifacts
                 + "]";
     }
 }
