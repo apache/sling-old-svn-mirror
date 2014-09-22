@@ -27,7 +27,7 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.sling.slingstart.model.SSMSubsystem;
+import org.apache.sling.slingstart.model.SSMDeliverable;
 import org.apache.sling.slingstart.model.xml.XMLSSMModelWriter;
 
 /**
@@ -44,7 +44,7 @@ public class AttachSlingSubsystem extends AbstractSubsystemMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        final SSMSubsystem model = this.readModel();
+        final SSMDeliverable model = this.readModel();
 
         final File outputFile = new File(this.project.getBuild().getDirectory() + File.separatorChar + "slingstart.xml");
         outputFile.getParentFile().mkdirs();
