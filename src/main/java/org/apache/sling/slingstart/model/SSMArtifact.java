@@ -137,7 +137,7 @@ public class SSMArtifact {
 
     @Override
     public String toString() {
-        return "CSArtifact [groupId=" + groupId + ", artifactId=" + artifactId
+        return "SSMArtifact [groupId=" + groupId + ", artifactId=" + artifactId
                 + ", version=" + version + ", classifier=" + classifier
                 + ", type=" + type + "]";
     }

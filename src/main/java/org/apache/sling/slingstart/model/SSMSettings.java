@@ -18,7 +18,7 @@ package org.apache.sling.slingstart.model;
 
 
 /**
- * The settings of a subsystem.
+ * The settings of a feature.
  */
 public class SSMSettings {
 
@@ -48,6 +48,6 @@ public class SSMSettings {
 
     @Override
     public String toString() {
-        return "CSSettings [properties=" + properties + "]";
+        return "SSMSettings [properties=" + properties + "]";
     }
 }

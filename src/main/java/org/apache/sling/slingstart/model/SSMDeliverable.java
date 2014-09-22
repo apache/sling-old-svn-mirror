@@ -25,28 +25,31 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A subsystem is a set of run modes and properties.
- * The properties can be used for specifying artifact versions.
- * At least it has a "global" run mode which describes the common subsystem.
+ * A deliverable is the central object.
+ * It consists of a set of features and properties.
+ * The properties can be used for specifying artifact versions, referencing them
+ * with ${propertyName}
+ *
+ * At least it has a "global" feature which contains artifacts that are always installed..
  */
-public class SSMSubsystem {
+public class SSMDeliverable {
 
-    public final List<SSMRunMode> runModes = new ArrayList<SSMRunMode>();
+    public final List<SSMFeature> features = new ArrayList<SSMFeature>();
 
     public Map<String, String> properties = new HashMap<String, String>();
 
-    public SSMSubsystem() {
-        this.runModes.add(new SSMRunMode()); // global run mode
+    public SSMDeliverable() {
+        this.features.add(new SSMFeature()); // global features
     }
 
     /**
-     * Find the run mode if available
+     * Find the feature if available
      * @param runModes
-     * @return The run mode or null.
+     * @return The feature or null.
      */
-    private SSMRunMode findRunMode(final String[] runModes) {
-        SSMRunMode result = null;
-        for(final SSMRunMode current : this.runModes) {
+    private SSMFeature findFeature(final String[] runModes) {
+        SSMFeature result = null;
+        for(final SSMFeature current : this.features) {
             if ( runModes == null && current.runModes == null ) {
                 result = current;
                 break;
@@ -66,26 +69,26 @@ public class SSMSubsystem {
     }
 
     /**
-     * Get the run mode if available
-     * @return The run mode or null
+     * Get the feature if available
+     * @return The feature or null
      */
-    public SSMRunMode getRunMode(final String runMode) {
-       return findRunMode(new String[] {runMode});
+    public SSMFeature getRunMode(final String runMode) {
+       return findFeature(new String[] {runMode});
     }
 
     /**
-     * Get or create the run mode.
+     * Get or create the feature.
      */
-    public SSMRunMode getOrCreateRunMode(final String[] runModes) {
-        SSMRunMode result = findRunMode(runModes);
+    public SSMFeature getOrCreateFeature(final String[] runModes) {
+        SSMFeature result = findFeature(runModes);
         if ( result == null ) {
-            result = new SSMRunMode();
+            result = new SSMFeature();
             result.runModes = runModes;
-            this.runModes.add(result);
-            Collections.sort(this.runModes, new Comparator<SSMRunMode>() {
+            this.features.add(result);
+            Collections.sort(this.features, new Comparator<SSMFeature>() {
 
                 @Override
-                public int compare(final SSMRunMode o1, final SSMRunMode o2) {
+                public int compare(final SSMFeature o1, final SSMFeature o2) {
                     if ( o1.runModes == null ) {
                         if ( o2.runModes == null ) {
                             return 0;
@@ -113,8 +116,8 @@ public class SSMSubsystem {
      * @throws IllegalStateException
      */
     public void validate() {
-        for(final SSMRunMode runMode : this.runModes) {
-            runMode.validate();
+        for(final SSMFeature f : this.features) {
+            f.validate();
         }
     }
 
@@ -149,19 +152,19 @@ public class SSMSubsystem {
     }
 
     /**
-     * Merge two subsystems.
+     * Merge two deliverables.
      */
-    public void merge(final SSMSubsystem other) {
-        for(final SSMRunMode mode : other.runModes) {
-            final SSMRunMode mergeRunMode = this.getOrCreateRunMode(mode.runModes);
-            mergeRunMode.merge(mode);
+    public void merge(final SSMDeliverable other) {
+        for(final SSMFeature mode : other.features) {
+            final SSMFeature mergeFeature = this.getOrCreateFeature(mode.runModes);
+            mergeFeature.merge(mode);
         }
         this.properties.putAll(other.properties);
     }
 
     @Override
     public String toString() {
-        return "SSMSubsystem [runModes=" + runModes + ", properties="
+        return "SSMDeliverable [features=" + features + ", properties="
                 + properties + "]";
     }
 }

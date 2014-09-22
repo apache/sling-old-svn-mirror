@@ -61,7 +61,7 @@ public class SSMConfiguration {
 
     @Override
     public String toString() {
-        return "CSConfiguration [pid=" + pid + ", factoryPid=" + factoryPid
+        return "SSMConfiguration [pid=" + pid + ", factoryPid=" + factoryPid
                 + ", properties=" + properties + "]";
     }
 }
