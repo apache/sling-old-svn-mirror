@@ -50,6 +50,9 @@ import org.osgi.framework.Version;
 
 public class HttpOsgiClient implements OsgiClient {
 
+    private static final int DEFAULT_SOCKET_TIMEOUT_SECONDS = 30;
+    private static final int DEFAULT_CONNECT_TIMEOUT_SECONDS = 30;
+
     private RepositoryInfo repositoryInfo;
 
     public HttpOsgiClient(RepositoryInfo repositoryInfo) {
@@ -101,6 +104,8 @@ public class HttpOsgiClient implements OsgiClient {
     private HttpClient getHttpClient() {
 
         HttpClient client = new HttpClient();
+        client.getHttpConnectionManager().getParams().setConnectionTimeout(DEFAULT_CONNECT_TIMEOUT_SECONDS * 1000);
+        client.getHttpConnectionManager().getParams().setSoTimeout(DEFAULT_SOCKET_TIMEOUT_SECONDS * 1000);
         client.getParams().setAuthenticationPreemptive(true);
         Credentials defaultcreds = new UsernamePasswordCredentials(repositoryInfo.getUsername(),
                 repositoryInfo.getPassword());
