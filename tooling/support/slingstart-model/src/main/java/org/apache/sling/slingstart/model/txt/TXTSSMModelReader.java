@@ -19,6 +19,7 @@ package org.apache.sling.slingstart.model.txt;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.Reader;
+import java.util.UUID;
 
 import org.apache.sling.slingstart.model.SSMArtifact;
 import org.apache.sling.slingstart.model.SSMConfiguration;
@@ -27,6 +28,8 @@ import org.apache.sling.slingstart.model.SSMFeature;
 
 
 public class TXTSSMModelReader {
+
+    public static final String FELIX_FORMAT_SUFFIX = "FORMAT:felix.config";
 
     /**
      * Reads the deliverable file
@@ -52,13 +55,14 @@ public class TXTSSMModelReader {
             // Parse verb and qualifier from first line
             final String [] firstLine= line.split(" ");
             final String verb = firstLine[0];
-            final StringBuilder qualifier = new StringBuilder();
+            final StringBuilder builder = new StringBuilder();
             for(int i=1; i < firstLine.length; i++) {
-                if (qualifier.length() > 0) {
-                    qualifier.append(' ');
+                if (builder.length() > 0) {
+                    builder.append(' ');
                 }
-                qualifier.append(firstLine[i]);
+                builder.append(firstLine[i]);
             }
+            final String qualifier = builder.toString();
 
             // Parse properties from optional indented lines
             // that follow verb line
@@ -75,15 +79,39 @@ public class TXTSSMModelReader {
 
             if ( "classpath".equals("verb") ) {
                 final SSMFeature boot = model.getOrCreateFeature(new String[] {SSMFeature.RUN_MODE_BOOT});
-                final SSMArtifact artifact = SSMArtifact.fromMvnUrl(qualifier.toString());
+                final SSMArtifact artifact = SSMArtifact.fromMvnUrl(qualifier);
                 boot.getOrCreateStartLevel(0).artifacts.add(artifact);
             } else if ( "bundle".equals(verb) ) {
                 final SSMFeature feature = model.getOrCreateFeature(null);
-                final SSMArtifact artifact = SSMArtifact.fromMvnUrl(qualifier.toString());
+                final SSMArtifact artifact = SSMArtifact.fromMvnUrl(qualifier);
                 feature.getOrCreateStartLevel(0).artifacts.add(artifact);
-            } else if ( "configuration".equals(verb) ) {
+            } else if ( "config".equals(verb) ) {
                 final SSMFeature feature = model.getOrCreateFeature(null);
                 final SSMConfiguration config = new SSMConfiguration();
+                boolean felixFormat = false;
+                if (qualifier.endsWith(FELIX_FORMAT_SUFFIX)) {
+                    felixFormat = true;
+                    config.pid = qualifier.split(" ")[0].trim();
+                } else {
+                    config.pid = qualifier;
+                }
+                if ( props != null ) {
+                    config.properties = props.toString();
+                }
+                feature.configurations.add(config);
+            } else if ( "config.factory".equals(verb) ) {
+                final SSMFeature feature = model.getOrCreateFeature(null);
+                final SSMConfiguration config = new SSMConfiguration();
+                boolean felixFormat = false;
+                if (qualifier.endsWith(FELIX_FORMAT_SUFFIX)) {
+                    felixFormat = true;
+                    config.factoryPid = qualifier.split(" ")[0].trim();
+                } else {
+                    config.factoryPid = qualifier;
+                }
+                // create unique alias
+                config.pid = UUID.randomUUID().toString();
+
                 if ( props != null ) {
                     config.properties = props.toString();
                 }
