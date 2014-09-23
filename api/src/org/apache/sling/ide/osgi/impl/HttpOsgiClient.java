@@ -20,6 +20,7 @@ package org.apache.sling.ide.osgi.impl;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,6 +45,7 @@ import org.apache.sling.ide.transport.RepositoryInfo;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 import org.osgi.framework.Version;
 
 public class HttpOsgiClient implements OsgiClient {
@@ -60,6 +62,7 @@ public class HttpOsgiClient implements OsgiClient {
 
         GetMethod method = new GetMethod(repositoryInfo.getUrl() + "system/console/bundles.json");
         HttpClient client = getHttpClient();
+        InputStream input = null;
 
         try {
             int result = client.executeMethod(method);
@@ -67,7 +70,9 @@ public class HttpOsgiClient implements OsgiClient {
                 throw new HttpException("Got status code " + result + " for call to " + method.getURI());
             }
 
-            JSONObject object = new JSONObject(method.getResponseBodyAsString());
+            input = method.getResponseBodyAsStream();
+
+            JSONObject object = new JSONObject(new JSONTokener(new InputStreamReader(input)));
 
             JSONArray bundleData = object.getJSONArray("data");
             for (int i = 0; i < bundleData.length(); i++) {
@@ -88,6 +93,7 @@ public class HttpOsgiClient implements OsgiClient {
         } catch (JSONException e) {
             throw new OsgiClientException(e);
         } finally {
+            IOUtils.closeQuietly(input);
             method.releaseConnection();
         }
     }
