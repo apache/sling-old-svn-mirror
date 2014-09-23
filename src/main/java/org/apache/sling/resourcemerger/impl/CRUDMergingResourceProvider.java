@@ -18,8 +18,10 @@
  */
 package org.apache.sling.resourcemerger.impl;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.api.resource.ModifiableValueMap;
@@ -28,6 +30,7 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
 
 /**
@@ -43,16 +46,20 @@ public class CRUDMergingResourceProvider
     }
 
     private static final class ExtendedResourceHolder {
-        public ResourceHolder holder;
+        public final String name;
+        public final List<Resource> resources = new ArrayList<Resource>();
+        public final List<ValueMap> valueMaps = new ArrayList<ValueMap>();
         public int count;
-        public String lowestResourcePath;
         public String highestResourcePath;
+
+        public ExtendedResourceHolder(final String n) {
+            this.name = n;
+        }
     }
     private ExtendedResourceHolder getAllResources(final ResourceResolver resolver,
             final String path,
             final String relativePath) {
-        final ExtendedResourceHolder holder = new ExtendedResourceHolder();
-        holder.holder = new ResourceHolder(ResourceUtil.getName(path));
+        final ExtendedResourceHolder holder = new ExtendedResourceHolder(ResourceUtil.getName(path));
 
         holder.count = 0;
 
@@ -61,19 +68,16 @@ public class CRUDMergingResourceProvider
         while ( iter.hasNext() ) {
             final Resource rsrc = iter.next();
             holder.count++;
-            if ( holder.count == 1 ) {
-                holder.lowestResourcePath = rsrc.getPath();
-            }
             holder.highestResourcePath = rsrc.getPath();
             if ( !ResourceUtil.isNonExistingResource(rsrc) ) {
                 // check parent for hiding
                 final Resource parent = rsrc.getParent();
                 if ( parent != null ) {
-                    final boolean hidden = new ParentHidingHandler(parent).isHidden(holder.holder.name);
+                    final boolean hidden = new ParentHidingHandler(parent).isHidden(holder.name);
                     if ( hidden ) {
-                        holder.holder.resources.clear();
+                        holder.resources.clear();
                     } else {
-                        holder.holder.resources.add(rsrc);
+                        holder.resources.add(rsrc);
                     }
                 }
             }
@@ -105,8 +109,8 @@ public class CRUDMergingResourceProvider
         if ( holder.count < 2 ) {
             throw new PersistenceException("Modifying is only supported with at least two potentially merged resources.", null, path, null);
         }
-        if ( holder.holder.resources.size() == 0
-             || (holder.holder.resources.size() < holder.count && !holder.holder.resources.get(holder.holder.resources.size() - 1).getPath().equals(holder.highestResourcePath) )) {
+        if ( holder.resources.size() == 0
+             || (holder.resources.size() < holder.count && !holder.resources.get(holder.resources.size() - 1).getPath().equals(holder.highestResourcePath) )) {
             final String createPath = holder.highestResourcePath;
             final Resource parentResource = ResourceUtil.getOrCreateResource(resolver, ResourceUtil.getParent(createPath), (String)null, null, false);
             resolver.create(parentResource, ResourceUtil.getName(createPath), properties);
@@ -144,9 +148,9 @@ public class CRUDMergingResourceProvider
             throw new PersistenceException("Modifying is only supported with at least two potentially merged resources.", null, path, null);
         }
 
-        if ( holder.holder.resources.size() == 1 && holder.holder.resources.get(0).getPath().equals(holder.highestResourcePath) ) {
+        if ( holder.resources.size() == 1 && holder.resources.get(0).getPath().equals(holder.highestResourcePath) ) {
             // delete the only resource which is the highest one
-            resolver.delete(holder.holder.resources.get(0));
+            resolver.delete(holder.resources.get(0));
         } else {
             // create overlay resource which is hiding the other
             final String createPath = holder.highestResourcePath;
