@@ -76,7 +76,7 @@ public class XMLSSMModelReader {
     }
 
     /**
-     * Reads the properties file
+     * Reads the deliverable file
      * The reader is not closed.
      * @throws IOException
      */
