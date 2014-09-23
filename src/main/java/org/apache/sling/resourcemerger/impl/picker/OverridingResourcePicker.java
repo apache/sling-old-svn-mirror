@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.NonExistingResource;
@@ -36,8 +37,14 @@ import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
     description = "This resource picker delivers merged resources based on the resource type hierarchy.",
     metatype = true, policy = ConfigurationPolicy.REQUIRE)
 @Service
-@Property(name = MergedResourcePicker.MERGE_ROOT, value = OverridingResourcePicker.DEFAULT_ROOT,
-    label = "Root", description = "Root path at which merged resources will be available.")
+@Properties({
+    @Property(name = MergedResourcePicker.MERGE_ROOT, value = OverridingResourcePicker.DEFAULT_ROOT,
+            label = "Root", description = "Root path at which merged resources will be available."),
+    @Property(name=MergedResourcePicker.READ_ONLY, boolValue=true,
+    label="Read Only",
+    description="Specifies if the resources are read-only or can be modified.")
+
+})
 public class OverridingResourcePicker implements MergedResourcePicker {
 
     public static final String DEFAULT_ROOT = "/mnt/override";
