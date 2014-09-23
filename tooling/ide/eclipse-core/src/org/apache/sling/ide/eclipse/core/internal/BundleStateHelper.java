@@ -16,6 +16,8 @@
  */
 package org.apache.sling.ide.eclipse.core.internal;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.jar.Manifest;
 
 import org.apache.commons.httpclient.Credentials;
@@ -24,6 +26,7 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -34,6 +37,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.wst.server.core.IServer;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 
 public class BundleStateHelper {
 
@@ -86,6 +90,9 @@ public class BundleStateHelper {
 	}
 	
 	private static Object doRecalcDecorationState(IServer server, IProject project) {
+
+        InputStream input = null;
+
         try {
         	if (!ProjectHelper.isBundleProject(project)) {
         		return EMPTY_STATE;
@@ -121,15 +128,18 @@ public class BundleStateHelper {
 			if (resultCode!=HttpStatus.SC_OK) {
 				return " ["+resultCode+"]";
 			}
-            String responseBodyAsString = method.getResponseBodyAsString(); // explicitly not limiting buffer here - even though this results in a warning
-                                                                            // cannot know the size of a bundle in advance, large bundles can have large json
-			JSONObject result = new JSONObject(responseBodyAsString);
+
+            input = method.getResponseBodyAsStream();
+
+            JSONObject result = new JSONObject(new JSONTokener(new InputStreamReader(input)));
             JSONArray dataArray = (JSONArray) result.get("data");
             JSONObject firstElement = (JSONObject) dataArray.get(0);
             return " ["+firstElement.get("state")+"]";
 		} catch (Exception e) {
 			e.printStackTrace();
 			return e.getMessage();
+        } finally {
+            IOUtils.closeQuietly(input);
 		}
 	}
 

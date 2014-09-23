@@ -16,6 +16,8 @@
  */
 package org.apache.sling.ide.test.impl.helpers;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -30,8 +32,10 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 import org.junit.rules.ExternalResource;
 
 public class ExternalSlingLaunchpad extends ExternalResource {
@@ -105,20 +109,28 @@ public class ExternalSlingLaunchpad extends ExternalResource {
             int status = client.executeMethod(httpMethod);
             debug("vmstat http call got return code " + status);
 
-            if (status == 200) {
-                String responseBody = httpMethod.getResponseBodyAsString();
-                Matcher m = STARTLEVEL_JSON_SNIPPET.matcher(responseBody);
-                if (m.find()) {
-                    int startLevel = Integer.parseInt(m.group(1));
-                    debug("vmstat http call got startLevel " + startLevel);
-                    if (startLevel >= EXPECTED_START_LEVEL) {
-                        debug("current startLevel " + startLevel + " >= " + EXPECTED_START_LEVEL + ", we are done here");
-                        return true;
+            InputStream input = null;
+            try {
+                if (status == 200) {
+
+                    String responseBody = IOUtils.toString(httpMethod.getResponseBodyAsStream(),
+                            httpMethod.getResponseCharSet());
+
+                    Matcher m = STARTLEVEL_JSON_SNIPPET.matcher(responseBody);
+                    if (m.find()) {
+                        int startLevel = Integer.parseInt(m.group(1));
+                        debug("vmstat http call got startLevel " + startLevel);
+                        if (startLevel >= EXPECTED_START_LEVEL) {
+                            debug("current startLevel " + startLevel + " >= " + EXPECTED_START_LEVEL
+                                    + ", we are done here");
+                            return true;
+                        }
                     }
+
                 }
-
+            } finally {
+                IOUtils.closeQuietly(input);
             }
-
             return false;
         }
     }
@@ -137,21 +149,27 @@ public class ExternalSlingLaunchpad extends ExternalResource {
             int status = client.executeMethod(httpMethod);
             debug("bundles http call got return code " + status);
 
-            if (status == 200) {
-                JSONObject obj = new JSONObject(httpMethod.getResponseBodyAsString());
-
-                JSONArray bundleStatus = obj.getJSONArray("s");
-
-                int total = bundleStatus.getInt(0);
-                int active = bundleStatus.getInt(1);
-                int fragment = bundleStatus.getInt(2);
-
-                debug("bundle http call status: total = " + total + ", active = " + active + ", fragment = " + fragment);
-
-                if (total == active + fragment) {
-                    debug("All bundles are started, we are done here");
-                    return true;
+            InputStream input = null;
+            try {
+                if (status == 200) {
+                    input = httpMethod.getResponseBodyAsStream();
+                    JSONObject obj = new JSONObject(new JSONTokener(new InputStreamReader(input)));
+    
+                    JSONArray bundleStatus = obj.getJSONArray("s");
+    
+                    int total = bundleStatus.getInt(0);
+                    int active = bundleStatus.getInt(1);
+                    int fragment = bundleStatus.getInt(2);
+    
+                    debug("bundle http call status: total = " + total + ", active = " + active + ", fragment = " + fragment);
+    
+                    if (total == active + fragment) {
+                        debug("All bundles are started, we are done here");
+                        return true;
+                    }
                 }
+            } finally {
+                IOUtils.closeQuietly(input);
             }
 
             return false;
