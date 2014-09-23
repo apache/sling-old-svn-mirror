@@ -24,7 +24,9 @@ import aQute.bnd.annotation.ProviderType;
 
 /**
  * Service to handle merged resources.
+ * @deprecated
  */
+@Deprecated
 @ProviderType
 public interface ResourceMergerService {
 
