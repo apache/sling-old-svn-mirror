@@ -73,10 +73,9 @@ public class SSMStartLevel implements Comparable<SSMStartLevel> {
         for(final SSMArtifact a : other.artifacts) {
             final SSMArtifact found = this.search(a);
             if ( found != null ) {
-                found.version = a.version;
-            } else {
-                this.artifacts.add(a);
+                this.artifacts.remove(found);
             }
+            this.artifacts.add(a);
         }
     }
 

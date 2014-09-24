@@ -21,11 +21,30 @@ package org.apache.sling.slingstart.model;
  */
 public class SSMArtifact {
 
-    public String groupId;
-    public String artifactId;
-    public String version;
-    public String classifier;
-    public String type;
+    public final String groupId;
+    public final String artifactId;
+    public final String version;
+    public final String classifier;
+    public final String type;
+
+    public SSMArtifact(final String gId, final String aId, final String version,
+            final String classifier, final String type) {
+        this.groupId = (gId != null ? gId.trim() : null);
+        this.artifactId = (aId != null ? aId.trim() : null);
+        this.version = (version != null ? version.trim() : null);
+        final String trimmedType = (type != null ? type.trim() : null);
+        if ( "bundle".equals(trimmedType) || trimmedType == null || trimmedType.isEmpty() ) {
+            this.type = "jar";
+        } else {
+            this.type = trimmedType;
+        }
+        final String trimmedClassifier = (classifier != null ? classifier.trim() : null);
+        if ( trimmedClassifier != null && trimmedClassifier.isEmpty() ) {
+            this.classifier = null;
+        } else {
+            this.classifier = trimmedClassifier;
+        }
+    }
 
     public String getRepositoryPath() {
         final StringBuilder sb = new StringBuilder();
@@ -60,13 +79,6 @@ public class SSMArtifact {
      * @throws IllegalStateException
      */
     public void validate() {
-        // trim values first
-        if ( groupId != null ) groupId = groupId.trim();
-        if ( artifactId != null ) artifactId = artifactId.trim();
-        if ( version != null ) version = version.trim();
-        if ( type != null ) type = type.trim();
-        if ( classifier != null ) classifier = classifier.trim();
-
         // check/correct values
         if ( groupId == null || groupId.isEmpty() ) {
             throw new IllegalStateException(this + " : groupId");
@@ -77,14 +89,8 @@ public class SSMArtifact {
         if ( version == null || version.isEmpty() ) {
             throw new IllegalStateException(this + " : version");
         }
-        if ( "bundle".equals(type) || type == null || type.isEmpty() ) {
-            type = "jar";
-        }
         if ( type == null || type.isEmpty() ) {
             throw new IllegalStateException(this + " : type");
-        }
-        if ( classifier != null && classifier.isEmpty() ) {
-            classifier = null;
         }
     }
 
@@ -94,7 +100,11 @@ public class SSMArtifact {
         // ignore repository url
         int pos = content.indexOf('!');
         final String coordinates = (pos == -1 ? content : content.substring(pos + 1));
-        final SSMArtifact ad = new SSMArtifact();
+        String gId = null;
+        String aId = null;
+        String version = null;
+        String type = null;
+        String classifier = null;
         int part = 0;
         String value = coordinates;
         while ( value != null ) {
@@ -113,25 +123,23 @@ public class SSMArtifact {
             }
             if ( current != null ) {
                 if ( part == 0 ) {
-                    ad.groupId = current;
+                    gId = current;
                 } else if ( part == 1 ) {
-                    ad.artifactId = current;
+                    aId = current;
                 } else if ( part == 2 ) {
-                    ad.version = current;
+                    version = current;
                 } else if ( part == 3 ) {
-                    ad.type = current;
+                    type = current;
                 } else if ( part == 4 ) {
-                    ad.classifier = current;
+                    classifier = current;
                 }
             }
             part++;
         }
-        if ( ad.version == null ) {
-            ad.version = "LATEST";
+        if ( version == null ) {
+            version = "LATEST";
         }
-        if ( ad.type == null || ad.type.length() == 0 || ad.type.equals("bundle") ) {
-            ad.type = "jar";
-        }
+        final SSMArtifact ad = new SSMArtifact(gId, aId, version, classifier, type);
         return ad;
     }
 
