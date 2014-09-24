@@ -204,11 +204,6 @@
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.auth.openid</artifactId>
-            <version>1.0.4</version>
-        </bundle>
-        <bundle>
-            <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.auth.form</artifactId>
             <version>1.0.6</version>
         </bundle>
