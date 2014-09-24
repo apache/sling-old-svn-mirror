@@ -138,12 +138,12 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
     }
 
     private static void addDependencies(final SSMDeliverable model, final Logger log, final MavenProject project) {
-        for(final SSMFeature feature : model.features) {
+        for(final SSMFeature feature : model.getFeatures()) {
             // skip base
             if ( feature.isRunMode(SSMFeature.RUN_MODE_BASE) ) {
                 continue;
             }
-            for(final SSMStartLevel sl : feature.startLevels) {
+            for(final SSMStartLevel sl : feature.getStartLevels()) {
                 for(final SSMArtifact a : sl.artifacts) {
                     final Dependency dep = new Dependency();
                     dep.setGroupId(a.groupId);

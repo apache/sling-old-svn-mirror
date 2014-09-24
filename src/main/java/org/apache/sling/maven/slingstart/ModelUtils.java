@@ -30,8 +30,8 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.sling.slingstart.model.SSMArtifact;
-import org.apache.sling.slingstart.model.SSMFeature;
 import org.apache.sling.slingstart.model.SSMDeliverable;
+import org.apache.sling.slingstart.model.SSMFeature;
 import org.apache.sling.slingstart.model.xml.XMLSSMModelReader;
 import org.codehaus.plexus.logging.Logger;
 
@@ -142,17 +142,17 @@ public abstract class ModelUtils {
         if ( base == null ) {
             throw new MojoExecutionException("No base run mode found.");
         }
-        if ( base.startLevels.size() == 0 ) {
+        if ( base.getStartLevels().size() == 0 ) {
             throw new MojoExecutionException("No base artifacts defined.");
         }
-        if ( base.startLevels.size() > 1 ) {
+        if ( base.getStartLevels().size() > 1 ) {
             throw new MojoExecutionException("Base run mode should only have a single start level.");
         }
-        if ( base.startLevels.get(0).artifacts.size() != 1 ) {
+        if ( base.getStartLevels().get(0).artifacts.size() != 1 ) {
             throw new MojoExecutionException("Base run mode should contain exactly one artifact.");
         }
 
-        return base.startLevels.get(0).artifacts.get(0);
+        return base.getStartLevels().get(0).artifacts.get(0);
     }
 
     /**
