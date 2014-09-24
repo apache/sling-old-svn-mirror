@@ -23,11 +23,9 @@ package org.apache.sling.replication.transport.impl;
  */
 public class ReplicationTransportConstants {
 
-    public static final String TRANSPORT_AUTHENTICATION_FACTORY = "TransportAuthenticationProviderFactory.target";
+    public static final String TRANSPORT_AUTHENTICATION_PROVIDER_TARGET = "TransportAuthenticationProvider.target";
 
     public static final String ENDPOINTS = "endpoints";
 
     public static final String ENDPOINT_STRATEGY = "endpoints.strategy";
-
-    public static final String AUTHENTICATION_PROPERTIES = "authentication.properties";
 }

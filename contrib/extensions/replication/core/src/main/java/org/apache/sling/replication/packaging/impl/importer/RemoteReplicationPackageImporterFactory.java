@@ -19,24 +19,16 @@
 package org.apache.sling.replication.packaging.impl.importer;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.annotations.*;
-import org.apache.http.client.fluent.Executor;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
-import org.apache.sling.replication.transport.ReplicationTransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
-import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
-import org.apache.sling.replication.transport.impl.MultipleEndpointReplicationTransportHandler;
 import org.apache.sling.replication.transport.impl.ReplicationTransportConstants;
-import org.apache.sling.replication.transport.impl.SimpleHttpReplicationTransportHandler;
 import org.apache.sling.replication.transport.impl.TransportEndpointStrategyType;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -57,9 +49,9 @@ public class RemoteReplicationPackageImporterFactory implements ReplicationPacka
     @Property
     private static final String NAME = "name";
 
-    @Property(name = ReplicationTransportConstants.TRANSPORT_AUTHENTICATION_FACTORY)
+    @Property(name = ReplicationTransportConstants.TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
     @Reference(name = "TransportAuthenticationProviderFactory", policy = ReferencePolicy.DYNAMIC)
-    private TransportAuthenticationProviderFactory transportAuthenticationProviderFactory;
+    private TransportAuthenticationProvider transportAuthenticationProvider;
 
     @Property(options = {
             @PropertyOption(name = "All",
@@ -80,17 +72,15 @@ public class RemoteReplicationPackageImporterFactory implements ReplicationPacka
     @Activate
     protected void activate(BundleContext context, Map<String, Object> config) throws Exception {
 
-       importer = getInstance(config, transportAuthenticationProviderFactory);
+       importer = getInstance(config, transportAuthenticationProvider);
 
     }
 
-    public static RemoteReplicationPackageImporter getInstance(Map<String, Object> config, TransportAuthenticationProviderFactory transportAuthenticationProviderFactory) {
+    public static RemoteReplicationPackageImporter getInstance(Map<String, Object> config, TransportAuthenticationProvider transportAuthenticationProvider) {
 
-        if (transportAuthenticationProviderFactory == null) {
+        if (transportAuthenticationProvider == null) {
             throw new IllegalArgumentException("transportAuthenticationProviderFactory is required");
         }
-
-        Map<String, String> authenticationProperties = PropertiesUtil.toMap(config.get(ReplicationTransportConstants.AUTHENTICATION_PROPERTIES), new String[0]);
 
         String[] endpoints = PropertiesUtil.toStringArray(config.get(ReplicationTransportConstants.ENDPOINTS), new String[0]);
 
@@ -99,8 +89,7 @@ public class RemoteReplicationPackageImporterFactory implements ReplicationPacka
         TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(endpointStrategyName);
 
 
-        return new RemoteReplicationPackageImporter(transportAuthenticationProviderFactory,
-                authenticationProperties, endpoints, transportEndpointStrategyType);
+        return new RemoteReplicationPackageImporter(transportAuthenticationProvider, endpoints, transportEndpointStrategyType);
 
     }
 

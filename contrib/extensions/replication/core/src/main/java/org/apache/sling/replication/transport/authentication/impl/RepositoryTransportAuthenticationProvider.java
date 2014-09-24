@@ -18,10 +18,8 @@
  */
 package org.apache.sling.replication.transport.authentication.impl;
 
-import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
 
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
@@ -34,10 +32,10 @@ public class RepositoryTransportAuthenticationProvider implements TransportAuthe
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final Credentials credentials;
+    private final String serviceName;
 
-    public RepositoryTransportAuthenticationProvider(String user, String password) {
-        this.credentials = new SimpleCredentials(user, password.toCharArray());
+    public RepositoryTransportAuthenticationProvider(String serviceName) {
+        this.serviceName = serviceName;
     }
 
     public boolean canAuthenticate(Class<?> authenticable) {
@@ -47,25 +45,28 @@ public class RepositoryTransportAuthenticationProvider implements TransportAuthe
     public Session authenticate(SlingRepository authenticable, TransportAuthenticationContext context)
             throws TransportAuthenticationException {
         String path = context.getAttribute("path", String.class);
-        if (path != null) {
-            Session session = null;
-            try {
-                session = authenticable.login(credentials);
-                if (!session.nodeExists(path)) {
-                    throw new TransportAuthenticationException("failed to read path " + path);
-                } else {
-                    log.info("authenticated path {} ", path);
-                    return session;
-                }
-            } catch (RepositoryException re) {
-                if (session != null) {
-                    session.logout();
-                }
-                throw new TransportAuthenticationException(re);
-            }
-        } else {
+
+        if (path == null) {
             throw new TransportAuthenticationException(
                     "the path to authenticate is missing from the context");
+
+        }
+
+        Session session = null;
+        try {
+            session = authenticable.loginService(serviceName, null);
+            if (!session.nodeExists(path)) {
+                session.logout();
+                throw new TransportAuthenticationException("failed to read path " + path);
+            }
+
+            log.info("authenticated path {} ", path);
+            return session;
+        } catch (RepositoryException re) {
+            if (session != null) {
+                session.logout();
+            }
+            throw new TransportAuthenticationException(re);
         }
     }
 

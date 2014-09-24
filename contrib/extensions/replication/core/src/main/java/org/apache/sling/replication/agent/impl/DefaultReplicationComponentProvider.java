@@ -28,7 +28,8 @@ import org.apache.sling.replication.queue.ReplicationQueueProvider;
 import org.apache.sling.replication.rule.ReplicationRuleEngine;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilderFactory;
-import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.replication.transport.authentication.impl.UserCredentialsTransportAuthenticationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +41,7 @@ import org.slf4j.LoggerFactory;
         @Reference(name = "replicationPackageExporter", referenceInterface = ReplicationPackageExporter.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
         @Reference(name = "replicationQueueProvider", referenceInterface = ReplicationQueueProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
         @Reference(name = "replicationQueueDistributionStrategy", referenceInterface = ReplicationQueueDistributionStrategy.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
-        @Reference(name = "transportAuthenticationProviderFactory", referenceInterface = TransportAuthenticationProviderFactory.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
+        @Reference(name = "transportAuthenticationProvider", referenceInterface = TransportAuthenticationProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
         @Reference(name = "replicationComponentListener", referenceInterface = ReplicationComponentListener.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
 })
 public class DefaultReplicationComponentProvider implements ReplicationComponentProvider {
@@ -65,7 +66,7 @@ public class DefaultReplicationComponentProvider implements ReplicationComponent
     Map<String, ReplicationComponentListener> replicationComponentListenerMap = new ConcurrentHashMap<String, ReplicationComponentListener>();
     Map<String, ReplicationQueueProvider> replicationQueueProviderMap = new ConcurrentHashMap<String, ReplicationQueueProvider>();
     Map<String, ReplicationQueueDistributionStrategy> replicationQueueDistributionStrategyMap = new ConcurrentHashMap<String, ReplicationQueueDistributionStrategy>();
-    Map<String, TransportAuthenticationProviderFactory> transportAuthenticationProviderFactoryMap = new ConcurrentHashMap<String, TransportAuthenticationProviderFactory>();
+    Map<String, TransportAuthenticationProvider> transportAuthenticationProviderMap = new ConcurrentHashMap<String, TransportAuthenticationProvider>();
     Map<String, ReplicationPackageImporter> replicationPackageImporterMap = new ConcurrentHashMap<String, ReplicationPackageImporter>();
     Map<String, ReplicationPackageExporter> replicationPackageExporterMap = new ConcurrentHashMap<String, ReplicationPackageExporter>();
 
@@ -78,8 +79,8 @@ public class DefaultReplicationComponentProvider implements ReplicationComponent
             return (ComponentType) replicationQueueProviderMap.get(componentName);
         } else if (type.isAssignableFrom(ReplicationQueueDistributionStrategy.class)) {
             return (ComponentType) replicationQueueDistributionStrategyMap.get(componentName);
-        } else if (type.isAssignableFrom(TransportAuthenticationProviderFactory.class)) {
-            return (ComponentType) transportAuthenticationProviderFactoryMap.get(componentName);
+        } else if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
+            return (ComponentType) transportAuthenticationProviderMap.get(componentName);
         }
 
         return null;
@@ -158,13 +159,13 @@ public class DefaultReplicationComponentProvider implements ReplicationComponent
             ReplicationPackageBuilder packageBuilder = createBuilder(builderProperties);
             return LocalReplicationPackageExporterFactory.getInstance(packageBuilder);
         } else if ("remote".equals(factory)) {
-            Map<String, Object> authenticationFactoryProperties = extractMap("authenticationFactory", properties);
-            TransportAuthenticationProviderFactory authenticationProviderFactory = createAuthenticationProviderFactory(authenticationFactoryProperties, componentProvider);
+            Map<String, Object> authenticationProviderProperties = extractMap("authenticationProvider", properties);
+            TransportAuthenticationProvider authenticationProvider = createTransportAuthenticationProvider(authenticationProviderProperties, componentProvider);
 
             Map<String, Object> builderProperties = extractMap("packageBuilder", properties);
             ReplicationPackageBuilder packageBuilder = createBuilder(builderProperties);
 
-            return RemoteReplicationPackageExporterFactory.getInstance(properties, packageBuilder, authenticationProviderFactory);
+            return RemoteReplicationPackageExporterFactory.getInstance(properties, packageBuilder, authenticationProvider);
         }
 
         return null;
@@ -182,9 +183,10 @@ public class DefaultReplicationComponentProvider implements ReplicationComponent
             ReplicationPackageBuilder packageBuilder = createBuilder(builderProperties);
             return LocalReplicationPackageImporterFactory.getInstance(properties, packageBuilder, replicationEventFactory);
         } else if ("remote".equals(factory)) {
-            Map<String, Object> authenticationFactoryProperties = extractMap("authenticationFactory", properties);
-            TransportAuthenticationProviderFactory authenticationProviderFactory = createAuthenticationProviderFactory(authenticationFactoryProperties, componentProvider);
-            return RemoteReplicationPackageImporterFactory.getInstance(properties, authenticationProviderFactory);
+            Map<String, Object> authenticationProviderProperties = extractMap("authenticationProvider", properties);
+            TransportAuthenticationProvider authenticationProvider = createTransportAuthenticationProvider(authenticationProviderProperties, componentProvider);
+
+            return RemoteReplicationPackageImporterFactory.getInstance(properties, authenticationProvider);
         }
 
         return null;
@@ -213,13 +215,16 @@ public class DefaultReplicationComponentProvider implements ReplicationComponent
         return null;
     }
 
-    public TransportAuthenticationProviderFactory createAuthenticationProviderFactory(Map<String, Object> properties, ReplicationComponentProvider componentProvider) {
+    public TransportAuthenticationProvider createTransportAuthenticationProvider(Map<String, Object> properties, ReplicationComponentProvider componentProvider) {
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), "service");
 
         if ("service".equals(factory)) {
             String name = PropertiesUtil.toString(properties.get(NAME), null);
-            return componentProvider.getComponent(TransportAuthenticationProviderFactory.class, name);
+            return componentProvider.getComponent(TransportAuthenticationProvider.class, name);
 
+        }
+        else if ("user".equals(factory)) {
+            return new UserCredentialsTransportAuthenticationProvider(properties);
         }
 
         return null;
@@ -284,23 +289,23 @@ public class DefaultReplicationComponentProvider implements ReplicationComponent
         }
     }
 
-    private void bindTransportAuthenticationProviderFactory(TransportAuthenticationProviderFactory transportAuthenticationProviderFactory, Map<String, Object> config) {
+    private void bindTransportAuthenticationProvider(TransportAuthenticationProvider transportAuthenticationProvider, Map<String, Object> config) {
 
         String name = (String) config.get("name");
         if (name != null) {
-            transportAuthenticationProviderFactoryMap.put(name, transportAuthenticationProviderFactory);
-            notifyListeners(transportAuthenticationProviderFactory, name, true);
+            transportAuthenticationProviderMap.put(name, transportAuthenticationProvider);
+            notifyListeners(transportAuthenticationProvider, name, true);
 
         }
 
     }
 
-    private void unbindTransportAuthenticationProviderFactory(TransportAuthenticationProviderFactory transportAuthenticationProviderFactory, Map<String, Object> config) {
+    private void unbindTransportAuthenticationProvider(TransportAuthenticationProvider transportAuthenticationProvider, Map<String, Object> config) {
 
         String name = (String) config.get("name");
         if (name != null) {
-            transportAuthenticationProviderFactoryMap.remove(name);
-            notifyListeners(transportAuthenticationProviderFactory, name, false);
+            transportAuthenticationProviderMap.remove(name);
+            notifyListeners(transportAuthenticationProvider, name, false);
 
         }
     }

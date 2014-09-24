@@ -11,11 +11,11 @@
 
     "packageImporter": [
         "type=remote",
-        "authentication.properties[user]=admin",
-        "authentication.properties[password]=admin",
         "endpoints[0]=http://localhost:4503/libs/sling/replication/services/importers/default",
-        "authenticationFactory/type=service",
-        "authenticationFactory/name=user",
+
+        "authenticationProvider/type=service",
+        "authenticationProvider/name=publishAdmin",
+
         "packageBuilder/type=vlt",
         "packageBuilder/servicename=replicationService"
     ],

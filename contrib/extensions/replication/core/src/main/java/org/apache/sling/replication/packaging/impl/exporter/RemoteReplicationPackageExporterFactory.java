@@ -36,7 +36,7 @@ import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
-import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.replication.transport.impl.ReplicationTransportConstants;
 import org.apache.sling.replication.transport.impl.TransportEndpointStrategyType;
 import org.slf4j.Logger;
@@ -59,9 +59,9 @@ public class RemoteReplicationPackageExporterFactory implements ReplicationPacka
     @Property(value = "exporters/remote", propertyPrivate = true)
     private static final String FACTORY_NAME = "factoryName";
 
-    @Property(name = ReplicationTransportConstants.TRANSPORT_AUTHENTICATION_FACTORY)
+    @Property(name = ReplicationTransportConstants.TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
     @Reference(name = "TransportAuthenticationProviderFactory", policy = ReferencePolicy.DYNAMIC)
-    private TransportAuthenticationProviderFactory transportAuthenticationProviderFactory;
+    private TransportAuthenticationProvider transportAuthenticationProvider;
 
     @Property(label = "Target ReplicationPackageBuilder", name = "ReplicationPackageBuilder.target")
     @Reference(name = "ReplicationPackageBuilder", policy = ReferencePolicy.DYNAMIC)
@@ -85,20 +85,16 @@ public class RemoteReplicationPackageExporterFactory implements ReplicationPacka
 
     @Activate
     protected void activate(Map<String, Object> config) throws Exception {
-        exporter = getInstance(config, packageBuilder, transportAuthenticationProviderFactory);
+        exporter = getInstance(config, packageBuilder, transportAuthenticationProvider);
     }
 
     public static ReplicationPackageExporter getInstance(Map<String, Object> config,
-                                                         ReplicationPackageBuilder packageBuilder, TransportAuthenticationProviderFactory transportAuthenticationProviderFactory) {
-        if (transportAuthenticationProviderFactory == null) {
-            throw new IllegalArgumentException("transportAuthenticationProviderFactory is required");
-        }
+                                                         ReplicationPackageBuilder packageBuilder,
+                                                         TransportAuthenticationProvider transportAuthenticationProvider) {
 
         if (packageBuilder == null) {
             throw new IllegalArgumentException("packageBuilder is required");
         }
-
-        Map<String, String> authenticationProperties = PropertiesUtil.toMap(config.get(ReplicationTransportConstants.AUTHENTICATION_PROPERTIES), new String[0]);
 
         String[] endpoints = PropertiesUtil.toStringArray(config.get(ReplicationTransportConstants.ENDPOINTS), new String[0]);
 
@@ -107,8 +103,7 @@ public class RemoteReplicationPackageExporterFactory implements ReplicationPacka
         String endpointStrategyName = PropertiesUtil.toString(config.get(ReplicationTransportConstants.ENDPOINT_STRATEGY), "One");
         TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(endpointStrategyName);
 
-        return new RemoteReplicationPackageExporter(packageBuilder, transportAuthenticationProviderFactory,
-                authenticationProperties,
+        return new RemoteReplicationPackageExporter(packageBuilder, transportAuthenticationProvider,
                 endpoints,
                 transportEndpointStrategyType,
                 pollItems);

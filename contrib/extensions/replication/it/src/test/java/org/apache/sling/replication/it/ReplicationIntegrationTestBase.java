@@ -59,11 +59,9 @@ public abstract class ReplicationIntegrationTestBase {
 
             setAgentProperties(author, "publish",
                     "packageImporter", "type=remote",
-                    "packageImporter", "authentication.properties[user]=admin",
-                    "packageImporter", "authentication.properties[password]=admin",
                     "packageImporter", "endpoints[0]=" + remoteImporterUrl,
-                    "packageImporter", "authenticationFactory/type=service",
-                    "packageImporter", "authenticationFactory/name=user",
+                    "packageImporter", "authenticationProvider/type=service",
+                    "packageImporter", "authenticationProvider/name=publishAdmin",
                     "packageImporter", "packageBuilder/type=vlt",
                     "packageImporter", "packageBuilder/servicename=replicationService");
 
@@ -76,11 +74,9 @@ public abstract class ReplicationIntegrationTestBase {
             String remoteExporterUrl = publish.getServerBaseUrl() + exporterUrl("reverse");
             setAgentProperties(author, "publish-reverse",
                     "packageExporter", "type=remote",
-                    "packageExporter", "authentication.properties[user]=admin",
-                    "packageExporter", "authentication.properties[password]=admin",
                     "packageExporter", "endpoints[0]=" + remoteExporterUrl,
-                    "packageExporter", "authenticationFactory/type=service",
-                    "packageExporter", "authenticationFactory/name=user",
+                    "packageExporter", "authenticationProvider/type=service",
+                    "packageExporter", "authenticationProvider/name=publishAdmin",
                     "packageExporter", "packageBuilder/type=vlt",
                     "packageExporter", "packageBuilder/servicename=replicationService");
 

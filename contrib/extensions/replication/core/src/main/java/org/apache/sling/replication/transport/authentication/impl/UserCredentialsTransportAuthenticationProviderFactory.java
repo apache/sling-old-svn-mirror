@@ -18,39 +18,58 @@
  */
 package org.apache.sling.replication.transport.authentication.impl;
 
-import java.util.Map;
-
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.http.HttpHost;
 import org.apache.http.client.fluent.Executor;
+import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.replication.communication.ReplicationEndpoint;
+import org.apache.sling.replication.packaging.ReplicationPackageExporter;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationException;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
-import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Component(immediate = true, label = "Factory for User based Transport Authentication Providers")
-@Service(value = TransportAuthenticationProviderFactory.class)
-@Property(name = "name", value = UserCredentialsTransportAuthenticationProviderFactory.TYPE)
-public class UserCredentialsTransportAuthenticationProviderFactory implements TransportAuthenticationProviderFactory {
+import java.util.Map;
 
-    public static final String TYPE = "user";
+@Component(label = "User Credentials based Transport Authentication Provider Factory",
+        configurationFactory = true,
+        specVersion = "1.1",
+        policy = ConfigurationPolicy.REQUIRE)
+@Service(value = TransportAuthenticationProvider.class)
+public class UserCredentialsTransportAuthenticationProviderFactory implements
+        TransportAuthenticationProvider<Executor, Executor> {
 
-    public TransportAuthenticationProvider<Executor, Executor> createAuthenticationProvider(
-            Map<String, String> properties) {
-        String user = null;
-        Object userProp = properties.get("user");
-        if (userProp != null) {
-            user = String.valueOf(userProp);
-        }
-        String password = null;
-        Object passwordProp = properties.get("password");
-        if (passwordProp != null) {
-            password = String.valueOf(passwordProp);
-        }
-        return new UserCredentialsTransportAuthenticationProvider(user, password);
+    @Property
+    public final static String USERNAME = UserCredentialsTransportAuthenticationProvider.USERNAME;
+
+    @Property
+    public final static String PASSWORD = UserCredentialsTransportAuthenticationProvider.PASSWORD;
+
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
+
+
+    private UserCredentialsTransportAuthenticationProvider transportAuthenticationProvider;
+
+
+    public void activate(Map<String, Object> config) {
+        transportAuthenticationProvider = new UserCredentialsTransportAuthenticationProvider(config);
+
     }
 
-    public String getType() {
-        return TYPE;
+
+
+    public Executor authenticate(Executor authenticable, TransportAuthenticationContext context)
+            throws TransportAuthenticationException {
+        return transportAuthenticationProvider.authenticate(authenticable, context);
+    }
+
+    public boolean canAuthenticate(Class<?> authenticable) {
+        return transportAuthenticationProvider.canAuthenticate(authenticable);
     }
 
 }

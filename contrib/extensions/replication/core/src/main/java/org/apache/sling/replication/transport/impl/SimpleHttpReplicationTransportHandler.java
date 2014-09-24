@@ -58,6 +58,11 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
                                                  ReplicationEndpoint replicationEndpoint,
                                                  ReplicationPackageBuilder packageBuilder,
                                                  int maxNumberOfPackages) {
+
+        if (transportAuthenticationProvider == null) {
+            throw new IllegalArgumentException("The authentication provider is required");
+        }
+
         this.transportAuthenticationProvider = transportAuthenticationProvider;
         this.replicationEndpoint = replicationEndpoint;
         this.packageBuilder = packageBuilder;
@@ -66,12 +71,15 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
 
     public void deliverPackage(ReplicationPackage replicationPackage) throws ReplicationTransportException {
         log.info("delivering package {} to {} using auth {}",
-                new Object[]{replicationPackage.getId(),
+                new Object[]{
+                        replicationPackage.getId(),
                         replicationEndpoint.getUri(),
-                        transportAuthenticationProvider});
+                        transportAuthenticationProvider
+                });
 
         try {
             Executor executor = Executor.newInstance();
+
             TransportAuthenticationContext context = new TransportAuthenticationContext();
             context.addAttribute("endpoint", replicationEndpoint);
             executor =  transportAuthenticationProvider.authenticate(executor, context);
@@ -96,7 +104,10 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
             if (response != null) {
                 Content content = response.returnContent();
                 log.info("Replication content of type {} for {} delivered: {}", new Object[]{
-                        replicationPackage.getType(), Arrays.toString(replicationPackage.getPaths()), content});
+                        replicationPackage.getType(),
+                        Arrays.toString(replicationPackage.getPaths()),
+                        content
+                });
             }
             else {
                 throw new IOException("response is empty");
@@ -129,7 +140,8 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
             try {
 
                 int polls = 0;
-                while ((httpResponse = executor.execute(req).returnResponse()).getStatusLine().getStatusCode() == 200
+                while ((httpResponse = executor.execute(req).returnResponse())
+                        .getStatusLine().getStatusCode() == 200
                         && polls < maxNumberOfPackages) {
                     ReplicationPackage responsePackage = packageBuilder.readPackage(httpResponse.getEntity().getContent());
 
@@ -153,7 +165,6 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
         }
         catch (Exception ex) {
             throw new ReplicationTransportException(ex);
-
         }
 
     }
