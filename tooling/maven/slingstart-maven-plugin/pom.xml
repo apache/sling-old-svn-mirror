@@ -114,6 +114,13 @@
             <version>3.3</version>
             <scope>provided</scope>
         </dependency>
+      <!-- We use a class from the config admin implementation to read config files -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.configadmin</artifactId>
+            <version>1.2.8</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.codehaus.plexus</groupId>
             <artifactId>plexus-archiver</artifactId>

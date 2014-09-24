@@ -17,12 +17,14 @@
 package org.apache.sling.maven.slingstart;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -126,7 +128,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
                 if ( webConfig != null ) {
                     final File webXML = new File(webappDir, "web.xml");
                     try {
-                        FileUtils.fileWrite(webXML, webConfig.properties);
+                        FileUtils.fileWrite(webXML, webConfig.getProperties().get(SSMConstants.CFG_WEB_XML).toString());
                     } catch (final IOException e) {
                         throw new MojoExecutionException("Unable to write configuration to " + webXML, e);
                     }
@@ -149,7 +151,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
             final Artifact artifact = getBaseArtifact(model, null, BuildConstants.TYPE_JAR);
             contentsMap.put(BASE_DESTINATION + "/"+ artifact.getArtifactId() + "." + artifact.getArtifactHandler().getExtension(), artifact.getFile());
         }
-        for(final SSMFeature feature : model.features) {
+        for(final SSMFeature feature : model.getFeatures()) {
             if ( packageRunMode == null ) {
                 if ( feature.isSpecial()
                      && !feature.isRunMode(SSMFeature.RUN_MODE_BOOT)) {
@@ -169,17 +171,17 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
      */
     private void buildContentsMap(final SSMDeliverable model, final SSMFeature runMode, final Map<String, File> contentsMap)
     throws MojoExecutionException{
-        for(final SSMStartLevel sl : runMode.startLevels) {
+        for(final SSMStartLevel sl : runMode.getStartLevels()) {
             for(final SSMArtifact a : sl.artifacts) {
                 final Artifact artifact = ModelUtils.getArtifact(this.project, a.groupId, a.artifactId, model.getValue(a.version), a.type, a.classifier);
                 final File artifactFile = artifact.getFile();
-                contentsMap.put(getPathForArtifact(sl.level, artifactFile.getName(), runMode), artifactFile);
+                contentsMap.put(getPathForArtifact(sl.getLevel(), artifactFile.getName(), runMode), artifactFile);
             }
         }
 
         final File rootConfDir = new File(this.getTmpDir(), "global-config");
         boolean hasConfig = false;
-        for(final SSMConfiguration config : runMode.configurations) {
+        for(final SSMConfiguration config : runMode.getConfigurations()) {
             // skip special configurations
             if ( config.isSpecial() ) {
                 continue;
@@ -189,7 +191,12 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
             getLog().debug(String.format("Creating configuration at %s", configFile.getPath()));
             configFile.getParentFile().mkdirs();
             try {
-                FileUtils.fileWrite(configFile, config.properties);
+                final FileOutputStream os = new FileOutputStream(configFile);
+                try {
+                    ConfigurationHandler.write(os, config.getProperties());
+                } finally {
+                    os.close();
+                }
             } catch (final IOException e) {
                 throw new MojoExecutionException("Unable to write configuration to " + configFile, e);
             }
@@ -207,18 +214,18 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
     throws MojoExecutionException {
         String settings = null;
         final SSMFeature baseRM = model.getRunMode(SSMFeature.RUN_MODE_BASE);
-        if ( baseRM != null && baseRM.settings != null ) {
-            settings = baseRM.settings.properties + "\n";
+        if ( baseRM != null && baseRM.getSettings() != null ) {
+            settings = baseRM.getSettings().properties + "\n";
         } else {
             settings = "";
         }
         final SSMFeature bootRM = model.getRunMode(SSMFeature.RUN_MODE_BOOT);
-        if ( bootRM != null && bootRM.settings != null ) {
-            settings = settings + bootRM.settings.properties + "\n";
+        if ( bootRM != null && bootRM.getSettings() != null ) {
+            settings = settings + bootRM.getSettings().properties + "\n";
         }
         final SSMFeature packageRM = model.getRunMode(packageRunMode);
-        if ( packageRM != null && packageRM.settings != null ) {
-            settings = settings + packageRM.settings.properties;
+        if ( packageRM != null && packageRM.getSettings() != null ) {
+            settings = settings + packageRM.getSettings().properties;
         }
 
         if ( settings != null ) {
@@ -237,34 +244,37 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
      */
     private void buildBootstrapFile(final SSMDeliverable model, final String packageRunMode, final File outputDir)
     throws MojoExecutionException {
-        String bootstrapTxt = "";
+        final StringBuilder sb = new StringBuilder();
         final SSMFeature baseRM = model.getRunMode(SSMFeature.RUN_MODE_BASE);
         if ( baseRM != null ) {
             final SSMConfiguration c = baseRM.getConfiguration(SSMConstants.CFG_BOOTSTRAP);
             if ( c != null ) {
-                bootstrapTxt = c.properties + "\n";
+                sb.append(c.getProperties().get(c.getPid()));
+                sb.append('\n');
             }
         }
         final SSMFeature bootRM = model.getRunMode(SSMFeature.RUN_MODE_BOOT);
         if ( bootRM != null ) {
             final SSMConfiguration c = bootRM.getConfiguration(SSMConstants.CFG_BOOTSTRAP);
             if ( c != null ) {
-                bootstrapTxt = bootstrapTxt + c.properties;
+                sb.append(c.getProperties().get(c.getPid()));
+                sb.append('\n');
             }
         }
         final SSMFeature packageRM = model.getRunMode(packageRunMode);
         if ( packageRM != null ) {
             final SSMConfiguration c = packageRM.getConfiguration(SSMConstants.CFG_BOOTSTRAP);
             if ( c != null ) {
-                bootstrapTxt = bootstrapTxt + c.properties;
+                sb.append(c.getProperties().get(c.getPid()));
+                sb.append('\n');
             }
         }
 
-        if ( bootstrapTxt != null ) {
+        if ( sb.length() > 0 ) {
             final File file = new File(outputDir, BOOTSTRAP_FILE);
             getLog().debug(String.format("Creating bootstrap file at %s", file.getPath()));
             try {
-                FileUtils.fileWrite(file, bootstrapTxt);
+                FileUtils.fileWrite(file, sb.toString());
             } catch ( final IOException ioe ) {
                 throw new MojoExecutionException("Unable to write bootstrap file.", ioe);
             }
@@ -335,8 +345,8 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
      */
     private String getPathForArtifact(final int startLevel, final String artifactName, final SSMFeature rm) {
         final Set<String> runModesList = new TreeSet<String>();
-        if (rm.runModes != null ) {
-            for(final String mode : rm.runModes) {
+        if (rm.getRunModes() != null ) {
+            for(final String mode : rm.getRunModes()) {
                 runModesList.add(mode);
             }
         }
@@ -367,8 +377,8 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
      */
     private String getPathForConfiguration(final SSMConfiguration config, final SSMFeature rm) {
         final Set<String> runModesList = new TreeSet<String>();
-        if (rm.runModes != null ) {
-            for(final String mode : rm.runModes) {
+        if (rm.getRunModes() != null ) {
+            for(final String mode : rm.getRunModes()) {
                 runModesList.add(mode);
             }
         }
@@ -390,8 +400,8 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
             runModeExt = sb.toString();
         }
 
-        final String mainName = (config.factoryPid != null ? config.factoryPid : config.pid);
-        final String alias = (config.factoryPid != null ? "-" + config.pid : "");
+        final String mainName = (config.getFactoryPid() != null ? config.getFactoryPid() : config.getPid());
+        final String alias = (config.getFactoryPid() != null ? "-" + config.getPid() : "");
         return String.format("%s/%s%s/%s%s.cfg", BASE_DESTINATION, CONFIG_DIRECTORY,
                 runModeExt,
                 mainName,
