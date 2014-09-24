@@ -23,11 +23,19 @@ import java.util.List;
  * A start level holds a set of artifacts.
  * A valid start level is positive, start level 0 means the default OSGi start level.
  */
-public class SSMStartLevel {
+public class SSMStartLevel implements Comparable<SSMStartLevel> {
 
-    public int level;
+    private final int level;
 
     public final List<SSMArtifact> artifacts = new ArrayList<SSMArtifact>();
+
+    public SSMStartLevel(final int level) {
+        this.level = level;
+    }
+
+    public int getLevel() {
+        return this.level;
+    }
 
     /**
      * validates the object and throws an IllegalStateException
@@ -70,6 +78,16 @@ public class SSMStartLevel {
                 this.artifacts.add(a);
             }
         }
+    }
+
+    @Override
+    public int compareTo(final SSMStartLevel o) {
+        if ( this.level < o.level ) {
+            return -1;
+        } else if ( this.level > o.level ) {
+            return 1;
+        }
+        return 0;
     }
 
     @Override

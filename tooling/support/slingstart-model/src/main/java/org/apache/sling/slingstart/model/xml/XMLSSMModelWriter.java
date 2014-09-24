@@ -16,11 +16,13 @@
  */
 package org.apache.sling.slingstart.model.xml;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.Map;
 
+import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.sling.slingstart.model.SSMArtifact;
 import org.apache.sling.slingstart.model.SSMConfiguration;
 import org.apache.sling.slingstart.model.SSMDeliverable;
@@ -33,10 +35,10 @@ import org.apache.sling.slingstart.model.SSMStartLevel;
 public class XMLSSMModelWriter {
 
     private static void printRunModeAttribute(final PrintWriter pw, final SSMFeature rmd) {
-        if ( rmd.runModes != null && rmd.runModes.length > 0 ) {
+        if ( rmd.getRunModes() != null && rmd.getRunModes().length > 0 ) {
             pw.print(" modes=\"");
             boolean first = true;
-            for(final String mode : rmd.runModes) {
+            for(final String mode : rmd.getRunModes()) {
                 if ( first ) {
                     first = false;
                 } else {
@@ -66,10 +68,10 @@ public class XMLSSMModelWriter {
         pw.println("<deliverable>");
 
         // properties
-        if ( subsystem.properties.size() > 0 ) {
+        if ( subsystem.getProperties().size() > 0 ) {
             pw.print(INDENT);
             pw.println("<properties><![CDATA[");
-            for(final Map.Entry<String, String> entry : subsystem.properties.entrySet()) {
+            for(final Map.Entry<String, String> entry : subsystem.getProperties().entrySet()) {
                 pw.print(INDENT);
                 pw.print(INDENT);
                 pw.print(entry.getKey());
@@ -79,10 +81,10 @@ public class XMLSSMModelWriter {
             pw.print(INDENT);
             pw.println("]]></properties>");
         }
-        for(final SSMFeature feature : subsystem.features) {
+        for(final SSMFeature feature : subsystem.getFeatures()) {
             // TODO - don't write out empty features
             String indent = INDENT;
-            if ( feature.runModes != null ) {
+            if ( feature.getRunModes() != null ) {
                 pw.print(indent);
                 pw.print("<feature");
                 printRunModeAttribute(pw, feature);
@@ -90,15 +92,15 @@ public class XMLSSMModelWriter {
                 indent = indent + INDENT;
             }
 
-            for(final SSMStartLevel startLevel : feature.startLevels) {
+            for(final SSMStartLevel startLevel : feature.getStartLevels()) {
                 if ( startLevel.artifacts.size() == 0 ) {
                     continue;
                 }
-                if ( startLevel.level != 0 ) {
+                if ( startLevel.getLevel() != 0 ) {
                     pw.print(indent);
                     pw.print("<startLevel");
                     pw.print(" level=\"");
-                    pw.print(String.valueOf(startLevel.level));
+                    pw.print(String.valueOf(startLevel.getLevel()));
                     pw.print("\"");
                     pw.println(">");
                     indent += INDENT;
@@ -124,38 +126,46 @@ public class XMLSSMModelWriter {
                     }
                     pw.println("/>");
                 }
-                if ( startLevel.level != 0 ) {
+                if ( startLevel.getLevel() != 0 ) {
                     indent = indent.substring(0, indent.length() - INDENT.length());
                     pw.print(indent);
                     pw.println("</startLevel>");
                 }
             }
 
-            for(final SSMConfiguration config : feature.configurations) {
+            for(final SSMConfiguration config : feature.getConfigurations()) {
                 pw.print(indent);
                 pw.print("<configuration ");
-                if ( config.factoryPid != null ) {
+                if ( config.getFactoryPid() != null ) {
                     pw.print("factory=\"");
-                    pw.print(escapeXml(config.factoryPid));
+                    pw.print(escapeXml(config.getFactoryPid()));
                     pw.print("\" ");
                 }
                 pw.print("pid=\"");
-                pw.print(escapeXml(config.pid));
+                pw.print(escapeXml(config.getPid()));
                 pw.println("\"><![CDATA[");
-                pw.println(config.properties);
+                final ByteArrayOutputStream os = new ByteArrayOutputStream();
+                try {
+                    ConfigurationHandler.write(os , config.getProperties());
+                } finally {
+                    os.close();
+                }
+                final String configString = new String(os.toByteArray(), "UTF-8");
+                pw.println(configString);
+                pw.println(config.getProperties());
                 pw.print(indent);
                 pw.println("]]></configuration>");
             }
 
-            if ( feature.settings != null ) {
+            if ( feature.getSettings() != null ) {
                 pw.print(indent);
                 pw.println("<settings><![CDATA[");
-                pw.println(feature.settings.properties);
+                pw.println(feature.getSettings().properties);
                 pw.print(indent);
                 pw.println("]]></settings>");
             }
 
-            if ( feature.runModes != null ) {
+            if ( feature.getRunModes() != null ) {
                 indent = indent.substring(0, indent.length() - INDENT.length());
                 pw.print(indent);
                 pw.println("</feature>");

@@ -19,7 +19,7 @@ package org.apache.sling.slingstart.model;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
 
@@ -34,7 +34,7 @@ import java.util.Set;
  * In addition to custom, user defined run modes, special run modes exists.
  * A special run mode name starts with a colon.
  */
-public class SSMFeature {
+public class SSMFeature implements Comparable<SSMFeature> {
 
     public static final String RUN_MODE_BASE = ":base";
 
@@ -44,13 +44,40 @@ public class SSMFeature {
 
     public static final String RUN_MODE_STANDALONE = ":standalone";
 
-    public String[] runModes;
+    private final String[] runModes;
 
-    public final List<SSMStartLevel> startLevels = new ArrayList<SSMStartLevel>();
+    private final List<SSMStartLevel> startLevels = new ArrayList<SSMStartLevel>();
 
-    public final List<SSMConfiguration> configurations = new ArrayList<SSMConfiguration>();
+    private final List<SSMConfiguration> configurations = new ArrayList<SSMConfiguration>();
 
-    public SSMSettings settings;
+    private SSMSettings settings;
+
+    public SSMFeature(final String[] runModes) {
+        this.runModes = getSortedRunModesArray(runModes);
+    }
+
+    public static String[] getSortedRunModesArray(final String[] runModes) {
+        // sort run modes
+        if ( runModes != null ) {
+            final List<String> list = new ArrayList<String>();
+            for(final String m : runModes) {
+                if ( m != null ) {
+                    if ( !m.trim().isEmpty() ) {
+                        list.add(m.trim());
+                    }
+                }
+            }
+            if ( list.size() > 0 ) {
+                Collections.sort(list);
+                return list.toArray(new String[list.size()]);
+            }
+        }
+        return null;
+    }
+
+    public String[] getRunModes() {
+        return this.runModes;
+    }
 
     /**
      * validates the object and throws an IllegalStateException
@@ -60,23 +87,13 @@ public class SSMFeature {
     public void validate() {
         if ( this.runModes != null ) {
             boolean hasSpecial = false;
-            final List<String> modes = new ArrayList<String>();
             for(String m : this.runModes) {
-                if ( m != null ) m = m.trim();
-                if ( m != null && !m.isEmpty()) {
-                    modes.add(m);
-                    if ( m.startsWith(":") ) {
-                        if ( hasSpecial ) {
-                            throw new IllegalStateException("Invalid modes " + Arrays.toString(this.runModes));
-                        }
-                        hasSpecial = true;
+                if ( m.startsWith(":") ) {
+                    if ( hasSpecial ) {
+                        throw new IllegalStateException("Invalid modes " + Arrays.toString(this.runModes));
                     }
+                    hasSpecial = true;
                 }
-            }
-            if ( modes.size() == 0 ) {
-                this.runModes = null;
-            } else {
-                this.runModes = modes.toArray(new String[modes.size()]);
             }
         }
         for(final SSMStartLevel sl : this.startLevels) {
@@ -140,25 +157,13 @@ public class SSMFeature {
      */
     public SSMStartLevel getOrCreateStartLevel(final int startLevel) {
         for(final SSMStartLevel sl : this.startLevels) {
-            if ( sl.level == startLevel ) {
+            if ( sl.getLevel() == startLevel ) {
                 return sl;
             }
         }
-        final SSMStartLevel sl = new SSMStartLevel();
-        sl.level = startLevel;
+        final SSMStartLevel sl = new SSMStartLevel(startLevel);
         this.startLevels.add(sl);
-        Collections.sort(this.startLevels, new Comparator<SSMStartLevel>() {
-
-            @Override
-            public int compare(SSMStartLevel o1, SSMStartLevel o2) {
-                if ( o1.level < o2.level ) {
-                    return -1;
-                } else if ( o1.level > o2.level ) {
-                    return 1;
-                }
-                return 0;
-            }
-        });
+        Collections.sort(this.startLevels);
         return sl;
     }
 
@@ -170,7 +175,7 @@ public class SSMFeature {
             // search for duplicates in other start levels
             for(final SSMArtifact artifact : sl.artifacts) {
                 for(final SSMStartLevel mySL : this.startLevels) {
-                    if ( mySL.level == sl.level ) {
+                    if ( mySL.getLevel() == sl.getLevel() ) {
                         continue;
                     }
                     final SSMArtifact myArtifact = mySL.search(artifact);
@@ -180,28 +185,15 @@ public class SSMFeature {
                 }
             }
 
-            final SSMStartLevel mergeSL = this.getOrCreateStartLevel(sl.level);
+            final SSMStartLevel mergeSL = this.getOrCreateStartLevel(sl.getLevel());
             mergeSL.merge(sl);
         }
         for(final SSMConfiguration config : mode.configurations) {
-            SSMConfiguration found = null;
-            for(final SSMConfiguration current : this.configurations) {
-                if ( config.factoryPid == null ) {
-                    if ( current.factoryPid == null && current.pid.equals(config.pid) ) {
-                        found = current;
-                        break;
-                    }
-                } else {
-                    if ( config.factoryPid.equals(current.factoryPid) && current.pid.equals(config.pid) ) {
-                        found = current;
-                        break;
-                    }
-                }
-            }
-            if ( found != null ) {
-                found.properties = config.properties;
-            } else {
-                this.configurations.add(config);
+            final SSMConfiguration found = getOrCreateConfiguration(config.getPid(), config.getFactoryPid());
+            final Enumeration<String> e = config.getProperties().keys();
+            while ( e.hasMoreElements() ) {
+                final String key = e.nextElement();
+                found.addProperty(key, config.getProperties().get(key));
             }
         }
         if ( this.settings == null && mode.settings != null ) {
@@ -217,11 +209,62 @@ public class SSMFeature {
      */
     public SSMConfiguration getConfiguration(final String pid) {
         for(final SSMConfiguration c : this.configurations) {
-            if ( pid.equals(c.pid) ) {
+            if ( pid.equals(c.getPid()) ) {
                 return c;
             }
         }
         return null;
+    }
+
+    public SSMConfiguration getOrCreateConfiguration(final String pid, final String factoryPid) {
+        SSMConfiguration found = null;
+        for(final SSMConfiguration current : this.configurations) {
+            if ( factoryPid == null ) {
+                if ( current.getFactoryPid() == null && current.getPid().equals(pid) ) {
+                    found = current;
+                    break;
+                }
+            } else {
+                if ( factoryPid.equals(current.getFactoryPid()) && current.getPid().equals(pid) ) {
+                    found = current;
+                    break;
+                }
+            }
+        }
+        if ( found == null ) {
+            found = new SSMConfiguration(pid, factoryPid);
+            this.configurations.add(found);
+        }
+        return found;
+    }
+
+    public List<SSMStartLevel> getStartLevels() {
+        return this.startLevels;
+    }
+
+    public List<SSMConfiguration> getConfigurations() {
+        return this.configurations;
+    }
+
+    public SSMSettings getSettings() {
+        return this.settings;
+    }
+
+    /**
+     * @see java.lang.Comparable#compareTo(java.lang.Object)
+     */
+    @Override
+    public int compareTo( SSMFeature o2) {
+        if ( this.runModes == null ) {
+            if ( o2.runModes == null ) {
+                return 0;
+            }
+            return -1;
+        }
+        if ( o2.runModes == null ) {
+            return 1;
+        }
+        return Arrays.toString(this.runModes).compareTo(Arrays.toString(o2.runModes));
     }
 
     @Override
@@ -229,5 +272,9 @@ public class SSMFeature {
         return "SSMFeature [runModes=" + Arrays.toString(runModes)
                 + ", startLevels=" + startLevels + ", configurations="
                 + configurations + ", settings=" + settings + "]";
+    }
+
+    public void setSettings(final SSMSettings ssmSettings) {
+        this.settings = ssmSettings;
     }
 }

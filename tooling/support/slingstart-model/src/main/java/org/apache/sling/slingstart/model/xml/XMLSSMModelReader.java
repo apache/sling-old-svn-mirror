@@ -16,16 +16,20 @@
  */
 package org.apache.sling.slingstart.model.xml;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.Stack;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.sling.slingstart.model.SSMArtifact;
 import org.apache.sling.slingstart.model.SSMConfiguration;
 import org.apache.sling.slingstart.model.SSMDeliverable;
@@ -156,16 +160,13 @@ public class XMLSSMModelReader {
                                 artifact.type = atts.getValue("type");
                                 artifact.classifier = atts.getValue("classifier");
                             } else if ( this.mode == MODE.CONFIGURATION || this.mode == MODE.FEATURE_CONFIGURATION) {
-                                this.configuration = new SSMConfiguration();
-                                this.configuration.pid = atts.getValue("pid");
-                                this.configuration.factoryPid = atts.getValue("factory");
-                                this.feature.configurations.add(this.configuration);
+                                this.configuration = this.feature.getOrCreateConfiguration(atts.getValue("pid"), atts.getValue("factory"));
                                 this.text = new StringBuilder();
                             } else if ( this.mode == MODE.SETTINGS || this.mode == MODE.FEATURE_SETTINGS) {
-                                if ( this.feature.settings != null ) {
+                                if ( this.feature.getSettings() != null ) {
                                     throw new SAXException("Duplicate settings section");
                                 }
-                                this.feature.settings = new SSMSettings();
+                                this.feature.setSettings(new SSMSettings());
                                 this.text = new StringBuilder();
 
                             } else if ( this.mode == MODE.FEATURE ) {
@@ -215,10 +216,30 @@ public class XMLSSMModelReader {
                         if ( prevMode == MODE.STARTLEVEL || prevMode == MODE.FEATURE_STARTLEVEL ) {
                             this.startLevel = 0;
                         } else if ( prevMode == MODE.CONFIGURATION || prevMode == MODE.FEATURE_CONFIGURATION ) {
-                            this.configuration.properties = textValue;
+                            ByteArrayInputStream bais = null;
+                            try {
+                                bais = new ByteArrayInputStream(textValue.getBytes("UTF-8"));
+                                @SuppressWarnings("unchecked")
+                                final Dictionary<String, Object> props = ConfigurationHandler.read(bais);
+                                final Enumeration<String> e = props.keys();
+                                while ( e.hasMoreElements() ) {
+                                    final String key = e.nextElement();
+                                    this.configuration.addProperty(key, props.get(key));
+                                }
+                            } catch ( final IOException ioe ) {
+                                throw new SAXException(ioe);
+                            } finally {
+                                if ( bais != null ) {
+                                    try {
+                                        bais.close();
+                                    } catch ( final IOException ignore ) {
+                                        // ignore
+                                    }
+                                }
+                            }
                             this.configuration = null;
                         } else if ( prevMode == MODE.SETTINGS || prevMode == MODE.FEATURE_SETTINGS) {
-                            this.feature.settings.properties = textValue;
+                            this.feature.getSettings().properties = textValue;
                         } else if ( prevMode == MODE.FEATURE ) {
                             this.feature = result.getOrCreateFeature(null);
                             this.startLevel = 0;
@@ -231,7 +252,7 @@ public class XMLSSMModelReader {
                                     if ( pos == -1 || line.indexOf("=", pos + 1 ) != -1 ) {
                                         throw new SAXException("Invalid property definition: " + line);
                                     }
-                                    result.properties.put(line.substring(0, pos), line.substring(pos + 1));
+                                    result.addProperty(line.substring(0, pos), line.substring(pos + 1));
                                 }
                             } catch (final IOException io) {
                                 throw new SAXException(io);
