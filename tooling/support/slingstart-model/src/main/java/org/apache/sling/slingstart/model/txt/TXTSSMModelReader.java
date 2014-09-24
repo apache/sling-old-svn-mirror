@@ -148,6 +148,8 @@ public class TXTSSMModelReader {
                     }
                 }
             }
+        } else if ( config.isSpecial() ) {
+            config.addProperty(config.getPid(), textValue);
         } else {
             final LineNumberReader lnr = new LineNumberReader(new StringReader(textValue));
             String line;
