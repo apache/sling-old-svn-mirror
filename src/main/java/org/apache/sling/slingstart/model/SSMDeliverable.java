@@ -19,7 +19,6 @@ package org.apache.sling.slingstart.model;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,12 +33,12 @@ import java.util.Map;
  */
 public class SSMDeliverable {
 
-    public final List<SSMFeature> features = new ArrayList<SSMFeature>();
+    private final List<SSMFeature> features = new ArrayList<SSMFeature>();
 
-    public Map<String, String> properties = new HashMap<String, String>();
+    private Map<String, String> properties = new HashMap<String, String>();
 
     public SSMDeliverable() {
-        this.features.add(new SSMFeature()); // global features
+        this.features.add(new SSMFeature(null)); // global features
     }
 
     /**
@@ -48,21 +47,12 @@ public class SSMDeliverable {
      * @return The feature or null.
      */
     private SSMFeature findFeature(final String[] runModes) {
+        final String[] sortedRunModes = SSMFeature.getSortedRunModesArray(runModes);
         SSMFeature result = null;
         for(final SSMFeature current : this.features) {
-            if ( runModes == null && current.runModes == null ) {
+            if ( Arrays.equals(sortedRunModes, current.getRunModes()) ) {
                 result = current;
                 break;
-            }
-            if ( runModes != null && current.runModes != null ) {
-                final List<String> a = new ArrayList<String>(Arrays.asList(runModes));
-                final List<String> b = new ArrayList<String>(Arrays.asList(current.runModes));
-                Collections.sort(a);
-                Collections.sort(b);
-                if ( a.equals(b) ) {
-                    result = current;
-                    break;
-                }
             }
         }
         return result;
@@ -82,32 +72,15 @@ public class SSMDeliverable {
     public SSMFeature getOrCreateFeature(final String[] runModes) {
         SSMFeature result = findFeature(runModes);
         if ( result == null ) {
-            result = new SSMFeature();
-            result.runModes = runModes;
+            result = new SSMFeature(runModes);
             this.features.add(result);
-            Collections.sort(this.features, new Comparator<SSMFeature>() {
-
-                @Override
-                public int compare(final SSMFeature o1, final SSMFeature o2) {
-                    if ( o1.runModes == null ) {
-                        if ( o2.runModes == null ) {
-                            return 0;
-                        }
-                        return -1;
-                    }
-                    if ( o2.runModes == null ) {
-                        return 1;
-                    }
-                    final List<String> a = new ArrayList<String>(Arrays.asList(o1.runModes));
-                    final List<String> b = new ArrayList<String>(Arrays.asList(o2.runModes));
-                    Collections.sort(a);
-                    Collections.sort(b);
-
-                    return a.toString().compareTo(b.toString());
-                }
-            });
+            Collections.sort(this.features);
         }
         return result;
+    }
+
+    public List<SSMFeature> getFeatures() {
+        return this.features;
     }
 
     /**
@@ -156,10 +129,18 @@ public class SSMDeliverable {
      */
     public void merge(final SSMDeliverable other) {
         for(final SSMFeature mode : other.features) {
-            final SSMFeature mergeFeature = this.getOrCreateFeature(mode.runModes);
+            final SSMFeature mergeFeature = this.getOrCreateFeature(mode.getRunModes());
             mergeFeature.merge(mode);
         }
         this.properties.putAll(other.properties);
+    }
+
+    public Map<String, String> getProperties() {
+        return this.properties;
+    }
+
+    public void addProperty(final String key, final String value) {
+        this.properties.put(key, value);
     }
 
     @Override

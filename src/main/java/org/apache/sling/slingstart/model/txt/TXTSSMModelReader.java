@@ -16,11 +16,16 @@
  */
 package org.apache.sling.slingstart.model.txt;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.Reader;
+import java.io.StringReader;
+import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.UUID;
 
+import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.sling.slingstart.model.SSMArtifact;
 import org.apache.sling.slingstart.model.SSMConfiguration;
 import org.apache.sling.slingstart.model.SSMDeliverable;
@@ -87,39 +92,70 @@ public class TXTSSMModelReader {
                 feature.getOrCreateStartLevel(0).artifacts.add(artifact);
             } else if ( "config".equals(verb) ) {
                 final SSMFeature feature = model.getOrCreateFeature(null);
-                final SSMConfiguration config = new SSMConfiguration();
                 boolean felixFormat = false;
+                final String pid;
                 if (qualifier.endsWith(FELIX_FORMAT_SUFFIX)) {
                     felixFormat = true;
-                    config.pid = qualifier.split(" ")[0].trim();
+                    pid = qualifier.split(" ")[0].trim();
                 } else {
-                    config.pid = qualifier;
+                    pid = qualifier;
                 }
+                final SSMConfiguration config = feature.getOrCreateConfiguration(pid, null);
                 if ( props != null ) {
-                    config.properties = props.toString();
+                    processConfigurationProperties(config, props.toString(), felixFormat);
                 }
-                feature.configurations.add(config);
             } else if ( "config.factory".equals(verb) ) {
                 final SSMFeature feature = model.getOrCreateFeature(null);
-                final SSMConfiguration config = new SSMConfiguration();
                 boolean felixFormat = false;
+                final String factoryPid;
                 if (qualifier.endsWith(FELIX_FORMAT_SUFFIX)) {
                     felixFormat = true;
-                    config.factoryPid = qualifier.split(" ")[0].trim();
+                    factoryPid = qualifier.split(" ")[0].trim();
                 } else {
-                    config.factoryPid = qualifier;
+                    factoryPid = qualifier;
                 }
                 // create unique alias
-                config.pid = UUID.randomUUID().toString();
-
+                final SSMConfiguration config = feature.getOrCreateConfiguration(UUID.randomUUID().toString(), factoryPid);
                 if ( props != null ) {
-                    config.properties = props.toString();
+                    processConfigurationProperties(config, props.toString(), felixFormat);
                 }
-                feature.configurations.add(config);
             }
         }
 
         return model;
+    }
+
+    private static void processConfigurationProperties(final SSMConfiguration config, final String textValue,
+            final boolean felixFormat)
+    throws IOException {
+        if ( felixFormat ) {
+            ByteArrayInputStream bais = null;
+            try {
+                bais = new ByteArrayInputStream(textValue.getBytes("UTF-8"));
+                @SuppressWarnings("unchecked")
+                final Dictionary<String, Object> props = ConfigurationHandler.read(bais);
+                final Enumeration<String> e = props.keys();
+                while ( e.hasMoreElements() ) {
+                    final String key = e.nextElement();
+                    config.addProperty(key, props.get(key));
+                }
+            } finally {
+                if ( bais != null ) {
+                    try {
+                        bais.close();
+                    } catch ( final IOException ignore ) {
+                        // ignore
+                    }
+                }
+            }
+        } else {
+            final LineNumberReader lnr = new LineNumberReader(new StringReader(textValue));
+            String line;
+            while ( (line = lnr.readLine()) != null ) {
+                final int pos = line.indexOf('=');
+                config.addProperty(line.substring(0, pos), line.substring(pos + 1));
+            }
+        }
     }
 
     private static boolean ignore(final String line) {

@@ -16,17 +16,33 @@
  */
 package org.apache.sling.slingstart.model;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
+
 
 /**
  * Configuration
  */
 public class SSMConfiguration {
 
-    public String pid;
+    private final String pid;
 
-    public String factoryPid;
+    private final String factoryPid;
 
-    public String properties;
+    private final Dictionary<String, Object> properties = new Hashtable<String, Object>();
+
+    public SSMConfiguration(final String pid, final String factoryPid) {
+        this.pid = (pid != null ? pid.trim() : null);
+        this.factoryPid = (factoryPid != null ? factoryPid.trim() : null);
+    }
+
+    public String getPid() {
+        return this.pid;
+    }
+
+    public String getFactoryPid() {
+        return this.factoryPid;
+    }
 
     /**
      * validates the object and throws an IllegalStateException
@@ -38,11 +54,6 @@ public class SSMConfiguration {
      * @throws IllegalStateException
      */
     public void validate() {
-        // trim values first
-        if ( pid != null ) pid = pid.trim();
-        if ( factoryPid != null ) factoryPid = factoryPid.trim();
-        if ( properties != null ) properties = properties.trim();
-
         // check/correct values
         if ( pid == null || pid.isEmpty() ) {
             throw new IllegalStateException("pid");
@@ -57,6 +68,14 @@ public class SSMConfiguration {
             return true;
         }
         return false;
+    }
+
+    public Dictionary<String, Object> getProperties() {
+        return this.properties;
+    }
+
+    public void addProperty(final String key, final Object value) {
+        this.properties.put(key, value);
     }
 
     @Override
