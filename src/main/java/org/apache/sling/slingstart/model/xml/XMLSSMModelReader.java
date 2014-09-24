@@ -215,24 +215,28 @@ public class XMLSSMModelReader {
                         if ( prevMode == MODE.STARTLEVEL || prevMode == MODE.FEATURE_STARTLEVEL ) {
                             this.startLevel = 0;
                         } else if ( prevMode == MODE.CONFIGURATION || prevMode == MODE.FEATURE_CONFIGURATION ) {
-                            ByteArrayInputStream bais = null;
-                            try {
-                                bais = new ByteArrayInputStream(textValue.getBytes("UTF-8"));
-                                @SuppressWarnings("unchecked")
-                                final Dictionary<String, Object> props = ConfigurationHandler.read(bais);
-                                final Enumeration<String> e = props.keys();
-                                while ( e.hasMoreElements() ) {
-                                    final String key = e.nextElement();
-                                    this.configuration.addProperty(key, props.get(key));
-                                }
-                            } catch ( final IOException ioe ) {
-                                throw new SAXException(ioe);
-                            } finally {
-                                if ( bais != null ) {
-                                    try {
-                                        bais.close();
-                                    } catch ( final IOException ignore ) {
-                                        // ignore
+                            if ( this.configuration.isSpecial() ) {
+                                this.configuration.addProperty(this.configuration.getPid(), textValue);
+                            } else {
+                                ByteArrayInputStream bais = null;
+                                try {
+                                    bais = new ByteArrayInputStream(textValue.getBytes("UTF-8"));
+                                    @SuppressWarnings("unchecked")
+                                    final Dictionary<String, Object> props = ConfigurationHandler.read(bais);
+                                    final Enumeration<String> e = props.keys();
+                                    while ( e.hasMoreElements() ) {
+                                        final String key = e.nextElement();
+                                        this.configuration.addProperty(key, props.get(key));
+                                    }
+                                } catch ( final IOException ioe ) {
+                                    throw new SAXException(ioe);
+                                } finally {
+                                    if ( bais != null ) {
+                                        try {
+                                            bais.close();
+                                        } catch ( final IOException ignore ) {
+                                            // ignore
+                                        }
                                     }
                                 }
                             }

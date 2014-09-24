@@ -144,15 +144,18 @@ public class XMLSSMModelWriter {
                 pw.print("pid=\"");
                 pw.print(escapeXml(config.getPid()));
                 pw.println("\"><![CDATA[");
-                final ByteArrayOutputStream os = new ByteArrayOutputStream();
-                try {
-                    ConfigurationHandler.write(os , config.getProperties());
-                } finally {
-                    os.close();
+                if ( config.isSpecial() ) {
+                    pw.println(config.getProperties().get(config.getPid()));
+                } else {
+                    final ByteArrayOutputStream os = new ByteArrayOutputStream();
+                    try {
+                        ConfigurationHandler.write(os , config.getProperties());
+                    } finally {
+                        os.close();
+                    }
+                    final String configString = new String(os.toByteArray(), "UTF-8");
+                    pw.println(configString);
                 }
-                final String configString = new String(os.toByteArray(), "UTF-8");
-                pw.println(configString);
-                pw.println(config.getProperties());
                 pw.print(indent);
                 pw.println("]]></configuration>");
             }
