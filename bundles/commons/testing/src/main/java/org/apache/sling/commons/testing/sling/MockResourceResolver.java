@@ -31,6 +31,10 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 
+/**
+ * @deprecated Please use the Mock Resource Resolver Implementation from testing/resourceresolver-mock instead.
+ */
+@Deprecated
 public class MockResourceResolver implements ResourceResolver {
 
     private String[] searchPath;
