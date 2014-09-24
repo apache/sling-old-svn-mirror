@@ -32,7 +32,6 @@ import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 import org.apache.sling.replication.transport.ReplicationTransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
-import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
 import org.apache.sling.replication.transport.impl.MultipleEndpointReplicationTransportHandler;
 import org.apache.sling.replication.transport.impl.SimpleHttpReplicationTransportHandler;
 import org.apache.sling.replication.transport.impl.TransportEndpointStrategyType;
@@ -46,14 +45,13 @@ public class RemoteReplicationPackageExporter implements ReplicationPackageExpor
 
     ReplicationTransportHandler transportHandler;
 
-    public RemoteReplicationPackageExporter(ReplicationPackageBuilder packageBuilder, TransportAuthenticationProviderFactory transportAuthenticationProviderFactory,
-                                            Map<String, String> authenticationProperties,
+    public RemoteReplicationPackageExporter(ReplicationPackageBuilder packageBuilder, TransportAuthenticationProvider transportAuthenticationProvider,
                                             String[] endpoints,
                                             TransportEndpointStrategyType transportEndpointStrategyType,
                                             int pollItems) {
         this.packageBuilder = packageBuilder;
 
-        TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider = (TransportAuthenticationProvider<Executor, Executor>) transportAuthenticationProviderFactory.createAuthenticationProvider(authenticationProperties);
+
         List<ReplicationTransportHandler> transportHandlers = new ArrayList<ReplicationTransportHandler>();
 
         for (String endpoint : endpoints) {
@@ -64,10 +62,6 @@ public class RemoteReplicationPackageExporter implements ReplicationPackageExpor
         }
         transportHandler = new MultipleEndpointReplicationTransportHandler(transportHandlers,
                 transportEndpointStrategyType);
-    }
-
-    @Deactivate
-    protected void deactivate() {
     }
 
     public List<ReplicationPackage> exportPackage(ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {

@@ -28,7 +28,7 @@ import org.apache.sling.replication.transport.authentication.TransportAuthentica
 public class NopTransportAuthenticationProvider implements TransportAuthenticationProvider<Object, Object> {
 
     public Object authenticate(Object authenticable, TransportAuthenticationContext context)
-                    throws TransportAuthenticationException {
+            throws TransportAuthenticationException {
         return authenticable;
     }
 

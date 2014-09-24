@@ -20,6 +20,7 @@ package org.apache.sling.replication.transport.authentication.impl;
 
 import org.apache.http.HttpHost;
 import org.apache.http.client.fluent.Executor;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationException;
@@ -27,14 +28,29 @@ import org.apache.sling.replication.transport.authentication.TransportAuthentica
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
+
 public class UserCredentialsTransportAuthenticationProvider implements
         TransportAuthenticationProvider<Executor, Executor> {
+
+    public final static String USERNAME = "username";
+    public final static String PASSWORD = "password";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final String username;
 
     private final String password;
+
+
+    public UserCredentialsTransportAuthenticationProvider(Map<String, Object> config) {
+        username = PropertiesUtil.toString(config.get(USERNAME), "").trim();
+        password = PropertiesUtil.toString(config.get(PASSWORD), "").trim();
+
+        if (username.length() == 0 || password.length() == 0) {
+            throw new IllegalArgumentException("Username and password are required");
+        }
+    }
 
     public UserCredentialsTransportAuthenticationProvider(String username, String password) {
         this.username = username;

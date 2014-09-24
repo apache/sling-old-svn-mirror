@@ -33,7 +33,6 @@ import org.apache.sling.replication.packaging.ReplicationPackageImporter;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.apache.sling.replication.transport.ReplicationTransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
-import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
 import org.apache.sling.replication.transport.impl.AdvancedHttpReplicationTransportHandler;
 import org.apache.sling.replication.transport.impl.MultipleEndpointReplicationTransportHandler;
 import org.apache.sling.replication.transport.impl.ReplicationTransportConstants;
@@ -55,9 +54,9 @@ public class AdvancedRemoteReplicationPackageImporter implements ReplicationPack
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(name = ReplicationTransportConstants.TRANSPORT_AUTHENTICATION_FACTORY)
-    @Reference(name = "TransportAuthenticationProviderFactory", policy = ReferencePolicy.DYNAMIC)
-    private TransportAuthenticationProviderFactory transportAuthenticationProviderFactory;
+    @Property(name = ReplicationTransportConstants.TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
+    @Reference(name = "TransportAuthenticationProvider", policy = ReferencePolicy.DYNAMIC)
+    private TransportAuthenticationProvider transportAuthenticationProvider;
 
     @Property(options = {
             @PropertyOption(name = "All",
@@ -90,10 +89,6 @@ public class AdvancedRemoteReplicationPackageImporter implements ReplicationPack
     @Activate
     protected void activate(BundleContext context, Map<String, ?> config) throws Exception {
 
-        Map<String, String> authenticationProperties = PropertiesUtil.toMap(config.get(ReplicationTransportConstants.AUTHENTICATION_PROPERTIES), new String[0]);
-
-        TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider = (TransportAuthenticationProvider<Executor, Executor>)
-                transportAuthenticationProviderFactory.createAuthenticationProvider(authenticationProperties);
         String[] endpoints = PropertiesUtil.toStringArray(config.get(ReplicationTransportConstants.ENDPOINTS), new String[0]);
         String endpointStrategyName = PropertiesUtil.toString(config.get(ReplicationTransportConstants.ENDPOINT_STRATEGY),
                 TransportEndpointStrategyType.One.name());

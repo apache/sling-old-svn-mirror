@@ -18,9 +18,7 @@
  */
 package org.apache.sling.replication.packaging.impl.importer;
 
-import org.apache.felix.scr.annotations.*;
 import org.apache.http.client.fluent.Executor;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackage;
@@ -28,12 +26,9 @@ import org.apache.sling.replication.packaging.ReplicationPackageImporter;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.apache.sling.replication.transport.ReplicationTransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
-import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
 import org.apache.sling.replication.transport.impl.MultipleEndpointReplicationTransportHandler;
-import org.apache.sling.replication.transport.impl.ReplicationTransportConstants;
 import org.apache.sling.replication.transport.impl.SimpleHttpReplicationTransportHandler;
 import org.apache.sling.replication.transport.impl.TransportEndpointStrategyType;
-import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,20 +44,16 @@ public class RemoteReplicationPackageImporter implements ReplicationPackageImpor
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private TransportAuthenticationProviderFactory transportAuthenticationProviderFactory;
+    private TransportAuthenticationProvider transportAuthenticationProviderFactory;
 
     private ReplicationEventFactory replicationEventFactory;
 
     private ReplicationTransportHandler transportHandler;
 
-    public RemoteReplicationPackageImporter(TransportAuthenticationProviderFactory transportAuthenticationProviderFactory,
-                                            Map<String, String> authenticationProperties,
+    public RemoteReplicationPackageImporter(TransportAuthenticationProvider transportAuthenticationProvider,
                                             String[] endpoints,
                                             TransportEndpointStrategyType transportEndpointStrategyType) {
 
-
-        TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider = (TransportAuthenticationProvider<Executor, Executor>)
-                transportAuthenticationProviderFactory.createAuthenticationProvider(authenticationProperties);
 
 
         List<ReplicationTransportHandler> transportHandlers = new ArrayList<ReplicationTransportHandler>();
