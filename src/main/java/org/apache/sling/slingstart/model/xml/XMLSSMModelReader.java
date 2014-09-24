@@ -152,13 +152,12 @@ public class XMLSSMModelReader {
                                 }
                                 this.startLevel = level;
                             } else if ( this.mode == MODE.ARTIFACT || this.mode == MODE.FEATURE_ARTIFACT || this.mode == MODE.STARTLEVEL_ARTIFACT || this.mode == MODE.FEATURE_STARTLEVEL_ARTIFACT) {
-                                final SSMArtifact artifact = new SSMArtifact();
+                                final SSMArtifact artifact = new SSMArtifact(atts.getValue("groupId"),
+                                        atts.getValue("artifactId"),
+                                        atts.getValue("version"),
+                                        atts.getValue("classifier"),
+                                        atts.getValue("type"));
                                 this.feature.getOrCreateStartLevel(this.startLevel).artifacts.add(artifact);
-                                artifact.groupId = atts.getValue("groupId");
-                                artifact.artifactId = atts.getValue("artifactId");
-                                artifact.version = atts.getValue("version");
-                                artifact.type = atts.getValue("type");
-                                artifact.classifier = atts.getValue("classifier");
                             } else if ( this.mode == MODE.CONFIGURATION || this.mode == MODE.FEATURE_CONFIGURATION) {
                                 this.configuration = this.feature.getOrCreateConfiguration(atts.getValue("pid"), atts.getValue("factory"));
                                 this.text = new StringBuilder();
