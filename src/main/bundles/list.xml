@@ -207,14 +207,6 @@
             <artifactId>org.apache.sling.auth.form</artifactId>
             <version>1.0.6</version>
         </bundle>
-<!--
-
-        <bundle>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.auth.selector</artifactId>
-            <version>1.0.6</version>
-        </bundle>
--->
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.adapter</artifactId>
