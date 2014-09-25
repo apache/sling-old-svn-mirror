@@ -20,7 +20,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -50,7 +52,7 @@ public class SSMFeature implements Comparable<SSMFeature> {
 
     private final List<SSMConfiguration> configurations = new ArrayList<SSMConfiguration>();
 
-    private SSMSettings settings;
+    private final Map<String, String> settings = new HashMap<String, String>();
 
     public SSMFeature(final String[] runModes) {
         this.runModes = getSortedRunModesArray(runModes);
@@ -101,12 +103,6 @@ public class SSMFeature implements Comparable<SSMFeature> {
         }
         for(final SSMConfiguration c : this.configurations) {
             c.validate();
-        }
-        if( settings != null ) {
-            if (!this.isSpecial() ) {
-                throw new IllegalStateException("Settings not allowed for custom run modes");
-            }
-            settings.validate();
         }
     }
 
@@ -173,14 +169,14 @@ public class SSMFeature implements Comparable<SSMFeature> {
     public void merge(final SSMFeature mode) {
         for(final SSMStartLevel sl : mode.startLevels) {
             // search for duplicates in other start levels
-            for(final SSMArtifact artifact : sl.artifacts) {
+            for(final SSMArtifact artifact : sl.getArtifacts()) {
                 for(final SSMStartLevel mySL : this.startLevels) {
                     if ( mySL.getLevel() == sl.getLevel() ) {
                         continue;
                     }
                     final SSMArtifact myArtifact = mySL.search(artifact);
                     if ( myArtifact != null ) {
-                        mySL.artifacts.remove(myArtifact);
+                        mySL.getArtifacts().remove(myArtifact);
                     }
                 }
             }
@@ -193,15 +189,10 @@ public class SSMFeature implements Comparable<SSMFeature> {
             final Enumeration<String> e = config.getProperties().keys();
             while ( e.hasMoreElements() ) {
                 final String key = e.nextElement();
-                found.addProperty(key, config.getProperties().get(key));
+                found.getProperties().put(key, config.getProperties().get(key));
             }
         }
-        if ( this.settings == null && mode.settings != null ) {
-            this.settings = new SSMSettings();
-        }
-        if ( mode.settings != null ) {
-            this.settings.merge(mode.settings);
-        }
+        this.settings.putAll(mode.settings);
     }
 
     /**
@@ -246,7 +237,7 @@ public class SSMFeature implements Comparable<SSMFeature> {
         return this.configurations;
     }
 
-    public SSMSettings getSettings() {
+    public Map<String, String> getSettings() {
         return this.settings;
     }
 
@@ -272,9 +263,5 @@ public class SSMFeature implements Comparable<SSMFeature> {
         return "SSMFeature [runModes=" + Arrays.toString(runModes)
                 + ", startLevels=" + startLevels + ", configurations="
                 + configurations + ", settings=" + settings + "]";
-    }
-
-    public void setSettings(final SSMSettings ssmSettings) {
-        this.settings = ssmSettings;
     }
 }

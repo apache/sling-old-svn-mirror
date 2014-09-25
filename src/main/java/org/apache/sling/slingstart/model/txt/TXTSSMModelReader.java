@@ -85,11 +85,11 @@ public class TXTSSMModelReader {
             if ( "classpath".equals("verb") ) {
                 final SSMFeature boot = model.getOrCreateFeature(new String[] {SSMFeature.RUN_MODE_BOOT});
                 final SSMArtifact artifact = SSMArtifact.fromMvnUrl(qualifier);
-                boot.getOrCreateStartLevel(0).artifacts.add(artifact);
+                boot.getOrCreateStartLevel(0).getArtifacts().add(artifact);
             } else if ( "bundle".equals(verb) ) {
                 final SSMFeature feature = model.getOrCreateFeature(null);
                 final SSMArtifact artifact = SSMArtifact.fromMvnUrl(qualifier);
-                feature.getOrCreateStartLevel(0).artifacts.add(artifact);
+                feature.getOrCreateStartLevel(0).getArtifacts().add(artifact);
             } else if ( "config".equals(verb) ) {
                 final SSMFeature feature = model.getOrCreateFeature(null);
                 boolean felixFormat = false;
@@ -137,7 +137,7 @@ public class TXTSSMModelReader {
                 final Enumeration<String> e = props.keys();
                 while ( e.hasMoreElements() ) {
                     final String key = e.nextElement();
-                    config.addProperty(key, props.get(key));
+                    config.getProperties().put(key, props.get(key));
                 }
             } finally {
                 if ( bais != null ) {
@@ -149,13 +149,13 @@ public class TXTSSMModelReader {
                 }
             }
         } else if ( config.isSpecial() ) {
-            config.addProperty(config.getPid(), textValue);
+            config.getProperties().put(config.getPid(), textValue);
         } else {
             final LineNumberReader lnr = new LineNumberReader(new StringReader(textValue));
             String line;
             while ( (line = lnr.readLine()) != null ) {
                 final int pos = line.indexOf('=');
-                config.addProperty(line.substring(0, pos), line.substring(pos + 1));
+                config.getProperties().put(line.substring(0, pos), line.substring(pos + 1));
             }
         }
     }

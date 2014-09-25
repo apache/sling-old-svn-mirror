@@ -27,7 +27,7 @@ public class SSMStartLevel implements Comparable<SSMStartLevel> {
 
     private final int level;
 
-    public final List<SSMArtifact> artifacts = new ArrayList<SSMArtifact>();
+    private final List<SSMArtifact> artifacts = new ArrayList<SSMArtifact>();
 
     public SSMStartLevel(final int level) {
         this.level = level;
@@ -35,6 +35,10 @@ public class SSMStartLevel implements Comparable<SSMStartLevel> {
 
     public int getLevel() {
         return this.level;
+    }
+
+    public List<SSMArtifact> getArtifacts() {
+        return this.artifacts;
     }
 
     /**
@@ -58,10 +62,10 @@ public class SSMStartLevel implements Comparable<SSMStartLevel> {
     public SSMArtifact search(final SSMArtifact template) {
         SSMArtifact found = null;
         for(final SSMArtifact current : this.artifacts) {
-            if ( current.groupId.equals(template.groupId)
-              && current.artifactId.equals(template.artifactId)
-              && current.classifier.equals(template.classifier)
-              && current.type.equals(template.type) ) {
+            if ( current.getGroupId().equals(template.getGroupId())
+              && current.getArtifactId().equals(template.getArtifactId())
+              && current.getClassifier().equals(template.getClassifier())
+              && current.getType().equals(template.getType()) ) {
                 found = current;
                 break;
             }

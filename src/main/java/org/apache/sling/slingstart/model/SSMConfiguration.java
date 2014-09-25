@@ -36,10 +36,19 @@ public class SSMConfiguration {
         this.factoryPid = (factoryPid != null ? factoryPid.trim() : null);
     }
 
+    /**
+     * Get the pid.
+     * If this is a factory configuration, it returns the alias for the configuration
+     * @return The pid.
+     */
     public String getPid() {
         return this.pid;
     }
 
+    /**
+     * Return the factory pid
+     * @return The factory pid or null.
+     */
     public String getFactoryPid() {
         return this.factoryPid;
     }
@@ -63,6 +72,10 @@ public class SSMConfiguration {
         }
     }
 
+    /**
+     * Is this a special configuration?
+     * @return Special config
+     */
     public boolean isSpecial() {
         if ( pid != null && pid.startsWith(":") ) {
             return true;
@@ -70,12 +83,12 @@ public class SSMConfiguration {
         return false;
     }
 
+    /**
+     * Get all properties of the configuration.
+     * @return The properties
+     */
     public Dictionary<String, Object> getProperties() {
         return this.properties;
-    }
-
-    public void addProperty(final String key, final Object value) {
-        this.properties.put(key, value);
     }
 
     @Override

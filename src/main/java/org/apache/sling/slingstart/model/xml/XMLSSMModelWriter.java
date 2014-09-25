@@ -68,10 +68,10 @@ public class XMLSSMModelWriter {
         pw.println("<deliverable>");
 
         // properties
-        if ( subsystem.getProperties().size() > 0 ) {
+        if ( subsystem.getVariables().size() > 0 ) {
             pw.print(INDENT);
-            pw.println("<properties><![CDATA[");
-            for(final Map.Entry<String, String> entry : subsystem.getProperties().entrySet()) {
+            pw.println("<variables><![CDATA[");
+            for(final Map.Entry<String, String> entry : subsystem.getVariables().entrySet()) {
                 pw.print(INDENT);
                 pw.print(INDENT);
                 pw.print(entry.getKey());
@@ -79,7 +79,7 @@ public class XMLSSMModelWriter {
                 pw.println(entry.getValue());
             }
             pw.print(INDENT);
-            pw.println("]]></properties>");
+            pw.println("]]></variables>");
         }
         for(final SSMFeature feature : subsystem.getFeatures()) {
             // TODO - don't write out empty features
@@ -93,7 +93,7 @@ public class XMLSSMModelWriter {
             }
 
             for(final SSMStartLevel startLevel : feature.getStartLevels()) {
-                if ( startLevel.artifacts.size() == 0 ) {
+                if ( startLevel.getArtifacts().size() == 0 ) {
                     continue;
                 }
                 if ( startLevel.getLevel() != 0 ) {
@@ -105,23 +105,23 @@ public class XMLSSMModelWriter {
                     pw.println(">");
                     indent += INDENT;
                 }
-                for(final SSMArtifact ad : startLevel.artifacts) {
+                for(final SSMArtifact ad : startLevel.getArtifacts()) {
                     pw.print(indent);
                     pw.print("<artifact groupId=\"");
-                    pw.print(escapeXml(ad.groupId));
+                    pw.print(escapeXml(ad.getGroupId()));
                     pw.print("\" artifactId=\"");
-                    pw.print(escapeXml(ad.artifactId));
+                    pw.print(escapeXml(ad.getArtifactId()));
                     pw.print("\" version=\"");
-                    pw.print(escapeXml(ad.version));
+                    pw.print(escapeXml(ad.getVersion()));
                     pw.print("\"");
-                    if ( !"jar".equals(ad.type) ) {
+                    if ( !"jar".equals(ad.getType()) ) {
                         pw.print(" type=\"");
-                        pw.print(escapeXml(ad.type));
+                        pw.print(escapeXml(ad.getType()));
                         pw.print("\"");
                     }
-                    if ( ad.classifier != null ) {
+                    if ( ad.getClassifier() != null ) {
                         pw.print(" classifier=\"");
-                        pw.print(escapeXml(ad.classifier));
+                        pw.print(escapeXml(ad.getClassifier()));
                         pw.print("\"");
                     }
                     pw.println("/>");
@@ -160,10 +160,18 @@ public class XMLSSMModelWriter {
                 pw.println("]]></configuration>");
             }
 
-            if ( feature.getSettings() != null ) {
+            if ( feature.getSettings().size() > 0 ) {
                 pw.print(indent);
                 pw.println("<settings><![CDATA[");
-                pw.println(feature.getSettings().properties);
+
+                for(final Map.Entry<String, String> entry :feature.getSettings().entrySet()) {
+                    pw.print(INDENT);
+                    pw.print(INDENT);
+                    pw.print(entry.getKey());
+                    pw.print("=");
+                    pw.println(entry.getValue());
+                }
+
                 pw.print(indent);
                 pw.println("]]></settings>");
             }
