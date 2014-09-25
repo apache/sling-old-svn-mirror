@@ -16,19 +16,38 @@
  */
 package org.apache.sling.slingstart.model;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Description of an artifact.
+ * An artifact is described by it's Apache Maven coordinates consisting of group id, artifact id, and version.
+ * In addition, the classifier and type can be specified as well.
+ * An artifact can have any metadata.
  */
 public class SSMArtifact {
 
-    public final String groupId;
-    public final String artifactId;
-    public final String version;
-    public final String classifier;
-    public final String type;
+    private final String groupId;
+    private final String artifactId;
+    private final String version;
+    private final String classifier;
+    private final String type;
 
-    public SSMArtifact(final String gId, final String aId, final String version,
-            final String classifier, final String type) {
+    private final Map<String, String> metadata = new HashMap<String, String>();
+
+    /**
+     * Create a new artifact object
+     * @param gId   The group id (required)
+     * @param aId   The artifact id (required)
+     * @param version The version (required)
+     * @param classifier The classifier (optional)
+     * @param type The type/extension (optional, defaults to jar)
+     */
+    public SSMArtifact(final String gId,
+            final String aId,
+            final String version,
+            final String classifier,
+            final String type) {
         this.groupId = (gId != null ? gId.trim() : null);
         this.artifactId = (aId != null ? aId.trim() : null);
         this.version = (version != null ? version.trim() : null);
@@ -46,59 +65,23 @@ public class SSMArtifact {
         }
     }
 
-    public String getRepositoryPath() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append(groupId.replace('.', '/'));
-        sb.append('/');
-        sb.append(artifactId);
-        sb.append('/');
-        sb.append(version);
-        sb.append('/');
-        sb.append(artifactId);
-        sb.append('-');
-        sb.append(version);
-        if ( classifier != null ) {
-            sb.append('-');
-            sb.append(classifier);
-        }
-        sb.append('.');
-        sb.append(type);
-        return sb.toString();
-    }
-
     /**
-     * validates the object and throws an IllegalStateException
-     * This object needs:
-     * - groupId
-     * - artifactId
-     * - version
-     * If type is null, it's set to "jar"
-     * If type is "bundle", it's set to "jar"
-     * - classifier is optional
-     *
-     * @throws IllegalStateException
+     * Create a new artifact from a maven url,
+     * 'mvn:' [ repository-url '!' ] group-id '/' artifact-id [ '/' [version] [ '/' [type] [ '/' classifier ] ] ] ]
+     * @param url The url
+     * @return A new artifact
+     * @throws IllegalArgumentException If the url is not valid
      */
-    public void validate() {
-        // check/correct values
-        if ( groupId == null || groupId.isEmpty() ) {
-            throw new IllegalStateException(this + " : groupId");
-        }
-        if ( artifactId == null || artifactId.isEmpty() ) {
-            throw new IllegalStateException(this + " : artifactId");
-        }
-        if ( version == null || version.isEmpty() ) {
-            throw new IllegalStateException(this + " : version");
-        }
-        if ( type == null || type.isEmpty() ) {
-            throw new IllegalStateException(this + " : type");
-        }
-    }
-
     public static SSMArtifact fromMvnUrl(final String url) {
-        // 'mvn:' [ repository-url '!' ] group-id '/' artifact-id [ '/' [version] [ '/' [type] [ '/' classifier ] ] ] ]
+        if ( url == null || !url.startsWith("mvn:") ) {
+            throw new IllegalArgumentException("Invalid mvn url: " + url);
+        }
         final String content = url.substring(4);
         // ignore repository url
         int pos = content.indexOf('!');
+        if ( pos != -1 ) {
+            throw new IllegalArgumentException("Repository url is not supported for Maven artifacts at the moment.");
+        }
         final String coordinates = (pos == -1 ? content : content.substring(pos + 1));
         String gId = null;
         String aId = null;
@@ -139,8 +122,106 @@ public class SSMArtifact {
         if ( version == null ) {
             version = "LATEST";
         }
-        final SSMArtifact ad = new SSMArtifact(gId, aId, version, classifier, type);
-        return ad;
+        return new SSMArtifact(gId, aId, version, classifier, type);
+    }
+
+    /**
+     * Return the group id.
+     * @return The group id.
+     */
+    public String getGroupId() {
+        return groupId;
+    }
+
+    /**
+     * Return the artifact id.
+     * @return The artifact id.
+     */
+    public String getArtifactId() {
+        return artifactId;
+    }
+
+    /**
+     * Return the version.
+     * @return The version.
+     */
+    public String getVersion() {
+        return version;
+    }
+
+    /**
+     * Return the optional classifier.
+     * @return The classifier or null.
+     */
+    public String getClassifier() {
+        return classifier;
+    }
+
+    /**
+     * Return the type.
+     * @return The type.
+     */
+    public String getType() {
+        return type;
+    }
+
+    /**
+     * Get the metadata of the artifact.
+     * @return The metadata.
+     */
+    public Map<String, String> getMetadata() {
+        return this.metadata;
+    }
+
+    /**
+     * Create a Maven like relative repository path.
+     */
+    public String getRepositoryPath() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(groupId.replace('.', '/'));
+        sb.append('/');
+        sb.append(artifactId);
+        sb.append('/');
+        sb.append(version);
+        sb.append('/');
+        sb.append(artifactId);
+        sb.append('-');
+        sb.append(version);
+        if ( classifier != null ) {
+            sb.append('-');
+            sb.append(classifier);
+        }
+        sb.append('.');
+        sb.append(type);
+        return sb.toString();
+    }
+
+    /**
+     * Validates the object and throws an IllegalStateException
+     * This object needs:
+     * - groupId
+     * - artifactId
+     * - version
+     * If type is null, it's set to "jar"
+     * If type is "bundle", it's set to "jar"
+     * - classifier is optional
+     *
+     * @throws IllegalStateException
+     */
+    public void validate() {
+        // check/correct values
+        if ( groupId == null || groupId.isEmpty() ) {
+            throw new IllegalStateException(this + " : groupId");
+        }
+        if ( artifactId == null || artifactId.isEmpty() ) {
+            throw new IllegalStateException(this + " : artifactId");
+        }
+        if ( version == null || version.isEmpty() ) {
+            throw new IllegalStateException(this + " : version");
+        }
+        if ( type == null || type.isEmpty() ) {
+            throw new IllegalStateException(this + " : type");
+        }
     }
 
     @Override

@@ -26,8 +26,8 @@ import java.util.Map;
 /**
  * A deliverable is the central object.
  * It consists of a set of features and properties.
- * The properties can be used for specifying artifact versions, referencing them
- * with ${propertyName}
+ * The variables can be used for specifying artifact versions, referencing them
+ * with ${variableName}
  *
  * At least it has a "global" feature which contains artifacts that are always installed..
  */
@@ -35,7 +35,7 @@ public class SSMDeliverable {
 
     private final List<SSMFeature> features = new ArrayList<SSMFeature>();
 
-    private Map<String, String> properties = new HashMap<String, String>();
+    private final Map<String, String> variables = new HashMap<String, String>();
 
     public SSMDeliverable() {
         this.features.add(new SSMFeature(null)); // global features
@@ -111,7 +111,7 @@ public class SSMDeliverable {
                     start = pos + 1;
                 } else {
                     final String name = msg.substring(pos + 2, endPos);
-                    final String value = this.properties.get(name);
+                    final String value = this.variables.get(name);
                     if ( value == null ) {
                         throw new IllegalArgumentException("Unknown variable: " + name);
                     }
@@ -132,20 +132,20 @@ public class SSMDeliverable {
             final SSMFeature mergeFeature = this.getOrCreateFeature(mode.getRunModes());
             mergeFeature.merge(mode);
         }
-        this.properties.putAll(other.properties);
+        this.variables.putAll(other.variables);
     }
 
-    public Map<String, String> getProperties() {
-        return this.properties;
-    }
-
-    public void addProperty(final String key, final String value) {
-        this.properties.put(key, value);
+    /**
+     * Get all variables
+     * @return The set of variables
+     */
+    public Map<String, String> getVariables() {
+        return this.variables;
     }
 
     @Override
     public String toString() {
-        return "SSMDeliverable [features=" + features + ", properties="
-                + properties + "]";
+        return "SSMDeliverable [features=" + features + ", variables="
+                + variables + "]";
     }
 }

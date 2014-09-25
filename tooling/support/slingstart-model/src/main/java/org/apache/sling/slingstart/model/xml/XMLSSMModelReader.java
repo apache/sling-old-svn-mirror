@@ -34,7 +34,6 @@ import org.apache.sling.slingstart.model.SSMArtifact;
 import org.apache.sling.slingstart.model.SSMConfiguration;
 import org.apache.sling.slingstart.model.SSMDeliverable;
 import org.apache.sling.slingstart.model.SSMFeature;
-import org.apache.sling.slingstart.model.SSMSettings;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
@@ -52,7 +51,7 @@ public class XMLSSMModelReader {
         INIT(null, null),
         DELIVERABLE(INIT, "deliverable"),
 
-        PROPERTIES(DELIVERABLE, "properties"),
+        VARIABKES(DELIVERABLE, "variables"),
 
         STARTLEVEL(DELIVERABLE, "startLevel"),
         ARTIFACT(DELIVERABLE, "artifact"),
@@ -157,7 +156,7 @@ public class XMLSSMModelReader {
                                         atts.getValue("version"),
                                         atts.getValue("classifier"),
                                         atts.getValue("type"));
-                                this.feature.getOrCreateStartLevel(this.startLevel).artifacts.add(artifact);
+                                this.feature.getOrCreateStartLevel(this.startLevel).getArtifacts().add(artifact);
                             } else if ( this.mode == MODE.CONFIGURATION || this.mode == MODE.FEATURE_CONFIGURATION) {
                                 this.configuration = this.feature.getOrCreateConfiguration(atts.getValue("pid"), atts.getValue("factory"));
                                 this.text = new StringBuilder();
@@ -165,7 +164,6 @@ public class XMLSSMModelReader {
                                 if ( this.feature.getSettings() != null ) {
                                     throw new SAXException("Duplicate settings section");
                                 }
-                                this.feature.setSettings(new SSMSettings());
                                 this.text = new StringBuilder();
 
                             } else if ( this.mode == MODE.FEATURE ) {
@@ -216,7 +214,7 @@ public class XMLSSMModelReader {
                             this.startLevel = 0;
                         } else if ( prevMode == MODE.CONFIGURATION || prevMode == MODE.FEATURE_CONFIGURATION ) {
                             if ( this.configuration.isSpecial() ) {
-                                this.configuration.addProperty(this.configuration.getPid(), textValue);
+                                this.configuration.getProperties().put(this.configuration.getPid(), textValue);
                             } else {
                                 ByteArrayInputStream bais = null;
                                 try {
@@ -226,7 +224,7 @@ public class XMLSSMModelReader {
                                     final Enumeration<String> e = props.keys();
                                     while ( e.hasMoreElements() ) {
                                         final String key = e.nextElement();
-                                        this.configuration.addProperty(key, props.get(key));
+                                        this.configuration.getProperties().put(key, props.get(key));
                                     }
                                 } catch ( final IOException ioe ) {
                                     throw new SAXException(ioe);
@@ -242,11 +240,6 @@ public class XMLSSMModelReader {
                             }
                             this.configuration = null;
                         } else if ( prevMode == MODE.SETTINGS || prevMode == MODE.FEATURE_SETTINGS) {
-                            this.feature.getSettings().properties = textValue;
-                        } else if ( prevMode == MODE.FEATURE ) {
-                            this.feature = result.getOrCreateFeature(null);
-                            this.startLevel = 0;
-                        } else if ( prevMode == MODE.PROPERTIES ) {
                             final LineNumberReader reader = new LineNumberReader(new StringReader(textValue));
                             String line = null;
                             try {
@@ -255,7 +248,24 @@ public class XMLSSMModelReader {
                                     if ( pos == -1 || line.indexOf("=", pos + 1 ) != -1 ) {
                                         throw new SAXException("Invalid property definition: " + line);
                                     }
-                                    result.addProperty(line.substring(0, pos), line.substring(pos + 1));
+                                    feature.getSettings().put(line.substring(0, pos), line.substring(pos + 1));
+                                }
+                            } catch (final IOException io) {
+                                throw new SAXException(io);
+                            }
+                        } else if ( prevMode == MODE.FEATURE ) {
+                            this.feature = result.getOrCreateFeature(null);
+                            this.startLevel = 0;
+                        } else if ( prevMode == MODE.VARIABKES ) {
+                            final LineNumberReader reader = new LineNumberReader(new StringReader(textValue));
+                            String line = null;
+                            try {
+                                while ( (line = reader.readLine()) != null ) {
+                                    final int pos = line.indexOf("=");
+                                    if ( pos == -1 || line.indexOf("=", pos + 1 ) != -1 ) {
+                                        throw new SAXException("Invalid property definition: " + line);
+                                    }
+                                    result.getVariables().put(line.substring(0, pos), line.substring(pos + 1));
                                 }
                             } catch (final IOException io) {
                                 throw new SAXException(io);
