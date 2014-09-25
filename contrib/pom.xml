@@ -86,8 +86,11 @@
           <module>auth/org.apache.sling.auth.xing.api</module>
           <module>auth/org.apache.sling.auth.xing.login</module>
           <module>auth/org.apache.sling.auth.xing.oauth</module>
+          <module>auth/selector</module>
+
           <module>commons/fsclassloader</module>
           <module>commons/html</module>
+
           <module>extensions/apt/parser</module>
           <module>extensions/apt/servlet</module>
           <module>extensions/collection</module>

@@ -122,7 +122,6 @@
         <!-- Authentication Support -->
         <module>bundles/auth/core</module>
         <module>bundles/auth/form</module>
-        <module>bundles/auth/selector</module>
         
         <!-- The Sling Engine -->
         <module>bundles/engine</module>
