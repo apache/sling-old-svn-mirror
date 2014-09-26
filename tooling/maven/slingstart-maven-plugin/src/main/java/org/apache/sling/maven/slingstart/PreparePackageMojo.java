@@ -18,12 +18,15 @@ package org.apache.sling.maven.slingstart;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -101,11 +104,11 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
 
         // unpack base artifact and create settings
         final File outputDir = new File(this.project.getBuild().getOutputDirectory());
-        unpackBaseArtifact(model, outputDir, SSMFeature.RUN_MODE_STANDALONE);
-        this.buildSettings(model, SSMFeature.RUN_MODE_STANDALONE, outputDir);
-        this.buildBootstrapFile(model, SSMFeature.RUN_MODE_STANDALONE, outputDir);
+        unpackBaseArtifact(model, outputDir, SSMConstants.RUN_MODE_STANDALONE);
+        this.buildSettings(model, SSMConstants.RUN_MODE_STANDALONE, outputDir);
+        this.buildBootstrapFile(model, SSMConstants.RUN_MODE_STANDALONE, outputDir);
 
-        this.buildContentsMap(model, SSMFeature.RUN_MODE_STANDALONE, contentsMap);
+        this.buildContentsMap(model, SSMConstants.RUN_MODE_STANDALONE, contentsMap);
     }
 
     /**
@@ -119,10 +122,10 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
             // unpack base artifact and create settings
             final File outputDir = new File(this.project.getBuild().getDirectory(), BuildConstants.WEBAPP_OUTDIR);
             final File webappDir = new File(outputDir, "WEB-INF");
-            unpackBaseArtifact(model, outputDir, SSMFeature.RUN_MODE_WEBAPP);
+            unpackBaseArtifact(model, outputDir, SSMConstants.RUN_MODE_WEBAPP);
 
             // check for web.xml
-            final SSMFeature webappRM = model.getRunMode(SSMFeature.RUN_MODE_WEBAPP);
+            final SSMFeature webappRM = model.getRunMode(SSMConstants.RUN_MODE_WEBAPP);
             if ( webappRM != null ) {
                 final SSMConfiguration webConfig = webappRM.getConfiguration(SSMConstants.CFG_WEB_XML);
                 if ( webConfig != null ) {
@@ -134,10 +137,10 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
                     }
                 }
             }
-            this.buildSettings(model, SSMFeature.RUN_MODE_WEBAPP, webappDir);
-            this.buildBootstrapFile(model, SSMFeature.RUN_MODE_WEBAPP, outputDir);
+            this.buildSettings(model, SSMConstants.RUN_MODE_WEBAPP, webappDir);
+            this.buildBootstrapFile(model, SSMConstants.RUN_MODE_WEBAPP, outputDir);
 
-            this.buildContentsMap(model, SSMFeature.RUN_MODE_WEBAPP, contentsMap);
+            this.buildContentsMap(model, SSMConstants.RUN_MODE_WEBAPP, contentsMap);
         }
     }
 
@@ -154,7 +157,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
         for(final SSMFeature feature : model.getFeatures()) {
             if ( packageRunMode == null ) {
                 if ( feature.isSpecial()
-                     && !feature.isRunMode(SSMFeature.RUN_MODE_BOOT)) {
+                     && !feature.isRunMode(SSMConstants.RUN_MODE_BOOT)) {
                     continue;
                 }
                 this.buildContentsMap(model, feature, contentsMap);
@@ -172,8 +175,8 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
     private void buildContentsMap(final SSMDeliverable model, final SSMFeature runMode, final Map<String, File> contentsMap)
     throws MojoExecutionException{
         for(final SSMStartLevel sl : runMode.getStartLevels()) {
-            for(final SSMArtifact a : sl.artifacts) {
-                final Artifact artifact = ModelUtils.getArtifact(this.project, a.groupId, a.artifactId, model.getValue(a.version), a.type, a.classifier);
+            for(final SSMArtifact a : sl.getArtifacts()) {
+                final Artifact artifact = ModelUtils.getArtifact(this.project, a.getGroupId(), a.getArtifactId(), model.getValue(a.getVersion()), a.getType(), a.getClassifier());
                 final File artifactFile = artifact.getFile();
                 contentsMap.put(getPathForArtifact(sl.getLevel(), artifactFile.getName(), runMode), artifactFile);
             }
@@ -212,29 +215,31 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
      */
     private void buildSettings(final SSMDeliverable model, final String packageRunMode, final File outputDir)
     throws MojoExecutionException {
-        String settings = null;
-        final SSMFeature baseRM = model.getRunMode(SSMFeature.RUN_MODE_BASE);
-        if ( baseRM != null && baseRM.getSettings() != null ) {
-            settings = baseRM.getSettings().properties + "\n";
-        } else {
-            settings = "";
+        final Properties settings = new Properties();
+        final SSMFeature baseRM = model.getRunMode(SSMConstants.RUN_MODE_BASE);
+        if ( baseRM != null ) {
+            settings.putAll(baseRM.getSettings());
         }
-        final SSMFeature bootRM = model.getRunMode(SSMFeature.RUN_MODE_BOOT);
-        if ( bootRM != null && bootRM.getSettings() != null ) {
-            settings = settings + bootRM.getSettings().properties + "\n";
+        final SSMFeature bootRM = model.getRunMode(SSMConstants.RUN_MODE_BOOT);
+        if ( bootRM != null ) {
+            settings.putAll(bootRM.getSettings());
         }
         final SSMFeature packageRM = model.getRunMode(packageRunMode);
-        if ( packageRM != null && packageRM.getSettings() != null ) {
-            settings = settings + packageRM.getSettings().properties;
+        if ( packageRM != null ) {
+            settings.putAll(packageRM.getSettings());
         }
 
-        if ( settings != null ) {
+        if ( settings.size() > 0 ) {
             final File settingsFile = new File(outputDir, PROPERTIES_FILE);
             getLog().debug(String.format("Creating settings at %s", settingsFile.getPath()));
+            FileWriter writer = null;
             try {
-                FileUtils.fileWrite(settingsFile, settings);
+                writer = new FileWriter(settingsFile);
+                settings.store(writer, null);
             } catch ( final IOException ioe ) {
                 throw new MojoExecutionException("Unable to write properties file.", ioe);
+            } finally {
+                IOUtils.closeQuietly(writer);
             }
         }
     }
@@ -245,7 +250,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
     private void buildBootstrapFile(final SSMDeliverable model, final String packageRunMode, final File outputDir)
     throws MojoExecutionException {
         final StringBuilder sb = new StringBuilder();
-        final SSMFeature baseRM = model.getRunMode(SSMFeature.RUN_MODE_BASE);
+        final SSMFeature baseRM = model.getRunMode(SSMConstants.RUN_MODE_BASE);
         if ( baseRM != null ) {
             final SSMConfiguration c = baseRM.getConfiguration(SSMConstants.CFG_BOOTSTRAP);
             if ( c != null ) {
@@ -253,7 +258,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
                 sb.append('\n');
             }
         }
-        final SSMFeature bootRM = model.getRunMode(SSMFeature.RUN_MODE_BOOT);
+        final SSMFeature bootRM = model.getRunMode(SSMConstants.RUN_MODE_BOOT);
         if ( bootRM != null ) {
             final SSMConfiguration c = bootRM.getConfiguration(SSMConstants.CFG_BOOTSTRAP);
             if ( c != null ) {
@@ -287,15 +292,15 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
     private Artifact getBaseArtifact(final SSMDeliverable model, final String classifier, final String type) throws MojoExecutionException {
         final SSMArtifact baseArtifact = ModelUtils.getBaseArtifact(model);
 
-        final Artifact a = ModelUtils.getArtifact(this.project, baseArtifact.groupId,
-                baseArtifact.artifactId,
-                model.getValue(baseArtifact.version),
+        final Artifact a = ModelUtils.getArtifact(this.project, baseArtifact.getGroupId(),
+                baseArtifact.getArtifactId(),
+                model.getValue(baseArtifact.getVersion()),
                 type,
                 classifier);
         if (a == null) {
             throw new MojoExecutionException(
                     String.format("Project doesn't have a base dependency of groupId %s and artifactId %s",
-                            baseArtifact.groupId, baseArtifact.artifactId));
+                            baseArtifact.getGroupId(), baseArtifact.getArtifactId()));
         }
         return a;
     }
@@ -307,7 +312,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
      throws MojoExecutionException {
         final String classifier;
         final String type;
-        if ( SSMFeature.RUN_MODE_STANDALONE.equals(packageRunMode) ) {
+        if ( SSMConstants.RUN_MODE_STANDALONE.equals(packageRunMode) ) {
             classifier = BuildConstants.CLASSIFIER_APP;
             type = BuildConstants.TYPE_JAR;
         } else {
@@ -362,7 +367,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
             runModeExt = sb.toString();
         }
 
-        if ( rm.isRunMode(SSMFeature.RUN_MODE_BOOT) ) {
+        if ( rm.isRunMode(SSMConstants.RUN_MODE_BOOT) ) {
             return String.format("%s/%s/1/%s", BASE_DESTINATION, BOOT_DIRECTORY,
                     artifactName);
         }

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
@@ -30,8 +31,12 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.sling.slingstart.model.SSMArtifact;
+import org.apache.sling.slingstart.model.SSMConstants;
 import org.apache.sling.slingstart.model.SSMDeliverable;
 import org.apache.sling.slingstart.model.SSMFeature;
+import org.apache.sling.slingstart.model.SSMTraceable;
+import org.apache.sling.slingstart.model.SSMValidator;
+import org.apache.sling.slingstart.model.txt.TXTSSMModelReader;
 import org.apache.sling.slingstart.model.xml.XMLSSMModelReader;
 import org.codehaus.plexus.logging.Logger;
 
@@ -47,7 +52,7 @@ public abstract class ModelUtils {
         final List<String> candidates = new ArrayList<String>();
         if ( systemsDirectory != null && systemsDirectory.exists() ) {
             for(final File f : systemsDirectory.listFiles() ) {
-                if ( f.isFile() && f.getName().endsWith(".xml") && !f.getName().startsWith(".") ) {
+                if ( f.isFile() && f.getName().endsWith(".txt") && !f.getName().startsWith(".") ) {
                     candidates.add(f.getName());
                 }
             }
@@ -59,13 +64,13 @@ public abstract class ModelUtils {
         for(final String name : candidates) {
             logger.debug("Reading model " + name + " in project " + project.getId());
             try {
-                final FileReader reader = new FileReader(new File(systemsDirectory, name));
+                final File f = new File(systemsDirectory, name);
+                final FileReader reader = new FileReader(f);
                 try {
-                    final SSMDeliverable current = XMLSSMModelReader.read(reader);
-                    try {
-                        current.validate();
-                    } catch ( final IllegalStateException ise) {
-                        throw new MojoExecutionException("Invalid model at " + name, ise);
+                    final SSMDeliverable current = TXTSSMModelReader.read(reader, f.getAbsolutePath());
+                    final Map<SSMTraceable, String> errors = new SSMValidator().validate(current);
+                    if (errors != null ) {
+                        throw new MojoExecutionException("Invalid model at " + name + " : " + errors);
                     }
                     result.merge(current);
                 } finally {
@@ -76,10 +81,9 @@ public abstract class ModelUtils {
             }
         }
 
-        try {
-            result.validate();
-        } catch ( final IllegalStateException ise) {
-            throw new MojoExecutionException("Invalid assembled model", ise);
+        final Map<SSMTraceable, String> errors = new SSMValidator().validate(result);
+        if (errors != null ) {
+            throw new MojoExecutionException("Invalid assembled model : " + errors);
         }
 
         return result;
@@ -107,10 +111,9 @@ public abstract class ModelUtils {
                         depModel = new SSMDeliverable();
                     }
                     final SSMDeliverable readModel = XMLSSMModelReader.read(r);
-                    try {
-                        readModel.validate();
-                    } catch ( final IllegalStateException ise) {
-                        throw new MojoExecutionException("Invalid model " + file, ise);
+                    final Map<SSMTraceable, String> errors = new SSMValidator().validate(readModel);
+                    if (errors != null ) {
+                        throw new MojoExecutionException("Invalid model at " + file + " : " + errors);
                     }
                     depModel.merge(readModel);
                 } finally {
@@ -119,13 +122,16 @@ public abstract class ModelUtils {
             }
             final SSMDeliverable result;
             if ( depModel != null ) {
-                try {
-                    depModel.validate();
-                    depModel.merge(localModel);
-                    depModel.validate();
-                } catch ( final IllegalStateException ise) {
-                    throw new MojoExecutionException("Invalid model.", ise);
+                Map<SSMTraceable, String> errors = new SSMValidator().validate(depModel);
+                if (errors != null ) {
+                    throw new MojoExecutionException("Invalid model : " + errors);
                 }
+                depModel.merge(localModel);
+                errors = new SSMValidator().validate(depModel);
+                if (errors != null ) {
+                    throw new MojoExecutionException("Invalid model : " + errors);
+                }
+
                 result = depModel;
             } else {
                 result = localModel;
@@ -138,7 +144,7 @@ public abstract class ModelUtils {
 
     public static SSMArtifact getBaseArtifact(final SSMDeliverable model) throws MojoExecutionException {
         // get base run mode
-        final SSMFeature base = model.getRunMode(SSMFeature.RUN_MODE_BASE);
+        final SSMFeature base = model.getRunMode(SSMConstants.RUN_MODE_BASE);
         if ( base == null ) {
             throw new MojoExecutionException("No base run mode found.");
         }
@@ -148,11 +154,11 @@ public abstract class ModelUtils {
         if ( base.getStartLevels().size() > 1 ) {
             throw new MojoExecutionException("Base run mode should only have a single start level.");
         }
-        if ( base.getStartLevels().get(0).artifacts.size() != 1 ) {
+        if ( base.getStartLevels().get(0).getArtifacts().size() != 1 ) {
             throw new MojoExecutionException("Base run mode should contain exactly one artifact.");
         }
 
-        return base.getStartLevels().get(0).artifacts.get(0);
+        return base.getStartLevels().get(0).getArtifacts().get(0);
     }
 
     /**
