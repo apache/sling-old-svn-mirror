@@ -22,7 +22,14 @@ import java.util.UUID;
 
 import org.junit.Test;
 
-import static org.apache.sling.replication.it.ReplicationUtils.*;
+import static org.apache.sling.replication.it.ReplicationUtils.agentConfigUrl;
+import static org.apache.sling.replication.it.ReplicationUtils.agentRootUrl;
+import static org.apache.sling.replication.it.ReplicationUtils.agentUrl;
+import static org.apache.sling.replication.it.ReplicationUtils.assertExists;
+import static org.apache.sling.replication.it.ReplicationUtils.assertNotExits;
+import static org.apache.sling.replication.it.ReplicationUtils.assertResponseContains;
+import static org.apache.sling.replication.it.ReplicationUtils.deleteNode;
+import static org.apache.sling.replication.it.ReplicationUtils.queueUrl;
 
 /**
  * Integration test for {@link org.apache.sling.replication.agent.ReplicationAgent} resources

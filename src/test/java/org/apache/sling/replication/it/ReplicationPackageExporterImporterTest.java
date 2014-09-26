@@ -22,7 +22,11 @@ import org.apache.http.protocol.HTTP;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.junit.Test;
 
-import static org.apache.sling.replication.it.ReplicationUtils.*;
+import static org.apache.sling.replication.it.ReplicationUtils.assertExists;
+import static org.apache.sling.replication.it.ReplicationUtils.assertNotExits;
+import static org.apache.sling.replication.it.ReplicationUtils.createRandomNode;
+import static org.apache.sling.replication.it.ReplicationUtils.doExport;
+import static org.apache.sling.replication.it.ReplicationUtils.doImport;
 
 public class ReplicationPackageExporterImporterTest extends ReplicationIntegrationTestBase  {
 

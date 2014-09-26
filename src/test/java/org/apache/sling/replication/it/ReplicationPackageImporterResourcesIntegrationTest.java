@@ -20,7 +20,10 @@ package org.apache.sling.replication.it;
 
 import org.junit.Test;
 
-import static org.apache.sling.replication.it.ReplicationUtils.*;
+import static org.apache.sling.replication.it.ReplicationUtils.assertExists;
+import static org.apache.sling.replication.it.ReplicationUtils.assertResponseContains;
+import static org.apache.sling.replication.it.ReplicationUtils.importerRootUrl;
+import static org.apache.sling.replication.it.ReplicationUtils.importerUrl;
 
 /**
  * Integration test for {@link org.apache.sling.replication.packaging.ReplicationPackageImporter} resources

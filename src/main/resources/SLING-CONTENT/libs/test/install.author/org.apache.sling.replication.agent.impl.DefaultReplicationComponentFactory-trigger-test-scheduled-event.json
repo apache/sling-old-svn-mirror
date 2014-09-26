@@ -1,0 +1,12 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "name" : "test-scheduled-event",
+
+    "kind" : "trigger",
+
+    "properties" : [
+        "type=scheduledEvent",
+        "action=poll",
+        "seconds=30"
+    ]
+}

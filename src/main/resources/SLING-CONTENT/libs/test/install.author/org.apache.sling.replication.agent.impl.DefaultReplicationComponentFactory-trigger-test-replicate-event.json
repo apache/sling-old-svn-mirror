@@ -1,0 +1,12 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "name" : "test-replicate-event",
+
+    "kind" : "trigger",
+
+    "properties" : [
+        "type=replicateEvent"
+
+    ]
+
+}
