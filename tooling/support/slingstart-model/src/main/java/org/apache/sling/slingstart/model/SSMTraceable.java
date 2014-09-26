@@ -16,25 +16,32 @@
  */
 package org.apache.sling.slingstart.model;
 
+public abstract class SSMTraceable {
 
-public abstract class SSMConstants {
+    private String location;
 
-    /** Name of the configuration containing the web.xml. */
-    public static final String CFG_WEB_XML = ":web.xml";
+    private String comment;
 
-    /** Name of the configuration for the bootstrap contents. */
-    public static final String CFG_BOOTSTRAP = ":bootstrap";
+    public String getLocation() {
+        return this.location;
+    }
 
-    /** Name of the base run mode for the Sling launchpad. */
-    public static final String RUN_MODE_BASE = ":base";
+    public void setLocation(final String value) {
+        this.location = value;
+    }
 
-    /** Name of the boot run mode. */
-    public static final String RUN_MODE_BOOT = ":boot";
+    public String getComment() {
+        return this.comment;
+    }
 
-    /** Name of the webapp run mode. */
-    public static final String RUN_MODE_WEBAPP = ":webapp";
+    public void setComment(final String value) {
+        this.comment = value;
+    }
 
-    /** Name of the standalone run mode. */
-    public static final String RUN_MODE_STANDALONE = ":standalone";
-
+    @Override
+    public String toString() {
+        return "SSMTraceable [location=" + location + ", comment=" + comment
+                + "]";
+    }
 }
+

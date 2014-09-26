@@ -23,6 +23,8 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.Map;
+import java.util.Properties;
 import java.util.Stack;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -34,6 +36,8 @@ import org.apache.sling.slingstart.model.SSMArtifact;
 import org.apache.sling.slingstart.model.SSMConfiguration;
 import org.apache.sling.slingstart.model.SSMDeliverable;
 import org.apache.sling.slingstart.model.SSMFeature;
+import org.apache.sling.slingstart.model.SSMTraceable;
+import org.apache.sling.slingstart.model.SSMValidator;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
@@ -114,6 +118,9 @@ public class XMLSSMModelReader {
                 /** Current configuration. */
                 private SSMConfiguration configuration;
 
+                /** Felix config format (default) */
+                private boolean isFelixConfigurationFormat = true;
+
                 @Override
                 public void startElement(final String uri,
                         final String localName,
@@ -159,15 +166,13 @@ public class XMLSSMModelReader {
                                 this.feature.getOrCreateStartLevel(this.startLevel).getArtifacts().add(artifact);
                             } else if ( this.mode == MODE.CONFIGURATION || this.mode == MODE.FEATURE_CONFIGURATION) {
                                 this.configuration = this.feature.getOrCreateConfiguration(atts.getValue("pid"), atts.getValue("factory"));
+                                this.isFelixConfigurationFormat = !"true".equals(atts.getValue("props"));
                                 this.text = new StringBuilder();
                             } else if ( this.mode == MODE.SETTINGS || this.mode == MODE.FEATURE_SETTINGS) {
-                                if ( this.feature.getSettings() != null ) {
-                                    throw new SAXException("Duplicate settings section");
-                                }
                                 this.text = new StringBuilder();
 
                             } else if ( this.mode == MODE.FEATURE ) {
-                                final String runMode = atts.getValue("modes");
+                                final String runMode = atts.getValue("runModes");
                                 if ( runMode == null || runMode.trim().length() == 0 ) {
                                     throw new SAXException("Required attribute runModes missing for runMode element");
                                 }
@@ -216,25 +221,37 @@ public class XMLSSMModelReader {
                             if ( this.configuration.isSpecial() ) {
                                 this.configuration.getProperties().put(this.configuration.getPid(), textValue);
                             } else {
-                                ByteArrayInputStream bais = null;
-                                try {
-                                    bais = new ByteArrayInputStream(textValue.getBytes("UTF-8"));
-                                    @SuppressWarnings("unchecked")
-                                    final Dictionary<String, Object> props = ConfigurationHandler.read(bais);
-                                    final Enumeration<String> e = props.keys();
-                                    while ( e.hasMoreElements() ) {
-                                        final String key = e.nextElement();
-                                        this.configuration.getProperties().put(key, props.get(key));
-                                    }
-                                } catch ( final IOException ioe ) {
-                                    throw new SAXException(ioe);
-                                } finally {
-                                    if ( bais != null ) {
-                                        try {
-                                            bais.close();
-                                        } catch ( final IOException ignore ) {
-                                            // ignore
+                                if ( this.isFelixConfigurationFormat ) {
+                                    ByteArrayInputStream bais = null;
+                                    try {
+                                        bais = new ByteArrayInputStream(textValue.getBytes("UTF-8"));
+                                        @SuppressWarnings("unchecked")
+                                        final Dictionary<String, Object> props = ConfigurationHandler.read(bais);
+                                        final Enumeration<String> e = props.keys();
+                                        while ( e.hasMoreElements() ) {
+                                            final String key = e.nextElement();
+                                            this.configuration.getProperties().put(key, props.get(key));
                                         }
+                                    } catch ( final IOException ioe ) {
+                                        throw new SAXException(ioe);
+                                    } finally {
+                                        if ( bais != null ) {
+                                            try {
+                                                bais.close();
+                                            } catch ( final IOException ignore ) {
+                                                // ignore
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    final Properties props = new Properties();
+                                    try {
+                                        props.load(new StringReader(textValue));
+                                    } catch ( final IOException ioe ) {
+                                        throw new SAXException(ioe);
+                                    }
+                                    for(final Map.Entry<Object, Object> entry : props.entrySet()) {
+                                        this.configuration.getProperties().put((String)entry.getKey(), (String)entry.getValue());
                                     }
                                 }
                             }
@@ -244,6 +261,9 @@ public class XMLSSMModelReader {
                             String line = null;
                             try {
                                 while ( (line = reader.readLine()) != null ) {
+                                    if ( line.startsWith("#") || line.trim().isEmpty()) {
+                                        continue;
+                                    }
                                     final int pos = line.indexOf("=");
                                     if ( pos == -1 || line.indexOf("=", pos + 1 ) != -1 ) {
                                         throw new SAXException("Invalid property definition: " + line);
@@ -328,10 +348,9 @@ public class XMLSSMModelReader {
             });
             xmlReader.parse(new InputSource(reader));
 
-            try {
-                result.validate();
-            } catch ( final IllegalStateException ise) {
-                throw (IOException)new IOException("Invalid subsystem definition: " + ise.getMessage()).initCause(ise);
+            final Map<SSMTraceable, String> errors = new SSMValidator().validate(result);
+            if ( errors != null ) {
+                throw new IOException("Invalid model definition: " + errors);
             }
             return result;
         } catch ( final SAXException se) {

@@ -36,15 +36,9 @@ import java.util.Set;
  * In addition to custom, user defined run modes, special run modes exists.
  * A special run mode name starts with a colon.
  */
-public class SSMFeature implements Comparable<SSMFeature> {
-
-    public static final String RUN_MODE_BASE = ":base";
-
-    public static final String RUN_MODE_BOOT = ":boot";
-
-    public static final String RUN_MODE_WEBAPP = ":webapp";
-
-    public static final String RUN_MODE_STANDALONE = ":standalone";
+public class SSMFeature
+    extends SSMTraceable
+    implements Comparable<SSMFeature> {
 
     private final String[] runModes;
 
@@ -79,31 +73,6 @@ public class SSMFeature implements Comparable<SSMFeature> {
 
     public String[] getRunModes() {
         return this.runModes;
-    }
-
-    /**
-     * validates the object and throws an IllegalStateException
-     *
-     * @throws IllegalStateException
-     */
-    public void validate() {
-        if ( this.runModes != null ) {
-            boolean hasSpecial = false;
-            for(String m : this.runModes) {
-                if ( m.startsWith(":") ) {
-                    if ( hasSpecial ) {
-                        throw new IllegalStateException("Invalid modes " + Arrays.toString(this.runModes));
-                    }
-                    hasSpecial = true;
-                }
-            }
-        }
-        for(final SSMStartLevel sl : this.startLevels) {
-            sl.validate();
-        }
-        for(final SSMConfiguration c : this.configurations) {
-            c.validate();
-        }
     }
 
     /**
@@ -261,7 +230,10 @@ public class SSMFeature implements Comparable<SSMFeature> {
     @Override
     public String toString() {
         return "SSMFeature [runModes=" + Arrays.toString(runModes)
-                + ", startLevels=" + startLevels + ", configurations="
-                + configurations + ", settings=" + settings + "]";
+                + ", startLevels=" + startLevels
+                + ", configurations=" + configurations
+                + ", settings=" + settings
+                + ( this.getLocation() != null ? ", location=" + this.getLocation() : "")
+                + "]";
     }
 }

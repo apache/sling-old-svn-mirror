@@ -20,118 +20,211 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.Reader;
-import java.io.StringReader;
 import java.util.Dictionary;
 import java.util.Enumeration;
-import java.util.UUID;
 
 import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.sling.slingstart.model.SSMArtifact;
 import org.apache.sling.slingstart.model.SSMConfiguration;
 import org.apache.sling.slingstart.model.SSMDeliverable;
 import org.apache.sling.slingstart.model.SSMFeature;
+import org.apache.sling.slingstart.model.SSMStartLevel;
+import org.apache.sling.slingstart.model.SSMTraceable;
 
 
 public class TXTSSMModelReader {
 
     public static final String FELIX_FORMAT_SUFFIX = "FORMAT:felix.config";
 
+    private enum MODE {
+        NONE,
+        VARS,
+        FEATURE,
+        START_LEVEL,
+        CONFIGURATION,
+        SETTINGS,
+        ARTIFACT
+    }
+
     /**
      * Reads the deliverable file
      * The reader is not closed.
      * @throws IOException
      */
-    public static SSMDeliverable read(final Reader reader)
+    public static SSMDeliverable read(final Reader reader, final String location)
     throws IOException {
-        final SSMDeliverable model = new SSMDeliverable();
-        final LineNumberReader lnr = new LineNumberReader(reader);
+        final TXTSSMModelReader mr = new TXTSSMModelReader(location);
+        return mr.readModel(reader);
+    }
+
+    private MODE mode = MODE.NONE;
+
+    private final SSMDeliverable model = new SSMDeliverable();
+
+    private SSMFeature feature = null;
+    private SSMStartLevel startLevel = null;
+    private SSMConfiguration config = null;
+    private SSMArtifact artifact = null;
+
+    private String comment = null;
+
+    private StringBuilder configBuilder = null;
+    private boolean configFelixFormat = false;
+
+    private LineNumberReader lineNumberReader;
+
+    private TXTSSMModelReader(final String location) {
+        this.model.setLocation(location);
+    }
+
+    private SSMDeliverable readModel(final Reader reader)
+    throws IOException {
+
+        boolean global = true;
+
+        lineNumberReader = new LineNumberReader(reader);
         String line;
-        while ( (line = lnr.readLine()) != null ) {
-            if ( ignore(line) ) {
+        while ( (line = lineNumberReader.readLine()) != null ) {
+            // ignore empty line
+            if ( line.trim().isEmpty() ) {
+                continue;
+            }
+            // comment?
+            if ( line.startsWith("#") ) {
+                checkConfig();
+                mode = MODE.NONE;
+                final String c = line.substring(1).trim();
+                if ( comment == null ) {
+                    comment = c;
+                } else {
+                    comment = comment + "\n" + c;
+                }
                 continue;
             }
 
-            // Command must start with a verb, optionally followed
-            // by properties
-            if (!isVerb(line)) {
-                throw new IOException("Expecting verb, current line is " + line);
+            if ( global ) {
+                global = false;
+                model.setComment(comment);
+                comment = null;
             }
 
-            // Parse verb and qualifier from first line
-            final String [] firstLine= line.split(" ");
-            final String verb = firstLine[0];
-            final StringBuilder builder = new StringBuilder();
-            for(int i=1; i < firstLine.length; i++) {
-                if (builder.length() > 0) {
-                    builder.append(' ');
-                }
-                builder.append(firstLine[i]);
-            }
-            final String qualifier = builder.toString();
+            final String trimmedLine = line.trim();
+            final int pos = line.indexOf(':');
+            final String params = (pos != -1 ? line.substring(pos + 1).trim() : null);
 
-            // Parse properties from optional indented lines
-            // that follow verb line
-            StringBuilder props = null;
-            do {
-                line = lnr.readLine();
-                if (line != null && !isVerb(line)) {
-                    if (props == null) {
-                        props = new StringBuilder();
-                    }
-                    addProperty(props, line);
-                }
-            } while ( line != null && !isVerb(line));
+            if ( trimmedLine.startsWith("feature:") ) {
+                checkConfig();
 
-            if ( "classpath".equals("verb") ) {
-                final SSMFeature boot = model.getOrCreateFeature(new String[] {SSMFeature.RUN_MODE_BOOT});
-                final SSMArtifact artifact = SSMArtifact.fromMvnUrl(qualifier);
-                boot.getOrCreateStartLevel(0).getArtifacts().add(artifact);
-            } else if ( "bundle".equals(verb) ) {
-                final SSMFeature feature = model.getOrCreateFeature(null);
-                final SSMArtifact artifact = SSMArtifact.fromMvnUrl(qualifier);
-                feature.getOrCreateStartLevel(0).getArtifacts().add(artifact);
-            } else if ( "config".equals(verb) ) {
-                final SSMFeature feature = model.getOrCreateFeature(null);
-                boolean felixFormat = false;
-                final String pid;
-                if (qualifier.endsWith(FELIX_FORMAT_SUFFIX)) {
-                    felixFormat = true;
-                    pid = qualifier.split(" ")[0].trim();
+                mode = MODE.FEATURE;
+                feature = model.getOrCreateFeature(params.split(","));
+                this.init(feature);
+                startLevel = feature.getOrCreateStartLevel(0);
+
+            } else if ( trimmedLine.startsWith("variables:") ) {
+                checkConfig();
+
+                if ( comment != null ) {
+                    throw new IOException("comment not allowed for variables in line " + this.lineNumberReader.getLineNumber());
+                }
+                mode = MODE.VARS;
+
+            } else if ( trimmedLine.startsWith("startLevel:") ) {
+                checkConfig();
+
+                if ( feature == null ) {
+                    throw new IOException("startlevel outside of feature in line " + this.lineNumberReader.getLineNumber());
+                }
+                int level = (params.length() == 0 ? level = 0 : Integer.valueOf(params));
+                startLevel = feature.getOrCreateStartLevel(level);
+                this.init(startLevel);
+                mode = MODE.START_LEVEL;
+
+            } else if ( trimmedLine.startsWith("config:FELIX ") || trimmedLine.startsWith("config: ") ) {
+                checkConfig();
+
+                mode = MODE.CONFIGURATION;
+                final int factoryPos = params.indexOf('-');
+                if ( factoryPos == -1 ) {
+                    config = new SSMConfiguration(params, null);
                 } else {
-                    pid = qualifier;
+                    config = new SSMConfiguration(params.substring(pos + 1), params.substring(0, pos));
                 }
-                final SSMConfiguration config = feature.getOrCreateConfiguration(pid, null);
-                if ( props != null ) {
-                    processConfigurationProperties(config, props.toString(), felixFormat);
+                this.init(config);
+                configBuilder = new StringBuilder();
+                configFelixFormat = trimmedLine.startsWith("config:FELIX ");
+
+            } else if ( trimmedLine.startsWith("settings:") ) {
+                checkConfig();
+
+                if ( comment != null ) {
+                    throw new IOException("comment not allowed for settings in line " + this.lineNumberReader.getLineNumber());
                 }
-            } else if ( "config.factory".equals(verb) ) {
-                final SSMFeature feature = model.getOrCreateFeature(null);
-                boolean felixFormat = false;
-                final String factoryPid;
-                if (qualifier.endsWith(FELIX_FORMAT_SUFFIX)) {
-                    felixFormat = true;
-                    factoryPid = qualifier.split(" ")[0].trim();
-                } else {
-                    factoryPid = qualifier;
+                if ( startLevel == null ) {
+                    throw new IOException("settings outside of feature/startlevel in line " + this.lineNumberReader.getLineNumber());
                 }
-                // create unique alias
-                final SSMConfiguration config = feature.getOrCreateConfiguration(UUID.randomUUID().toString(), factoryPid);
-                if ( props != null ) {
-                    processConfigurationProperties(config, props.toString(), felixFormat);
+                mode = MODE.SETTINGS;
+
+            } else if ( trimmedLine.startsWith("artifact:") ) {
+                checkConfig();
+
+                if ( startLevel == null ) {
+                    throw new IOException("artifact outside of feature/startlevel in line " + this.lineNumberReader.getLineNumber());
+                }
+
+                mode = MODE.ARTIFACT;
+                try {
+                    artifact = SSMArtifact.fromMvnUrl("mvn:" + params);
+                } catch ( final IllegalArgumentException iae) {
+                    throw new IOException(iae.getMessage() + " in line " + this.lineNumberReader.getLineNumber(), iae);
+                }
+                this.init(artifact);
+                startLevel.getArtifacts().add(artifact);
+
+            } else {
+                switch ( mode ) {
+                    case NONE:  throw new IOException("No global contents allowed in line " + this.lineNumberReader.getLineNumber());
+                    case ARTIFACT : final String[] metadata = parseProperty(trimmedLine);
+                                    artifact.getMetadata().put(metadata[0], metadata[1]);
+                                    break;
+                    case VARS : final String[] vars = parseProperty(trimmedLine);
+                                model.getVariables().put(vars[0], vars[1]);
+                                break;
+                    case SETTINGS : final String[] settings = parseProperty(trimmedLine);
+                                    feature.getSettings().put(settings[0], settings[1]);
+                                    break;
+                    case FEATURE: throw new IOException("No contents allowed for feature in line " + this.lineNumberReader.getLineNumber());
+                    case START_LEVEL: throw new IOException("No contents allowed for feature in line " + this.lineNumberReader.getLineNumber());
+                    case CONFIGURATION: configBuilder.append(trimmedLine);
+                                        configBuilder.append('\n');
+                                        break;
                 }
             }
+        }
+        checkConfig();
+        if ( comment != null ) {
+            throw new IOException("Comment not allowed at the end of file");
         }
 
         return model;
     }
 
-    private static void processConfigurationProperties(final SSMConfiguration config, final String textValue,
-            final boolean felixFormat)
+    private void init(final SSMTraceable traceable) {
+        traceable.setComment(this.comment);
+        this.comment = null;
+        final String number = String.valueOf(this.lineNumberReader.getLineNumber());
+        if ( model.getLocation() != null ) {
+            traceable.setLocation(model.getLocation() + ":" + number);
+        } else {
+            traceable.setLocation(number);
+        }
+    }
+
+    private void checkConfig()
     throws IOException {
-        if ( felixFormat ) {
+        if ( config != null ) {
             ByteArrayInputStream bais = null;
             try {
-                bais = new ByteArrayInputStream(textValue.getBytes("UTF-8"));
+                bais = new ByteArrayInputStream(configBuilder.toString().getBytes("UTF-8"));
                 @SuppressWarnings("unchecked")
                 final Dictionary<String, Object> props = ConfigurationHandler.read(bais);
                 final Enumeration<String> e = props.keys();
@@ -148,39 +241,19 @@ public class TXTSSMModelReader {
                     }
                 }
             }
-        } else if ( config.isSpecial() ) {
-            config.getProperties().put(config.getPid(), textValue);
-        } else {
-            final LineNumberReader lnr = new LineNumberReader(new StringReader(textValue));
-            String line;
-            while ( (line = lnr.readLine()) != null ) {
-                final int pos = line.indexOf('=');
-                config.getProperties().put(line.substring(0, pos), line.substring(pos + 1));
-            }
         }
+        config = null;
+        configBuilder = null;
     }
 
-    private static boolean ignore(final String line) {
-        return line.trim().length() == 0 || line.startsWith("#");
-    }
-
-    private static boolean isVerb(final String line) {
-        return line.length() > 0 && !Character.isWhitespace(line.charAt(0));
-    }
-
-   private static void addProperty(final StringBuilder builder, final String line)
-   throws IOException {
+    private String[] parseProperty(final String line) throws IOException {
         final int equalsPos = line.indexOf('=');
         final String key = line.substring(0, equalsPos).trim();
         final String value = line.substring(equalsPos + 1).trim();
-        if (key.trim().isEmpty() || value.trim().isEmpty() ) {
-            throw new IOException("Invalid property line [" + line + "]");
+        if (key.isEmpty() || value.isEmpty() ) {
+            throw new IOException("Invalid property; " + line + " in line " + this.lineNumberReader.getLineNumber());
         }
-
-        builder.append(key);
-        builder.append('=');
-        builder.append(value);
-        builder.append('\n');
+        return new String[] {key, value};
     }
 }
 
