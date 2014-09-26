@@ -34,6 +34,7 @@ import org.apache.sling.slingstart.model.SSMArtifact;
 import org.apache.sling.slingstart.model.SSMConstants;
 import org.apache.sling.slingstart.model.SSMDeliverable;
 import org.apache.sling.slingstart.model.SSMFeature;
+import org.apache.sling.slingstart.model.SSMMerger;
 import org.apache.sling.slingstart.model.SSMTraceable;
 import org.apache.sling.slingstart.model.SSMValidator;
 import org.apache.sling.slingstart.model.txt.TXTSSMModelReader;
@@ -67,11 +68,11 @@ public abstract class ModelUtils {
                 final FileReader reader = new FileReader(f);
                 try {
                     final SSMDeliverable current = TXTSSMModelReader.read(reader, f.getAbsolutePath());
-                    final Map<SSMTraceable, String> errors = new SSMValidator().validate(current);
+                    final Map<SSMTraceable, String> errors = SSMValidator.validate(current);
                     if (errors != null ) {
                         throw new MojoExecutionException("Invalid model at " + name + " : " + errors);
                     }
-                    result.merge(current);
+                    SSMMerger.merge(result, current);
                 } finally {
                     IOUtils.closeQuietly(reader);
                 }
@@ -80,7 +81,7 @@ public abstract class ModelUtils {
             }
         }
 
-        final Map<SSMTraceable, String> errors = new SSMValidator().validate(result);
+        final Map<SSMTraceable, String> errors = SSMValidator.validate(result);
         if (errors != null ) {
             throw new MojoExecutionException("Invalid assembled model : " + errors);
         }
@@ -110,23 +111,23 @@ public abstract class ModelUtils {
                         depModel = new SSMDeliverable();
                     }
                     final SSMDeliverable readModel = TXTSSMModelReader.read(r, file.getAbsolutePath());
-                    final Map<SSMTraceable, String> errors = new SSMValidator().validate(readModel);
+                    final Map<SSMTraceable, String> errors = SSMValidator.validate(readModel);
                     if (errors != null ) {
                         throw new MojoExecutionException("Invalid model at " + file + " : " + errors);
                     }
-                    depModel.merge(readModel);
+                    SSMMerger.merge(depModel, readModel);
                 } finally {
                     IOUtils.closeQuietly(r);
                 }
             }
             final SSMDeliverable result;
             if ( depModel != null ) {
-                Map<SSMTraceable, String> errors = new SSMValidator().validate(depModel);
+                Map<SSMTraceable, String> errors = SSMValidator.validate(depModel);
                 if (errors != null ) {
                     throw new MojoExecutionException("Invalid model : " + errors);
                 }
-                depModel.merge(localModel);
-                errors = new SSMValidator().validate(depModel);
+                SSMMerger.merge(depModel, localModel);
+                errors = SSMValidator.validate(depModel);
                 if (errors != null ) {
                     throw new MojoExecutionException("Invalid model : " + errors);
                 }

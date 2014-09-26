@@ -41,6 +41,7 @@ import org.apache.sling.slingstart.model.SSMConstants;
 import org.apache.sling.slingstart.model.SSMDeliverable;
 import org.apache.sling.slingstart.model.SSMFeature;
 import org.apache.sling.slingstart.model.SSMStartLevel;
+import org.apache.sling.slingstart.model.SSMUtil;
 import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.UnArchiver;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
@@ -78,7 +79,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        final SSMDeliverable model = this.readModel();
+        final SSMDeliverable model = SSMUtil.getEffectiveModel(this.readModel());
 
         this.prepareGlobal(model);
         this.prepareStandaloneApp(model);
@@ -176,7 +177,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
     throws MojoExecutionException{
         for(final SSMStartLevel sl : runMode.getStartLevels()) {
             for(final SSMArtifact a : sl.getArtifacts()) {
-                final Artifact artifact = ModelUtils.getArtifact(this.project, a.getGroupId(), a.getArtifactId(), model.getValue(a.getVersion()), a.getType(), a.getClassifier());
+                final Artifact artifact = ModelUtils.getArtifact(this.project, a.getGroupId(), a.getArtifactId(), a.getVersion(), a.getType(), a.getClassifier());
                 final File artifactFile = artifact.getFile();
                 contentsMap.put(getPathForArtifact(sl.getLevel(), artifactFile.getName(), runMode), artifactFile);
             }
@@ -294,7 +295,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
 
         final Artifact a = ModelUtils.getArtifact(this.project, baseArtifact.getGroupId(),
                 baseArtifact.getArtifactId(),
-                model.getValue(baseArtifact.getVersion()),
+                baseArtifact.getVersion(),
                 type,
                 classifier);
         if (a == null) {
