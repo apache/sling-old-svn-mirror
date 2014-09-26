@@ -65,7 +65,7 @@ Replication agents configuration include:
 -- In memory
 -- Sling Job Handling based
 - Queue distribution: how items to be replicated are distributed to agent's queues
-- Rules: additional triggers on agents
+- Triggers: triggers able to handle replication requests
 
 Replication agents' configurations can be retrieved via `HTTP GET`:
 
