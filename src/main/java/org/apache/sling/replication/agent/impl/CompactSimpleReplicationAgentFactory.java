@@ -62,9 +62,6 @@ public class CompactSimpleReplicationAgentFactory implements ReplicationComponen
     @Property(label = "Name")
     public static final String NAME = "name";
 
-    @Property(label = "Rules")
-    public static final String RULES = "rules";
-
     @Property(boolValue = true, label = "Replicate using aggregated paths")
     public static final String USE_AGGREGATE_PATHS = "useAggregatePaths";
 

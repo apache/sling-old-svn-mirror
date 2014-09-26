@@ -90,7 +90,7 @@ public class RemoteEventReplicationTrigger implements ReplicationTrigger {
 
     public void register(String handlerId, ReplicationTriggerRequestHandler requestHandler) {
         try {
-            log.info("applying remote event replication rule");
+            log.info("applying remote event replication trigger");
 
             ScheduleOptions options = scheduler.NOW();
             options.name(handlerId);
