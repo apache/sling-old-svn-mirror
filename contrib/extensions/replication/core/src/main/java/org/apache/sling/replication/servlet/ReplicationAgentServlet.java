@@ -18,13 +18,12 @@
  */
 package org.apache.sling.replication.servlet;
 
+import javax.servlet.Servlet;
+import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
@@ -33,10 +32,10 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-
 import org.apache.sling.replication.agent.AgentReplicationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.communication.*;
+import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.communication.ReplicationResponse;
 import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
 import org.apache.sling.replication.resources.ReplicationConstants;
 import org.apache.sling.replication.transport.impl.RequestUtils;

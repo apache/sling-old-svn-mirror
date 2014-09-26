@@ -18,6 +18,13 @@
  */
 package org.apache.sling.replication.transport.impl;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Content;
@@ -26,7 +33,6 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.entity.ContentType;
-import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
@@ -35,14 +41,6 @@ import org.apache.sling.replication.transport.ReplicationTransportException;
 import org.apache.sling.replication.transport.ReplicationTransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,6 +59,10 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
 
         if (transportAuthenticationProvider == null) {
             throw new IllegalArgumentException("The authentication provider is required");
+        }
+
+        if (!transportAuthenticationProvider.canAuthenticate(Executor.class)) {
+            throw new IllegalArgumentException("Authentication provider cannot authenticate Executor");
         }
 
         this.transportAuthenticationProvider = transportAuthenticationProvider;

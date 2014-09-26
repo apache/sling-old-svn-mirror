@@ -1,10 +1,13 @@
 package org.apache.sling.replication.agent.impl;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
@@ -14,6 +17,7 @@ import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.event.ReplicationEventFactory;
@@ -25,11 +29,16 @@ import org.apache.sling.replication.packaging.impl.importer.LocalReplicationPack
 import org.apache.sling.replication.packaging.impl.importer.RemoteReplicationPackageImporterFactory;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
-import org.apache.sling.replication.rule.ReplicationRuleEngine;
+import org.apache.sling.replication.trigger.ReplicationTrigger;
+import org.apache.sling.replication.trigger.impl.ChainReplicateReplicationTrigger;
+import org.apache.sling.replication.trigger.impl.RemoteEventReplicationTrigger;
+import org.apache.sling.replication.trigger.impl.ResourceEventReplicationTrigger;
+import org.apache.sling.replication.trigger.impl.ScheduledReplicationTrigger;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilderFactory;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.replication.transport.authentication.impl.UserCredentialsTransportAuthenticationProvider;
+import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,9 +61,6 @@ public class DefaultReplicationComponentProvider implements ReplicationComponent
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Reference
-    private ReplicationRuleEngine replicationRuleEngine;
-
-    @Reference
     private ReplicationEventFactory replicationEventFactory;
 
     @Reference
@@ -63,12 +69,21 @@ public class DefaultReplicationComponentProvider implements ReplicationComponent
     @Reference
     private Packaging packaging;
 
+    @Reference
+    private Scheduler scheduler;
+
     Map<String, ReplicationComponentListener> replicationComponentListenerMap = new ConcurrentHashMap<String, ReplicationComponentListener>();
     Map<String, ReplicationQueueProvider> replicationQueueProviderMap = new ConcurrentHashMap<String, ReplicationQueueProvider>();
     Map<String, ReplicationQueueDistributionStrategy> replicationQueueDistributionStrategyMap = new ConcurrentHashMap<String, ReplicationQueueDistributionStrategy>();
     Map<String, TransportAuthenticationProvider> transportAuthenticationProviderMap = new ConcurrentHashMap<String, TransportAuthenticationProvider>();
     Map<String, ReplicationPackageImporter> replicationPackageImporterMap = new ConcurrentHashMap<String, ReplicationPackageImporter>();
     Map<String, ReplicationPackageExporter> replicationPackageExporterMap = new ConcurrentHashMap<String, ReplicationPackageExporter>();
+    private BundleContext bundleContext;
+
+    @Activate
+    private void activate(BundleContext bundleContext) {
+        this.bundleContext = bundleContext;
+    }
 
     public <ComponentType> ComponentType getComponent(Class<ComponentType> type, String componentName) {
         if (type.isAssignableFrom(ReplicationPackageExporter.class)) {
@@ -90,6 +105,9 @@ public class DefaultReplicationComponentProvider implements ReplicationComponent
         try {
             if (type.isAssignableFrom(ReplicationAgent.class)) {
                 return (ComponentType) createAgent(properties, this);
+            }
+            else if (type.isAssignableFrom(ReplicationTrigger.class)) {
+                return (ComponentType) createTrigger(properties, this);
             }
         } catch (Throwable t) {
             log.error("Cannot create agent", t);
@@ -123,9 +141,10 @@ public class DefaultReplicationComponentProvider implements ReplicationComponent
             Map<String, Object> queueProviderProperties = extractMap("queueProvider", properties);
             ReplicationQueueProvider queueProvider = createQueueProvider(queueProviderProperties, componentProvider);
 
-            String name = PropertiesUtil.toString(properties.get(CompactSimpleReplicationAgentFactory.NAME), String.valueOf(new Random().nextInt(1000)));
+            List<Map<String, Object>> triggersProperties = extractMapList("trigger", properties);
+            List<ReplicationTrigger> triggers = createTriggerList(triggersProperties, componentProvider);
 
-            String[] rules = PropertiesUtil.toStringArray(properties.get(CompactSimpleReplicationAgentFactory.RULES), new String[0]);
+            String name = PropertiesUtil.toString(properties.get(CompactSimpleReplicationAgentFactory.NAME), String.valueOf(new Random().nextInt(1000)));
 
             boolean useAggregatePaths = PropertiesUtil.toBoolean(properties.get(CompactSimpleReplicationAgentFactory.USE_AGGREGATE_PATHS), true);
 
@@ -137,14 +156,15 @@ public class DefaultReplicationComponentProvider implements ReplicationComponent
                 return null;
             }
 
-            return new SimpleReplicationAgent(name, rules, useAggregatePaths, isPassive,
-                    packageImporter, packageExporter, queueProvider, queueDistributionStrategy, replicationEventFactory, replicationRuleEngine);
+            return new SimpleReplicationAgent(name, useAggregatePaths, isPassive,
+                    packageImporter, packageExporter, queueProvider, queueDistributionStrategy, replicationEventFactory, triggers);
 
         }
 
         return null;
 
     }
+
 
     public ReplicationPackageExporter createExporter(Map<String, Object> properties, ReplicationComponentProvider componentProvider) {
 
@@ -240,16 +260,56 @@ public class DefaultReplicationComponentProvider implements ReplicationComponent
         return null;
     }
 
-    Map<String, Object> extractMap(String key, Map<String, Object> objectMap) {
-        Object value = objectMap.get(key);
 
-        if (value instanceof String[]) {
-            return SettingsUtils.compactMap(SettingsUtils.toMap((String[]) value));
+    private ReplicationTrigger createTrigger(Map<String,Object> properties, ReplicationComponentProvider componentProvider) {
+        String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), "service");
+
+        if ("service".equals(factory)) {
+            String name = PropertiesUtil.toString(properties.get(NAME), null);
+            return componentProvider.getComponent(ReplicationTrigger.class, name);
 
         }
+        else if (RemoteEventReplicationTrigger.TYPE.equals(factory)) {
+            Map<String, Object> authenticationProviderProperties = extractMap("authenticationProvider", properties);
+
+            TransportAuthenticationProvider authenticationProvider = createTransportAuthenticationProvider(authenticationProviderProperties, componentProvider);
+            return new RemoteEventReplicationTrigger(properties, authenticationProvider, scheduler);
+        }
+        else if (ResourceEventReplicationTrigger.TYPE.equals(factory)) {
+            return new ResourceEventReplicationTrigger(properties, bundleContext);
+        }
+        else if (ScheduledReplicationTrigger.TYPE.equals(factory)) {
+            return new ScheduledReplicationTrigger(properties, scheduler);
+        }
+        else if (ChainReplicateReplicationTrigger.TYPE.equals(factory)) {
+            return new ChainReplicateReplicationTrigger(properties, bundleContext);
+        }
+
         return null;
     }
 
+    private List<ReplicationTrigger> createTriggerList(List<Map<String, Object>> triggersProperties, ReplicationComponentProvider componentProvider) {
+        List<ReplicationTrigger> triggers = new ArrayList<ReplicationTrigger>();
+        for (Map<String, Object> properties : triggersProperties) {
+            triggers.add(createTrigger(properties, componentProvider));
+        }
+
+        return triggers;
+    }
+
+    Map<String, Object> extractMap(String key, Map<String, Object> objectMap) {
+         return SettingsUtils.extractMap(key, objectMap);
+    }
+
+    List<Map<String, Object>> extractMapList(String key, Map<String, Object> objectMap) {
+        List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
+        for (String mapKey : objectMap.keySet()) {
+            if (mapKey.startsWith(key)) {
+                result.add(SettingsUtils.extractMap(mapKey, objectMap));
+            }
+        }
+        return result;
+    }
 
     private void bindReplicationQueueProvider(ReplicationQueueProvider replicationQueueProvider, Map<String, Object> config) {
 

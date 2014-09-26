@@ -19,6 +19,7 @@
 package org.apache.sling.replication.event;
 
 import java.util.Dictionary;
+
 import org.osgi.service.event.Event;
 
 /**

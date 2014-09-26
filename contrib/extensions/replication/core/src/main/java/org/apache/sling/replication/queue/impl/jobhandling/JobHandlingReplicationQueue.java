@@ -18,7 +18,10 @@
  */
 package org.apache.sling.replication.queue.impl.jobhandling;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;

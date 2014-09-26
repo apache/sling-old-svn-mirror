@@ -21,6 +21,7 @@ package org.apache.sling.replication.monitor;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
+
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueItem;

@@ -32,7 +32,7 @@ public class NopTransportAuthenticationProvider implements TransportAuthenticati
         return authenticable;
     }
 
-    public boolean canAuthenticate(Class<?> authenticable) {
+    public boolean canAuthenticate(Class authenticable) {
         return true;
     }
 

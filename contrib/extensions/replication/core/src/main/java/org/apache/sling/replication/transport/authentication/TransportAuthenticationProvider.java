@@ -31,7 +31,7 @@ public interface TransportAuthenticationProvider<A, T> {
      * @return <code>true</code> if this provider can check authentication on instances of this class, <code>false</code>
      * otherwise
      */
-    boolean canAuthenticate(Class<?> authenticable);
+    boolean canAuthenticate(Class authenticable);
 
     /**
      *

@@ -28,7 +28,6 @@ import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.commons.osgi.PropertiesUtil;

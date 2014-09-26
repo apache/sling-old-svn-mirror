@@ -30,12 +30,13 @@ import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationParameter;
-import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.testing.tools.http.Request;
 import org.apache.sling.testing.tools.sling.SlingClient;
 import org.apache.sling.testing.tools.sling.SlingInstance;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Utils class for Replication ITs
@@ -208,6 +209,19 @@ public class ReplicationUtils {
 
     public static String exporterConfigUrl(String exporterName) {
         return REPLICATION_ROOT_PATH + "/settings/exporters/" + exporterName;
+    }
+
+
+    public static String triggerRootUrl() {
+        return REPLICATION_ROOT_PATH + "/services/triggers";
+    }
+
+    public static String triggerUrl(String triggerName) {
+        return  triggerRootUrl() + "/" + triggerName;
+    }
+
+    public static String triggerEventUrl(String triggerName) {
+        return  triggerRootUrl() + "/" + triggerName + ".event";
     }
 
 }

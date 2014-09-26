@@ -18,11 +18,11 @@
  */
 package org.apache.sling.replication.resources.impl.common;
 
+import java.util.Map;
+
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
-
-import java.util.Map;
 
 /**
  * Resource that can be adapted to a ModifiableValueMap

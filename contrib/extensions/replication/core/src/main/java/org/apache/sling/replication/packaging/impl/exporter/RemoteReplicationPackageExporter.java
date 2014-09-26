@@ -20,10 +20,7 @@ package org.apache.sling.replication.packaging.impl.exporter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.http.client.fluent.Executor;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;

@@ -18,19 +18,30 @@
  */
 package org.apache.sling.replication.agent.impl;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
-import org.apache.felix.scr.annotations.*;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.event.ReplicationEventFactory;
+import org.apache.sling.replication.packaging.ReplicationPackageExporter;
+import org.apache.sling.replication.packaging.ReplicationPackageImporter;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
 import org.apache.sling.replication.queue.impl.SingleQueueDistributionStrategy;
 import org.apache.sling.replication.queue.impl.jobhandling.JobHandlingReplicationQueueProvider;
-import org.apache.sling.replication.rule.ReplicationRuleEngine;
-import org.apache.sling.replication.packaging.ReplicationPackageExporter;
-import org.apache.sling.replication.packaging.ReplicationPackageImporter;
+import org.apache.sling.replication.trigger.ReplicationTrigger;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -73,8 +84,8 @@ public class SimpleReplicationAgentFactory {
     @Property(label = "Name")
     public static final String NAME = "name";
 
-    @Property(label = "Rules")
-    public static final String RULES = "rules";
+    @Property(label = "Triggers")
+    public static final String TRIGGERS = "triggers";
 
     @Property(boolValue = true, label = "Replicate using aggregated paths")
     public static final String USE_AGGREGATE_PATHS = "useAggregatePaths";
@@ -102,9 +113,6 @@ public class SimpleReplicationAgentFactory {
     private static final String RUNMODES = "runModes";
 
     private ServiceRegistration agentReg;
-
-    @Reference
-    private ReplicationRuleEngine replicationRuleEngine;
 
     @Reference
     private ReplicationEventFactory replicationEventFactory;
@@ -137,8 +145,8 @@ public class SimpleReplicationAgentFactory {
             String distribution = PropertiesUtil.toString(config.get(QUEUE_DISTRIBUTION_TARGET), DEFAULT_DISTRIBUTION);
             props.put(QUEUE_DISTRIBUTION_TARGET, distribution);
 
-            String[] rules = PropertiesUtil.toStringArray(config.get(RULES), new String[0]);
-            props.put(RULES, rules);
+            String[] triggers = PropertiesUtil.toStringArray(config.get(TRIGGERS), new String[0]);
+            props.put(TRIGGERS, triggers);
 
 
             boolean useAggregatePaths = PropertiesUtil.toBoolean(config.get(USE_AGGREGATE_PATHS), true);
@@ -155,8 +163,9 @@ public class SimpleReplicationAgentFactory {
             log.info("bound services for {} :  {} - {} - {} - {} - {} - {}", new Object[]{name,
                     packageImporter, packageExporter, queueProvider, queueDistributionStrategy});
 
-            SimpleReplicationAgent agent = new SimpleReplicationAgent(name, rules, useAggregatePaths, isPassive,
-                    packageImporter, packageExporter, queueProvider, queueDistributionStrategy, replicationEventFactory, replicationRuleEngine);
+            SimpleReplicationAgent agent = new SimpleReplicationAgent(name, useAggregatePaths, isPassive,
+                    packageImporter, packageExporter, queueProvider, queueDistributionStrategy, replicationEventFactory,
+                    null); // TODO : enable triggers again
 
             // only enable if instance runmodes match configured ones
             if (matchRunmodes(runModes)) {

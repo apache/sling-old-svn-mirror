@@ -86,7 +86,7 @@ public class CompactSimpleReplicationAgentFactory implements ReplicationComponen
     @Reference
     private SlingSettingsService settingsService;
 
-    @Reference(target = "(name=default)")
+    @Reference
     private ReplicationComponentProvider componentProvider;
 
     private ServiceRegistration agentReg;

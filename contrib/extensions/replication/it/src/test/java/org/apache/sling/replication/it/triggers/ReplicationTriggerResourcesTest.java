@@ -16,23 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.rule;
 
-/**
- * a replication trigger
- */
-public interface ReplicationTrigger {
+package org.apache.sling.replication.it.triggers;
 
-    /**
-     * register a replication trigger
-     * @param handlerId id of the given handler
-     * @param requestHandler handler
-     */
-    void register(String handlerId, ReplicationRequestHandler requestHandler);
 
-    /**
-     * unregister the handler with the given id, if existing
-     * @param handlerId id of the handler to unregister
-     */
-    void unregister(String handlerId);
+import org.apache.sling.replication.it.ReplicationIntegrationTestBase;
+import org.junit.Test;
+
+import static org.apache.sling.replication.it.ReplicationUtils.assertExists;
+import static org.apache.sling.replication.it.ReplicationUtils.triggerUrl;
+
+public class ReplicationTriggerResourcesTest extends ReplicationIntegrationTestBase {
+
+    @Test
+    public void testTestTriggersOnAuthor() throws Exception {
+        String[] names = new String[]{
+                "test-content-event",
+                "test-remote-event",
+                "test-replicate-event",
+                "test-scheduled-event"
+        };
+        for (String name : names) {
+            assertExists(authorClient, triggerUrl(name));
+        }
+    }
 }

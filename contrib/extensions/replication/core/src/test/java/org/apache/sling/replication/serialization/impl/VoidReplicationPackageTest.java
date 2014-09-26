@@ -20,6 +20,7 @@ package org.apache.sling.replication.serialization.impl;
 
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;

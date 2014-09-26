@@ -35,11 +35,11 @@ import static org.apache.sling.replication.it.ReplicationUtils.setAgentPropertie
  */
 public abstract class ReplicationIntegrationTestBase {
 
-    static SlingInstance author;
-    static SlingInstance publish;
+    protected static SlingInstance author;
+    protected static SlingInstance publish;
 
-    static SlingClient authorClient;
-    static SlingClient publishClient;
+    protected static SlingClient authorClient;
+    protected static SlingClient publishClient;
 
     @BeforeClass
     public static void setUpBefore() {

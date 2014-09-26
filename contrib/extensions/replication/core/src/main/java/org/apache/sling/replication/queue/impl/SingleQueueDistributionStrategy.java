@@ -21,11 +21,15 @@ package org.apache.sling.replication.queue.impl;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.replication.queue.*;
+import org.apache.sling.replication.queue.ReplicationQueue;
+import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
+import org.apache.sling.replication.queue.ReplicationQueueException;
+import org.apache.sling.replication.queue.ReplicationQueueItem;
+import org.apache.sling.replication.queue.ReplicationQueueItemState;
+import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
+import org.apache.sling.replication.queue.ReplicationQueueProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
 
 /**
  * The default strategy for delivering packages to queues. Each agent just manages a single queue,

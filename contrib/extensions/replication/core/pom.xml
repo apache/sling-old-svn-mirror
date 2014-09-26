@@ -68,12 +68,12 @@
                   <Bundle-SymbolicName>org.apache.sling.replication</Bundle-SymbolicName>
                   <Sling-Initial-Content>SLING-CONTENT/libs/sling/replication;path:=/libs/sling/replication;overwrite:=true</Sling-Initial-Content>
                   <Export-Package>
-                    org.apache.sling.replication.agent,
-                    org.apache.sling.replication.communication,
-                    org.apache.sling.replication.event,
-                    org.apache.sling.replication.queue,
-                    org.apache.sling.replication.rule,
-                    org.apache.sling.replication.packaging
+                      org.apache.sling.replication.agent,
+                      org.apache.sling.replication.communication,
+                      org.apache.sling.replication.event,
+                      org.apache.sling.replication.queue,
+                      org.apache.sling.replication.trigger,
+                      org.apache.sling.replication.packaging
                   </Export-Package>
                   <Embed-Dependency>httpasyncclient</Embed-Dependency>
                 </instructions>

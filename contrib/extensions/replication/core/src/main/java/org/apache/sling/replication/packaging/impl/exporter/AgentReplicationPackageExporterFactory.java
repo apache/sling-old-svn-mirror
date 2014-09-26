@@ -22,15 +22,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.scr.annotations.*;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.packaging.ReplicationPackage;
+import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueItem;
-import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
-import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

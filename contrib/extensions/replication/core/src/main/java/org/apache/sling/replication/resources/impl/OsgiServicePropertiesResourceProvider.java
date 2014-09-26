@@ -20,6 +20,13 @@
 package org.apache.sling.replication.resources.impl;
 
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.commons.osgi.PropertiesUtil;
@@ -27,13 +34,6 @@ import org.apache.sling.replication.resources.impl.common.AbstractReadableResour
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * {@link ResourceProvider} for Osgi services for a specific service interface.

@@ -16,10 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.rule;
 
-import org.apache.sling.replication.communication.ReplicationRequest;
+package org.apache.sling.replication.it.triggers;
 
-public interface ReplicationRequestHandler {
-    void execute(ReplicationRequest request);
+import org.apache.sling.replication.it.ReplicationIntegrationTestBase;
+import org.junit.Test;
+
+import static org.apache.sling.replication.it.ReplicationUtils.assertResponseContains;
+import static org.apache.sling.replication.it.ReplicationUtils.triggerEventUrl;
+
+public class ScheduledReplicationTriggerTest extends ReplicationIntegrationTestBase {
+
+    @Test
+    public void testTestTriggersOnAuthor() throws Exception {
+        assertResponseContains(author, triggerEventUrl("test-scheduled-event"), "POLL");
+    }
 }

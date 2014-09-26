@@ -19,16 +19,16 @@
 package org.apache.sling.replication.resources.impl.common;
 
 
-import org.apache.sling.api.resource.ModifyingResourceProvider;
-import org.apache.sling.api.resource.PersistenceException;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
-
 import javax.jcr.Session;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.sling.api.resource.ModifyingResourceProvider;
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 
 public abstract class AbstractModifyingResourceProvider extends AbstractReadableResourceProvider
         implements ModifyingResourceProvider {
