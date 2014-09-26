@@ -36,6 +36,7 @@ import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
@@ -63,8 +64,9 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
 
     private static final String TYPE = "vlt";
 
-    public FileVaultReplicationPackageBuilder(String subServiceName, SlingRepository repository, Packaging packaging) {
-        super(TYPE);
+    public FileVaultReplicationPackageBuilder(String subServiceName, SlingRepository repository, Packaging packaging,
+                                              ReplicationEventFactory replicationEventFactory) {
+        super(TYPE, replicationEventFactory);
 
         this.subServiceName = subServiceName;
         this.repository = repository;

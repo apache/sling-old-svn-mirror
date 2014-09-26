@@ -254,7 +254,7 @@ public class DefaultReplicationComponentProvider implements ReplicationComponent
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), "service");
 
         if ("vlt".equals(factory)) {
-            return FileVaultReplicationPackageBuilderFactory.getInstance(properties, repository, packaging);
+            return FileVaultReplicationPackageBuilderFactory.getInstance(properties, repository, packaging, replicationEventFactory);
         }
 
         return null;

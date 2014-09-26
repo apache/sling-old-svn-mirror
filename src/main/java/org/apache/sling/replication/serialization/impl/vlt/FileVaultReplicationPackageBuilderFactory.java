@@ -32,6 +32,7 @@ import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.osgi.framework.BundleContext;
@@ -71,6 +72,9 @@ public class FileVaultReplicationPackageBuilderFactory {
     @Reference
     private Packaging packaging;
 
+    @Reference
+    private ReplicationEventFactory replicationEventFactory;
+
     private ServiceRegistration builderReg;
 
     @Activate
@@ -86,7 +90,7 @@ public class FileVaultReplicationPackageBuilderFactory {
         Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(NAME, name);
 
-        ReplicationPackageBuilder replicationPackageBuilder = getInstance(config, repository, packaging);
+        ReplicationPackageBuilder replicationPackageBuilder = getInstance(config, repository, packaging, replicationEventFactory);
 
         builderReg = context.registerService(ReplicationPackageBuilder.class.getName(), replicationPackageBuilder, props);
     }
@@ -101,8 +105,8 @@ public class FileVaultReplicationPackageBuilderFactory {
     }
 
     public static FileVaultReplicationPackageBuilder getInstance(Map<String, Object> config,
-                                                                 SlingRepository repository, Packaging packaging) {
-
+                                                                 SlingRepository repository, Packaging packaging,
+                                                                 ReplicationEventFactory replicationEventFactory) {
 
         String serviceName = PropertiesUtil.toString(config.get(SERVICENAME), "").trim();
 
@@ -110,7 +114,7 @@ public class FileVaultReplicationPackageBuilderFactory {
             throw new IllegalArgumentException("Service Name cannot be empty");
         }
 
-        return new FileVaultReplicationPackageBuilder(serviceName, repository, packaging);
+        return new FileVaultReplicationPackageBuilder(serviceName, repository, packaging, replicationEventFactory);
 
     }
 
