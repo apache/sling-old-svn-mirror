@@ -18,22 +18,17 @@
  */
 package org.apache.sling.replication.transport.authentication.impl;
 
+import java.util.Map;
+
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.http.HttpHost;
-import org.apache.http.client.fluent.Executor;
-import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.replication.communication.ReplicationEndpoint;
-import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationException;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Map;
 
 @Component(label = "User Credentials based Transport Authentication Provider Factory",
         configurationFactory = true,
@@ -41,7 +36,7 @@ import java.util.Map;
         policy = ConfigurationPolicy.REQUIRE)
 @Service(value = TransportAuthenticationProvider.class)
 public class UserCredentialsTransportAuthenticationProviderFactory implements
-        TransportAuthenticationProvider<Executor, Executor> {
+        TransportAuthenticationProvider {
 
     @Property
     public final static String USERNAME = UserCredentialsTransportAuthenticationProvider.USERNAME;
@@ -63,12 +58,12 @@ public class UserCredentialsTransportAuthenticationProviderFactory implements
 
 
 
-    public Executor authenticate(Executor authenticable, TransportAuthenticationContext context)
+    public Object authenticate(Object authenticable, TransportAuthenticationContext context)
             throws TransportAuthenticationException {
         return transportAuthenticationProvider.authenticate(authenticable, context);
     }
 
-    public boolean canAuthenticate(Class<?> authenticable) {
+    public boolean canAuthenticate(Class authenticable) {
         return transportAuthenticationProvider.canAuthenticate(authenticable);
     }
 

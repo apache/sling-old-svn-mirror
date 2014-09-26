@@ -31,6 +31,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgent;
+import org.apache.sling.replication.trigger.ReplicationTrigger;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -39,22 +40,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * An OSGi service factory for {@link ReplicationAgent}s using a compact configuration, already existing OSGi services
+ * A generic factory for replication components using a compact configuration, already existing OSGi services
  * for the components to be wired can be used as well as directly instantiated components (called by type name).
+ *
+ * Currently supported components are of kind 'agent' and 'trigger'.
  */
 @Component(metatype = true,
-        label = "Compact Replication Agents Factory",
-        description = "OSGi configuration based ReplicationAgent service factory",
-        name = CompactSimpleReplicationAgentFactory.SERVICE_PID,
+        label = "Generic Replication Components Factory",
+        description = "OSGi configuration Replication Component factory",
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE
 )
-public class CompactSimpleReplicationAgentFactory implements ReplicationComponentListener {
+public class DefaultReplicationComponentFactory implements ReplicationComponentListener {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-
-    static final String SERVICE_PID = "org.apache.sling.replication.agent.impl.CompactSimpleReplicationAgentFactory";
 
     @Property(boolValue = true, label = "Enabled")
     private static final String ENABLED = "enabled";
@@ -62,26 +62,11 @@ public class CompactSimpleReplicationAgentFactory implements ReplicationComponen
     @Property(label = "Name")
     public static final String NAME = "name";
 
-    @Property(label = "Rules")
-    public static final String RULES = "rules";
+    @Property(label = "Properties")
+    public static final String PROPERTIES = "properties";
 
-    @Property(boolValue = true, label = "Replicate using aggregated paths")
-    public static final String USE_AGGREGATE_PATHS = "useAggregatePaths";
-
-    @Property(boolValue = false, label = "Replicate using aggregated paths")
-    public static final String IS_PASSIVE = "isPassive";
-
-    @Property(label = "Package Exporter", cardinality = 100)
-    public static final String PACKAGE_EXPORTER = "packageExporter";
-
-    @Property(label = "Package Importer", cardinality = 100)
-    public static final String PACKAGE_IMPORTER = "packageImporter";
-
-    @Property(label = "Queue Provider", cardinality = 100)
-    public static final String QUEUE_PROVIDER = "queueProvider";
-
-    @Property(label = "Queue Distribution Strategy", cardinality = 100)
-    public static final String QUEUE_DISTRIBUTION_STRATEGY = "queueDistributionStrategy";
+    @Property(label = "Kind")
+    public static final String KIND = "kind";
 
     @Reference
     private SlingSettingsService settingsService;
@@ -89,11 +74,13 @@ public class CompactSimpleReplicationAgentFactory implements ReplicationComponen
     @Reference
     private ReplicationComponentProvider componentProvider;
 
-    private ServiceRegistration agentReg;
+    private ServiceRegistration componentReg;
     private ServiceRegistration listenerReg;
 
     private BundleContext savedContext;
     private Map<String, Object> savedConfig;
+
+    private String kind;
 
     @Activate
     public void activate(BundleContext context, Map<String, Object> config) throws Exception {
@@ -108,6 +95,8 @@ public class CompactSimpleReplicationAgentFactory implements ReplicationComponen
         boolean enabled = PropertiesUtil.toBoolean(config.get(ENABLED), true);
         String name = PropertiesUtil.toString(config.get(NAME), null);
 
+        kind = PropertiesUtil.toString(config.get(KIND), null);
+
         if (enabled) {
             props.put(ENABLED, true);
             props.put(NAME, name);
@@ -116,21 +105,34 @@ public class CompactSimpleReplicationAgentFactory implements ReplicationComponen
                 listenerReg = context.registerService(ReplicationComponentListener.class.getName(), this, props);
             }
 
-            if (agentReg == null) {
+            if (componentReg == null) {
+                Map<String, Object> configProperties = SettingsUtils.extractMap(PROPERTIES, config);
+
                 Map<String, Object> properties = new HashMap<String, Object>();
                 properties.putAll(config);
+                properties.putAll(configProperties);
 
-                properties.put("type", "simple");
-                SimpleReplicationAgent agent = (SimpleReplicationAgent) componentProvider.createComponent(ReplicationAgent.class, properties);
+                String componentClass = null;
+                Object componentObject = null;
 
-                log.debug("activated agent {}", agent != null ? agent.getName() : null);
-
-                if (agent != null) {
-                    props.put(NAME, agent.getName());
-
-                    // register agent service
-                    agentReg = context.registerService(ReplicationAgent.class.getName(), agent, props);
+                if ("agent".equals(kind)) {
+                    SimpleReplicationAgent agent = (SimpleReplicationAgent) componentProvider.createComponent(ReplicationAgent.class, properties);
+                    componentClass = ReplicationAgent.class.getName();
+                    componentObject = agent;
                     agent.enable();
+
+                }
+                else if ("trigger".equals(kind)) {
+
+                    ReplicationTrigger trigger = componentProvider.createComponent(ReplicationTrigger.class, properties);
+
+                    componentClass = ReplicationTrigger.class.getName();
+                    componentObject = trigger;
+                }
+
+                if (componentObject != null && componentClass != null) {
+                    componentReg = context.registerService(componentClass, componentObject, props);
+                    log.debug("activated component kind {} name", kind, name);
                 }
             }
         }
@@ -138,13 +140,20 @@ public class CompactSimpleReplicationAgentFactory implements ReplicationComponen
 
     @Deactivate
     private void deactivate(BundleContext context) {
-        log.debug("deactivating agent");
-        if (agentReg != null) {
-            ServiceReference reference = agentReg.getReference();
-            SimpleReplicationAgent replicationAgent = (SimpleReplicationAgent) context.getService(reference);
-            replicationAgent.disable();
-            agentReg.unregister();
-            agentReg = null;
+        log.debug("deactivating component");
+        if (componentReg != null) {
+            ServiceReference reference = componentReg.getReference();
+
+            if ("agent".equals(kind)) {
+                SimpleReplicationAgent replicationComponent = (SimpleReplicationAgent) context.getService(reference);
+                replicationComponent.disable();
+
+            }
+            else if ("trigger".equals(kind)) {
+
+            }
+            componentReg.unregister();
+            componentReg = null;
         }
         if (listenerReg != null) {
             listenerReg.unregister();
@@ -155,9 +164,9 @@ public class CompactSimpleReplicationAgentFactory implements ReplicationComponen
     private void refresh(boolean isBinding) {
         try {
             if (savedContext != null && savedConfig != null) {
-                if (isBinding && agentReg == null) {
+                if (isBinding && componentReg == null) {
                     activate(savedContext, savedConfig);
-                } else if (!isBinding && agentReg != null) {
+                } else if (!isBinding && componentReg != null) {
                     deactivate(savedContext);
                 }
             }

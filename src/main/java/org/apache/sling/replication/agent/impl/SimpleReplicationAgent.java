@@ -39,7 +39,8 @@ import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.queue.ReplicationQueueItemState;
 import org.apache.sling.replication.queue.ReplicationQueueProcessor;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
-import org.apache.sling.replication.rule.ReplicationRuleEngine;
+import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
+import org.apache.sling.replication.trigger.ReplicationTrigger;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.slf4j.Logger;
@@ -62,24 +63,22 @@ public class SimpleReplicationAgent implements ReplicationAgent {
 
     private final ReplicationEventFactory replicationEventFactory;
 
-    private final String name;
+    private final List<ReplicationTrigger> triggers;
 
-    private final String[] rules;
+    private final String name;
 
     private final boolean useAggregatePaths;
 
-    private final ReplicationRuleEngine ruleEngine;
-
-    public SimpleReplicationAgent(String name, String[] rules,
+    public SimpleReplicationAgent(String name,
                                   boolean useAggregatePaths,
                                   boolean passive,
                                   ReplicationPackageImporter replicationPackageImporter,
                                   ReplicationPackageExporter replicationPackageExporter,
                                   ReplicationQueueProvider queueProvider,
                                   ReplicationQueueDistributionStrategy queueDistributionHandler,
-                                  ReplicationEventFactory replicationEventFactory, ReplicationRuleEngine ruleEngine) {
+                                  ReplicationEventFactory replicationEventFactory,
+                                  List<ReplicationTrigger> triggers) {
         this.name = name;
-        this.rules = rules;
         this.passive = passive;
         this.replicationPackageImporter = replicationPackageImporter;
         this.replicationPackageExporter = replicationPackageExporter;
@@ -87,7 +86,7 @@ public class SimpleReplicationAgent implements ReplicationAgent {
         this.queueDistributionStrategy = queueDistributionHandler;
         this.useAggregatePaths = useAggregatePaths;
         this.replicationEventFactory = replicationEventFactory;
-        this.ruleEngine = ruleEngine;
+        this.triggers = triggers == null ? new ArrayList<ReplicationTrigger>() : triggers;
     }
 
     public ReplicationResponse execute(ReplicationRequest replicationRequest)
@@ -193,9 +192,12 @@ public class SimpleReplicationAgent implements ReplicationAgent {
 
     public void enable() {
         log.info("enabling agent");
-        // apply rules if any
-        if (rules.length > 0) {
-            ruleEngine.applyRules(this, rules);
+        // register triggers if any
+
+        for (int i=0; i < triggers.size(); i++) {
+            ReplicationTrigger trigger = triggers.get(i);
+            String handlerId = getName() + "-" + i;
+            trigger.register(handlerId, new AgentBasedTriggerRequestHandler(this));
         }
 
         if (!isPassive()) {
@@ -205,8 +207,10 @@ public class SimpleReplicationAgent implements ReplicationAgent {
 
     public void disable() {
         log.info("disabling agent");
-        if (rules != null) {
-            ruleEngine.unapplyRules(this, rules);
+        for (int i=0; i < triggers.size(); i++) {
+            ReplicationTrigger trigger = triggers.get(i);
+            String handlerId = getName() + "-" + i;
+            trigger.unregister(handlerId);
         }
 
         if (!isPassive()) {
@@ -234,6 +238,23 @@ public class SimpleReplicationAgent implements ReplicationAgent {
         public boolean process(String queueName, ReplicationQueueItem packageInfo) {
             log.info("running package queue processor");
             return processTransportQueue(packageInfo);
+        }
+    }
+
+    public class AgentBasedTriggerRequestHandler implements ReplicationTriggerRequestHandler {
+        private final ReplicationAgent agent;
+
+        public AgentBasedTriggerRequestHandler(ReplicationAgent agent) {
+            this.agent = agent;
+        }
+
+        public void handle(ReplicationRequest request) {
+            try {
+                agent.execute(request);
+            }
+            catch (AgentReplicationException e) {
+                log.error("Error executing handler", e);
+            }
         }
     }
 }

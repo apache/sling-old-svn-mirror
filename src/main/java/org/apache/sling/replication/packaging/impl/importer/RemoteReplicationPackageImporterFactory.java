@@ -21,7 +21,14 @@ package org.apache.sling.replication.packaging.impl.importer;
 import java.io.InputStream;
 import java.util.Map;
 
-import org.apache.felix.scr.annotations.*;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyOption;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackage;
@@ -92,7 +99,6 @@ public class RemoteReplicationPackageImporterFactory implements ReplicationPacka
         return new RemoteReplicationPackageImporter(transportAuthenticationProvider, endpoints, transportEndpointStrategyType);
 
     }
-
 
     public boolean importPackage(ReplicationPackage replicationPackage) {
        return importer.importPackage(replicationPackage);

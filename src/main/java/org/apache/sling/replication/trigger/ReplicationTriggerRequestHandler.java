@@ -16,23 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.rule;
+package org.apache.sling.replication.trigger;
+
+import org.apache.sling.replication.communication.ReplicationRequest;
 
 /**
- * a replication trigger
+ * An handler for {@link org.apache.sling.replication.communication.ReplicationRequest}s passed to a
+ * {@link org.apache.sling.replication.trigger.ReplicationTrigger}
  */
-public interface ReplicationTrigger {
+public interface ReplicationTriggerRequestHandler {
 
     /**
-     * register a replication trigger
-     * @param handlerId id of the given handler
-     * @param requestHandler handler
+     * handle the request according to the trigger implementation.
+     *
+     * @param request a replication request
      */
-    void register(String handlerId, ReplicationRequestHandler requestHandler);
+    void handle(ReplicationRequest request);
 
-    /**
-     * unregister the handler with the given id, if existing
-     * @param handlerId id of the handler to unregister
-     */
-    void unregister(String handlerId);
 }

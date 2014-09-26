@@ -18,7 +18,6 @@
  */
 package org.apache.sling.replication.serialization.impl.vlt;
 
-import java.lang.reflect.Field;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.communication.ReplicationRequest;

@@ -20,14 +20,14 @@
 package org.apache.sling.replication.resources.impl.common;
 
 
+import java.lang.reflect.Array;
+import java.util.Map;
+
 import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
-
-import java.lang.reflect.Array;
-import java.util.Map;
 
 /**
  * Read only resource that can adapt to one of the object provided as parameter.

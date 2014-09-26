@@ -16,22 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.rule.impl;
+package org.apache.sling.replication.trigger.impl;
 
 import java.io.IOException;
-import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import org.apache.felix.scr.annotations.*;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIUtils;
@@ -43,75 +37,72 @@ import org.apache.http.nio.ContentDecoder;
 import org.apache.http.nio.IOControl;
 import org.apache.http.nio.protocol.BasicAsyncRequestProducer;
 import org.apache.http.nio.protocol.BasicAsyncResponseConsumer;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.replication.communication.ReplicationActionType;
+import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.communication.ReplicationRequest;
-import org.apache.sling.replication.rule.ReplicationRequestHandler;
-import org.apache.sling.replication.rule.ReplicationRule;
+import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
+import org.apache.sling.replication.trigger.ReplicationTrigger;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * {@link org.apache.sling.replication.rule.ReplicationRule} to trigger replication upon reception of server sent events
+ * {@link org.apache.sling.replication.trigger.ReplicationTrigger} to trigger replication upon reception of server sent events
  * on a certain URL
  */
-@Component(immediate = true, label = "Rule for listening on Server Sent Events on a certain URL")
-@Service(value = ReplicationRule.class)
-public class RemoteEventReplicationRule implements ReplicationRule {
-
-    @Property(label = "Name", value = "remote", propertyPrivate = true)
-    private static final String NAME = "name";
+public class RemoteEventReplicationTrigger implements ReplicationTrigger {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private static final String SIGNATURE = "remote trigger on {host} with user {user} and password {password}";
+    public final static String TYPE = "remoteEvent";
+    public final static String ENDPOINT = "endpoint";
 
-    private static final String SIGNATURE_REGEX = "remote\\strigger\\son\\s([^\\s]+)\\swith\\suser\\s([^\\s]+)\\sand\\spassword\\s([^\\s]+)";
+    private final ReplicationEndpoint endpoint;
+    private final TransportAuthenticationProvider<CredentialsProvider, CredentialsProvider> authenticationProvider;
 
-    private static final Pattern signaturePattern = Pattern.compile(SIGNATURE_REGEX);
-
-    @Reference
     private Scheduler scheduler;
 
-    private Map<String, Future<HttpResponse>> requests;
+    private Map<String, Future<HttpResponse>> requests = new ConcurrentHashMap<String, Future<HttpResponse>>();
 
-    @Activate
-    protected void activate() {
-        this.requests = new ConcurrentHashMap<String, Future<HttpResponse>>();
+    public RemoteEventReplicationTrigger(Map<String, Object> config, TransportAuthenticationProvider<CredentialsProvider, CredentialsProvider> authenticationProvider, Scheduler scheduler) {
+        this(PropertiesUtil.toString(config.get(ENDPOINT), null),
+                authenticationProvider,
+                scheduler);
     }
 
-    public String getSignature() {
-        return SIGNATURE;
+    public RemoteEventReplicationTrigger(String endpoint, TransportAuthenticationProvider<CredentialsProvider, CredentialsProvider> authenticationProvider, Scheduler scheduler) {
+        if (endpoint == null) {
+            throw new IllegalArgumentException("Endpoint is required");
+        }
+
+        if (!authenticationProvider.canAuthenticate(CredentialsProvider.class)) {
+            throw new IllegalArgumentException("Authentication provider cannot authenticate CredentialsProvider");
+        }
+
+        this.authenticationProvider = authenticationProvider;
+        this.endpoint = new ReplicationEndpoint(endpoint);
+        this.scheduler = scheduler;
     }
 
-    public boolean signatureMatches(String ruleString) {
-        return ruleString.matches(SIGNATURE_REGEX);
-    }
+    public void register(String handlerId, ReplicationTriggerRequestHandler requestHandler) {
+        try {
+            log.info("applying remote event replication rule");
 
-    public void apply(String handleId, ReplicationRequestHandler agent, String ruleString) {
-        Matcher matcher = signaturePattern.matcher(ruleString);
-        if (matcher.find()) {
-            String remoteHost = matcher.group(1);
-            String user = matcher.group(2);
-            String password = matcher.group(3);
+            ScheduleOptions options = scheduler.NOW();
+            options.name(handlerId);
+            scheduler.schedule(new EventBasedReplication(handlerId, requestHandler), options);
 
-            try {
-                log.info("applying remote event replication rule");
-
-                ScheduleOptions options = scheduler.NOW();
-                options.name(handleId);
-                scheduler.schedule(new EventBasedReplication(handleId, agent, remoteHost, user, password), options);
-
-            } catch (Exception e) {
-                log.error("cannot apply rule {} to agent {}", ruleString, agent);
-                log.error("{}", e);
-            }
+        } catch (Exception e) {
+            log.error("handler {} cannot be registered", handlerId, e);
         }
     }
 
-    public void undo(String handleId) {
-        Future<HttpResponse> httpResponseFuture = requests.remove(handleId);
+    public void unregister(String handlerId) {
+        Future<HttpResponse> httpResponseFuture = requests.remove(handlerId);
         if (httpResponseFuture != null) {
             httpResponseFuture.cancel(true);
         }
@@ -120,9 +111,9 @@ public class RemoteEventReplicationRule implements ReplicationRule {
     private class SSEResponseConsumer extends BasicAsyncResponseConsumer {
 
         private final String handleId;
-        private final ReplicationRequestHandler agent;
+        private final ReplicationTriggerRequestHandler agent;
 
-        private SSEResponseConsumer(String handleId, ReplicationRequestHandler agent) {
+        private SSEResponseConsumer(String handleId, ReplicationTriggerRequestHandler agent) {
             this.handleId = handleId;
             this.agent = agent;
         }
@@ -136,7 +127,7 @@ public class RemoteEventReplicationRule implements ReplicationRule {
 
             // TODO : currently it always triggers poll request on /, should this be configurable?
             ReplicationRequest replicationRequest = new ReplicationRequest(System.currentTimeMillis(), ReplicationActionType.POLL, "/");
-            agent.execute(replicationRequest);
+            agent.handle(replicationRequest);
             log.info("replication request to agent {} sent ({} {})", new Object[]{
                     handleId,
                     replicationRequest.getAction(),
@@ -154,36 +145,31 @@ public class RemoteEventReplicationRule implements ReplicationRule {
 
     private class EventBasedReplication implements Runnable {
         private final String handleId;
-        private final ReplicationRequestHandler agent;
-        private final String targetTransport;
-        private final String userName;
-        private final String password;
+        private final ReplicationTriggerRequestHandler requestHandler;
 
-        public EventBasedReplication(String handleId, ReplicationRequestHandler agent, String targetTransport, String userName, String password) {
+        public EventBasedReplication(String handleId, ReplicationTriggerRequestHandler requestHandler) {
             this.handleId = handleId;
-            this.agent = agent;
-            this.targetTransport = targetTransport;
-            this.userName = userName;
-            this.password = password;
+            this.requestHandler = requestHandler;
+
         }
 
         public void run() {
             try {
-                log.debug("getting events from {}", targetTransport);
-
-                URI eventEndpoint = URI.create(targetTransport);
+                log.debug("getting events from {}", endpoint.getUri().toString());
 
                 log.debug("preparing request");
 
                 CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-                credentialsProvider.setCredentials(
-                        new AuthScope(eventEndpoint.getHost(), eventEndpoint.getPort()),
-                        new UsernamePasswordCredentials(userName, password));
+
+                TransportAuthenticationContext context = new TransportAuthenticationContext();
+                context.addAttribute("endpoint", endpoint);
+                credentialsProvider =  authenticationProvider.authenticate(credentialsProvider, context);
+
                 final CloseableHttpAsyncClient httpClient = HttpAsyncClients.custom()
                         .setDefaultCredentialsProvider(credentialsProvider)
                         .build();
 
-                HttpGet get = new HttpGet(eventEndpoint);
+                HttpGet get = new HttpGet(endpoint.getUri());
                 HttpHost target = URIUtils.extractHost(get.getURI());
                 BasicAsyncRequestProducer basicAsyncRequestProducer = new BasicAsyncRequestProducer(target, get);
                 httpClient.start();
@@ -191,7 +177,7 @@ public class RemoteEventReplicationRule implements ReplicationRule {
                     log.debug("sending request");
                     Future<HttpResponse> futureResponse = httpClient.execute(
                             basicAsyncRequestProducer,
-                            new SSEResponseConsumer(handleId, agent), new FutureCallback<HttpResponse>() {
+                            new SSEResponseConsumer(handleId, requestHandler), new FutureCallback<HttpResponse>() {
                                 public void completed(HttpResponse httpResponse) {
                                     log.debug("response received {}", httpResponse);
                                 }
@@ -208,7 +194,7 @@ public class RemoteEventReplicationRule implements ReplicationRule {
                     futureResponse.get();
 
                 } catch (Exception e) {
-                    log.warn("cannot communicate with {} - {}", targetTransport, e);
+                    log.warn("cannot communicate with {} - {}",  endpoint, e);
                 }
                 httpClient.close();
                 log.debug("request finished");

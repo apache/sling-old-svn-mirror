@@ -18,9 +18,8 @@
  */
 package org.apache.sling.replication.queue.impl.jobhandling;
 
-import java.io.InputStream;
 import java.util.Map;
-import org.apache.commons.io.IOUtils;
+
 import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.junit.Test;
 

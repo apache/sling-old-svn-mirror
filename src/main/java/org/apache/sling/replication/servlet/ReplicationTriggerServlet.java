@@ -33,8 +33,8 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.replication.communication.ReplicationRequest;
-import org.apache.sling.replication.rule.ReplicationRequestHandler;
-import org.apache.sling.replication.rule.ReplicationTrigger;
+import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
+import org.apache.sling.replication.trigger.ReplicationTrigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +46,7 @@ import org.slf4j.LoggerFactory;
 @Service(value = Servlet.class)
 @Properties({
         @Property(name = "sling.servlet.resourceTypes", value = "sling/replication/service/trigger"),
+        @Property(name = "sling.servlet.extensions", value="event"),
         @Property(name = "sling.servlet.methods", value = "GET")
 })
 public class ReplicationTriggerServlet extends SlingAllMethodsServlet {
@@ -86,8 +87,8 @@ public class ReplicationTriggerServlet extends SlingAllMethodsServlet {
 
         String handlerId = "ReplicationTriggerServlet" + UUID.randomUUID().toString();
 
-        replicationTrigger.register(handlerId, new ReplicationRequestHandler() {
-            public void execute(ReplicationRequest request) {
+        replicationTrigger.register(handlerId, new ReplicationTriggerRequestHandler() {
+            public void handle(ReplicationRequest request) {
                 writeEvent(writer, request);
             }
         });

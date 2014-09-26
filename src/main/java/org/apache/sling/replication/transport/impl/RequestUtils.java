@@ -19,15 +19,14 @@
 
 package org.apache.sling.replication.transport.impl;
 
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.replication.communication.ReplicationActionType;
-import org.apache.sling.replication.communication.ReplicationParameter;
-import org.apache.sling.replication.communication.ReplicationRequest;
-
 import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.net.URISyntaxException;
+
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.sling.replication.communication.ReplicationActionType;
+import org.apache.sling.replication.communication.ReplicationParameter;
+import org.apache.sling.replication.communication.ReplicationRequest;
 
 public class RequestUtils {
 

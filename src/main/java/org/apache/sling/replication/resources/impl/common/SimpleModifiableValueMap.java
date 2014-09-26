@@ -18,13 +18,12 @@
  */
 package org.apache.sling.replication.resources.impl.common;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.wrappers.ModifiableValueMapDecorator;
-import org.apache.sling.replication.resources.impl.common.AbstractModifyingResourceProvider;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * ValueMap that signals to the underlying resource provider the its values are changed.

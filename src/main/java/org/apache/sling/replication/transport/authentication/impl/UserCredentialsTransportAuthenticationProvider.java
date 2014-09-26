@@ -18,7 +18,12 @@
  */
 package org.apache.sling.replication.transport.authentication.impl;
 
+import java.util.Map;
+
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.fluent.Executor;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
@@ -28,10 +33,8 @@ import org.apache.sling.replication.transport.authentication.TransportAuthentica
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-
 public class UserCredentialsTransportAuthenticationProvider implements
-        TransportAuthenticationProvider<Executor, Executor> {
+        TransportAuthenticationProvider {
 
     public final static String USERNAME = "username";
     public final static String PASSWORD = "password";
@@ -57,23 +60,37 @@ public class UserCredentialsTransportAuthenticationProvider implements
         this.password = password;
     }
 
-    public Executor authenticate(Executor authenticable, TransportAuthenticationContext context)
-            throws TransportAuthenticationException {
-        ReplicationEndpoint endpoint = context.getAttribute("endpoint",
-                ReplicationEndpoint.class);
-        if (endpoint != null) {
-            Executor authenticated = authenticable.auth(new HttpHost(endpoint
-                    .getUri().getHost()), username, password);
+    public Object authenticate(Object authenticable, TransportAuthenticationContext context) throws TransportAuthenticationException {
+
+        ReplicationEndpoint endpoint = context.getAttribute("endpoint", ReplicationEndpoint.class);
+
+        if (endpoint == null) {
+            throw new TransportAuthenticationException("the endpoint to authenticate is missing from the context");
+        }
+
+        if (authenticable instanceof Executor) {
+            Executor executor = (Executor) authenticable;
+
+            Executor authenticated = executor.auth(new HttpHost(endpoint.getUri().getHost()),
+                    username, password);
             log.debug("authenticated executor HTTP client with user and password");
             return authenticated;
-        } else {
-            throw new TransportAuthenticationException(
-                    "the endpoint to authenticate is missing from the context");
+
         }
+        else if (authenticable instanceof CredentialsProvider) {
+            CredentialsProvider credentialsProvider = (CredentialsProvider) authenticable;
+            credentialsProvider.setCredentials(new AuthScope(new HttpHost(endpoint.getUri().getHost())),
+                    new UsernamePasswordCredentials(username, password));
+
+            log.debug("authenticated CredentialsProvider HTTP client with user and password");
+            return credentialsProvider;
+        }
+
+        return null;
     }
 
-    public boolean canAuthenticate(Class<?> authenticable) {
-        return Executor.class.isAssignableFrom(authenticable);
+    public boolean canAuthenticate(Class authenticable) {
+        return Executor.class.isAssignableFrom(authenticable) || CredentialsProvider.class.isAssignableFrom(authenticable);
     }
 
 }

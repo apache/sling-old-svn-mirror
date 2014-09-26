@@ -18,8 +18,14 @@
  */
 package org.apache.sling.replication.serialization.impl.vlt;
 
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.util.Properties;
+
 import org.apache.commons.io.IOUtils;
-import org.apache.felix.scr.annotations.*;
 import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.config.DefaultMetaInf;
 import org.apache.jackrabbit.vault.fs.config.DefaultWorkspaceFilter;
@@ -28,7 +34,6 @@ import org.apache.jackrabbit.vault.packaging.ExportOptions;
 import org.apache.jackrabbit.vault.packaging.JcrPackage;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
@@ -36,17 +41,8 @@ import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.apache.sling.replication.serialization.impl.AbstractReplicationPackageBuilder;
-import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.util.Properties;
 
 /**
  * a {@link org.apache.sling.replication.serialization.ReplicationPackageBuilder} based on Apache Jackrabbit FileVault.

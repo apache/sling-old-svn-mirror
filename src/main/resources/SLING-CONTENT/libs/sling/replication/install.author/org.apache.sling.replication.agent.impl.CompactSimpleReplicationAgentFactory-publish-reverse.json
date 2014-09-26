@@ -30,9 +30,18 @@
         "name=error"
     ],
 
-    "rules" : [
-        "scheduled poll every 30 sec",
-        "remote trigger on http://localhost:4503/libs/sling/replication/services/triggers/content-event?3600000 with user admin and password admin"
+    "trigger0" : [
+        "type=scheduledEvent",
+        "action=poll",
+        "seconds=30"
+    ],
+
+    "trigger1" : [
+        "type=remoteEvent",
+        "endpoint=http://localhost:4503/libs/sling/replication/services/triggers/content-changed.event",
+
+        "authenticationProvider/type=service",
+        "authenticationProvider/name=publishAdmin"
     ]
 
 }

@@ -38,7 +38,7 @@ public class RepositoryTransportAuthenticationProvider implements TransportAuthe
         this.serviceName = serviceName;
     }
 
-    public boolean canAuthenticate(Class<?> authenticable) {
+    public boolean canAuthenticate(Class authenticable) {
         return SlingRepository.class.isAssignableFrom(authenticable);
     }
 

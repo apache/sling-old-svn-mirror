@@ -18,7 +18,11 @@
  */
 package org.apache.sling.replication.packaging.impl.importer;
 
-import org.apache.felix.scr.annotations.*;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Dictionary;
+import java.util.Hashtable;
+
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.event.ReplicationEventType;
 import org.apache.sling.replication.packaging.ReplicationPackage;
@@ -27,11 +31,6 @@ import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Dictionary;
-import java.util.Hashtable;
 
 /**
  * {@link org.apache.sling.replication.packaging.ReplicationPackageImporter} implementation which imports a FileVault

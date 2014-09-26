@@ -19,14 +19,16 @@
 package org.apache.sling.replication.packaging.impl.importer;
 
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Dictionary;
-import java.util.Hashtable;
 import java.util.Map;
 
-import org.apache.felix.scr.annotations.*;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.replication.event.ReplicationEventFactory;
-import org.apache.sling.replication.event.ReplicationEventType;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;

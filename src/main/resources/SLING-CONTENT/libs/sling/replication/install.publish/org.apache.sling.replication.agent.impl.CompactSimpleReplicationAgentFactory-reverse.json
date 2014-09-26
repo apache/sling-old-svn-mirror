@@ -27,6 +27,8 @@
         "name=error"
     ],
 
-    "rules" : ["trigger on path: /content/usergenerated"]
-
+    "trigger0" : [
+        "type=resourceEvent",
+        "path=/content/usergenerated"
+    ]
 }

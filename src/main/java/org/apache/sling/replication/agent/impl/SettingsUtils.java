@@ -18,15 +18,30 @@
  */
 package org.apache.sling.replication.agent.impl;
 
-import org.apache.sling.commons.osgi.PropertiesUtil;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import java.util.*;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 
 public class SettingsUtils {
 
     private static final char COMPONENT_DELIM = '/';
     private static final char COMPONENT_MAP_BEGIN = '[';
     private static final char COMPONENT_MAP_END = ']';
+
+    public static Map<String, Object> extractMap(String key, Map<String, Object> objectMap) {
+        Object value = objectMap.get(key);
+
+        if (value instanceof String[]) {
+            return compactMap(SettingsUtils.toMap((String[]) value));
+
+        }
+        return null;
+    }
+
 
     public static Map<String, Object> compactMap(Map<String, Object> valueMap) {
 

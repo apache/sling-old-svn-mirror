@@ -18,7 +18,10 @@
  */
 package org.apache.sling.replication.packaging.impl.importer;
 
-import org.apache.http.client.fluent.Executor;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackage;
@@ -31,11 +34,6 @@ import org.apache.sling.replication.transport.impl.SimpleHttpReplicationTranspor
 import org.apache.sling.replication.transport.impl.TransportEndpointStrategyType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Remote implementation of {@link org.apache.sling.replication.packaging.ReplicationPackageImporter}
@@ -54,8 +52,6 @@ public class RemoteReplicationPackageImporter implements ReplicationPackageImpor
                                             String[] endpoints,
                                             TransportEndpointStrategyType transportEndpointStrategyType) {
 
-
-
         List<ReplicationTransportHandler> transportHandlers = new ArrayList<ReplicationTransportHandler>();
 
         for (String endpoint : endpoints) {
@@ -68,7 +64,6 @@ public class RemoteReplicationPackageImporter implements ReplicationPackageImpor
                 transportEndpointStrategyType);
 
     }
-
 
     public boolean importPackage(ReplicationPackage replicationPackage) {
         boolean result = false;
