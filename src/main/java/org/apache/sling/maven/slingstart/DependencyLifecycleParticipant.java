@@ -41,6 +41,7 @@ import org.apache.sling.slingstart.model.SSMConstants;
 import org.apache.sling.slingstart.model.SSMDeliverable;
 import org.apache.sling.slingstart.model.SSMFeature;
 import org.apache.sling.slingstart.model.SSMStartLevel;
+import org.apache.sling.slingstart.model.SSMUtil;
 import org.apache.sling.slingstart.model.txt.TXTSSMModelWriter;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
@@ -116,14 +117,16 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
         TXTSSMModelWriter.write(w, model);
         project.setContextValue(SSMDeliverable.class.getName() + "/text", w.toString());
 
+        final SSMDeliverable effectiveModel = SSMUtil.getEffectiveModel(model);
+
         // start with base artifact
-        final SSMArtifact base = ModelUtils.getBaseArtifact(model);
+        final SSMArtifact base = ModelUtils.getBaseArtifact(effectiveModel);
         final String[] classifiers = new String[] {null, BuildConstants.CLASSIFIER_APP, BuildConstants.CLASSIFIER_WEBAPP};
         for(final String c : classifiers) {
             final Dependency dep = new Dependency();
             dep.setGroupId(base.getGroupId());
             dep.setArtifactId(base.getArtifactId());
-            dep.setVersion(model.getValue(base.getVersion()));
+            dep.setVersion(base.getVersion());
             dep.setType(base.getType());
             dep.setClassifier(c);
             if ( BuildConstants.CLASSIFIER_WEBAPP.equals(c) ) {
@@ -135,7 +138,7 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
             project.getDependencies().add(dep);
         }
 
-        addDependencies(model, log, project);
+        addDependencies(effectiveModel, log, project);
     }
 
     private static void addDependencies(final SSMDeliverable model, final Logger log, final MavenProject project) {
@@ -149,7 +152,7 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
                     final Dependency dep = new Dependency();
                     dep.setGroupId(a.getGroupId());
                     dep.setArtifactId(a.getArtifactId());
-                    dep.setVersion(model.getValue(a.getVersion()));
+                    dep.setVersion(a.getVersion());
                     dep.setType(a.getType());
                     dep.setClassifier(a.getClassifier());
                     dep.setScope(PROVIDED);
