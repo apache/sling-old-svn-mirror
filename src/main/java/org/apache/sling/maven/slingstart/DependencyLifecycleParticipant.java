@@ -41,7 +41,7 @@ import org.apache.sling.slingstart.model.SSMConstants;
 import org.apache.sling.slingstart.model.SSMDeliverable;
 import org.apache.sling.slingstart.model.SSMFeature;
 import org.apache.sling.slingstart.model.SSMStartLevel;
-import org.apache.sling.slingstart.model.xml.XMLSSMModelWriter;
+import org.apache.sling.slingstart.model.txt.TXTSSMModelWriter;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.codehaus.plexus.logging.Logger;
@@ -113,7 +113,7 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
         final SSMDeliverable model = ModelUtils.readFullModel(new File(directory), dependencies, project, session, log);
 
         final StringWriter w = new StringWriter();
-        XMLSSMModelWriter.write(w, model);
+        TXTSSMModelWriter.write(w, model);
         project.setContextValue(SSMDeliverable.class.getName() + "/text", w.toString());
 
         // start with base artifact
