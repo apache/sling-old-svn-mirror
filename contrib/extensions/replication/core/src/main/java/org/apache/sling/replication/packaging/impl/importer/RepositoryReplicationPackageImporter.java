@@ -101,7 +101,7 @@ public class RepositoryReplicationPackageImporter implements ReplicationPackageI
 
                 Dictionary<Object, Object> props = new Properties();
                 props.put("path", replicationPackage.getPaths());
-                replicationEventFactory.generateEvent(ReplicationEventType.PACKAGE_REPLICATED, props);
+                replicationEventFactory.generateEvent(ReplicationEventType.PACKAGE_IMPORTED, props);
             } else {
                 throw new Exception("could not get a Session to deliver package to the repository");
             }

@@ -24,9 +24,13 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Dictionary;
+import java.util.Hashtable;
 
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.event.ReplicationEventFactory;
+import org.apache.sling.replication.event.ReplicationEventType;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
@@ -40,10 +44,14 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractReplicationPackageBuilder implements ReplicationPackageBuilder {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
+
     private final String type;
 
-    public AbstractReplicationPackageBuilder(String type) {
+    private final ReplicationEventFactory replicationEventFactory;
+
+    public AbstractReplicationPackageBuilder(String type, ReplicationEventFactory replicationEventFactory) {
         this.type = type;
+        this.replicationEventFactory = replicationEventFactory;
     }
 
     public ReplicationPackage createPackage(ReplicationRequest request)
@@ -54,10 +62,16 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
         } else if (ReplicationActionType.DELETE.equals(request.getAction())) {
             replicationPackage = new VoidReplicationPackage(request, type);
         } else if (ReplicationActionType.POLL.equals(request.getAction())) {
-            replicationPackage = new VoidReplicationPackage(request, type); // TODO : change this
+            replicationPackage = new VoidReplicationPackage(request, type);
         } else {
             throw new ReplicationPackageBuildingException("unknown action type "
                     + request.getAction());
+        }
+        if (replicationPackage != null && replicationEventFactory != null) {
+            Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
+            dictionary.put("replication.action", replicationPackage.getAction());
+            dictionary.put("replication.path", replicationPackage.getPaths());
+            replicationEventFactory.generateEvent(ReplicationEventType.PACKAGE_CREATED, dictionary);
         }
         return replicationPackage;
     }
@@ -94,11 +108,21 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
 
     public boolean installPackage(ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {
         ReplicationActionType actionType = ReplicationActionType.fromName(replicationPackage.getAction());
+        boolean installed;
         if (ReplicationActionType.DELETE.equals(actionType)) {
-            return installDeletePackage(replicationPackage);
+            installed = installDeletePackage(replicationPackage);
+        } else {
+            installed = installPackageInternal(replicationPackage);
         }
-        return installPackageInternal(replicationPackage);
 
+        if (installed && replicationEventFactory != null) {
+            Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
+            dictionary.put("replication.action", replicationPackage.getAction());
+            dictionary.put("replication.path", replicationPackage.getPaths());
+            replicationEventFactory.generateEvent(ReplicationEventType.PACKAGE_INSTALLED, dictionary);
+        }
+
+        return installed;
     }
 
     private boolean installDeletePackage(ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {

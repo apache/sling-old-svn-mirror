@@ -152,13 +152,11 @@ public class SimpleReplicationAgent implements ReplicationAgent {
             ReplicationQueueItemState state = queueDistributionStrategy.add(getName(), replicationQueueItem,
                     queueProvider);
 
-            // TODO : it probably makes sense to always generate the package queued event
-            if (isPassive()) {
-                Dictionary<Object, Object> properties = new Properties();
-                properties.put("replication.package.paths", replicationQueueItem.getPaths());
-                properties.put("replication.agent.name", name);
-                replicationEventFactory.generateEvent(ReplicationEventType.PACKAGE_QUEUED, properties);
-            }
+            Dictionary<Object, Object> properties = new Properties();
+            properties.put("replication.package.paths", replicationQueueItem.getPaths());
+            properties.put("replication.agent.name", name);
+            replicationEventFactory.generateEvent(ReplicationEventType.PACKAGE_QUEUED, properties);
+
             if (state != null) {
                 replicationResponse.setStatus(state.getItemState().toString());
                 replicationResponse.setSuccessful(state.isSuccessful());
@@ -225,6 +223,12 @@ public class SimpleReplicationAgent implements ReplicationAgent {
             ReplicationPackage replicationPackage = replicationPackageExporter.exportPackageById(queueItem.getId());
             if (replicationPackage != null) {
                 replicationPackageImporter.importPackage(replicationPackage);
+
+                Dictionary<Object, Object> properties = new Properties();
+                properties.put("replication.package.paths", replicationPackage.getPaths());
+                properties.put("replication.agent.name", name);
+                replicationEventFactory.generateEvent(ReplicationEventType.PACKAGE_REPLICATED, properties);
+
                 replicationPackage.delete();
                 success = true;
             }
