@@ -31,7 +31,7 @@ import java.util.Map;
  *
  * At least it has a "global" feature which contains artifacts that are always installed..
  */
-public class SSMDeliverable {
+public class SSMDeliverable extends SSMTraceable {
 
     private final List<SSMFeature> features = new ArrayList<SSMFeature>();
 
@@ -81,17 +81,6 @@ public class SSMDeliverable {
 
     public List<SSMFeature> getFeatures() {
         return this.features;
-    }
-
-    /**
-     * validates the object and throws an IllegalStateException
-     *
-     * @throws IllegalStateException
-     */
-    public void validate() {
-        for(final SSMFeature f : this.features) {
-            f.validate();
-        }
     }
 
     /**
@@ -145,7 +134,9 @@ public class SSMDeliverable {
 
     @Override
     public String toString() {
-        return "SSMDeliverable [features=" + features + ", variables="
-                + variables + "]";
+        return "SSMDeliverable [features=" + features
+                + ", variables=" + variables
+                + ( this.getLocation() != null ? ", location=" + this.getLocation() : "")
+                + "]";
     }
 }

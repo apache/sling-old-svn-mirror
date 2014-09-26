@@ -23,7 +23,7 @@ import java.util.Hashtable;
 /**
  * Configuration
  */
-public class SSMConfiguration {
+public class SSMConfiguration extends SSMTraceable {
 
     private final String pid;
 
@@ -54,25 +54,6 @@ public class SSMConfiguration {
     }
 
     /**
-     * validates the object and throws an IllegalStateException
-     * This object needs:
-     * - pid
-     * - properties
-     * - factoryPid is optional
-     *
-     * @throws IllegalStateException
-     */
-    public void validate() {
-        // check/correct values
-        if ( pid == null || pid.isEmpty() ) {
-            throw new IllegalStateException("pid");
-        }
-        if ( properties == null || properties.isEmpty() ) {
-            throw new IllegalStateException("properties");
-        }
-    }
-
-    /**
      * Is this a special configuration?
      * @return Special config
      */
@@ -93,7 +74,10 @@ public class SSMConfiguration {
 
     @Override
     public String toString() {
-        return "SSMConfiguration [pid=" + pid + ", factoryPid=" + factoryPid
-                + ", properties=" + properties + "]";
+        return "SSMConfiguration [pid=" + pid
+                + ", factoryPid=" + factoryPid
+                + ", properties=" + properties
+                + ( this.getLocation() != null ? ", location=" + this.getLocation() : "")
+                + "]";
     }
 }

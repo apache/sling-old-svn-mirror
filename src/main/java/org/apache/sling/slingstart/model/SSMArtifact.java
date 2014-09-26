@@ -25,7 +25,7 @@ import java.util.Map;
  * In addition, the classifier and type can be specified as well.
  * An artifact can have any metadata.
  */
-public class SSMArtifact {
+public class SSMArtifact extends SSMTraceable {
 
     private final String groupId;
     private final String artifactId;
@@ -126,6 +126,27 @@ public class SSMArtifact {
     }
 
     /**
+     * Return a mvn url
+     * @return A mvn url
+     * @see #fromMvnUrl(String)
+     */
+    public String toMvnUrl() {
+        final StringBuilder sb = new StringBuilder("mvn:");
+        sb.append(this.groupId);
+        sb.append('/');
+        sb.append(this.artifactId);
+        sb.append('/');
+        sb.append(this.version);
+        sb.append('/');
+        sb.append(this.type);
+        if ( this.classifier != null ) {
+            sb.append('/');
+            sb.append(this.classifier);
+        }
+        return sb.toString();
+    }
+
+    /**
      * Return the group id.
      * @return The group id.
      */
@@ -196,38 +217,14 @@ public class SSMArtifact {
         return sb.toString();
     }
 
-    /**
-     * Validates the object and throws an IllegalStateException
-     * This object needs:
-     * - groupId
-     * - artifactId
-     * - version
-     * If type is null, it's set to "jar"
-     * If type is "bundle", it's set to "jar"
-     * - classifier is optional
-     *
-     * @throws IllegalStateException
-     */
-    public void validate() {
-        // check/correct values
-        if ( groupId == null || groupId.isEmpty() ) {
-            throw new IllegalStateException(this + " : groupId");
-        }
-        if ( artifactId == null || artifactId.isEmpty() ) {
-            throw new IllegalStateException(this + " : artifactId");
-        }
-        if ( version == null || version.isEmpty() ) {
-            throw new IllegalStateException(this + " : version");
-        }
-        if ( type == null || type.isEmpty() ) {
-            throw new IllegalStateException(this + " : type");
-        }
-    }
-
     @Override
     public String toString() {
-        return "SSMArtifact [groupId=" + groupId + ", artifactId=" + artifactId
-                + ", version=" + version + ", classifier=" + classifier
-                + ", type=" + type + "]";
+        return "SSMArtifact [groupId=" + groupId
+                + ", artifactId=" + artifactId
+                + ", version=" + version
+                + ", classifier=" + classifier
+                + ", type=" + type
+                + ( this.getLocation() != null ? ", location=" + this.getLocation() : "")
+                + "]";
     }
 }
