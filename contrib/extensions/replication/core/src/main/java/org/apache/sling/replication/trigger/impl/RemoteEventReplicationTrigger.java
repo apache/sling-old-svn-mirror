@@ -79,6 +79,10 @@ public class RemoteEventReplicationTrigger implements ReplicationTrigger {
             throw new IllegalArgumentException("Endpoint is required");
         }
 
+        if (authenticationProvider == null) {
+            throw new IllegalArgumentException("Authentication provider is required");
+        }
+
         if (!authenticationProvider.canAuthenticate(CredentialsProvider.class)) {
             throw new IllegalArgumentException("Authentication provider cannot authenticate CredentialsProvider");
         }
