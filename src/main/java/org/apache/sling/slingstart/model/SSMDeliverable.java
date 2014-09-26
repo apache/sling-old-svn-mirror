@@ -33,10 +33,15 @@ import java.util.Map;
  */
 public class SSMDeliverable extends SSMTraceable {
 
+    /** All features. */
     private final List<SSMFeature> features = new ArrayList<SSMFeature>();
 
+    /** Variables. */
     private final Map<String, String> variables = new HashMap<String, String>();
 
+    /**
+     * Construct a new deliverable.
+     */
     public SSMDeliverable() {
         this.features.add(new SSMFeature(null)); // global features
     }
@@ -60,6 +65,7 @@ public class SSMDeliverable extends SSMTraceable {
 
     /**
      * Get the feature if available
+     * @param runmode The single run mode.
      * @return The feature or null
      */
     public SSMFeature getRunMode(final String runMode) {
@@ -68,6 +74,8 @@ public class SSMDeliverable extends SSMTraceable {
 
     /**
      * Get or create the feature.
+     * @param runModes The run modes.
+     * @return The feature for the given run modes.
      */
     public SSMFeature getOrCreateFeature(final String[] runModes) {
         SSMFeature result = findFeature(runModes);
@@ -79,49 +87,13 @@ public class SSMDeliverable extends SSMTraceable {
         return result;
     }
 
+    /**
+     * Return all features.
+     * The returned list is modifiable and directly modifies the model.
+     * @return The list of features.
+     */
     public List<SSMFeature> getFeatures() {
         return this.features;
-    }
-
-    /**
-     * Replace properties in the string.
-     *
-     * @throws IllegalArgumentException
-     */
-    public String getValue(final String v) {
-        String msg = v;
-        // check for variables
-        int pos = -1;
-        int start = 0;
-        while ( ( pos = msg.indexOf('$', start) ) != -1 ) {
-            if ( msg.length() > pos && msg.charAt(pos + 1) == '{' ) {
-                final int endPos = msg.indexOf('}', pos);
-                if ( endPos == -1 ) {
-                    start = pos + 1;
-                } else {
-                    final String name = msg.substring(pos + 2, endPos);
-                    final String value = this.variables.get(name);
-                    if ( value == null ) {
-                        throw new IllegalArgumentException("Unknown variable: " + name);
-                    }
-                    msg = msg.substring(0, pos) + value + msg.substring(endPos + 1);
-                }
-            } else {
-                start = pos + 1;
-            }
-        }
-        return msg;
-    }
-
-    /**
-     * Merge two deliverables.
-     */
-    public void merge(final SSMDeliverable other) {
-        for(final SSMFeature mode : other.features) {
-            final SSMFeature mergeFeature = this.getOrCreateFeature(mode.getRunModes());
-            mergeFeature.merge(mode);
-        }
-        this.variables.putAll(other.variables);
     }
 
     /**

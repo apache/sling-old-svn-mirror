@@ -36,8 +36,6 @@ import org.apache.sling.slingstart.model.SSMArtifact;
 import org.apache.sling.slingstart.model.SSMConfiguration;
 import org.apache.sling.slingstart.model.SSMDeliverable;
 import org.apache.sling.slingstart.model.SSMFeature;
-import org.apache.sling.slingstart.model.SSMTraceable;
-import org.apache.sling.slingstart.model.SSMValidator;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
@@ -348,10 +346,6 @@ public class XMLSSMModelReader {
             });
             xmlReader.parse(new InputSource(reader));
 
-            final Map<SSMTraceable, String> errors = new SSMValidator().validate(result);
-            if ( errors != null ) {
-                throw new IOException("Invalid model definition: " + errors);
-            }
             return result;
         } catch ( final SAXException se) {
             throw new IOException(se);

@@ -142,6 +142,10 @@ public class TXTSSMModelReader {
             } else if ( trimmedLine.startsWith("config:FELIX ") || trimmedLine.startsWith("config: ") ) {
                 checkConfig();
 
+                if ( feature == null ) {
+                    throw new IOException("configuration outside of feature in line " + this.lineNumberReader.getLineNumber());
+                }
+
                 mode = MODE.CONFIGURATION;
                 final int factoryPos = params.indexOf('-');
                 if ( factoryPos == -1 ) {
@@ -150,6 +154,7 @@ public class TXTSSMModelReader {
                     config = new SSMConfiguration(params.substring(pos + 1), params.substring(0, pos));
                 }
                 this.init(config);
+                feature.getConfigurations().add(config);
                 configBuilder = new StringBuilder();
                 configFelixFormat = trimmedLine.startsWith("config:FELIX ");
 
