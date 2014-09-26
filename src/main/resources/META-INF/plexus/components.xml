@@ -74,8 +74,8 @@
       <configuration>
         <type>slingsubsystem</type>
         <includesDependencies>false</includesDependencies>
-        <language>xml</language>
-        <extension>xml</extension>
+        <language>txt</language>
+        <extension>txt</extension>
         <addedToClasspath>false</addedToClasspath>
       </configuration>
     </component>

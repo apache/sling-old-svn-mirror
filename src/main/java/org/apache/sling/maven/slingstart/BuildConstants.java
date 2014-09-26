@@ -19,14 +19,14 @@ package org.apache.sling.maven.slingstart;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.sling.slingstart.model.SSMFeature;
+import org.apache.sling.slingstart.model.SSMConstants;
 
 public abstract class BuildConstants {
 
     // CONTEXTS
     public static final String CONTEXT_GLOBAL = "slingstart:global";
-    public static final String CONTEXT_STANDALONE = "slingstart" + SSMFeature.RUN_MODE_STANDALONE;
-    public static final String CONTEXT_WEBAPP = "slingstart" + SSMFeature.RUN_MODE_WEBAPP;
+    public static final String CONTEXT_STANDALONE = "slingstart" + SSMConstants.RUN_MODE_STANDALONE;
+    public static final String CONTEXT_WEBAPP = "slingstart" + SSMConstants.RUN_MODE_WEBAPP;
 
 
     // Types
@@ -37,7 +37,7 @@ public abstract class BuildConstants {
 
     public static final String TYPE_POM = "pom";
 
-    public static final String TYPE_XML = "xml";
+    public static final String TYPE_TXT = "txt";
 
     public static final String PACKAGING_PARTIAL_SYSTEM = "slingsubsystem";
 

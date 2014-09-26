@@ -37,6 +37,7 @@ import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
 import org.apache.sling.slingstart.model.SSMArtifact;
+import org.apache.sling.slingstart.model.SSMConstants;
 import org.apache.sling.slingstart.model.SSMDeliverable;
 import org.apache.sling.slingstart.model.SSMFeature;
 import org.apache.sling.slingstart.model.SSMStartLevel;
@@ -120,10 +121,10 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
         final String[] classifiers = new String[] {null, BuildConstants.CLASSIFIER_APP, BuildConstants.CLASSIFIER_WEBAPP};
         for(final String c : classifiers) {
             final Dependency dep = new Dependency();
-            dep.setGroupId(base.groupId);
-            dep.setArtifactId(base.artifactId);
-            dep.setVersion(model.getValue(base.version));
-            dep.setType(base.type);
+            dep.setGroupId(base.getGroupId());
+            dep.setArtifactId(base.getArtifactId());
+            dep.setVersion(model.getValue(base.getVersion()));
+            dep.setType(base.getType());
             dep.setClassifier(c);
             if ( BuildConstants.CLASSIFIER_WEBAPP.equals(c) ) {
                 dep.setType(BuildConstants.TYPE_WAR);
@@ -140,17 +141,17 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
     private static void addDependencies(final SSMDeliverable model, final Logger log, final MavenProject project) {
         for(final SSMFeature feature : model.getFeatures()) {
             // skip base
-            if ( feature.isRunMode(SSMFeature.RUN_MODE_BASE) ) {
+            if ( feature.isRunMode(SSMConstants.RUN_MODE_BASE) ) {
                 continue;
             }
             for(final SSMStartLevel sl : feature.getStartLevels()) {
-                for(final SSMArtifact a : sl.artifacts) {
+                for(final SSMArtifact a : sl.getArtifacts()) {
                     final Dependency dep = new Dependency();
-                    dep.setGroupId(a.groupId);
-                    dep.setArtifactId(a.artifactId);
-                    dep.setVersion(model.getValue(a.version));
-                    dep.setType(a.type);
-                    dep.setClassifier(a.classifier);
+                    dep.setGroupId(a.getGroupId());
+                    dep.setArtifactId(a.getArtifactId());
+                    dep.setVersion(model.getValue(a.getVersion()));
+                    dep.setType(a.getType());
+                    dep.setClassifier(a.getClassifier());
                     dep.setScope(PROVIDED);
 
                     log.debug("- adding dependency " + dep);
