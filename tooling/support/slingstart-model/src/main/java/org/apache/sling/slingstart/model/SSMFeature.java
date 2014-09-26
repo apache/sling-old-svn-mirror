@@ -19,7 +19,6 @@ package org.apache.sling.slingstart.model;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -130,38 +129,6 @@ public class SSMFeature
         this.startLevels.add(sl);
         Collections.sort(this.startLevels);
         return sl;
-    }
-
-    /**
-     * Merge another feature with this one.
-     */
-    public void merge(final SSMFeature mode) {
-        for(final SSMStartLevel sl : mode.startLevels) {
-            // search for duplicates in other start levels
-            for(final SSMArtifact artifact : sl.getArtifacts()) {
-                for(final SSMStartLevel mySL : this.startLevels) {
-                    if ( mySL.getLevel() == sl.getLevel() ) {
-                        continue;
-                    }
-                    final SSMArtifact myArtifact = mySL.search(artifact);
-                    if ( myArtifact != null ) {
-                        mySL.getArtifacts().remove(myArtifact);
-                    }
-                }
-            }
-
-            final SSMStartLevel mergeSL = this.getOrCreateStartLevel(sl.getLevel());
-            mergeSL.merge(sl);
-        }
-        for(final SSMConfiguration config : mode.configurations) {
-            final SSMConfiguration found = getOrCreateConfiguration(config.getPid(), config.getFactoryPid());
-            final Enumeration<String> e = config.getProperties().keys();
-            while ( e.hasMoreElements() ) {
-                final String key = e.nextElement();
-                found.getProperties().put(key, config.getProperties().get(key));
-            }
-        }
-        this.settings.putAll(mode.settings);
     }
 
     /**

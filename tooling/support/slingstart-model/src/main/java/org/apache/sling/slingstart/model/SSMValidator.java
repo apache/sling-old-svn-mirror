@@ -23,14 +23,14 @@ import java.util.Map;
 /**
  * Validate a complete model.
  */
-public class SSMValidator {
+public abstract class SSMValidator {
 
     /**
      * Validates the model.
      * @param model
      * @return
      */
-    public Map<SSMTraceable, String> validate(final SSMDeliverable model) {
+    public static Map<SSMTraceable, String> validate(final SSMDeliverable model) {
         final Map<SSMTraceable, String> errors = new HashMap<SSMTraceable, String>();
 
         for(final SSMFeature feature : model.getFeatures() ) {

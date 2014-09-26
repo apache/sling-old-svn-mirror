@@ -60,16 +60,6 @@ public class SSMStartLevel extends SSMTraceable
         return found;
     }
 
-    public void merge(final SSMStartLevel other) {
-        for(final SSMArtifact a : other.artifacts) {
-            final SSMArtifact found = this.search(a);
-            if ( found != null ) {
-                this.artifacts.remove(found);
-            }
-            this.artifacts.add(a);
-        }
-    }
-
     @Override
     public int compareTo(final SSMStartLevel o) {
         if ( this.level < o.level ) {
