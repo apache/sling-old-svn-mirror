@@ -37,7 +37,6 @@ import org.apache.sling.slingstart.model.SSMFeature;
 import org.apache.sling.slingstart.model.SSMTraceable;
 import org.apache.sling.slingstart.model.SSMValidator;
 import org.apache.sling.slingstart.model.txt.TXTSSMModelReader;
-import org.apache.sling.slingstart.model.xml.XMLSSMModelReader;
 import org.codehaus.plexus.logging.Logger;
 
 public abstract class ModelUtils {
@@ -110,7 +109,7 @@ public abstract class ModelUtils {
                     if ( depModel == null ) {
                         depModel = new SSMDeliverable();
                     }
-                    final SSMDeliverable readModel = XMLSSMModelReader.read(r);
+                    final SSMDeliverable readModel = TXTSSMModelReader.read(r, file.getAbsolutePath());
                     final Map<SSMTraceable, String> errors = new SSMValidator().validate(readModel);
                     if (errors != null ) {
                         throw new MojoExecutionException("Invalid model at " + file + " : " + errors);

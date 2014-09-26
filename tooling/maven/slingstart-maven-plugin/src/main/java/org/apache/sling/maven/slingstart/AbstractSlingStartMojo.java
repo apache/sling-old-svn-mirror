@@ -28,7 +28,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.apache.sling.slingstart.model.SSMDeliverable;
-import org.apache.sling.slingstart.model.xml.XMLSSMModelReader;
+import org.apache.sling.slingstart.model.txt.TXTSSMModelReader;
 
 public abstract class AbstractSlingStartMojo extends AbstractMojo {
 
@@ -56,7 +56,7 @@ public abstract class AbstractSlingStartMojo extends AbstractMojo {
         if ( result == null ) {
             try {
                 final String contents = (String)this.project.getContextValue(SSMDeliverable.class.getName() + "/text");
-                result = XMLSSMModelReader.read(new StringReader(contents));
+                result = TXTSSMModelReader.read(new StringReader(contents), null);
 
                 this.project.setContextValue(SSMDeliverable.class.getName(), result);
             } catch ( final IOException ioe) {
