@@ -25,6 +25,16 @@ public abstract class SSMConstants {
     /** Name of the configuration for the bootstrap contents. */
     public static final String CFG_BOOTSTRAP = ":bootstrap";
 
+    /** Unprocessed configuration values. */
+    public static final String CFG_UNPROCESSED = ":rawconfig";
+
+    /** Format of the unprocessed configuration values. */
+    public static final String CFG_UNPROCESSED_FORMAT = ":rawconfig.format";
+
+    public static final String CFG_FORMAT_FELIX_CA = "felixca";
+
+    public static final String CFG_FORMAT_PROPERTIES = "properties";
+
     /** Name of the base run mode for the Sling launchpad. */
     public static final String RUN_MODE_BASE = ":base";
 

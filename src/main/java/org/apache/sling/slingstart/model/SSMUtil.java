@@ -16,8 +16,15 @@
  */
 package org.apache.sling.slingstart.model;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Map;
+import java.util.Properties;
+
+import org.apache.felix.cm.file.ConfigurationHandler;
 
 /**
  * Utility methods
@@ -28,7 +35,7 @@ public abstract class SSMUtil {
      * Replace all variables in the model and return a new model with the replaced values.
      * @param base The base model.
      * @return The model with replaced variables.
-     * @throws IllegalArgumentException If a variable can't be replaced.
+     * @throws IllegalArgumentException If a variable can't be replaced or configuration properties can't be parsed
      */
     public static SSMDeliverable getEffectiveModel(final SSMDeliverable base) {
         final SSMDeliverable result = new SSMDeliverable();
@@ -64,10 +71,55 @@ public abstract class SSMUtil {
                 newConfig.setComment(config.getComment());
                 newConfig.setLocation(config.getLocation());
 
-                final Enumeration<String> i = config.getProperties().keys();
-                while ( i.hasMoreElements() ) {
-                    final String key = i.nextElement();
-                    newConfig.getProperties().put(key, config.getProperties().get(key));
+                // check for raw configuration
+                final String rawConfig = (String)config.getProperties().get(SSMConstants.CFG_UNPROCESSED);
+                if ( rawConfig != null ) {
+                    final String format = (String)config.getProperties().get(SSMConstants.CFG_UNPROCESSED_FORMAT);
+
+                    if ( SSMConstants.CFG_FORMAT_PROPERTIES.equals(format) ) {
+                        // properties
+                        final Properties props = new Properties();
+                        try {
+                            props.load(new StringReader(rawConfig));
+                        } catch ( final IOException ioe) {
+                            throw new IllegalArgumentException("Unable to read configuration properties.", ioe);
+                        }
+                        final Enumeration<Object> i = props.keys();
+                        while ( i.hasMoreElements() ) {
+                            final String key = (String)i.nextElement();
+                            newConfig.getProperties().put(key, props.get(key));
+                        }
+                    } else {
+                        // Apache Felix CA format
+                        ByteArrayInputStream bais = null;
+                        try {
+                            bais = new ByteArrayInputStream(rawConfig.getBytes("UTF-8"));
+                            @SuppressWarnings("unchecked")
+                            final Dictionary<String, Object> props = ConfigurationHandler.read(bais);
+                            final Enumeration<String> i = props.keys();
+                            while ( i.hasMoreElements() ) {
+                                final String key = i.nextElement();
+                                newConfig.getProperties().put(key, props.get(key));
+                            }
+                        } catch ( final IOException ioe) {
+                            throw new IllegalArgumentException("Unable to read configuration properties.", ioe);
+                        } finally {
+                            if ( bais != null ) {
+                                try {
+                                    bais.close();
+                                } catch ( final IOException ignore ) {
+                                    // ignore
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // simply copy
+                    final Enumeration<String> i = config.getProperties().keys();
+                    while ( i.hasMoreElements() ) {
+                        final String key = i.nextElement();
+                        newConfig.getProperties().put(key, config.getProperties().get(key));
+                    }
                 }
 
                 newFeature.getConfigurations().add(newConfig);

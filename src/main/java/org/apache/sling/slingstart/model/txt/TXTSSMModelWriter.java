@@ -27,6 +27,7 @@ import java.util.Map;
 import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.sling.slingstart.model.SSMArtifact;
 import org.apache.sling.slingstart.model.SSMConfiguration;
+import org.apache.sling.slingstart.model.SSMConstants;
 import org.apache.sling.slingstart.model.SSMDeliverable;
 import org.apache.sling.slingstart.model.SSMFeature;
 import org.apache.sling.slingstart.model.SSMStartLevel;
@@ -158,7 +159,16 @@ public class TXTSSMModelWriter {
             // configurations
             for(final SSMConfiguration config : feature.getConfigurations()) {
                 writeComment(pw, config);
-                pw.print("  config: ");
+                final String raw = (String)config.getProperties().get(SSMConstants.CFG_UNPROCESSED);
+                String format = (String)config.getProperties().get(SSMConstants.CFG_UNPROCESSED_FORMAT);
+                if ( format == null ) {
+                    format = SSMConstants.CFG_FORMAT_FELIX_CA;
+                }
+                pw.print("  config:");
+                if ( !SSMConstants.CFG_FORMAT_FELIX_CA.equals(format) ) {
+                    pw.print(format);
+                }
+                pw.print(" ");
                 if ( config.getFactoryPid() != null ) {
                     pw.print(config.getFactoryPid());
                     pw.print("-");
@@ -166,7 +176,9 @@ public class TXTSSMModelWriter {
                 pw.print(config.getPid());
                 pw.println();
                 final String configString;
-                if ( config.isSpecial() ) {
+                if ( raw != null ) {
+                    configString = raw;
+                } else if ( config.isSpecial() ) {
                     configString = config.getProperties().get(config.getPid()).toString();
                 } else {
                     final ByteArrayOutputStream os = new ByteArrayOutputStream();
