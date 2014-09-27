@@ -16,16 +16,13 @@
  */
 package org.apache.sling.slingstart.model.txt;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.Reader;
-import java.util.Dictionary;
-import java.util.Enumeration;
 
-import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.sling.slingstart.model.SSMArtifact;
 import org.apache.sling.slingstart.model.SSMConfiguration;
+import org.apache.sling.slingstart.model.SSMConstants;
 import org.apache.sling.slingstart.model.SSMDeliverable;
 import org.apache.sling.slingstart.model.SSMFeature;
 import org.apache.sling.slingstart.model.SSMStartLevel;
@@ -69,7 +66,6 @@ public class TXTSSMModelReader {
     private String comment = null;
 
     private StringBuilder configBuilder = null;
-    private boolean configFelixFormat = false;
 
     private LineNumberReader lineNumberReader;
 
@@ -139,14 +135,24 @@ public class TXTSSMModelReader {
                 this.init(startLevel);
                 mode = MODE.START_LEVEL;
 
-            } else if ( trimmedLine.startsWith("config:FELIX ") || trimmedLine.startsWith("config: ") ) {
+            } else if ( trimmedLine.startsWith("config:") ) {
                 checkConfig();
 
                 if ( feature == null ) {
                     throw new IOException("configuration outside of feature in line " + this.lineNumberReader.getLineNumber());
                 }
 
-                mode = MODE.CONFIGURATION;
+                String format = SSMConstants.CFG_FORMAT_FELIX_CA;
+                if ( trimmedLine.length() > 7 && !Character.isWhitespace(trimmedLine.charAt(7)) ) {
+                    String formatDef = trimmedLine.substring(7);
+                    if ( formatDef.equals(SSMConstants.CFG_FORMAT_PROPERTIES) || formatDef.startsWith(SSMConstants.CFG_FORMAT_PROPERTIES + " ")) {
+                        format = SSMConstants.CFG_FORMAT_PROPERTIES;
+                    } else if ( formatDef.equals(SSMConstants.CFG_FORMAT_FELIX_CA) || formatDef.startsWith(SSMConstants.CFG_FORMAT_FELIX_CA + " ")) {
+                        format = SSMConstants.CFG_FORMAT_FELIX_CA;
+                    } else {
+                        throw new IOException("Unknown configuration format: " + formatDef + " in line " + this.lineNumberReader.getLineNumber());
+                    }
+                }
                 final int factoryPos = params.indexOf('-');
                 if ( factoryPos == -1 ) {
                     config = new SSMConfiguration(params, null);
@@ -154,9 +160,10 @@ public class TXTSSMModelReader {
                     config = new SSMConfiguration(params.substring(pos + 1), params.substring(0, pos));
                 }
                 this.init(config);
+                config.getProperties().put(SSMConstants.CFG_UNPROCESSED_FORMAT, format);
                 feature.getConfigurations().add(config);
                 configBuilder = new StringBuilder();
-                configFelixFormat = trimmedLine.startsWith("config:FELIX ");
+                mode = MODE.CONFIGURATION;
 
             } else if ( trimmedLine.startsWith("settings:") ) {
                 checkConfig();
@@ -224,28 +231,9 @@ public class TXTSSMModelReader {
         }
     }
 
-    private void checkConfig()
-    throws IOException {
+    private void checkConfig() {
         if ( config != null ) {
-            ByteArrayInputStream bais = null;
-            try {
-                bais = new ByteArrayInputStream(configBuilder.toString().getBytes("UTF-8"));
-                @SuppressWarnings("unchecked")
-                final Dictionary<String, Object> props = ConfigurationHandler.read(bais);
-                final Enumeration<String> e = props.keys();
-                while ( e.hasMoreElements() ) {
-                    final String key = e.nextElement();
-                    config.getProperties().put(key, props.get(key));
-                }
-            } finally {
-                if ( bais != null ) {
-                    try {
-                        bais.close();
-                    } catch ( final IOException ignore ) {
-                        // ignore
-                    }
-                }
-            }
+            config.getProperties().put(SSMConstants.CFG_UNPROCESSED, configBuilder.toString());
         }
         config = null;
         configBuilder = null;
