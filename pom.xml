@@ -43,10 +43,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/replication</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/replication
-        </developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/replication</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/replication/core</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/replication/core</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/replication/core</url>
     </scm>
 
     <!-- ======================================================================= -->
@@ -68,7 +67,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Bundle-SymbolicName>org.apache.sling.replication</Bundle-SymbolicName>
+                        <Bundle-SymbolicName>org.apache.sling.replication.core</Bundle-SymbolicName>
                         <Sling-Initial-Content>
                             SLING-CONTENT/libs/sling/replication;path:=/libs/sling/replication;overwrite:=true
                         </Sling-Initial-Content>
