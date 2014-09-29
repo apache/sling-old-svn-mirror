@@ -41,7 +41,7 @@ public class ReplicationEndpoint {
 
     @Override
     public String toString() {
-        return uri.toString();
+        return uri.toASCIIString();
     }
 
     @Override

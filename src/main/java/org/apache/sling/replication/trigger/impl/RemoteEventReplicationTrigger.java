@@ -198,7 +198,7 @@ public class RemoteEventReplicationTrigger implements ReplicationTrigger {
                     futureResponse.get();
 
                 } catch (Exception e) {
-                    log.warn("cannot communicate with {} - {}", endpoint, e);
+                    log.warn("cannot communicate with {}", endpoint, e);
                 }
                 httpClient.close();
                 log.debug("request finished");
