@@ -32,20 +32,19 @@
     <!-- ======================================================================= -->
     <!-- P R O J E C T                                                           -->
     <!-- ======================================================================= -->
-    <artifactId>org.apache.sling.replication.core</artifactId>
+    <artifactId>org.apache.sling.replication.sample</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling Replication Core</name>
+    <name>Apache Sling Replication Sample</name>
     <description>
-        The Apache Sling Replication core bundle provides a set of utilities to replicate content from / to other Sling
-        instances.
+        The Apache Sling Replication sample bundle provides a set of sample configurations and custom component implementations.
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/replication/core</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/replication/core</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/replication/core</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/replication/sample</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/replication/sample</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/replication/sample</url>
     </scm>
 
     <!-- ======================================================================= -->
@@ -67,19 +66,12 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Bundle-SymbolicName>org.apache.sling.replication.core</Bundle-SymbolicName>
+                        <Bundle-SymbolicName>org.apache.sling.replication.sample</Bundle-SymbolicName>
                         <Sling-Initial-Content>
                             SLING-CONTENT/libs/sling/replication;path:=/libs/sling/replication;overwrite:=true
                         </Sling-Initial-Content>
                         <Export-Package>
-                            org.apache.sling.replication.agent,
-                            org.apache.sling.replication.communication,
-                            org.apache.sling.replication.event,
-                            org.apache.sling.replication.queue,
-                            org.apache.sling.replication.trigger,
-                            org.apache.sling.replication.packaging,
-                            org.apache.sling.replication.transport.authentication
-                        </Export-Package>
+                            </Export-Package>
                         <Embed-Dependency>httpasyncclient</Embed-Dependency>
                     </instructions>
                 </configuration>
@@ -101,13 +93,12 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>1.9.5</version>
-            <scope>test</scope>
-        </dependency>
         <!-- SLING -->
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.replication.core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.api</artifactId>

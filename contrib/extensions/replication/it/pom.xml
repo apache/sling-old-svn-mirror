@@ -90,8 +90,7 @@
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/replication/it</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/replication/it
-        </developerConnection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/replication/it</developerConnection>
         <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/replication/it</url>
     </scm>
 
@@ -274,6 +273,7 @@
                         <sling.additional.bundle.3>org.apache.sling.hc.core</sling.additional.bundle.3>
                         <sling.additional.bundle.4>org.apache.jackrabbit.vault</sling.additional.bundle.4>
                         <sling.additional.bundle.5>org.apache.sling.replication.core</sling.additional.bundle.5>
+                        <sling.additional.bundle.6>org.apache.sling.replication.sample</sling.additional.bundle.6>
                         <sling.additional.bundle.7>${project.build.finalName}.jar</sling.additional.bundle.7>
                     </systemPropertyVariables>
                 </configuration>
@@ -385,6 +385,11 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.replication.core</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.replication.sample</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
     </dependencies>
