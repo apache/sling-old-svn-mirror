@@ -32,18 +32,36 @@ import org.apache.felix.cm.file.ConfigurationHandler;
 public abstract class SSMUtil {
 
     /**
+     * Optional variable resolver
+     */
+    public interface VariableResolver {
+
+        /**
+         * Resolve the variable.
+         * An implementation might get the value of a variable from the system properties,
+         * or the environment etc.
+         * As a fallback, the resolver should check the variables of the model.
+         * @param model The model
+         * @param name The variable name
+         * @return The variable value or null.
+         */
+        String resolve(final SSMDeliverable model, final String name);
+    }
+
+    /**
      * Replace all variables in the model and return a new model with the replaced values.
-     * @param base The base model.
+     * @param model The base model.
+     * @param resolver Optional variable resolver.
      * @return The model with replaced variables.
      * @throws IllegalArgumentException If a variable can't be replaced or configuration properties can't be parsed
      */
-    public static SSMDeliverable getEffectiveModel(final SSMDeliverable base) {
+    public static SSMDeliverable getEffectiveModel(final SSMDeliverable model, final VariableResolver resolver) {
         final SSMDeliverable result = new SSMDeliverable();
-        result.setComment(base.getComment());
-        result.setLocation(base.getLocation());
-        result.getVariables().putAll(base.getVariables());
+        result.setComment(model.getComment());
+        result.setLocation(model.getLocation());
+        result.getVariables().putAll(model.getVariables());
 
-        for(final SSMFeature feature : base.getFeatures()) {
+        for(final SSMFeature feature : model.getFeatures()) {
             final SSMFeature newFeature = result.getOrCreateFeature(feature.getRunModes());
             newFeature.setComment(feature.getComment());
             newFeature.setLocation(feature.getLocation());
@@ -54,11 +72,11 @@ public abstract class SSMUtil {
                 newStartLevel.setLocation(startLevel.getLocation());
 
                 for(final SSMArtifact artifact : startLevel.getArtifacts()) {
-                    final SSMArtifact newArtifact = new SSMArtifact(replace(base, artifact.getGroupId()),
-                            replace(base, artifact.getArtifactId()),
-                            replace(base, artifact.getVersion()),
-                            replace(base, artifact.getClassifier()),
-                            replace(base, artifact.getType()));
+                    final SSMArtifact newArtifact = new SSMArtifact(replace(model, artifact.getGroupId(), resolver),
+                            replace(model, artifact.getArtifactId(), resolver),
+                            replace(model, artifact.getVersion(), resolver),
+                            replace(model, artifact.getClassifier(), resolver),
+                            replace(model, artifact.getType(), resolver));
                     newArtifact.setComment(artifact.getComment());
                     newArtifact.setLocation(artifact.getLocation());
 
@@ -126,7 +144,7 @@ public abstract class SSMUtil {
             }
 
             for(final Map.Entry<String, String> entry : feature.getSettings().entrySet() ) {
-                newFeature.getSettings().put(entry.getKey(), replace(base, entry.getValue()));
+                newFeature.getSettings().put(entry.getKey(), replace(model, entry.getValue(), resolver));
             }
         }
         return result;
@@ -135,9 +153,13 @@ public abstract class SSMUtil {
     /**
      * Replace properties in the string.
      *
+     * @param model The model
+     * @param v The variable name
+     * @param resolver Optional resolver
+     * @result The value of the variable
      * @throws IllegalArgumentException
      */
-    private static String replace(final SSMDeliverable base, final String v) {
+    private static String replace(final SSMDeliverable model, final String v, final VariableResolver resolver) {
         if ( v == null ) {
             return null;
         }
@@ -146,13 +168,18 @@ public abstract class SSMUtil {
         int pos = -1;
         int start = 0;
         while ( ( pos = msg.indexOf('$', start) ) != -1 ) {
-            if ( msg.length() > pos && msg.charAt(pos + 1) == '{' ) {
+            if ( msg.length() > pos && msg.charAt(pos + 1) == '{' && (pos == 0 || msg.charAt(pos - 1) != '$') ) {
                 final int endPos = msg.indexOf('}', pos);
                 if ( endPos == -1 ) {
                     start = pos + 1;
                 } else {
                     final String name = msg.substring(pos + 2, endPos);
-                    final String value = base.getVariables().get(name);
+                    final String value;
+                    if ( resolver != null ) {
+                        value = resolver.resolve(model, name);
+                    } else {
+                        value = model.getVariables().get(name);
+                    }
                     if ( value == null ) {
                         throw new IllegalArgumentException("Unknown variable: " + name);
                     }
