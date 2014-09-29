@@ -33,6 +33,12 @@ public class ReplicationEvent extends Event {
         super(getTopic(type), properties);
     }
 
+    /**
+     * get the topic for a certain event type
+     *
+     * @param type the {@link org.apache.sling.replication.event.ReplicationEventType} to get the topic for
+     * @return a <code>String</code> representing the topic
+     */
     public static String getTopic(ReplicationEventType type) {
         return EVENT_TOPIC + '/' + type.toString();
     }

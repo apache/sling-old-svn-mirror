@@ -57,8 +57,8 @@ public interface ReplicationPackageBuilder {
     /**
      * Installs the given replicationPackage into the repository
      *
-     * @param replicationPackage
-     * @return
+     * @param replicationPackage the replication package to install
+     * @return <code>true</code> if the package was installed successfully
      * @throws ReplicationPackageReadingException
      */
     boolean installPackage(ReplicationPackage replicationPackage) throws ReplicationPackageReadingException;
