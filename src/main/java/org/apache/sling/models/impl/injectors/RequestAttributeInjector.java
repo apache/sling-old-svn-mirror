@@ -31,15 +31,11 @@ import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProc
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
 import org.osgi.framework.Constants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 4000)
 public class RequestAttributeInjector implements Injector, InjectAnnotationProcessorFactory {
-
-    private static final Logger log = LoggerFactory.getLogger(RequestAttributeInjector.class);
 
     @Override
     public String getName() {
