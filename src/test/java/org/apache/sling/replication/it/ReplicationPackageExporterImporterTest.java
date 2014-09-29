@@ -28,7 +28,7 @@ import static org.apache.sling.replication.it.ReplicationUtils.createRandomNode;
 import static org.apache.sling.replication.it.ReplicationUtils.doExport;
 import static org.apache.sling.replication.it.ReplicationUtils.doImport;
 
-public class ReplicationPackageExporterImporterTest extends ReplicationIntegrationTestBase  {
+public class ReplicationPackageExporterImporterTest extends ReplicationIntegrationTestBase {
 
     @Test
     public void testAddExportImport() throws Exception {

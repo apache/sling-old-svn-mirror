@@ -114,7 +114,7 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
         assertExists(authorClient, agentRootUrl());
         assertResponseContains(author, agentRootUrl(),
                 "sling:resourceType", "sling/replication/service/agent/list",
-                "items", "publish-reverse","publish");
+                "items", "publish-reverse", "publish");
     }
 
     @Test
