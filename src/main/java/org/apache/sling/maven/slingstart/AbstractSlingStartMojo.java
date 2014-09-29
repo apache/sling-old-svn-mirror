@@ -18,7 +18,6 @@ package org.apache.sling.maven.slingstart;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.StringReader;
 
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
@@ -28,7 +27,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.apache.sling.slingstart.model.SSMDeliverable;
-import org.apache.sling.slingstart.model.txt.TXTSSMModelReader;
 
 public abstract class AbstractSlingStartMojo extends AbstractMojo {
 
@@ -47,18 +45,38 @@ public abstract class AbstractSlingStartMojo extends AbstractMojo {
     @Parameter(defaultValue="false")
     protected boolean createWebapp;
 
+    private static final String CTX_RAW = SSMDeliverable.class.getName() + "/r";
+    private static final String CTX_EFFECTIVE = SSMDeliverable.class.getName() + "/e";
+
     /**
      * Read the model prepared by the lifecycle plugin
      */
-    protected SSMDeliverable readModel()
+    protected SSMDeliverable readRawModel()
     throws MojoExecutionException {
-        SSMDeliverable result = (SSMDeliverable)this.project.getContextValue(SSMDeliverable.class.getName());
+        SSMDeliverable result = (SSMDeliverable)this.project.getContextValue(CTX_RAW);
         if ( result == null ) {
             try {
-                final String contents = (String)this.project.getContextValue(SSMDeliverable.class.getName() + "/text");
-                result = TXTSSMModelReader.read(new StringReader(contents), null);
+                result = ModelUtils.getRawModel(this.project);
 
-                this.project.setContextValue(SSMDeliverable.class.getName(), result);
+                this.project.setContextValue(CTX_RAW, result);
+            } catch ( final IOException ioe) {
+                throw new MojoExecutionException("Unable to cache model", ioe);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Read the model prepared by the lifecycle plugin
+     */
+    protected SSMDeliverable readEffectiveModel()
+    throws MojoExecutionException {
+        SSMDeliverable result = (SSMDeliverable)this.project.getContextValue(CTX_EFFECTIVE);
+        if ( result == null ) {
+            try {
+                result = ModelUtils.getEffectiveModel(this.project);
+
+                this.project.setContextValue(CTX_EFFECTIVE, result);
             } catch ( final IOException ioe) {
                 throw new MojoExecutionException("Unable to cache model", ioe);
             }

@@ -19,6 +19,8 @@ package org.apache.sling.maven.slingstart;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,6 +40,7 @@ import org.apache.sling.slingstart.model.SSMMerger;
 import org.apache.sling.slingstart.model.SSMTraceable;
 import org.apache.sling.slingstart.model.SSMValidator;
 import org.apache.sling.slingstart.model.txt.TXTSSMModelReader;
+import org.apache.sling.slingstart.model.txt.TXTSSMModelWriter;
 import org.codehaus.plexus.logging.Logger;
 
 public abstract class ModelUtils {
@@ -181,5 +184,56 @@ public abstract class ModelUtils {
             }
         }
         return null;
+    }
+
+    private static final String RAW_MODEL = SSMDeliverable.class.getName() + "/raw";
+    private static final String EFFECTIVE_MODEL = SSMDeliverable.class.getName() + "/effective";
+
+    /**
+     * Store the raw model in the project.
+     * @param project The maven project
+     * @param model The model
+     * @throws IOException If writing fails
+     */
+    public static void storeRawModel(final MavenProject project, final SSMDeliverable model)
+    throws IOException {
+        final StringWriter w = new StringWriter();
+        TXTSSMModelWriter.write(w, model);
+        project.setContextValue(RAW_MODEL, w.toString());
+    }
+
+    /**
+     * Get the raw model from the project
+     * @param project The maven projet
+     * @return The raw model
+     * @throws IOException If reading fails
+     */
+    public static SSMDeliverable getRawModel(final MavenProject project) throws IOException {
+        final String contents = (String)project.getContextValue(RAW_MODEL);
+        return TXTSSMModelReader.read(new StringReader(contents), null);
+    }
+
+    /**
+     * Store the effective model in the project.
+     * @param project The maven project
+     * @param model The model
+     * @throws IOException If writing fails
+     */
+    public static void storeEffectiveModel(final MavenProject project, final SSMDeliverable model)
+    throws IOException {
+        final StringWriter w = new StringWriter();
+        TXTSSMModelWriter.write(w, model);
+        project.setContextValue(EFFECTIVE_MODEL, w.toString());
+    }
+
+    /**
+     * Get the effective model from the project
+     * @param project The maven projet
+     * @return The raw model
+     * @throws IOException If reading fails
+     */
+    public static SSMDeliverable getEffectiveModel(final MavenProject project) throws IOException {
+        final String contents = (String)project.getContextValue(EFFECTIVE_MODEL);
+        return TXTSSMModelReader.read(new StringReader(contents), null);
     }
 }

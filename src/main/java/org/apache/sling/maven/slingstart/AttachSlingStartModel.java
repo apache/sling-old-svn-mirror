@@ -44,7 +44,7 @@ public class AttachSlingStartModel extends AbstractSlingStartMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        final SSMDeliverable model = this.readModel();
+        final SSMDeliverable model = this.readRawModel();
 
         final File outputFile = new File(this.project.getBuild().getDirectory() + File.separatorChar + "slingstart.txt");
         outputFile.getParentFile().mkdirs();

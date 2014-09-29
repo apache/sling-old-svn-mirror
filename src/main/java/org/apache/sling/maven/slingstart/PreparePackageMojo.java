@@ -41,7 +41,6 @@ import org.apache.sling.slingstart.model.SSMConstants;
 import org.apache.sling.slingstart.model.SSMDeliverable;
 import org.apache.sling.slingstart.model.SSMFeature;
 import org.apache.sling.slingstart.model.SSMStartLevel;
-import org.apache.sling.slingstart.model.SSMUtil;
 import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.UnArchiver;
 import org.codehaus.plexus.archiver.manager.ArchiverManager;
@@ -79,7 +78,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        final SSMDeliverable model = SSMUtil.getEffectiveModel(this.readModel());
+        final SSMDeliverable model = this.readEffectiveModel();
 
         this.prepareGlobal(model);
         this.prepareStandaloneApp(model);

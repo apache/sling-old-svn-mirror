@@ -17,7 +17,6 @@
 package org.apache.sling.maven.slingstart;
 
 import java.io.File;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,7 +41,6 @@ import org.apache.sling.slingstart.model.SSMDeliverable;
 import org.apache.sling.slingstart.model.SSMFeature;
 import org.apache.sling.slingstart.model.SSMStartLevel;
 import org.apache.sling.slingstart.model.SSMUtil;
-import org.apache.sling.slingstart.model.txt.TXTSSMModelWriter;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.codehaus.plexus.logging.Logger;
@@ -113,11 +111,11 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
                 "systemsDirectory", new File(project.getBasedir(), "src/main/systems").getAbsolutePath());
         final SSMDeliverable model = ModelUtils.readFullModel(new File(directory), dependencies, project, session, log);
 
-        final StringWriter w = new StringWriter();
-        TXTSSMModelWriter.write(w, model);
-        project.setContextValue(SSMDeliverable.class.getName() + "/text", w.toString());
+        ModelUtils.storeRawModel(project, model);
 
-        final SSMDeliverable effectiveModel = SSMUtil.getEffectiveModel(model);
+        final SSMDeliverable effectiveModel = SSMUtil.getEffectiveModel(model, null);
+
+        ModelUtils.storeEffectiveModel(project, effectiveModel);
 
         // start with base artifact
         final SSMArtifact base = ModelUtils.getBaseArtifact(effectiveModel);
