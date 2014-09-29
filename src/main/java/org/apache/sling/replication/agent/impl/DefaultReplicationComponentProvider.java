@@ -108,7 +108,10 @@ public class DefaultReplicationComponentProvider implements ReplicationComponent
                 return (ComponentType) createAgent(properties, this);
             } else if (type.isAssignableFrom(ReplicationTrigger.class)) {
                 return (ComponentType) createTrigger(properties, this);
+            } else if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
+                return (ComponentType) createTransportAuthenticationProvider(properties, this);
             }
+
         } catch (Throwable t) {
             log.error("Cannot create agent", t);
 
