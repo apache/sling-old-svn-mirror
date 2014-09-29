@@ -35,6 +35,11 @@ public class ReplicationEndpoint {
         this.uri = URI.create(uriString);
     }
 
+    /**
+     * get the URI of this replication endpoint
+     *
+     * @return a <code>URI</code>
+     */
     public URI getUri() {
         return uri;
     }

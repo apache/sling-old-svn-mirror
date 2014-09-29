@@ -35,14 +35,29 @@ public class ReplicationRequest {
         this.paths = paths;
     }
 
+    /**
+     * get the time this replication request was created
+     *
+     * @return a <code>long</code> representing the replication request creation time
+     */
     public long getTime() {
         return time;
     }
 
+    /**
+     * get the {@link org.apache.sling.replication.communication.ReplicationActionType} associated with this request
+     *
+     * @return the action as a <code>ReplicationActionType</code>
+     */
     public ReplicationActionType getAction() {
         return action;
     }
 
+    /**
+     * get the paths for this replication request
+     *
+     * @return an array of <code>String</code>s representing the paths
+     */
     public String[] getPaths() {
         return paths;
     }

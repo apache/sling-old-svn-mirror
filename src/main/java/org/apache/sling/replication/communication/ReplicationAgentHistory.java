@@ -20,14 +20,18 @@ package org.apache.sling.replication.communication;
 
 import java.util.SortedMap;
 
+import org.apache.sling.replication.agent.ReplicationAgent;
+
 /**
  * The communication history for a certain agent
  */
 public interface ReplicationAgentHistory {
 
-    SortedMap<ReplicationRequest, ReplicationResponse> getCommunication();
+    /**
+     * get the communication history of a certain agent
+     *
+     * @return
+     */
+    SortedMap<ReplicationRequest, ReplicationResponse> getCommunication(ReplicationAgent agent);
 
-    ReplicationResponse getResponseFor(ReplicationRequest request);
-
-    ReplicationResponse getResponseFor(String requestId);
 }
