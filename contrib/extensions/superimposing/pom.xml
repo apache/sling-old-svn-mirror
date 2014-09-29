@@ -25,7 +25,7 @@
     </parent>
 
     <artifactId>org.apache.sling.superimposing</artifactId>
-    <version>0.2.0</version>
+    <version>0.2.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Superimposing Resource Provider</name>
@@ -36,9 +36,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.superimposing-0.2.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.superimposing-0.2.0</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.superimposing-0.2.0</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/superimposing</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/superimposing</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/superimposing</url>
     </scm>
 
     <build>
