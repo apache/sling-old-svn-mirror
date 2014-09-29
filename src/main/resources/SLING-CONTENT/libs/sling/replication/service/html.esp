@@ -1,0 +1,21 @@
+<%
+var valueMap = resource.adaptTo(Packages.org.apache.sling.api.resource.ValueMap);
+var pit = valueMap.keySet().iterator();
+%>
+<html>
+  <body>
+    <h1>Agent: <%= valueMap.get("name") %></h1>
+
+    <ul>
+    <% while(pit.hasNext()) { %>
+
+        <% var pname =  pit.next(); %>
+
+        <li>
+            <%= pname %>: <%= valueMap.get(pname) %>
+        </li>
+
+    <% } %>
+    </ul>
+  </body>
+</html>

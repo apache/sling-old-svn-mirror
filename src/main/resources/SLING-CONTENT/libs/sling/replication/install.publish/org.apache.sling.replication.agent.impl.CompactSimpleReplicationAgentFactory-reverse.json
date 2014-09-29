@@ -1,0 +1,34 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "reverse",
+    "type": "simple",
+
+    "isPassive": true,
+
+    "packageExporter": [
+        "type=local",
+        "packageBuilder/type=vlt",
+        "packageBuilder/servicename=replicationService"
+    ],
+
+    "packageImporter": [
+        "type=local",
+        "packageBuilder/type=vlt",
+        "packageBuilder/servicename=replicationService"
+    ],
+
+    "queueProvider": [
+        "type=service",
+        "name=sjh"
+    ],
+
+    "queueDistributionStrategy": [
+        "type=service",
+        "name=error"
+    ],
+
+    "trigger0": [
+        "type=resourceEvent",
+        "path=/content/usergenerated"
+    ]
+}

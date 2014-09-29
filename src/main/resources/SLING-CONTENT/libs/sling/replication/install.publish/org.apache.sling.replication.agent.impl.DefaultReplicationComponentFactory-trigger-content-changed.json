@@ -1,0 +1,12 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "content-changed",
+
+    "kind": "trigger",
+
+    "properties": [
+        "type=resourceEvent",
+        "path=/content/usergenerated"
+    ]
+
+}
