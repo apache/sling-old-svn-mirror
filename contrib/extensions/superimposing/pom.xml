@@ -35,11 +35,11 @@
         It is possible to add or overlay resources in the mirrored tree.
     </description>
 
-    <properties>
-      <sling.url>http://localhost:8080</sling.url>
-      <sling.user>admin</sling.user>
-      <sling.password>admin</sling.password>
-    </properties>
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/superimposing</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/superimposing</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/superimposing</url>
+    </scm>
 
     <build>
         <plugins>
