@@ -365,6 +365,11 @@
         </bundle>
         <bundle>
             <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.webconsole.plugins.obr</artifactId>
+            <version>1.0.2</version>
+        </bundle>
+        <bundle>
+            <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.webconsole.plugins.packageadmin</artifactId>
             <version>1.0.0</version>
         </bundle>
