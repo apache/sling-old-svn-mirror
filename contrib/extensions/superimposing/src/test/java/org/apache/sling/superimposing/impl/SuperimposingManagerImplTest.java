@@ -40,6 +40,7 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 
+import org.apache.commons.collections.IteratorUtils;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -217,6 +218,7 @@ public class SuperimposingManagerImplTest {
         verifyZeroInteractions(bundleContext);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testFindAllSuperimposings() throws InterruptedException, LoginException, RepositoryException {
         // prepare a query that returns one existing superimposed resource
@@ -231,9 +233,9 @@ public class SuperimposingManagerImplTest {
         initialize(true);
 
         // ensure the superimposed resource is detected and registered
-        Map<String, SuperimposingResourceProvider> providers = underTest.getRegisteredProviders();
+        List<SuperimposingResourceProvider> providers = IteratorUtils.toList(underTest.getRegisteredProviders());
         assertEquals(1, providers.size());
-        SuperimposingResourceProvider provider = providers.values().iterator().next();
+        SuperimposingResourceProvider provider = providers.iterator().next();
         assertEquals(SUPERIMPOSED_PATH, provider.getRootPath());
         assertEquals(ORIGINAL_PATH, provider.getSourcePath());
         assertFalse(provider.isOverlayable());
@@ -300,6 +302,7 @@ public class SuperimposingManagerImplTest {
         return eventIterator;
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testSuperimposedResourceCreateUpdateRemove() throws InterruptedException, LoginException, RepositoryException {
         initialize(true);
@@ -309,9 +312,9 @@ public class SuperimposingManagerImplTest {
         underTest.onEvent(prepareNodeCreateEvent(superimposedResource));
 
         // ensure the superimposed resource is detected and registered
-        Map<String, SuperimposingResourceProvider> providers = underTest.getRegisteredProviders();
+        List<SuperimposingResourceProvider> providers = IteratorUtils.toList(underTest.getRegisteredProviders());
         assertEquals(1, providers.size());
-        SuperimposingResourceProvider provider = providers.values().iterator().next();
+        SuperimposingResourceProvider provider = providers.iterator().next();
         assertEquals(SUPERIMPOSED_PATH, provider.getRootPath());
         assertEquals(ORIGINAL_PATH, provider.getSourcePath());
         assertFalse(provider.isOverlayable());
@@ -322,9 +325,9 @@ public class SuperimposingManagerImplTest {
         underTest.onEvent(prepareNodeChangeEvent(superimposedResource));
 
         // ensure the superimposed resource update is detected and a new provider instance is registered
-        providers = underTest.getRegisteredProviders();
+        providers = IteratorUtils.toList(underTest.getRegisteredProviders());
         assertEquals(1, providers.size());
-        SuperimposingResourceProvider provider2 = providers.values().iterator().next();
+        SuperimposingResourceProvider provider2 = providers.iterator().next();
         assertEquals(SUPERIMPOSED_PATH, provider2.getRootPath());
         assertEquals("/other/path", provider2.getSourcePath());
         assertFalse(provider2.isOverlayable());
@@ -334,10 +337,11 @@ public class SuperimposingManagerImplTest {
         underTest.onEvent(prepareNodeRemoveEvent(superimposedResource));
 
         // ensure provider is removed
-        providers = underTest.getRegisteredProviders();
+        providers = IteratorUtils.toList(underTest.getRegisteredProviders());
         assertEquals(0, providers.size());
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testSuperimposedResourceCreateMove() throws InterruptedException, LoginException, RepositoryException {
         when(componentContextProperties.get(SuperimposingManagerImpl.FINDALLQUERIES_PROPERTY)).thenReturn("syntax|query");
@@ -363,9 +367,9 @@ public class SuperimposingManagerImplTest {
         underTest.onEvent(prepareNodeMoveEvent(superimposedResource, oldPath));
 
         // ensure the superimposed resource update is detected and a new provider instance is registered
-        Map<String, SuperimposingResourceProvider> providers = underTest.getRegisteredProviders();
+        List<SuperimposingResourceProvider> providers = IteratorUtils.toList(underTest.getRegisteredProviders());
         assertEquals(1, providers.size());
-        SuperimposingResourceProvider provider = providers.values().iterator().next();
+        SuperimposingResourceProvider provider = providers.iterator().next();
         assertEquals("/new/path", provider.getRootPath());
         assertEquals(ORIGINAL_PATH, provider.getSourcePath());
         assertFalse(provider.isOverlayable());

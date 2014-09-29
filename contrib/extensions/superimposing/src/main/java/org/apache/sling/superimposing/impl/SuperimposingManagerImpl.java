@@ -22,9 +22,9 @@ import static org.apache.sling.superimposing.SuperimposingResourceProvider.PROP_
 import static org.apache.sling.superimposing.SuperimposingResourceProvider.PROP_SUPERIMPOSE_SOURCE_PATH;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -413,11 +413,13 @@ public class SuperimposingManagerImpl implements SuperimposingManager, EventList
     }
 
     /**
-     * @return Immutable map with all superimposing resource providers currently registered
+     * @return Iterator with all superimposing resource providers currently registered.
+     *   Iterator is backed by a {@link java.util.concurrent.ConcurrentHashMap} and is safe to access
+     *   even if superimposing resource providers are registered or unregistered at the same time.
      */
-    public Map<String, SuperimposingResourceProvider> getRegisteredProviders() {
-        Map<String, SuperimposingResourceProvider> mapcopy = new HashMap<String, SuperimposingResourceProvider>(superimposingProviders);
-        return Collections.unmodifiableMap(mapcopy);
+    @SuppressWarnings("unchecked")
+    public Iterator<SuperimposingResourceProvider> getRegisteredProviders() {
+        return IteratorUtils.unmodifiableIterator(superimposingProviders.values().iterator());
     }
 
     SuperimposingManagerImpl withResourceResolverFactory(ResourceResolverFactory resolverFactory) {
