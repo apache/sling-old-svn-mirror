@@ -27,8 +27,9 @@ public interface ReplicationEventFactory {
 
     /**
      * generate a replication event
+     *
      * @param replicationEventType the type of event to be generated
-     * @param properties a dictionary of properties to be attached to the event
+     * @param properties           a dictionary of properties to be attached to the event
      */
     void generateEvent(ReplicationEventType replicationEventType, Dictionary<?, ?> properties);
 }

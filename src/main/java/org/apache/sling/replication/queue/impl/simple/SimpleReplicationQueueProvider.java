@@ -38,7 +38,7 @@ import org.apache.sling.replication.queue.impl.AbstractReplicationQueueProvider;
 @Service(value = ReplicationQueueProvider.class)
 @Property(name = "name", value = SimpleReplicationQueueProvider.NAME)
 public class SimpleReplicationQueueProvider extends AbstractReplicationQueueProvider implements
-                ReplicationQueueProvider {
+        ReplicationQueueProvider {
 
     @Reference
     Scheduler scheduler;
@@ -46,7 +46,7 @@ public class SimpleReplicationQueueProvider extends AbstractReplicationQueueProv
     public static final String NAME = "simple";
 
     protected ReplicationQueue getOrCreateQueue(String agentName, String selector)
-                    throws ReplicationQueueException {
+            throws ReplicationQueueException {
         return new SimpleReplicationQueue(agentName, selector);
     }
 
@@ -65,7 +65,7 @@ public class SimpleReplicationQueueProvider extends AbstractReplicationQueueProv
         scheduler.unschedule(getJobName(agentName));
     }
 
-    private String getJobName(String  agentName){
-        return SimpleReplicationQueueProvider.NAME+"-queueProcessor-"+agentName;
+    private String getJobName(String agentName) {
+        return SimpleReplicationQueueProvider.NAME + "-queueProcessor-" + agentName;
     }
 }

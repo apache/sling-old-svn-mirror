@@ -23,9 +23,9 @@ package org.apache.sling.replication.resources.impl.common;
  * Path info representing a main resource.
  * The requestPath = resourcePath + resourcePathInfo
  * The identified resource can be of three types:
- *      root  - resourcePath = resourceRoot
- *      main  - resourcePath = resourceRoot + mainResourceName
- *      child - resourcePath = resourceRoot + mainResourceName + childResourceName
+ * root  - resourcePath = resourceRoot
+ * main  - resourcePath = resourceRoot + mainResourceName
+ * child - resourcePath = resourceRoot + mainResourceName + childResourceName
  */
 public class SimplePathInfo {
 
@@ -68,14 +68,12 @@ public class SimplePathInfo {
         return mainResourceName != null && childResourceName != null;
     }
 
-    public String  getResourcePath() {
+    public String getResourcePath() {
         if (isRoot()) {
             return resourceRoot;
-        }
-        else if (isMain()) {
+        } else if (isMain()) {
             return resourceRoot + "/" + mainResourceName;
-        }
-        else if (isChild()) {
+        } else if (isChild()) {
             return resourceRoot + "/" + mainResourceName + "/" + childResourceName;
         }
 
@@ -91,15 +89,14 @@ public class SimplePathInfo {
         String resourceName = null;
         String resourcePathInfo = null;
 
-        if(requestPath.startsWith(resourceRoot + "/")) {
-            resourceName = requestPath.substring(resourceRoot.length()+1);
+        if (requestPath.startsWith(resourceRoot + "/")) {
+            resourceName = requestPath.substring(resourceRoot.length() + 1);
             int idx = resourceName.indexOf(".");
             if (idx >= 0) {
                 resourcePathInfo = resourceName.substring(idx);
                 resourceName = resourceName.substring(0, idx);
             }
-        }
-        else {
+        } else {
             int idx = requestPath.indexOf(".");
             if (requestPath.contains(".")) {
                 resourcePathInfo = requestPath.substring(idx);
@@ -111,7 +108,7 @@ public class SimplePathInfo {
         if (resourceName != null) {
             int idx = resourceName.indexOf("/");
             if (idx >= 0) {
-                childResourceName = resourceName.substring(idx+1);
+                childResourceName = resourceName.substring(idx + 1);
                 resourceName = resourceName.substring(0, idx);
             }
         }

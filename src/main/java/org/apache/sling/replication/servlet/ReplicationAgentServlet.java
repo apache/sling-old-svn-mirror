@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
 @Service(value = Servlet.class)
 @Properties({
         @Property(name = "sling.servlet.resourceTypes", value = ReplicationConstants.AGENT_RESOURCE_TYPE),
-        @Property(name = "sling.servlet.methods", value = "POST") })
+        @Property(name = "sling.servlet.methods", value = "POST")})
 public class ReplicationAgentServlet extends SlingAllMethodsServlet {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -91,9 +91,9 @@ public class ReplicationAgentServlet extends SlingAllMethodsServlet {
         }
     }
 
-    String[] toStringArray(Enumeration<String> e){
+    String[] toStringArray(Enumeration<String> e) {
         List<String> l = new ArrayList<String>();
-        while (e.hasMoreElements()){
+        while (e.hasMoreElements()) {
             l.add(e.nextElement());
         }
 

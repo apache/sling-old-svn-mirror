@@ -43,7 +43,7 @@ public class SimpleReadableResource extends AbstractResource {
 
 
     public SimpleReadableResource(ResourceResolver resourceResolver, String resourcePath,
-                                    Map<String, Object> properties, Object... adapters) {
+                                  Map<String, Object> properties, Object... adapters) {
 
         this.resourceResolver = resourceResolver;
         this.resourcePath = resourcePath;
@@ -58,7 +58,7 @@ public class SimpleReadableResource extends AbstractResource {
     public String getResourceType() {
         // get resource type from data
         final Object rt = this.properties.get("sling:resourceType");
-        if ( rt != null ) {
+        if (rt != null) {
             return rt.toString();
         }
         return "nt:unstructured";
@@ -67,7 +67,7 @@ public class SimpleReadableResource extends AbstractResource {
     public String getResourceSuperType() {
         // get resource type from data
         final Object rt = this.properties.get("sling:resourceSuperType");
-        if ( rt != null ) {
+        if (rt != null) {
             return rt.toString();
         }
         return "nt:unstructured";
@@ -91,8 +91,7 @@ public class SimpleReadableResource extends AbstractResource {
 
         if (type == ValueMap.class || type == Map.class) {
             return (AdapterType) new ValueMapDecorator(getProperties());
-        }
-        else {
+        } else {
             if (adapters != null) {
                 for (Object adapter : adapters) {
                     if (adapter == null) continue;
@@ -103,8 +102,7 @@ public class SimpleReadableResource extends AbstractResource {
 
                             return convertArray(type, adapterArray);
                         }
-                    }
-                    else if (type.isAssignableFrom(adapter.getClass())) {
+                    } else if (type.isAssignableFrom(adapter.getClass())) {
                         return (AdapterType) adapter;
                     }
                 }
@@ -114,13 +112,13 @@ public class SimpleReadableResource extends AbstractResource {
     }
 
 
-    private  <ArrayType> ArrayType convertArray(Class<ArrayType> arrayType, Object[] array) {
+    private <ArrayType> ArrayType convertArray(Class<ArrayType> arrayType, Object[] array) {
         Object[] result = (Object[]) Array.newInstance(arrayType.getComponentType(), array.length);
-        for (int i=0; i < array.length; i++) {
-           if (array[i] != null && !arrayType.getComponentType().isAssignableFrom(array[i].getClass())) {
-            return null;
-           }
-           result[i] = array[i];
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] != null && !arrayType.getComponentType().isAssignableFrom(array[i].getClass())) {
+                return null;
+            }
+            result[i] = array[i];
         }
 
         return (ArrayType) result;

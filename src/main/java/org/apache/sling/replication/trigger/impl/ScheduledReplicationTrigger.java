@@ -25,8 +25,8 @@ import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
-import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
+import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +57,7 @@ public class ScheduledReplicationTrigger implements ReplicationTrigger {
                 scheduler);
     }
 
-    public ScheduledReplicationTrigger(ReplicationActionType replicationAction, String path,  int secondsInterval, Scheduler scheduler) {
+    public ScheduledReplicationTrigger(ReplicationActionType replicationAction, String path, int secondsInterval, Scheduler scheduler) {
 
         this.replicationAction = replicationAction;
         this.path = path;
@@ -84,7 +84,7 @@ public class ScheduledReplicationTrigger implements ReplicationTrigger {
         }
 
         public void run() {
-            log.debug("agent {}: scheduling {} replication of {}", new Object[]{ requestHandler, replicationAction, path});
+            log.debug("agent {}: scheduling {} replication of {}", new Object[]{requestHandler, replicationAction, path});
 
             requestHandler.handle(new ReplicationRequest(System.currentTimeMillis(), replicationAction, path));
         }

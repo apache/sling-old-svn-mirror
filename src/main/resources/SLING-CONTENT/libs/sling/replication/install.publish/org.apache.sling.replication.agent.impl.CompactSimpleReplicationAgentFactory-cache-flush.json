@@ -1,9 +1,9 @@
 {
-    "jcr:primaryType" : "sling:OsgiConfig",
-    "name" : "cache-flush",
-    "type" : "simple",
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "cache-flush",
+    "type": "simple",
 
-    "packageExporter" : [
+    "packageExporter": [
         "type=service",
         "name=void"
     ],
@@ -13,12 +13,12 @@
         "name=cache-flush"
     ],
 
-    "queueProvider" : [
+    "queueProvider": [
         "type=service",
         "name=sjh"
     ],
 
-    "queueDistributionStrategy" : [
+    "queueDistributionStrategy": [
         "type=service",
         "name=error"
     ]

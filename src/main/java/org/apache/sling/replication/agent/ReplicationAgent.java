@@ -25,7 +25,7 @@ import org.apache.sling.replication.queue.ReplicationQueueException;
 
 /**
  * A replication agent is responsible for handling {@link org.apache.sling.replication.communication.ReplicationRequest}s.
- *
+ * <p/>
  * This means executing actions of a specific {@link org.apache.sling.replication.communication.ReplicationActionType}s on
  * specific path(s) which will resume in e.g. polling resources from a certain Sling instance and / or sending resources to
  * other instances.

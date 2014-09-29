@@ -33,7 +33,7 @@ public class UserCredentialsTransportAuthenticationProviderTest {
     @Test
     public void testAuthenticationWithNullAuthenticableAndContext() throws Exception {
         UserCredentialsTransportAuthenticationProvider authenticationHandler = new UserCredentialsTransportAuthenticationProvider(
-                        "foo", "bar");
+                "foo", "bar");
         Executor authenticable = null;
         TransportAuthenticationContext context = null;
         try {
@@ -47,7 +47,7 @@ public class UserCredentialsTransportAuthenticationProviderTest {
     @Test
     public void testAuthenticationWithAuthenticableAndNullContext() throws Exception {
         UserCredentialsTransportAuthenticationProvider authenticationHandler = new UserCredentialsTransportAuthenticationProvider(
-                        "foo", "bar");
+                "foo", "bar");
         Executor authenticable = Executor.newInstance();
         TransportAuthenticationContext context = null;
         try {
@@ -61,7 +61,7 @@ public class UserCredentialsTransportAuthenticationProviderTest {
     @Test
     public void testAuthenticationWithAuthenticableAndEmptyContext() throws Exception {
         UserCredentialsTransportAuthenticationProvider authenticationHandler = new UserCredentialsTransportAuthenticationProvider(
-                        "foo", "bar");
+                "foo", "bar");
         Executor authenticable = Executor.newInstance();
         TransportAuthenticationContext context = new TransportAuthenticationContext();
         try {
@@ -75,7 +75,7 @@ public class UserCredentialsTransportAuthenticationProviderTest {
     @Test
     public void testAuthenticationWithAuthenticableAndCorrectContext() throws Exception {
         UserCredentialsTransportAuthenticationProvider authenticationHandler = new UserCredentialsTransportAuthenticationProvider(
-                        "foo", "bar");
+                "foo", "bar");
         Executor authenticable = Executor.newInstance();
         TransportAuthenticationContext context = new TransportAuthenticationContext();
         context.addAttribute("endpoint", new ReplicationEndpoint("http://www.apache.org"));

@@ -20,7 +20,7 @@ package org.apache.sling.replication.queue;
 
 /**
  * An item in a {@link org.apache.sling.replication.queue.ReplicationQueue}
- *
+ * <p/>
  * This is basically a proxy to {@link org.apache.sling.replication.packaging.ReplicationPackage} designed to avoid having
  * to keep the package {@link org.apache.sling.replication.packaging.ReplicationPackage#createInputStream() stream} into
  * the queues.

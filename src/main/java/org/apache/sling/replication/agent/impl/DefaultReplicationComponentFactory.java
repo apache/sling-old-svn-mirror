@@ -31,6 +31,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgent;
+import org.apache.sling.replication.agent.ReplicationComponentProvider;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
@@ -42,7 +43,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A generic factory for replication components using a compact configuration, already existing OSGi services
  * for the components to be wired can be used as well as directly instantiated components (called by type name).
- *
+ * <p/>
  * Currently supported components are of kind 'agent' and 'trigger'.
  */
 @Component(metatype = true,
@@ -121,8 +122,7 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentL
                     componentObject = agent;
                     agent.enable();
 
-                }
-                else if ("trigger".equals(kind)) {
+                } else if ("trigger".equals(kind)) {
 
                     ReplicationTrigger trigger = componentProvider.createComponent(ReplicationTrigger.class, properties);
 
@@ -148,8 +148,7 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentL
                 SimpleReplicationAgent replicationComponent = (SimpleReplicationAgent) context.getService(reference);
                 replicationComponent.disable();
 
-            }
-            else if ("trigger".equals(kind)) {
+            } else if ("trigger".equals(kind)) {
 
             }
             componentReg.unregister();

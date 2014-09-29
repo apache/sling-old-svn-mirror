@@ -33,8 +33,8 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.replication.communication.ReplicationRequest;
-import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
+import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 @Service(value = Servlet.class)
 @Properties({
         @Property(name = "sling.servlet.resourceTypes", value = "sling/replication/service/trigger"),
-        @Property(name = "sling.servlet.extensions", value="event"),
+        @Property(name = "sling.servlet.extensions", value = "event"),
         @Property(name = "sling.servlet.methods", value = "GET")
 })
 public class ReplicationTriggerServlet extends SlingAllMethodsServlet {
@@ -79,7 +79,8 @@ public class ReplicationTriggerServlet extends SlingAllMethodsServlet {
         response.setHeader("Cache-Control", "no-cache");
         response.setHeader("Connection", "keep-alive");
 
-        // needed to allow the JavaScript EventSource API to make a call from author to this server and listen for the events
+        // needed to allow e.g. the JavaScript EventSource API to make a call from author to this server and listen for the events
+        // TODO : check if this is needed or not (other than for browser communication)
         response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
         response.setHeader("Access-Control-Allow-Credentials", "true");
 

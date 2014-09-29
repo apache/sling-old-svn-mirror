@@ -1,7 +1,7 @@
 {
-    "jcr:primaryType" : "sling:OsgiConfig",
+    "jcr:primaryType": "sling:OsgiConfig",
     "name": "reverse",
 
-    "ReplicationPackageBuilder.target" : "(name=vlt)",
-    "ReplicationAgent.target" : "(name=reverse)"
+    "ReplicationPackageBuilder.target": "(name=vlt)",
+    "ReplicationAgent.target": "(name=reverse)"
 }

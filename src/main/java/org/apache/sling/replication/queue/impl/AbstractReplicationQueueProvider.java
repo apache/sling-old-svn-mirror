@@ -38,7 +38,7 @@ public abstract class AbstractReplicationQueueProvider implements ReplicationQue
     private final Map<String, ReplicationQueue> queueMap = new ConcurrentHashMap<String, ReplicationQueue>();
 
     public ReplicationQueue getQueue(String agentName, String queueName)
-                    throws ReplicationQueueException {
+            throws ReplicationQueueException {
         String key = agentName + queueName;
 
         ReplicationQueue queue = queueMap.get(key);
@@ -52,7 +52,7 @@ public abstract class AbstractReplicationQueueProvider implements ReplicationQue
     }
 
     public ReplicationQueue getDefaultQueue(String agentName)
-                    throws ReplicationQueueException {
+            throws ReplicationQueueException {
         return getQueue(agentName, "");
     }
 

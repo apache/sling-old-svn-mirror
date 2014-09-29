@@ -164,8 +164,6 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
     }
 
 
-
-
     @Override
     public boolean installPackageInternal(ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {
         log.debug("reading a replication package stream");

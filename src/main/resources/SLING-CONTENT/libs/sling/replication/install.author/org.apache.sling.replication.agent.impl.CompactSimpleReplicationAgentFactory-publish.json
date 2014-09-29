@@ -1,9 +1,9 @@
 {
-    "jcr:primaryType" : "sling:OsgiConfig",
-    "name" : "publish",
-    "type" : "simple",
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "publish",
+    "type": "simple",
 
-    "packageExporter" : [
+    "packageExporter": [
         "type=local",
         "packageBuilder/type=vlt",
         "packageBuilder/servicename=replicationService"
@@ -20,12 +20,12 @@
         "packageBuilder/servicename=replicationService"
     ],
 
-    "queueProvider" : [
+    "queueProvider": [
         "type=service",
         "name=sjh"
     ],
 
-    "queueDistributionStrategy" : [
+    "queueDistributionStrategy": [
         "type=service",
         "name=error"
     ]
