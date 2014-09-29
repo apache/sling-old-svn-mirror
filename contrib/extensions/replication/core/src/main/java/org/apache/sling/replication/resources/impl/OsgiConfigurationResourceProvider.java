@@ -208,7 +208,7 @@ public class OsgiConfigurationResourceProvider extends AbstractModifyingResource
         return dictionary;
     }
 
-    private Map<String, Object>  filterBeforeSave(Map<String, Object> properties) {
+    private Map<String, Object> filterBeforeSave(Map<String, Object> properties) {
         Map<String, Object> result = new HashMap<String, Object>();
 
         for (Map.Entry<String, Object> entry : properties.entrySet()) {
@@ -218,8 +218,7 @@ public class OsgiConfigurationResourceProvider extends AbstractModifyingResource
                 if (entryValue != null) {
                     result.put(entry.getKey(), entryValue);
                 }
-            }
-            else {
+            } else {
                 result.put(entry.getKey(), entry.getValue());
             }
 
@@ -229,7 +228,7 @@ public class OsgiConfigurationResourceProvider extends AbstractModifyingResource
 
     }
 
-    private Map<String, Object>  filterBeforeRead(Map<String, Object> properties) {
+    private Map<String, Object> filterBeforeRead(Map<String, Object> properties) {
         Map<String, Object> result = new HashMap<String, Object>();
 
         for (Map.Entry<String, Object> entry : properties.entrySet()) {
@@ -239,8 +238,7 @@ public class OsgiConfigurationResourceProvider extends AbstractModifyingResource
                 if (entryValue != null) {
                     result.put(entry.getKey(), entryValue);
                 }
-            }
-            else {
+            } else {
                 result.put(entry.getKey(), entry.getValue());
             }
 

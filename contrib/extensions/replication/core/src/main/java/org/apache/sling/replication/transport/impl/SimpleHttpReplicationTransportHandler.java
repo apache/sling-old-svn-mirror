@@ -84,22 +84,21 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
 
             TransportAuthenticationContext context = new TransportAuthenticationContext();
             context.addAttribute("endpoint", replicationEndpoint);
-            executor =  transportAuthenticationProvider.authenticate(executor, context);
+            executor = transportAuthenticationProvider.authenticate(executor, context);
 
             Request req = Request.Post(replicationEndpoint.getUri()).useExpectContinue();
 
             InputStream inputStream = null;
             Response response = null;
-            try{
+            try {
 
                 inputStream = replicationPackage.createInputStream();
 
-                if(inputStream != null) {
+                if (inputStream != null) {
                     req = req.bodyStream(inputStream, ContentType.APPLICATION_OCTET_STREAM);
                 }
                 response = executor.execute(req);
-            }
-            finally {
+            } finally {
                 IOUtils.closeQuietly(inputStream);
             }
 
@@ -110,12 +109,10 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
                         Arrays.toString(replicationPackage.getPaths()),
                         content
                 });
-            }
-            else {
+            } else {
                 throw new IOException("response is empty");
             }
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             throw new ReplicationTransportException(ex);
         }
 
@@ -153,8 +150,7 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
 
                 if (polls > 0) {
                     log.info("polled {} packages from {}", polls, replicationEndpoint.getUri());
-                }
-                else {
+                } else {
                     log.debug("polled {} packages from {}", polls, replicationEndpoint.getUri());
                 }
 
@@ -164,8 +160,7 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
 
             return result;
 
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             throw new ReplicationTransportException(ex);
         }
 

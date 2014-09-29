@@ -1,9 +1,9 @@
 {
-    "jcr:primaryType" : "sling:OsgiConfig",
-    "name" : "publish-reverse",
-    "type" : "simple",
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "publish-reverse",
+    "type": "simple",
 
-    "packageExporter" : [
+    "packageExporter": [
         "type=remote",
         "endpoints[0]=http://localhost:4503/libs/sling/replication/services/exporters/reverse",
 
@@ -20,23 +20,23 @@
         "packageBuilder/servicename=replicationService"
     ],
 
-    "queueProvider" : [
+    "queueProvider": [
         "type=service",
         "name=sjh"
     ],
 
-    "queueDistributionStrategy" : [
+    "queueDistributionStrategy": [
         "type=service",
         "name=error"
     ],
 
-    "trigger0" : [
+    "trigger0": [
         "type=scheduledEvent",
         "action=poll",
         "seconds=30"
     ],
 
-    "trigger1" : [
+    "trigger1": [
         "type=remoteEvent",
         "endpoint=http://localhost:4503/libs/sling/replication/services/triggers/content-changed.event",
 

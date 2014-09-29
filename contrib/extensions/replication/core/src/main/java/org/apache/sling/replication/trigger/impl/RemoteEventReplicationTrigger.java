@@ -43,10 +43,10 @@ import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.communication.ReplicationRequest;
-import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
-import org.apache.sling.replication.trigger.ReplicationTrigger;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.replication.trigger.ReplicationTrigger;
+import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -167,7 +167,7 @@ public class RemoteEventReplicationTrigger implements ReplicationTrigger {
 
                 TransportAuthenticationContext context = new TransportAuthenticationContext();
                 context.addAttribute("endpoint", endpoint);
-                credentialsProvider =  authenticationProvider.authenticate(credentialsProvider, context);
+                credentialsProvider = authenticationProvider.authenticate(credentialsProvider, context);
 
                 final CloseableHttpAsyncClient httpClient = HttpAsyncClients.custom()
                         .setDefaultCredentialsProvider(credentialsProvider)
@@ -198,7 +198,7 @@ public class RemoteEventReplicationTrigger implements ReplicationTrigger {
                     futureResponse.get();
 
                 } catch (Exception e) {
-                    log.warn("cannot communicate with {} - {}",  endpoint, e);
+                    log.warn("cannot communicate with {} - {}", endpoint, e);
                 }
                 httpClient.close();
                 log.debug("request finished");

@@ -27,8 +27,8 @@ import org.apache.sling.api.SlingConstants;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
-import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
+import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
@@ -53,7 +53,7 @@ public class ResourceEventReplicationTrigger implements ReplicationTrigger {
 
 
     public ResourceEventReplicationTrigger(Map<String, Object> config, BundleContext bundleContext) {
-       this(PropertiesUtil.toString(config.get(PATH), null), bundleContext);
+        this(PropertiesUtil.toString(config.get(PATH), null), bundleContext);
     }
 
     public ResourceEventReplicationTrigger(String path, BundleContext bundleContext) {
@@ -92,7 +92,6 @@ public class ResourceEventReplicationTrigger implements ReplicationTrigger {
             registrations.put(handlerId, triggerPathEventRegistration);
         } else {
             log.error("cannot register trigger since bundle context is null");
-
         }
     }
 
@@ -102,7 +101,6 @@ public class ResourceEventReplicationTrigger implements ReplicationTrigger {
             serviceRegistration.unregister();
         }
     }
-
 
     private class TriggerAgentEventListener implements EventHandler {
 

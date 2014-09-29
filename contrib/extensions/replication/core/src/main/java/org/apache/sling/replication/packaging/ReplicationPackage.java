@@ -29,24 +29,28 @@ public interface ReplicationPackage extends Serializable {
 
     /**
      * get package id
+     *
      * @return the package id as a <code>String</code>
      */
     String getId();
 
     /**
      * get the paths covered by this package
+     *
      * @return an array of <code>String</code> paths
      */
     String[] getPaths();
 
     /**
      * get the action this package is used for
+     *
      * @return the action as a <code>String</code>
      */
     String getAction();
 
     /**
      * get the type of package
+     *
      * @return the package type as a <code>String</code>
      */
     String getType();
@@ -54,6 +58,7 @@ public interface ReplicationPackage extends Serializable {
     /**
      * creates a package stream.
      * a new stream is created for each call and it is the caller's obligation to close the stream.
+     *
      * @return an {@link InputStream}
      * @throws IOException
      */
@@ -61,6 +66,7 @@ public interface ReplicationPackage extends Serializable {
 
     /**
      * get package stream length
+     *
      * @return the package length as a <code>long</code>
      */
     long getLength();

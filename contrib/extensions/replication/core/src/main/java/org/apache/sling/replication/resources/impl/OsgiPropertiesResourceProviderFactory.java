@@ -40,17 +40,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-@Component(label="Osgi Service Properties Resource Provider Factory",
-        description="Osgi Service Properties Resource Provider Factory",
+@Component(label = "Osgi Service Properties Resource Provider Factory",
+        description = "Osgi Service Properties Resource Provider Factory",
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE,
         name = OsgiPropertiesResourceProviderFactory.SERVICE_PID,
-        metatype=true)
-@Service(value=ResourceProviderFactory.class)
+        metatype = true)
+@Service(value = ResourceProviderFactory.class)
 @Properties({
-        @Property(name= ResourceProvider.ROOTS),
-        @Property(name = ResourceProvider.OWNS_ROOTS, boolValue=true, propertyPrivate=true)
+        @Property(name = ResourceProvider.ROOTS),
+        @Property(name = ResourceProvider.OWNS_ROOTS, boolValue = true, propertyPrivate = true)
 })
 public class OsgiPropertiesResourceProviderFactory implements ResourceProviderFactory {
 
@@ -70,7 +70,7 @@ public class OsgiPropertiesResourceProviderFactory implements ResourceProviderFa
     /**
      * nameProperty contains the name of the property that will be used to expose
      * the underlying resources.
-     *
+     * <p/>
      * resourceRoot/resourceName/childResourceName
      */
     @Property(value = DEFAULT_FRIENDLY_NAME_PROPERTY)
@@ -80,15 +80,14 @@ public class OsgiPropertiesResourceProviderFactory implements ResourceProviderFa
      * resourceProperties contains the list of properties returned by this provider.
      * Properties can be configured for the main resource, for the root resource and for child resources.
      * Root resource properties are static and can be configured as follows:
-     *      ../rootResourcePropertyName = rootResourcePropertyValue
-     *
+     * ../rootResourcePropertyName = rootResourcePropertyValue
+     * <p/>
      * Main resource properties can be static or dynamic (depending on the underlying resource) are configured as follows:
-     *      mainResourceStaticPropertyName = mainResourceStaticPropertyValue
-     *      mainResourceDynamicPropertyName = {mainResourceSourcePropertyName}
-     *
+     * mainResourceStaticPropertyName = mainResourceStaticPropertyValue
+     * mainResourceDynamicPropertyName = {mainResourceSourcePropertyName}
+     * <p/>
      * Child resource properties are static an can be configured as follows:
-     *      childResourceName/childResourcePropertyName=childResourcePropertyValue
-     *
+     * childResourceName/childResourcePropertyName=childResourcePropertyValue
      */
     @Property(cardinality = 100)
     public final static String RESOURCE_PROPERTIES = "resourceProperties";
@@ -98,7 +97,7 @@ public class OsgiPropertiesResourceProviderFactory implements ResourceProviderFa
      * The providerType can be osgiService or osgiConfig.
      * A provider of type osgiService will allow read only access to osgi service properties of a particuar interface.
      * The resource can be adapted to the underlying service instance.
-     *
+     * <p/>
      * A provider of type osgiConfig will allow CRUD access to osgi configurations registered for a particular factory.     *
      */
     @Property(value = DEFAULT_PROVIDER_TYPE)
@@ -133,8 +132,7 @@ public class OsgiPropertiesResourceProviderFactory implements ResourceProviderFa
                     resourceRoot,
                     additionalResourceProperties);
 
-        }
-        else {
+        } else {
             OsgiServicePropertiesResourceProvider servicePropertiesResourceProvider;
             resourceProvider = servicePropertiesResourceProvider = new OsgiServicePropertiesResourceProvider(context,
                     type,

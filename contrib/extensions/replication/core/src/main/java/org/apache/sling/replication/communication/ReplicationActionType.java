@@ -46,9 +46,8 @@ public enum ReplicationActionType {
 
     /**
      * Create a type
-     * 
-     * @param name
-     *            name
+     *
+     * @param name name
      */
     private ReplicationActionType(String name) {
         this.name = name;
@@ -56,7 +55,7 @@ public enum ReplicationActionType {
 
     /**
      * Returns the human readable type name of this type.
-     * 
+     *
      * @return the name
      */
     public String getName() {
@@ -66,9 +65,8 @@ public enum ReplicationActionType {
     /**
      * Creates an action type for the given name. if the name cannot be mapped to a enum type or if
      * it's <code>null</code>, <code>null</code> is returned.
-     * 
-     * @param n
-     *            the name
+     *
+     * @param n the name
      * @return the type or <code>null</code>
      */
     public static ReplicationActionType fromName(String n) {

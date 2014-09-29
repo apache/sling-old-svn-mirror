@@ -20,6 +20,7 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.agent.ReplicationAgent;
+import org.apache.sling.replication.agent.ReplicationComponentProvider;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
@@ -29,15 +30,15 @@ import org.apache.sling.replication.packaging.impl.importer.LocalReplicationPack
 import org.apache.sling.replication.packaging.impl.importer.RemoteReplicationPackageImporterFactory;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
+import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
+import org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilderFactory;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.replication.transport.authentication.impl.UserCredentialsTransportAuthenticationProvider;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
 import org.apache.sling.replication.trigger.impl.ChainReplicateReplicationTrigger;
 import org.apache.sling.replication.trigger.impl.RemoteEventReplicationTrigger;
 import org.apache.sling.replication.trigger.impl.ResourceEventReplicationTrigger;
 import org.apache.sling.replication.trigger.impl.ScheduledReplicationTrigger;
-import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
-import org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilderFactory;
-import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
-import org.apache.sling.replication.transport.authentication.impl.UserCredentialsTransportAuthenticationProvider;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,8 +106,7 @@ public class DefaultReplicationComponentProvider implements ReplicationComponent
         try {
             if (type.isAssignableFrom(ReplicationAgent.class)) {
                 return (ComponentType) createAgent(properties, this);
-            }
-            else if (type.isAssignableFrom(ReplicationTrigger.class)) {
+            } else if (type.isAssignableFrom(ReplicationTrigger.class)) {
                 return (ComponentType) createTrigger(properties, this);
             }
         } catch (Throwable t) {
@@ -242,8 +242,7 @@ public class DefaultReplicationComponentProvider implements ReplicationComponent
             String name = PropertiesUtil.toString(properties.get(NAME), null);
             return componentProvider.getComponent(TransportAuthenticationProvider.class, name);
 
-        }
-        else if ("user".equals(factory)) {
+        } else if ("user".equals(factory)) {
             return new UserCredentialsTransportAuthenticationProvider(properties);
         }
 
@@ -261,27 +260,23 @@ public class DefaultReplicationComponentProvider implements ReplicationComponent
     }
 
 
-    private ReplicationTrigger createTrigger(Map<String,Object> properties, ReplicationComponentProvider componentProvider) {
+    private ReplicationTrigger createTrigger(Map<String, Object> properties, ReplicationComponentProvider componentProvider) {
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), "service");
 
         if ("service".equals(factory)) {
             String name = PropertiesUtil.toString(properties.get(NAME), null);
             return componentProvider.getComponent(ReplicationTrigger.class, name);
 
-        }
-        else if (RemoteEventReplicationTrigger.TYPE.equals(factory)) {
+        } else if (RemoteEventReplicationTrigger.TYPE.equals(factory)) {
             Map<String, Object> authenticationProviderProperties = extractMap("authenticationProvider", properties);
 
             TransportAuthenticationProvider authenticationProvider = createTransportAuthenticationProvider(authenticationProviderProperties, componentProvider);
             return new RemoteEventReplicationTrigger(properties, authenticationProvider, scheduler);
-        }
-        else if (ResourceEventReplicationTrigger.TYPE.equals(factory)) {
+        } else if (ResourceEventReplicationTrigger.TYPE.equals(factory)) {
             return new ResourceEventReplicationTrigger(properties, bundleContext);
-        }
-        else if (ScheduledReplicationTrigger.TYPE.equals(factory)) {
+        } else if (ScheduledReplicationTrigger.TYPE.equals(factory)) {
             return new ScheduledReplicationTrigger(properties, scheduler);
-        }
-        else if (ChainReplicateReplicationTrigger.TYPE.equals(factory)) {
+        } else if (ChainReplicateReplicationTrigger.TYPE.equals(factory)) {
             return new ChainReplicateReplicationTrigger(properties, bundleContext);
         }
 
@@ -298,7 +293,7 @@ public class DefaultReplicationComponentProvider implements ReplicationComponent
     }
 
     Map<String, Object> extractMap(String key, Map<String, Object> objectMap) {
-         return SettingsUtils.extractMap(key, objectMap);
+        return SettingsUtils.extractMap(key, objectMap);
     }
 
     List<Map<String, Object>> extractMapList(String key, Map<String, Object> objectMap) {

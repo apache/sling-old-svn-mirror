@@ -37,7 +37,7 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
     private final Set<String> deletedResources = new HashSet<String>();
 
     public AbstractModifyingResourceProvider(String resourceRoot,
-                                              Map<String,String> additionalResourceProperties){
+                                             Map<String, String> additionalResourceProperties) {
         super(resourceRoot, additionalResourceProperties);
 
     }
@@ -79,8 +79,8 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
         String resourceName = pathInfo.getMainResourceName();
 
         if (!deletedResources.contains(resourceName)) {
-           deletedResources.add(resourceName);
-           changedResources.remove(resourceName);
+            deletedResources.add(resourceName);
+            changedResources.remove(resourceName);
         }
     }
 
@@ -164,7 +164,6 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
     protected abstract void save(ResourceResolver resourceResolver,
                                  Map<String, Map<String, Object>> changedResources,
                                  Set<String> deletedResources) throws PersistenceException;
-
 
 
 }

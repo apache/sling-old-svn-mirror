@@ -79,7 +79,7 @@ public class RemoteReplicationPackageImporterFactory implements ReplicationPacka
     @Activate
     protected void activate(BundleContext context, Map<String, Object> config) throws Exception {
 
-       importer = getInstance(config, transportAuthenticationProvider);
+        importer = getInstance(config, transportAuthenticationProvider);
 
     }
 
@@ -101,7 +101,7 @@ public class RemoteReplicationPackageImporterFactory implements ReplicationPacka
     }
 
     public boolean importPackage(ReplicationPackage replicationPackage) {
-       return importer.importPackage(replicationPackage);
+        return importer.importPackage(replicationPackage);
     }
 
     public ReplicationPackage readPackage(InputStream stream) throws ReplicationPackageReadingException {

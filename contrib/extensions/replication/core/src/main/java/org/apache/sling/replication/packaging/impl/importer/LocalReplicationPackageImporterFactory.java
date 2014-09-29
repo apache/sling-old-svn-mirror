@@ -69,7 +69,7 @@ public class LocalReplicationPackageImporterFactory implements ReplicationPackag
     }
 
     public static LocalReplicationPackageImporter getInstance(Map<String, Object> config,
-            ReplicationPackageBuilder packageBuilder, ReplicationEventFactory replicationEventFactory) {
+                                                              ReplicationPackageBuilder packageBuilder, ReplicationEventFactory replicationEventFactory) {
         if (packageBuilder == null) {
             throw new IllegalArgumentException("A package builder is required");
         }
@@ -78,7 +78,7 @@ public class LocalReplicationPackageImporterFactory implements ReplicationPackag
     }
 
     public boolean importPackage(ReplicationPackage replicationPackage) {
-       return importer.importPackage(replicationPackage);
+        return importer.importPackage(replicationPackage);
     }
 
     public ReplicationPackage readPackage(InputStream stream) throws ReplicationPackageReadingException {

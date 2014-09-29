@@ -25,12 +25,12 @@ public class ReplicationConstants {
     public static final String SUFFIX_AGENT_QUEUE = "/queue";
     public static final String SUFFIX_AGENT_QUEUE_EVENT = "/queue/event";
 
-    public static final String  AGENT_RESOURCE_TYPE = "sling/replication/service/agent";
-    public static final String  AGENT_QUEUE_RESOURCE_TYPE = AGENT_RESOURCE_TYPE + SUFFIX_AGENT_QUEUE;
-    public static final String  AGENT_QUEUE_EVENT_RESOURCE_TYPE = AGENT_QUEUE_RESOURCE_TYPE + SUFFIX_AGENT_QUEUE_EVENT;
-    public static final String  AGENT_ROOT_RESOURCE_TYPE = AGENT_RESOURCE_TYPE + SUFFIX_RESOURCE_LIST;
+    public static final String AGENT_RESOURCE_TYPE = "sling/replication/service/agent";
+    public static final String AGENT_QUEUE_RESOURCE_TYPE = AGENT_RESOURCE_TYPE + SUFFIX_AGENT_QUEUE;
+    public static final String AGENT_QUEUE_EVENT_RESOURCE_TYPE = AGENT_QUEUE_RESOURCE_TYPE + SUFFIX_AGENT_QUEUE_EVENT;
+    public static final String AGENT_ROOT_RESOURCE_TYPE = AGENT_RESOURCE_TYPE + SUFFIX_RESOURCE_LIST;
 
-    public static final String  IMPORTER_RESOURCE_TYPE = "sling/replication/service/importer";
-    public static final String  EXPORTER_RESOURCE_TYPE = "sling/replication/service/exporter";
+    public static final String IMPORTER_RESOURCE_TYPE = "sling/replication/service/importer";
+    public static final String EXPORTER_RESOURCE_TYPE = "sling/replication/service/exporter";
 
 }

@@ -217,11 +217,11 @@ public class ReplicationUtils {
     }
 
     public static String triggerUrl(String triggerName) {
-        return  triggerRootUrl() + "/" + triggerName;
+        return triggerRootUrl() + "/" + triggerName;
     }
 
     public static String triggerEventUrl(String triggerName) {
-        return  triggerRootUrl() + "/" + triggerName + ".event";
+        return triggerRootUrl() + "/" + triggerName + ".event";
     }
 
 }

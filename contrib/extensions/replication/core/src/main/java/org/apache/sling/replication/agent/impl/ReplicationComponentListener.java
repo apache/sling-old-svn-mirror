@@ -21,5 +21,6 @@ package org.apache.sling.replication.agent.impl;
 
 public interface ReplicationComponentListener {
     <ComponentType> void componentBind(ComponentType component, String componentName);
+
     <ComponentType> void componentUnbind(ComponentType component, String componentName);
 }

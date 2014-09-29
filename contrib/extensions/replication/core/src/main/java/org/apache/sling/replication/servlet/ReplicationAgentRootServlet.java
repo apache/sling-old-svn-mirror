@@ -44,8 +44,8 @@ import org.slf4j.LoggerFactory;
 @Component(metatype = false)
 @Service(value = Servlet.class)
 @Properties({
-    @Property(name = "sling.servlet.resourceTypes", value = ReplicationConstants.AGENT_ROOT_RESOURCE_TYPE),
-    @Property(name = "sling.servlet.methods", value = {"POST" })
+        @Property(name = "sling.servlet.resourceTypes", value = ReplicationConstants.AGENT_ROOT_RESOURCE_TYPE),
+        @Property(name = "sling.servlet.methods", value = {"POST"})
 })
 public class ReplicationAgentRootServlet extends SlingAllMethodsServlet {
 
@@ -58,7 +58,7 @@ public class ReplicationAgentRootServlet extends SlingAllMethodsServlet {
 
     @Override
     protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
-                    throws ServletException, IOException {
+            throws ServletException, IOException {
 
         ReplicationAgent[] agents = request.getResource().adaptTo(ReplicationAgent[].class);
 
@@ -69,7 +69,7 @@ public class ReplicationAgentRootServlet extends SlingAllMethodsServlet {
 
 
         ReplicationRequest replicationRequest = new ReplicationRequest(System.currentTimeMillis(),
-                        action, paths);
+                action, paths);
 
         boolean failed = false;
         for (ReplicationAgent agent : agents) {
@@ -87,8 +87,7 @@ public class ReplicationAgentRootServlet extends SlingAllMethodsServlet {
         if (failed) {
             response.setStatus(503);
             response.getWriter().append("status : ").append("503");
-        }
-        else {
+        } else {
             response.setStatus(200);
         }
     }

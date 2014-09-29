@@ -34,7 +34,6 @@ public interface TransportAuthenticationProvider<A, T> {
     boolean canAuthenticate(Class authenticable);
 
     /**
-     *
      * @param authenticable
      * @param context
      * @return

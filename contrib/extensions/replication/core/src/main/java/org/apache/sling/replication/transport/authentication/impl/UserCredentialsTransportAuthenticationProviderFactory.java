@@ -47,7 +47,6 @@ public class UserCredentialsTransportAuthenticationProviderFactory implements
     private final Logger log = LoggerFactory.getLogger(getClass());
 
 
-
     private UserCredentialsTransportAuthenticationProvider transportAuthenticationProvider;
 
 
@@ -55,7 +54,6 @@ public class UserCredentialsTransportAuthenticationProviderFactory implements
         transportAuthenticationProvider = new UserCredentialsTransportAuthenticationProvider(config);
 
     }
-
 
 
     public Object authenticate(Object authenticable, TransportAuthenticationContext context)

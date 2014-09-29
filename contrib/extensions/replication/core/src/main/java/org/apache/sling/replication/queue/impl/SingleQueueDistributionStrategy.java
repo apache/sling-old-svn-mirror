@@ -46,7 +46,7 @@ public class SingleQueueDistributionStrategy implements ReplicationQueueDistribu
 
     public ReplicationQueueItemState add(String agentName, ReplicationQueueItem item,
                                          ReplicationQueueProvider queueProvider)
-                    throws ReplicationQueueException {
+            throws ReplicationQueueException {
         log.info("using single queue distribution");
 
         ReplicationQueueItemState state = new ReplicationQueueItemState();

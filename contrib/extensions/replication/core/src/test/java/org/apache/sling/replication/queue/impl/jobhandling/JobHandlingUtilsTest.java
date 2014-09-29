@@ -39,7 +39,7 @@ public class JobHandlingUtilsTest {
         when(replicationQueueItem.getId()).thenReturn("an-id");
         when(replicationQueueItem.getPaths()).thenReturn(new String[]{"/content", "/apps"});
         when(replicationQueueItem.getType()).thenReturn("vlt");
-        Map<String,Object> fullPropertiesFromPackage = JobHandlingUtils.createFullProperties(replicationQueueItem);
+        Map<String, Object> fullPropertiesFromPackage = JobHandlingUtils.createFullProperties(replicationQueueItem);
         assertNotNull(fullPropertiesFromPackage);
         assertEquals(4, fullPropertiesFromPackage.size());
         assertNotNull(fullPropertiesFromPackage.get("replication.package.paths"));
@@ -52,7 +52,7 @@ public class JobHandlingUtilsTest {
     public void testIdPropertiesFromPackageCreation() throws Exception {
         ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         when(replicationPackage.getId()).thenReturn("an-id");
-        Map<String,Object> idPropertiesFromPackage = JobHandlingUtils.createIdProperties(replicationPackage.getId());
+        Map<String, Object> idPropertiesFromPackage = JobHandlingUtils.createIdProperties(replicationPackage.getId());
         assertNotNull(idPropertiesFromPackage);
         assertEquals(1, idPropertiesFromPackage.size());
         assertNotNull(idPropertiesFromPackage.get("replication.package.id"));

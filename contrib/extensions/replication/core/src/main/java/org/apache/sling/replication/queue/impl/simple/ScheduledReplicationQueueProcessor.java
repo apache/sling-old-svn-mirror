@@ -37,7 +37,7 @@ public class ScheduledReplicationQueueProcessor implements Runnable {
     private final ReplicationQueueProcessor queueProcessor;
 
     public ScheduledReplicationQueueProcessor(ReplicationQueueProvider queueProvider,
-                                              ReplicationQueueProcessor queueProcessor){
+                                              ReplicationQueueProcessor queueProcessor) {
 
         this.queueProvider = queueProvider;
         this.queueProcessor = queueProcessor;

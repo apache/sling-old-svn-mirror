@@ -77,8 +77,11 @@
 
         <!-- Options for the jar to execute. $JAREXEC_SERVER_PORT$ is replaced by the
         selected port number -->
-        <author.jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$ -Dsling.run.modes=author -Dsling.home=sling/author</author.jar.executor.jar.options>
-        <publish.jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$ -Dsling.run.modes=publish -Dsling.home=sling/publish</publish.jar.executor.jar.options>
+        <author.jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$ -Dsling.run.modes=author -Dsling.home=sling/author
+        </author.jar.executor.jar.options>
+        <publish.jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$ -Dsling.run.modes=publish
+            -Dsling.home=sling/publish
+        </publish.jar.executor.jar.options>
 
 
         <!-- Change this to run selected tests only -->
@@ -87,7 +90,8 @@
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/replication/it</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/replication/it</developerConnection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/replication/it
+        </developerConnection>
         <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/replication/it</url>
     </scm>
 
@@ -237,8 +241,10 @@
                         <jar.executor.jar.name.regexp>org.apache.sling.launchpad.*jar$</jar.executor.jar.name.regexp>
                         <jar.executor.work.folder>${jar.executor.work.folder}</jar.executor.work.folder>
 
-                        <author.jar.executor.jar.options>${author.jar.executor.jar.options}</author.jar.executor.jar.options>
-                        <publish.jar.executor.jar.options>${publish.jar.executor.jar.options}</publish.jar.executor.jar.options>
+                        <author.jar.executor.jar.options>${author.jar.executor.jar.options}
+                        </author.jar.executor.jar.options>
+                        <publish.jar.executor.jar.options>${publish.jar.executor.jar.options}
+                        </publish.jar.executor.jar.options>
 
 
                         <additional.bundles.path>

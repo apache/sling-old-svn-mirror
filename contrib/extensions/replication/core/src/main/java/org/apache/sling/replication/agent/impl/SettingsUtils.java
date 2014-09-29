@@ -53,23 +53,22 @@ public class SettingsUtils {
             int beginDelim = key.indexOf(COMPONENT_MAP_BEGIN);
             int endDelim = key.indexOf(COMPONENT_MAP_END);
 
-            if (beginDelim >=0 && endDelim > beginDelim && value instanceof String) {
+            if (beginDelim >= 0 && endDelim > beginDelim && value instanceof String) {
                 String newKey = key.substring(0, beginDelim);
-                String partialKey = key.substring(beginDelim+1, endDelim);
+                String partialKey = key.substring(beginDelim + 1, endDelim);
 
                 String newValue = (String) value;
 
                 try {
                     Integer.parseInt(partialKey);
                     // newKey[0] = newValue
-                } catch(NumberFormatException e) {
+                } catch (NumberFormatException e) {
                     // newKey[partialKey] = newValue
                     newValue = partialKey + "=" + newValue;
                 }
 
                 addValueInArray(result, newKey, newValue);
-            }
-            else {
+            } else {
                 result.put(key, value);
             }
         }
@@ -89,11 +88,10 @@ public class SettingsUtils {
             int firstDelim = key.indexOf(COMPONENT_DELIM);
             if (firstDelim >= 0) {
                 String newKey = key.substring(0, firstDelim);
-                String newValue = key.substring(firstDelim+1) + "=" + value;
+                String newValue = key.substring(firstDelim + 1) + "=" + value;
 
                 addValueInArray(result, newKey, newValue);
-            }
-            else {
+            } else {
                 result.put(key, value);
             }
 
@@ -114,9 +112,8 @@ public class SettingsUtils {
             Collections.addAll(newList, existingArray);
             newList.add(value);
             arayValue = newList.toArray(new String[newList.size()]);
-        }
-        else {
-            arayValue = new String[] { value };
+        } else {
+            arayValue = new String[]{value};
         }
 
         map.put(key, arayValue);
@@ -133,24 +130,22 @@ public class SettingsUtils {
 
 
             if (value instanceof Map) {
-                Map<String,Object> map = (Map<String, Object>) value;
+                Map<String, Object> map = (Map<String, Object>) value;
                 for (Map.Entry<String, Object> e : map.entrySet()) {
                     if (e.getValue() != null) {
                         result.add(key + "[" + e.getKey() + "]=" + e.getValue().toString());
                     }
                 }
 
-            }
-            else if (value.getClass().isArray()) {
+            } else if (value.getClass().isArray()) {
                 Object[] array = (Object[]) value;
-                for (int i=0; i < array.length; i++) {
+                for (int i = 0; i < array.length; i++) {
                     if (array[i] != null) {
                         result.add(key + "[" + i + "]=" + array[i].toString());
                     }
                 }
 
-            }
-            else {
+            } else {
                 result.add(key + "=" + value.toString());
             }
         }

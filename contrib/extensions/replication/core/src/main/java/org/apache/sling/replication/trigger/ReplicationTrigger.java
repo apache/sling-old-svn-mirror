@@ -25,13 +25,15 @@ public interface ReplicationTrigger {
 
     /**
      * register a replication trigger
-     * @param handlerId id of the given handler
+     *
+     * @param handlerId      id of the given handler
      * @param requestHandler handler
      */
     void register(String handlerId, ReplicationTriggerRequestHandler requestHandler);
 
     /**
      * unregister the handler with the given id, if existing
+     *
      * @param handlerId id of the handler to unregister
      */
     void unregister(String handlerId);

@@ -1,5 +1,5 @@
 {
-    "jcr:primaryType" : "sling:OsgiConfig",
-    "name" : "vlt",
-    "servicename" : "replicationService"
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "vlt",
+    "servicename": "replicationService"
 }

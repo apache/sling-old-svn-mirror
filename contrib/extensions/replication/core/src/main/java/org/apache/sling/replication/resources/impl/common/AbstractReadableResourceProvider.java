@@ -41,7 +41,7 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
     private final Map<String, Map<String, String>> additionalResourcePropertiesMap = new HashMap<String, Map<String, String>>();
 
     public AbstractReadableResourceProvider(String resourceRoot,
-                                            Map<String,String> additionalResourceProperties) {
+                                            Map<String, String> additionalResourceProperties) {
 
         this.resourceRoot = resourceRoot;
 
@@ -50,9 +50,9 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
             String resourceName = MAIN_RESOURCE_PREFIX;
             String propertyName = entry.getKey();
             int idx = propertyName.indexOf("/");
-            if (idx >=0) {
+            if (idx >= 0) {
                 resourceName = propertyName.substring(0, idx);
-                propertyName = propertyName.substring(idx+1);
+                propertyName = propertyName.substring(idx + 1);
             }
 
             if (!additionalResourcePropertiesMap.containsKey(resourceName)) {
@@ -78,7 +78,7 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
             return null;
         }
 
-        if(!hasPermission(resourceResolver, pathInfo.getResourcePath(), Session.ACTION_READ)) {
+        if (!hasPermission(resourceResolver, pathInfo.getResourcePath(), Session.ACTION_READ)) {
             return null;
         }
 
@@ -93,16 +93,15 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
 
                 Map<String, String> additionalProperties = additionalResourcePropertiesMap.get(MAIN_RESOURCE_PREFIX);
                 if (!properties.containsKey("sling:resourceType") && additionalProperties.containsKey("sling:resourceType")) {
-                    properties.put("sling:resourceType", additionalProperties.get("sling:resourceType") +"/list");
+                    properties.put("sling:resourceType", additionalProperties.get("sling:resourceType") + "/list");
                 }
                 if (!properties.containsKey("sling:resourceSuperType") && additionalProperties.containsKey("sling:resourceSuperType")) {
-                    properties.put("sling:resourceSuperType", additionalProperties.get("sling:resourceSuperType") +"/list");
+                    properties.put("sling:resourceSuperType", additionalProperties.get("sling:resourceSuperType") + "/list");
                 }
 
                 resource = new SimpleReadableResource(resourceResolver, pathInfo.getResourcePath(), properties, adaptable);
             }
-        }
-        else if (pathInfo.isMain()) {
+        } else if (pathInfo.isMain()) {
             Map<String, Object> properties = getMainResourceProperties(pathInfo.getMainResourceName());
 
             if (properties != null) {
@@ -112,8 +111,7 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
 
                 resource = buildMainResource(resourceResolver, pathInfo, properties, adaptable);
             }
-        }
-        else if (pathInfo.isChild()) {
+        } else if (pathInfo.isChild()) {
             Map<String, Object> mainProperties = getMainResourceProperties(pathInfo.getMainResourceName());
             Map<String, String> childProperties = additionalResourcePropertiesMap.get(pathInfo.getChildResourceName());
 
@@ -138,13 +136,14 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
      * Template: resourcePropertyName = "{osgiPropertyName}"
      * Property: osgiPropertyName = osgiPropertyValue
      * Result: resourcePropertyName = osgiPropertyValue
+     *
      * @param properties
      * @return
      */
     protected Map<String, Object> bindMainResourceProperties(Map<String, Object> properties) {
         Map<String, Object> result = new HashMap<String, Object>();
 
-        Map<String, String > resourcePropertyTemplates = additionalResourcePropertiesMap.get(MAIN_RESOURCE_PREFIX);
+        Map<String, String> resourcePropertyTemplates = additionalResourcePropertiesMap.get(MAIN_RESOURCE_PREFIX);
 
         for (Map.Entry<String, String> propertyTemplateEntry : resourcePropertyTemplates.entrySet()) {
             String templateName = propertyTemplateEntry.getKey();
@@ -152,7 +151,7 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
 
             Object propertyValue = templateValue;
             if (templateValue.startsWith("{") && templateValue.endsWith("}")) {
-                String propertyName = templateValue.substring(1, templateValue.length()-1);
+                String propertyName = templateValue.substring(1, templateValue.length() - 1);
                 propertyValue = properties.get(propertyName);
             }
 
@@ -170,20 +169,21 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
      * Template: resourcePropertyName = "{osgiPropertyName}"
      * Property: resourcePropertyName = osgiPropertyValue
      * Result: osgiPropertyName = osgiPropertyValue
+     *
      * @param properties
      * @return
      */
     protected Map<String, Object> unbindMainResourceProperties(Map<String, Object> properties) {
         Map<String, Object> result = new HashMap<String, Object>();
 
-        Map<String, String > resourcePropertyTemplates = additionalResourcePropertiesMap.get(MAIN_RESOURCE_PREFIX);
+        Map<String, String> resourcePropertyTemplates = additionalResourcePropertiesMap.get(MAIN_RESOURCE_PREFIX);
 
         for (Map.Entry<String, String> propertyTemplateEntry : resourcePropertyTemplates.entrySet()) {
             String templateName = propertyTemplateEntry.getKey();
             String templateValue = propertyTemplateEntry.getValue();
 
             if (templateValue.startsWith("{") && templateValue.endsWith("}")) {
-                String propertyName = templateValue.substring(1, templateValue.length()-1);
+                String propertyName = templateValue.substring(1, templateValue.length() - 1);
                 Object propertyValue = properties.get(templateName);
                 if (propertyValue != null) {
                     result.put(propertyName, propertyValue);
@@ -200,7 +200,7 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
         return new SimpleReadableResource(resourceResolver, pathInfo.getResourcePath(), properties, adapters);
     }
 
-    protected  SimplePathInfo extractPathInfo(String path) {
+    protected SimplePathInfo extractPathInfo(String path) {
         return SimplePathInfo.parsePathInfo(resourceRoot, path);
     }
 
@@ -221,8 +221,8 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
     }
 
 
-    static <K,V> Map<String, Object> fixMap(Map<K, V> map) {
-        Map<String, Object> result = new HashMap<String , Object>();
+    static <K, V> Map<String, Object> fixMap(Map<K, V> map) {
+        Map<String, Object> result = new HashMap<String, Object>();
         for (Map.Entry<K, V> entry : map.entrySet()) {
             K key = entry.getKey();
             V value = entry.getValue();
@@ -261,5 +261,6 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
 
 
     protected abstract Map<String, Object> getResourceProperties(String resourceName);
+
     protected abstract Map<String, Object> getResourceRootProperties();
 }

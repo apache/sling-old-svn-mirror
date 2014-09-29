@@ -39,10 +39,10 @@ import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.queue.ReplicationQueueItemState;
 import org.apache.sling.replication.queue.ReplicationQueueProcessor;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
-import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
-import org.apache.sling.replication.trigger.ReplicationTrigger;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
+import org.apache.sling.replication.trigger.ReplicationTrigger;
+import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -192,7 +192,7 @@ public class SimpleReplicationAgent implements ReplicationAgent {
         log.info("enabling agent");
         // register triggers if any
 
-        for (int i=0; i < triggers.size(); i++) {
+        for (int i = 0; i < triggers.size(); i++) {
             ReplicationTrigger trigger = triggers.get(i);
             String handlerId = getName() + "-" + i;
             trigger.register(handlerId, new AgentBasedTriggerRequestHandler(this));
@@ -205,7 +205,7 @@ public class SimpleReplicationAgent implements ReplicationAgent {
 
     public void disable() {
         log.info("disabling agent");
-        for (int i=0; i < triggers.size(); i++) {
+        for (int i = 0; i < triggers.size(); i++) {
             ReplicationTrigger trigger = triggers.get(i);
             String handlerId = getName() + "-" + i;
             trigger.unregister(handlerId);
@@ -255,8 +255,7 @@ public class SimpleReplicationAgent implements ReplicationAgent {
         public void handle(ReplicationRequest request) {
             try {
                 agent.execute(request);
-            }
-            catch (AgentReplicationException e) {
+            } catch (AgentReplicationException e) {
                 log.error("Error executing handler", e);
             }
         }

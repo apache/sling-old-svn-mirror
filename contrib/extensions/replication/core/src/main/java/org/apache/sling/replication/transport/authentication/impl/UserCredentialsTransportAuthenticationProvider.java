@@ -76,8 +76,7 @@ public class UserCredentialsTransportAuthenticationProvider implements
             log.debug("authenticated executor HTTP client with user and password");
             return authenticated;
 
-        }
-        else if (authenticable instanceof CredentialsProvider) {
+        } else if (authenticable instanceof CredentialsProvider) {
             CredentialsProvider credentialsProvider = (CredentialsProvider) authenticable;
             credentialsProvider.setCredentials(new AuthScope(new HttpHost(endpoint.getUri().getHost())),
                     new UsernamePasswordCredentials(username, password));
