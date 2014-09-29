@@ -51,7 +51,6 @@ public class ResourceEventReplicationTrigger implements ReplicationTrigger {
     private final String path;
     private final Map<String, ServiceRegistration> registrations = new ConcurrentHashMap<String, ServiceRegistration>();
 
-
     public ResourceEventReplicationTrigger(Map<String, Object> config, BundleContext bundleContext) {
         this(PropertiesUtil.toString(config.get(PATH), null), bundleContext);
     }
@@ -111,7 +110,8 @@ public class ResourceEventReplicationTrigger implements ReplicationTrigger {
         }
 
         public void handleEvent(Event event) {
-            ReplicationActionType action = SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic()) ? ReplicationActionType.DELETE : ReplicationActionType.ADD;
+            ReplicationActionType action = SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic()) ?
+                    ReplicationActionType.DELETE : ReplicationActionType.ADD;
             log.info("triggering replication from event {}", event);
 
             Object eventProperty = event.getProperty("path");
