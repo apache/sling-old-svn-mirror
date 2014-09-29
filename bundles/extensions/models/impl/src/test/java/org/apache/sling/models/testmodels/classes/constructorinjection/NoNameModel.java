@@ -25,7 +25,6 @@ import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.models.annotations.Model;
 
 @Model(adaptables = SlingHttpServletRequest.class)
-@SuppressWarnings("javadoc")
 public class NoNameModel {
 
     private final SlingScriptHelper sling;

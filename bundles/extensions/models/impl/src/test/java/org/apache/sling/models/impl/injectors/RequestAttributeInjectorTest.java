@@ -31,7 +31,6 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-@SuppressWarnings("javadoc")
 public class RequestAttributeInjectorTest {
 
     private RequestAttributeInjector injector = new RequestAttributeInjector();

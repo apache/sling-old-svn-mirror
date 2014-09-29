@@ -23,7 +23,6 @@ import org.apache.sling.models.annotations.Default;
 import org.apache.sling.models.annotations.Model;
 
 @Model(adaptables = Resource.class)
-@SuppressWarnings("javadoc")
 public class DefaultPrimitivesModel {
 
     private final boolean booleanProperty;

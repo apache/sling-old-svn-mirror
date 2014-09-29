@@ -51,7 +51,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @RunWith(MockitoJUnitRunner.class)
-@SuppressWarnings("javadoc")
 public class InjectorSpecificAnnotationTest {
 
     @Mock

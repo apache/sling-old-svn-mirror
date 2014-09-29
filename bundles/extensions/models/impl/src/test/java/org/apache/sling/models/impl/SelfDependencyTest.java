@@ -41,7 +41,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
 
 @RunWith(MockitoJUnitRunner.class)
-@SuppressWarnings("javadoc")
 public class SelfDependencyTest {
 
     @Mock

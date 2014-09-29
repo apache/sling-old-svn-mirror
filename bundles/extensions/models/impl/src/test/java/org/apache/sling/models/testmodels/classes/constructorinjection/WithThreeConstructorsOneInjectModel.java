@@ -23,7 +23,6 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.models.annotations.Model;
 
 @Model(adaptables = SlingHttpServletRequest.class)
-@SuppressWarnings("javadoc")
 public class WithThreeConstructorsOneInjectModel {
 
     private SlingHttpServletRequest request;
