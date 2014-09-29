@@ -40,7 +40,6 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-@SuppressWarnings("javadoc")
 public class SlingObjectInjectorRequestTest {
 
     private final SlingObjectInjector injector = new SlingObjectInjector();

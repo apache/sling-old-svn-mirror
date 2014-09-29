@@ -30,7 +30,6 @@ import org.apache.sling.models.annotations.injectorspecific.ValueMapValue;
 import org.slf4j.Logger;
 
 @Model(adaptables = SlingHttpServletRequest.class)
-@SuppressWarnings("javadoc")
 public class InjectorSpecificAnnotationModel {
 
     private final String first;
