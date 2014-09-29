@@ -18,7 +18,7 @@
  */
 package org.apache.sling.superimposing;
 
-import java.util.Map;
+import java.util.Iterator;
 
 import org.apache.sling.superimposing.impl.SuperimposingResourceProviderImpl;
 
@@ -29,13 +29,15 @@ import org.apache.sling.superimposing.impl.SuperimposingResourceProviderImpl;
 public interface SuperimposingManager {
 
     /**
-     * @return true if superimposing mode is enabled
+     * @return true if superimposing mode is enabled.
      */
     boolean isEnabled();
 
     /**
-     * @return Immutable map with all superimposing resource providers currently registered
+     * @return Iterator with all superimposing resource providers currently registered.
+     *   Iterator is backed by a {@link java.util.concurrent.ConcurrentHashMap} and is safe to access
+     *   even if superimposing resource providers are registered or unregistered at the same time.
      */
-    Map<String, SuperimposingResourceProvider> getRegisteredProviders();
+    Iterator<SuperimposingResourceProvider> getRegisteredProviders();
 
 }
