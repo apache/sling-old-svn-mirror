@@ -45,7 +45,7 @@ public interface InjectAnnotationProcessor {
     boolean hasDefault();
 
     /**
-     * Tries to get the default value from the annotation. Only used if {@link hasDefaultValue()} is set to true.
+     * Tries to get the default value from the annotation. Only used if {@link #hasDefault()} is set to true.
      * 
      * @return the value to be used if nothing can be injected
      */
