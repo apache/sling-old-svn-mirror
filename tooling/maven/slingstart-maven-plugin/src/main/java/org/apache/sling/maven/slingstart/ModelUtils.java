@@ -32,15 +32,14 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
-import org.apache.sling.slingstart.model.SSMArtifact;
-import org.apache.sling.slingstart.model.SSMConstants;
-import org.apache.sling.slingstart.model.SSMDeliverable;
-import org.apache.sling.slingstart.model.SSMFeature;
-import org.apache.sling.slingstart.model.SSMMerger;
-import org.apache.sling.slingstart.model.SSMTraceable;
-import org.apache.sling.slingstart.model.SSMValidator;
-import org.apache.sling.slingstart.model.txt.TXTSSMModelReader;
-import org.apache.sling.slingstart.model.txt.TXTSSMModelWriter;
+import org.apache.sling.provisioning.model.Feature;
+import org.apache.sling.provisioning.model.Model;
+import org.apache.sling.provisioning.model.ModelConstants;
+import org.apache.sling.provisioning.model.ModelUtility;
+import org.apache.sling.provisioning.model.RunMode;
+import org.apache.sling.provisioning.model.Traceable;
+import org.apache.sling.provisioning.model.io.ModelReader;
+import org.apache.sling.provisioning.model.io.ModelWriter;
 import org.codehaus.plexus.logging.Logger;
 
 public abstract class ModelUtils {
@@ -49,9 +48,9 @@ public abstract class ModelUtils {
      * Read all model files from the directory in alphabetical order
      * @param logger
      */
-    private static SSMDeliverable readLocalModel(final File systemsDirectory, final MavenProject project, final MavenSession session, final Logger logger)
+    private static Model readLocalModel(final File systemsDirectory, final MavenProject project, final MavenSession session, final Logger logger)
     throws MojoExecutionException {
-        final SSMDeliverable result = new SSMDeliverable();
+        final Model result = new Model();
         final List<String> candidates = new ArrayList<String>();
         if ( systemsDirectory != null && systemsDirectory.exists() ) {
             for(final File f : systemsDirectory.listFiles() ) {
@@ -70,12 +69,12 @@ public abstract class ModelUtils {
                 final File f = new File(systemsDirectory, name);
                 final FileReader reader = new FileReader(f);
                 try {
-                    final SSMDeliverable current = TXTSSMModelReader.read(reader, f.getAbsolutePath());
-                    final Map<SSMTraceable, String> errors = SSMValidator.validate(current);
+                    final Model current = ModelReader.read(reader, f.getAbsolutePath());
+                    final Map<Traceable, String> errors = ModelUtility.validate(current);
                     if (errors != null ) {
                         throw new MojoExecutionException("Invalid model at " + name + " : " + errors);
                     }
-                    SSMMerger.merge(result, current);
+                    ModelUtility.merge(result, current);
                 } finally {
                     IOUtils.closeQuietly(reader);
                 }
@@ -84,7 +83,7 @@ public abstract class ModelUtils {
             }
         }
 
-        final Map<SSMTraceable, String> errors = SSMValidator.validate(result);
+        final Map<Traceable, String> errors = ModelUtility.validate(result);
         if (errors != null ) {
             throw new MojoExecutionException("Invalid assembled model : " + errors);
         }
@@ -95,42 +94,42 @@ public abstract class ModelUtils {
     /**
      * Read the full model
      */
-    public static SSMDeliverable readFullModel(final File systemsDirectory,
+    public static Model readFullModel(final File systemsDirectory,
             final List<File> dependentModels,
             final MavenProject project,
             final MavenSession session,
             final Logger logger)
     throws MojoExecutionException {
         try {
-            final SSMDeliverable localModel = readLocalModel(systemsDirectory, project, session, logger);
+            final Model localModel = readLocalModel(systemsDirectory, project, session, logger);
 
             // check dependent models
-            SSMDeliverable depModel = null;
+            Model depModel = null;
             for(final File file : dependentModels) {
                 FileReader r = null;
                 try {
                     r = new FileReader(file);
                     if ( depModel == null ) {
-                        depModel = new SSMDeliverable();
+                        depModel = new Model();
                     }
-                    final SSMDeliverable readModel = TXTSSMModelReader.read(r, file.getAbsolutePath());
-                    final Map<SSMTraceable, String> errors = SSMValidator.validate(readModel);
+                    final Model readModel = ModelReader.read(r, file.getAbsolutePath());
+                    final Map<Traceable, String> errors = ModelUtility.validate(readModel);
                     if (errors != null ) {
                         throw new MojoExecutionException("Invalid model at " + file + " : " + errors);
                     }
-                    SSMMerger.merge(depModel, readModel);
+                    ModelUtility.merge(depModel, readModel);
                 } finally {
                     IOUtils.closeQuietly(r);
                 }
             }
-            final SSMDeliverable result;
+            final Model result;
             if ( depModel != null ) {
-                Map<SSMTraceable, String> errors = SSMValidator.validate(depModel);
+                Map<Traceable, String> errors = ModelUtility.validate(depModel);
                 if (errors != null ) {
                     throw new MojoExecutionException("Invalid model : " + errors);
                 }
-                SSMMerger.merge(depModel, localModel);
-                errors = SSMValidator.validate(depModel);
+                ModelUtility.merge(depModel, localModel);
+                errors = ModelUtility.validate(depModel);
                 if (errors != null ) {
                     throw new MojoExecutionException("Invalid model : " + errors);
                 }
@@ -145,23 +144,26 @@ public abstract class ModelUtils {
         }
     }
 
-    public static SSMArtifact getBaseArtifact(final SSMDeliverable model) throws MojoExecutionException {
-        // get base run mode
-        final SSMFeature base = model.getRunMode(SSMConstants.RUN_MODE_BASE);
+    public static org.apache.sling.provisioning.model.Artifact getBaseArtifact(final Model model) throws MojoExecutionException {
+        final Feature base = model.findFeature(ModelConstants.FEATURE_LAUNCHPAD);
         if ( base == null ) {
-            throw new MojoExecutionException("No base run mode found.");
+            throw new MojoExecutionException("No launchpad feature found.");
         }
-        if ( base.getStartLevels().size() == 0 ) {
+        // get global run mode
+        final RunMode runMode = base.getRunMode(null);
+        if ( runMode == null ) {
+            throw new MojoExecutionException("No global run mode found in launchpad feature.");
+        }
+        if ( runMode.getArtifactGroups().isEmpty() ) {
             throw new MojoExecutionException("No base artifacts defined.");
         }
-        if ( base.getStartLevels().size() > 1 ) {
+        if ( runMode.getArtifactGroups().size() > 1 ) {
             throw new MojoExecutionException("Base run mode should only have a single start level.");
         }
-        if ( base.getStartLevels().get(0).getArtifacts().size() != 1 ) {
+        if ( runMode.getArtifactGroups().get(0).getArtifacts().size() != 1 ) {
             throw new MojoExecutionException("Base run mode should contain exactly one artifact.");
         }
-
-        return base.getStartLevels().get(0).getArtifacts().get(0);
+        return runMode.getArtifactGroups().get(0).getArtifacts().get(0);
     }
 
     /**
@@ -186,8 +188,8 @@ public abstract class ModelUtils {
         return null;
     }
 
-    private static final String RAW_MODEL = SSMDeliverable.class.getName() + "/raw";
-    private static final String EFFECTIVE_MODEL = SSMDeliverable.class.getName() + "/effective";
+    private static final String RAW_MODEL = Model.class.getName() + "/raw";
+    private static final String EFFECTIVE_MODEL = Model.class.getName() + "/effective";
 
     /**
      * Store the raw model in the project.
@@ -195,10 +197,10 @@ public abstract class ModelUtils {
      * @param model The model
      * @throws IOException If writing fails
      */
-    public static void storeRawModel(final MavenProject project, final SSMDeliverable model)
+    public static void storeRawModel(final MavenProject project, final Model model)
     throws IOException {
         final StringWriter w = new StringWriter();
-        TXTSSMModelWriter.write(w, model);
+        ModelWriter.write(w, model);
         project.setContextValue(RAW_MODEL, w.toString());
     }
 
@@ -208,9 +210,9 @@ public abstract class ModelUtils {
      * @return The raw model
      * @throws IOException If reading fails
      */
-    public static SSMDeliverable getRawModel(final MavenProject project) throws IOException {
+    public static Model getRawModel(final MavenProject project) throws IOException {
         final String contents = (String)project.getContextValue(RAW_MODEL);
-        return TXTSSMModelReader.read(new StringReader(contents), null);
+        return ModelReader.read(new StringReader(contents), null);
     }
 
     /**
@@ -219,10 +221,10 @@ public abstract class ModelUtils {
      * @param model The model
      * @throws IOException If writing fails
      */
-    public static void storeEffectiveModel(final MavenProject project, final SSMDeliverable model)
+    public static void storeEffectiveModel(final MavenProject project, final Model model)
     throws IOException {
         final StringWriter w = new StringWriter();
-        TXTSSMModelWriter.write(w, model);
+        ModelWriter.write(w, model);
         project.setContextValue(EFFECTIVE_MODEL, w.toString());
     }
 
@@ -232,8 +234,8 @@ public abstract class ModelUtils {
      * @return The raw model
      * @throws IOException If reading fails
      */
-    public static SSMDeliverable getEffectiveModel(final MavenProject project) throws IOException {
+    public static Model getEffectiveModel(final MavenProject project) throws IOException {
         final String contents = (String)project.getContextValue(EFFECTIVE_MODEL);
-        return TXTSSMModelReader.read(new StringReader(contents), null);
+        return ModelReader.read(new StringReader(contents), null);
     }
 }

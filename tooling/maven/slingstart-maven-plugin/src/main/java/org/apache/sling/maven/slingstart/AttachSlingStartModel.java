@@ -27,8 +27,8 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.sling.slingstart.model.SSMDeliverable;
-import org.apache.sling.slingstart.model.txt.TXTSSMModelWriter;
+import org.apache.sling.provisioning.model.Model;
+import org.apache.sling.provisioning.model.io.ModelWriter;
 
 /**
  * Attaches the subsystem as a project artifact.
@@ -44,14 +44,14 @@ public class AttachSlingStartModel extends AbstractSlingStartMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        final SSMDeliverable model = this.readRawModel();
+        final Model model = this.readRawModel();
 
         final File outputFile = new File(this.project.getBuild().getDirectory() + File.separatorChar + "slingstart.txt");
         outputFile.getParentFile().mkdirs();
         Writer writer = null;
         try {
             writer = new FileWriter(outputFile);
-            TXTSSMModelWriter.write(writer, model);
+            ModelWriter.write(writer, model);
         } catch (IOException e) {
             throw new MojoExecutionException("Unable to write model to " + outputFile, e);
         } finally {

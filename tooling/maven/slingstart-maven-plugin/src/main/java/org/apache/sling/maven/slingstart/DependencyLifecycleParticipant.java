@@ -35,12 +35,12 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
-import org.apache.sling.slingstart.model.SSMArtifact;
-import org.apache.sling.slingstart.model.SSMConstants;
-import org.apache.sling.slingstart.model.SSMDeliverable;
-import org.apache.sling.slingstart.model.SSMFeature;
-import org.apache.sling.slingstart.model.SSMStartLevel;
-import org.apache.sling.slingstart.model.SSMUtil;
+import org.apache.sling.provisioning.model.ArtifactGroup;
+import org.apache.sling.provisioning.model.Feature;
+import org.apache.sling.provisioning.model.Model;
+import org.apache.sling.provisioning.model.ModelConstants;
+import org.apache.sling.provisioning.model.ModelUtility;
+import org.apache.sling.provisioning.model.RunMode;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.codehaus.plexus.logging.Logger;
@@ -109,16 +109,16 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
 
         final String directory = nodeValue((Xpp3Dom) plugin.getConfiguration(),
                 "systemsDirectory", new File(project.getBasedir(), "src/main/systems").getAbsolutePath());
-        final SSMDeliverable model = ModelUtils.readFullModel(new File(directory), dependencies, project, session, log);
+        final Model model = ModelUtils.readFullModel(new File(directory), dependencies, project, session, log);
 
         ModelUtils.storeRawModel(project, model);
 
-        final SSMDeliverable effectiveModel = SSMUtil.getEffectiveModel(model, null);
+        final Model effectiveModel = ModelUtility.getEffectiveModel(model, null);
 
         ModelUtils.storeEffectiveModel(project, effectiveModel);
 
         // start with base artifact
-        final SSMArtifact base = ModelUtils.getBaseArtifact(effectiveModel);
+        final org.apache.sling.provisioning.model.Artifact base = ModelUtils.getBaseArtifact(effectiveModel);
         final String[] classifiers = new String[] {null, BuildConstants.CLASSIFIER_APP, BuildConstants.CLASSIFIER_WEBAPP};
         for(final String c : classifiers) {
             final Dependency dep = new Dependency();
@@ -139,24 +139,26 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
         addDependencies(effectiveModel, log, project);
     }
 
-    private static void addDependencies(final SSMDeliverable model, final Logger log, final MavenProject project) {
-        for(final SSMFeature feature : model.getFeatures()) {
+    private static void addDependencies(final Model model, final Logger log, final MavenProject project) {
+        for(final Feature feature : model.getFeatures()) {
             // skip base
-            if ( feature.isRunMode(SSMConstants.RUN_MODE_BASE) ) {
+            if ( feature.getName().equals(ModelConstants.FEATURE_LAUNCHPAD) ) {
                 continue;
             }
-            for(final SSMStartLevel sl : feature.getStartLevels()) {
-                for(final SSMArtifact a : sl.getArtifacts()) {
-                    final Dependency dep = new Dependency();
-                    dep.setGroupId(a.getGroupId());
-                    dep.setArtifactId(a.getArtifactId());
-                    dep.setVersion(a.getVersion());
-                    dep.setType(a.getType());
-                    dep.setClassifier(a.getClassifier());
-                    dep.setScope(PROVIDED);
+            for(final RunMode runMode : feature.getRunModes()) {
+                for(final ArtifactGroup sl : runMode.getArtifactGroups()) {
+                    for(final org.apache.sling.provisioning.model.Artifact a : sl.getArtifacts()) {
+                        final Dependency dep = new Dependency();
+                        dep.setGroupId(a.getGroupId());
+                        dep.setArtifactId(a.getArtifactId());
+                        dep.setVersion(a.getVersion());
+                        dep.setType(a.getType());
+                        dep.setClassifier(a.getClassifier());
+                        dep.setScope(PROVIDED);
 
-                    log.debug("- adding dependency " + dep);
-                    project.getDependencies().add(dep);
+                        log.debug("- adding dependency " + dep);
+                        project.getDependencies().add(dep);
+                    }
                 }
             }
         }
