@@ -58,6 +58,13 @@ public class Feature
     }
 
     /**
+     * Special feature?
+     */
+    public boolean isSpecial() {
+        return this.name.startsWith(":");
+    }
+
+    /**
      * Get all variables
      * @return The set of variables
      */
@@ -74,7 +81,7 @@ public class Feature
      * @param runModes
      * @return The feature or null.
      */
-    public RunMode findRunMode(final String[] runModes) {
+    public RunMode getRunMode(final String[] runModes) {
         final String[] sortedRunModes = RunMode.getSortedRunModesArray(runModes);
         RunMode result = null;
         for(final RunMode current : this.runModes) {
@@ -87,21 +94,12 @@ public class Feature
     }
 
     /**
-     * Find the run mode if available
-     * @param runModes
-     * @return The feature or null.
-     */
-    public RunMode findRunMode(final String runMode) {
-        return this.findRunMode(new String[] {runMode});
-    }
-
-    /**
      * Get or create the run mode.
      * @param runModes The run modes.
      * @return The feature for the given run modes.
      */
     public RunMode getOrCreateFeature(final String[] runModes) {
-        RunMode result = findRunMode(runModes);
+        RunMode result = getRunMode(runModes);
         if ( result == null ) {
             result = new RunMode(runModes);
             this.runModes.add(result);
