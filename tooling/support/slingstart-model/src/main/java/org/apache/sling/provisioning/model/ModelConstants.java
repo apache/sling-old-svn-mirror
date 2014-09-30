@@ -32,13 +32,13 @@ public abstract class ModelConstants {
      * Name of the configuration containing the web.xml. This configuration
      * is used by the launchpad feature.
      */
-    public static final String CFG_WEB_XML = ":web.xml";
+    public static final String CFG_LAUNCHPAD_WEB_XML = ":web.xml";
 
     /**
      * Name of the configuration for the bootstrap contents. This
      * configuration is used by the launchpad feature.
      */
-    public static final String CFG_BOOTSTRAP = ":bootstrap";
+    public static final String CFG_LAUNCHPAD_BOOTSTRAP = ":bootstrap";
 
     /** Unprocessed configuration values. */
     public static final String CFG_UNPROCESSED = ":rawconfig";

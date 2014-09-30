@@ -184,7 +184,7 @@ public class ModelReader {
                                         throw new IOException(exceptionPrefix + "Unknown run mode parameters in line " + this.lineNumberReader.getLineNumber() + ": " + line);
                                     }
                                     final String[] rm = names.split(",");
-                                    if ( this.feature.findRunMode(rm) != null ) {
+                                    if ( this.feature.getRunMode(rm) != null ) {
                                         throw new IOException(exceptionPrefix + "Duplicate run mode in line " + this.lineNumberReader.getLineNumber() + ": " + line);
                                     }
                                     this.runMode = this.feature.getOrCreateFeature(rm);
@@ -195,7 +195,7 @@ public class ModelReader {
                                   if ( !parameters.isEmpty() ) {
                                       throw new IOException(exceptionPrefix + "Unknown global parameters in line " + this.lineNumberReader.getLineNumber() + ": " + line);
                                   }
-                                  if ( this.feature.findRunMode((String)null) != null ) {
+                                  if ( this.feature.getRunMode(null) != null ) {
                                       throw new IOException(exceptionPrefix + "Duplicate global run mode in line " + this.lineNumberReader.getLineNumber() + ": " + line);
                                   }
                                   this.runMode = this.feature.getOrCreateFeature(null);
