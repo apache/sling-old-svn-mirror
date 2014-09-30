@@ -70,6 +70,7 @@ import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistr
 import org.apache.sling.discovery.impl.topology.connector.ConnectorRegistry;
 import org.apache.sling.discovery.impl.topology.connector.TopologyConnectorClientInformation;
 import org.apache.sling.discovery.impl.topology.connector.TopologyConnectorServlet;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
@@ -86,23 +87,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Instance {
-    
+
     public class MyConfig extends Config {
-        
+
         long heartbeatTimeout;
         long heartbeatInterval;
         int minEventDelay;
         List<String> whitelist;
-        
+
         @Override
         public long getHeartbeatInterval() {
             return heartbeatInterval;
         }
-        
+
         public void setHeartbeatInterval(long heartbeatInterval) {
             this.heartbeatInterval = heartbeatInterval;
         }
-        
+
         @Override
         public long getHeartbeatTimeout() {
             return heartbeatTimeout;
@@ -111,16 +112,16 @@ public class Instance {
         public void setHeartbeatTimeout(long heartbeatTimeout) {
             this.heartbeatTimeout = heartbeatTimeout;
         }
-        
+
         @Override
         public int getMinEventDelay() {
             return minEventDelay;
         }
-        
+
         public void setMinEventDelay(int minEventDelay) {
             this.minEventDelay = minEventDelay;
         }
-        
+
         @Override
         public String[] getTopologyConnectorWhitelist() {
             if (whitelist==null) {
@@ -128,24 +129,24 @@ public class Instance {
             }
             return whitelist.toArray(new String[whitelist.size()]);
         }
-        
+
         public void addTopologyConnectorWhitelistEntry(String whitelistEntry) {
             if (whitelist==null) {
                 whitelist = new LinkedList<String>();
             }
             whitelist.add(whitelistEntry);
         }
-        
+
         @Override
         public int getBackoffStableFactor() {
             return 1;
         }
-        
+
         @Override
         public int getBackoffStandbyFactor() {
             return 1;
         }
-        
+
     }
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -174,9 +175,9 @@ public class Instance {
     private ResourceResolver resourceResolver;
 
     private int serviceId = 999;
-    
+
     private static Scheduler singletonScheduler = null;
-    
+
     private static Scheduler getSingletonScheduler() throws Exception {
     	if (singletonScheduler!=null) {
     		return singletonScheduler;
@@ -194,7 +195,7 @@ public class Instance {
         singletonScheduler = newscheduler;
         return singletonScheduler;
     }
-    
+
     private HeartbeatRunner heartbeatRunner = null;
 
     private ServletContextHandler servletContext;
@@ -204,19 +205,19 @@ public class Instance {
     private MyConfig config;
 
     private EventListener observationListener;
-    
+
     private ObservationManager observationManager;
-    
+
     private class HeartbeatRunner implements Runnable {
-    	
+
     	private final int intervalInSeconds;
 
     	private boolean stopped_ = false;
-    	
+
 		public HeartbeatRunner(int intervalInSeconds) {
     		this.intervalInSeconds = intervalInSeconds;
     	}
-		
+
 		public synchronized void stop() {
 			logger.info("Stopping Instance ["+slingId+"]");
 			stopped_ = true;
@@ -239,7 +240,7 @@ public class Instance {
 				}
 			}
 		}
-    	
+
     }
 
     private Instance(String debugName,
@@ -247,7 +248,7 @@ public class Instance {
             throws Exception {
     	this("/var/discovery/impl/", debugName, resourceResolverFactory, resetRepo, 20, 1, UUID.randomUUID().toString());
     }
-    
+
     private Instance(String discoveryResourcePath, String debugName,
             ResourceResolverFactory resourceResolverFactory, boolean resetRepo,
             final int heartbeatTimeout, final int minEventDelay, String slingId)
@@ -265,9 +266,9 @@ public class Instance {
         config.setHeartbeatInterval(20);
         config.setMinEventDelay(minEventDelay);
         config.addTopologyConnectorWhitelistEntry("127.0.0.1");
-                
+
         PrivateAccessor.setField(config, "discoveryResourcePath", discoveryResourcePath);
-        
+
         clusterViewService = OSGiFactory.createClusterViewServiceImpl(slingId,
                 resourceResolverFactory, config);
         announcementRegistry = OSGiFactory.createITopologyAnnouncementRegistry(
@@ -279,7 +280,7 @@ public class Instance {
                 connectorRegistry, config,
                 resourceResolverFactory.getAdministrativeResourceResolver(null)
                         .adaptTo(Repository.class), getSingletonScheduler());
-        
+
 		discoveryService = OSGiFactory.createDiscoverService(slingId,
                 heartbeatHandler, clusterViewService, announcementRegistry,
                 resourceResolverFactory, config, connectorRegistry, getSingletonScheduler());
@@ -349,7 +350,7 @@ public class Instance {
     }
 
     public static Instance newStandaloneInstance(String debugName,
-            Repository repository) throws Exception {
+            SlingRepository repository) throws Exception {
         ResourceResolverFactory resourceResolverFactory = MockFactory
                 .mockResourceResolverFactory(repository);
         return new Instance(debugName, resourceResolverFactory, false);
@@ -361,14 +362,14 @@ public class Instance {
                 .mockResourceResolverFactory();
         return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, minEventDelay, slingId);
     }
-    
+
     public static Instance newStandaloneInstance(String discoveryResourcePath, String debugName,
             boolean resetRepo, int heartbeatTimeout, int minEventDelay) throws Exception {
         ResourceResolverFactory resourceResolverFactory = MockFactory
                 .mockResourceResolverFactory();
         return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, minEventDelay, UUID.randomUUID().toString());
     }
-    
+
     public static Instance newStandaloneInstance(String debugName,
             boolean resetRepo) throws Exception {
         ResourceResolverFactory resourceResolverFactory = MockFactory
@@ -409,15 +410,15 @@ public class Instance {
     public ClusterViewService getClusterViewService() {
         return clusterViewService;
     }
-    
+
     public DiscoveryService getDiscoveryService() {
         return discoveryService;
     }
-    
+
     public AnnouncementRegistry getAnnouncementRegistry() {
         return announcementRegistry;
     }
-    
+
     public synchronized void startJetty() throws Throwable {
         if (jettyServer!=null) {
             return;
@@ -434,19 +435,19 @@ public class Instance {
         final HttpService httpService = context.mock(HttpService.class);
         context.checking(new Expectations() {
             {
-                allowing(httpService).registerServlet(with(any(String.class)), 
-                        with(any(Servlet.class)), 
-                        with(any(Dictionary.class)), 
+                allowing(httpService).registerServlet(with(any(String.class)),
+                        with(any(Servlet.class)),
+                        with(any(Dictionary.class)),
                         with(any(HttpContext.class)));
             }
         });
         PrivateAccessor.setField(servlet, "httpService", httpService);
         ComponentContext cc = null;
         PrivateAccessor.invoke(servlet, "activate", new Class[] {ComponentContext.class}, new Object[] {cc});
-        
+
         ServletHolder holder =
                 new ServletHolder(servlet);
-        
+
         servletContext.addServlet(holder, "/system/console/topology/*");
 
         jettyServer = new Server();
@@ -455,7 +456,7 @@ public class Instance {
         jettyServer.setConnectors(new Connector[]{connector});
         jettyServer.start();
     }
-    
+
     public synchronized int getJettyPort() {
         if (jettyServer==null) {
             throw new IllegalStateException("jettyServer not started");
@@ -485,7 +486,7 @@ public class Instance {
     	logger.info("Instance ["+slingId+"] issues a heartbeat now "+new Date());
         heartbeatHandler.run();
     }
-    
+
     public void startHeartbeats(int intervalInSeconds) throws IllegalAccessException, InvocationTargetException {
     	logger.info("startHeartbeats: intervalInSeconds="+intervalInSeconds);
     	if (heartbeatRunner!=null) {
@@ -510,7 +511,7 @@ public class Instance {
     	th.start();
 		logger.info("startHeartbeats: done.");
     }
-    
+
 	public boolean isHeartbeatRunning() {
 		return (heartbeatRunner!=null);
 	}
@@ -587,7 +588,7 @@ public class Instance {
     	} else {
     	    logger.warn("stop: could not remove listener for slingId="+slingId+", debugName="+debugName+", observationManager="+observationManager+", observationListener="+observationListener);
     	}
-    	
+
         if (resourceResolver != null) {
             resourceResolver.close();
         }
