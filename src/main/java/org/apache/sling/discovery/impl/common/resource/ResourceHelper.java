@@ -37,13 +37,15 @@ import org.apache.sling.api.resource.ValueMap;
  */
 public class ResourceHelper {
 
+    private static final String DEFAULT_RESOURCE_TYPE = "sling:Folder";
+
     public static Resource getOrCreateResource(
             final ResourceResolver resourceResolver, final String path)
             throws PersistenceException {
     	return ResourceUtil.getOrCreateResource(resourceResolver, path,
-    			(String)null, null, true);
+    	        DEFAULT_RESOURCE_TYPE, DEFAULT_RESOURCE_TYPE, true);
     }
-    
+
     public static boolean deleteResource(
             final ResourceResolver resourceResolver, final String path) throws PersistenceException {
         final Resource resource = resourceResolver.getResource(path);
@@ -52,15 +54,6 @@ public class ResourceHelper {
         }
         resourceResolver.delete(resource);
         return true;
-    }
-
-    /**
-     * @deprecated use {@link #getOrCreateResource(ResourceResolver, String)} instead
-     */
-    @Deprecated
-    public static Resource createResource(final ResourceResolver resourceResolver,
-            final String path) throws PersistenceException {
-    	return getOrCreateResource(resourceResolver, path);
     }
 
     /** Compile a string builder containing the properties of a resource - used for logging **/

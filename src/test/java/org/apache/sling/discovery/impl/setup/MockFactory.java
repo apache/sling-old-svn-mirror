@@ -21,10 +21,8 @@ package org.apache.sling.discovery.impl.setup;
 import java.util.Dictionary;
 import java.util.Properties;
 
-import javax.jcr.Repository;
-
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.commons.scheduler.Scheduler;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.settings.SlingSettingsService;
 import org.hamcrest.Description;
 import org.jmock.Expectations;
@@ -44,8 +42,8 @@ public class MockFactory {
             throws Exception {
     	return mockResourceResolverFactory(null);
     }
-    
-    public static ResourceResolverFactory mockResourceResolverFactory(final Repository repositoryOrNull)
+
+    public static ResourceResolverFactory mockResourceResolverFactory(final SlingRepository repositoryOrNull)
             throws Exception {
         Mockery context = new JUnit4Mockery();
 

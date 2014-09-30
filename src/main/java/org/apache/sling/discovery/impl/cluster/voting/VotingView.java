@@ -60,7 +60,7 @@ public class VotingView extends View {
     public static VotingView newVoting(final ResourceResolver resourceResolver,
             final Config config,
             final String newViewId, String initiatorId, final Set<String> liveInstances) throws PersistenceException {
-        final Resource votingResource = ResourceHelper.createResource(
+        final Resource votingResource = ResourceHelper.getOrCreateResource(
                 resourceResolver, config.getOngoingVotingsPath() + "/"
                         + newViewId);
         final ModifiableValueMap votingMap = votingResource.adaptTo(ModifiableValueMap.class);
@@ -95,7 +95,7 @@ public class VotingView extends View {
         	clusterIdDefinedBy = initiatorId;
         }
         votingMap.put(VIEW_PROPERTY_CLUSTER_ID_DEFINED_BY, clusterIdDefinedBy);
-        
+
         final Resource membersResource = resourceResolver.create(votingResource, "members", null);
         final Iterator<String> it = liveInstances.iterator();
         while (it.hasNext()) {
