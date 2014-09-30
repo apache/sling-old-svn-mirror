@@ -24,7 +24,7 @@
     org.apache.commons/commons-math/2.2/jar
 # Artifacts can have additional information like a SHA1 etc.
 #
-    org.apache.commons/commons-math/2.2/jar {sha1=2353750701ABE}
+    org.apache.commons/commons-math/2.2/jar [sha1=2353750701ABE]
 
 # A start level can be specified
 [artifacts startLevel=5]
@@ -47,7 +47,7 @@ org.apache.sling.log.LoggerFactory-error
     value="Hallo"
 
 # A configuration using properties format:
-org.apache.sling.another.config {format=properties}
+org.apache.sling.another.config [format=properties]
      test=A
      value=5
      

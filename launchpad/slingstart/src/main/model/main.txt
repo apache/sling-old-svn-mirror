@@ -95,7 +95,8 @@
     org.apache.sling/org.apache.sling.jcr.jackrabbit.usermanager/2.2.1-SNAPSHOT/jar
     org.apache.sling/org.apache.sling.jcr.jackrabbit.accessmanager/2.1.1-SNAPSHOT/jar
 
-[artifacts startLevel=15, runModes=jackrabbit]
+[runMode names=jackrabbit]
+[artifacts startLevel=15]
     org.apache.derby/derby/10.5.3.0_1/jar
     org.apache.sling/org.apache.sling.jcr.jackrabbit.server/2.1.3-SNAPSHOT/jar
 

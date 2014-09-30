@@ -1,14 +1,18 @@
-[variables]
-  ws.version=1.0.2
-
-[runMode names=:base]
+# The :launchpad feature defines Sling's launchpad version
+# Only a single artifact is allowed within this feature.
+#
+[feature name=:launchpad]
     org.apache.sling/org.apache.sling.launchpad.base/4.4.1-2.5.2/jar
+
+
+# The :boot feature contains all things to bootstrap the installation.
+#
+[feature name=:boot]
 
 # additional entries for sling.properties
 # ---------------------------------------
 # jackrabbit and oak run modes are mutually exclusive,
 # and cannot be changed after the first startup
-[runMode names=:boot]
 [settings]
     sling.run.mode.install.options=jackrabbit,oak
 
