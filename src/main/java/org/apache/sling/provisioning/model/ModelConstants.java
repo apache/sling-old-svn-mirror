@@ -16,13 +16,28 @@
  */
 package org.apache.sling.provisioning.model;
 
-
+/**
+ * Constants for the provisioning model.
+ */
 public abstract class ModelConstants {
 
-    /** Name of the configuration containing the web.xml. */
+    /** Name of Sling's launchpad feature. */
+    public static final String FEATURE_LAUNCHPAD = ":launchpad";
+
+    /** Name of the boot feature */
+    public static final String FEATURE_BOOT = ":boot";
+
+
+    /**
+     * Name of the configuration containing the web.xml. This configuration
+     * is used by the launchpad feature.
+     */
     public static final String CFG_WEB_XML = ":web.xml";
 
-    /** Name of the configuration for the bootstrap contents. */
+    /**
+     * Name of the configuration for the bootstrap contents. This
+     * configuration is used by the launchpad feature.
+     */
     public static final String CFG_BOOTSTRAP = ":bootstrap";
 
     /** Unprocessed configuration values. */
@@ -34,12 +49,6 @@ public abstract class ModelConstants {
     public static final String CFG_FORMAT_FELIX_CA = "felixca";
 
     public static final String CFG_FORMAT_PROPERTIES = "properties";
-
-    /** Name of the base run mode for the Sling launchpad. */
-    public static final String RUN_MODE_BASE = ":base";
-
-    /** Name of the boot run mode. */
-    public static final String RUN_MODE_BOOT = ":boot";
 
     /** Name of the webapp run mode. */
     public static final String RUN_MODE_WEBAPP = ":webapp";

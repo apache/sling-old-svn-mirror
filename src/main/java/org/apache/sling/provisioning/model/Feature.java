@@ -87,6 +87,15 @@ public class Feature
     }
 
     /**
+     * Find the run mode if available
+     * @param runModes
+     * @return The feature or null.
+     */
+    public RunMode findRunMode(final String runMode) {
+        return this.findRunMode(new String[] {runMode});
+    }
+
+    /**
      * Get or create the run mode.
      * @param runModes The run modes.
      * @return The feature for the given run modes.
