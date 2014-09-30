@@ -26,7 +26,7 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
-import org.apache.sling.slingstart.model.SSMDeliverable;
+import org.apache.sling.provisioning.model.Model;
 
 public abstract class AbstractSlingStartMojo extends AbstractMojo {
 
@@ -45,15 +45,15 @@ public abstract class AbstractSlingStartMojo extends AbstractMojo {
     @Parameter(defaultValue="false")
     protected boolean createWebapp;
 
-    private static final String CTX_RAW = SSMDeliverable.class.getName() + "/r";
-    private static final String CTX_EFFECTIVE = SSMDeliverable.class.getName() + "/e";
+    private static final String CTX_RAW = Model.class.getName() + "/r";
+    private static final String CTX_EFFECTIVE = Model.class.getName() + "/e";
 
     /**
      * Read the model prepared by the lifecycle plugin
      */
-    protected SSMDeliverable readRawModel()
+    protected Model readRawModel()
     throws MojoExecutionException {
-        SSMDeliverable result = (SSMDeliverable)this.project.getContextValue(CTX_RAW);
+        Model result = (Model)this.project.getContextValue(CTX_RAW);
         if ( result == null ) {
             try {
                 result = ModelUtils.getRawModel(this.project);
@@ -69,9 +69,9 @@ public abstract class AbstractSlingStartMojo extends AbstractMojo {
     /**
      * Read the model prepared by the lifecycle plugin
      */
-    protected SSMDeliverable readEffectiveModel()
+    protected Model readEffectiveModel()
     throws MojoExecutionException {
-        SSMDeliverable result = (SSMDeliverable)this.project.getContextValue(CTX_EFFECTIVE);
+        Model result = (Model)this.project.getContextValue(CTX_EFFECTIVE);
         if ( result == null ) {
             try {
                 result = ModelUtils.getEffectiveModel(this.project);
