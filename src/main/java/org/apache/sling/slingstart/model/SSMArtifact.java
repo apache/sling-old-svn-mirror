@@ -137,11 +137,13 @@ public class SSMArtifact extends SSMTraceable {
         sb.append(this.artifactId);
         sb.append('/');
         sb.append(this.version);
-        sb.append('/');
-        sb.append(this.type);
-        if ( this.classifier != null ) {
+        if ( this.classifier != null || !"jar".equals(this.type)) {
             sb.append('/');
-            sb.append(this.classifier);
+            sb.append(this.type);
+            if ( this.classifier != null ) {
+                sb.append('/');
+                sb.append(this.classifier);
+            }
         }
         return sb.toString();
     }
