@@ -193,8 +193,8 @@ public abstract class ModelUtils {
         return null;
     }
 
-    private static final String RAW_MODEL_TXT = Model.class.getName() + "/raw";
-    private static final String EFFECTIVE_MODEL_TXT = Model.class.getName() + "/effective";
+    private static final String RAW_MODEL_TXT = Model.class.getName() + "/raw.txt";
+    private static final String EFFECTIVE_MODEL_TXT = Model.class.getName() + "/effective.txt";
 
     private static final String RAW_MODEL = Model.class.getName() + "/raw";
     private static final String EFFECTIVE_MODEL = Model.class.getName() + "/effective";
