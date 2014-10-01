@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>20</version>
+        <version>22</version>
         <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
 
@@ -61,7 +61,7 @@
                             org.apache.sling.scripting.javascript,
                             org.mozilla.javascript;
                             org.mozilla.classfile;
-                            org.mozilla.javascript.debug;version=0.0.0.1_7R4
+                            org.mozilla.javascript.debug;version=0.0.1
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.scripting.javascript.*,
