@@ -130,6 +130,33 @@ public class JcrNodeCreationTest {
         assertThat(project, hasFile("/jcr_root/content/test-root/holder/org.apache.sling.SomeComponent.xml"));
     }
 
+    @Test
+    public void createUnstructuredNodeWithSpecialName() throws Exception {
+
+        JcrNode contentNode = syncDirNode.getNode("/content/test-root");
+        contentNode.createChild("sling:stuff", "nt:unstructured");
+
+        assertThat(projectRule.getProject(), hasFile("/jcr_root/content/test-root/_sling_stuff/.content.xml"));
+    }
+
+    @Test
+    public void createFullCoverageNodeWithSpecialName() throws Exception {
+
+        JcrNode contentNode = syncDirNode.getNode("/content/test-root");
+        contentNode.createChild("sling:stuff", "sling:OsgiConfig");
+
+        assertThat(projectRule.getProject(), hasFile("/jcr_root/content/test-root/_sling_stuff.xml"));
+    }
+
+    @Test
+    public void createSlingFolderNodeWithSpecialName() throws Exception {
+
+        JcrNode contentNode = syncDirNode.getNode("/content/test-root");
+        contentNode.createChild("sling:stuff", "sling:Folder");
+
+        assertThat(projectRule.getProject(), hasFile("/jcr_root/content/test-root/_sling_stuff/.content.xml"));
+    }
+
     @After
     public void cleanup() throws Exception {
         new RepositoryAccessor(config).tryDeleteResource("/content/test-root");
