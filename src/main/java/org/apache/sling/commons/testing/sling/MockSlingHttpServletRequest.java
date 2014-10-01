@@ -62,7 +62,7 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
 
     private boolean secure = false;
 
-    private MockResourceResolver mockResourceResolver;
+    private ResourceResolver mockResourceResolver;
 
     private RequestProgressTracker mockRequestProgressTracker;
 
@@ -94,7 +94,7 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
 		setMethod(null);
 	}
 
-    public void setResourceResolver(MockResourceResolver resolver) {
+    public void setResourceResolver(ResourceResolver resolver) {
         this.mockResourceResolver = resolver;
 
         // recreate request resource with the new resolver
