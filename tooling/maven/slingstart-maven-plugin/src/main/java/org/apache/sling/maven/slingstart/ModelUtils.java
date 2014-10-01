@@ -145,7 +145,7 @@ public abstract class ModelUtils {
     }
 
     public static org.apache.sling.provisioning.model.Artifact getBaseArtifact(final Model model) throws MojoExecutionException {
-        final Feature base = model.findFeature(ModelConstants.FEATURE_LAUNCHPAD);
+        final Feature base = model.getFeature(ModelConstants.FEATURE_LAUNCHPAD);
         if ( base == null ) {
             throw new MojoExecutionException("No launchpad feature found.");
         }
@@ -160,10 +160,15 @@ public abstract class ModelUtils {
         if ( runMode.getArtifactGroups().size() > 1 ) {
             throw new MojoExecutionException("Base run mode should only have a single start level.");
         }
-        if ( runMode.getArtifactGroups().get(0).getArtifacts().size() != 1 ) {
-            throw new MojoExecutionException("Base run mode should contain exactly one artifact.");
+        org.apache.sling.provisioning.model.Artifact firstArtifact = null;
+        for(final org.apache.sling.provisioning.model.Artifact a : runMode.getArtifactGroups().get(0)) {
+            if ( firstArtifact == null ) {
+                firstArtifact = a;
+            } else {
+                throw new MojoExecutionException("Base run mode should contain exactly one artifact.");
+            }
         }
-        return runMode.getArtifactGroups().get(0).getArtifacts().get(0);
+        return firstArtifact;
     }
 
     /**
