@@ -89,8 +89,11 @@ Require-Bundle: org.eclipse.wst.common.project.facet.ui,
  org.eclipse.ui.editors,
  org.eclipse.swt
 Service-Component: OSGI-INF/*.xml
-Export-Package: org.apache.sling.ide.eclipse.ui,org.apache.sling.ide.e
- clipse.ui.console,org.apache.sling.ide.eclipse.ui.internal;x-friends:
- ="org.apache.sling.ide.eclipse-test",org.apache.sling.ide.eclipse.ui.
- propertyPages,org.apache.sling.ide.eclipse.ui.views,org.apache.sling.
- ide.eclipse.ui.wizards
+Export-Package: org.apache.sling.ide.eclipse.ui,
+ org.apache.sling.ide.eclipse.ui.console,
+ org.apache.sling.ide.eclipse.ui.internal;x-friends:="org.apache.sling.ide.eclipse-test",
+ org.apache.sling.ide.eclipse.ui.nav;x-friends:="org.apache.sling.ide.eclipse-test",
+ org.apache.sling.ide.eclipse.ui.nav.model;x-friends:="org.apache.sling.ide.eclipse-test",
+ org.apache.sling.ide.eclipse.ui.propertyPages,
+ org.apache.sling.ide.eclipse.ui.views,
+ org.apache.sling.ide.eclipse.ui.wizards
