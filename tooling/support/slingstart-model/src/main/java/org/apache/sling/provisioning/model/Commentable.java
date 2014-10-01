@@ -17,7 +17,7 @@
 package org.apache.sling.provisioning.model;
 
 /**
- * A traceable has a comment and a location.
+ * A commentable has a comment and a location.
  * Both are optional.
  */
 public abstract class Commentable extends Traceable {

@@ -23,13 +23,12 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * A feature is a collection of
+ * A run mode is a collection of
  * - artifacts (through start levels)
  * - configurations
  * - settings
  *
- * A feature might be tied to run modes. Only if all run modes are active,
- * this feature is active.
+ * Only if all run modes are active, this run mode is active.
  * In addition to custom, user defined run modes, special run modes exists.
  * A special run mode name starts with a colon.
  */
@@ -37,23 +36,36 @@ public class RunMode
     extends Traceable
     implements Comparable<RunMode> {
 
-    private final String[] runModes;
+    /** The array of run mode names. */
+    private final String[] names;
 
+    /** The artifact groups. */
     private final List<ArtifactGroup> groups = new ArrayList<ArtifactGroup>();
 
+    /** The configurations. */
     private final ItemList<Configuration> configurations = new ItemList<Configuration>();
 
+    /** The settings. */
     private final KeyValueMap<String> settings = new KeyValueMap<String>();
 
-    public RunMode(final String[] runModes) {
-        this.runModes = getSortedRunModesArray(runModes);
+    /**
+     * Create a new run mode
+     * @param names The run mode names
+     */
+    public RunMode(final String[] names) {
+        this.names = getSortedRunModesArray(names);
     }
 
-    public static String[] getSortedRunModesArray(final String[] runModes) {
+    /**
+     * Get an alphabetical sorted array of the run mode names.
+     * @param names The run mode names
+     * @return The sorted run mode names
+     */
+    public static String[] getSortedRunModesArray(final String[] names) {
         // sort run modes
-        if ( runModes != null ) {
+        if ( names != null ) {
             final List<String> list = new ArrayList<String>();
-            for(final String m : runModes) {
+            for(final String m : names) {
                 if ( m != null ) {
                     if ( !m.trim().isEmpty() ) {
                         list.add(m.trim());
@@ -68,17 +80,23 @@ public class RunMode
         return null;
     }
 
-    public String[] getRunModes() {
-        return this.runModes;
+    /**
+     * Return the run mode names.
+     * @return The array of run mode names or {@code null}.
+     */
+    public String[] getNames() {
+        return this.names;
     }
 
     /**
-     * Check if this feature is active wrt the given set of active run modes.
+     * Check if this run mode is active wrt the given set of active run modes.
+     * @param activeRunModes The set of active run modes.
+     * @return {@code true} if the run mode is active.
      */
     public boolean isActive(final Set<String> activeRunModes) {
         boolean active = true;
-        if ( runModes != null ) {
-            for(final String mode : runModes) {
+        if ( names != null ) {
+            for(final String mode : names) {
                 if ( !activeRunModes.contains(mode) ) {
                     active = false;
                     break;
@@ -89,26 +107,29 @@ public class RunMode
     }
 
     /**
-     * Check whether this feature is a special one
+     * Check whether this run mode is a special one
+     * @return {@code true} if it is special
      */
     public boolean isSpecial() {
-        if ( runModes != null && runModes.length == 1 && runModes[0].startsWith(":") ) {
+        if ( names != null && names.length == 1 && names[0].startsWith(":") ) {
             return true;
         }
         return false;
     }
 
     /**
-     * Check if this feature is tied to a single specific run mode.
+     * Check if this run mode is tied to a single specific run mode name.
+     * @param mode The name of the run mode
+     * @return {@code true} if this run mode is tied to exactly the single one.
      */
     public boolean isRunMode(final String mode) {
-        if ( mode == null && this.runModes == null ) {
+        if ( mode == null && this.names == null ) {
             return true;
         }
         if ( mode != null
-             && this.runModes != null
-             && this.runModes.length == 1
-             && this.runModes[0].equals(mode) ) {
+             && this.names != null
+             && this.names.length == 1
+             && this.names[0].equals(mode) ) {
             return true;
         }
         return false;
@@ -116,10 +137,12 @@ public class RunMode
 
     /**
      * Find the artifact group.
+     * @param startLevel the start level
+     * @return The artifact group for that level or {@code null}.
      */
-    public ArtifactGroup findArtifactGroup(final int startLevel) {
+    public ArtifactGroup getArtifactGroup(final int startLevel) {
         for(final ArtifactGroup g : this.groups) {
-            if ( g.getLevel() == startLevel ) {
+            if ( g.getStartLevel() == startLevel ) {
                 return g;
             }
         }
@@ -128,9 +151,11 @@ public class RunMode
 
     /**
      * Get or create an artifact group
+     * @param startLevel The start level
+     * @return The artifact group.
      */
     public ArtifactGroup getOrCreateArtifactGroup(final int startLevel) {
-        ArtifactGroup result = this.findArtifactGroup(startLevel);
+        ArtifactGroup result = this.getArtifactGroup(startLevel);
         if ( result == null ) {
             result = new ArtifactGroup(startLevel);
             this.groups.add(result);
@@ -141,6 +166,8 @@ public class RunMode
 
     /**
      * Search a configuration with a pid
+     * @param pid The configuration pid
+     * @return The configuration or {@code null}
      */
     public Configuration getConfiguration(final String pid) {
         for(final Configuration c : this.configurations) {
@@ -151,6 +178,12 @@ public class RunMode
         return null;
     }
 
+    /**
+     * Search a configuration with pid and factory pid
+     * @param pid The pid
+     * @param factoryPid The optional factory pid
+     * @return The configuration or {@code null}.
+     */
     public Configuration getConfiguration(final String pid, final String factoryPid) {
         Configuration found = null;
         for(final Configuration current : this.configurations) {
@@ -169,6 +202,12 @@ public class RunMode
         return found;
     }
 
+    /**
+     * Get or create the configuration
+     * @param pid The pid
+     * @param factoryPid The optional factory pid
+     * @return The configuration
+     */
     public Configuration getOrCreateConfiguration(final String pid, final String factoryPid) {
         Configuration found = getConfiguration(pid, factoryPid);
         if ( found == null ) {
@@ -178,14 +217,26 @@ public class RunMode
         return found;
     }
 
+    /**
+     * Get all artifact groups
+     * @return List of artifact groups
+     */
     public List<ArtifactGroup> getArtifactGroups() {
         return this.groups;
     }
 
+    /**
+     * Get all configurations
+     * @return List of configurations
+     */
     public ItemList<Configuration> getConfigurations() {
         return this.configurations;
     }
 
+    /**
+     * Get the settings
+     * @return Map with the settings.
+     */
     public KeyValueMap<String> getSettings() {
         return this.settings;
     }
@@ -195,21 +246,21 @@ public class RunMode
      */
     @Override
     public int compareTo( RunMode o2) {
-        if ( this.runModes == null ) {
-            if ( o2.runModes == null ) {
+        if ( this.names == null ) {
+            if ( o2.names == null ) {
                 return 0;
             }
             return -1;
         }
-        if ( o2.runModes == null ) {
+        if ( o2.names == null ) {
             return 1;
         }
-        return Arrays.toString(this.runModes).compareTo(Arrays.toString(o2.runModes));
+        return Arrays.toString(this.names).compareTo(Arrays.toString(o2.names));
     }
 
     @Override
     public String toString() {
-        return "RunMode [runModes=" + Arrays.toString(runModes) + ", groups="
+        return "RunMode [names=" + Arrays.toString(names) + ", groups="
                 + groups + ", configurations=" + configurations + ", settings="
                 + settings
                 + "]";

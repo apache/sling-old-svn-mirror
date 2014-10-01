@@ -56,7 +56,7 @@ public class ModelWriter {
     }
 
     private static void writeRunMode(final PrintWriter pw, final RunMode runMode) {
-        final String[] rm = runMode.getRunModes();
+        final String[] rm = runMode.getNames();
         if ( rm != null && rm.length > 0 ) {
             pw.print(" runModes=");
             boolean first = true;
@@ -129,9 +129,9 @@ public class ModelWriter {
                     }
                     writeComment(pw, group);
                     pw.print("[artifacts");
-                    if ( group.getLevel() > 0 ) {
+                    if ( group.getStartLevel() > 0 ) {
                         pw.print(" startLevel=");
-                        pw.print(String.valueOf(group.getLevel()));
+                        pw.print(String.valueOf(group.getStartLevel()));
                     }
                     writeRunMode(pw, runMode);
                     pw.println("]");

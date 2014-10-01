@@ -22,17 +22,23 @@ import java.util.Map;
 /**
  * Description of an artifact.
  * An artifact is described by it's Apache Maven coordinates consisting of group id, artifact id, and version.
- * In addition, the classifier and type can be specified as well.
+ * In addition, the classifier and type can be specified as well. If no type is specified, "jar" is assumed.
  * An artifact can have any metadata.
  */
 public class Artifact extends Commentable {
 
+    /** The required group id. */
     private final String groupId;
+    /** The required artifact id. */
     private final String artifactId;
+    /** The required version. */
     private final String version;
+    /** The optional classifier. */
     private final String classifier;
+    /** The optional type. */
     private final String type;
 
+    /** Artifact metadata. */
     private final Map<String, String> metadata = new HashMap<String, String>();
 
     /**
@@ -198,6 +204,7 @@ public class Artifact extends Commentable {
 
     /**
      * Create a Maven like relative repository path.
+     * @return A relative repository path.
      */
     public String getRepositoryPath() {
         final StringBuilder sb = new StringBuilder();

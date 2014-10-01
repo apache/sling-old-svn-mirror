@@ -24,6 +24,7 @@ import java.util.List;
 
 /**
  * A feature is a collection of
+ * - a name
  * - variables
  * - run modes
  */
@@ -37,6 +38,7 @@ public class Feature
     /** Variables. */
     private final KeyValueMap<String> variables = new KeyValueMap<String>();
 
+    /** Feature name. */
     private final String name;
 
     /**
@@ -57,6 +59,7 @@ public class Feature
 
     /**
      * Special feature?
+     * @return true if the feature is special
      */
     public boolean isSpecial() {
         return this.name.startsWith(":");
@@ -70,20 +73,24 @@ public class Feature
         return this.variables;
     }
 
+    /**
+     * Get all run modes.
+     * @return The list of run modes.
+     */
     public List<RunMode> getRunModes() {
         return this.runModes;
     }
 
     /**
      * Find the run mode if available
-     * @param runModes
-     * @return The feature or null.
+     * @param runModes The run modes or {@code null}
+     * @return The feature or {@code null}.
      */
     public RunMode getRunMode(final String[] runModes) {
         final String[] sortedRunModes = RunMode.getSortedRunModesArray(runModes);
         RunMode result = null;
         for(final RunMode current : this.runModes) {
-            if ( Arrays.equals(sortedRunModes, current.getRunModes()) ) {
+            if ( Arrays.equals(sortedRunModes, current.getNames()) ) {
                 result = current;
                 break;
             }
@@ -93,13 +100,13 @@ public class Feature
 
     /**
      * Get or create the run mode.
-     * @param runModes The run modes.
-     * @return The feature for the given run modes.
+     * @param names The run modes.
+     * @return The run mode for the given run modes names.
      */
-    public RunMode getOrCreateRunMode(final String[] runModes) {
-        RunMode result = getRunMode(runModes);
+    public RunMode getOrCreateRunMode(final String[] names) {
+        RunMode result = getRunMode(names);
         if ( result == null ) {
-            result = new RunMode(runModes);
+            result = new RunMode(names);
             this.runModes.add(result);
             Collections.sort(this.runModes);
         }

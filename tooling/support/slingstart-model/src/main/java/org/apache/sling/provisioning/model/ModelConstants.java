@@ -27,7 +27,6 @@ public abstract class ModelConstants {
     /** Name of the boot feature */
     public static final String FEATURE_BOOT = ":boot";
 
-
     /**
      * Name of the configuration containing the web.xml. This configuration
      * is used by the launchpad feature.
@@ -46,8 +45,10 @@ public abstract class ModelConstants {
     /** Format of the unprocessed configuration values. */
     public static final String CFG_UNPROCESSED_FORMAT = ":rawconfig.format";
 
+    /** Format of the Apache Felix Config Admin. */
     public static final String CFG_FORMAT_FELIX_CA = "felixca";
 
+    /** Property file format. */
     public static final String CFG_FORMAT_PROPERTIES = "properties";
 
     /** Name of the webapp run mode. */
