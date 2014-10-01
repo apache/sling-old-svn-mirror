@@ -17,34 +17,33 @@
 package org.apache.sling.provisioning.model;
 
 /**
- * A traceable has an optional location.
+ * A traceable has a comment and a location.
+ * Both are optional.
  */
-public abstract class Traceable {
+public abstract class Commentable extends Traceable {
 
-    /** The location. */
-    private String location;
+    /** The comment. */
+    private String comment;
 
     /**
-     * Get the location.
-     * The location might be the location of the model file or any other
-     * means identifying where the object is defined.
-     * @return The location or {@code null}.
+     * Get the comment.
+     * @return The comment or {@code null}.
      */
-    public String getLocation() {
-        return this.location;
+    public String getComment() {
+        return this.comment;
     }
 
     /**
-     * Set the location.
-     * @param value The new location.
+     * Set the comment.
+     * @param value The new comment.
      */
-    public void setLocation(final String value) {
-        this.location = value;
+    public void setComment(final String value) {
+        this.comment = value;
     }
 
     @Override
     public String toString() {
-        return "Traceable [location=" + location + "]";
+        return "Commentable [location=" + this.getLocation() + ", comment=" + comment + "]";
     }
 }
 

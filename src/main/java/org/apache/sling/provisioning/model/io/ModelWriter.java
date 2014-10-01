@@ -27,22 +27,22 @@ import java.util.Map;
 import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.sling.provisioning.model.Artifact;
 import org.apache.sling.provisioning.model.ArtifactGroup;
+import org.apache.sling.provisioning.model.Commentable;
 import org.apache.sling.provisioning.model.Configuration;
 import org.apache.sling.provisioning.model.Feature;
 import org.apache.sling.provisioning.model.Model;
 import org.apache.sling.provisioning.model.ModelConstants;
 import org.apache.sling.provisioning.model.RunMode;
-import org.apache.sling.provisioning.model.Traceable;
 
 /**
  * Simple writer for the a model
  */
 public class ModelWriter {
 
-    private static void writeComment(final PrintWriter pw, final Traceable traceable)
+    private static void writeComment(final PrintWriter pw, final Commentable commentable)
     throws IOException {
-        if ( traceable.getComment() != null ) {
-            final LineNumberReader lnr = new LineNumberReader(new StringReader(traceable.getComment()));
+        if ( commentable.getComment() != null ) {
+            final LineNumberReader lnr = new LineNumberReader(new StringReader(commentable.getComment()));
             try {
                 String line = null;
                 while ( (line = lnr.readLine()) != null ) {
@@ -51,6 +51,22 @@ public class ModelWriter {
                 }
             } finally {
                 lnr.close();
+            }
+        }
+    }
+
+    private static void writeRunMode(final PrintWriter pw, final RunMode runMode) {
+        final String[] rm = runMode.getRunModes();
+        if ( rm != null && rm.length > 0 ) {
+            pw.print(" runModes=");
+            boolean first = true;
+            for(final String mode : rm) {
+                if ( first ) {
+                    first = false;
+                } else {
+                    pw.print(",");
+                }
+                pw.print(mode);
             }
         }
     }
@@ -66,8 +82,6 @@ public class ModelWriter {
     throws IOException {
         final PrintWriter pw = new PrintWriter(writer);
 
-        writeComment(pw, model);
-
         // features
         for(final Feature feature : model.getFeatures()) {
             writeComment(pw, feature);
@@ -78,8 +92,9 @@ public class ModelWriter {
 
             // variables
             if ( !feature.getVariables().isEmpty() ) {
+                writeComment(pw, feature.getVariables());
                 pw.println("[variables]");
-                for(final Map.Entry<String, String> entry : feature.getVariables().entrySet()) {
+                for(final Map.Entry<String, String> entry : feature.getVariables()) {
                     pw.print("  ");
                     pw.print(entry.getKey());
                     pw.print("=");
@@ -90,43 +105,14 @@ public class ModelWriter {
 
             // run modes
             for(final RunMode runMode : feature.getRunModes()) {
-                // skip empty run mode
-                if ( runMode.getConfigurations().isEmpty() && runMode.getSettings().isEmpty() ) {
-                    boolean hasArtifacts = false;
-                    for(final ArtifactGroup sl : runMode.getArtifactGroups()) {
-                        if ( !sl.getArtifacts().isEmpty() ) {
-                            hasArtifacts = true;
-                            break;
-                        }
-                    }
-                    if ( !hasArtifacts ) {
-                        continue;
-                    }
-                }
-                writeComment(pw, runMode);
-                final String[] runModes = runMode.getRunModes();
-                if ( runModes == null || runModes.length == 0 ) {
-                    pw.println("[global]");
-                } else {
-                    pw.print("[runMode names=");
-                    boolean first = true;
-                    for(final String mode : runModes) {
-                        if ( first ) {
-                            first = false;
-                        } else {
-                            pw.print(",");
-                        }
-                        pw.print(mode);
-                    }
-                    pw.println("]");
-                }
-                pw.println();
-
                 // settings
                 if ( !runMode.getSettings().isEmpty() ) {
-                    pw.println("[settings]");
+                    writeComment(pw, runMode.getSettings());
+                    pw.print("[settings");
+                    writeRunMode(pw, runMode);
+                    pw.println("]");
 
-                    for(final Map.Entry<String, String> entry : runMode.getSettings().entrySet()) {
+                    for(final Map.Entry<String, String> entry : runMode.getSettings()) {
                         pw.print("  ");
                         pw.print(entry.getKey());
                         pw.print("=");
@@ -138,7 +124,7 @@ public class ModelWriter {
                 // artifact groups
                 for(final ArtifactGroup group : runMode.getArtifactGroups()) {
                     // skip empty groups
-                    if ( group.getArtifacts().isEmpty() ) {
+                    if ( group.isEmpty() ) {
                         continue;
                     }
                     writeComment(pw, group);
@@ -147,11 +133,12 @@ public class ModelWriter {
                         pw.print(" startLevel=");
                         pw.print(String.valueOf(group.getLevel()));
                     }
+                    writeRunMode(pw, runMode);
                     pw.println("]");
                     pw.println();
 
                     // artifacts
-                    for(final Artifact ad : group.getArtifacts()) {
+                    for(final Artifact ad : group) {
                         writeComment(pw, ad);
                         pw.print("  ");
                         pw.print(ad.toMvnUrl().substring(4));
@@ -160,26 +147,27 @@ public class ModelWriter {
                             for(final Map.Entry<String, String> entry : ad.getMetadata().entrySet()) {
                                 if ( first ) {
                                     first = false;
-                                    pw.print("{ ");
+                                    pw.print(" { ");
                                 } else {
                                     pw.print(", ");
                                 }
                                 pw.print(entry.getKey());
                                 pw.print("=");
-                                pw.println(entry.getValue());
+                                pw.print(entry.getValue());
                             }
                             pw.print("}");
                         }
                         pw.println();
                     }
-                    if ( !group.getArtifacts().isEmpty() ) {
-                        pw.println();
-                    }
+                    pw.println();
                 }
 
                 // configurations
                 if ( !runMode.getConfigurations().isEmpty() ) {
-                    pw.println("[configurations]");
+                    writeComment(pw, runMode.getConfigurations());
+                    pw.print("[configurations");
+                    writeRunMode(pw, runMode);
+                    pw.println("]");
                     for(final Configuration config : runMode.getConfigurations()) {
                         writeComment(pw, config);
                         final String raw = (String)config.getProperties().get(ModelConstants.CFG_UNPROCESSED);

@@ -19,9 +19,7 @@ package org.apache.sling.provisioning.model;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -43,9 +41,9 @@ public class RunMode
 
     private final List<ArtifactGroup> groups = new ArrayList<ArtifactGroup>();
 
-    private final List<Configuration> configurations = new ArrayList<Configuration>();
+    private final ItemList<Configuration> configurations = new ItemList<Configuration>();
 
-    private final Map<String, String> settings = new HashMap<String, String>();
+    private final KeyValueMap<String> settings = new KeyValueMap<String>();
 
     public RunMode(final String[] runModes) {
         this.runModes = getSortedRunModesArray(runModes);
@@ -153,7 +151,7 @@ public class RunMode
         return null;
     }
 
-    public Configuration getOrCreateConfiguration(final String pid, final String factoryPid) {
+    public Configuration getConfiguration(final String pid, final String factoryPid) {
         Configuration found = null;
         for(final Configuration current : this.configurations) {
             if ( factoryPid == null ) {
@@ -168,6 +166,11 @@ public class RunMode
                 }
             }
         }
+        return found;
+    }
+
+    public Configuration getOrCreateConfiguration(final String pid, final String factoryPid) {
+        Configuration found = getConfiguration(pid, factoryPid);
         if ( found == null ) {
             found = new Configuration(pid, factoryPid);
             this.configurations.add(found);
@@ -179,11 +182,11 @@ public class RunMode
         return this.groups;
     }
 
-    public List<Configuration> getConfigurations() {
+    public ItemList<Configuration> getConfigurations() {
         return this.configurations;
     }
 
-    public Map<String, String> getSettings() {
+    public KeyValueMap<String> getSettings() {
         return this.settings;
     }
 
@@ -209,7 +212,6 @@ public class RunMode
         return "RunMode [runModes=" + Arrays.toString(runModes) + ", groups="
                 + groups + ", configurations=" + configurations + ", settings="
                 + settings
-                + ( this.getLocation() != null ? ", location=" + this.getLocation() : "")
                 + "]";
     }
 

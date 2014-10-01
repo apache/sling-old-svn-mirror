@@ -69,8 +69,6 @@ public class Model extends Traceable {
 
     @Override
     public String toString() {
-        return "Model [features=" + features
-                + ( this.getLocation() != null ? ", location=" + this.getLocation() : "")
-                + "]";
+        return "Model [features=" + features + "]";
     }
 }

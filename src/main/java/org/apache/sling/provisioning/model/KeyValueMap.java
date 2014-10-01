@@ -16,35 +16,40 @@
  */
 package org.apache.sling.provisioning.model;
 
-/**
- * A traceable has an optional location.
- */
-public abstract class Traceable {
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 
-    /** The location. */
-    private String location;
+public class KeyValueMap<T>
+    extends Commentable
+    implements Iterable<Map.Entry<String, T>> {
 
-    /**
-     * Get the location.
-     * The location might be the location of the model file or any other
-     * means identifying where the object is defined.
-     * @return The location or {@code null}.
-     */
-    public String getLocation() {
-        return this.location;
+    private final Map<String, T> properties = new HashMap<String, T>();
+
+    public T get(final String key) {
+        return this.properties.get(key);
     }
 
-    /**
-     * Set the location.
-     * @param value The new location.
-     */
-    public void setLocation(final String value) {
-        this.location = value;
+    public void put(final String key, final T value) {
+        this.properties.put(key, value);
+    }
+
+    public void putAll(final KeyValueMap<T> map) {
+        this.properties.putAll(map.properties);
+    }
+
+    @Override
+    public Iterator<Entry<String, T>> iterator() {
+        return this.properties.entrySet().iterator();
+    }
+
+    public boolean isEmpty() {
+        return this.properties.isEmpty();
     }
 
     @Override
     public String toString() {
-        return "Traceable [location=" + location + "]";
+        return properties.toString();
     }
 }
-
