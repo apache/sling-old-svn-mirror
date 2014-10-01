@@ -28,6 +28,8 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.models.annotations.Model;
+import org.apache.sling.models.factory.InvalidAdaptableException;
+import org.apache.sling.models.factory.InvalidModelException;
 import org.apache.sling.models.impl.injectors.ChildResourceInjector;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
 import org.junit.Before;
@@ -70,6 +72,16 @@ public class InvalidAdaptationsTest {
         assertNull(factory.getAdapter(res, NonModel.class));
     }
 
+    @Test(expected = InvalidModelException.class)
+    public void testNonModelClassException() {
+        Map<String, Object> emptyMap = Collections.<String, Object> emptyMap();
+
+        Resource res = mock(Resource.class);
+        when(res.adaptTo(ValueMap.class)).thenReturn(new ValueMapDecorator(emptyMap));
+
+        assertNull(factory.createModel(res, NonModel.class));
+    }
+
     @Test
     public void testWrongAdaptableClass() {
         Map<String, Object> emptyMap = Collections.<String, Object> emptyMap();
@@ -78,6 +90,16 @@ public class InvalidAdaptationsTest {
         when(res.adaptTo(ValueMap.class)).thenReturn(new ValueMapDecorator(emptyMap));
 
         assertNull(factory.getAdapter(res, RequestModel.class));
+    }
+
+    @Test(expected = InvalidAdaptableException.class)
+    public void testWrongAdaptableClassException() {
+        Map<String, Object> emptyMap = Collections.<String, Object> emptyMap();
+
+        Resource res = mock(Resource.class);
+        when(res.adaptTo(ValueMap.class)).thenReturn(new ValueMapDecorator(emptyMap));
+
+        assertNull(factory.createModel(res, RequestModel.class));
     }
 
     private class NonModel {
