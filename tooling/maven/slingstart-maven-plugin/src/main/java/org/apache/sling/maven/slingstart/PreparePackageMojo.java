@@ -78,15 +78,11 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        try {
-            final Model model = ModelUtils.getEffectiveModel(this.project);
+        final Model model = ModelUtils.getEffectiveModel(this.project);
 
-            this.prepareGlobal(model);
-            this.prepareStandaloneApp(model);
-            this.prepareWebapp(model);
-        } catch ( final IOException io) {
-            throw new MojoExecutionException("Unable to read cached model.", io);
-        }
+        this.prepareGlobal(model);
+        this.prepareStandaloneApp(model);
+        this.prepareWebapp(model);
     }
 
     /**
