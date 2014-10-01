@@ -24,7 +24,6 @@ import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.eclipse.core.internal.Activator;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
@@ -34,10 +33,6 @@ import org.xml.sax.SAXException;
 
 import de.pdark.decentxml.Document;
 import de.pdark.decentxml.Element;
-import de.pdark.decentxml.XMLParser;
-import de.pdark.decentxml.XMLSource;
-import de.pdark.decentxml.XMLStringSource;
-import de.pdark.decentxml.XMLTokenizer;
 import de.pdark.decentxml.XMLTokenizer.Type;
 
 /** WIP: model object for a [.content.xml] shown in the content package view in project explorer **/
@@ -163,7 +158,7 @@ public class GenericJcrRootFile extends JcrNode {
 		for (Iterator<Object> it = membersList.iterator(); it.hasNext();) {
 			final IResource resource = (IResource) it.next();
 			final String resName = resource.getName();
-			Iterator it2;
+            Iterator<?> it2;
 			if (isRootContentXml()) {
 				it2 = parent.children.iterator();
 			} else {
