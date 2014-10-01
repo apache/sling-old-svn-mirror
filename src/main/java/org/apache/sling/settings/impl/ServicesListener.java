@@ -23,16 +23,13 @@ import java.util.Hashtable;
 
 import org.apache.sling.launchpad.api.StartupHandler;
 import org.apache.sling.settings.SlingSettingsService;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
-import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.cm.ManagedService;
 
 /**
  * The <code>ServicesListener</code> listens for the required services
@@ -47,11 +44,15 @@ public class ServicesListener {
     /** The listener for the startup handler. */
     private final Listener startupListener;
 
+    /** The listener for configuration admin. */
+    private ConfigAdminListener configAdminListener;
+
+    /** The listener for the shell. */
+    private ShellListener shellListener;
+
+
     /** The registration of the settings service. */
     private ServiceRegistration settingsReg;
-
-    /** The registration of the managed service. */
-    private ServiceRegistration managedServiceReg;
 
     /**
      * Start listeners
@@ -87,47 +88,34 @@ public class ServicesListener {
                                                settingsService, props);
         SlingPropertiesPrinter.initPlugin(bundleContext);
         SlingSettingsPrinter.initPlugin(bundleContext, settingsService);
-        try {
-            RunModeCommand.initPlugin(bundleContext, settingsService.getRunModes());
-        } catch (final Throwable ignore) {
-            // we just ignore this
-        }
-        // setup manager service for configuration handling
-        final Dictionary<String, String> msProps = new Hashtable<String, String>();
-        msProps.put(Constants.SERVICE_PID, settingsService.getClass().getName());
-        msProps.put(Constants.SERVICE_DESCRIPTION,
-            "Apache Sling Managed Service for the Settings Service");
-        msProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        managedServiceReg = this.bundleContext.registerService(ManagedService.class.getName(), new ServiceFactory() {
 
-            public void ungetService(final Bundle bundle, final ServiceRegistration registration,
-                    final Object service) {
-                // nothing to do
-            }
+        // add config admin support
+        this.configAdminListener = new ConfigAdminListener(settingsService);
+        this.configAdminListener.start();
 
-            public Object getService(final Bundle bundle, final ServiceRegistration registration) {
-                return new SettingsServiceConfigurator(settingsService);
-            }
-        }, msProps);
+        // add shell support
+        this.shellListener = new ShellListener(settingsService);
+        this.shellListener.start();
     }
+
     /**
      * Deactivate this listener.
      */
     public void deactivate() {
-        if ( this.managedServiceReg != null ) {
-            this.managedServiceReg.unregister();
-            this.managedServiceReg = null;
+        if ( this.shellListener != null ) {
+            this.shellListener.deactivate();
+            this.shellListener = null;
+        }
+        if ( this.configAdminListener != null ) {
+            this.configAdminListener.deactivate();
+            this.configAdminListener = null;
         }
         this.startupListener.deactivate();
         if ( this.settingsReg != null ) {
             this.settingsReg.unregister();
             this.settingsReg = null;
         }
-        try {
-            RunModeCommand.destroyPlugin();
-        } catch (Throwable ignore) {
-            // we just ignore this
-        }
+
         SlingSettingsPrinter.destroyPlugin();
         SlingPropertiesPrinter.destroyPlugin();
     }
@@ -135,7 +123,7 @@ public class ServicesListener {
     /**
      * Helper class listening for service events for a defined service.
      */
-    protected final class Listener implements ServiceListener {
+    private abstract class AbstractListener implements ServiceListener {
 
         /** The name of the service. */
         private final String serviceName;
@@ -149,7 +137,7 @@ public class ServicesListener {
         /**
          * Constructor
          */
-        public Listener(final String serviceName) {
+        public AbstractListener(final String serviceName) {
             this.serviceName = serviceName;
         }
 
@@ -193,7 +181,7 @@ public class ServicesListener {
                     if ( this.service == null ) {
                         this.reference = null;
                     } else {
-                        notifyChange();
+                        serviceChanged();
                     }
                 }
             }
@@ -207,7 +195,7 @@ public class ServicesListener {
                 this.service = null;
                 bundleContext.ungetService(this.reference);
                 this.reference = null;
-                notifyChange();
+                serviceChanged();
             }
         }
 
@@ -221,5 +209,95 @@ public class ServicesListener {
                 this.releaseService();
             }
         }
+
+        protected abstract void serviceChanged();
+    }
+
+    /**
+     * Helper class listening for service events for a defined service.
+     */
+    private final class Listener extends AbstractListener {
+
+        /**
+         * Constructor
+         */
+        public Listener(final String serviceName) {
+            super(serviceName);
+        }
+
+        @Override
+        protected void serviceChanged() {
+            notifyChange();
+        }
+    }
+
+    /**
+     * Helper class listening for service events for config admin
+     */
+    private final class ConfigAdminListener extends AbstractListener {
+
+        private Object settingsServiceConfigurator;
+
+        private final SlingSettingsServiceImpl settings;
+
+        /**
+         * Constructor
+         */
+        public ConfigAdminListener(final SlingSettingsServiceImpl settings) {
+            super("org.osgi.service.cm.ConfigurationAdmin");
+            this.settings = settings;
+        }
+
+        @Override
+        protected void serviceChanged() {
+            if ( this.getService() != null && this.settingsServiceConfigurator == null ) {
+                this.settingsServiceConfigurator = new SettingsServiceConfigurator(bundleContext, settings);
+            }
+        }
+
+        @Override
+        public void deactivate() {
+            super.deactivate();
+            if ( settingsServiceConfigurator != null ) {
+                ((SettingsServiceConfigurator)settingsServiceConfigurator).destroy();
+                settingsServiceConfigurator = null;
+            }
+        }
+
+    }
+
+    /**
+     * Helper class listening for service events for config admin
+     */
+    private final class ShellListener extends AbstractListener {
+
+        private Object runModeCommand;
+
+        private final SlingSettingsServiceImpl settings;
+
+        /**
+         * Constructor
+         */
+        public ShellListener(final SlingSettingsServiceImpl settings) {
+            super("org.apache.felix.shell.ShellService");
+            this.settings = settings;
+        }
+
+        @Override
+        protected void serviceChanged() {
+            if ( this.getService() != null && this.runModeCommand == null ) {
+                this.runModeCommand = new RunModeCommand(bundleContext, settings.getRunModes());
+            }
+        }
+
+        @Override
+        public void deactivate() {
+            super.deactivate();
+            if ( runModeCommand != null ) {
+                ((RunModeCommand)runModeCommand).destroy();
+                runModeCommand = null;
+            }
+        }
+
     }
 }
