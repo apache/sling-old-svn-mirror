@@ -58,7 +58,7 @@ public class RemoteReplicationPackageImporterFactory implements ReplicationPacka
 
     @Property(name = ReplicationTransportConstants.TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
     @Reference(name = "TransportAuthenticationProviderFactory", policy = ReferencePolicy.DYNAMIC)
-    private TransportAuthenticationProvider transportAuthenticationProvider;
+    private volatile TransportAuthenticationProvider transportAuthenticationProvider;
 
     @Property(options = {
             @PropertyOption(name = "All",

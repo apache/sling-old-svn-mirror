@@ -61,11 +61,11 @@ public class RemoteReplicationPackageExporterFactory implements ReplicationPacka
 
     @Property(name = ReplicationTransportConstants.TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
     @Reference(name = "TransportAuthenticationProviderFactory", policy = ReferencePolicy.DYNAMIC)
-    private TransportAuthenticationProvider transportAuthenticationProvider;
+    private volatile TransportAuthenticationProvider transportAuthenticationProvider;
 
     @Property(label = "Target ReplicationPackageBuilder", name = "ReplicationPackageBuilder.target")
     @Reference(name = "ReplicationPackageBuilder", policy = ReferencePolicy.DYNAMIC)
-    private ReplicationPackageBuilder packageBuilder;
+    private volatile ReplicationPackageBuilder packageBuilder;
 
     @Property(name = "poll items", description = "number of subsequent poll requests to make", intValue = 1)
     public static final String POLL_ITEMS = "poll.items";

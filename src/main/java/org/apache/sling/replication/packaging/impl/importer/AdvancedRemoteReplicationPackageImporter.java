@@ -62,7 +62,7 @@ public class AdvancedRemoteReplicationPackageImporter implements ReplicationPack
 
     @Property(name = ReplicationTransportConstants.TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
     @Reference(name = "TransportAuthenticationProvider", policy = ReferencePolicy.DYNAMIC)
-    private TransportAuthenticationProvider transportAuthenticationProvider;
+    private volatile TransportAuthenticationProvider transportAuthenticationProvider;
 
     @Property(options = {
             @PropertyOption(name = "All",

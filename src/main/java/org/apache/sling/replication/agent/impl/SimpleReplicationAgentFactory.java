@@ -93,11 +93,11 @@ public class SimpleReplicationAgentFactory {
 
     @Property(label = "Target ReplicationPackageExporter", name = PACKAGE_EXPORTER_TARGET)
     @Reference(name = "ReplicationPackageExporter", policy = ReferencePolicy.DYNAMIC)
-    private ReplicationPackageExporter packageExporter;
+    private volatile ReplicationPackageExporter packageExporter;
 
     @Property(label = "Target ReplicationPackageImporter", name = PACKAGE_IMPORTER_TARGET)
     @Reference(name = "ReplicationPackageImporter", policy = ReferencePolicy.DYNAMIC)
-    private ReplicationPackageImporter packageImporter;
+    private volatile ReplicationPackageImporter packageImporter;
 
     @Property(label = "Target ReplicationQueueProvider", name = QUEUEPROVIDER_TARGET, value = DEFAULT_QUEUEPROVIDER)
     @Reference(name = "ReplicationQueueProvider", target = DEFAULT_QUEUEPROVIDER, policy = ReferencePolicy.DYNAMIC)
