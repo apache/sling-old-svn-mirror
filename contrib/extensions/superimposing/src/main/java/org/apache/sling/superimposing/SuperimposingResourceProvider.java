@@ -49,12 +49,12 @@ public interface SuperimposingResourceProvider extends ResourceProvider {
     String PROP_SUPERIMPOSE_OVERLAYABLE = "sling:superimposeOverlayable";
 
     /**
-     * @return Root path (source path)
+     * @return Root path (destination for superimposing)
      */
     String getRootPath();
 
     /**
-     * @return Target path (destination path)
+     * @return Source path (source for superimposing)
      */
     String getSourcePath();
 

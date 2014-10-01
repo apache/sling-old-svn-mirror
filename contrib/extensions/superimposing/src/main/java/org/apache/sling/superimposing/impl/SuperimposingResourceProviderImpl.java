@@ -222,14 +222,14 @@ public class SuperimposingResourceProviderImpl implements SuperimposingResourceP
     }
 
     /**
-     * @return Root path (source path)
+     * @return Root path (destination for superimposing)
      */
     public String getRootPath() {
         return rootPath;
     }
 
     /**
-     * @return Target path (destination path)
+     * @return Source path (source for superimposing)
      */
     public String getSourcePath() {
         return sourcePath;
