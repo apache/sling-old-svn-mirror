@@ -80,19 +80,13 @@ public class AddOrUpdateNodeCommandTest {
 
             Property newProp = session.getNode("/content").getProperty(PROP_NAME);
             if (newPropertyValues instanceof String) {
-                if (newProp.isMultiple()) {
-                    Value[] values = session.getNode("/content").getProperty(PROP_NAME).getValues();
-
-                    assertThat(values.length, equalTo(1));
-                    assertThat(values[0].getString(), equalTo(newPropertyValues));
-
-                } else {
-                    assertThat(newProp.getString(), equalTo((String) newPropertyValues));
-                }
+                assertThat("property.isMultiple", newProp.isMultiple(), equalTo(Boolean.FALSE));
+                assertThat(newProp.getString(), equalTo((String) newPropertyValues));
 
             } else {
 
                 String[] expectedValues = (String[]) newPropertyValues;
+                assertThat("property.isMultiple", newProp.isMultiple(), equalTo(Boolean.TRUE));
 
                 Value[] values = session.getNode("/content").getProperty(PROP_NAME).getValues();
 
