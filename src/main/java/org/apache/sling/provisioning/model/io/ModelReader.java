@@ -187,7 +187,7 @@ public class ModelReader {
                                     if ( this.feature.getRunMode(rm) != null ) {
                                         throw new IOException(exceptionPrefix + "Duplicate run mode in line " + this.lineNumberReader.getLineNumber() + ": " + line);
                                     }
-                                    this.runMode = this.feature.getOrCreateFeature(rm);
+                                    this.runMode = this.feature.getOrCreateRunMode(rm);
                                     this.init(this.runMode);
                                     this.artifactGroup = null;
                                     break;
@@ -198,7 +198,7 @@ public class ModelReader {
                                   if ( this.feature.getRunMode(null) != null ) {
                                       throw new IOException(exceptionPrefix + "Duplicate global run mode in line " + this.lineNumberReader.getLineNumber() + ": " + line);
                                   }
-                                  this.runMode = this.feature.getOrCreateFeature(null);
+                                  this.runMode = this.feature.getOrCreateRunMode(null);
                                   this.init(this.runMode);
                                   this.artifactGroup = null;
                                   break;
@@ -337,7 +337,7 @@ public class ModelReader {
      */
     private void checkRunMode() throws IOException {
         if ( runMode == null ) {
-            runMode = this.feature.getOrCreateFeature(null);
+            runMode = this.feature.getOrCreateRunMode(null);
         }
     }
 

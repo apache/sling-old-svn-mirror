@@ -98,7 +98,7 @@ public class Feature
      * @param runModes The run modes.
      * @return The feature for the given run modes.
      */
-    public RunMode getOrCreateFeature(final String[] runModes) {
+    public RunMode getOrCreateRunMode(final String[] runModes) {
         RunMode result = getRunMode(runModes);
         if ( result == null ) {
             result = new RunMode(runModes);

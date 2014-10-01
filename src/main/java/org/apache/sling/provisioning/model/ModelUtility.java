@@ -49,7 +49,7 @@ public abstract class ModelUtility {
 
             // run modes
             for(final RunMode runMode : feature.getRunModes()) {
-                final RunMode baseRunMode = baseFeature.getOrCreateFeature(runMode.getRunModes());
+                final RunMode baseRunMode = baseFeature.getOrCreateRunMode(runMode.getRunModes());
 
                 // artifact groups
                 for(final ArtifactGroup group : runMode.getArtifactGroups()) {
@@ -120,7 +120,7 @@ public abstract class ModelUtility {
             newFeature.getVariables().putAll(feature.getVariables());
 
             for(final RunMode runMode : feature.getRunModes()) {
-                final RunMode newRunMode = newFeature.getOrCreateFeature(runMode.getRunModes());
+                final RunMode newRunMode = newFeature.getOrCreateRunMode(runMode.getRunModes());
                 newRunMode.setComment(runMode.getComment());
                 newRunMode.setLocation(runMode.getLocation());
 
