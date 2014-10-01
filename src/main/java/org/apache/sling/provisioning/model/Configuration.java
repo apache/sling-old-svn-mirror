@@ -21,16 +21,25 @@ import java.util.Hashtable;
 
 
 /**
- * Configuration
+ * A configuration has either
+ * - a pid
+ * - or a factory pid and an alias (pid)
+ * and properties.
  */
 public class Configuration extends Commentable {
 
+    /** The pid. */
     private final String pid;
-
+    /** The factory pid. */
     private final String factoryPid;
-
+    /** The properties. */
     private final Dictionary<String, Object> properties = new Hashtable<String, Object>();
 
+    /**
+     * Create a new configuration
+     * @param pid The pid or alias for a factory pid
+     * @param factoryPid The factory pid
+     */
     public Configuration(final String pid, final String factoryPid) {
         this.pid = (pid != null ? pid.trim() : null);
         this.factoryPid = (factoryPid != null ? factoryPid.trim() : null);

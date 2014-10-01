@@ -160,7 +160,7 @@ public class ModelReader {
                                    if ( name == null ) {
                                        throw new IOException(exceptionPrefix + "Feature name missing in line " + this.lineNumberReader.getLineNumber() + ": " + line);
                                    }
-                                   if ( model.findFeature(name) != null ) {
+                                   if ( model.getFeature(name) != null ) {
                                        throw new IOException(exceptionPrefix + "Duplicate feature in line " + this.lineNumberReader.getLineNumber() + ": " + line);
                                    }
                                    this.feature = model.getOrCreateFeature(name);
@@ -186,7 +186,7 @@ public class ModelReader {
                                             throw new IOException(exceptionPrefix + "Invalid start level in line " + this.lineNumberReader.getLineNumber() + ": " + line + ":" + level);
                                         }
                                     }
-                                    if ( this.runMode.findArtifactGroup(startLevel) != null ) {
+                                    if ( this.runMode.getArtifactGroup(startLevel) != null ) {
                                         throw new IOException(exceptionPrefix + "Duplicate artifact group in line " + this.lineNumberReader.getLineNumber() + ": " + line);
                                     }
                                     this.artifactGroup = this.runMode.getOrCreateArtifactGroup(startLevel);

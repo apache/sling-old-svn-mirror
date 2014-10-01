@@ -19,24 +19,36 @@ package org.apache.sling.provisioning.model;
 
 /**
  * A artifact group holds a set of artifacts.
+ *
  * A valid start level is positive, start level 0 means the default OSGi start level.
  */
 public class ArtifactGroup extends ItemList<Artifact>
     implements Comparable<ArtifactGroup> {
 
+    /** The start level. */
     private final int level;
 
-    public ArtifactGroup(final int level) {
-        this.level = level;
+    /**
+     * Create a new artifact group with the level.
+     * @param startLevel The start level.
+     */
+    public ArtifactGroup(final int startLevel) {
+        this.level = startLevel;
     }
 
-    public int getLevel() {
+    /**
+     * Get the start level.
+     * @return The start level.
+     */
+    public int getStartLevel() {
         return this.level;
     }
 
     /**
      * Search an artifact with the same groupId, artifactId, version, type and classifier.
      * Version is not considered.
+     * @param template A template artifact
+     * @return The artifact or {@code null}.
      */
     public Artifact search(final Artifact template) {
         Artifact found = null;

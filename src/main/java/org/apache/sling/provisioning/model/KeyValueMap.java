@@ -21,20 +21,38 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
+/**
+ * Helper class to hold key value pairs.
+ */
 public class KeyValueMap<T>
     extends Commentable
     implements Iterable<Map.Entry<String, T>> {
 
+    /** The map holding the actual key value pairs. */
     private final Map<String, T> properties = new HashMap<String, T>();
 
+    /**
+     * Get an item from the map.
+     * @param key The key of the item.
+     * @return The item or {@code null}.
+     */
     public T get(final String key) {
         return this.properties.get(key);
     }
 
+    /**
+     * Put an item in the map
+     * @param key The key of the item.
+     * @param value The value
+     */
     public void put(final String key, final T value) {
         this.properties.put(key, value);
     }
 
+    /**
+     * Put all items from the other map in this map
+     * @param map The other map
+     */
     public void putAll(final KeyValueMap<T> map) {
         this.properties.putAll(map.properties);
     }
@@ -44,6 +62,10 @@ public class KeyValueMap<T>
         return this.properties.entrySet().iterator();
     }
 
+    /**
+     * Check whether this map is empty.
+     * @return {@code true} if the map is empty.
+     */
     public boolean isEmpty() {
         return this.properties.isEmpty();
     }

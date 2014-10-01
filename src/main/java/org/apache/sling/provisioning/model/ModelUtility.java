@@ -49,11 +49,11 @@ public abstract class ModelUtility {
 
             // run modes
             for(final RunMode runMode : feature.getRunModes()) {
-                final RunMode baseRunMode = baseFeature.getOrCreateRunMode(runMode.getRunModes());
+                final RunMode baseRunMode = baseFeature.getOrCreateRunMode(runMode.getNames());
 
                 // artifact groups
                 for(final ArtifactGroup group : runMode.getArtifactGroups()) {
-                    final ArtifactGroup baseGroup = baseRunMode.getOrCreateArtifactGroup(group.getLevel());
+                    final ArtifactGroup baseGroup = baseRunMode.getOrCreateArtifactGroup(group.getStartLevel());
 
                     for(final Artifact artifact : group) {
                         final Artifact found = baseGroup.search(artifact);
@@ -92,12 +92,12 @@ public abstract class ModelUtility {
          * Resolve the variable.
          * An implementation might get the value of a variable from the system properties,
          * or the environment etc.
-         * As a fallback, the resolver should check the variables of the model.
-         * @param model The model
+         * As a fallback, the resolver should check the variables of the feature.
+         * @param feature The feature
          * @param name The variable name
          * @return The variable value or null.
          */
-        String resolve(final Feature model, final String name);
+        String resolve(final Feature feature, final String name);
     }
 
     /**
@@ -109,19 +109,23 @@ public abstract class ModelUtility {
      */
     public static Model getEffectiveModel(final Model model, final VariableResolver resolver) {
         final Model result = new Model();
+        result.setLocation(model.getLocation());
 
         for(final Feature feature : model.getFeatures()) {
             final Feature newFeature = result.getOrCreateFeature(feature.getName());
             newFeature.setComment(feature.getComment());
             newFeature.setLocation(feature.getLocation());
 
+            newFeature.getVariables().setComment(feature.getVariables().getComment());
+            newFeature.getVariables().setLocation(feature.getVariables().getLocation());
             newFeature.getVariables().putAll(feature.getVariables());
 
             for(final RunMode runMode : feature.getRunModes()) {
-                final RunMode newRunMode = newFeature.getOrCreateRunMode(runMode.getRunModes());
+                final RunMode newRunMode = newFeature.getOrCreateRunMode(runMode.getNames());
+                newRunMode.setLocation(runMode.getLocation());
 
                 for(final ArtifactGroup group : runMode.getArtifactGroups()) {
-                    final ArtifactGroup newGroup = newRunMode.getOrCreateArtifactGroup(group.getLevel());
+                    final ArtifactGroup newGroup = newRunMode.getOrCreateArtifactGroup(group.getStartLevel());
                     newGroup.setComment(group.getComment());
                     newGroup.setLocation(group.getLocation());
 
@@ -138,6 +142,8 @@ public abstract class ModelUtility {
                     }
                 }
 
+                newRunMode.getConfigurations().setComment(runMode.getConfigurations().getComment());
+                newRunMode.getConfigurations().setLocation(runMode.getConfigurations().getLocation());
                 for(final Configuration config : runMode.getConfigurations()) {
                     final Configuration newConfig = new Configuration(config.getPid(), config.getFactoryPid());
                     newConfig.setComment(config.getComment());
@@ -197,6 +203,8 @@ public abstract class ModelUtility {
                     newRunMode.getConfigurations().add(newConfig);
                 }
 
+                newRunMode.getSettings().setComment(runMode.getSettings().getComment());
+                newRunMode.getSettings().setLocation(runMode.getSettings().getLocation());
                 for(final Map.Entry<String, String> entry : runMode.getSettings() ) {
                     newRunMode.getSettings().put(entry.getKey(), replace(feature, entry.getValue(), resolver));
                 }
@@ -209,13 +217,13 @@ public abstract class ModelUtility {
     /**
      * Replace properties in the string.
      *
-     * @param model The model
+     * @param feature The feature
      * @param v The variable name
      * @param resolver Optional resolver
      * @result The value of the variable
-     * @throws IllegalArgumentException
+     * @throws IllegalArgumentException If variable can't be found.
      */
-    private static String replace(final Feature model, final String v, final VariableResolver resolver) {
+    private static String replace(final Feature feature, final String v, final VariableResolver resolver) {
         if ( v == null ) {
             return null;
         }
@@ -232,9 +240,9 @@ public abstract class ModelUtility {
                     final String name = msg.substring(pos + 2, endPos);
                     final String value;
                     if ( resolver != null ) {
-                        value = resolver.resolve(model, name);
+                        value = resolver.resolve(feature, name);
                     } else {
-                        value = model.getVariables().get(name);
+                        value = feature.getVariables().get(name);
                     }
                     if ( value == null ) {
                         throw new IllegalArgumentException("Unknown variable: " + name);
@@ -250,7 +258,7 @@ public abstract class ModelUtility {
 
     /**
      * Validates the model.
-     * @param model
+     * @param model The model to validate
      * @return A map with errors or {@code null}.
      */
     public static Map<Traceable, String> validate(final Model model) {
@@ -262,7 +270,7 @@ public abstract class ModelUtility {
                 errors.put(feature, "Name is required for a feature.");
             }
             for(final RunMode runMode : feature.getRunModes()) {
-                final String[] rm = runMode.getRunModes();
+                final String[] rm = runMode.getNames();
                 if ( rm != null ) {
                     boolean hasSpecial = false;
                     for(final String m : rm) {
@@ -277,8 +285,8 @@ public abstract class ModelUtility {
                 }
 
                 for(final ArtifactGroup sl : runMode.getArtifactGroups()) {
-                    if ( sl.getLevel() < 0 ) {
-                        errors.put(sl, "Invalid start level " + sl.getLevel());
+                    if ( sl.getStartLevel() < 0 ) {
+                        errors.put(sl, "Invalid start level " + sl.getStartLevel());
                     }
                     for(final Artifact a : sl) {
                         String error = null;

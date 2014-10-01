@@ -34,7 +34,7 @@ public class Model extends Traceable {
      * @param name The feature name
      * @return The feature or {@code null}.
      */
-    public Feature findFeature(final String name) {
+    public Feature getFeature(final String name) {
         for(final Feature f : this.features) {
             if ( name.equals(f.getName()) ) {
                 return f;
@@ -49,7 +49,7 @@ public class Model extends Traceable {
      * @return The feature for the given run modes.
      */
     public Feature getOrCreateFeature(final String name) {
-        Feature result = findFeature(name);
+        Feature result = getFeature(name);
         if ( result == null ) {
             result = new Feature(name);
             this.features.add(result);

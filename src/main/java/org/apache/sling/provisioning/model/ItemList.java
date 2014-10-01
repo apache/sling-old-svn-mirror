@@ -20,16 +20,28 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * Helper class to hold a list of items.
+ */
 public class ItemList<T>
     extends Commentable
     implements Iterable<T> {
 
+    /** The list holding the items. */
     protected final List<T> items = new ArrayList<T>();
 
+    /**
+     * Add a new item
+     * @param item The new item
+     */
     public void add(final T item) {
         this.items.add(item);
     }
 
+    /**
+     * Remove an item.
+     * @param item The item to remove.
+     */
     public void remove(final T item) {
         this.items.remove(item);
     }
@@ -39,6 +51,10 @@ public class ItemList<T>
         return this.items.iterator();
     }
 
+    /**
+     * Check if the list is empty.
+     * @return {@code true} if the list is empty.
+     */
     public boolean isEmpty() {
         return this.items.isEmpty();
     }
