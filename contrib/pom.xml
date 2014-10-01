@@ -94,8 +94,6 @@
           <module>extensions/apt/parser</module>
           <module>extensions/apt/servlet</module>
           <module>extensions/collection</module>
-          <module>extensions/leak-detector</module>
-          <module>extensions/slf4j-mdc</module>
           <module>extensions/datasource</module>
           <module>extensions/dojo</module>
           <module>extensions/dojo-sling</module>
@@ -104,16 +102,19 @@
           <module>extensions/gwt/servlet</module>
           <module>extensions/i18n</module>
           <module>extensions/jmxprovider</module>
+          <module>extensions/leak-detector</module>
           <module>extensions/mongodb</module>
           <module>extensions/obr</module>
-          <module>extensions/reqanalyzer</module>
-          <module>extensions/resourcemerger</module>
-          <module>extensions/rewriter</module>
-          <module>extensions/tenant</module>
           <module>extensions/replication/core</module>
           <module>extensions/replication/sample</module>
           <module>extensions/replication/it</module>
+          <module>extensions/reqanalyzer</module>
+          <module>extensions/resourcemerger</module>
+          <module>extensions/rewriter</module>
+          <module>extensions/slf4j-mdc</module>
           <module>extensions/sling-query</module>
+          <module>extensions/superimposing</module>
+          <module>extensions/tenant</module>
           <module>jcr/compiler</module>
           <module>jcr/jackrabbit-client</module>
           <module>jcr/ocm</module>
