@@ -30,7 +30,6 @@ import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.Path;
 import org.hamcrest.CoreMatchers;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -91,7 +90,6 @@ public class JcrContentContentProviderTest {
     }
 
     @Test
-    @Ignore("SLING-3988")
     public void listChildrenWithNestedContentXmlInEscapedDir() throws Exception {
 
         // create faceted project
@@ -124,6 +122,11 @@ public class JcrContentContentProviderTest {
         JcrNode contentNode = (JcrNode) children[0];
         Object[] children2 = contentProvider.getChildren(contentNode);
         assertChildrenHavePaths(children2, "/content/sling:stuff");
+
+        // test children of '/content/sling:stuff
+        JcrNode slingStuffNode = (JcrNode) children2[0];
+        Object[] children3 = contentProvider.getChildren(slingStuffNode);
+        assertChildrenHavePaths(children3); // no children
 
     }
 

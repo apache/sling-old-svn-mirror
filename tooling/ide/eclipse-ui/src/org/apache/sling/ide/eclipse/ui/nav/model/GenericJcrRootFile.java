@@ -83,7 +83,6 @@ public class GenericJcrRootFile extends JcrNode {
 		if (isRootContentXml()) {
 			if (parent instanceof DirNode) {
 				DirNode dirNodeParent = (DirNode)parent;
-				JcrNode dirNodeParentParent = dirNodeParent.getParent();
 				JcrNode effectiveSibling = dirNodeParent.getEffectiveSibling();
 				if (effectiveSibling!=null) {
 				    effectiveSibling.dirSibling = dirNodeParent;
@@ -92,7 +91,6 @@ public class GenericJcrRootFile extends JcrNode {
 				    handleProperties(element, parent.properties);
 				}
 				effectiveParent = parent;
-				dirNodeParentParent.hide(parent);
 			} else {
 				handleProperties(element, parent.properties);
 				effectiveParent = parent;
