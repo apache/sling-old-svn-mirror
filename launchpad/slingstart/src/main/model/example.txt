@@ -2,6 +2,7 @@
 #
 # A feature consists of variables and run mode dependent artifacts.
 #
+[feature name=example]
 # The variables are global and can be used within artifact definitions, configurations,
 # and settings.
 #
@@ -52,14 +53,11 @@ org.apache.sling.another.config [format=properties]
      value=5
      
  
-# If artifacts should only be available for a specific run mode, a new section needs
-# to be started:
-[runMode names=jackrabbit]
 
 # Now artifacts, configurations and settings can be specified. All of them belong to
 # the previous runMode definition
 #
-[artifacts startLevel=15]
+[artifacts startLevel=15 runModes=jackrabbit]
     org.apache.derby/derby/10.5.3.0_1/jar
     org.apache.sling/org.apache.sling.jcr.jackrabbit.server/2.1.3-SNAPSHOT/jar
 
