@@ -64,6 +64,9 @@ public class FactoryCache {
     /** The optional property for the content types the component should apply to */
     private static final String PROPERTY_CONTENT_TYPES = "pipeline.contentTypes";
 
+    /** The optional property for the selectors the component should apply to */
+    private static final String PROPERTY_SELECTORS = "pipeline.selectors";
+
     /** The optional property for the resource types the component should apply to */
     private static final String PROPERTY_RESOURCE_TYPES = "pipeline.resourceTypes";
 
@@ -430,12 +433,14 @@ public class FactoryCache {
             final String[] extensions = OsgiUtil.toStringArray(ref.getProperty(PROPERTY_EXTENSIONS), null);
             final String[] contentTypes = OsgiUtil.toStringArray(ref.getProperty(PROPERTY_CONTENT_TYPES), null);
             final String[] resourceTypes = OsgiUtil.toStringArray(ref.getProperty(PROPERTY_RESOURCE_TYPES), null);
+            final String[] selectors = OsgiUtil.toStringArray(ref.getProperty(PROPERTY_SELECTORS), null);
             final boolean noCheckRequired = (paths == null || paths.length == 0) &&
                                    (extensions == null || extensions.length == 0) &&
                                    (contentTypes == null || contentTypes.length == 0) &&
-                                   (resourceTypes == null || resourceTypes.length == 0);
+                                   (resourceTypes == null || resourceTypes.length == 0) &&
+                                   (selectors == null || selectors.length == 0);
             if ( !noCheckRequired ) {
-                this.configuration = new ProcessorConfigurationImpl(contentTypes, paths, extensions, resourceTypes);
+                this.configuration = new ProcessorConfigurationImpl(contentTypes, paths, extensions, resourceTypes, selectors);
             } else {
                 this.configuration = null;
             }
