@@ -49,6 +49,7 @@ import org.apache.sling.ide.filter.FilterResult;
 import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.serialization.SerializationKind;
 import org.apache.sling.ide.serialization.SerializationKindManager;
+import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.NodeTypeRegistry;
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryException;
@@ -844,6 +845,8 @@ public class JcrNode implements IAdaptable {
 	    String thisNodeType = getPrimaryType();
 	    final SerializationKind parentSk = getSerializationKind(thisNodeType);
         final SerializationKind childSk = getSerializationKind(childNodeType);
+
+        final SerializationManager serializationManager = Activator.getDefault().getSerializationManager();
 	    
 	    if (parentSk==SerializationKind.METADATA_FULL) {
 	        createDomChild(childNodeName, childNodeType);
@@ -891,7 +894,7 @@ public class JcrNode implements IAdaptable {
 	        }
         } else if ((parentSk == SerializationKind.FOLDER || parentSk == SerializationKind.METADATA_PARTIAL)
                 && childSk == SerializationKind.METADATA_FULL) {
-            createVaultFile((IFolder)resource, childNodeName+".xml", childNodeType);
+            createVaultFile((IFolder) resource, serializationManager.getOsPath(childNodeName) + ".xml", childNodeType);
 	    } else if (parentSk==SerializationKind.FOLDER && childSk==SerializationKind.METADATA_PARTIAL) {
 //	        createVaultFile((IFolder)resource, childNodeName+".xml", childNodeType);
 
@@ -901,7 +904,7 @@ public class JcrNode implements IAdaptable {
                 public void run(IProgressMonitor monitor) throws CoreException {
                     IFolder f = (IFolder)resource;
                     IFolder newFolder = null;
-                    newFolder = f.getFolder(childNodeName);
+                    newFolder = f.getFolder(serializationManager.getOsPath(childNodeName));
                     newFolder.create(true, true, new NullProgressMonitor());
                     createVaultFile(newFolder, ".content.xml", childNodeType);
                 }
