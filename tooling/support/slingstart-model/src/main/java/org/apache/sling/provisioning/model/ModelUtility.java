@@ -55,12 +55,12 @@ public abstract class ModelUtility {
                 for(final ArtifactGroup group : runMode.getArtifactGroups()) {
                     final ArtifactGroup baseGroup = baseRunMode.getOrCreateArtifactGroup(group.getLevel());
 
-                    for(final Artifact artifact : group.getArtifacts()) {
+                    for(final Artifact artifact : group) {
                         final Artifact found = baseGroup.search(artifact);
                         if ( found != null ) {
-                            baseGroup.getArtifacts().remove(found);
+                            baseGroup.remove(found);
                         }
-                        baseGroup.getArtifacts().add(artifact);
+                        baseGroup.add(artifact);
                     }
                 }
 
@@ -75,7 +75,7 @@ public abstract class ModelUtility {
                 }
 
                 // settings
-                for(final Map.Entry<String, String> entry : runMode.getSettings().entrySet() ) {
+                for(final Map.Entry<String, String> entry : runMode.getSettings() ) {
                     baseRunMode.getSettings().put(entry.getKey(), entry.getValue());
                 }
             }
@@ -109,8 +109,6 @@ public abstract class ModelUtility {
      */
     public static Model getEffectiveModel(final Model model, final VariableResolver resolver) {
         final Model result = new Model();
-        result.setComment(model.getComment());
-        result.setLocation(model.getLocation());
 
         for(final Feature feature : model.getFeatures()) {
             final Feature newFeature = result.getOrCreateFeature(feature.getName());
@@ -121,15 +119,13 @@ public abstract class ModelUtility {
 
             for(final RunMode runMode : feature.getRunModes()) {
                 final RunMode newRunMode = newFeature.getOrCreateRunMode(runMode.getRunModes());
-                newRunMode.setComment(runMode.getComment());
-                newRunMode.setLocation(runMode.getLocation());
 
                 for(final ArtifactGroup group : runMode.getArtifactGroups()) {
                     final ArtifactGroup newGroup = newRunMode.getOrCreateArtifactGroup(group.getLevel());
                     newGroup.setComment(group.getComment());
                     newGroup.setLocation(group.getLocation());
 
-                    for(final Artifact artifact : group.getArtifacts()) {
+                    for(final Artifact artifact : group) {
                         final Artifact newArtifact = new Artifact(replace(feature, artifact.getGroupId(), resolver),
                                 replace(feature, artifact.getArtifactId(), resolver),
                                 replace(feature, artifact.getVersion(), resolver),
@@ -138,7 +134,7 @@ public abstract class ModelUtility {
                         newArtifact.setComment(artifact.getComment());
                         newArtifact.setLocation(artifact.getLocation());
 
-                        newGroup.getArtifacts().add(newArtifact);
+                        newGroup.add(newArtifact);
                     }
                 }
 
@@ -201,7 +197,7 @@ public abstract class ModelUtility {
                     newRunMode.getConfigurations().add(newConfig);
                 }
 
-                for(final Map.Entry<String, String> entry : runMode.getSettings().entrySet() ) {
+                for(final Map.Entry<String, String> entry : runMode.getSettings() ) {
                     newRunMode.getSettings().put(entry.getKey(), replace(feature, entry.getValue(), resolver));
                 }
             }
@@ -284,7 +280,7 @@ public abstract class ModelUtility {
                     if ( sl.getLevel() < 0 ) {
                         errors.put(sl, "Invalid start level " + sl.getLevel());
                     }
-                    for(final Artifact a : sl.getArtifacts()) {
+                    for(final Artifact a : sl) {
                         String error = null;
                         if ( a.getGroupId() == null || a.getGroupId().isEmpty() ) {
                             error = "groupId missing";

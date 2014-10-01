@@ -23,7 +23,7 @@ import java.util.Hashtable;
 /**
  * Configuration
  */
-public class Configuration extends Traceable {
+public class Configuration extends Commentable {
 
     private final String pid;
 

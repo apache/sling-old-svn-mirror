@@ -1,0 +1,64 @@
+# This is a feature description
+#
+# A feature consists of variables and run mode dependent artifacts.
+#
+[feature name=example]
+# The variables are global and can be used within artifact definitions, configurations,
+# and settings.
+#
+# Variables
+[variables]
+  ws.version=1.0.2
+
+# Settings, artifacts and configurations belong to a run mode. If none is specified
+# the default run mode is used. The same goes with the start level for artifacts
+# Framework properties
+[settings]
+    sling.options=jackrabbit,oak
+
+[artifacts]
+    commons-io/commons-io/1.4/jar
+    commons-fileupload/commons-fileupload/1.3.1/jar
+    commons-collections/commons-collections/3.2.1/jar
+    commons-codec/commons-codec/1.9/jar
+    commons-lang/commons-lang/2.6/jar
+    org.apache.commons/commons-math/2.2/jar
+# Artifacts can have additional information like a SHA1 etc.
+#
+    org.apache.commons/commons-math/2.2/jar [sha1=2353750701ABE]
+
+# A start level can be specified
+[artifacts startLevel=5]
+    org.apache.sling/org.apache.sling.extensions.webconsolebranding/1.0.0/jar
+    org.apache.sling/org.apache.sling.extensions.webconsolesecurityprovider/1.0.0/jar
+
+# And now the configurations section
+# A configuration ends with an empty line and all configurations use the Apache Felix
+# ConfigAdmin format.
+#
+[configurations]
+# A plain configuration
+org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService
+    name="Default\ NodeStore"
+    repository.home="sling/oak/repository"
+
+# A factory configuration with the alias error
+org.apache.sling.log.LoggerFactory-error
+    name="Test"
+    value="Hallo"
+
+# A configuration using properties format:
+org.apache.sling.another.config [format=properties]
+     test=A
+     value=5
+     
+ 
+
+# Now artifacts, configurations and settings can be specified. All of them belong to
+# the previous runMode definition
+#
+[artifacts startLevel=15 runModes=jackrabbit]
+    org.apache.derby/derby/10.5.3.0_1/jar
+    org.apache.sling/org.apache.sling.jcr.jackrabbit.server/2.1.3-SNAPSHOT/jar
+
+

@@ -16,35 +16,35 @@
  */
 package org.apache.sling.provisioning.model;
 
-/**
- * A traceable has an optional location.
- */
-public abstract class Traceable {
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
-    /** The location. */
-    private String location;
+public class ItemList<T>
+    extends Commentable
+    implements Iterable<T> {
 
-    /**
-     * Get the location.
-     * The location might be the location of the model file or any other
-     * means identifying where the object is defined.
-     * @return The location or {@code null}.
-     */
-    public String getLocation() {
-        return this.location;
+    protected final List<T> items = new ArrayList<T>();
+
+    public void add(final T item) {
+        this.items.add(item);
     }
 
-    /**
-     * Set the location.
-     * @param value The new location.
-     */
-    public void setLocation(final String value) {
-        this.location = value;
+    public void remove(final T item) {
+        this.items.remove(item);
+    }
+
+    @Override
+    public Iterator<T> iterator() {
+        return this.items.iterator();
+    }
+
+    public boolean isEmpty() {
+        return this.items.isEmpty();
     }
 
     @Override
     public String toString() {
-        return "Traceable [location=" + location + "]";
+        return items.toString();
     }
 }
-

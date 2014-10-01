@@ -25,7 +25,7 @@ import java.util.Map;
  * In addition, the classifier and type can be specified as well.
  * An artifact can have any metadata.
  */
-public class Artifact extends Traceable {
+public class Artifact extends Commentable {
 
     private final String groupId;
     private final String artifactId;

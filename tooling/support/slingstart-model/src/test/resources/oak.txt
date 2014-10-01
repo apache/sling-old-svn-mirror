@@ -1,0 +1,19 @@
+# This is the OAK feature.
+[feature name=oak]
+# All bundles are defined to be started at start level 15
+# The segment node store is used via a configuration
+[artifacts startLevel=15 runModes=oak]
+    org.apache.sling/org.apache.sling.jcr.oak.server/0.0.2-SNAPSHOT/jar
+    com.google.guava/guava/15.0/jar
+    org.apache.jackrabbit/oak-core/1.0.0/jar
+    org.apache.jackrabbit/oak-commons/1.0.0/jar
+    org.apache.jackrabbit/oak-mk/1.0.0/jar
+    org.apache.jackrabbit/oak-mk-api/1.0.0/jar
+    org.apache.jackrabbit/oak-mk-remote/1.0.0/jar
+    org.apache.jackrabbit/oak-lucene/1.0.0/jar
+    org.apache.jackrabbit/oak-blob/1.0.0/jar
+
+[configurations runModes=oak]
+  org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService
+    name="Default\ NodeStore"
+    repository.home="sling/oak/repository"

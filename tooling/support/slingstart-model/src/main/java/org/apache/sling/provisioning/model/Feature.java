@@ -19,9 +19,7 @@ package org.apache.sling.provisioning.model;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -30,14 +28,14 @@ import java.util.Map;
  * - run modes
  */
 public class Feature
-    extends Traceable
+    extends Commentable
     implements Comparable<Feature> {
 
     /** All run modes. */
     private final List<RunMode> runModes = new ArrayList<RunMode>();
 
     /** Variables. */
-    private final Map<String, String> variables = new HashMap<String, String>();
+    private final KeyValueMap<String> variables = new KeyValueMap<String>();
 
     private final String name;
 
@@ -68,7 +66,7 @@ public class Feature
      * Get all variables
      * @return The set of variables
      */
-    public Map<String, String> getVariables() {
+    public KeyValueMap<String> getVariables() {
         return this.variables;
     }
 
@@ -120,6 +118,14 @@ public class Feature
             return 1;
         }
         return this.name.compareTo(o.name);
+    }
+
+    @Override
+    public String toString() {
+        return "Feature [runModes=" + runModes + ", variables=" + variables
+                + ", name=" + name
+                + ( this.getLocation() != null ? ", location=" + this.getLocation() : "")
+                + "]";
     }
 
 }

@@ -16,19 +16,15 @@
  */
 package org.apache.sling.provisioning.model;
 
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A artifact group holds a set of artifacts.
  * A valid start level is positive, start level 0 means the default OSGi start level.
  */
-public class ArtifactGroup extends Traceable
+public class ArtifactGroup extends ItemList<Artifact>
     implements Comparable<ArtifactGroup> {
 
     private final int level;
-
-    private final List<Artifact> artifacts = new ArrayList<Artifact>();
 
     public ArtifactGroup(final int level) {
         this.level = level;
@@ -38,20 +34,17 @@ public class ArtifactGroup extends Traceable
         return this.level;
     }
 
-    public List<Artifact> getArtifacts() {
-        return this.artifacts;
-    }
-
     /**
      * Search an artifact with the same groupId, artifactId, version, type and classifier.
      * Version is not considered.
      */
     public Artifact search(final Artifact template) {
         Artifact found = null;
-        for(final Artifact current : this.artifacts) {
+        for(final Artifact current : this) {
             if ( current.getGroupId().equals(template.getGroupId())
               && current.getArtifactId().equals(template.getArtifactId())
-              && current.getClassifier().equals(template.getClassifier())
+              && ((current.getClassifier() == null && template.getClassifier() == null)
+                  || (current.getClassifier().equals(template.getClassifier()) ))
               && current.getType().equals(template.getType()) ) {
                 found = current;
                 break;
@@ -73,7 +66,7 @@ public class ArtifactGroup extends Traceable
     @Override
     public String toString() {
         return "ArtifactGroup [level=" + level
-                + ", artifacts=" + artifacts
+                + ", artifacts=" + this.items
                 + ( this.getLocation() != null ? ", location=" + this.getLocation() : "")
                 + "]";
     }

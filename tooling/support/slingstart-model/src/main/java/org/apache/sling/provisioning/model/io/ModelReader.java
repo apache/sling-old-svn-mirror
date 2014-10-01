@@ -25,31 +25,32 @@ import java.util.Map;
 
 import org.apache.sling.provisioning.model.Artifact;
 import org.apache.sling.provisioning.model.ArtifactGroup;
+import org.apache.sling.provisioning.model.Commentable;
 import org.apache.sling.provisioning.model.Configuration;
 import org.apache.sling.provisioning.model.Feature;
 import org.apache.sling.provisioning.model.Model;
 import org.apache.sling.provisioning.model.ModelConstants;
 import org.apache.sling.provisioning.model.RunMode;
-import org.apache.sling.provisioning.model.Traceable;
 
 
 public class ModelReader {
 
     private enum CATEGORY {
-        NONE(null),
-        FEATURE("feature"),
-        VARIABLES("variables"),
-        GLOBAL("global"),
-        RUN_MODE("runMode"),
-        ARTIFACTS("artifacts"),
-        SETTINGS("settings"),
-        CONFIGURATIONS("configurations"),
-        CONFIG(null);
+        NONE(null, null),
+        FEATURE("feature", new String[] {"name"}),
+        VARIABLES("variables", null),
+        ARTIFACTS("artifacts", new String[] {"runModes", "startLevel"}),
+        SETTINGS("settings", new String[] {"runModes"}),
+        CONFIGURATIONS("configurations", new String[] {"runModes"}),
+        CONFIG(null, null);
 
         public final String name;
 
-        private CATEGORY(final String n) {
+        public final String[] parameters;
+
+        private CATEGORY(final String n, final String[] p) {
             this.name = n;
+            this.parameters = p;
         }
     }
 
@@ -63,9 +64,6 @@ public class ModelReader {
         final ModelReader mr = new ModelReader(location);
         return mr.readModel(reader);
     }
-
-    /** Is this a single feature model? */
-    private boolean isSingleFeature = false;
 
     private CATEGORY mode = CATEGORY.NONE;
 
@@ -101,16 +99,18 @@ public class ModelReader {
         lineNumberReader = new LineNumberReader(reader);
         String line;
         while ( (line = lineNumberReader.readLine()) != null ) {
+            // trim the line
             line = line.trim();
+
             // ignore empty line
             if ( line.isEmpty() ) {
                 checkConfig();
                 continue;
             }
+
             // comment?
             if ( line.startsWith("#") ) {
                 checkConfig();
-                mode = CATEGORY.NONE;
                 final String c = line.substring(1).trim();
                 if ( comment == null ) {
                     comment = c;
@@ -122,8 +122,9 @@ public class ModelReader {
 
             if ( global ) {
                 global = false;
-                model.setComment(comment);
-                comment = null;
+                if ( !line.startsWith("[feature ") ) {
+                    throw new IOException(exceptionPrefix + " Model file must start with a feature category.");
+                }
             }
 
             if ( line.startsWith("[") ) {
@@ -149,21 +150,15 @@ public class ModelReader {
                 Map<String, String> parameters = Collections.emptyMap();
                 if (line.charAt(pos) != ']') {
                     final String parameterLine = line.substring(pos + 1, line.length() - 1).trim();
-                    parameters = parseParameters(parameterLine);
+                    parameters = parseParameters(parameterLine, this.mode.parameters);
                 }
 
                 switch ( this.mode ) {
                     case NONE : break; // this can never happen
                     case CONFIG : break; // this can never happen
-                    case FEATURE : if ( this.isSingleFeature ) {
-                                       throw new IOException(exceptionPrefix + "Single feature model allows only one feature.");
-                                   }
-                                   final String name = parameters.get("name");
+                    case FEATURE : final String name = parameters.get("name");
                                    if ( name == null ) {
                                        throw new IOException(exceptionPrefix + "Feature name missing in line " + this.lineNumberReader.getLineNumber() + ": " + line);
-                                   }
-                                   if ( parameters.size() > 1 ) {
-                                       throw new IOException(exceptionPrefix + "Unknown feature parameters in line " + this.lineNumberReader.getLineNumber() + ": " + line);
                                    }
                                    if ( model.findFeature(name) != null ) {
                                        throw new IOException(exceptionPrefix + "Duplicate feature in line " + this.lineNumberReader.getLineNumber() + ": " + line);
@@ -174,45 +169,16 @@ public class ModelReader {
                                    this.artifactGroup = null;
                                    break;
                     case VARIABLES : checkFeature();
+                                     this.init(this.feature.getVariables());
                                      break;
-                    case RUN_MODE : checkFeature();
-                                    final String names = parameters.get("names");
-                                    if ( names == null ) {
-                                        throw new IOException(exceptionPrefix + "Run mode names missing in line " + this.lineNumberReader.getLineNumber() + ": " + line);
-                                    }
-                                    if ( parameters.size() > 1 ) {
-                                        throw new IOException(exceptionPrefix + "Unknown run mode parameters in line " + this.lineNumberReader.getLineNumber() + ": " + line);
-                                    }
-                                    final String[] rm = names.split(",");
-                                    if ( this.feature.getRunMode(rm) != null ) {
-                                        throw new IOException(exceptionPrefix + "Duplicate run mode in line " + this.lineNumberReader.getLineNumber() + ": " + line);
-                                    }
-                                    this.runMode = this.feature.getOrCreateRunMode(rm);
-                                    this.init(this.runMode);
-                                    this.artifactGroup = null;
-                                    break;
-                    case GLOBAL : checkFeature();
-                                  if ( !parameters.isEmpty() ) {
-                                      throw new IOException(exceptionPrefix + "Unknown global parameters in line " + this.lineNumberReader.getLineNumber() + ": " + line);
-                                  }
-                                  if ( this.feature.getRunMode(null) != null ) {
-                                      throw new IOException(exceptionPrefix + "Duplicate global run mode in line " + this.lineNumberReader.getLineNumber() + ": " + line);
-                                  }
-                                  this.runMode = this.feature.getOrCreateRunMode(null);
-                                  this.init(this.runMode);
-                                  this.artifactGroup = null;
-                                  break;
                     case SETTINGS: checkFeature();
-                                   checkRunMode();
+                                   checkRunMode(parameters);
+                                   this.init(this.runMode.getSettings());
                                    break;
                     case ARTIFACTS: checkFeature();
-                                    checkRunMode();
-                                    String level = parameters.get("startLevel");
-                                    if ( (level == null && !parameters.isEmpty())
-                                        || (level != null && parameters.size() > 1 ) ) {
-                                        throw new IOException(exceptionPrefix + "Unknown artifacts parameters in line " + this.lineNumberReader.getLineNumber() + ": " + line);
-                                    }
+                                    checkRunMode(parameters);
                                     int startLevel = 0;
+                                    String level = parameters.get("startLevel");
                                     if ( level != null ) {
                                         try {
                                             startLevel = Integer.valueOf(level);
@@ -227,7 +193,8 @@ public class ModelReader {
                                     this.init(this.artifactGroup);
                                     break;
                     case CONFIGURATIONS: checkFeature();
-                                         checkRunMode();
+                                         checkRunMode(parameters);
+                                         this.init(this.runMode.getConfigurations());
                                          break;
                 }
             } else {
@@ -239,27 +206,22 @@ public class ModelReader {
                     case SETTINGS : final String[] settings = parseProperty(line);
                                     runMode.getSettings().put(settings[0], settings[1]);
                                     break;
-                    case FEATURE:
-                    case RUN_MODE:
-                    case GLOBAL:
-                    case ARTIFACTS : this.checkFeature();
-                                     this.checkRunMode();
-                                     if ( this.artifactGroup == null ) {
-                                         this.artifactGroup = this.runMode.getOrCreateArtifactGroup(0);
-                                     }
-                                     String artifactUrl = line;
+                    case FEATURE:   this.runMode = this.feature.getOrCreateRunMode(null);
+                                    this.artifactGroup = this.runMode.getOrCreateArtifactGroup(0);
+                                    // no break, we continue with ARTIFACT
+                    case ARTIFACTS : String artifactUrl = line;
                                      Map<String, String> parameters = Collections.emptyMap();
                                      if ( line.endsWith("]") ) {
                                          final int startPos = line.indexOf("[");
                                          if ( startPos != -1 ) {
                                              artifactUrl = line.substring(0, startPos).trim();
-                                             parameters = parseParameters(line.substring(startPos + 1, line.length() - 1).trim());
+                                             parameters = parseParameters(line.substring(startPos + 1, line.length() - 1).trim(), null);
                                          }
                                      }
                                      try {
                                          final Artifact artifact = Artifact.fromMvnUrl("mvn:" + artifactUrl);
                                          this.init(artifact);
-                                         this.artifactGroup.getArtifacts().add(artifact);
+                                         this.artifactGroup.add(artifact);
                                          artifact.getMetadata().putAll(parameters);
                                      } catch ( final IllegalArgumentException iae) {
                                          throw new IOException(exceptionPrefix + iae.getMessage() + " in line " + this.lineNumberReader.getLineNumber(), iae);
@@ -271,14 +233,10 @@ public class ModelReader {
                                               final int startPos = line.indexOf("[");
                                               if ( startPos != -1 ) {
                                                   configId = line.substring(0, startPos).trim();
-                                                  cfgPars = parseParameters(line.substring(startPos + 1, line.length() - 1).trim());
+                                                  cfgPars = parseParameters(line.substring(startPos + 1, line.length() - 1).trim(), new String[] {"format"});
                                               }
                                           }
                                           String format = cfgPars.get("format");
-                                          if ( (format == null && !cfgPars.isEmpty())
-                                               || (format != null && cfgPars.size() > 1 ) ) {
-                                              throw new IOException(exceptionPrefix + "Unknown configuration parameters in line " + this.lineNumberReader.getLineNumber() + ": " + line);
-                                          }
                                           if ( format != null ) {
                                               if ( !ModelConstants.CFG_FORMAT_FELIX_CA.equals(format)
                                                   && !ModelConstants.CFG_FORMAT_PROPERTIES.equals(format) ) {
@@ -287,15 +245,23 @@ public class ModelReader {
                                           } else {
                                               format = ModelConstants.CFG_FORMAT_FELIX_CA;
                                           }
+                                          final String pid;
+                                          final String factoryPid;
                                           final int factoryPos = configId.indexOf('-');
                                           if ( factoryPos == -1 ) {
+                                              pid = configId;
+                                              factoryPid = null;
                                               config = new Configuration(configId, null);
                                           } else {
-                                              config = new Configuration(configId.substring(factoryPos + 1), configId.substring(0, factoryPos));
+                                              pid = configId.substring(factoryPos + 1);
+                                              factoryPid = configId.substring(0, factoryPos);
                                           }
+                                          if ( runMode.getConfiguration(pid, factoryPid) != null ) {
+                                              throw new IOException(exceptionPrefix + "Duplicate configuration in line " + this.lineNumberReader.getLineNumber());
+                                          }
+                                          config = runMode.getOrCreateConfiguration(pid, factoryPid);
                                           this.init(config);
                                           config.getProperties().put(ModelConstants.CFG_UNPROCESSED_FORMAT, format);
-                                          runMode.getConfigurations().add(config);
                                           configBuilder = new StringBuilder();
                                           mode = CATEGORY.CONFIG;
                                           break;
@@ -318,30 +284,26 @@ public class ModelReader {
      */
     private void checkFeature() throws IOException {
         if ( feature == null ) {
-            if ( model.getLocation() == null ) {
-                throw new IOException(exceptionPrefix + "No preceding feature definition in line " + this.lineNumberReader.getLineNumber());
-            }
-            final int beginPos = model.getLocation().replace('\\', '/').lastIndexOf("/");
-            String newName = model.getLocation().substring(beginPos + 1);
-            final int endPos = newName.lastIndexOf('.');
-            if ( endPos != -1 ) {
-                newName = newName.substring(0, endPos);
-            }
-            this.isSingleFeature = true;
-            feature = model.getOrCreateFeature(newName);
+            throw new IOException(exceptionPrefix + "No preceding feature definition in line " + this.lineNumberReader.getLineNumber());
         }
     }
 
     /**
      * Check for a run mode object
      */
-    private void checkRunMode() throws IOException {
-        if ( runMode == null ) {
-            runMode = this.feature.getOrCreateRunMode(null);
+    private void checkRunMode(final Map<String, String> parameters) throws IOException {
+        String[] runModes = null;
+        final String rmDef = parameters.get("runModes");
+        if ( rmDef != null ) {
+            runModes = rmDef.split(",");
+            for(int i=0; i<runModes.length; i++) {
+                runModes[i] = runModes[i].trim();
+            }
         }
+        runMode = this.feature.getOrCreateRunMode(runModes);
     }
 
-    private void init(final Traceable traceable) {
+    private void init(final Commentable traceable) {
         traceable.setComment(this.comment);
         this.comment = null;
         final String number = String.valueOf(this.lineNumberReader.getLineNumber());
@@ -377,7 +339,7 @@ public class ModelReader {
         return new String[] {key, value};
     }
 
-    private Map<String, String> parseParameters(final String line) throws IOException {
+    private Map<String, String> parseParameters(final String line, final String[] allowedParameters) throws IOException {
         final Map<String, String>parameters = new HashMap<String, String>();
         final String[] keyValuePairs = line.split(" ");
         for(String kv : keyValuePairs) {
@@ -387,7 +349,21 @@ public class ModelReader {
                 if ( sep == -1 ) {
                     throw new IOException(exceptionPrefix + "Invalid parameter definition in line " + this.lineNumberReader.getLineNumber() + ": " + line);
                 }
-                parameters.put(kv.substring(0, sep).trim(), kv.substring(sep + 1).trim());
+                final String key = kv.substring(0, sep).trim();
+                parameters.put(key, kv.substring(sep + 1).trim());
+
+                if ( allowedParameters != null ) {
+                    boolean found = false;
+                    for(final String allowed : allowedParameters) {
+                        if ( key.equals(allowed) ) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if ( !found ) {
+                        throw new IOException(exceptionPrefix + "Invalid parameter " + key + " in line " + this.lineNumberReader.getLineNumber());
+                    }
+                }
             }
         }
         return parameters;
