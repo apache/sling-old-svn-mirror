@@ -17,14 +17,8 @@
  * under the License.
  */
 
-/**
- * Provides a service to interface which may be implemented by applications
- * to get notified on cluster topology changes.
- *
- * @version 1.0
- */
-@Version("1.0.2")
-package org.apache.sling.discovery;
+@Version("2.0")
+package org.apache.sling.hc.samples.junit;
 
 import aQute.bnd.annotation.Version;
 
