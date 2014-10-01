@@ -37,7 +37,6 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.rewriter.PipelineConfiguration;
 import org.apache.sling.rewriter.ProcessingContext;
 import org.apache.sling.rewriter.Processor;
@@ -196,17 +195,17 @@ public class ProcessorManagerImpl
             final Resource spResource = this.resourceResolver.getResource(path.substring(0, path.length() - 1));
             if ( spResource != null ) {
                 // now iterate over the child nodes
-                final Iterator<Resource> spIter = ResourceUtil.listChildren(spResource);
+                final Iterator<Resource> spIter = spResource.listChildren();
                 while ( spIter.hasNext() ) {
                     // check if the node has a rewriter config
                     final Resource appResource = spIter.next();
                     final Resource parentResource = this.resourceResolver.getResource(appResource.getPath() + CONFIG_PATH);
                     if ( parentResource != null ) {
                         // now read configs
-                        final Iterator<Resource> iter = ResourceUtil.listChildren(parentResource);
+                        final Iterator<Resource> iter = parentResource.listChildren();
                         while ( iter.hasNext() ) {
                             final Resource configResource = iter.next();
-                            final String key = ResourceUtil.getName(configResource);
+                            final String key = configResource.getName();
                             final ProcessorConfigurationImpl config = this.getProcessorConfiguration(configResource);
                             this.log.debug("Found new processor configuration {}", config);
                             this.addProcessor(key, configResource.getPath(), config);
