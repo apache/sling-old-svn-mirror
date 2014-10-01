@@ -725,6 +725,18 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
             return methodName;
         }
     }
+    
+    private boolean addMethodIfNotOverriden(List<Method> methods, Method newMethod) {
+        for (Method method : methods) {
+            if (method.getName().equals(newMethod.getName())) {
+                if (Arrays.equals(method.getParameterTypes(),newMethod.getParameterTypes())) {
+                    return false;
+                }
+            }
+        }
+        methods.add(newMethod);
+        return true;
+    }
 
     private void invokePostConstruct(Object object) throws Exception {
         Class<?> clazz = object.getClass();
@@ -733,7 +745,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
             Method[] methods = clazz.getDeclaredMethods();
             for (Method method : methods) {
                 if (method.isAnnotationPresent(PostConstruct.class)) {
-                    postConstructMethods.add(method);
+                    addMethodIfNotOverriden(postConstructMethods, method);
                 }
             }
             clazz = clazz.getSuperclass();
