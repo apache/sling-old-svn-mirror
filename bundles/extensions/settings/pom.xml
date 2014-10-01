@@ -71,10 +71,11 @@
                             org.apache.sling.settings.impl.Activator
                         </Bundle-Activator>
                         <DynamicImport-Package>
-                            org.osgi.service.cm
+                            org.osgi.service.cm,
+                            org.apache.felix.shell
                         </DynamicImport-Package>
                         <Import-Package>
-                            !org.osgi.service.cm,
+                            org.osgi.service.cm;resolution:=optional,
                             org.apache.felix.shell;resolution:=optional, 
                             *
                         </Import-Package>

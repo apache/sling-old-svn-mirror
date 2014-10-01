@@ -241,6 +241,7 @@ public class SlingSettingsServiceImpl
     }
 
 
+    @SuppressWarnings("unchecked")
     private List<Options> readOptions(final BundleContext context) {
         List<Options> optionsList = null;
         final File file = context.getDataFile(OPTIONS_FILE);
