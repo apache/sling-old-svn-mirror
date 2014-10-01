@@ -29,7 +29,6 @@ class MockServiceRegistration implements ServiceRegistration {
         throw new UnsupportedOperationException("Not implemented");
     }
 
-    @SuppressWarnings("unchecked")
     public void setProperties(Dictionary dictionary) {
         throw new UnsupportedOperationException("Not implemented");
     }
