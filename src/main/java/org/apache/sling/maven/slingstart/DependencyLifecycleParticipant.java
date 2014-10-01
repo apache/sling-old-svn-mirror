@@ -146,8 +146,8 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
                 continue;
             }
             for(final RunMode runMode : feature.getRunModes()) {
-                for(final ArtifactGroup sl : runMode.getArtifactGroups()) {
-                    for(final org.apache.sling.provisioning.model.Artifact a : sl.getArtifacts()) {
+                for(final ArtifactGroup group : runMode.getArtifactGroups()) {
+                    for(final org.apache.sling.provisioning.model.Artifact a : group) {
                         final Dependency dep = new Dependency();
                         dep.setGroupId(a.getGroupId());
                         dep.setArtifactId(a.getArtifactId());

@@ -125,7 +125,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
             unpackBaseArtifact(model, outputDir, ModelConstants.RUN_MODE_WEBAPP);
 
             // check for web.xml
-            final Feature webappF = model.findFeature(ModelConstants.FEATURE_LAUNCHPAD);
+            final Feature webappF = model.getFeature(ModelConstants.FEATURE_LAUNCHPAD);
             if ( webappF != null ) {
                 final RunMode webappRM = webappF.getRunMode(null);
                 if ( webappRM != null ) {
@@ -181,11 +181,11 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
      */
     private void buildContentsMap(final Model model, final RunMode runMode, final Map<String, File> contentsMap, final boolean isBoot)
     throws MojoExecutionException{
-        for(final ArtifactGroup sl : runMode.getArtifactGroups()) {
-            for(final org.apache.sling.provisioning.model.Artifact a : sl.getArtifacts()) {
+        for(final ArtifactGroup group : runMode.getArtifactGroups()) {
+            for(final org.apache.sling.provisioning.model.Artifact a : group) {
                 final Artifact artifact = ModelUtils.getArtifact(this.project, a.getGroupId(), a.getArtifactId(), a.getVersion(), a.getType(), a.getClassifier());
                 final File artifactFile = artifact.getFile();
-                contentsMap.put(getPathForArtifact(sl.getLevel(), artifactFile.getName(), runMode, isBoot), artifactFile);
+                contentsMap.put(getPathForArtifact(group.getStartLevel(), artifactFile.getName(), runMode, isBoot), artifactFile);
             }
         }
 
@@ -223,24 +223,30 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
     private void buildSettings(final Model model, final String packageRunMode, final File outputDir)
     throws MojoExecutionException {
         final Properties settings = new Properties();
-        final Feature launchpadFeature = model.findFeature(ModelConstants.FEATURE_LAUNCHPAD);
+        final Feature launchpadFeature = model.getFeature(ModelConstants.FEATURE_LAUNCHPAD);
         if ( launchpadFeature != null ) {
             final RunMode launchpadRunMode = launchpadFeature.getRunMode(null);
             if ( launchpadRunMode != null ) {
-                settings.putAll(launchpadRunMode.getSettings());
+                for(final Map.Entry<String, String> entry : launchpadRunMode.getSettings()) {
+                    settings.put(entry.getKey(), entry.getValue());
+                }
             }
         }
-        final Feature bootFeature = model.findFeature(ModelConstants.FEATURE_BOOT);
+        final Feature bootFeature = model.getFeature(ModelConstants.FEATURE_BOOT);
         if ( bootFeature != null ) {
             final RunMode bootRunMode = bootFeature.getRunMode(null);
             if ( bootRunMode != null ) {
-                settings.putAll(bootRunMode.getSettings());
+                for(final Map.Entry<String, String> entry : bootRunMode.getSettings()) {
+                    settings.put(entry.getKey(), entry.getValue());
+                }
             }
         }
         for(final Feature f : model.getFeatures()) {
             final RunMode packageRM = f.getRunMode(new String[] {packageRunMode});
             if ( packageRM != null ) {
-                settings.putAll(packageRM.getSettings());
+                for(final Map.Entry<String, String> entry : packageRM.getSettings()) {
+                    settings.put(entry.getKey(), entry.getValue());
+                }
             }
         }
 
@@ -266,7 +272,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
     throws MojoExecutionException {
         final StringBuilder sb = new StringBuilder();
 
-        final Feature launchpadFeature = model.findFeature(ModelConstants.FEATURE_LAUNCHPAD);
+        final Feature launchpadFeature = model.getFeature(ModelConstants.FEATURE_LAUNCHPAD);
         if ( launchpadFeature != null ) {
             final RunMode launchpadRunMode = launchpadFeature.getRunMode(null);
             if ( launchpadRunMode != null ) {
@@ -361,8 +367,8 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
      */
     private String getPathForArtifact(final int startLevel, final String artifactName, final RunMode rm, final boolean isBoot) {
         final Set<String> runModesList = new TreeSet<String>();
-        if (rm.getRunModes() != null ) {
-            for(final String mode : rm.getRunModes()) {
+        if (rm.getNames() != null ) {
+            for(final String mode : rm.getNames()) {
                 runModesList.add(mode);
             }
         }
@@ -393,8 +399,8 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
      */
     private String getPathForConfiguration(final Configuration config, final RunMode rm) {
         final Set<String> runModesList = new TreeSet<String>();
-        if (rm.getRunModes() != null ) {
-            for(final String mode : rm.getRunModes()) {
+        if (rm.getNames() != null ) {
+            for(final String mode : rm.getNames()) {
                 runModesList.add(mode);
             }
         }
