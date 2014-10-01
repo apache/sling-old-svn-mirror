@@ -12,6 +12,7 @@ Require-Bundle: org.junit,
  org.eclipse.jdt.launching,
  org.eclipse.wst.server.core,
  org.apache.sling.ide.eclipse-core,
+ org.apache.sling.ide.eclipse-ui,
  org.apache.sling.ide.api,
  org.apache.sling.ide.artifacts,
  org.eclipse.debug.core,
@@ -25,8 +26,6 @@ Require-Bundle: org.junit,
 Import-Package: javax.jcr,
  javax.jcr.nodetype,
  org.apache.jackrabbit.util,
- org.apache.sling.ide.eclipse.core.internal,
- org.apache.sling.ide.eclipse.ui.internal,
  org.apache.sling.ide.jcr
 Bundle-Activator: org.apache.sling.ide.test.impl.Activator
 Bundle-ActivationPolicy: lazy
