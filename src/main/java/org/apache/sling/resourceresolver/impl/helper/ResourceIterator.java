@@ -204,6 +204,8 @@ public class ResourceIterator implements Iterator<Resource> {
                     visited.add(resPath);
                     delayed.remove(resPath);
                     log.debug("      resource {} {}", resPath, res.getClass());
+
+                    res.getResourceMetadata().setResolutionPath(res.getPath());
                     return res;
 
                 }
@@ -234,6 +236,7 @@ public class ResourceIterator implements Iterator<Resource> {
                             visited.add(resPath);
                             log.debug("   B  resource {} {}", resPath,
                                     res.getClass());
+                            res.getResourceMetadata().setResolutionPath(res.getPath());
                             return res;
                         }
                     }
@@ -255,6 +258,7 @@ public class ResourceIterator implements Iterator<Resource> {
         final Resource res = delayedIter.hasNext() ? delayedIter.next() : null;
         if (res != null) {
             log.debug("   D  resource {} {}", res.getPath(), res.getClass());
+            res.getResourceMetadata().setResolutionPath(res.getPath());
         }
         return res;
     }
