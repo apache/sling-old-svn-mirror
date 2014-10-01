@@ -30,8 +30,8 @@ import org.apache.sling.provisioning.model.Model;
 
 public abstract class AbstractSlingStartMojo extends AbstractMojo {
 
-    @Parameter(defaultValue="${basedir}/src/main/systems")
-    protected File systemsDirectory;
+    @Parameter(defaultValue="${basedir}/src/main/models")
+    private File systemsDirectory;
 
     @Parameter(property = "project", readonly = true, required = true)
     protected MavenProject project;

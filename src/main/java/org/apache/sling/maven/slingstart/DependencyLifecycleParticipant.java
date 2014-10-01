@@ -108,7 +108,7 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
         }
 
         final String directory = nodeValue((Xpp3Dom) plugin.getConfiguration(),
-                "systemsDirectory", new File(project.getBasedir(), "src/main/systems").getAbsolutePath());
+                "systemsDirectory", new File(project.getBasedir(), "src/main/models").getAbsolutePath());
         final Model model = ModelUtils.readFullModel(new File(directory), dependencies, project, session, log);
 
         ModelUtils.storeRawModel(project, model);
