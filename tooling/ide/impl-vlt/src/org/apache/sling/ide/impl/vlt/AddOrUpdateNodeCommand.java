@@ -51,6 +51,7 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.PropertyDefinition;
 
 import org.apache.jackrabbit.vault.util.JcrConstants;
 import org.apache.jackrabbit.vault.util.Text;
@@ -220,74 +221,54 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
                 continue;
             }
 
-            // TODO - we don't handle the case where the input no longer matches the property definition, e.g. type
-            // change or multiplicity change
-
-            boolean isMultiple = property != null && property.getDefinition().isMultiple();
-
             ValueFactory valueFactory = session.getValueFactory();
             Value value = null;
             Value[] values = null;
 
             if (propertyValue instanceof String) {
-                if (isMultiple) {
-                    values = toValueArray(new String[] { (String) propertyValue }, session);
-                } else {
-                    value = valueFactory.createValue((String) propertyValue);
-                }
+                value = valueFactory.createValue((String) propertyValue);
+                ensurePropertyDefinitionMatchers(property, PropertyType.STRING, false);
             } else if (propertyValue instanceof String[]) {
                 values = toValueArray((String[]) propertyValue, session);
+                ensurePropertyDefinitionMatchers(property, PropertyType.STRING, true);
             } else if (propertyValue instanceof Boolean) {
-                if (isMultiple) {
-                    values = toValueArray(new Boolean[] { (Boolean) propertyValue }, session);
-                } else {
-                    value = valueFactory.createValue((Boolean) propertyValue);
-                }
+                value = valueFactory.createValue((Boolean) propertyValue);
+                ensurePropertyDefinitionMatchers(property, PropertyType.BOOLEAN, false);
             } else if (propertyValue instanceof Boolean[]) {
                 values = toValueArray((Boolean[]) propertyValue, session);
+                ensurePropertyDefinitionMatchers(property, PropertyType.BOOLEAN, true);
             } else if (propertyValue instanceof Calendar) {
-                if (isMultiple) {
-                    values = toValueArray(new Calendar[] { (Calendar) propertyValue }, session);
-                } else {
-                    value = valueFactory.createValue((Calendar) propertyValue);
-                }
+                value = valueFactory.createValue((Calendar) propertyValue);
+                ensurePropertyDefinitionMatchers(property, PropertyType.DATE, false);
             } else if (propertyValue instanceof Calendar[]) {
                 values = toValueArray((Calendar[]) propertyValue, session);
+                ensurePropertyDefinitionMatchers(property, PropertyType.DATE, true);
             } else if (propertyValue instanceof Double) {
-                if (isMultiple) {
-                    values = toValueArray(new Double[] { (Double) propertyValue }, session);
-                } else {
-                    value = valueFactory.createValue((Double) propertyValue);
-                }
+                value = valueFactory.createValue((Double) propertyValue);
+                ensurePropertyDefinitionMatchers(property, PropertyType.DOUBLE, false);
             } else if (propertyValue instanceof Double[]) {
                 values = toValueArray((Double[]) propertyValue, session);
+                ensurePropertyDefinitionMatchers(property, PropertyType.DOUBLE, true);
             } else if (propertyValue instanceof BigDecimal) {
-                if (isMultiple) {
-                    values = toValueArray(new BigDecimal[] { (BigDecimal) propertyValue }, session);
-                } else {
-                    value = valueFactory.createValue((BigDecimal) propertyValue);
-                }
+                value = valueFactory.createValue((BigDecimal) propertyValue);
+                ensurePropertyDefinitionMatchers(property, PropertyType.DECIMAL, false);
             } else if (propertyValue instanceof BigDecimal[]) {
                 values = toValueArray((BigDecimal[]) propertyValue, session);
+                ensurePropertyDefinitionMatchers(property, PropertyType.DECIMAL, true);
             } else if (propertyValue instanceof Long) {
-                if (isMultiple) {
-                    values = toValueArray(new Long[] { (Long) propertyValue }, session);
-                } else {
-                    value = valueFactory.createValue((Long) propertyValue);
-                }
+                value = valueFactory.createValue((Long) propertyValue);
+                ensurePropertyDefinitionMatchers(property, PropertyType.LONG, false);
             } else if (propertyValue instanceof Long[]) {
                 values = toValueArray((Long[]) propertyValue, session);
+                ensurePropertyDefinitionMatchers(property, PropertyType.LONG, true);
                 // TODO - distinguish between weak vs strong references
             } else if (propertyValue instanceof UUID) {
                 Node reference = session.getNodeByIdentifier(((UUID) propertyValue).toString());
-                if (isMultiple) {
-                    values = toValueArray(new UUID[] { (UUID) propertyValue }, session);
-                } else {
-                    value = valueFactory.createValue(reference);
-                }
-
+                value = valueFactory.createValue(reference);
+                ensurePropertyDefinitionMatchers(property, PropertyType.REFERENCE, false);
             } else if (propertyValue instanceof UUID[]) {
                 values = toValueArray((UUID[]) propertyValue, session);
+                ensurePropertyDefinitionMatchers(property, PropertyType.REFERENCE, true);
             } else {
                 throw new IllegalArgumentException("Unable to handle value '" + propertyValue + "' for property '"
                         + propertyName + "'");
@@ -299,11 +280,6 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
                 node.setProperty(propertyName, value);
                 getLogger().trace("Set property {0} with value {1} (raw =  {2}) on node at {3}", arguments);
             } else if (values != null) {
-                if (node.hasProperty(propertyName) && !node.getProperty(propertyName).isMultiple()) {
-                    getLogger().trace("Removing single-valued property {0} since we need to set multiple values",
-                            propertyName);
-                    node.getProperty(propertyName).remove();
-                }
                 Object[] arguments = { propertyName, values, propertyValue, node.getPath() };
                 getLogger().trace("Setting property {0} with values {1} (raw =  {2}) on node at {3}", arguments);
                 node.setProperty(propertyName, values);
@@ -319,6 +295,28 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
             getLogger().trace("Removed property {0} from node at {1}", propertyToRemove, node.getPath());
         }
 
+    }
+
+    private void ensurePropertyDefinitionMatchers(Property property, int expectedType, boolean expectedMultiplicity)
+            throws RepositoryException {
+        if (property == null) {
+            return;
+        }
+
+        PropertyDefinition definition = property.getDefinition();
+        if (definition.getRequiredType() != expectedType) {
+            getLogger().trace("Removing property {0} of type {1} since we need type {2}", property.getName(),
+                    definition.getRequiredType(), expectedType);
+            property.remove();
+            return;
+        }
+
+        if (definition.isMultiple() != expectedMultiplicity) {
+            getLogger().trace("Removing property {0} of multiplicity {1} since we need type {2}", property.getName(),
+                    definition.isMultiple(), expectedMultiplicity);
+            property.remove();
+            return;
+        }
     }
 
     private void updateMixins(Node node, Object mixinValue) throws RepositoryException {
