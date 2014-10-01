@@ -211,14 +211,18 @@ public abstract class ModelUtils {
      * Get the raw model from the project
      * @param project The maven projet
      * @return The raw model
-     * @throws IOException If reading fails
+     * @throws MojoExecutionException If reading fails
      */
-    public static Model getRawModel(final MavenProject project) throws IOException {
+    public static Model getRawModel(final MavenProject project) throws MojoExecutionException {
         Model result = (Model)project.getContextValue(RAW_MODEL);
         if ( result == null ) {
             final String contents = (String)project.getContextValue(RAW_MODEL_TXT);
-            result = ModelReader.read(new StringReader(contents), null);
-            project.setContextValue(RAW_MODEL, result);
+            try {
+                result = ModelReader.read(new StringReader(contents), null);
+                project.setContextValue(RAW_MODEL, result);
+            } catch ( final IOException ioe) {
+                throw new MojoExecutionException("Unable to read cached model.", ioe);
+            }
         }
         return result;
     }
@@ -240,14 +244,18 @@ public abstract class ModelUtils {
      * Get the effective model from the project
      * @param project The maven projet
      * @return The raw model
-     * @throws IOException If reading fails
+     * @throws MojoExecutionException If reading fails
      */
-    public static Model getEffectiveModel(final MavenProject project) throws IOException {
+    public static Model getEffectiveModel(final MavenProject project) throws MojoExecutionException {
         Model result = (Model)project.getContextValue(EFFECTIVE_MODEL);
         if ( result == null ) {
             final String contents = (String)project.getContextValue(EFFECTIVE_MODEL_TXT);
-            result = ModelReader.read(new StringReader(contents), null);
-            project.setContextValue(EFFECTIVE_MODEL, result);
+            try {
+                result = ModelReader.read(new StringReader(contents), null);
+                project.setContextValue(EFFECTIVE_MODEL, result);
+            } catch ( final IOException ioe) {
+                throw new MojoExecutionException("Unable to read cached model.", ioe);
+            }
         }
         return result;
     }
