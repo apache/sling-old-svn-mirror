@@ -44,12 +44,13 @@ public class AttachSlingStartModel extends AbstractSlingStartMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        final Model model = this.readRawModel();
 
         final File outputFile = new File(this.project.getBuild().getDirectory() + File.separatorChar + "slingstart.txt");
         outputFile.getParentFile().mkdirs();
         Writer writer = null;
         try {
+            final Model model = ModelUtils.getRawModel(this.project);
+
             writer = new FileWriter(outputFile);
             ModelWriter.write(writer, model);
         } catch (IOException e) {

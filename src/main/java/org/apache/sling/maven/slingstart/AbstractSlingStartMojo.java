@@ -17,16 +17,13 @@
 package org.apache.sling.maven.slingstart;
 
 import java.io.File;
-import java.io.IOException;
 
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
-import org.apache.sling.provisioning.model.Model;
 
 public abstract class AbstractSlingStartMojo extends AbstractMojo {
 
@@ -44,45 +41,6 @@ public abstract class AbstractSlingStartMojo extends AbstractMojo {
 
     @Parameter(defaultValue="false")
     protected boolean createWebapp;
-
-    private static final String CTX_RAW = Model.class.getName() + "/r";
-    private static final String CTX_EFFECTIVE = Model.class.getName() + "/e";
-
-    /**
-     * Read the model prepared by the lifecycle plugin
-     */
-    protected Model readRawModel()
-    throws MojoExecutionException {
-        Model result = (Model)this.project.getContextValue(CTX_RAW);
-        if ( result == null ) {
-            try {
-                result = ModelUtils.getRawModel(this.project);
-
-                this.project.setContextValue(CTX_RAW, result);
-            } catch ( final IOException ioe) {
-                throw new MojoExecutionException("Unable to cache model", ioe);
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Read the model prepared by the lifecycle plugin
-     */
-    protected Model readEffectiveModel()
-    throws MojoExecutionException {
-        Model result = (Model)this.project.getContextValue(CTX_EFFECTIVE);
-        if ( result == null ) {
-            try {
-                result = ModelUtils.getEffectiveModel(this.project);
-
-                this.project.setContextValue(CTX_EFFECTIVE, result);
-            } catch ( final IOException ioe) {
-                throw new MojoExecutionException("Unable to cache model", ioe);
-            }
-        }
-        return result;
-    }
 
     protected File getTmpDir() {
         return new File(this.project.getBuild().getDirectory(), "slingstart-tmp");
