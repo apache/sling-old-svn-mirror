@@ -188,6 +188,9 @@ public abstract class ModelUtils {
         return null;
     }
 
+    private static final String RAW_MODEL_TXT = Model.class.getName() + "/raw";
+    private static final String EFFECTIVE_MODEL_TXT = Model.class.getName() + "/effective";
+
     private static final String RAW_MODEL = Model.class.getName() + "/raw";
     private static final String EFFECTIVE_MODEL = Model.class.getName() + "/effective";
 
@@ -201,7 +204,7 @@ public abstract class ModelUtils {
     throws IOException {
         final StringWriter w = new StringWriter();
         ModelWriter.write(w, model);
-        project.setContextValue(RAW_MODEL, w.toString());
+        project.setContextValue(RAW_MODEL_TXT, w.toString());
     }
 
     /**
@@ -211,8 +214,13 @@ public abstract class ModelUtils {
      * @throws IOException If reading fails
      */
     public static Model getRawModel(final MavenProject project) throws IOException {
-        final String contents = (String)project.getContextValue(RAW_MODEL);
-        return ModelReader.read(new StringReader(contents), null);
+        Model result = (Model)project.getContextValue(RAW_MODEL);
+        if ( result == null ) {
+            final String contents = (String)project.getContextValue(RAW_MODEL_TXT);
+            result = ModelReader.read(new StringReader(contents), null);
+            project.setContextValue(RAW_MODEL, result);
+        }
+        return result;
     }
 
     /**
@@ -225,7 +233,7 @@ public abstract class ModelUtils {
     throws IOException {
         final StringWriter w = new StringWriter();
         ModelWriter.write(w, model);
-        project.setContextValue(EFFECTIVE_MODEL, w.toString());
+        project.setContextValue(EFFECTIVE_MODEL_TXT, w.toString());
     }
 
     /**
@@ -235,7 +243,12 @@ public abstract class ModelUtils {
      * @throws IOException If reading fails
      */
     public static Model getEffectiveModel(final MavenProject project) throws IOException {
-        final String contents = (String)project.getContextValue(EFFECTIVE_MODEL);
-        return ModelReader.read(new StringReader(contents), null);
+        Model result = (Model)project.getContextValue(EFFECTIVE_MODEL);
+        if ( result == null ) {
+            final String contents = (String)project.getContextValue(EFFECTIVE_MODEL_TXT);
+            result = ModelReader.read(new StringReader(contents), null);
+            project.setContextValue(EFFECTIVE_MODEL, result);
+        }
+        return result;
     }
 }
