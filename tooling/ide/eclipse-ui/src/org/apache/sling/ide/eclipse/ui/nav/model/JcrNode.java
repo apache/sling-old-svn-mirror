@@ -889,7 +889,8 @@ public class JcrNode implements IAdaptable {
 	            MessageDialog.openError(Display.getDefault().getActiveShell(), "Error creating node", "Error creating child of "+thisNodeType+" with type "+childNodeType+": "+e);
 	            return;
 	        }
-	    } else if (parentSk==SerializationKind.FOLDER && childSk==SerializationKind.METADATA_FULL) {
+        } else if ((parentSk == SerializationKind.FOLDER || parentSk == SerializationKind.METADATA_PARTIAL)
+                && childSk == SerializationKind.METADATA_FULL) {
             createVaultFile((IFolder)resource, childNodeName+".xml", childNodeType);
 	    } else if (parentSk==SerializationKind.FOLDER && childSk==SerializationKind.METADATA_PARTIAL) {
 //	        createVaultFile((IFolder)resource, childNodeName+".xml", childNodeType);
@@ -924,6 +925,11 @@ public class JcrNode implements IAdaptable {
 	            return;
 	        }
 	        //TODO: FILE not yet supported
+
+            Activator.getDefault().getPluginLogger()
+                    .error("Cannot create child node of type " + childNodeType + ", serializationKind " + childSk
+                            + " under child node of type " + thisNodeType + ", serializationKind " + parentSk);
+
 	        MessageDialog.openWarning(Display.getDefault().getActiveShell(), "Error creating node", "Cannot create child of "+thisNodeType+" with type "+childNodeType+" (yet?)");
 	        return;
 	    }
