@@ -23,6 +23,7 @@ import java.util.Hashtable;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.testmodels.classes.SubClass;
+import org.apache.sling.models.testmodels.classes.SubClassOverriddenPostConstruct;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -56,5 +57,17 @@ public class PostConstructTest {
         SubClass sc = factory.getAdapter(r, SubClass.class);
         assertTrue(sc.getPostConstructCalledTimestampInSub() > sc.getPostConstructCalledTimestampInSuper());
         assertTrue(sc.getPostConstructCalledTimestampInSuper() > 0);
+    }
+    
+    @Test
+    public void testOverriddenPostConstruct() {
+        Resource r = mock(Resource.class);
+        ModelAdapterFactory factory = new ModelAdapterFactory();
+        factory.activate(componentCtx);
+        // no injectors are necessary
+
+        SubClassOverriddenPostConstruct sc = factory.getAdapter(r, SubClassOverriddenPostConstruct.class);
+        assertEquals("Post construct not called exactly one time in sub class!", 1, sc.getPostConstructorCalledCounter());
+        assertEquals("Post construct was called on super class although overridden in sub class", 0, sc.getPostConstructCalledTimestampInSuper());
     }
 }
