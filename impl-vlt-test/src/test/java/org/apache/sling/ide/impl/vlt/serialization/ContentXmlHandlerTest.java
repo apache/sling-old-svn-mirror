@@ -102,6 +102,29 @@ public class ContentXmlHandlerTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    public void parseSingleExplicitMultiValuedProperties() throws ParserConfigurationException, SAXException,
+            IOException {
+
+        Map<String, Object> properties = parseContentXmlFile("single-explicit-multivalued-properties-content.xml", "/")
+                .getProperties();
+
+        assertThat("properties.size", properties.size(), is(7));
+        assertThat("properties[values]", (String[]) properties.get("values"),
+                Matchers.is(new String[] { "first"}));
+        assertThat("properties[decimals]", (BigDecimal[]) properties.get("decimals"),
+                Matchers.is(new BigDecimal[] { new BigDecimal("5.10")}));
+        assertThat("properties[doubles]", (Double[]) properties.get("doubles"),
+                Matchers.is(new Double[] { new Double("5.1") }));
+        assertThat("properties[flags]", (Boolean[]) properties.get("flags"),
+                Matchers.is(new Boolean[] { Boolean.FALSE }));
+        assertThat("properties[longs]", (Long[]) properties.get("longs"),
+                Matchers.is(new Long[] { Long.valueOf(15)}));
+        assertThat("properties[dates]", (Calendar[]) properties.get("dates"),
+                array(millis(1377982800000l)));
+    }
+
+    @Test
     public void parseFullCoverageXmlFile() throws ParserConfigurationException, SAXException, IOException {
 
         ResourceProxy root = parseContentXmlFile("full-coverage.xml", "/apps/full-coverage");
