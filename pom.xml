@@ -80,12 +80,15 @@
         <!-- The real Sling Parent Project -->
         <module>parent</module>
 
+        <!-- Tooling Support -->
+        <module>tooling/support/provisioning-model</module>
         <!-- The Maven Plugins and Archeyptes-->
         <module>tooling/maven/adapter-annotations</module>
         <module>tooling/maven/maven-jcrocm-plugin</module>
         <module>tooling/maven/maven-jspc-plugin</module>
         <module>tooling/maven/maven-sling-plugin</module>
         <module>tooling/maven/maven-launchpad-plugin</module>
+        <module>tooling/maven/slingstart-maven-plugin</module>
         <module>tooling/maven/archetypes/launchpad-standalone</module>
         <module>tooling/maven/archetypes/launchpad-webapp</module>
         <module>tooling/maven/archetypes/initial-content</module>
@@ -93,7 +96,7 @@
         <module>tooling/maven/archetypes/bundle</module>
         <module>tooling/maven/archetypes/bundle-for-jcrinstall</module>
         <module>tooling/maven/archetypes/taglib</module>
-
+     
         <!-- The Sling API -->
         <module>bundles/api</module>
 
