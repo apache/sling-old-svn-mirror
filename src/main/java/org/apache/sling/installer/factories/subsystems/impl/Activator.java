@@ -46,8 +46,8 @@ public class Activator implements BundleActivator {
      */
     public void start(final BundleContext context) throws Exception {
         this.rootSubsystemTracker = new ServiceTracker<Subsystem, Subsystem>(context,
-            "&(" + Constants.OBJECTCLASS + "=" + Subsystem.class.getName() + ")" +
-             "(" + SubsystemConstants.SUBSYSTEM_ID_PROPERTY + "=0)",
+            context.createFilter("(&(" + Constants.OBJECTCLASS + "=" + Subsystem.class.getName() + ")" +
+             "(" + SubsystemConstants.SUBSYSTEM_ID_PROPERTY + "=0))"),
 
              new ServiceTrackerCustomizer<Subsystem, Subsystem>() {
 
