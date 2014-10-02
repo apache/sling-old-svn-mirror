@@ -23,8 +23,9 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.ChangeStateTask;
@@ -229,17 +230,18 @@ public class SubsystemInstaller
         Manifest result = null;
 
         if ( ins != null ) {
-            JarInputStream jis = null;
+            ZipInputStream jis = null;
             try {
-                jis = new JarInputStream(ins);
-                result = jis.getManifest();
+                jis = new ZipInputStream(ins);
 
-                // SLING-2288 : if this is a jar file, but the manifest is not the first entry
-                //              log a warning
-                if ( rsrc.getURL().endsWith(".jar") && result == null ) {
-                    logger.warn("Resource {} does not have the manifest as its first entry in the archive. If this is " +
-                                "a subsystem, make sure to put the manifest first in the jar file.", rsrc.getURL());
+                ZipEntry entry;
+
+                while ( (entry = jis.getNextEntry()) != null ) {
+                    if (entry.getName().equals("OSGI-INF/SUBSYSTEM.MF") ) {
+                        result = new Manifest(jis);
+                    }
                 }
+
             } finally {
 
                 // close the jar stream or the input stream, if the jar
