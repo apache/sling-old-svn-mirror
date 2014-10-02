@@ -31,6 +31,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.m2e.core.project.ProjectImportConfiguration;
 import org.eclipse.wst.server.core.IServer;
@@ -89,7 +90,8 @@ public abstract class AbstractNewMavenBasedSlingApplicationWizard extends Abstra
         advance(monitor, 1);
 
         List<IProject> projects = MavenPlugin.getProjectConfigurationManager().createArchetypeProjects(location,
-                archetype, groupId, artifactId, version, javaPackage, properties, configuration, monitor);
+                archetype, groupId, artifactId, version, javaPackage, properties, configuration,
+                new NullProgressMonitor());
 
         monitor.worked(3);
 
