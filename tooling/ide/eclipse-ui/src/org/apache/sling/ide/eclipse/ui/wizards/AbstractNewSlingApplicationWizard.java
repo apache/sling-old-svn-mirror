@@ -164,6 +164,10 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
     protected void deployProjectsOnServer(Projects projects, IProgressMonitor monitor) throws CoreException {
 
         IServer server = setupServerWizardPage.getOrCreateServer(monitor);
+        if (server == null) {
+            monitor.done();
+            return;
+        }
         advance(monitor, 1);
 
         IServerWorkingCopy wc = server.createWorkingCopy();
@@ -196,6 +200,9 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 
     protected void publishModules(final List<IProject> createdProjects, IProgressMonitor monitor) throws CoreException {
         IServer server = setupServerWizardPage.getOrCreateServer(monitor);
+        if (server == null) {
+            return;
+        }
         if (setupServerWizardPage.getStartServer()) {
             server.start(ILaunchManager.RUN_MODE, monitor);
         }
