@@ -51,14 +51,13 @@ public class ScheduledReplicationTrigger implements ReplicationTrigger {
     private final Scheduler scheduler;
 
     public ScheduledReplicationTrigger(Map<String, Object> config, Scheduler scheduler) {
-        this(ReplicationActionType.fromName(PropertiesUtil.toString(config.get(ACTION), null)),
-                PropertiesUtil.toString(config.get(PATH), null),
+        this(ReplicationActionType.fromName(PropertiesUtil.toString(config.get(ACTION), ReplicationActionType.POLL.name())),
+                PropertiesUtil.toString(config.get(PATH), "/"),
                 PropertiesUtil.toInteger(config.get(SECONDS), 30),
                 scheduler);
     }
 
     public ScheduledReplicationTrigger(ReplicationActionType replicationAction, String path, int secondsInterval, Scheduler scheduler) {
-
         this.replicationAction = replicationAction;
         this.path = path;
         this.secondsInterval = secondsInterval;

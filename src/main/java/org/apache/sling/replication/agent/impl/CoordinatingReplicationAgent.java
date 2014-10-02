@@ -32,6 +32,10 @@ import org.apache.sling.replication.event.ReplicationEventType;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
+import org.apache.sling.replication.packaging.impl.exporter.RemoteReplicationPackageExporter;
+import org.apache.sling.replication.packaging.impl.exporter.RemoteReplicationPackageExporterFactory;
+import org.apache.sling.replication.packaging.impl.importer.RemoteReplicationPackageImporter;
+import org.apache.sling.replication.packaging.impl.importer.RemoteReplicationPackageImporterFactory;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueException;
@@ -47,15 +51,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Basic implementation of a {@link ReplicationAgent}
+ * {@link org.apache.sling.replication.agent.ReplicationAgent} responsible for coordinating replication between two or more
+ * remote Sling instances.
+ * <p/>
+ * A coordinate agent is configured by specifying the remote importer endpoints to monitor/pull and the remote exporter
+ * endpoints to push content to (either to one of the instances or to all of them).
  */
-public class SimpleReplicationAgent implements ReplicationAgent {
+public class CoordinatingReplicationAgent implements ReplicationAgent {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final ReplicationQueueProvider queueProvider;
 
-    private final boolean passive;
     private final ReplicationPackageImporter replicationPackageImporter;
     private final ReplicationPackageExporter replicationPackageExporter;
 
@@ -69,19 +76,17 @@ public class SimpleReplicationAgent implements ReplicationAgent {
 
     private final boolean useAggregatePaths;
 
-    public SimpleReplicationAgent(String name,
-                                  boolean useAggregatePaths,
-                                  boolean passive,
-                                  ReplicationPackageImporter replicationPackageImporter,
-                                  ReplicationPackageExporter replicationPackageExporter,
-                                  ReplicationQueueProvider queueProvider,
-                                  ReplicationQueueDistributionStrategy queueDistributionHandler,
-                                  ReplicationEventFactory replicationEventFactory,
-                                  List<ReplicationTrigger> triggers) {
+    public CoordinatingReplicationAgent(String name,
+                                        boolean useAggregatePaths,
+                                        RemoteReplicationPackageImporter remoteReplicationPackageImporter,
+                                        RemoteReplicationPackageExporter remoteReplicationPackageExporter,
+                                        ReplicationQueueProvider queueProvider,
+                                        ReplicationQueueDistributionStrategy queueDistributionHandler,
+                                        ReplicationEventFactory replicationEventFactory,
+                                        List<ReplicationTrigger> triggers) {
         this.name = name;
-        this.passive = passive;
-        this.replicationPackageImporter = replicationPackageImporter;
-        this.replicationPackageExporter = replicationPackageExporter;
+        this.replicationPackageImporter = remoteReplicationPackageImporter;
+        this.replicationPackageExporter = remoteReplicationPackageExporter;
         this.queueProvider = queueProvider;
         this.queueDistributionStrategy = queueDistributionHandler;
         this.useAggregatePaths = useAggregatePaths;
@@ -97,11 +102,6 @@ public class SimpleReplicationAgent implements ReplicationAgent {
             log.error("Error executing replication request {}", replicationRequest, e);
             throw new AgentReplicationException(e);
         }
-
-    }
-
-    public boolean isPassive() {
-        return passive;
     }
 
     private List<ReplicationPackage> buildPackages(ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
@@ -198,9 +198,7 @@ public class SimpleReplicationAgent implements ReplicationAgent {
             trigger.register(handlerId, new AgentBasedTriggerRequestHandler(this));
         }
 
-        if (!isPassive()) {
-            queueProvider.enableQueueProcessing(getName(), new PackageQueueProcessor());
-        }
+        queueProvider.enableQueueProcessing(getName(), new PackageQueueProcessor());
     }
 
     public void disable() {
@@ -211,9 +209,7 @@ public class SimpleReplicationAgent implements ReplicationAgent {
             trigger.unregister(handlerId);
         }
 
-        if (!isPassive()) {
-            queueProvider.disableQueueProcessing(getName());
-        }
+        queueProvider.disableQueueProcessing(getName());
     }
 
     private boolean processTransportQueue(ReplicationQueueItem queueItem) {
