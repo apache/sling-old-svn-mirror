@@ -20,7 +20,7 @@
   <components>
     <component>
       <role>org.apache.maven.lifecycle.mapping.LifecycleMapping</role>
-      <role-hint>slingsubsystem</role-hint>
+      <role-hint>slingfeature</role-hint>
       <implementation>org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping</implementation>
       <configuration>
         <lifecycles>
@@ -28,7 +28,7 @@
             <id>default</id>
             <!-- START SNIPPET: bundle-lifecycle -->
             <phases>
-              <package>org.apache.sling:slingstart-maven-plugin:attach-slingsubsystem</package>
+              <package>org.apache.sling:slingstart-maven-plugin:attach-slingfeature</package>
               <install>org.apache.maven.plugins:maven-install-plugin:install</install>
               <deploy>org.apache.maven.plugins:maven-deploy-plugin:deploy</deploy>
             </phases>
@@ -56,7 +56,7 @@
               <test-compile>org.apache.maven.plugins:maven-compiler-plugin:testCompile</test-compile>
               <test>org.apache.maven.plugins:maven-surefire-plugin:test</test>
               <package>
-                  org.apache.sling:slingstart-maven-plugin:attach-slingsubsystem,
+                  org.apache.sling:slingstart-maven-plugin:attach-slingfeature,
                   org.apache.sling:slingstart-maven-plugin:package
               </package>
               <install>org.apache.maven.plugins:maven-install-plugin:install</install>
@@ -69,10 +69,10 @@
     </component>
     <component>
       <role>org.apache.maven.artifact.handler.ArtifactHandler</role>
-      <role-hint>slingsubsystem</role-hint>
+      <role-hint>slingfeature</role-hint>
       <implementation>org.apache.maven.artifact.handler.DefaultArtifactHandler</implementation>
       <configuration>
-        <type>slingsubsystem</type>
+        <type>slingfeature</type>
         <includesDependencies>false</includesDependencies>
         <language>txt</language>
         <extension>txt</extension>
