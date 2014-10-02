@@ -206,6 +206,8 @@ public class SetupServerWizardPage extends WizardPage {
         installToolingSupportBundle.setSelection(true);
 
         updateEnablements();
+
+        setPageComplete(false);
 		
 		setControl(container);
 	}
