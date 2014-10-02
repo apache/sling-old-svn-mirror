@@ -17,17 +17,13 @@
 package org.apache.sling.ide.eclipse.core.internal;
 
 import org.apache.sling.ide.log.Logger;
-import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.wst.common.project.facet.core.IDelegate;
 import org.eclipse.wst.common.project.facet.core.IProjectFacetVersion;
 
 public class SlingBundleFacetInstallDelegate implements IDelegate {
-
-    private static final String VALIDATION_BUILDER_NAME = "org.eclipse.wst.validation.validationbuilder";
 
     @Override
     public void execute(IProject project, IProjectFacetVersion facetVersion, Object config, IProgressMonitor monitor)
@@ -37,29 +33,7 @@ public class SlingBundleFacetInstallDelegate implements IDelegate {
 
         pluginLogger.trace("Installing facet {0} on project {1}", facetVersion, project);
 
-        IProjectDescription description = project.getDescription();
-        ICommand[] builders = description.getBuildSpec();
-        for (ICommand builder : builders) {
-            if (builder.getBuilderName().equals(VALIDATION_BUILDER_NAME)) {
-                pluginLogger.trace("Validation builder already installed, skipping");
-                return;
-            }
-        }
-
-        pluginLogger.trace("Installing validation builder");
-
-        ICommand[] newBuilders = new ICommand[builders.length + 1];
-        System.arraycopy(builders, 0, newBuilders, 0, builders.length);
-        ICommand validationCommand = description.newCommand();
-        validationCommand.setBuilderName(VALIDATION_BUILDER_NAME);
-        newBuilders[newBuilders.length - 1] = validationCommand;
-
-        description.setBuildSpec(newBuilders);
-
-        project.setDescription(description, monitor);
-
-        pluginLogger.trace("Installed validation builder");
-
+        new ProjectDescriptionManager(pluginLogger).enableValidationBuilderAndCommand(project, monitor);
     }
 
 }

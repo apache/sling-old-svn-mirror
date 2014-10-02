@@ -213,4 +213,19 @@
       	</include>
       </validator>
    </extension>
+   
+   <extension
+         id="contentProjectValidator"
+         point="org.eclipse.wst.validation.validatorV2"
+         name="Sling Content Project Validator">
+      <validator class="org.apache.sling.ide.eclipse.internal.validation.ContentProjectValidator">
+      	<include>
+          <rules>
+          	<facet
+                 id="sling.content">
+          	</facet>
+          </rules>
+      	</include>
+      </validator>
+   </extension>
 </plugin>    
