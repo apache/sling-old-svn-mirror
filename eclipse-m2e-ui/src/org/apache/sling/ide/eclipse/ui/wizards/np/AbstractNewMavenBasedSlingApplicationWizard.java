@@ -84,7 +84,7 @@ public abstract class AbstractNewMavenBasedSlingApplicationWizard extends Abstra
 
         IProject existingProject = ResourcesPlugin.getWorkspace().getRoot().getProject(artifactId);
         if (existingProject!=null && existingProject.exists()) {
-            throw new IllegalStateException("Project already exists with name "+artifactId);
+            throw new IllegalStateException("A project with the name " + artifactId + " already exists.");
         }
 
         advance(monitor, 1);
