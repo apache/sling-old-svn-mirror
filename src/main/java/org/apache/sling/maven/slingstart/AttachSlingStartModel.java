@@ -35,7 +35,7 @@ import org.apache.sling.provisioning.model.io.ModelWriter;
  *
  */
 @Mojo(
-        name = "attach-slingsubsystem",
+        name = "attach-slingfeature",
         defaultPhase = LifecyclePhase.PACKAGE,
         requiresDependencyResolution = ResolutionScope.TEST,
         threadSafe = true
