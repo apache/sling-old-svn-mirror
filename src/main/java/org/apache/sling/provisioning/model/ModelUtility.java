@@ -152,41 +152,45 @@ public abstract class ModelUtility {
                     // check for raw configuration
                     final String rawConfig = (String)config.getProperties().get(ModelConstants.CFG_UNPROCESSED);
                     if ( rawConfig != null ) {
-                        final String format = (String)config.getProperties().get(ModelConstants.CFG_UNPROCESSED_FORMAT);
-
-                        if ( ModelConstants.CFG_FORMAT_PROPERTIES.equals(format) ) {
-                            // properties
-                            final Properties props = new Properties();
-                            try {
-                                props.load(new StringReader(rawConfig));
-                            } catch ( final IOException ioe) {
-                                throw new IllegalArgumentException("Unable to read configuration properties.", ioe);
-                            }
-                            final Enumeration<Object> i = props.keys();
-                            while ( i.hasMoreElements() ) {
-                                final String key = (String)i.nextElement();
-                                newConfig.getProperties().put(key, props.get(key));
-                            }
+                        if ( config.isSpecial() ) {
+                            newConfig.getProperties().put(config.getPid(), rawConfig);
                         } else {
-                            // Apache Felix CA format
-                            ByteArrayInputStream bais = null;
-                            try {
-                                bais = new ByteArrayInputStream(rawConfig.getBytes("UTF-8"));
-                                @SuppressWarnings("unchecked")
-                                final Dictionary<String, Object> props = ConfigurationHandler.read(bais);
-                                final Enumeration<String> i = props.keys();
+                            final String format = (String)config.getProperties().get(ModelConstants.CFG_UNPROCESSED_FORMAT);
+
+                            if ( ModelConstants.CFG_FORMAT_PROPERTIES.equals(format) ) {
+                                // properties
+                                final Properties props = new Properties();
+                                try {
+                                    props.load(new StringReader(rawConfig));
+                                } catch ( final IOException ioe) {
+                                    throw new IllegalArgumentException("Unable to read configuration properties.", ioe);
+                                }
+                                final Enumeration<Object> i = props.keys();
                                 while ( i.hasMoreElements() ) {
-                                    final String key = i.nextElement();
+                                    final String key = (String)i.nextElement();
                                     newConfig.getProperties().put(key, props.get(key));
                                 }
-                            } catch ( final IOException ioe) {
-                                throw new IllegalArgumentException("Unable to read configuration properties.", ioe);
-                            } finally {
-                                if ( bais != null ) {
-                                    try {
-                                        bais.close();
-                                    } catch ( final IOException ignore ) {
-                                        // ignore
+                            } else {
+                                // Apache Felix CA format
+                                ByteArrayInputStream bais = null;
+                                try {
+                                    bais = new ByteArrayInputStream(rawConfig.getBytes("UTF-8"));
+                                    @SuppressWarnings("unchecked")
+                                    final Dictionary<String, Object> props = ConfigurationHandler.read(bais);
+                                    final Enumeration<String> i = props.keys();
+                                    while ( i.hasMoreElements() ) {
+                                        final String key = i.nextElement();
+                                        newConfig.getProperties().put(key, props.get(key));
+                                    }
+                                } catch ( final IOException ioe) {
+                                    throw new IllegalArgumentException("Unable to read configuration properties: " + config, ioe);
+                                } finally {
+                                    if ( bais != null ) {
+                                        try {
+                                            bais.close();
+                                        } catch ( final IOException ignore ) {
+                                            // ignore
+                                        }
                                     }
                                 }
                             }
@@ -206,7 +210,20 @@ public abstract class ModelUtility {
                 newRunMode.getSettings().setComment(runMode.getSettings().getComment());
                 newRunMode.getSettings().setLocation(runMode.getSettings().getLocation());
                 for(final Map.Entry<String, String> entry : runMode.getSettings() ) {
-                    newRunMode.getSettings().put(entry.getKey(), replace(feature, entry.getValue(), resolver));
+                    newRunMode.getSettings().put(entry.getKey(), replace(feature, entry.getValue(),
+                            new VariableResolver() {
+
+                                @Override
+                                public String resolve(final Feature feature, final String name) {
+                                    if ( "sling.home".equals(name) ) {
+                                        return "${sling.home}";
+                                    }
+                                    if ( resolver != null ) {
+                                        return resolver.resolve(feature, name);
+                                    }
+                                    return feature.getVariables().get(name);
+                                }
+                            }));
                 }
             }
 
@@ -234,9 +251,7 @@ public abstract class ModelUtility {
         while ( ( pos = msg.indexOf('$', start) ) != -1 ) {
             if ( msg.length() > pos && msg.charAt(pos + 1) == '{' && (pos == 0 || msg.charAt(pos - 1) != '$') ) {
                 final int endPos = msg.indexOf('}', pos);
-                if ( endPos == -1 ) {
-                    start = pos + 1;
-                } else {
+                if ( endPos != -1 ) {
                     final String name = msg.substring(pos + 2, endPos);
                     final String value;
                     if ( resolver != null ) {
@@ -249,9 +264,8 @@ public abstract class ModelUtility {
                     }
                     msg = msg.substring(0, pos) + value + msg.substring(endPos + 1);
                 }
-            } else {
-                start = pos + 1;
             }
+            start = pos + 1;
         }
         return msg;
     }
