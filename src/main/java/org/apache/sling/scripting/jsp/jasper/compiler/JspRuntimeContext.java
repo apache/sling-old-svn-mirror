@@ -316,10 +316,10 @@ public final class JspRuntimeContext {
      * Remove a  JspServletWrapper.
      *
      * @param jspUri JSP URI of JspServletWrapper to remove
-     */
     public void removeWrapper(String jspUri) {
         jsps.remove(jspUri);
     }
+     */
 
     /**
      * Process a "destroy" event for this web application context.
