@@ -25,9 +25,3 @@
     org.apache.sling/org.apache.sling.installer.provider.file/1.0.4
     org.apache.felix/org.apache.felix.configadmin/1.6.0
     org.apache.felix/org.apache.felix.eventadmin/1.4.2
-
-# Add an a servlet implementation for the standalone case
-[artifacts startLevel=5 runModes=:standalone]
-    org.apache.felix/org.apache.felix.http.api/2.3.0
-    org.apache.felix/org.apache.felix.http.servlet-api/1.0.0
-    org.apache.felix/org.apache.felix.http.jetty/2.3.0
