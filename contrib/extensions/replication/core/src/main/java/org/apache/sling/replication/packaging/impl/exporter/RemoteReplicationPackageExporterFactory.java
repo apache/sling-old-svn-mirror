@@ -98,7 +98,7 @@ public class RemoteReplicationPackageExporterFactory implements ReplicationPacka
 
         String[] endpoints = PropertiesUtil.toStringArray(config.get(ReplicationTransportConstants.ENDPOINTS), new String[0]);
 
-        int pollItems = PropertiesUtil.toInteger(config.get(POLL_ITEMS), 1);
+        int pollItems = PropertiesUtil.toInteger(config.get(POLL_ITEMS), Integer.MAX_VALUE);
 
         String endpointStrategyName = PropertiesUtil.toString(config.get(ReplicationTransportConstants.ENDPOINT_STRATEGY), "One");
         TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(endpointStrategyName);

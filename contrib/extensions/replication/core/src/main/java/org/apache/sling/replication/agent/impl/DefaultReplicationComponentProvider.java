@@ -2,6 +2,7 @@ package org.apache.sling.replication.agent.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -25,8 +26,10 @@ import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
 import org.apache.sling.replication.packaging.impl.exporter.LocalReplicationPackageExporterFactory;
+import org.apache.sling.replication.packaging.impl.exporter.RemoteReplicationPackageExporter;
 import org.apache.sling.replication.packaging.impl.exporter.RemoteReplicationPackageExporterFactory;
 import org.apache.sling.replication.packaging.impl.importer.LocalReplicationPackageImporterFactory;
+import org.apache.sling.replication.packaging.impl.importer.RemoteReplicationPackageImporter;
 import org.apache.sling.replication.packaging.impl.importer.RemoteReplicationPackageImporterFactory;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
@@ -162,6 +165,51 @@ public class DefaultReplicationComponentProvider implements ReplicationComponent
             return new SimpleReplicationAgent(name, useAggregatePaths, isPassive,
                     packageImporter, packageExporter, queueProvider, queueDistributionStrategy, replicationEventFactory, triggers);
 
+        } else if ("coordinating".equals(factory)) {
+            if (log.isDebugEnabled()) {
+                log.debug("creating coordinating agent");
+                for (Map.Entry<String, Object> e : properties.entrySet()) {
+                    Object value = e.getValue();
+                    log.info(e.getKey() + " -> " + (value != null && value.getClass().isArray() ? Arrays.toString((Object[]) value) : value));
+                }
+            }
+
+            // build exporter
+            Map<String, Object> exporterProperties = extractMap("packageExporter", properties);
+            exporterProperties.put(COMPONENT_TYPE, "remote");
+            RemoteReplicationPackageExporter packageExporter = (RemoteReplicationPackageExporter) createExporter(exporterProperties, componentProvider);
+
+            // build importer
+            Map<String, Object> importerProperties = extractMap("packageImporter", properties);
+            importerProperties.put(COMPONENT_TYPE, "remote");
+            RemoteReplicationPackageImporter packageImporter = (RemoteReplicationPackageImporter) createImporter(importerProperties, componentProvider);
+
+            // build triggers
+            List<ReplicationTrigger> triggers = new ArrayList<ReplicationTrigger>(1);
+            triggers.add(new ScheduledReplicationTrigger(Collections.<String, Object>emptyMap(), scheduler));
+
+            // TODO : eventually enable remote event triggers automatically
+//            String[] exporterEndpoints = (String[]) exporterProperties.get("endpoints");
+//            for (String exporterEndpoint : exporterEndpoints) {
+//            }
+
+            Map<String, Object> queueDistributionStrategyProperties = extractMap("queueDistributionStrategy", properties);
+            ReplicationQueueDistributionStrategy queueDistributionStrategy = createDistributionStrategy(queueDistributionStrategyProperties, componentProvider);
+
+            Map<String, Object> queueProviderProperties = extractMap("queueProvider", properties);
+            ReplicationQueueProvider queueProvider = createQueueProvider(queueProviderProperties, componentProvider);
+
+            String name = PropertiesUtil.toString(properties.get(CoordinatingReplicationAgentFactory.NAME), String.valueOf(new Random().nextInt(1000)));
+
+            boolean useAggregatePaths = PropertiesUtil.toBoolean(properties.get(CompactSimpleReplicationAgentFactory.USE_AGGREGATE_PATHS), true);
+
+            // check configuration is valid
+            if (name == null || packageExporter == null || packageImporter == null || queueProvider == null || queueDistributionStrategy == null) {
+                log.error("could not create the coordinate agent with following bindings {}", Arrays.toString(new Object[]{name, packageExporter, packageImporter, queueProvider, queueDistributionStrategy}));
+            } else {
+                return new CoordinatingReplicationAgent(name, useAggregatePaths,
+                        packageImporter, packageExporter, queueProvider, queueDistributionStrategy, replicationEventFactory, triggers);
+            }
         }
 
         return null;
