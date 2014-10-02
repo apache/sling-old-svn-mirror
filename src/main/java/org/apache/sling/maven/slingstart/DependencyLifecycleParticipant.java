@@ -102,8 +102,8 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
         for(final Dependency d : project.getDependencies() ) {
             if ( d.getType().equals(BuildConstants.PACKAGING_SLINGSTART)
               || d.getType().equals(BuildConstants.PACKAGING_PARTIAL_SYSTEM)) {
-                final File modelXML = getSlingstartArtifact(artifactHandlerManager, resolver, project, session, d);
-                dependencies.add(modelXML);
+                final File modelFile = getSlingstartArtifact(artifactHandlerManager, resolver, project, session, d);
+                dependencies.add(modelFile);
             }
         }
 

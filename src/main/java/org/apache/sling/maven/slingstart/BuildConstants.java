@@ -39,13 +39,13 @@ public abstract class BuildConstants {
 
     public static final String TYPE_TXT = "txt";
 
-    public static final String PACKAGING_PARTIAL_SYSTEM = "slingsubsystem";
+    public static final String PACKAGING_PARTIAL_SYSTEM = "slingfeature";
 
     public static final String PACKAGING_SLINGSTART = "slingstart";
 
     // Classifiers
 
-    public static final String CLASSIFIER_PARTIAL_SYSTEM = "slingsubsystem";
+    public static final String CLASSIFIER_PARTIAL_SYSTEM = "slingfeature";
 
     public static final String CLASSIFIER_BASE = "base";
 
