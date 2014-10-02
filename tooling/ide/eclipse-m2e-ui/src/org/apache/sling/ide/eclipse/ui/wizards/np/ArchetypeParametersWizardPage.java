@@ -24,6 +24,8 @@ import java.util.StringTokenizer;
 import org.apache.maven.archetype.catalog.Archetype;
 import org.apache.maven.archetype.metadata.RequiredProperty;
 import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jface.dialogs.IDialogPage;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.CellNavigationStrategy;
@@ -313,6 +315,14 @@ public class ArchetypeParametersWizardPage extends WizardPage {
 			updateStatus("package must be specified");
 			return;
 		}
+
+        IProject existingProject = ResourcesPlugin.getWorkspace().getRoot().getProject(artifactId.getText());
+
+        if (existingProject.exists()) {
+            updateStatus("A project with the name " + artifactId.getText() + " already exists.");
+            return;
+        }
+
 		int cnt = propertiesTable.getItemCount();
 		for(int i=0; i<cnt; i++) {
 			TableItem item = propertiesTable.getItem(i);
