@@ -1,7 +1,6 @@
 {
     "jcr:primaryType": "sling:OsgiConfig",
     "name": "reverse",
-    "type": "simple",
 
     "isPassive": true,
 
@@ -17,15 +16,10 @@
         "packageBuilder/servicename=replicationService"
     ],
 
-    "queueProvider": [
-        "type=service",
-        "name=sjh"
-    ],
 
-    "queueDistributionStrategy": [
-        "type=service",
-        "name=error"
-    ],
+    "queueProvider.target" : "(name=sjh)",
+
+    "queueDistributionStrategy": "(name=error)",
 
     "trigger0": [
         "type=resourceEvent",

@@ -1,14 +1,14 @@
 {
     "jcr:primaryType": "sling:OsgiConfig",
     "name": "publish-reverse",
-    "type": "simple",
+
+    "enabled" : true,
 
     "packageExporter": [
         "type=remote",
         "endpoints[0]=http://localhost:4503/libs/sling/replication/services/exporters/reverse",
 
         "authenticationProvider/type=service",
-        "authenticationProvider/name=publishAdmin",
 
         "packageBuilder/type=vlt",
         "packageBuilder/servicename=replicationService"
@@ -18,16 +18,6 @@
         "type=local",
         "packageBuilder/type=vlt",
         "packageBuilder/servicename=replicationService"
-    ],
-
-    "queueProvider": [
-        "type=service",
-        "name=sjh"
-    ],
-
-    "queueDistributionStrategy": [
-        "type=service",
-        "name=error"
     ],
 
     "trigger0": [
@@ -40,8 +30,14 @@
         "type=remoteEvent",
         "endpoint=http://localhost:4503/libs/sling/replication/services/triggers/content-changed.event",
 
-        "authenticationProvider/type=service",
-        "authenticationProvider/name=publishAdmin"
-    ]
+        "authenticationProvider/type=service"
+    ],
+
+
+    "queueProvider.target" : "(name=sjh)",
+
+    "queueDistributionStrategy.target": "(name=error)",
+
+    "transportAuthenticationProvider.target" : "(name=publishAdmin)"
 
 }

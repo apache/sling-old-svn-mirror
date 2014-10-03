@@ -2,14 +2,15 @@
     "jcr:primaryType": "sling:OsgiConfig",
     "name": "remote-event",
 
-    "kind": "trigger",
+    "componentType": "trigger",
 
     "properties": [
         "type=remoteEvent",
         "endpoint=http://localhost:4503/libs/sling/replication/services/triggers/content-changed.event",
 
-        "authenticationProvider/type=service",
-        "authenticationProvider/name=publishAdmin"
-    ]
+        "authenticationProvider/type=service"
+    ],
+
+    "transportAuthenticationProvider.target" : "(name=publishAdmin)"
 
 }

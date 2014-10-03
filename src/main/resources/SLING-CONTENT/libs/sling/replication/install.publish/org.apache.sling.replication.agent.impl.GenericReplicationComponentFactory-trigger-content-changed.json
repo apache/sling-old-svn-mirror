@@ -2,7 +2,7 @@
     "jcr:primaryType": "sling:OsgiConfig",
     "name": "content-changed",
 
-    "kind": "trigger",
+    "componentType": "trigger",
 
     "properties": [
         "type=resourceEvent",

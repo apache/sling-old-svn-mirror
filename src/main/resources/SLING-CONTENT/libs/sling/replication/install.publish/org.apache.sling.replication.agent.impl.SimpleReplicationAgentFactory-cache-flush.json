@@ -1,7 +1,6 @@
 {
     "jcr:primaryType": "sling:OsgiConfig",
     "name": "cache-flush",
-    "type": "simple",
 
     "packageExporter": [
         "type=service",
@@ -13,13 +12,8 @@
         "name=cache-flush"
     ],
 
-    "queueProvider": [
-        "type=service",
-        "name=sjh"
-    ],
 
-    "queueDistributionStrategy": [
-        "type=service",
-        "name=error"
-    ]
+    "queueProvider.target" : "(name=sjh)",
+
+    "queueDistributionStrategy": "(name=error)"
 }
