@@ -16,19 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.models.factory;
+package org.apache.sling.models.testmodels.classes;
 
-/**
- * Exception which is triggered whenever a Sling Model could not be
- * instantiated because it could not be adapted from the given adaptable.
- * 
- * @see ModelFactory
- *
- */
-public final class InvalidAdaptableException extends RuntimeException {
-    private static final long serialVersionUID = -1209301268928038702L;
+import javax.annotation.PostConstruct;
 
-    public InvalidAdaptableException(String message) {
-        super(message);
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.models.annotations.Model;
+
+@Model(adaptables=Resource.class)
+public class FailingPostConstuctModel {
+
+    @PostConstruct
+    protected void pc() throws Exception {
+        throw new Exception("FAIL");
     }
+
 }

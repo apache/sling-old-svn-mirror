@@ -25,7 +25,7 @@ package org.apache.sling.models.factory;
  * 
  * @see ModelFactory
  */
-public class InvalidModelException extends RuntimeException {
+public final class InvalidModelException extends RuntimeException {
 
     private static final long serialVersionUID = 4323592065808565135L;
 

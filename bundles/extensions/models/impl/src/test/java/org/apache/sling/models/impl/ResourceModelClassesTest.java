@@ -19,6 +19,7 @@ package org.apache.sling.models.impl;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,6 +30,7 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
+import org.apache.sling.models.factory.MissingElementsException;
 import org.apache.sling.models.impl.injectors.ChildResourceInjector;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
 import org.apache.sling.models.testmodels.classes.ArrayPrimitivesModel;
@@ -175,6 +177,29 @@ public class ResourceModelClassesTest {
 
         ResourceModelWithRequiredField model = factory.getAdapter(res, ResourceModelWithRequiredField.class);
         assertNull(model);
+
+        verify(vm).get("required", String.class);
+    }
+
+    @Test
+    public void testRequiredPropertyModelWithException() {
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("first", "first-value");
+        map.put("third", "third-value");
+        ValueMap vm = spy(new ValueMapDecorator(map));
+
+        Resource res = mock(Resource.class);
+        when(res.adaptTo(ValueMap.class)).thenReturn(vm);
+
+        boolean thrown = false;
+        try {
+            factory.createModel(res, ResourceModelWithRequiredField.class);
+        } catch (MissingElementsException e) {
+            assertEquals(ResourceModelWithRequiredField.class, e.getType());
+            assertEquals("required", ((Field) e.getMissingElements().iterator().next()).getName());
+            thrown = true;
+        }
+        assertTrue(thrown);
 
         verify(vm).get("required", String.class);
     }
