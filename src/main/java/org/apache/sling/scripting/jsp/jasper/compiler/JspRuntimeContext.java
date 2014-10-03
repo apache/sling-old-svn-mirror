@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
@@ -229,6 +231,11 @@ public final class JspRuntimeContext {
      */
     private final Map<String, Set<String>> depToJsp = new HashMap<String, Set<String>>();
 
+    /**
+     * Locks for loading tag files.
+     */
+    private final ConcurrentHashMap<String, Lock> tagFileLoadingLocks = new ConcurrentHashMap<String, Lock>();
+
     // ------------------------------------------------------ Public Methods
 
     public void addJspDependencies(final JspServletWrapper jsw, final List<String> deps) {
@@ -313,13 +320,22 @@ public final class JspRuntimeContext {
     }
 
     /**
-     * Remove a  JspServletWrapper.
-     *
-     * @param jspUri JSP URI of JspServletWrapper to remove
-    public void removeWrapper(String jspUri) {
-        jsps.remove(jspUri);
-    }
+     * Locks a tag file path. Use this before loading it.
+     * @param tagFilePath Tag file path
      */
+    public void lockTagFileLoading(final String tagFilePath) {
+        final Lock lock = getTagFileLoadingLock(tagFilePath);
+        lock.lock();
+    }
+
+    /**
+     * Unlocks a tag file path. Use this after loading it.
+     * @param tagFilePath Tag file path
+     */
+    public void unlockTagFileLoading(final String tagFilePath) {
+        final Lock lock = getTagFileLoadingLock(tagFilePath);
+        lock.unlock();
+    }
 
     /**
      * Process a "destroy" event for this web application context.
@@ -403,5 +419,20 @@ public final class JspRuntimeContext {
         }
     }
 
+    /**
+     * Returns and optionally creates a lock to load a tag file.
+     */
+    private Lock getTagFileLoadingLock(final String tagFilePath) {
+        Lock lock = tagFileLoadingLocks.get(tagFilePath);
+        if (lock == null) {
+            lock = new ReentrantLock();
+            final Lock existingLock = tagFileLoadingLocks.putIfAbsent(tagFilePath, lock);
+            if (existingLock != null) {
+                lock = existingLock;
+            }
+        }
+
+        return lock;
+    }
 
 }
