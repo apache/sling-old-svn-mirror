@@ -2,7 +2,7 @@
     "jcr:primaryType": "sling:OsgiConfig",
     "name": "test-scheduled-event",
 
-    "kind": "trigger",
+    "componentType": "trigger",
 
     "properties": [
         "type=scheduledEvent",
