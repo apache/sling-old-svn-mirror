@@ -25,7 +25,7 @@ package org.apache.sling.models.factory;
  * @see ModelFactory
  *
  */
-public class InvalidAdaptableException extends RuntimeException {
+public final class InvalidAdaptableException extends RuntimeException {
     private static final long serialVersionUID = -1209301268928038702L;
 
     public InvalidAdaptableException(String message) {
