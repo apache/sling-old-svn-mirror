@@ -18,28 +18,20 @@
  */
 package org.apache.sling.replication.agent;
 
-import java.util.Map;
-
+/**
+ * provider for already existing {@link org.apache.sling.replication.agent.ReplicationComponent}s
+ */
 public interface ReplicationComponentProvider {
 
     /**
-     * Retrieves an already existing component.
-     * @param type
-     * @param componentName
-     * @param <ComponentType>
+     * Retrieves an already existing component by name.
+     * If null is passed as componentName then a default component is returned.
+     *
+     * @param type            the <code>Class</code> of the component to be retrieved
+     * @param componentName   the component name as a <code>String</code>
+     * @param <ComponentType> the actual type of the {@link org.apache.sling.replication.agent.ReplicationComponent}
+     *                        to be retrieved
      * @return
      */
     <ComponentType> ComponentType getComponent(java.lang.Class<ComponentType> type, String componentName);
-
-    /**
-     * Creates a new component.
-     * @param type
-     * @param properties
-     * @param <ComponentType>
-     * @return
-     */
-    <ComponentType> ComponentType createComponent(java.lang.Class<ComponentType> type, Map<String, Object> properties);
-
-
-
 }

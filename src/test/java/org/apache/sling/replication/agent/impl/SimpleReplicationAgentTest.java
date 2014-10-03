@@ -125,8 +125,10 @@ public class SimpleReplicationAgentTest {
         ReplicationPackageExporter packageExporter = mock(ReplicationPackageExporter.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueueDistributionStrategy distributionHandler = mock(ReplicationQueueDistributionStrategy.class);
+        ReplicationEventFactory replicationEventFactory = mock(ReplicationEventFactory.class);
+
         SimpleReplicationAgent agent = new SimpleReplicationAgent(name, true,
-                false, packageImporter, packageExporter, queueProvider, distributionHandler, null, null);
+                false, packageImporter, packageExporter, queueProvider, distributionHandler, replicationEventFactory, null);
         ReplicationQueue queue = mock(ReplicationQueue.class);
         when(queueProvider.getDefaultQueue(agent.getName())).thenReturn(queue);
         assertNotNull(agent.getQueue(null));
@@ -139,8 +141,10 @@ public class SimpleReplicationAgentTest {
         ReplicationPackageExporter packageExporter = mock(ReplicationPackageExporter.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueueDistributionStrategy distributionHandler = mock(ReplicationQueueDistributionStrategy.class);
+        ReplicationEventFactory replicationEventFactory = mock(ReplicationEventFactory.class);
+
         SimpleReplicationAgent agent = new SimpleReplicationAgent(name, true,
-                false, packageImporter, packageExporter, queueProvider, distributionHandler, null, null);
+                false, packageImporter, packageExporter, queueProvider, distributionHandler, replicationEventFactory, null);
         ReplicationQueue queue = mock(ReplicationQueue.class);
         when(queueProvider.getQueue(agent.getName(), "priority")).thenReturn(queue);
         assertNotNull(agent.getQueue("priority"));
@@ -153,8 +157,10 @@ public class SimpleReplicationAgentTest {
         ReplicationPackageExporter packageExporter = mock(ReplicationPackageExporter.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueueDistributionStrategy distributionHandler = mock(ReplicationQueueDistributionStrategy.class);
+        ReplicationEventFactory replicationEventFactory = mock(ReplicationEventFactory.class);
+
         SimpleReplicationAgent agent = new SimpleReplicationAgent(name, true,
-                false, packageImporter, packageExporter, queueProvider, distributionHandler, null, null);
+                false, packageImporter, packageExporter, queueProvider, distributionHandler, replicationEventFactory, null);
         ReplicationQueue queue = mock(ReplicationQueue.class);
         when(queueProvider.getQueue(agent.getName(), "priority")).thenReturn(queue);
         assertNull(agent.getQueue("weird"));

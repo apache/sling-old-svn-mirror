@@ -18,20 +18,19 @@
  */
 package org.apache.sling.replication.agent.impl;
 
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Map;
-
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.*;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgent;
+import org.apache.sling.replication.agent.ReplicationComponent;
+import org.apache.sling.replication.agent.ReplicationComponentFactory;
 import org.apache.sling.replication.agent.ReplicationComponentProvider;
+import org.apache.sling.replication.event.ReplicationEventFactory;
+import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
+import org.apache.sling.replication.queue.ReplicationQueueProvider;
+import org.apache.sling.replication.queue.impl.SingleQueueDistributionStrategy;
+import org.apache.sling.replication.queue.impl.jobhandling.JobHandlingReplicationQueueProvider;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.replication.trigger.ReplicationTrigger;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -39,22 +38,29 @@ import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.*;
+import java.util.Properties;
+
 /**
- * An OSGi service factory for {@link org.apache.sling.replication.agent.impl.CoordinatingReplicationAgent}s.
+ * An OSGi service factory for {@link org.apache.sling.replication.agent.ReplicationAgent}s which references already existing OSGi services.
  */
 @Component(metatype = true,
         label = "Coordinating Replication Agents Factory",
-        description = "OSGi configuration based ReplicationAgent service factory",
-        name = CoordinatingReplicationAgentFactory.SERVICE_PID,
+        description = "OSGi configuration factory for coordinate agents",
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE
 )
-public class CoordinatingReplicationAgentFactory implements ReplicationComponentListener {
+public class CoordinatingReplicationAgentFactory implements ReplicationComponentProvider {
+    public static final String QUEUEPROVIDER_TARGET = "queueProvider.target";
+
+    public static final String QUEUE_DISTRIBUTION_TARGET = "queueDistributionStrategy.target";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    static final String SERVICE_PID = "org.apache.sling.replication.agent.impl.CoordinatingReplicationAgentFactory";
+    private static final String DEFAULT_QUEUEPROVIDER = "(name=" + JobHandlingReplicationQueueProvider.NAME + ")";
+
+    private static final String DEFAULT_DISTRIBUTION = "(name=" + SingleQueueDistributionStrategy.NAME + ")";
 
     @Property(boolValue = true, label = "Enabled")
     private static final String ENABLED = "enabled";
@@ -71,27 +77,36 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
     @Property(label = "Package Importer", cardinality = 100)
     public static final String PACKAGE_IMPORTER = "packageImporter";
 
-    @Property(label = "Queue Provider", cardinality = 100)
-    public static final String QUEUE_PROVIDER = "queueProvider";
+    @Property(label = "Target ReplicationQueueProvider", name = QUEUEPROVIDER_TARGET, value = DEFAULT_QUEUEPROVIDER)
+    @Reference(name = "queueProvider", target = DEFAULT_QUEUEPROVIDER)
+    private volatile ReplicationQueueProvider queueProvider;
 
-    @Property(label = "Queue Distribution Strategy", cardinality = 100)
-    public static final String QUEUE_DISTRIBUTION_STRATEGY = "queueDistributionStrategy";
+    @Property(label = "Target QueueDistributionStrategy", name = QUEUE_DISTRIBUTION_TARGET, value = DEFAULT_DISTRIBUTION)
+    @Reference(name = "queueDistributionStrategy", target = DEFAULT_DISTRIBUTION)
+    private volatile ReplicationQueueDistributionStrategy queueDistributionStrategy;
+
+    @Property(label = "Target TransportAuthenticationProvider", name = "transportAuthenticationProvider.target")
+    @Reference(name = "transportAuthenticationProvider")
+    private volatile TransportAuthenticationProvider transportAuthenticationProvider;
+
+
+    @Reference
+    private ReplicationEventFactory replicationEventFactory;
 
     @Reference
     private SlingSettingsService settingsService;
 
     @Reference
-    private ReplicationComponentProvider componentProvider;
+    private ReplicationComponentFactory componentFactory;
 
-    private ServiceRegistration agentReg;
-    private ServiceRegistration listenerReg;
 
+
+    private ServiceRegistration componentReg;
     private BundleContext savedContext;
     private Map<String, Object> savedConfig;
 
     @Activate
-    public void activate(BundleContext context, Map<String, Object> config) throws Exception {
-        log.debug("activating agent with config {}", config);
+    public void activate(BundleContext context, Map<String, Object> config) {
 
         savedContext = context;
         savedConfig = config;
@@ -100,22 +115,50 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
         Dictionary<String, Object> props = new Hashtable<String, Object>();
 
         boolean enabled = PropertiesUtil.toBoolean(config.get(ENABLED), true);
-        String name = PropertiesUtil.toString(config.get(NAME), null);
 
         if (enabled) {
             props.put(ENABLED, true);
+
+            String name = PropertiesUtil
+                    .toString(config.get(NAME), String.valueOf(new Random().nextInt(1000)));
             props.put(NAME, name);
 
-            if (listenerReg == null) {
-                listenerReg = context.registerService(ReplicationComponentListener.class.getName(), this, props);
-            }
 
-            if (agentReg == null) {
+            String queue = PropertiesUtil.toString(config.get(QUEUEPROVIDER_TARGET), DEFAULT_QUEUEPROVIDER);
+            props.put(QUEUEPROVIDER_TARGET, queue);
+
+            String distribution = PropertiesUtil.toString(config.get(QUEUE_DISTRIBUTION_TARGET), DEFAULT_DISTRIBUTION);
+            props.put(QUEUE_DISTRIBUTION_TARGET, distribution);
+
+            if (componentReg == null) {
                 Map<String, Object> properties = new HashMap<String, Object>();
                 properties.putAll(config);
 
-                properties.put("type", "coordinating");
-                CoordinatingReplicationAgent agent = (CoordinatingReplicationAgent) componentProvider.createComponent(ReplicationAgent.class, properties);
+                properties.put("type", "simple");
+                properties.put("isPassive", false);
+
+                {
+                    String[] packageImporterProperties = PropertiesUtil.toStringArray(properties.get(PACKAGE_IMPORTER));
+                    List<String> packageImporterPropertiesList = new ArrayList<String>();
+                    packageImporterPropertiesList.addAll(Arrays.asList(packageImporterProperties));
+                    packageImporterPropertiesList.add("type=remote");
+                    packageImporterProperties = packageImporterPropertiesList.toArray(new String[0]);
+                    properties.put(PACKAGE_IMPORTER, packageImporterProperties);
+                }
+
+                {
+                    String[] packageExporterProperties = PropertiesUtil.toStringArray(properties.get(PACKAGE_EXPORTER));
+                    List<String> packageExporterPropertiesList = new ArrayList<String>();
+                    packageExporterPropertiesList.addAll(Arrays.asList(packageExporterProperties));
+                    packageExporterPropertiesList.add("type=remote");
+                    packageExporterProperties = packageExporterPropertiesList.toArray(new String[0]);
+                    properties.put(PACKAGE_EXPORTER, packageExporterProperties);
+                }
+
+
+                properties.put("trigger0", new String[] { "type=scheduledEvent" });
+
+                ReplicationAgent agent = componentFactory.createComponent(ReplicationAgent.class, properties, this);
 
                 log.debug("activated agent {}", agent != null ? agent.getName() : null);
 
@@ -123,49 +166,45 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
                     props.put(NAME, agent.getName());
 
                     // register agent service
-                    agentReg = context.registerService(ReplicationAgent.class.getName(), agent, props);
-                    agent.enable();
+                    componentReg = context.registerService(ReplicationAgent.class.getName(), agent, props);
+
+
+                    if (agent instanceof ReplicationComponent) {
+                        ((ReplicationComponent) agent).enable();
+                    }
                 }
             }
+
         }
     }
 
     @Deactivate
     private void deactivate(BundleContext context) {
-        log.debug("deactivating agent");
-        if (agentReg != null) {
-            ServiceReference reference = agentReg.getReference();
-            CoordinatingReplicationAgent replicationAgent = (CoordinatingReplicationAgent) context.getService(reference);
-            replicationAgent.disable();
-            agentReg.unregister();
-            agentReg = null;
-        }
-        if (listenerReg != null) {
-            listenerReg.unregister();
-            listenerReg = null;
-        }
-    }
-
-    private void refresh(boolean isBinding) {
-        try {
-            if (savedContext != null && savedConfig != null) {
-                if (isBinding && agentReg == null) {
-                    activate(savedContext, savedConfig);
-                } else if (!isBinding && agentReg != null) {
-                    deactivate(savedContext);
-                }
+        if (componentReg != null) {
+            ServiceReference reference = componentReg.getReference();
+            Object service = context.getService(reference);
+            if (service instanceof ReplicationComponent) {
+                ((ReplicationComponent) service).disable();
             }
 
-        } catch (Exception e) {
-            log.error("Cannot refresh agent", e);
+            componentReg.unregister();
+            componentReg = null;
         }
+
     }
 
-    public <ComponentType> void componentBind(ComponentType component, String componentName) {
-        refresh(true);
-    }
 
-    public <ComponentType> void componentUnbind(ComponentType component, String componentName) {
-        refresh(false);
+    public <ComponentType> ComponentType getComponent(Class<ComponentType> type, String componentName) {
+        if (type.isAssignableFrom(ReplicationQueueProvider.class)) {
+            return (ComponentType) queueProvider;
+
+        }
+        else if (type.isAssignableFrom(ReplicationQueueDistributionStrategy.class)) {
+            return (ComponentType) queueDistributionStrategy;
+        }
+        else if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
+            return (ComponentType) transportAuthenticationProvider;
+        }
+        return null;
     }
 }

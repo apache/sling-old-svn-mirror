@@ -16,11 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.agent.impl;
+package org.apache.sling.replication.agent;
 
+/**
+ * Marker interface for replication components requiring explicit enabling and disabling
+ */
+public interface ReplicationComponent {
 
-public interface ReplicationComponentListener {
-    <ComponentType> void componentBind(ComponentType component, String componentName);
+    /**
+     * Enables the component
+     */
+    void enable();
 
-    <ComponentType> void componentUnbind(ComponentType component, String componentName);
+    /**
+     * Disables the component
+     */
+    void disable();
 }

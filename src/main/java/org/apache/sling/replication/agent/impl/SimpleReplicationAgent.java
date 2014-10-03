@@ -18,13 +18,11 @@
  */
 package org.apache.sling.replication.agent.impl;
 
-import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 import org.apache.sling.replication.agent.AgentReplicationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
+import org.apache.sling.replication.agent.ReplicationComponent;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.communication.ReplicationResponse;
 import org.apache.sling.replication.event.ReplicationEventFactory;
@@ -49,7 +47,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Basic implementation of a {@link ReplicationAgent}
  */
-public class SimpleReplicationAgent implements ReplicationAgent {
+public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComponent {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -75,15 +73,33 @@ public class SimpleReplicationAgent implements ReplicationAgent {
                                   ReplicationPackageImporter replicationPackageImporter,
                                   ReplicationPackageExporter replicationPackageExporter,
                                   ReplicationQueueProvider queueProvider,
-                                  ReplicationQueueDistributionStrategy queueDistributionHandler,
+                                  ReplicationQueueDistributionStrategy queueDistributionStrategy,
                                   ReplicationEventFactory replicationEventFactory,
                                   List<ReplicationTrigger> triggers) {
+
+        // check configuration is valid
+        if (name == null
+                || replicationPackageImporter == null
+                || replicationPackageExporter == null
+                || queueProvider == null
+                || queueDistributionStrategy == null
+                || replicationEventFactory == null) {
+
+            String errorMessage = Arrays.toString(new Object[]{name,
+                    replicationPackageImporter,
+                    replicationPackageExporter,
+                    queueProvider,
+                    queueDistributionStrategy,
+                    replicationEventFactory});
+            throw new IllegalArgumentException("all arguments are required: " + errorMessage);
+        }
+
         this.name = name;
         this.passive = passive;
         this.replicationPackageImporter = replicationPackageImporter;
         this.replicationPackageExporter = replicationPackageExporter;
         this.queueProvider = queueProvider;
-        this.queueDistributionStrategy = queueDistributionHandler;
+        this.queueDistributionStrategy = queueDistributionStrategy;
         this.useAggregatePaths = useAggregatePaths;
         this.replicationEventFactory = replicationEventFactory;
         this.triggers = triggers == null ? new ArrayList<ReplicationTrigger>() : triggers;
