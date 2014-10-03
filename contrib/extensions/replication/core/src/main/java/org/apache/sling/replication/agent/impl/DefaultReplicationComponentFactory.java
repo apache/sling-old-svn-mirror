@@ -18,10 +18,16 @@
  */
 package org.apache.sling.replication.agent.impl;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
-import org.apache.felix.scr.annotations.*;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.Scheduler;
@@ -47,10 +53,7 @@ import org.apache.sling.replication.trigger.impl.ChainReplicateReplicationTrigge
 import org.apache.sling.replication.trigger.impl.RemoteEventReplicationTrigger;
 import org.apache.sling.replication.trigger.impl.ResourceEventReplicationTrigger;
 import org.apache.sling.replication.trigger.impl.ScheduledReplicationTrigger;
-import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,14 +61,15 @@ import org.slf4j.LoggerFactory;
  * A generic factory for replication components using a compact configuration, already existing OSGi services
  * for the components to be wired can be used as well as directly instantiated components (called by type name).
  * <p/>
- * Currently supported components are of kind 'agent' and 'trigger'.
+ * Currently supported components are {@link org.apache.sling.replication.agent.ReplicationAgent}s,
+ * {@link org.apache.sling.replication.trigger.ReplicationTrigger}s and
+ * {@link org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider}s
  */
 @Component(metatype = true,
         label = "Generic Replication Components Factory",
         description = "OSGi configuration Replication Component factory",
         specVersion = "1.1",
         immediate = true
-
 )
 @Service(ReplicationComponentFactory.class)
 public class DefaultReplicationComponentFactory implements ReplicationComponentFactory {
