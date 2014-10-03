@@ -1,14 +1,26 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.sling.replication.agent.impl;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
@@ -16,36 +28,19 @@ import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.jackrabbit.vault.packaging.Packaging;
-import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.commons.scheduler.Scheduler;
-import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.agent.ReplicationComponentProvider;
-import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
-import org.apache.sling.replication.packaging.impl.exporter.LocalReplicationPackageExporterFactory;
-import org.apache.sling.replication.packaging.impl.exporter.RemoteReplicationPackageExporter;
-import org.apache.sling.replication.packaging.impl.exporter.RemoteReplicationPackageExporterFactory;
-import org.apache.sling.replication.packaging.impl.importer.LocalReplicationPackageImporterFactory;
-import org.apache.sling.replication.packaging.impl.importer.RemoteReplicationPackageImporter;
-import org.apache.sling.replication.packaging.impl.importer.RemoteReplicationPackageImporterFactory;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
-import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
-import org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilderFactory;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
-import org.apache.sling.replication.transport.authentication.impl.UserCredentialsTransportAuthenticationProvider;
-import org.apache.sling.replication.trigger.ReplicationTrigger;
-import org.apache.sling.replication.trigger.impl.ChainReplicateReplicationTrigger;
-import org.apache.sling.replication.trigger.impl.RemoteEventReplicationTrigger;
-import org.apache.sling.replication.trigger.impl.ResourceEventReplicationTrigger;
-import org.apache.sling.replication.trigger.impl.ScheduledReplicationTrigger;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * default implementation of {@link org.apache.sling.replication.agent.ReplicationComponentProvider} (as an OSGi service).
+ */
 @Component
 @Service(ReplicationComponentProvider.class)
 @Property(name = "name", value = "default")
@@ -63,15 +58,12 @@ public class DefaultReplicationComponentProvider implements ReplicationComponent
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-
     Map<String, ReplicationQueueProvider> replicationQueueProviderMap = new ConcurrentHashMap<String, ReplicationQueueProvider>();
     Map<String, ReplicationQueueDistributionStrategy> replicationQueueDistributionStrategyMap = new ConcurrentHashMap<String, ReplicationQueueDistributionStrategy>();
     Map<String, TransportAuthenticationProvider> transportAuthenticationProviderMap = new ConcurrentHashMap<String, TransportAuthenticationProvider>();
     Map<String, ReplicationPackageImporter> replicationPackageImporterMap = new ConcurrentHashMap<String, ReplicationPackageImporter>();
     Map<String, ReplicationPackageExporter> replicationPackageExporterMap = new ConcurrentHashMap<String, ReplicationPackageExporter>();
     private BundleContext bundleContext;
-
-
 
     public <ComponentType> ComponentType getComponent(Class<ComponentType> type, String componentName) {
         if (type.isAssignableFrom(ReplicationPackageExporter.class)) {

@@ -18,17 +18,26 @@
  */
 package org.apache.sling.replication.agent.impl;
 
-import java.util.*;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Random;
 
-import org.apache.felix.scr.annotations.*;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.agent.ReplicationComponent;
 import org.apache.sling.replication.agent.ReplicationComponentFactory;
 import org.apache.sling.replication.agent.ReplicationComponentProvider;
 import org.apache.sling.replication.event.ReplicationEventFactory;
-import org.apache.sling.replication.packaging.ReplicationPackageExporter;
-import org.apache.sling.replication.packaging.ReplicationPackageImporter;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
 import org.apache.sling.replication.queue.impl.SingleQueueDistributionStrategy;
@@ -94,7 +103,6 @@ public class SimpleReplicationAgentFactory implements ReplicationComponentProvid
             cardinality = ReferenceCardinality.OPTIONAL_UNARY)
     private volatile TransportAuthenticationProvider transportAuthenticationProvider;
 
-
     @Reference
     private ReplicationEventFactory replicationEventFactory;
 
@@ -103,8 +111,6 @@ public class SimpleReplicationAgentFactory implements ReplicationComponentProvid
 
     @Reference
     private ReplicationComponentFactory componentFactory;
-
-
 
     private ServiceRegistration componentReg;
     private BundleContext savedContext;
@@ -150,7 +156,6 @@ public class SimpleReplicationAgentFactory implements ReplicationComponentProvid
                     // register agent service
                     componentReg = context.registerService(ReplicationAgent.class.getName(), agent, props);
 
-
                     if (agent instanceof ReplicationComponent) {
                         ((ReplicationComponent) agent).enable();
                     }
@@ -175,7 +180,6 @@ public class SimpleReplicationAgentFactory implements ReplicationComponentProvid
 
     }
 
-
     public <ComponentType> ComponentType getComponent(Class<ComponentType> type, String componentName) {
         if (type.isAssignableFrom(ReplicationQueueProvider.class)) {
             return (ComponentType) queueProvider;
@@ -189,7 +193,6 @@ public class SimpleReplicationAgentFactory implements ReplicationComponentProvid
         }
         return null;
     }
-
 
     private void refresh() {
         if (savedContext != null && savedConfig != null) {
