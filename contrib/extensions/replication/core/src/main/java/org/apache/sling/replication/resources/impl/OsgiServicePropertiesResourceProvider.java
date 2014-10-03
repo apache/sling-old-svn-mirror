@@ -103,6 +103,10 @@ public class OsgiServicePropertiesResourceProvider extends AbstractReadableResou
 
         Object service = context.getService(serviceReference);
 
+        if (service == null) {
+            return null;
+        }
+
         services.put(serviceName, service);
         serviceProperties.put(serviceName, properties);
 

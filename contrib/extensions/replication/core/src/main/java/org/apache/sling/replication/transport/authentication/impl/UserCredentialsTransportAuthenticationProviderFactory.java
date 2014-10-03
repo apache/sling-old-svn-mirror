@@ -52,9 +52,7 @@ public class UserCredentialsTransportAuthenticationProviderFactory implements
 
     public void activate(Map<String, Object> config) {
         transportAuthenticationProvider = new UserCredentialsTransportAuthenticationProvider(config);
-
     }
-
 
     public Object authenticate(Object authenticable, TransportAuthenticationContext context)
             throws TransportAuthenticationException {

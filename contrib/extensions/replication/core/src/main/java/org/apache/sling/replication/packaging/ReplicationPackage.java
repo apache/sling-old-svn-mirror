@@ -71,9 +71,8 @@ public interface ReplicationPackage extends Serializable {
      */
     long getLength();
 
-
     /**
-     * releases resources associated with this object
+     * releases resources associated with this package
      */
     void close();
 

@@ -1,13 +1,12 @@
 {
     "jcr:primaryType": "sling:OsgiConfig",
-    "name": "test-content-event",
+    "name": "content-changed",
 
-    "kind": "trigger",
+    "componentType": "trigger",
 
     "properties": [
         "type=resourceEvent",
-        "path=/content"
-
+        "path=/content/usergenerated"
     ]
 
 }

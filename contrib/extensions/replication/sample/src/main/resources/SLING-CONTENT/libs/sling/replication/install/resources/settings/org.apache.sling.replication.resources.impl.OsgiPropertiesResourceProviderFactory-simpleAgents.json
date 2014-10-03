@@ -2,7 +2,7 @@
     "jcr:primaryType": "sling:OsgiConfig",
     "name": "simpleAgents",
     "provider.roots": [ "/libs/sling/replication/settings/agents" ],
-    "serviceType": "org.apache.sling.replication.agent.impl.CompactSimpleReplicationAgentFactory",
+    "serviceType": "org.apache.sling.replication.agent.impl.SimpleReplicationAgentFactory",
     "providerType": "osgiConfig",
     "groupPrefix": "agents",
 

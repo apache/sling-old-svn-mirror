@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.replication.agent.ReplicationComponent;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.event.ReplicationEvent;
@@ -41,7 +42,7 @@ import org.slf4j.LoggerFactory;
 /**
  * {@link org.apache.sling.replication.trigger.ReplicationTrigger} for chain replication upon a certain {@link org.apache.sling.replication.event.ReplicationEventType}
  */
-public class ChainReplicateReplicationTrigger implements ReplicationTrigger {
+public class ChainReplicateReplicationTrigger implements ReplicationTrigger, ReplicationComponent {
 
     public static final String TYPE = "replicateEvent";
     public static final String PATH = "path";
@@ -63,14 +64,7 @@ public class ChainReplicateReplicationTrigger implements ReplicationTrigger {
         this.pathPrefix = pathPrefix;
     }
 
-    protected void deactivate() {
-        for (Map.Entry<String, ServiceRegistration> entry : registrations.entrySet()) {
-            if (entry.getValue() != null) {
-                entry.getValue().unregister();
-            }
-        }
-        registrations.clear();
-    }
+
 
     public void register(String handlerId, ReplicationTriggerRequestHandler requestHandler) {
         // register an event handler on replication package install (on a certain path) which triggers the chain replication of that same package
@@ -96,6 +90,18 @@ public class ChainReplicateReplicationTrigger implements ReplicationTrigger {
         if (serviceRegistration != null) {
             serviceRegistration.unregister();
         }
+    }
+
+    public void enable() {
+    }
+
+    public void disable() {
+        for (Map.Entry<String, ServiceRegistration> entry : registrations.entrySet()) {
+            if (entry.getValue() != null) {
+                entry.getValue().unregister();
+            }
+        }
+        registrations.clear();
     }
 
 

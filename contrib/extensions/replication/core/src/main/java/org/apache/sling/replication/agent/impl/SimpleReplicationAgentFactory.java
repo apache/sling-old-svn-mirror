@@ -18,21 +18,14 @@
  */
 package org.apache.sling.replication.agent.impl;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.*;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgent;
+import org.apache.sling.replication.agent.ReplicationComponent;
+import org.apache.sling.replication.agent.ReplicationComponentFactory;
+import org.apache.sling.replication.agent.ReplicationComponentProvider;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
@@ -40,6 +33,7 @@ import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
 import org.apache.sling.replication.queue.impl.SingleQueueDistributionStrategy;
 import org.apache.sling.replication.queue.impl.jobhandling.JobHandlingReplicationQueueProvider;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -52,25 +46,17 @@ import org.slf4j.LoggerFactory;
  */
 @Component(metatype = true,
         label = "Simple Replication Agents Factory",
-        description = "OSGi configuration based ReplicationAgent service factory",
-        name = SimpleReplicationAgentFactory.SERVICE_PID,
+        description = "OSGi configuration factory for agents",
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE
 )
-public class SimpleReplicationAgentFactory {
+public class SimpleReplicationAgentFactory implements ReplicationComponentProvider {
+    public static final String QUEUEPROVIDER_TARGET = "queueProvider.target";
 
-    public static final String PACKAGE_EXPORTER_TARGET = "ReplicationPackageExporter.target";
-
-    public static final String PACKAGE_IMPORTER_TARGET = "ReplicationPackageImporter.target";
-
-    public static final String QUEUEPROVIDER_TARGET = "ReplicationQueueProvider.target";
-
-    public static final String QUEUE_DISTRIBUTION_TARGET = "ReplicationQueueDistributionStrategy.target";
+    public static final String QUEUE_DISTRIBUTION_TARGET = "queueDistributionStrategy.target";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-
-    static final String SERVICE_PID = "org.apache.sling.replication.agent.impl.SimpleReplicationAgentFactory";
 
     private static final String DEFAULT_QUEUEPROVIDER = "(name=" + JobHandlingReplicationQueueProvider.NAME + ")";
 
@@ -82,35 +68,32 @@ public class SimpleReplicationAgentFactory {
     @Property(label = "Name")
     public static final String NAME = "name";
 
-    @Property(label = "Triggers")
-    public static final String TRIGGERS = "triggers";
-
     @Property(boolValue = true, label = "Replicate using aggregated paths")
     public static final String USE_AGGREGATE_PATHS = "useAggregatePaths";
 
     @Property(boolValue = false, label = "Replicate using aggregated paths")
     public static final String IS_PASSIVE = "isPassive";
 
-    @Property(label = "Target ReplicationPackageExporter", name = PACKAGE_EXPORTER_TARGET)
-    @Reference(name = "ReplicationPackageExporter", policy = ReferencePolicy.DYNAMIC)
-    private volatile ReplicationPackageExporter packageExporter;
 
-    @Property(label = "Target ReplicationPackageImporter", name = PACKAGE_IMPORTER_TARGET)
-    @Reference(name = "ReplicationPackageImporter", policy = ReferencePolicy.DYNAMIC)
-    private volatile ReplicationPackageImporter packageImporter;
+    @Property(label = "Package Exporter", cardinality = 100)
+    public static final String PACKAGE_EXPORTER = "packageExporter";
+
+    @Property(label = "Package Importer", cardinality = 100)
+    public static final String PACKAGE_IMPORTER = "packageImporter";
 
     @Property(label = "Target ReplicationQueueProvider", name = QUEUEPROVIDER_TARGET, value = DEFAULT_QUEUEPROVIDER)
-    @Reference(name = "ReplicationQueueProvider", target = DEFAULT_QUEUEPROVIDER, policy = ReferencePolicy.DYNAMIC)
+    @Reference(name = "queueProvider", target = DEFAULT_QUEUEPROVIDER)
     private volatile ReplicationQueueProvider queueProvider;
 
     @Property(label = "Target QueueDistributionStrategy", name = QUEUE_DISTRIBUTION_TARGET, value = DEFAULT_DISTRIBUTION)
-    @Reference(name = "ReplicationQueueDistributionStrategy", target = DEFAULT_DISTRIBUTION, policy = ReferencePolicy.DYNAMIC)
+    @Reference(name = "queueDistributionStrategy", target = DEFAULT_DISTRIBUTION)
     private volatile ReplicationQueueDistributionStrategy queueDistributionStrategy;
 
-    @Property(label = "Runmodes")
-    private static final String RUNMODES = "runModes";
+    @Property(label = "Target TransportAuthenticationProvider", name = "transportAuthenticationProvider.target")
+    @Reference(name = "transportAuthenticationProvider", policy = ReferencePolicy.DYNAMIC,
+            cardinality = ReferenceCardinality.OPTIONAL_UNARY)
+    private volatile TransportAuthenticationProvider transportAuthenticationProvider;
 
-    private ServiceRegistration agentReg;
 
     @Reference
     private ReplicationEventFactory replicationEventFactory;
@@ -118,8 +101,20 @@ public class SimpleReplicationAgentFactory {
     @Reference
     private SlingSettingsService settingsService;
 
+    @Reference
+    private ReplicationComponentFactory componentFactory;
+
+
+
+    private ServiceRegistration componentReg;
+    private BundleContext savedContext;
+    private Map<String, Object> savedConfig;
+
     @Activate
-    public void activate(BundleContext context, Map<String, ?> config) throws Exception {
+    public void activate(BundleContext context, Map<String, Object> config) {
+
+        savedContext = context;
+        savedConfig = config;
 
         // inject configuration
         Dictionary<String, Object> props = new Hashtable<String, Object>();
@@ -128,9 +123,6 @@ public class SimpleReplicationAgentFactory {
 
         if (enabled) {
             props.put(ENABLED, true);
-
-            String[] runModes = PropertiesUtil.toStringArray(config.get(RUNMODES), new String[0]);
-            props.put(RUNMODES, runModes);
 
             String name = PropertiesUtil
                     .toString(config.get(NAME), String.valueOf(new Random().nextInt(1000)));
@@ -143,61 +135,81 @@ public class SimpleReplicationAgentFactory {
             String distribution = PropertiesUtil.toString(config.get(QUEUE_DISTRIBUTION_TARGET), DEFAULT_DISTRIBUTION);
             props.put(QUEUE_DISTRIBUTION_TARGET, distribution);
 
-            String[] triggers = PropertiesUtil.toStringArray(config.get(TRIGGERS), new String[0]);
-            props.put(TRIGGERS, triggers);
+            if (componentReg == null) {
+                Map<String, Object> properties = new HashMap<String, Object>();
+                properties.putAll(config);
+
+                properties.put("type", "simple");
+                ReplicationAgent agent = componentFactory.createComponent(ReplicationAgent.class, properties, this);
+
+                log.debug("activated agent {}", agent != null ? agent.getName() : null);
+
+                if (agent != null) {
+                    props.put(NAME, agent.getName());
+
+                    // register agent service
+                    componentReg = context.registerService(ReplicationAgent.class.getName(), agent, props);
 
 
-            boolean useAggregatePaths = PropertiesUtil.toBoolean(config.get(USE_AGGREGATE_PATHS), true);
-            props.put(USE_AGGREGATE_PATHS, useAggregatePaths);
-
-            boolean isPassive = PropertiesUtil.toBoolean(config.get(IS_PASSIVE), false);
-            props.put(IS_PASSIVE, isPassive);
-
-            // check configuration is valid
-            if (name == null || packageExporter == null || packageImporter == null || queueProvider == null || queueDistributionStrategy == null) {
-                throw new Exception("configuration for this agent is not valid");
-            }
-
-            log.info("bound services for {} :  {} - {} - {} - {} - {} - {}", new Object[]{name,
-                    packageImporter, packageExporter, queueProvider, queueDistributionStrategy});
-
-            SimpleReplicationAgent agent = new SimpleReplicationAgent(name, useAggregatePaths, isPassive,
-                    packageImporter, packageExporter, queueProvider, queueDistributionStrategy, replicationEventFactory,
-                    null); // TODO : enable triggers again
-
-            // only enable if instance runmodes match configured ones
-            if (matchRunmodes(runModes)) {
-                // register agent service
-                agentReg = context.registerService(ReplicationAgent.class.getName(), agent, props);
-                agent.enable();
-            }
-        }
-    }
-
-    private boolean matchRunmodes(String[] configuredRunModes) {
-        boolean match = configuredRunModes == null || configuredRunModes.length == 0;
-        if (!match) {
-            Set<String> activeRunModes = settingsService.getRunModes();
-            for (String activeRunMode : activeRunModes) {
-                for (String configuredRunMode : configuredRunModes) {
-                    if (activeRunMode.equals(configuredRunMode)) {
-                        match = true;
-                        break;
+                    if (agent instanceof ReplicationComponent) {
+                        ((ReplicationComponent) agent).enable();
                     }
                 }
             }
+
         }
-        return match;
     }
 
     @Deactivate
     private void deactivate(BundleContext context) {
-        if (agentReg != null) {
-            ServiceReference reference = agentReg.getReference();
-            SimpleReplicationAgent replicationAgent = (SimpleReplicationAgent) context.getService(reference);
-            replicationAgent.disable();
-            agentReg.unregister();
+        if (componentReg != null) {
+            ServiceReference reference = componentReg.getReference();
+            Object service = context.getService(reference);
+            if (service instanceof ReplicationComponent) {
+                ((ReplicationComponent) service).disable();
+            }
+
+            componentReg.unregister();
+            componentReg = null;
         }
 
+    }
+
+
+    public <ComponentType> ComponentType getComponent(Class<ComponentType> type, String componentName) {
+        if (type.isAssignableFrom(ReplicationQueueProvider.class)) {
+            return (ComponentType) queueProvider;
+
+        }
+        else if (type.isAssignableFrom(ReplicationQueueDistributionStrategy.class)) {
+            return (ComponentType) queueDistributionStrategy;
+        }
+        else if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
+            return (ComponentType) transportAuthenticationProvider;
+        }
+        return null;
+    }
+
+
+    private void refresh() {
+        if (savedContext != null && savedConfig != null) {
+            if (componentReg == null) {
+                activate(savedContext, savedConfig);
+            }
+            else if (componentReg != null) {
+                deactivate(savedContext);
+                activate(savedContext, savedConfig);
+            }
+        }
+    }
+
+    private void bindTransportAuthenticationProvider(TransportAuthenticationProvider transportAuthenticationProvider) {
+        this.transportAuthenticationProvider = transportAuthenticationProvider;
+        refresh();
+    }
+
+    private void unbindTransportAuthenticationProvider(TransportAuthenticationProvider transportAuthenticationProvider) {
+        this.transportAuthenticationProvider = null;
+        refresh();
     }
 }

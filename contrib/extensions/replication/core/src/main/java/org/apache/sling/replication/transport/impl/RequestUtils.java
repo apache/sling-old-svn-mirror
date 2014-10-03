@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.replication.transport.impl;
 
 import javax.servlet.http.HttpServletRequest;
@@ -34,12 +33,9 @@ public class RequestUtils {
         String action = request.getParameter(ReplicationParameter.ACTION.toString());
         String[] paths = request.getParameterValues(ReplicationParameter.PATH.toString());
 
-        ReplicationRequest replicationRequest = new ReplicationRequest(System.currentTimeMillis(),
+        return new ReplicationRequest(System.currentTimeMillis(),
                 ReplicationActionType.fromName(action),
                 paths);
-
-        return replicationRequest;
-
     }
 
     public static URI appendReplicationRequest(URI uri, ReplicationRequest replicationRequest) throws URISyntaxException {

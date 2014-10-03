@@ -39,7 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * base abstract implementation of a {@link ReplicationPackageBuilder}
+ * base abstract implementation of a JCR based {@link ReplicationPackageBuilder}
  */
 public abstract class AbstractReplicationPackageBuilder implements ReplicationPackageBuilder {
 

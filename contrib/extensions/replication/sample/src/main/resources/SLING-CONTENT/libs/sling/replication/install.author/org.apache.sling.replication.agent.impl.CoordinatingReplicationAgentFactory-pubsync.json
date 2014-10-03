@@ -1,25 +1,21 @@
 {
     "jcr:primaryType": "sling:OsgiConfig",
     "name": "pubsync",
-    "type": "coordinating",
-    "enabled" : false,
 
     "packageExporter": [
         "authenticationProvider/type=service",
-        "authenticationProvider/name=publishAdmin",
 
         "packageBuilder/type=vlt",
         "packageBuilder/servicename=replicationService",
 
-        "endpoints[0]=http://localhost:4503/libs/sling/replication/services/exporters/reverse",
-        "endpoints[1]=http://localhost:4504/libs/sling/replication/services/exporters/reverse",
-        "endpoints[2]=http://localhost:4505/libs/sling/replication/services/exporters/reverse",
+        "endpoints[0]=http://localhost:4503/libs/sling/replication/services/exporters/reverse-pubsync",
+        "endpoints[1]=http://localhost:4504/libs/sling/replication/services/exporters/reverse-pubsync",
+        "endpoints[2]=http://localhost:4505/libs/sling/replication/services/exporters/reverse-pubsync",
         "endpoints.strategy=All"
     ],
 
     "packageImporter": [
         "authenticationProvider/type=service",
-        "authenticationProvider/name=publishAdmin",
 
         "packageBuilder/type=vlt",
         "packageBuilder/servicename=replicationService",
@@ -30,13 +26,9 @@
         "endpoints.strategy=All"
     ],
 
-    "queueProvider": [
-        "type=service",
-        "name=sjh"
-    ],
+    "queueProvider.target" : "(name=sjh)",
 
-    "queueDistributionStrategy": [
-        "type=service",
-        "name=error"
-    ]
+    "queueDistributionStrategy.target": "(name=error)",
+
+    "transportAuthenticationProvider.target" : "(name=publishAdmin)"
 }

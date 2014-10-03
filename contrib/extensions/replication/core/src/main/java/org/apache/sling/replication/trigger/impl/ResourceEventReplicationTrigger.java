@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.replication.agent.ReplicationComponent;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
@@ -40,7 +41,7 @@ import org.slf4j.LoggerFactory;
 /**
  * {@link org.apache.sling.replication.trigger.ReplicationTrigger} for triggering a specific agent upon node / properties being changed under a certain path
  */
-public class ResourceEventReplicationTrigger implements ReplicationTrigger {
+public class ResourceEventReplicationTrigger implements ReplicationTrigger, ReplicationComponent {
 
     public static final String TYPE = "resourceEvent";
     public static final String PATH = "path";
@@ -68,7 +69,11 @@ public class ResourceEventReplicationTrigger implements ReplicationTrigger {
         this.path = path;
     }
 
-    protected void deactivate() {
+    public void enable() {
+
+    }
+
+    public void disable() {
         for (Map.Entry<String, ServiceRegistration> entry : registrations.entrySet()) {
             if (entry.getValue() != null) {
                 entry.getValue().unregister();
@@ -114,9 +119,9 @@ public class ResourceEventReplicationTrigger implements ReplicationTrigger {
                     ReplicationActionType.DELETE : ReplicationActionType.ADD;
             log.info("triggering replication from event {}", event);
 
-            Object eventProperty = event.getProperty("path");
-            if (eventProperty != null) {
-                String replicatingPath = String.valueOf(eventProperty);
+            Object pathProperty = event.getProperty("path");
+            if (pathProperty != null) {
+                String replicatingPath = String.valueOf(pathProperty);
                 requestHandler.handle(new ReplicationRequest(System.currentTimeMillis(), action, replicatingPath));
             }
         }

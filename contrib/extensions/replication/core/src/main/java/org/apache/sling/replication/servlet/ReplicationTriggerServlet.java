@@ -81,6 +81,7 @@ public class ReplicationTriggerServlet extends SlingAllMethodsServlet {
 
         // needed to allow e.g. the JavaScript EventSource API to make a call from author to this server and listen for the events
         // TODO : check if this is needed or not (other than for browser communication)
+        // TODO : allowed origins should be explicitly configured
         response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
         response.setHeader("Access-Control-Allow-Credentials", "true");
 
