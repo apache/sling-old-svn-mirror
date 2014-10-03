@@ -483,11 +483,13 @@
             <groupId>org.apache.derby</groupId>
             <artifactId>derby</artifactId>
             <version>10.5.3.0_1</version>
+            <runModes>jackrabbit</runModes>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.jackrabbit.server</artifactId>
             <version>2.2.0</version>
+            <runModes>jackrabbit</runModes>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
@@ -533,6 +535,72 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.davex</artifactId>
             <version>1.2.2</version>
+        </bundle>
+    </startLevel>
+
+    <startLevel level="15">
+        <!-- Oak-specific bundles -->
+        <bundle>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.jcr.oak.server</artifactId>
+            <version>0.0.2-SNAPSHOT</version>
+            <runModes>oak</runModes>
+        </bundle>
+        <bundle>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>15.0</version>
+            <runModes>oak</runModes>
+        </bundle>
+        <bundle>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>oak-core</artifactId>
+            <version>1.0.0</version>
+            <runModes>oak</runModes>
+        </bundle>
+        <!-- embedded in oak.server for now
+        <bundle>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>oak-jcr</artifactId>
+            <version>0.10</version>
+            <runModes>oak</runModes>
+        </bundle>
+        -->
+        <bundle>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>oak-commons</artifactId>
+            <version>1.0.0</version>
+            <runModes>oak</runModes>
+        </bundle>
+        <bundle>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>oak-mk</artifactId>
+            <version>1.0.0</version>
+            <runModes>oak</runModes>
+        </bundle>
+        <bundle>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>oak-mk-api</artifactId>
+            <version>1.0.0</version>
+            <runModes>oak</runModes>
+        </bundle>
+        <bundle>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>oak-mk-remote</artifactId>
+            <version>1.0.0</version>
+            <runModes>oak</runModes>
+        </bundle>
+        <bundle>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>oak-lucene</artifactId>
+            <version>1.0.0</version>
+            <runModes>oak</runModes>
+        </bundle>
+        <bundle>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>oak-blob</artifactId>
+            <version>1.0.0</version>
+            <runModes>oak</runModes>
         </bundle>
     </startLevel>
 </bundles>
