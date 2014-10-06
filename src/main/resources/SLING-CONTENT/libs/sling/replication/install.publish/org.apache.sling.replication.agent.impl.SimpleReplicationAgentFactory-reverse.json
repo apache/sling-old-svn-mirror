@@ -22,7 +22,7 @@
     "queueDistributionStrategy": "(name=error)",
 
     "trigger0": [
-        "type=resourceEvent",
+        "type=jcrEvent",
         "path=/content/usergenerated"
     ]
 }
