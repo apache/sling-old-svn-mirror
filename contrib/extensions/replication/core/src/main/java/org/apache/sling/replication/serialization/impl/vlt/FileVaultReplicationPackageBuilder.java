@@ -54,6 +54,8 @@ import org.slf4j.LoggerFactory;
 public class FileVaultReplicationPackageBuilder extends AbstractReplicationPackageBuilder implements
         ReplicationPackageBuilder {
 
+    public static final String USER_DATA = "vlt.pb.data";
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private SlingRepository repository;
@@ -114,7 +116,9 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
 
     @Override
     protected Session getSession() throws RepositoryException {
-        return repository.loginService(subServiceName, null);
+        Session session = repository.loginService(subServiceName, null);
+        session.getWorkspace().getObservationManager().setUserData(USER_DATA);
+        return session;
     }
 
     @Override

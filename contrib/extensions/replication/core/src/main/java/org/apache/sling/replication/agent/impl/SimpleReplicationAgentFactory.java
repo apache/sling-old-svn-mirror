@@ -80,7 +80,7 @@ public class SimpleReplicationAgentFactory implements ReplicationComponentProvid
     @Property(boolValue = true, label = "Replicate using aggregated paths")
     public static final String USE_AGGREGATE_PATHS = "useAggregatePaths";
 
-    @Property(boolValue = false, label = "Replicate using aggregated paths")
+    @Property(boolValue = false, label = "Use this agent as a passive one (only queueing)")
     public static final String IS_PASSIVE = "isPassive";
 
 
@@ -141,7 +141,7 @@ public class SimpleReplicationAgentFactory implements ReplicationComponentProvid
             String distribution = PropertiesUtil.toString(config.get(QUEUE_DISTRIBUTION_TARGET), DEFAULT_DISTRIBUTION);
             props.put(QUEUE_DISTRIBUTION_TARGET, distribution);
 
-            if (componentReg == null) {
+            if (componentReg == null && componentFactory != null) {
                 Map<String, Object> properties = new HashMap<String, Object>();
                 properties.putAll(config);
 
@@ -183,7 +183,6 @@ public class SimpleReplicationAgentFactory implements ReplicationComponentProvid
     public <ComponentType> ComponentType getComponent(Class<ComponentType> type, String componentName) {
         if (type.isAssignableFrom(ReplicationQueueProvider.class)) {
             return (ComponentType) queueProvider;
-
         }
         else if (type.isAssignableFrom(ReplicationQueueDistributionStrategy.class)) {
             return (ComponentType) queueDistributionStrategy;

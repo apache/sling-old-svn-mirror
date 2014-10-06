@@ -71,7 +71,7 @@ public class RemoteReplicationPackageImporter implements ReplicationPackageImpor
             transportHandler.deliverPackage(replicationPackage);
             result = true;
         } catch (Exception e) {
-            log.error("failed in importing package {} due to {}", replicationPackage, e);
+            log.error("failed in importing package {} ", replicationPackage, e);
         }
         return result;
     }

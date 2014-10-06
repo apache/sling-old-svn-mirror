@@ -52,7 +52,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * An OSGi service factory for {@link org.apache.sling.replication.agent.ReplicationAgent}s which references already existing OSGi services.
+ * An OSGi service factory for 'Coordinate' {@link org.apache.sling.replication.agent.ReplicationAgent}s.
  */
 @Component(metatype = true,
         label = "Coordinating Replication Agents Factory",
@@ -99,7 +99,6 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
     @Reference(name = "transportAuthenticationProvider")
     private volatile TransportAuthenticationProvider transportAuthenticationProvider;
 
-
     @Reference
     private ReplicationEventFactory replicationEventFactory;
 
@@ -109,17 +108,10 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
     @Reference
     private ReplicationComponentFactory componentFactory;
 
-
-
     private ServiceRegistration componentReg;
-    private BundleContext savedContext;
-    private Map<String, Object> savedConfig;
 
     @Activate
     public void activate(BundleContext context, Map<String, Object> config) {
-
-        savedContext = context;
-        savedConfig = config;
 
         // inject configuration
         Dictionary<String, Object> props = new Hashtable<String, Object>();
@@ -152,7 +144,7 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
                     List<String> packageImporterPropertiesList = new ArrayList<String>();
                     packageImporterPropertiesList.addAll(Arrays.asList(packageImporterProperties));
                     packageImporterPropertiesList.add("type=remote");
-                    packageImporterProperties = packageImporterPropertiesList.toArray(new String[0]);
+                    packageImporterProperties = packageImporterPropertiesList.toArray(new String[packageImporterPropertiesList.size()]);
                     properties.put(PACKAGE_IMPORTER, packageImporterProperties);
                 }
 
@@ -161,7 +153,7 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
                     List<String> packageExporterPropertiesList = new ArrayList<String>();
                     packageExporterPropertiesList.addAll(Arrays.asList(packageExporterProperties));
                     packageExporterPropertiesList.add("type=remote");
-                    packageExporterProperties = packageExporterPropertiesList.toArray(new String[0]);
+                    packageExporterProperties = packageExporterPropertiesList.toArray(new String[packageExporterPropertiesList.size()]);
                     properties.put(PACKAGE_EXPORTER, packageExporterProperties);
                 }
 
@@ -177,7 +169,6 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
 
                     // register agent service
                     componentReg = context.registerService(ReplicationAgent.class.getName(), agent, props);
-
 
                     if (agent instanceof ReplicationComponent) {
                         ((ReplicationComponent) agent).enable();
@@ -202,7 +193,6 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
         }
 
     }
-
 
     public <ComponentType> ComponentType getComponent(Class<ComponentType> type, String componentName) {
         if (type.isAssignableFrom(ReplicationQueueProvider.class)) {
