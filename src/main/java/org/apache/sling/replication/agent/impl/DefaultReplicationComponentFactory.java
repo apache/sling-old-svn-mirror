@@ -50,6 +50,7 @@ import org.apache.sling.replication.transport.authentication.TransportAuthentica
 import org.apache.sling.replication.transport.authentication.impl.UserCredentialsTransportAuthenticationProvider;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
 import org.apache.sling.replication.trigger.impl.ChainReplicateReplicationTrigger;
+import org.apache.sling.replication.trigger.impl.JcrEventReplicationTrigger;
 import org.apache.sling.replication.trigger.impl.RemoteEventReplicationTrigger;
 import org.apache.sling.replication.trigger.impl.ResourceEventReplicationTrigger;
 import org.apache.sling.replication.trigger.impl.ScheduledReplicationTrigger;
@@ -117,7 +118,6 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
         return null;
     }
 
-
     public ReplicationAgent createAgent(Map<String, Object> properties, ReplicationComponentProvider componentProvider) {
 
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), "simple");
@@ -154,7 +154,6 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
         return null;
 
     }
-
 
     public ReplicationPackageExporter createExporter(Map<String, Object> properties, ReplicationComponentProvider componentProvider) {
 
@@ -268,6 +267,8 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
             return new ScheduledReplicationTrigger(properties, scheduler);
         } else if (ChainReplicateReplicationTrigger.TYPE.equals(factory)) {
             return new ChainReplicateReplicationTrigger(properties, bundleContext);
+        } else if (JcrEventReplicationTrigger.TYPE.equals(factory)) {
+            return new JcrEventReplicationTrigger(properties, repository);
         }
 
         return null;

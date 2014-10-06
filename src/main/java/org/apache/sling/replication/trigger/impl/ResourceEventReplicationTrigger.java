@@ -39,7 +39,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * {@link org.apache.sling.replication.trigger.ReplicationTrigger} for triggering a specific agent upon node / properties being changed under a certain path
+ * {@link org.apache.sling.replication.trigger.ReplicationTrigger} for triggering a specific handler (e.g. agent) upon
+ * node / properties being changed under a certain path
  */
 public class ResourceEventReplicationTrigger implements ReplicationTrigger, ReplicationComponent {
 
