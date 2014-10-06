@@ -105,28 +105,28 @@ public class HeartbeatHandler implements Runnable, StartupListener {
 
     /** lock object for synchronizing the run method **/
     private final Object lock = new Object();
-    
+
     /** SLING-2892: remember first heartbeat written to repository by this instance **/
     private long firstHeartbeatWritten = -1;
-    
+
     /** SLING-2892: remember the value of the heartbeat this instance has written the last time **/
     private Calendar lastHeartbeatWritten = null;
-    
+
     /** SLING-2895: avoid heartbeats after deactivation **/
     private volatile boolean activated = false;
-    
+
     /** SLING-2901: the runtimeId is a unique id, set on activation, used for robust duplicate sling.id detection **/
     private String runtimeId;
-    
+
     /** keep a reference to the component context **/
     private ComponentContext context;
-    
+
     /** SLING-2968 : start issuing remote heartbeats only after startup finished **/
     private boolean startupFinished = false;
 
     /** SLING-3382 : force ping instructs the servlet to start the backoff from scratch again **/
     private boolean forcePing;
-    
+
     public void inform(StartupMode mode, boolean finished) {
     	if (finished) {
     		startupFinished(mode);
@@ -139,16 +139,16 @@ public class HeartbeatHandler implements Runnable, StartupListener {
     		issueHeartbeat();
     	}
     }
-    
+
     public void startupProgress(float ratio) {
     	// we dont care
     }
-    
+
     @Activate
     protected void activate(ComponentContext context) {
     	synchronized(lock) {
     		this.context = context;
-    		
+
 	        slingId = slingSettingsService.getSlingId();
 	        // on activate the resetLeaderElectionId is set to true to ensure that
 	        // the 'leaderElectionId' property is reset on next heartbeat issuance.
@@ -161,7 +161,7 @@ public class HeartbeatHandler implements Runnable, StartupListener {
 	        // SLING-2895: reset variables to avoid unnecessary log.error
 	        firstHeartbeatWritten = -1;
 	        lastHeartbeatWritten = null;
-	        
+
 	        activated = true;
     	}
     }
@@ -204,10 +204,10 @@ public class HeartbeatHandler implements Runnable, StartupListener {
         		// SLING:2895: avoid heartbeats if not activated
         		return;
         	}
-        	
+
             // issue a heartbeat
             issueHeartbeat();
-    
+
             // check the view
             checkView();
         }
@@ -285,19 +285,19 @@ public class HeartbeatHandler implements Runnable, StartupListener {
             final Resource resource = ResourceHelper.getOrCreateResource(
                     resourceResolver, myClusterNodePath);
             final ModifiableValueMap resourceMap = resource.adaptTo(ModifiableValueMap.class);
-            
+
             if (firstHeartbeatWritten!=-1 && lastHeartbeatWritten!=null) {
             	// SLING-2892: additional paranoia check
             	// after the first heartbeat, check if there's someone else using
             	// the same sling.id in this cluster
-            	final long timeSinceFirstHeartbeat = 
+            	final long timeSinceFirstHeartbeat =
             			System.currentTimeMillis() - firstHeartbeatWritten;
             	if (timeSinceFirstHeartbeat > 2*config.getHeartbeatInterval()) {
             		// but wait at least 2 heartbeat intervals to handle the situation
             		// where a bundle is refreshed, and startup cases.
             		final Calendar lastHeartbeat = resourceMap.get("lastHeartbeat", Calendar.class);
             		if (lastHeartbeat!=null) {
-            			// if there is a heartbeat value, check if it is what I've written 
+            			// if there is a heartbeat value, check if it is what I've written
             			// the last time
             			if (!lastHeartbeatWritten.getTime().equals(lastHeartbeat.getTime())) {
             				// then we've likely hit the situation where there is another
@@ -313,13 +313,16 @@ public class HeartbeatHandler implements Runnable, StartupListener {
             			}
             		}
             	}
-            	
+
             	// SLING-2901 : robust paranoia check: on first heartbeat write, the
             	//              'runtimeId' is set as a property (ignoring any former value).
             	//              If in subsequent calls the value of 'runtimeId' changes, then
             	//              there is someone else around with the same slingId.
             	final String readRuntimeId = resourceMap.get("runtimeId", String.class);
-            	if (!runtimeId.equals(readRuntimeId)) {
+            	if ( readRuntimeId == null ) { // SLING-3977
+            	    // someone deleted the resource property
+            	    firstHeartbeatWritten = -1;
+            	} else if (!runtimeId.equals(readRuntimeId)) {
             		logger.error("issueClusterLocalHeartbeat: SLING-2091: Detected more than 1 instance running in this cluster " +
             				" with the same sling.id. My sling.id is "+slingId+", " +
     						" Check for sling.id.file in your installation of all instances in this cluster " +
@@ -421,7 +424,7 @@ public class HeartbeatHandler implements Runnable, StartupListener {
         }
     }
 
-    /** do the established-against-heartbeat view check using the given resourceResolver. 
+    /** do the established-against-heartbeat view check using the given resourceResolver.
      */
     private void doCheckView(final ResourceResolver resourceResolver) throws PersistenceException {
 
