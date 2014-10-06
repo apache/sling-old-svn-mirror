@@ -32,7 +32,6 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.PropertyDefinition;
 
 import org.apache.sling.api.resource.ModifiableValueMap;
@@ -281,9 +280,6 @@ public class SlingPropertyValueHandler {
                 }
             }
 
-            // TODO - we should check for session
-            final ValueFactory valFac = parent.resource.getResourceResolver().adaptTo(Session.class).getValueFactory();
-
             final boolean multiValue = isMultiValue(parent, prop, values);
             final int type = getType(parent, prop);
 
@@ -292,13 +288,17 @@ public class SlingPropertyValueHandler {
                 removeIfSingleValueProperty(parent, prop);
             }
 
-            if (type == PropertyType.DATE) {
-                if (storeAsDate(parent, prop.getName(), values, multiValue, valFac)) {
-                    return;
-                }
-            } else if (isReferencePropertyType(type)) {
-                if (storeAsReference(parent, prop.getName(), values, type, multiValue, valFac)) {
-                    return;
+            Session s = parent.resource.getResourceResolver().adaptTo(Session.class);
+            if (s != null) {
+                final ValueFactory valFac = s.getValueFactory();
+                if (type == PropertyType.DATE) {
+                    if (storeAsDate(parent, prop.getName(), values, multiValue, valFac)) {
+                        return;
+                    }
+                } else if (isReferencePropertyType(type)) {
+                    if (storeAsReference(parent, prop.getName(), values, type, multiValue, valFac)) {
+                        return;
+                    }
                 }
             }
 
