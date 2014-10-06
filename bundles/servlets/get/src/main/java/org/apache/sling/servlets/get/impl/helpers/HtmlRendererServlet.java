@@ -78,7 +78,7 @@ public class HtmlRendererServlet extends SlingSafeMethodsServlet {
             printEpilog(pw, isIncluded);
         } else {
             if ( !isIncluded ) {
-                resp.sendError(HttpServletResponse.SC_NO_CONTENT); // NO Content
+                resp.setStatus(HttpServletResponse.SC_NO_CONTENT); // NO Content
             }
         }
     }
