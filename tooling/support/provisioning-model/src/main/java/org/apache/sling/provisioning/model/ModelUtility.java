@@ -56,9 +56,11 @@ public abstract class ModelUtility {
                     final ArtifactGroup baseGroup = baseRunMode.getOrCreateArtifactGroup(group.getStartLevel());
 
                     for(final Artifact artifact : group) {
-                        final Artifact found = baseGroup.search(artifact);
-                        if ( found != null ) {
-                            baseGroup.remove(found);
+                        for(final ArtifactGroup searchGroup : baseRunMode.getArtifactGroups()) {
+                            final Artifact found = baseGroup.search(artifact);
+                            if ( found != null ) {
+                                searchGroup.remove(found);
+                            }
                         }
                         baseGroup.add(artifact);
                     }
