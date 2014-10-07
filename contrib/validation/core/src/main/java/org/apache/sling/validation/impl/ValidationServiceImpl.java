@@ -377,9 +377,13 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
             Validator validator = validatorEntry.getKey();
             Map<String, String> arguments = validatorEntry.getValue();
             try {
-                if (!validator.validate(value, arguments)) {
-                    result.addFailureMessage(property, "Property does not contain a valid value for the " + validator
-                            .getClass().getName() + " validator");
+                String validatorMessage = validator.validate(value, arguments);
+                if (validatorMessage != null) {
+                    if (validatorMessage.isEmpty()) {
+                        validatorMessage = "Property does not contain a valid value for the " + validator
+                                .getClass().getName() + " validator";
+                    } 
+                    result.addFailureMessage(property, validatorMessage);
                 }
             } catch (SlingValidationException e) {
                 LOG.error("SlingValidationException for resourceProperty " + property, e);
