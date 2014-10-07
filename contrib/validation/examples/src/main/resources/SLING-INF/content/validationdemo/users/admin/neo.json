@@ -1,0 +1,11 @@
+{
+    "jcr:primaryType":"nt:unstructured",
+    "sling:resourceType":"/apps/validationdemo/components/user",
+    "firstName":"Thomas",
+    "isAdmin":"true",
+    "lastName":"Anderson",
+    "username":"neo",
+    "token" : {
+        "jcr:primaryType":"nt:unstructured"
+    }
+}

@@ -1,0 +1,44 @@
+{
+    "jcr:primaryType": "nt:unstructured",
+    "sling:resourceType": "sling/validation/model",
+    "applicablePaths": [
+        "/content/validationdemo/users/"
+    ],
+    "validatedResourceType": "/apps/validationdemo/components/user",
+    "properties": {
+        "jcr:primaryType": "nt:unstructured",
+        "firstName": {
+            "jcr:primaryType": "nt:unstructured",
+            "propertyType": "string",
+            "validators": {
+                "jcr:primaryType": "nt:unstructured",
+                "org.apache.sling.validation.impl.validators.RegexValidator": {
+                    "jcr:primaryType": "nt:unstructured",
+                    "validatorArguments": ["regex=^\\p{L}+$"]
+                }
+            }
+        },
+        "lastName": {
+            "jcr:primaryType": "nt:unstructured",
+            "propertyType": "string",
+            "validators": {
+                "jcr:primaryType": "nt:unstructured",
+                "org.apache.sling.validation.impl.validators.RegexValidator": {
+                    "jcr:primaryType": "nt:unstructured",
+                    "validatorArguments": ["regex=^\\p{L}+$"]
+                }
+            }
+        },
+        "username": {
+            "jcr:primaryType": "nt:unstructured",
+            "propertyType": "string",
+            "validators": {
+                "jcr:primaryType": "nt:unstructured",
+                "org.apache.sling.validation.impl.validators.RegexValidator": {
+                    "jcr:primaryType": "nt:unstructured",
+                    "validatorArguments": ["regex=^[a-z.]+$"]
+                }
+            }
+        }
+    }
+}
