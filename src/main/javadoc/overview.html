@@ -1,6 +1,6 @@
 <body>
 
-<p><b>Apache Sling</b><small><sup>TM</sup></small>
+<p><b>Apache Sling &#0153;</b>
  is an innovative web framework that is intended to bring back the fun to web development.</p> 
  
 <h1>Apache Sling in five bullets points</h1> 
@@ -38,16 +38,7 @@ applications. </p>
 <h1>JavaDoc generation</h1>
 
 <p> 
-This documentation has been created from <a
-href="http://svn.apache.org/repos/asf/sling/trunk">Sling
-Trunk</a> using the Maven JavaDoc plugin as follows:
+This documentation has been created using the <a href="https://svn.apache.org/repos/asf/sling/trunk/tooling/generate_javadoc_for_release.sh">generate_javadoc_for_release.sh</a>
+script.
 </p> 
- 
-<pre> 
-$ svn export http://svn.apache.org/repos/asf/sling/trunk sling6
-$ cd sling6
-$ mvn -DexcludePackageNames="*.impl:*.internal:*.jsp:sun.misc:*.juli:*.testservices:*.integrationtest:*.maven" \
-     org.apache.maven.plugins:maven-javadoc-plugin:2.7:aggregate
-</pre> 
-
 </body>
