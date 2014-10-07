@@ -131,6 +131,7 @@
           <module>scripting/thymeleaf</module>
           <module>scripting/velocity</module>
           <module>scripting/xproc</module>
+          <module>validation</module>
           <module>launchpad/karaf</module>
           <module>launchpad/testing</module>
     </modules>
