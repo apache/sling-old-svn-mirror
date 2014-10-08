@@ -37,7 +37,7 @@ public class RegexValidator implements Validator {
     public static final String REGEX_PARAM = "regex";
 
     @Override
-    public boolean validate(String data, Map<String, String> arguments) {
+    public String validate(String data, Map<String, String> arguments) {
         if (data == null || arguments == null) {
             throw new SlingValidationException("Cannot perform data validation with null parameters");
         }
@@ -46,6 +46,9 @@ public class RegexValidator implements Validator {
             throw new SlingValidationException("Mandatory " + REGEX_PARAM + " is missing from the arguments map.");
         }
         Pattern pattern = Pattern.compile(regex);
-        return pattern.matcher(data).matches();
+        if (pattern.matcher(data).matches()) {
+            return null;
+        }
+        return "Property does not match the pattern " + regex;
     }
 }
