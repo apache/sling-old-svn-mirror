@@ -32,6 +32,7 @@ import org.apache.sling.validation.api.ValidationModel;
 import org.apache.sling.validation.api.ValidationResult;
 import org.apache.sling.validation.api.ValidationService;
 import org.apache.sling.validation.api.ValidatorLookupService;
+import org.apache.sling.validation.api.exceptions.SlingValidationException;
 import org.apache.sling.validation.impl.setup.MockedResourceResolver;
 import org.apache.sling.validation.impl.validators.RegexValidator;
 import org.junit.AfterClass;
@@ -201,7 +202,7 @@ public class ValidationServiceImplTest {
         }
     }
 
-    @Test
+    @Test(expected=SlingValidationException.class)
     public void testValueMapWithWrongDataType() throws Exception {
         when(validatorLookupService.getValidator("org.apache.sling.validation.impl.validators.RegexValidator")).thenReturn(new
                 RegexValidator());
@@ -226,11 +227,10 @@ public class ValidationServiceImplTest {
             }};
             ValueMap map = new ValueMapDecorator(hashMap);
             ValidationResult vr = validationService.validate(map, vm);
-            assertFalse(vr.isValid());
+        } finally {
             if (model1 != null) {
                 rr.delete(model1);
             }
-        } finally {
             if (rr != null) {
                 rr.commit();
                 rr.close();
