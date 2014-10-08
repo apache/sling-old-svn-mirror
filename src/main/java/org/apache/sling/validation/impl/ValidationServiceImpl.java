@@ -382,8 +382,9 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
                             .getClass().getName() + " validator");
                 }
             } catch (SlingValidationException e) {
-                LOG.error("SlingValidationException for resourceProperty " + property, e);
-                result.addFailureMessage(property, "Validator " + validator.getClass() + "encountered a problem: " + e.getMessage());
+                // wrap in another SlingValidationException to include information about the property
+                throw new SlingValidationException("Could not call validator " + validator
+                        .getClass().getName() + " for resourceProperty " + property, e);
             }
         }
     }
