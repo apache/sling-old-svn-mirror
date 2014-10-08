@@ -8,7 +8,7 @@ Getting Started
 ===============
 
 This component uses a Maven 3 (http://maven.apache.org/) build
-environment. It requires a Java 5 JDK (or higher) and Maven (http://maven.apache.org/)
+environment. It requires a Java 6 JDK (or higher) and Maven (http://maven.apache.org/)
 3.0.5 or later. We recommend to use the latest Maven version.
 
 If you have Maven 3 installed, you can compile and
@@ -38,7 +38,7 @@ The default user name and password are: admin/admin.
 Install and start the built bundle from the OSGi->Bundles page.
 
 When deployed the application can be accessed from:
-  http://localhost:8080/slingshot/albums.html
+  http://localhost:8080/slingshot.html
   
 
 The latest source code for this component is available in the
