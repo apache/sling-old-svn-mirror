@@ -279,7 +279,7 @@ public abstract class ModelUtils {
         if ( result == null ) {
             final String contents = (String)project.getContextValue(EFFECTIVE_MODEL_TXT);
             try {
-                result = ModelReader.read(new StringReader(contents), null);
+                result = ModelUtility.getEffectiveModel(ModelReader.read(new StringReader(contents), null), null);
                 project.setContextValue(EFFECTIVE_MODEL, result);
             } catch ( final IOException ioe) {
                 throw new MojoExecutionException("Unable to read cached model.", ioe);
