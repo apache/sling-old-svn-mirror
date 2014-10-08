@@ -147,7 +147,7 @@ public abstract class ModelUtility {
                 newRunMode.getConfigurations().setComment(runMode.getConfigurations().getComment());
                 newRunMode.getConfigurations().setLocation(runMode.getConfigurations().getLocation());
                 for(final Configuration config : runMode.getConfigurations()) {
-                    final Configuration newConfig = new Configuration(config.getPid(), config.getFactoryPid());
+                    final Configuration newConfig = newRunMode.getOrCreateConfiguration(config.getPid(), config.getFactoryPid());
                     newConfig.setComment(config.getComment());
                     newConfig.setLocation(config.getLocation());
 
@@ -205,8 +205,6 @@ public abstract class ModelUtility {
                             newConfig.getProperties().put(key, config.getProperties().get(key));
                         }
                     }
-
-                    newRunMode.getConfigurations().add(newConfig);
                 }
 
                 newRunMode.getSettings().setComment(runMode.getSettings().getComment());
