@@ -71,8 +71,9 @@ public class UserCredentialsTransportAuthenticationProvider implements
         if (authenticable instanceof Executor) {
             Executor executor = (Executor) authenticable;
 
-            Executor authenticated = executor.auth(new HttpHost(endpoint.getUri().getHost()),
-                    username, password);
+            Executor authenticated = executor.auth(new HttpHost(endpoint.getUri().getHost(), endpoint.getUri().getPort()),
+                    username, password).authPreemptive(
+                        new HttpHost(endpoint.getUri().getHost(), endpoint.getUri().getPort()));
             log.debug("authenticated executor HTTP client with user and password");
             return authenticated;
 
