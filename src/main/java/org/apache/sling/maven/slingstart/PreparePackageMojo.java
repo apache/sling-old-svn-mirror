@@ -441,7 +441,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
 
         final String mainName = (config.getFactoryPid() != null ? config.getFactoryPid() : config.getPid());
         final String alias = (config.getFactoryPid() != null ? "-" + config.getPid() : "");
-        return String.format("%s/%s%s/%s%s.cfg", BASE_DESTINATION, CONFIG_DIRECTORY,
+        return String.format("%s/%s%s/%s%s.config", BASE_DESTINATION, CONFIG_DIRECTORY,
                 runModeExt,
                 mainName,
                 alias);
