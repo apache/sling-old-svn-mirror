@@ -143,7 +143,7 @@ public abstract class ResourceHelper {
     
     /**
      * Filter the node name for not allowed characters and replace them.
-     * @param nodeName The suggested node name.
+     * @param resourceName The suggested resource name.
      * @return The filtered node name.
      */
     public static String filterName(final String resourceName) {
@@ -296,7 +296,8 @@ public abstract class ResourceHelper {
                         ResourceHelper.RESOURCE_TYPE_FOLDER,
                         true);
             } catch ( final PersistenceException pe ) {
-                // ignore
+                //in case of exception, revert to last clean state and retry SLING-4014
+                resolver.revert();
             }
         }
         throw new PersistenceException("Unable to create resource with path " + path);
