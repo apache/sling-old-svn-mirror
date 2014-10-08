@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.communication;
 
+import java.util.Arrays;
+
 /**
  * A replication request
  */
@@ -60,5 +62,14 @@ public class ReplicationRequest {
      */
     public String[] getPaths() {
         return paths;
+    }
+
+    @Override
+    public String toString() {
+        return "ReplicationRequest{" +
+                "time=" + time +
+                ", action=" + action +
+                ", paths=" + Arrays.toString(paths) +
+                '}';
     }
 }
