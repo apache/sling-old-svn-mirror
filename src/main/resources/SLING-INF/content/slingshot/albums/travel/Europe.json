@@ -1,6 +1,0 @@
-{
-    "jcr:primaryType":"sling:Folder",
-    "jcr:mixinTypes":["slingshot:Album"],
-    "jcr:title":"Travel Europe",
-    "jcr:description":"All travels around Europe."
-}

@@ -1,15 +1,15 @@
 {
     "jcr:primaryType":"sling:Folder",
     "ApacheCon" : {
-        "jcr:primaryType":"slingshot:Tag",
-        "jcr:description":"Photos from the ApacheCons."
+        "jcr:primaryType":"sling:Folder",
+        "description":"Photos from the ApacheCons."
     },
     "Vacation" : {
-        "jcr:primaryType":"slingshot:Tag",
-        "jcr:description":"Photos shot during vacations."
+        "jcr:primaryType":"sling:Folder",
+        "description":"Photos shot during vacations."
     },
     "Cool" : {
-        "jcr:primaryType":"slingshot:Tag",
-        "jcr:description":"Very cool photos."
+        "jcr:primaryType":"sling:Folder",
+        "description":"Very cool photos."
     }
 }

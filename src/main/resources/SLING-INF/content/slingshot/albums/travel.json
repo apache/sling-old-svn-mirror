@@ -1,6 +1,0 @@
-{
-    "jcr:primaryType":"nt:folder",
-    "jcr:mixinTypes":["slingshot:Album"],
-    "jcr:title":"Travel",
-    "jcr:description":"All travel related albums."
-}

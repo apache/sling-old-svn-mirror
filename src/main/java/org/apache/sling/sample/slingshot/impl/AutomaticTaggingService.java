@@ -32,6 +32,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.sample.slingshot.Constants;
+import org.apache.sling.sample.slingshot.SlingshotConstants;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
@@ -95,7 +96,7 @@ public class AutomaticTaggingService
                         if ( (tagsValue & 4) == 4 ) {
                             tags.add("Cool");
                         }
-                        mvm.put(Constants.PROPERTY_SLINGSHOT_TAGS, tags.toArray(new String[tags.size()]));
+                        mvm.put(SlingshotConstants.PROPERTY_TAGS, tags.toArray(new String[tags.size()]));
                         try {
                             resolver.commit();
                         } catch (final PersistenceException e) {
