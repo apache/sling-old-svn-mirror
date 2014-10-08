@@ -31,9 +31,9 @@ public interface Validator {
      * Validates the {@code data} according to the internal constraints of this validator.
      *
      * @param data the data to validate
-     * @return {@code true} if the data is valid, {@code false} otherwise
+     * @return validation error message if validation was not successfull, {@code null} otherwise. In case an empty string is returned a generic validation error message is used.
      * @throws org.apache.sling.validation.api.exceptions.SlingValidationException if the method is called with {@code null} arguments or
      * some expected arguments are missing from the arguments map
      */
-    boolean validate(String data, Map<String, String> arguments) throws SlingValidationException;
+    String validate(String data, Map<String, String> arguments) throws SlingValidationException;
 }
