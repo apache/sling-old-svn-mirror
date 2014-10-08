@@ -97,6 +97,10 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
         this.prepareWebapp(model);
     }
 
+    protected File getStandaloneOutputDirectory() {
+        return new File(this.project.getBuild().getOutputDirectory());
+    }
+
     /**
      * Prepare the global map for the artifacts.
      */
@@ -115,7 +119,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
         this.project.setContextValue(BuildConstants.CONTEXT_STANDALONE, contentsMap);
 
         // unpack base artifact and create settings
-        final File outputDir = new File(this.project.getBuild().getOutputDirectory());
+        final File outputDir = getStandaloneOutputDirectory();
         unpackBaseArtifact(model, outputDir, ModelConstants.RUN_MODE_STANDALONE);
         this.buildSettings(model, ModelConstants.RUN_MODE_STANDALONE, outputDir);
         this.buildBootstrapFile(model, ModelConstants.RUN_MODE_STANDALONE, outputDir);
