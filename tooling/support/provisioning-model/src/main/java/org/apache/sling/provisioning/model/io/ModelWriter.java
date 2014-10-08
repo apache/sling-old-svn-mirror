@@ -211,6 +211,7 @@ public class ModelWriter {
                             }
                             pw.print("    ");
                             pw.println(line.trim());
+                            pw.println();
                         }
                         pw.println();
                     }
