@@ -29,6 +29,8 @@ import java.util.TreeSet;
 import org.apache.commons.io.IOUtils;
 import org.apache.felix.cm.file.ConfigurationHandler;
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
+import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -75,6 +77,16 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
      */
     @Component
     private ArchiverManager archiverManager;
+
+    @Component
+    private ArtifactHandlerManager artifactHandlerManager;
+
+    /**
+     * Used to look up Artifacts in the remote repository.
+     *
+     */
+    @Component
+    private ArtifactResolver resolver;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -183,7 +195,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
     throws MojoExecutionException{
         for(final ArtifactGroup group : runMode.getArtifactGroups()) {
             for(final org.apache.sling.provisioning.model.Artifact a : group) {
-                final Artifact artifact = ModelUtils.getArtifact(this.project, a.getGroupId(), a.getArtifactId(), a.getVersion(), a.getType(), a.getClassifier());
+                final Artifact artifact = ModelUtils.getArtifact(this.project, this.mavenSession, this.artifactHandlerManager, this.resolver, a.getGroupId(), a.getArtifactId(), a.getVersion(), a.getType(), a.getClassifier());
                 final File artifactFile = artifact.getFile();
                 contentsMap.put(getPathForArtifact(group.getStartLevel(), artifactFile.getName(), runMode, isBoot), artifactFile);
             }
@@ -309,7 +321,8 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
     private Artifact getBaseArtifact(final Model model, final String classifier, final String type) throws MojoExecutionException {
         final org.apache.sling.provisioning.model.Artifact baseArtifact = ModelUtils.getBaseArtifact(model);
 
-        final Artifact a = ModelUtils.getArtifact(this.project, baseArtifact.getGroupId(),
+        final Artifact a = ModelUtils.getArtifact(this.project,  this.mavenSession, this.artifactHandlerManager, this.resolver,
+                baseArtifact.getGroupId(),
                 baseArtifact.getArtifactId(),
                 baseArtifact.getVersion(),
                 type,

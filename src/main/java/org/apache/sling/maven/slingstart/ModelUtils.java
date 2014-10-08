@@ -29,6 +29,12 @@ import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.DefaultArtifact;
+import org.apache.maven.artifact.handler.manager.ArtifactHandlerManager;
+import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
+import org.apache.maven.artifact.resolver.ArtifactResolutionException;
+import org.apache.maven.artifact.resolver.ArtifactResolver;
+import org.apache.maven.artifact.versioning.VersionRange;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
@@ -178,6 +184,9 @@ public abstract class ModelUtils {
      * @throws MojoExecutionException
      */
     public static Artifact getArtifact(final MavenProject project,
+            final MavenSession session,
+            final ArtifactHandlerManager artifactHandlerManager,
+            final ArtifactResolver resolver,
             final String groupId, final String artifactId, final String version, final String type, final String classifier)
     throws MojoExecutionException {
         final Set<Artifact> artifacts = project.getDependencyArtifacts();
@@ -190,7 +199,21 @@ public abstract class ModelUtils {
                 return artifact;
             }
         }
-        return null;
+        final Artifact prjArtifact = new DefaultArtifact(groupId,
+                artifactId,
+                VersionRange.createFromVersion(version),
+                Artifact.SCOPE_PROVIDED,
+                type,
+                classifier,
+                artifactHandlerManager.getArtifactHandler(type));
+        try {
+            resolver.resolve(prjArtifact, project.getRemoteArtifactRepositories(), session.getLocalRepository());
+        } catch (final ArtifactResolutionException e) {
+            throw new MojoExecutionException("Unable to get artifact for " + groupId + ":" + artifactId + ":" + version, e);
+        } catch (final ArtifactNotFoundException e) {
+            throw new MojoExecutionException("Unable to get artifact for " + groupId + ":" + artifactId + ":" + version, e);
+        }
+        return prjArtifact;
     }
 
     private static final String RAW_MODEL_TXT = Model.class.getName() + "/raw.txt";
