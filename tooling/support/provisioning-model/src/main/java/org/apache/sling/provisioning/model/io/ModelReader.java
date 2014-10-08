@@ -266,6 +266,7 @@ public class ModelReader {
                                           mode = CATEGORY.CONFIG;
                                           break;
                     case CONFIG : configBuilder.append(line);
+                                  configBuilder.append('\n');
                                   break;
                 }
             }
