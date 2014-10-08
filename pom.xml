@@ -160,7 +160,7 @@
                 </executions>
                 <configuration>
                     <defaultBundleList>
-                        <version>${project.version}</version>
+                        <version>8-SNAPSHOT</version>
                     </defaultBundleList>
                     <jarWebSupport>
                         <groupId>org.apache.felix</groupId>
