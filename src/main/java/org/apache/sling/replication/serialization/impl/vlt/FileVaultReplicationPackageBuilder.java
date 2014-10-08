@@ -42,6 +42,7 @@ import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.apache.sling.replication.serialization.impl.AbstractReplicationPackageBuilder;
+import org.apache.sling.replication.trigger.impl.JcrEventReplicationTrigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,8 +54,6 @@ import org.slf4j.LoggerFactory;
  */
 public class FileVaultReplicationPackageBuilder extends AbstractReplicationPackageBuilder implements
         ReplicationPackageBuilder {
-
-    public static final String USER_DATA = "vlt.pb.data";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -117,7 +116,7 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
     @Override
     protected Session getSession() throws RepositoryException {
         Session session = repository.loginService(subServiceName, null);
-        session.getWorkspace().getObservationManager().setUserData(USER_DATA);
+        session.getWorkspace().getObservationManager().setUserData(JcrEventReplicationTrigger.DO_NOT_REPLICATE);
         return session;
     }
 

@@ -25,11 +25,11 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import java.util.Map;
 
+import org.apache.jackrabbit.api.observation.JackrabbitEvent;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
-import org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilder;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
 import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
 import org.slf4j.Logger;
@@ -38,9 +38,11 @@ import org.slf4j.LoggerFactory;
 /**
  * A JCR observation based {@link org.apache.sling.replication.trigger.ReplicationTrigger}.
  * It filters events having {@link javax.jcr.observation.ObservationManager#setUserData(String)} set to
- * {@link org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilder#USER_DATA}
+ * {@link #DO_NOT_REPLICATE}
  */
 public class JcrEventReplicationTrigger implements ReplicationTrigger {
+
+    public static final String DO_NOT_REPLICATE = "do.not.replicate";
 
     public static final String TYPE = "jcrEvent";
 
@@ -89,17 +91,18 @@ public class JcrEventReplicationTrigger implements ReplicationTrigger {
             try {
                 while (eventIterator.hasNext()) {
                     Event event = eventIterator.nextEvent();
-                    // TODO : check for JackrabbitEvent#isExternal
-                    String userData = event.getUserData();
-                    log.info("event userData is {}", userData);
-                    if (!FileVaultReplicationPackageBuilder.USER_DATA.equals(userData)) {
-                        log.info("triggering replication from jcr event {}", event);
+                    if (event instanceof JackrabbitEvent && !((JackrabbitEvent)event).isExternal()) {
+                        String userData = event.getUserData();
+                        log.debug("event userData is {}", userData);
+                        if (!DO_NOT_REPLICATE.equals(userData)) {
+                            log.info("triggering replication from jcr event {}", event);
 
-                        Object pathProperty = event.getPath();
-                        if (pathProperty != null) {
-                            String replicatingPath = String.valueOf(pathProperty);
-                            requestHandler.handle(new ReplicationRequest(System.currentTimeMillis(), Event.NODE_MOVED ==
-                                    event.getType() ? ReplicationActionType.DELETE : ReplicationActionType.ADD, replicatingPath));
+                            Object pathProperty = event.getPath();
+                            if (pathProperty != null) {
+                                String replicatingPath = String.valueOf(pathProperty);
+                                requestHandler.handle(new ReplicationRequest(System.currentTimeMillis(), Event.NODE_MOVED ==
+                                        event.getType() ? ReplicationActionType.DELETE : ReplicationActionType.ADD, replicatingPath));
+                            }
                         }
                     }
                 }
