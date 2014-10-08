@@ -18,6 +18,17 @@
  */
 package org.apache.sling.validation.impl;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.Resource;
@@ -34,24 +45,15 @@ import org.apache.sling.validation.api.ValidationService;
 import org.apache.sling.validation.api.ValidatorLookupService;
 import org.apache.sling.validation.impl.setup.MockedResourceResolver;
 import org.apache.sling.validation.impl.validators.RegexValidator;
+import org.hamcrest.Matchers;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.powermock.reflect.Whitebox;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class ValidationServiceImplTest {
 
@@ -250,6 +252,11 @@ public class ValidationServiceImplTest {
         field.type = Type.STRING;
         field.validators.put("org.apache.sling.validation.impl.validators.RegexValidator", new String[] {"regex=^\\p{L}+$"});
         fields.add(field);
+        field.name = "field2";
+        field.type = Type.STRING;
+        final String TEST_REGEX = "^test$";
+        field.validators.put("org.apache.sling.validation.impl.validators.RegexValidator", new String[] {"regex="+TEST_REGEX});
+        fields.add(field);
         ResourceResolver rr = rrf.getAdministrativeResourceResolver(null);
         Resource model1 = null;
         try {
@@ -260,10 +267,15 @@ public class ValidationServiceImplTest {
             ValidationModel vm = validationService.getValidationModel("sling/validation/test", "/apps/validation/1/resource");
             HashMap<String, Object> hashMap = new HashMap<String, Object>() {{
                 put("field1", "HelloWorld");
+                put("field2", "HelloWorld");
             }};
             ValueMap map = new ValueMapDecorator(hashMap);
             ValidationResult vr = validationService.validate(map, vm);
-            assertTrue(vr.isValid());
+            assertFalse(vr.isValid());
+            // check for correct error message
+            Map<String, List<String>> expectedFailureMessages = new HashMap<String, List<String>>();
+            expectedFailureMessages.put("field2", Arrays.asList("Property does not match the pattern " + TEST_REGEX));
+            Assert.assertThat(vr.getFailureMessages().entrySet(), Matchers.equalTo(expectedFailureMessages.entrySet()));
             if (model1 != null) {
                 rr.delete(model1);
             }
