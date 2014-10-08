@@ -18,9 +18,12 @@
  */
 package org.apache.sling.validation.api;
 
+import java.util.Map;
+
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.validation.api.exceptions.SlingValidationException;
 
 /**
  * The {@code ValidationService} provides methods for finding {@link ValidationModel} services.
@@ -52,8 +55,9 @@ public interface ValidationService {
      * @param resource the resource to validate
      * @param model    the model with which to perform the validation
      * @return a {@link ValidationResult} that provides the necessary information
+     * @throws org.apache.sling.validation.api.exceptions.SlingValidationException if one validator was called with invalid arguments
      */
-    ValidationResult validate(Resource resource, ValidationModel model);
+    ValidationResult validate(Resource resource, ValidationModel model) throws SlingValidationException;
 
     /**
      * Validates a {@link ValueMap} or any object adaptable to a {@code ValueMap} using a specific {@link ValidationModel}. Since the
@@ -62,6 +66,7 @@ public interface ValidationService {
      *
      * @param valueMap the map to validate
      * @return a {@link ValidationResult} that provides the necessary information
+     * @throws org.apache.sling.validation.api.exceptions.SlingValidationException if one validator was called with invalid arguments
      */
-    ValidationResult validate(ValueMap valueMap, ValidationModel model);
+    ValidationResult validate(ValueMap valueMap, ValidationModel model) throws SlingValidationException;
 }
