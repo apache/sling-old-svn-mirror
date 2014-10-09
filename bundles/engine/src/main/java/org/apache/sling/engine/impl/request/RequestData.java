@@ -47,15 +47,17 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
-import org.apache.sling.engine.impl.StaticResponseHeader;
 import org.apache.sling.engine.impl.SlingHttpServletRequestImpl;
 import org.apache.sling.engine.impl.SlingHttpServletRequestImpl3;
 import org.apache.sling.engine.impl.SlingHttpServletResponseImpl;
 import org.apache.sling.engine.impl.SlingMainServlet;
 import org.apache.sling.engine.impl.SlingRequestProcessorImpl;
+import org.apache.sling.engine.impl.StaticResponseHeader;
 import org.apache.sling.engine.impl.adapter.SlingServletRequestAdapter;
 import org.apache.sling.engine.impl.adapter.SlingServletResponseAdapter;
 import org.apache.sling.engine.impl.parameters.ParameterSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>RequestData</code> class provides access to objects which are set
@@ -71,6 +73,9 @@ import org.apache.sling.engine.impl.parameters.ParameterSupport;
  * @see ContentData
  */
 public class RequestData {
+
+    /** default log */
+    private final Logger log = LoggerFactory.getLogger(RequestData.class);
 
     /**
      * The default value for the number of recursive inclusions for a single
@@ -107,10 +112,15 @@ public class RequestData {
      */
     private static int maxCallCounter = DEFAULT_MAX_CALL_COUNTER;
 
+    /**
+     * The name of the request attribute to override the max call number (-1 for infinite or integer value).
+     */
+    private static String REQUEST_MAX_CALL_OVERRIDE = SlingMainServlet.PROP_MAX_CALL_COUNTER;
+
     private static SlingMainServlet SLING_MAIN_SERVLET;
 
     private static SlingHttpServletRequestFactory REQUEST_FACTORY;
-    
+
     private static ArrayList<StaticResponseHeader> ADDITIONAL_RESPONSE_HEADERS;
 
     /** The SlingMainServlet used for request dispatching and other stuff */
@@ -184,11 +194,11 @@ public class RequestData {
         RequestData.SLING_MAIN_SERVLET = slingMainServlet;
         RequestData.REQUEST_FACTORY = null;
     }
-    
+
     public static void setAdditionalResponseHeaders(ArrayList<StaticResponseHeader> mappings){
         RequestData.ADDITIONAL_RESPONSE_HEADERS = mappings;
-    }    
-    
+    }
+
     public static ArrayList<StaticResponseHeader> getAdditionalResponseHeaders() {
         return ADDITIONAL_RESPONSE_HEADERS;
     }
@@ -503,7 +513,7 @@ public class RequestData {
             String name = RequestUtil.getServletName(servlet);
 
             // verify the number of service calls in this request
-            if (requestData.servletCallCounter >= maxCallCounter) {
+            if (requestData.hasServletMaxCallCount(request)) {
                 throw new TooManyCallsException(name);
             }
 
@@ -572,6 +582,32 @@ public class RequestData {
 
     public int getServletCallCount() {
         return servletCallCounter;
+    }
+
+    /**
+     * Returns {@code true} if the number of {@code RequestDispatcher.include}
+     * calls has been reached within the given request. That maximum number may
+     * either be defined by the {@link #REQUEST_MAX_CALL_OVERRIDE} request
+     * attribute or the {@link SlingMainServlet#PROP_MAX_CALL_COUNTER}
+     * configuration of the {@link SlingMainServlet}.
+     *
+     * @param request The request to check
+     * @return {@code true} if the maximum number of calls has been reached (or
+     *         surpassed)
+     */
+    private boolean hasServletMaxCallCount(final ServletRequest request) {
+        // verify the number of service calls in this request
+        log.debug("Servlet call counter : {}", getServletCallCount());
+
+        // max number of calls can be overriden with a request attribute (-1 for
+        // infinite or integer value)
+        int maxCallCounter = RequestData.getMaxCallCounter();
+        Object reqMaxOverride = request.getAttribute(REQUEST_MAX_CALL_OVERRIDE);
+        if (reqMaxOverride instanceof Number) {
+            maxCallCounter = ((Number) reqMaxOverride).intValue();
+        }
+
+        return (maxCallCounter >= 0) && getServletCallCount() >= maxCallCounter;
     }
 
     public long getElapsedTimeMsec() {
