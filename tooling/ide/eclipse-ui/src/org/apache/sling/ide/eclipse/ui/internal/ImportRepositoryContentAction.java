@@ -392,7 +392,11 @@ public class ImportRepositoryContentAction {
      */
     private IPath getPathForPlainFileNode(ResourceProxy resource, IPath serializationFolderPath) {
 
-        return serializationFolderPath.removeLastSegments(1).append(Text.getName(resource.getPath()));
+        // TODO - can we just use the serializationFolderPath ?
+
+        String name = serializationManager.getOsPath(Text.getName(resource.getPath()));
+
+        return serializationFolderPath.removeLastSegments(1).append(name);
     }
 
     private void parseIgnoreFiles(IFolder folder, String path) throws IOException, CoreException {
