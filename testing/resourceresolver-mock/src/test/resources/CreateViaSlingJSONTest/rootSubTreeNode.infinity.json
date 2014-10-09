@@ -1,0 +1,44 @@
+{
+    "hasChildNodes": {
+        "jcr:primaryType": "nt:unstructured",
+        "one": {
+            "jcr:primaryType": "nt:unstructured",
+            "two": {
+                "jcr:primaryType": "nt:unstructured",
+                "three": {
+                    "jcr:primaryType": "nt:unstructured"
+                }
+            }
+        },
+        "one_sibling": {
+            "jcr:primaryType": "nt:unstructured"
+        }
+    },
+    "hasChildNodesToo": {
+        "jcr:primaryType": "nt:unstructured",
+        "one": {
+            "jcr:primaryType": "nt:unstructured"
+        },
+        "one_1": {
+            "jcr:primaryType": "nt:unstructured"
+        },
+        "one_2": {
+            "jcr:primaryType": "nt:unstructured"
+        }
+    },
+    "jcr:primaryType": "nt:unstructured",
+    "multiValueProperties": {
+        "jcr:primaryType": "nt:unstructured",
+        "string": [
+            "one",
+            "2",
+            "three"
+        ]
+    },
+    "simplePropertyValues": {
+        "boolean": true,
+        "double": 1211113123,
+        "jcr:primaryType": "nt:unstructured",
+        "string": "stringValue"
+    }
+}
