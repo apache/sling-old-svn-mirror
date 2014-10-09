@@ -92,14 +92,24 @@ public class ResourceChangeCommandFactory {
 
         ResourceAndInfo rai = buildResourceAndInfo(resource, repository);
         
-        if ( rai == null ) {
+        if (rai == null) {
             return null;
         }
 
         return repository.newAddOrUpdateNodeCommand(rai.getInfo(), rai.getResource());
     }
 
-    private ResourceAndInfo buildResourceAndInfo(IResource resource, Repository repository) throws CoreException,
+    /**
+     * Convenience method which builds a <tt>ResourceAndInfo</tt> info for a specific <tt>IResource</tt>
+     * 
+     * @param resource the resource to process
+     * @param repository the repository, used to extract serialization information for different resource types
+     * @return the build object, or null if one could not be built
+     * @throws CoreException
+     * @throws SerializationException
+     * @throws IOException
+     */
+    public ResourceAndInfo buildResourceAndInfo(IResource resource, Repository repository) throws CoreException,
             SerializationException, IOException {
         if (ignoredFileNames.contains(resource.getName())) {
             return null;
@@ -550,24 +560,6 @@ public class ResourceChangeCommandFactory {
         } catch (IOException e) {
             throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, "Failed reordering child nodes for "
                     + res, e));
-        }
-    }
-
-    private static class ResourceAndInfo {
-        private final ResourceProxy resource;
-        private final FileInfo info;
-
-        public ResourceAndInfo(ResourceProxy resource, FileInfo info) {
-            this.resource = resource;
-            this.info = info;
-        }
-
-        public ResourceProxy getResource() {
-            return resource;
-        }
-
-        public FileInfo getInfo() {
-            return info;
         }
     }
 }
