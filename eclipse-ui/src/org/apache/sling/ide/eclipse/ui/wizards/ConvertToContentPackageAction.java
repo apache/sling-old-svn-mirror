@@ -166,6 +166,7 @@ public class ConvertToContentPackageAction implements IObjectActionDelegate {
                                             "jcr_root not found under "
                                                     + container
                                                     + " (or not a Folder)");
+                                    return;
                                 }
                                 ConfigurationHelper
                                         .convertToContentPackageProject(
