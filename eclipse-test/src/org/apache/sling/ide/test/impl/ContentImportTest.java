@@ -421,6 +421,35 @@ public class ContentImportTest {
         
     }
     
+    @Test
+    public void importFileWithNamespacedName() throws Exception {
+
+        RepositoryAccessor repo = new RepositoryAccessor(config);
+
+        // create faceted project
+        IProject contentProject = projectRule.getProject();
+
+        ProjectAdapter project = new ProjectAdapter(contentProject);
+        project.addNatures(JavaCore.NATURE_ID, "org.eclipse.wst.common.project.facet.core.nature");
+
+        // install bundle facet
+        project.installFacet("sling.content", "1.0");
+
+        wstServer.waitForServerToStart();
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
+
+        project.createVltFilterWithRoots("/content/test-root");
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/hello.txt"),
+                new ByteArrayInputStream("hello, world".getBytes()));
+
+        repo.createFile("/content/test-root/sling:file", "some_content".getBytes());
+
+        runImport(contentProject);
+
+        assertThat(contentProject, hasFile("jcr_root/content/test-root/_sling_file"));
+    }
 
     @Before
     public void setUp() throws Exception {
