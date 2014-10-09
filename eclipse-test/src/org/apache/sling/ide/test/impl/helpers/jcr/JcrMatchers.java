@@ -46,6 +46,10 @@ public final class JcrMatchers {
         return new PropertyMatcher(propertyName, propertyValue);
     }
 
+    public static Matcher<Node> hasFileContent(String value) {
+        return new NtFileContentMatcher(value);
+    }
+
     private JcrMatchers() {
 
     }
