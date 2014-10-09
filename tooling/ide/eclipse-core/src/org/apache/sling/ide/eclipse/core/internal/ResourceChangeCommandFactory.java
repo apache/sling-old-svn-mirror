@@ -207,8 +207,19 @@ public class ResourceChangeCommandFactory {
         return info;
     }
 
-    private FilterResult getFilterResult(IResource resource, Filter filter, File contentSyncRoot, IFolder syncFolder) throws SerializationException {
+    private FilterResult getFilterResult(IResource resource, Filter filter) throws SerializationException {
 
+        File contentSyncRoot = ProjectUtil.getSyncDirectoryFile(resource.getProject());
+
+        String repositoryPath = getRepositoryPathForDeletedResource(resource, contentSyncRoot);
+
+        Activator.getDefault().getPluginLogger().trace("Filtering by {0} for {1}", repositoryPath, resource);
+
+        return filter.filter(contentSyncRoot, repositoryPath);
+    }
+
+    private String getRepositoryPathForDeletedResource(IResource resource, File contentSyncRoot) {
+        IFolder syncFolder = ProjectUtil.getSyncDirectory(resource.getProject());
         IPath relativePath = resource.getFullPath().makeRelativeTo(syncFolder.getFullPath());
 
         String absFilePath = new File(contentSyncRoot, relativePath.toOSString()).getAbsolutePath();
@@ -216,11 +227,12 @@ public class ResourceChangeCommandFactory {
 
         IPath osPath = Path.fromOSString(filePath);
         String repositoryPath = serializationManager.getRepositoryPath(osPath.makeRelativeTo(syncFolder.getLocation())
-                .toPortableString());
+                .makeAbsolute().toPortableString());
 
-        Activator.getDefault().getPluginLogger().trace("Filtering by {0} for {1}", repositoryPath, resource);
+        Activator.getDefault().getPluginLogger()
+                .trace("Repository path for deleted resource {0} is {1}", resource, repositoryPath);
 
-        return filter.filter(contentSyncRoot, repositoryPath);
+        return repositoryPath;
     }
 
     private boolean isFiltered(Filter filter, ResourceProxy resourceProxy, IResource resource) {
@@ -487,20 +499,18 @@ public class ResourceChangeCommandFactory {
         }
 
         IFolder syncDirectory = ProjectUtil.getSyncDirectory(resource.getProject());
-        File syncDirectoryAsFile = ProjectUtil.getSyncDirectoryFile(resource.getProject());
-        final IFolder syncFolder = syncDirectory;
 
-        Filter filter = ProjectUtil.loadFilter(syncFolder.getProject());
+        Filter filter = ProjectUtil.loadFilter(syncDirectory.getProject());
 
         if (filter != null) {
-            FilterResult filterResult = getFilterResult(resource, filter, syncDirectoryAsFile, syncDirectory);
+            FilterResult filterResult = getFilterResult(resource, filter);
             if (filterResult == FilterResult.DENY || filterResult == FilterResult.PREREQUISITE) {
                 return null;
             }
         }
         
-        String resourceLocation = '/' + resource.getFullPath().makeRelativeTo(syncDirectory.getFullPath())
-                .toPortableString();
+        String resourceLocation = getRepositoryPathForDeletedResource(resource,
+                ProjectUtil.getSyncDirectoryFile(resource.getProject()));
         
         // make sure that a 'plain' folder being deleted does not signal that the content structure
         // was rearranged under a covering parent aggregate
