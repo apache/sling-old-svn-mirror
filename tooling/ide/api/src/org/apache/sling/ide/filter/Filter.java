@@ -21,9 +21,11 @@ import java.io.File;
 public interface Filter {
 
     /**
+     * Returns the result of filtering, i.e. whether a resource should be included in synchronization calls with the
+     * repository
      * 
-     * @param relativeFilePath a relative path
-     * @return the filter result
+     * @param path a path in repository format
+     * @return the filter result, never <code>null</code>
      */
-    FilterResult filter(File contentSyncRoot, String relativeFilePath);
+    FilterResult filter(File contentSyncRoot, String path);
 }
