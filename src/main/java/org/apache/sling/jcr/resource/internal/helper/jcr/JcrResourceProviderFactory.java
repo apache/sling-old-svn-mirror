@@ -410,32 +410,38 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
      * @return A credentials object or <code>null</code>
      */
     private Credentials getCredentials(final Map<String, Object> authenticationInfo) {
-        if (authenticationInfo == null) {
-            return null;
+
+        Credentials creds = null;
+        if (authenticationInfo != null) {
+
+            final Object credentialsObject = authenticationInfo.get(JcrResourceConstants.AUTHENTICATION_INFO_CREDENTIALS);
+
+            if (credentialsObject instanceof Credentials) {
+                creds = (Credentials) credentialsObject;
+            } else {
+                // otherwise try to create SimpleCredentials if the userId is set
+                final Object userId = authenticationInfo.get(ResourceResolverFactory.USER);
+                if (userId instanceof String) {
+                    final Object password = authenticationInfo.get(ResourceResolverFactory.PASSWORD);
+                    final SimpleCredentials credentials = new SimpleCredentials(
+                            (String) userId, ((password instanceof char[])
+                            ? (char[]) password
+                            : new char[0]));
+
+                    // add attributes
+                    copyAttributes(credentials, authenticationInfo);
+
+                    creds = credentials;
+                }
+            }
         }
 
-        final Object credentialsObject = authenticationInfo.get(JcrResourceConstants.AUTHENTICATION_INFO_CREDENTIALS);
-        if (credentialsObject instanceof Credentials) {
-            return (Credentials) credentialsObject;
+        if (creds instanceof SimpleCredentials
+                && authenticationInfo.get(ResourceResolverFactory.NEW_PASSWORD) instanceof String) {
+            ((SimpleCredentials) creds).setAttribute(ResourceResolverFactory.NEW_PASSWORD, authenticationInfo.get(ResourceResolverFactory.NEW_PASSWORD));
         }
 
-        // otherwise try to create SimpleCredentials if the userId is set
-        final Object userId = authenticationInfo.get(ResourceResolverFactory.USER);
-        if (userId instanceof String) {
-            final Object password = authenticationInfo.get(ResourceResolverFactory.PASSWORD);
-            final SimpleCredentials credentials = new SimpleCredentials(
-                (String) userId, ((password instanceof char[])
-                        ? (char[]) password
-                        : new char[0]));
-
-            // add attributes
-            copyAttributes(credentials, authenticationInfo);
-
-            return credentials;
-        }
-
-        // no user id (or not a String)
-        return null;
+        return creds;
     }
 
     /**
