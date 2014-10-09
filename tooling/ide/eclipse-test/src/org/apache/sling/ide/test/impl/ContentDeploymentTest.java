@@ -17,6 +17,7 @@
 package org.apache.sling.ide.test.impl;
 
 import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasChildrenCount;
+import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasFileContent;
 import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasPath;
 import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasPrimaryType;
 import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasPropertyValue;
@@ -49,7 +50,6 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
 import org.hamcrest.Matcher;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -235,8 +235,13 @@ public class ContentDeploymentTest {
 
     }
 
+    /**
+     * This test validates that if the parent of a resource that does not exist in the repository the resource is
+     * successfully created
+     * 
+     * @throws Exception
+     */
     @Test
-    @Ignore("SLING-3586")
     public void deployFileWithMissingParentFromRepository() throws Exception {
 
         wstServer.waitForServerToStart();
@@ -254,7 +259,7 @@ public class ContentDeploymentTest {
         server.installModule(contentProject);
 
         // create filter.xml
-        project.createVltFilterWithRoots("/test/demo/nested/structure");
+        project.createVltFilterWithRoots("/test");
         // create file
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/demo/nested/structure/hello.txt"),
                 new ByteArrayInputStream("hello, world".getBytes()));
@@ -267,7 +272,7 @@ public class ContentDeploymentTest {
             public Node call() throws RepositoryException {
                 return repo.getNode("/test/demo/nested/structure/hello.txt");
             }
-        }, nullValue(Node.class));
+        }, hasFileContent("hello, world"));
     }
 
     private void assertThatNode(final RepositoryAccessor repo, Poller poller, final String nodePath, Matcher<Node> matcher)
