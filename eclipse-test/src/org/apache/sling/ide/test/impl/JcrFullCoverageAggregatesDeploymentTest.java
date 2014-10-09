@@ -22,6 +22,7 @@ import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasMixinTyp
 import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasPath;
 import static org.apache.sling.ide.test.impl.helpers.jcr.JcrMatchers.hasPrimaryType;
 import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.equalTo;
 
 import java.io.InputStream;
 import java.util.concurrent.Callable;
@@ -297,6 +298,56 @@ public class JcrFullCoverageAggregatesDeploymentTest {
 
             }
         }, postConditions);
+    }
+
+    @Test
+    public void deleteFullCoverageAggregate() throws Exception {
+
+        wstServer.waitForServerToStart();
+
+        // create faceted project
+        IProject contentProject = projectRule.getProject();
+
+        ProjectAdapter project = new ProjectAdapter(contentProject);
+        project.addNatures("org.eclipse.wst.common.project.facet.core.nature");
+
+        // install content facet
+        project.installFacet("sling.content", "1.0");
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
+        
+        final String baseName = "com.example.some.Component";
+
+        // create .content.xml structure
+        InputStream contentXml = getClass().getResourceAsStream(baseName + ".xml");
+        project.createOrUpdateFile(
+                Path.fromPortableString("jcr_root/content/test-root/" + baseName + ".xml"), contentXml);
+
+        Matcher<Node> postConditions = allOf(hasPath("/content/test-root/" + baseName),
+                hasPrimaryType("sling:OsgiConfig"));
+
+        final RepositoryAccessor repo = new RepositoryAccessor(config);
+        Poller poller = new Poller();
+        poller.pollUntil(new Callable<Node>() {
+            @Override
+            public Node call() throws RepositoryException {
+                return repo.getNode("/content/test-root/" + baseName);
+
+            }
+        }, postConditions);
+
+        // Remove file from disk
+        project.deleteMember(Path.fromPortableString("jcr_root/content/test-root/" + baseName + ".xml"));
+
+        // poll until the node no longer exists
+        poller.pollUntil(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws RepositoryException {
+                return repo.hasNode("/content/test-root/" + baseName);
+
+            }
+        }, equalTo(false));
     }
 
     @After
