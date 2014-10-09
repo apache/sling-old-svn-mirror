@@ -419,8 +419,11 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                         case IModuleResourceDelta.NO_CHANGE: // TODO is this needed?
                             ensureParentIsPublished(resourceDelta.getModuleResource(), repository, allResources,
                                     publishedResources, handledPaths);
-                            execute(addFileCommand(repository, resourceDelta.getModuleResource()));
-                            addedOrUpdatedResources.add(resourceDelta.getModuleResource());
+                            Command<?> command = addFileCommand(repository, resourceDelta.getModuleResource());
+                            execute(command);
+                            if (command != null) {
+                                addedOrUpdatedResources.add(resourceDelta.getModuleResource());
+                            }
                             break;
                         case IModuleResourceDelta.REMOVED:
                             execute(removeFileCommand(repository, resourceDelta.getModuleResource()));
@@ -432,8 +435,11 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
             case ServerBehaviourDelegate.ADDED:
             case ServerBehaviourDelegate.NO_CHANGE: // TODO is this correct ?
                 for (IModuleResource resource : getResources(module)) {
-                    execute(addFileCommand(repository, resource));
-                    addedOrUpdatedResources.add(resource);
+                    Command<?> command = addFileCommand(repository, resource);
+                    execute(command);
+                    if (command != null) {
+                        addedOrUpdatedResources.add(resource);
+                    }
                 }
                 break;
             case ServerBehaviourDelegate.REMOVED:
