@@ -110,7 +110,12 @@ public class ModelReader {
 
             // comment?
             if ( line.startsWith("#") ) {
-                checkConfig();
+                if ( config != null ) {
+                    configBuilder.append(line);
+                    configBuilder.append('\n');
+
+                    continue;
+                }
                 final String c = line.substring(1).trim();
                 if ( comment == null ) {
                     comment = c;

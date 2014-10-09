@@ -18,6 +18,7 @@ package org.apache.sling.provisioning.model;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.LineNumberReader;
 import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Dictionary;
@@ -174,9 +175,26 @@ public abstract class ModelUtility {
                                 }
                             } else {
                                 // Apache Felix CA format
+                                // the raw format might have comments, we have to remove them first
+                                final StringBuilder sb = new StringBuilder();
+                                try {
+                                    final LineNumberReader lnr = new LineNumberReader(new StringReader(rawConfig));
+                                    String line = null;
+                                    while ((line = lnr.readLine()) != null ) {
+                                        line = line.trim();
+                                        if ( line.isEmpty() || line.startsWith("#")) {
+                                            continue;
+                                        }
+                                        sb.append(line);
+                                        sb.append('\n');
+                                    }
+                                } catch ( final IOException ioe) {
+                                    throw new IllegalArgumentException("Unable to read configuration properties: " + config, ioe);
+                                }
+
                                 ByteArrayInputStream bais = null;
                                 try {
-                                    bais = new ByteArrayInputStream(rawConfig.getBytes("UTF-8"));
+                                    bais = new ByteArrayInputStream(sb.toString().getBytes("UTF-8"));
                                     @SuppressWarnings("unchecked")
                                     final Dictionary<String, Object> props = ConfigurationHandler.read(bais);
                                     final Enumeration<String> i = props.keys();
