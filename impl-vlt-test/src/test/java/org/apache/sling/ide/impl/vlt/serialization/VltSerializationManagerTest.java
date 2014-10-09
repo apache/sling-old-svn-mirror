@@ -71,7 +71,7 @@ public class VltSerializationManagerTest {
 
         File current = parent;
         for (String segment : segments) {
-            current = new File(parent, segment);
+            current = new File(current, segment);
         }
         return current;
     }
@@ -134,5 +134,13 @@ public class VltSerializationManagerTest {
     @Test
     public void getRepositoryPath_SerializationDir() {
         assertThat(serializationManager.getRepositoryPath("/content/test.dir/file"), is("/content/test/file"));
+    }
+
+    @Test
+    public void getBaseResourcePath_MissingXmlFile() {
+        File f = newFile(findFilesystemRoot(), "apps", "sling", "servlet", "default", "config.xml");
+
+        assertThat(serializationManager.getBaseResourcePath(f.getAbsolutePath()),
+                is(f.getAbsolutePath().replace(".xml", "")));
     }
 }

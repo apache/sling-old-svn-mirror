@@ -128,6 +128,12 @@ public class VltSerializationManager implements SerializationManager {
             return file.getAbsolutePath();
         }
 
+        // assume that delete file with the xml extension is a full serialization aggregate
+        // TODO - this can generate false results
+        if (!file.exists()) {
+            return getPathWithoutXmlExtension(file);
+        }
+
         // TODO - refrain from doing I/O here
         // TODO - copied from TransactionImpl
         InputStream in = null;
@@ -135,7 +141,7 @@ public class VltSerializationManager implements SerializationManager {
             in = new BufferedInputStream(new FileInputStream(file));
             SerializationType serType = XmlAnalyzer.analyze(new InputSource(in));
             if (serType == SerializationType.XML_DOCVIEW) {
-                return file.getAbsolutePath().substring(0, file.getAbsolutePath().length() - EXTENSION_XML.length());
+                return getPathWithoutXmlExtension(file);
             }
 
             return file.getAbsolutePath();
@@ -144,6 +150,10 @@ public class VltSerializationManager implements SerializationManager {
         } finally {
             IOUtils.closeQuietly(in);
         }
+    }
+
+    private String getPathWithoutXmlExtension(File file) {
+        return file.getAbsolutePath().substring(0, file.getAbsolutePath().length() - EXTENSION_XML.length());
     }
 
     @Override
