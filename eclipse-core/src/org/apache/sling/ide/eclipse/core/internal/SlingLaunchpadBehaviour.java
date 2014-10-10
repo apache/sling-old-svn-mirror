@@ -416,13 +416,14 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                         case IModuleResourceDelta.ADDED:
                         case IModuleResourceDelta.CHANGED:
                         case IModuleResourceDelta.NO_CHANGE: // TODO is this needed?
-                            ensureParentIsPublished(resourceDelta.getModuleResource(), repository, allResources,
-                                    handledPaths);
                             Command<?> command = addFileCommand(repository, resourceDelta.getModuleResource());
-                            execute(command);
+
                             if (command != null) {
+                                ensureParentIsPublished(resourceDelta.getModuleResource(), repository, allResources,
+                                        handledPaths);
                                 addedOrUpdatedResources.add(resourceDelta.getModuleResource());
                             }
+                            execute(command);
                             break;
                         case IModuleResourceDelta.REMOVED:
                             execute(removeFileCommand(repository, resourceDelta.getModuleResource()));
