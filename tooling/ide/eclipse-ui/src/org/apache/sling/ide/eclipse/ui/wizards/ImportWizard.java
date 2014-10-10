@@ -26,10 +26,15 @@ import org.apache.sling.ide.serialization.SerializationException;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.resources.IWorkspaceRunnable;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
@@ -71,24 +76,42 @@ public class ImportWizard extends Wizard implements IImportWizard {
         IResource resource = mainPage.getResource();
         final IProject project = resource.getProject();
         final IPath projectRelativePath = resource.getProjectRelativePath();
-        IRunnableWithProgress runnable = new IRunnableWithProgress() {
-            @Override
-            public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
-
-                try {
-                    new ImportRepositoryContentAction(server, projectRelativePath, project, serializationManager).run(monitor);
-                } catch (SerializationException e) {
-                    throw new InvocationTargetException(e);
-                } catch (CoreException e) {
-                    throw new InvocationTargetException(e);
-                } finally {
-                    serializationManager.destroy();
-                }
-            }
-        };
 
         try {
-            getContainer().run(true, true, runnable);
+            getContainer().run(true, true, new IRunnableWithProgress() {
+
+                @Override
+                public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
+                    // wrap the import action in a IWorkspaceRunnable to make sure that changes are only
+                    // published once at the end. This is especially important since the import action
+                    // sets persistent properties on the modified resources to avoid them being published
+                    // following this change ( see org.apache.sling.ide.core.ResourceUtil )
+                    try {
+                        ResourcesPlugin.getWorkspace().run(new IWorkspaceRunnable() {
+
+                            @Override
+                            public void run(IProgressMonitor monitor) throws CoreException {
+                                try {
+                                    new ImportRepositoryContentAction(server, projectRelativePath, project,
+                                            serializationManager).run(monitor);
+                                } catch (SerializationException e) {
+                                    throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
+                                            "Import failed", e));
+                                } catch (InvocationTargetException e) {
+                                    throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
+                                            "Import failed", e.getCause()));
+                                } catch (InterruptedException e) {
+                                    Thread.currentThread().interrupt();
+                                } finally {
+                                    serializationManager.destroy();
+                                }
+                            }
+                        }, project, IWorkspace.AVOID_UPDATE, monitor);
+                    } catch (CoreException e) {
+                        throw new InvocationTargetException(e);
+                    }
+                }
+            });
         } catch (InvocationTargetException e) {
             Throwable cause = e.getCause();
             mainPage.setErrorMessage("Import error : " + cause.getMessage()
@@ -96,7 +119,8 @@ public class ImportWizard extends Wizard implements IImportWizard {
             Activator.getDefault().getPluginLogger().error("Repository import failed", cause);
             return false;
         } catch (OperationCanceledException e) {
-            System.out.println("Here");
+            Thread.currentThread().interrupt();
+            return false;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return false;

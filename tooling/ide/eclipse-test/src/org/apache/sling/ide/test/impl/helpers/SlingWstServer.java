@@ -86,7 +86,6 @@ public class SlingWstServer extends ExternalResource {
         wc.setAttribute(ISlingLaunchpadServer.PROP_CONTEXT_PATH, config.getContextPath());
         wc.setAttribute(ISlingLaunchpadServer.PROP_USERNAME, config.getUsername());
         wc.setAttribute(ISlingLaunchpadServer.PROP_PASSWORD, config.getPassword());
-        wc.setAttribute("auto-publish-setting", ISlingLaunchpadServer.PUBLISH_STATE_RESOURCE_CHANGE);
         wc.setAttribute("auto-publish-time", 0);
 
         server = wc.save(true, new NullProgressMonitor());
