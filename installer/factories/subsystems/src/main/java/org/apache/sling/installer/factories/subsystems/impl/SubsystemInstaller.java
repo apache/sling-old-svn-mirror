@@ -186,8 +186,10 @@ public class SubsystemInstaller
                         if (compare < 0) {
                             // installed version is lower -> update
                             result = new UpdateSubsystemTask(toActivate, this.bundleContext, ref, this.rootSubsystem);
+                        } else if ( compare == 0 && isSnapshot(newVersion) ) {
+                            // same version but snapshot -> update
+                            result = new UpdateSubsystemTask(toActivate, this.bundleContext, ref, this.rootSubsystem);
                         } else {
-                            // TODO - support SNAPSHOT?
                             logger.debug("{} is not installed, subsystem with same or higher version is already installed: {}", info, newVersion);
                             result = new ChangeStateTask(toActivate, ResourceState.IGNORED);
                         }
@@ -302,5 +304,14 @@ public class SubsystemInstaller
             // ignore
         }
         return null;
+    }
+
+    private static final String MAVEN_SNAPSHOT_MARKER = "SNAPSHOT";
+
+    /**
+     * Check if the version is a snapshot version
+     */
+    public static boolean isSnapshot(final Version v) {
+        return v.toString().indexOf(MAVEN_SNAPSHOT_MARKER) >= 0;
     }
 }

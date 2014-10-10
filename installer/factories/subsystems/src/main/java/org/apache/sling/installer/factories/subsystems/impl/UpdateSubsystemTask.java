@@ -57,6 +57,7 @@ public class UpdateSubsystemTask extends InstallTask {
         try {
             subsystem = this.bundleContext.getService(this.subsystemReference);
             if ( subsystem != null ) {
+                subsystem.stop();
                 subsystem.uninstall();
                 ctx.addTaskToCurrentCycle(new InstallSubsystemTask(this.getResourceGroup(), this.rootSubsystem));
             } else {
