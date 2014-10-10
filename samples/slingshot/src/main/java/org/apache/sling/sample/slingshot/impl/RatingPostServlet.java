@@ -26,6 +26,7 @@ import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
@@ -52,14 +53,16 @@ public class RatingPostServlet extends SlingAllMethodsServlet {
 
         final String userId = request.getRemoteUser();
 
-        logger.info("New rating from {} : {}", userId, rating);
+        logger.debug("New rating from {} : {}", userId, rating);
 
-        // save comment
+        // save rating
         ResourceResolver resolver = null;
         try {
             resolver = factory.getAdministrativeResourceResolver(null);
 
-            SlingshotUtil.setOwnRating(request.getResource().getParent(), userId, Integer.valueOf(rating));
+            final Resource reqResource = resolver.getResource(request.getResource().getPath());
+
+            SlingshotUtil.setOwnRating(reqResource.getParent(), userId, Integer.valueOf(rating));
         } catch ( final LoginException le ) {
             throw new ServletException("Unable to login", le);
         } finally {

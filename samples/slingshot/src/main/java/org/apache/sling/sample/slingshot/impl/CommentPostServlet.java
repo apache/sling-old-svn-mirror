@@ -66,6 +66,8 @@ public class CommentPostServlet extends SlingAllMethodsServlet {
         try {
             resolver = factory.getAdministrativeResourceResolver(null);
 
+            final Resource reqResource = resolver.getResource(request.getResource().getPath());
+
             final Map<String, Object> properties = new HashMap<String, Object>();
             properties.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, SlingshotConstants.RESOURCETYPE_COMMENT);
             properties.put(SlingshotConstants.PROPERTY_TITLE, title);
@@ -78,8 +80,8 @@ public class CommentPostServlet extends SlingAllMethodsServlet {
             for(int i=0; i<5; i++) {
                 try {
                     exception = null;
-                    final String name = ResourceUtil.createUniqueChildName(request.getResource(), Util.filter(title));
-                    newResource = resolver.create(request.getResource(), name, properties);
+                    final String name = ResourceUtil.createUniqueChildName(reqResource, Util.filter(title));
+                    newResource = resolver.create(reqResource, name, properties);
 
                     resolver.commit();
                     break;
