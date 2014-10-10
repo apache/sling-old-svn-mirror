@@ -18,8 +18,6 @@
  */
 package org.apache.sling.installer.factories.subsystems.impl;
 
-import java.io.IOException;
-
 import org.apache.sling.installer.api.tasks.ChangeStateTask;
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallationContext;
@@ -29,32 +27,27 @@ import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.osgi.service.subsystem.Subsystem;
 
 /**
- * This is the subsystem install task.
+ * This is the subsystem start task.
  */
-public class InstallSubsystemTask extends InstallTask {
+public class StartSubsystemTask extends InstallTask {
 
-    private static final String INSTALL_ORDER = "53-";
+    private static final String INSTALL_ORDER = "55-";
 
-    private final Subsystem rootSubsystem;
+    private final Subsystem subsystem;
 
-    public InstallSubsystemTask(final TaskResourceGroup grp, final Subsystem rootSubsystem) {
+    public StartSubsystemTask(final TaskResourceGroup grp, final Subsystem system) {
         super(grp);
-        this.rootSubsystem = rootSubsystem;
+        this.subsystem = system;
     }
 
     @Override
     public void execute(final InstallationContext ctx) {
         final TaskResource tr = this.getResource();
-        ctx.log("Installing new subsystem from {}", tr);
+        ctx.log("Starting subsystem from {}", tr);
 
-        try {
-            final Subsystem sub = this.rootSubsystem.install(tr.getURL(), tr.getInputStream());
-            ctx.addTaskToCurrentCycle(new StartSubsystemTask(this.getResourceGroup(), sub));
-            ctx.log("Installed new subsystem {}", sub);
-        } catch (final IOException e) {
-            ctx.log("Unable to install subsystem {} : {}", tr, e);
-            ctx.addTaskToCurrentCycle(new ChangeStateTask(this.getResourceGroup(), ResourceState.IGNORED));
-        }
+        this.subsystem.start();
+        ctx.addTaskToCurrentCycle(new ChangeStateTask(this.getResourceGroup(), ResourceState.INSTALLED));
+        ctx.log("Started subsystem {}", this.subsystem);
     }
 
     @Override
