@@ -18,10 +18,10 @@ package org.apache.sling.ide.test.impl.helpers;
 
 import static org.junit.Assert.fail;
 
-import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.sling.ide.eclipse.core.internal.Activator;
 import org.apache.sling.ide.transport.CommandExecutionProperties;
@@ -39,8 +39,10 @@ import org.osgi.service.event.EventHandler;
  */
 public class FailOnModificationEventsRule implements EventHandler, TestRule {
 
+    private static final int SETTLE_TIMEOUT_MILLIS = 100;
+    
     private ServiceRegistration<EventHandler> registration;
-    private List<Event> unexpectedEvents = new ArrayList<Event>();
+    private List<Event> unexpectedEvents = new CopyOnWriteArrayList<Event>();
 
     public Statement apply(Statement base, Description description) {
         return statement(base);
@@ -69,11 +71,13 @@ public class FailOnModificationEventsRule implements EventHandler, TestRule {
 
     }
 
-    protected void after() {
+    protected void after() throws InterruptedException {
 
         if (registration != null) {
             registration.unregister();
         }
+
+        waitForEventsToSettle();
 
         if (unexpectedEvents.isEmpty()) {
             return;
@@ -91,6 +95,35 @@ public class FailOnModificationEventsRule implements EventHandler, TestRule {
         }
 
         fail(desc.toString());
+    }
+
+    /**
+     * Clears the list of unexpected events after the event firing settles
+     * 
+     * <p>
+     * This can be useful for instance when you want to validate that no import events take place after a certain point
+     * in time.
+     * </p>
+     * 
+     * <p>
+     * Event firing settling is defined as no unexpected events being recorded for {@value #SETTLE_TIMEOUT_MILLIS}
+     * milliseconds
+     * </p>
+     */
+    public void clearUnexpectedEventsAfterSettling() throws InterruptedException {
+
+        waitForEventsToSettle();
+
+        unexpectedEvents.clear();
+    }
+
+    private void waitForEventsToSettle() throws InterruptedException {
+
+        int currentSize;
+        do {
+            currentSize = unexpectedEvents.size();
+            Thread.sleep(SETTLE_TIMEOUT_MILLIS);
+        } while (currentSize != unexpectedEvents.size());
     }
 
     @Override
