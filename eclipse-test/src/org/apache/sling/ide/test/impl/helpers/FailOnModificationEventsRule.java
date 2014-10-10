@@ -39,8 +39,10 @@ import org.osgi.service.event.EventHandler;
  */
 public class FailOnModificationEventsRule implements EventHandler, TestRule {
 
+    /**
+     * 
+     */
     private static final int SETTLE_TIMEOUT_MILLIS = 100;
-    
     private ServiceRegistration<EventHandler> registration;
     private List<Event> unexpectedEvents = new CopyOnWriteArrayList<Event>();
 
@@ -131,7 +133,8 @@ public class FailOnModificationEventsRule implements EventHandler, TestRule {
 
         String type = (String) event.getProperty(CommandExecutionProperties.ACTION_TYPE);
 
-        if ("AddOrUpdateNodeCommand".equals(type) || "ReorderChildNodesCommand".equals(type)) {
+        if ("AddOrUpdateNodeCommand".equals(type) || "ReorderChildNodesCommand".equals(type)
+                || "DeleteNodeCommand".equals(type)) {
             unexpectedEvents.add(event);
         }
     }
