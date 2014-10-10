@@ -117,15 +117,11 @@ public class ResourceChangeCommandFactory {
 
         Long modificationTimestamp = (Long) resource.getSessionProperty(ResourceUtil.QN_IMPORT_MODIFICATION_TIMESTAMP);
 
-        if (modificationTimestamp != null) {
-            if (modificationTimestamp >= resource.getModificationStamp()) {
-                Activator.getDefault().getPluginLogger()
-                        .trace("Change for resource {0} ignored as the import timestamp {1} >= modification timestamp {2}",
-                                resource, modificationTimestamp, resource.getModificationStamp());
-            } else {
-                // clear the import modification timestamp since this is a more recent change
-                resource.setSessionProperty(ResourceUtil.QN_IMPORT_MODIFICATION_TIMESTAMP, null);
-            }
+        if (modificationTimestamp != null && modificationTimestamp >= resource.getModificationStamp()) {
+            Activator.getDefault().getPluginLogger()
+                    .trace("Change for resource {0} ignored as the import timestamp {1} >= modification timestamp {2}",
+                            resource, modificationTimestamp, resource.getModificationStamp());
+            return null;
         }
 
         if (resource.isTeamPrivateMember(IResource.CHECK_ANCESTORS)) {
