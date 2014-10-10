@@ -45,7 +45,8 @@ public class InstallSubsystemTask extends InstallTask {
         ctx.log("Installing new subsystem from {}", tr);
 
         try {
-            this.rootSubsystem.install(tr.getURL(), tr.getInputStream());
+            final Subsystem sub = this.rootSubsystem.install(tr.getURL(), tr.getInputStream());
+            sub.start();
             ctx.addTaskToCurrentCycle(new ChangeStateTask(this.getResourceGroup(), ResourceState.INSTALLED));
         } catch (final IOException e) {
             ctx.log("Unable to install subsystem {} : {}", tr, e);
