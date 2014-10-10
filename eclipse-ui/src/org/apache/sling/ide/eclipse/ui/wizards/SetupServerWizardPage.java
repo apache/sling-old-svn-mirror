@@ -389,7 +389,6 @@ public class SetupServerWizardPage extends WizardPage {
                 wc.setAttribute(ISlingLaunchpadServer.PROP_INSTALL_LOCALLY, installToolingSupportBundle.getSelection());
                 wc.setAttribute(ISlingLaunchpadServer.PROP_USERNAME, newServerUsername.getText());
                 wc.setAttribute(ISlingLaunchpadServer.PROP_PASSWORD, newServerPassword.getText());
-                wc.setAttribute("auto-publish-setting", ISlingLaunchpadServer.PUBLISH_STATE_RESOURCE_CHANGE);
                 wc.setAttribute("auto-publish-time", 0);
                 if (finalVersion != null) {
                     wc.setAttribute(String.format(ISlingLaunchpadServer.PROP_BUNDLE_VERSION_FORMAT,

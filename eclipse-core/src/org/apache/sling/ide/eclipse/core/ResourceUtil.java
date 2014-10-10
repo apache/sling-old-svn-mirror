@@ -17,11 +17,26 @@
 package org.apache.sling.ide.eclipse.core;
 
 import org.apache.sling.ide.eclipse.core.internal.Activator;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.QualifiedName;
 
 public abstract class ResourceUtil {
 
-    public static final QualifiedName QN_IGNORE_NEXT_CHANGE = new QualifiedName(Activator.PLUGIN_ID, "ignoreNextChange");
+    /**
+     * This property is set by code which imports content from the repository into the workspace
+     * 
+     * <p>
+     * It serves to distinguish between changes which are triggered by the user directly and changes which are triggered
+     * by an import run.
+     * </p>
+     * 
+     * <p>
+     * If an exporter finds this property and the property of the {#link {@link IResource#getModificationStamp()} is
+     * older than or equal to the value of this property, the change should be ignored.
+     * </p>
+     */
+    public static final QualifiedName QN_IMPORT_MODIFICATION_TIMESTAMP = new QualifiedName(Activator.PLUGIN_ID,
+            "importModificationTimestamp");
 
     private ResourceUtil() {
 

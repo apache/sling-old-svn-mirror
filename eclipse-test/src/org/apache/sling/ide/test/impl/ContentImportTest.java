@@ -36,6 +36,7 @@ import org.apache.sling.ide.eclipse.ui.internal.ImportRepositoryContentAction;
 import org.apache.sling.ide.serialization.SerializationException;
 import org.apache.sling.ide.test.impl.helpers.DisableDebugStatusHandlers;
 import org.apache.sling.ide.test.impl.helpers.ExternalSlingLaunchpad;
+import org.apache.sling.ide.test.impl.helpers.FailOnModificationEventsRule;
 import org.apache.sling.ide.test.impl.helpers.LaunchpadConfig;
 import org.apache.sling.ide.test.impl.helpers.ProjectAdapter;
 import org.apache.sling.ide.test.impl.helpers.RepositoryAccessor;
@@ -71,6 +72,9 @@ public class ContentImportTest {
     @Rule
     public DisableDebugStatusHandlers disableDebugHandlers = new DisableDebugStatusHandlers();
 
+    @Rule
+    public FailOnModificationEventsRule deh = new FailOnModificationEventsRule();
+
     @Test
     public void importFilesAndFolders() throws Exception {
 
@@ -85,12 +89,12 @@ public class ContentImportTest {
 
         wstServer.waitForServerToStart();
 
-        ServerAdapter server = new ServerAdapter(wstServer.getServer());
-        server.installModule(contentProject);
-
         project.createVltFilterWithRoots("/content/test-root/en");
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en/hello.txt"),
                 new ByteArrayInputStream("hello, world".getBytes()));
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
 
         // create server-side content
         RepositoryAccessor repo = new RepositoryAccessor(config);
@@ -118,12 +122,12 @@ public class ContentImportTest {
 
         wstServer.waitForServerToStart();
 
-        ServerAdapter server = new ServerAdapter(wstServer.getServer());
-        server.installModule(contentProject);
-
         project.createVltFilterWithRoots("/content/test-root/en");
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en/hello.txt"),
                 new ByteArrayInputStream("hello, world".getBytes()));
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
 
         // create server-side content
         RepositoryAccessor repo = new RepositoryAccessor(config);
@@ -150,12 +154,12 @@ public class ContentImportTest {
 
         wstServer.waitForServerToStart();
 
-        ServerAdapter server = new ServerAdapter(wstServer.getServer());
-        server.installModule(contentProject);
-
         project.createVltFilterWithRoots("/content/test-root/en");
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/.vltignore"),
                 new ByteArrayInputStream("en\n".getBytes()));
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
 
         // create server-side content
         RepositoryAccessor repo = new RepositoryAccessor(config);
@@ -182,15 +186,15 @@ public class ContentImportTest {
 
         wstServer.waitForServerToStart();
 
-        ServerAdapter server = new ServerAdapter(wstServer.getServer());
-        server.installModule(contentProject);
-
         project.createVltFilterWithRoots("/content/test-root/en");
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/hello.txt"), new ByteArrayInputStream(
                 "hello, world".getBytes()));
 
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/.vltignore"), new ByteArrayInputStream(
                 "content/test-root/en\n".getBytes()));
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
 
         // create server-side content
         RepositoryAccessor repo = new RepositoryAccessor(config);
@@ -265,7 +269,6 @@ public class ContentImportTest {
         
         assertThat(repo.getNode("/content/test-root").getPrimaryNodeType().getName(), equalTo("sling:Folder"));
 
-
         runImport(contentProject);
 
         assertThat("File not properly imported", contentProject,
@@ -298,12 +301,12 @@ public class ContentImportTest {
 
         wstServer.waitForServerToStart();
 
-        ServerAdapter server = new ServerAdapter(wstServer.getServer());
-        server.installModule(contentProject);
-
         project.createVltFilterWithRoots("/content/test-root");
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/hello.txt"),
                 new ByteArrayInputStream("hello, world".getBytes()));
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
 
         // create server-side content
         RepositoryAccessor repo = new RepositoryAccessor(config);
@@ -342,12 +345,12 @@ public class ContentImportTest {
 
         wstServer.waitForServerToStart();
 
-        ServerAdapter server = new ServerAdapter(wstServer.getServer());
-        server.installModule(contentProject);
-
         project.createVltFilterWithRoots("/content/test-root");
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/hello.txt"),
                 new ByteArrayInputStream("hello, world".getBytes()));
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
 
         // create server-side content
         RepositoryAccessor repo = new RepositoryAccessor(config);
@@ -385,13 +388,13 @@ public class ContentImportTest {
 
         wstServer.waitForServerToStart();
 
-        ServerAdapter server = new ServerAdapter(wstServer.getServer());
-        server.installModule(contentProject);
-
         project.createVltFilterWithRoots("/content/test-root");
         project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/en/hello.txt"),
                 new ByteArrayInputStream("hello, world".getBytes()));
         
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
+
         repo.createNode("/content/test-root/folder", "sling:Folder");
         repo.createNode("/content/test-root/folder/jcr:content", "nt:unstructured");
         repo.createFile("/content/test-root/folder/jcr:content/some_file.txt", "dummy contents".getBytes());
@@ -435,14 +438,14 @@ public class ContentImportTest {
         // install bundle facet
         project.installFacet("sling.content", "1.0");
 
+        project.createVltFilterWithRoots("/content/test-root");
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/hello.txt"),
+                new ByteArrayInputStream("hello, world".getBytes()));
+
         wstServer.waitForServerToStart();
 
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
-
-        project.createVltFilterWithRoots("/content/test-root");
-        project.createOrUpdateFile(Path.fromPortableString("jcr_root/content/test-root/hello.txt"),
-                new ByteArrayInputStream("hello, world".getBytes()));
 
         repo.createFile("/content/test-root/sling:file", "some_content".getBytes());
 

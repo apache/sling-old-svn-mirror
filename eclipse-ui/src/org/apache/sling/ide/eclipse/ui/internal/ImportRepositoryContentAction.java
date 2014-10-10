@@ -29,7 +29,6 @@ import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.Text;
-import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.ResourceUtil;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
@@ -115,17 +114,6 @@ public class ImportRepositoryContentAction {
         this.builder = serializationManager.newBuilder(
         		repository, ProjectUtil.getSyncDirectoryFile(project));
 
-        ISlingLaunchpadServer launchpad = (ISlingLaunchpadServer) server.loadAdapter(
-                ISlingLaunchpadServer.class, monitor);
-
-        int oldPublishState = launchpad.getPublishState();
-        // TODO disabling publish does not work; since the publish is done async
-        // Not sure if there is a simple workaround. Anyway, the only side effect is that we
-        // make too many calls after the import, functionality is not affected
-        if (server.canPublish().isOK() && oldPublishState != ISlingLaunchpadServer.PUBLISH_STATE_NEVER) {
-            launchpad.setPublishState(ISlingLaunchpadServer.PUBLISH_STATE_NEVER, monitor);
-        }
-
         SerializationKindManager skm;
         
         try {
@@ -173,9 +161,6 @@ public class ImportRepositoryContentAction {
         } catch (Exception e) {
             throw new InvocationTargetException(e);
         } finally {
-            if (oldPublishState != ISlingLaunchpadServer.PUBLISH_STATE_NEVER) {
-                launchpad.setPublishState(oldPublishState, monitor);
-            }
             if (builder!=null) {
             	builder.destroy();
             	builder = null;
@@ -433,9 +418,11 @@ public class ImportRepositoryContentAction {
 
             createParents(destinationFolder.getParent());
             destinationFolder.create(true, true, null /* TODO progress monitor */);
-            destinationFolder.setSessionProperty(ResourceUtil.QN_IGNORE_NEXT_CHANGE, Boolean.TRUE.toString());
         }
 
+        destinationFolder.setSessionProperty(ResourceUtil.QN_IMPORT_MODIFICATION_TIMESTAMP,
+                destinationFolder.getModificationStamp());
+        
         removeTouchedResource(destinationFolder);
 
         return destinationFolder;
@@ -471,7 +458,8 @@ public class ImportRepositoryContentAction {
 
         removeTouchedResource(destinationFile);
 
-        destinationFile.setSessionProperty(ResourceUtil.QN_IGNORE_NEXT_CHANGE, Boolean.TRUE.toString());
+        destinationFile.setSessionProperty(ResourceUtil.QN_IMPORT_MODIFICATION_TIMESTAMP,
+                destinationFile.getModificationStamp());
     }
     
     private void createParents(IContainer container) throws CoreException {
