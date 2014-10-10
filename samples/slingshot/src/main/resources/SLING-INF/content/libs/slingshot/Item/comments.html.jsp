@@ -42,10 +42,7 @@
     if ( slingRequest.getAuthType() != null ) {
         %>
         <hr/><p>Leave a comment...</p>
-        <form method="POST" action="<%= request.getContextPath() %><%=resource.getName() %>/comments/*">
-        <input type="hidden" name="sling:resourceType" value="<%= SlingshotConstants.RESOURCETYPE_COMMENT %>"/>
-        <input type="hidden" name=":order" value="first"/>
-        <input type="hidden" name=":redirect" value="<%= request.getContextPath() %><%=resource.getPath() %>.html"/>
+        <form method="POST" action="<%= request.getContextPath() %><%=resource.getName() %>/comments">
         <p>Title: <input name="<%= SlingshotConstants.PROPERTY_TITLE %>"/></p>
         <p>Description: <input name="<%= SlingshotConstants.PROPERTY_DESCRIPTION %>"/></p>
         <button class="ui-button ui-form-button" type="submit">Add</button>

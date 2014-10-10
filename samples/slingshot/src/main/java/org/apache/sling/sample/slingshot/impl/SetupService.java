@@ -1,14 +1,33 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.sling.sample.slingshot.impl;
 
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.security.Privilege;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.api.resource.LoginException;
@@ -40,12 +59,57 @@ public class SetupService {
             resolver = this.factory.getAdministrativeResourceResolver(null);
             setupUsers(resolver);
             setupContent(resolver);
+            setupACL(resolver);
         } finally {
             if ( resolver != null ) {
                 resolver.close();
             }
         }
         logger.info("Finished setting up SlingShot");
+    }
+
+    private void setupACL(final ResourceResolver resolver) throws RepositoryException {
+        final Session session = resolver.adaptTo(Session.class);
+
+        for(final String principalId : USERS) {
+            final String resourcePath = SlingshotConstants.APP_ROOT_PATH + "/public/" + principalId;
+
+            final Map<String, String> privileges = new HashMap<String, String>();
+            privileges.put(Privilege.JCR_ALL, "granted");
+
+            modifyAce(session, resourcePath, principalId, Privilege.JCR_ALL, true);
+
+            privileges.clear();
+        }
+    }
+
+    private void modifyAce(final Session jcrSession,
+            final String resourcePath,
+            final String principalId,
+            final String privilege,
+            final boolean granted)
+    throws RepositoryException {
+        final PrincipalManager principalManager = AccessControlUtil.getPrincipalManager(jcrSession);
+        final Principal principal = principalManager.getPrincipal(principalId);
+
+        final String[] grantedPrivilegeNames;
+        final String[] deniedPrivilegeNames;
+        if ( granted ) {
+            grantedPrivilegeNames = new String[] {privilege};
+            deniedPrivilegeNames = null;
+        } else {
+            grantedPrivilegeNames = null;
+            deniedPrivilegeNames = new String[] {privilege};
+        }
+
+        AccessControlUtil.replaceAccessControlEntry(jcrSession, resourcePath, principal,
+                grantedPrivilegeNames,
+                deniedPrivilegeNames,
+                null,
+                null);
+        if (jcrSession.hasPendingChanges()) {
+            jcrSession.save();
+        }
     }
 
     private void setupUsers(final ResourceResolver resolver) throws RepositoryException {
