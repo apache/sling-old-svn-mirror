@@ -30,7 +30,6 @@ import java.io.InputStream;
 import java.util.concurrent.Callable;
 
 import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 
 import org.apache.commons.httpclient.HttpException;
@@ -197,8 +196,8 @@ public class ContentDeploymentTest {
         assertThatNode(repo, poller, "/test/hello.esp/jcr:content", hasPropertyValue("jcr:mimeType", "text/javascript"));
     }
 
-    @Test(expected = PathNotFoundException.class)
-    public void deployFileBeforeModuleDeploymentIsIgnored() throws Throwable {
+    @Test
+    public void fileDeployedBeforeAddingModuleToServerIsPublished() throws Throwable {
 
         wstServer.waitForServerToStart();
 
@@ -220,18 +219,12 @@ public class ContentDeploymentTest {
         // verify that file is created
         final RepositoryAccessor repo = new RepositoryAccessor(config);
         Poller poller = new Poller();
-        try {
-            poller.pollUntil(new Callable<Node>() {
-                @Override
-                public Node call() throws RepositoryException {
-                    return repo.getNode("/test/hello.txt");
-                }
-            }, nullValue(Node.class));
-        } catch (RuntimeException e) {
-            // unwrap the underlying repository exception, since the poller does not do that
-            if (e.getCause() != null)
-                throw e.getCause();
-        }
+        poller.pollUntil(new Callable<Node>() {
+            @Override
+            public Node call() throws RepositoryException {
+                return repo.getNode("/test/hello.txt");
+            }
+        }, hasFileContent("hello, world"));
 
     }
 

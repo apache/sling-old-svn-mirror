@@ -96,6 +96,8 @@ public class ContentImportTest {
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
 
+        deh.clearUnexpectedEventsAfterSettling();
+
         // create server-side content
         RepositoryAccessor repo = new RepositoryAccessor(config);
         repo.createNode("/content/test-root/en", "nt:folder");
@@ -129,6 +131,8 @@ public class ContentImportTest {
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
 
+        deh.clearUnexpectedEventsAfterSettling();
+
         // create server-side content
         RepositoryAccessor repo = new RepositoryAccessor(config);
         repo.createNode("/content/test-root/de", "nt:folder");
@@ -160,6 +164,8 @@ public class ContentImportTest {
 
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
+
+        deh.clearUnexpectedEventsAfterSettling();
 
         // create server-side content
         RepositoryAccessor repo = new RepositoryAccessor(config);
@@ -195,6 +201,8 @@ public class ContentImportTest {
 
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
+
+        deh.clearUnexpectedEventsAfterSettling();
 
         // create server-side content
         RepositoryAccessor repo = new RepositoryAccessor(config);
@@ -240,6 +248,8 @@ public class ContentImportTest {
 
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
+
+        deh.clearUnexpectedEventsAfterSettling();
 
         // create server-side content
         RepositoryAccessor repo = new RepositoryAccessor(config);
@@ -308,6 +318,8 @@ public class ContentImportTest {
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
 
+        deh.clearUnexpectedEventsAfterSettling();
+
         // create server-side content
         RepositoryAccessor repo = new RepositoryAccessor(config);
         repo.doWithSession(new SessionRunnable<Void>() {
@@ -352,12 +364,17 @@ public class ContentImportTest {
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
 
+        deh.clearUnexpectedEventsAfterSettling();
+
         // create server-side content
         RepositoryAccessor repo = new RepositoryAccessor(config);
         repo.createNode("/content/test-root/en", "nt:folder");
         repo.createNode("/content/test-root/en/files", "nt:folder");
         repo.createFile("/content/test-root/en/files/first.txt", "first file".getBytes());
         repo.createFile("/content/test-root/en/files/second.txt", "second file".getBytes());
+
+        // delete file since it was deployed when the module was added to the server
+        repo.tryDeleteResource("/content/test-root/hello.txt");
 
         // run initial import
         runImport(contentProject);
@@ -394,6 +411,8 @@ public class ContentImportTest {
         
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
+
+        deh.clearUnexpectedEventsAfterSettling();
 
         repo.createNode("/content/test-root/folder", "sling:Folder");
         repo.createNode("/content/test-root/folder/jcr:content", "nt:unstructured");
@@ -446,6 +465,8 @@ public class ContentImportTest {
 
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
+
+        deh.clearUnexpectedEventsAfterSettling();
 
         repo.createFile("/content/test-root/sling:file", "some_content".getBytes());
 
