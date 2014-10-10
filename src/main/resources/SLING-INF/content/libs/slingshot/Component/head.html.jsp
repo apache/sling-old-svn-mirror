@@ -22,6 +22,7 @@
   <link href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/css/jquery-ui.theme.min.css" rel="stylesheet"/>
   <link href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/css/metro-bootstrap.min.css" rel="stylesheet"/>
   <link href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/css/jquery-breadcrumbs.css" rel="stylesheet"/>
+  <link href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/css/iconFont.css" rel="stylesheet"/>
   <link href="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/css/slingshot.css" rel="stylesheet"/>
   <script src="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/js/jquery.js" type="text/javascript" ></script>
   <script src="<%= request.getContextPath() %><%= SlingshotConstants.APP_ROOT_PATH %>/resources/js/jquery-ui.min.js" type="text/javascript" ></script>

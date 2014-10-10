@@ -1,4 +1,9 @@
-Uses jquery-breadcrumb from http://phonicuk.com
+Includes and uses Metro UI CSS
+MIT License
+Copyright (c) 2012-2014 Sergey Pimenov
+http://metroui.org.ua
+----------------------------------------------------------------------
+Includes and uses jquery-breadcrumb from http://phonicuk.com
 jquery-breadcrumb 1.0
 http://code.google.com/p/jquery-breadcrumb/
 

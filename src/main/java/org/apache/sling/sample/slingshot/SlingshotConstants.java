@@ -34,6 +34,15 @@ public abstract class SlingshotConstants {
     /** The resource type for a comment. */
     public static final String RESOURCETYPE_COMMENT = "slingshot/Comment";
 
+    /** The resource type for a rating. */
+    public static final String RESOURCETYPE_RATING = "slingshot/Rating";
+
+    /** The resource type for the resource holder of the comments. */
+    public static final String RESOURCETYPE_COMMENTS = "slingshot/Comments";
+
+    /** The resource type for the resource holder of the ratings */
+    public static final String RESOURCETYPE_RATINGS = "slingshot/Ratings";
+
     /** The resource type for a user. */
     public static final String RESOURCETYPE_HOME = "slingshot/Home";
 

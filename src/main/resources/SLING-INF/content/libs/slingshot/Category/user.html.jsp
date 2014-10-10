@@ -27,28 +27,16 @@
     final ValueMap attr = resource.getValueMap();
     final String itemTitle = attr.get(SlingshotConstants.PROPERTY_TITLE, resource.getName());
     
-    String imagePath = null;
     int count = 0;
     for(final Resource current : resource.getChildren()) {
-        if ( current.isResourceType(SlingshotConstants.RESOURCETYPE_ITEM)) {
-            if ( imagePath == null ) {
-                final Resource imagesResource = resource.getResourceResolver().getResource(current, "images");
-                if ( imagesResource != null ) {
-                    for(final Resource imgResource : imagesResource.getChildren()) {
-                        imagePath = imgResource.getPath();
-                        break;
-                    }
-                }
-            }
-        }
         count++;
     }
 %><div class="tile double ui-slingshot-clickable" data-link="<%= request.getContextPath() %><%=resource.getPath()%>.html">
-    <div class="tile-content image">
-        <img src="<%= request.getContextPath() %><%=imagePath%>"/>
+    <div class="tile-content icon">
+        <i class="icon-pictures fg-blue"></i>
     </div>
     <div class="brand">
-        <span class="label fg-white"><%= ResponseUtil.escapeXml(itemTitle) %></span>
+        <span class="label fg-black"><%= ResponseUtil.escapeXml(itemTitle) %></span>
         <span class="badge bg-orange"><%= count %></span>
     </div>
 </div>
