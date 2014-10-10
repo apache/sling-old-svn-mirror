@@ -382,7 +382,6 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
 
         List<IModuleResource> addedOrUpdatedResources = new ArrayList<IModuleResource>();
         IModuleResource[] allResources = getResources(module);
-        IModuleResource[] publishedResources = getPublishedResources(module);
         Set<IPath> handledPaths = new HashSet<IPath>();
 
         switch (deltaKind) {
@@ -418,7 +417,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                         case IModuleResourceDelta.CHANGED:
                         case IModuleResourceDelta.NO_CHANGE: // TODO is this needed?
                             ensureParentIsPublished(resourceDelta.getModuleResource(), repository, allResources,
-                                    publishedResources, handledPaths);
+                                    handledPaths);
                             Command<?> command = addFileCommand(repository, resourceDelta.getModuleResource());
                             execute(command);
                             if (command != null) {
@@ -472,7 +471,6 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
      * @param moduleResource the current resource
      * @param repository the repository to publish to
      * @param allResources all of the module's resources
-     * @param publishedResources the resources which have been already published
      * @param handledPaths the paths that have been handled already in this publish operation, but possibly not
      *            registered as published
      * @throws IOException
@@ -480,7 +478,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
      * @throws CoreException
      */
     private void ensureParentIsPublished(IModuleResource moduleResource, Repository repository,
-            IModuleResource[] allResources, IModuleResource[] publishedResources, Set<IPath> handledPaths)
+            IModuleResource[] allResources, Set<IPath> handledPaths)
             throws CoreException, SerializationException, IOException {
 
         Logger logger = Activator.getDefault().getPluginLogger();
@@ -503,18 +501,10 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
             return;
         }
 
-        // already published earlier as part of the publish job
-        for (IModuleResource alreadyPublished : publishedResources) {
-            if (alreadyPublished.getModuleRelativePath().equals(parentPath)) {
-                logger.trace("Parent path {0} was already published, skipping", parentPath);
-                return;
-            }
-        }
-
         for (IModuleResource maybeParent : allResources) {
             if (maybeParent.getModuleRelativePath().equals(parentPath)) {
                 // handle the parent's parent first, if needed
-                ensureParentIsPublished(maybeParent, repository, allResources, publishedResources, handledPaths);
+                ensureParentIsPublished(maybeParent, repository, allResources, handledPaths);
                 // create this resource
                 execute(addFileCommand(repository, maybeParent));
                 handledPaths.add(maybeParent.getModuleRelativePath());
