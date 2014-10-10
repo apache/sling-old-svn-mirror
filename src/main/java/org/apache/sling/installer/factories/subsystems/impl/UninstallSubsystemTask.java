@@ -28,6 +28,9 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.subsystem.Subsystem;
 
+/**
+ * Uninstall a subsystem
+ */
 public class UninstallSubsystemTask extends InstallTask {
 
     private static final String INSTALL_ORDER = "52-";
@@ -55,6 +58,7 @@ public class UninstallSubsystemTask extends InstallTask {
             if ( subsystem != null ) {
                 subsystem.uninstall();
                 ctx.addTaskToCurrentCycle(new ChangeStateTask(this.getResourceGroup(), ResourceState.UNINSTALLED));
+                ctx.log("Uninstalled subsystem {}", subsystem);
             } else {
                 ctx.log("Unable to uninstall subsystem {}.", tr);
                 ctx.addTaskToCurrentCycle(new ChangeStateTask(this.getResourceGroup(), ResourceState.IGNORED));

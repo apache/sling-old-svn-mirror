@@ -28,6 +28,9 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.subsystem.Subsystem;
 
+/**
+ * Update subsystem by uninstalling and installing it.
+ */
 public class UpdateSubsystemTask extends InstallTask {
 
     private static final String INSTALL_ORDER = "54-";
