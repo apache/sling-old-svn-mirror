@@ -16,6 +16,8 @@
  */
 package org.apache.sling.ide.eclipse.core.debug.impl;
 
+import java.util.Date;
+
 import org.apache.sling.ide.log.Logger;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Plugin;
@@ -32,6 +34,7 @@ public class Tracer implements DebugOptionsListener, Logger {
 
     private final Plugin plugin;
     private boolean debugEnabled;
+    private boolean consoleEnabled;
     private DebugTrace trace;
     
     public Tracer(Plugin plugin) {
@@ -44,18 +47,31 @@ public class Tracer implements DebugOptionsListener, Logger {
         String pluginId = plugin.getBundle().getSymbolicName();
 
         debugEnabled = options.getBooleanOption(pluginId + "/debug", false);
+        consoleEnabled = options.getBooleanOption(pluginId + "/debug/console", false) && debugEnabled;
         trace = options.newDebugTrace(pluginId, getClass());
     }
     
     @Override
     public void trace(String message, Object... arguments) {
-    	if ( !debugEnabled )
-    		return;
-    	
+
+        if (!debugEnabled)
+            return;
+
     	if ( arguments.length > 0 )
     		message = NLS.bind(message, arguments);
     	
     	trace.trace("/debug", message);
+
+        if (consoleEnabled)
+            writeToConsole(message, null);
+    }
+
+    private void writeToConsole(String message, Throwable t) {
+
+        System.out.println("[" + Thread.currentThread().getName() + "] " + new Date() + " "
+                + plugin.getBundle().getSymbolicName() + " : " + message);
+        if (t != null)
+            t.printStackTrace(System.out);
     }
 
     @Override
@@ -64,6 +80,9 @@ public class Tracer implements DebugOptionsListener, Logger {
             return;
 
         trace.trace("/debug", message, error);
+
+        if (consoleEnabled)
+            writeToConsole(message, error);
     }
 
     @Override
