@@ -26,6 +26,7 @@ Require-Bundle: org.junit,
 Import-Package: javax.jcr,
  javax.jcr.nodetype,
  org.apache.jackrabbit.util,
- org.apache.sling.ide.jcr
+ org.apache.sling.ide.jcr,
+ org.osgi.service.event;version="1.3.0"
 Bundle-Activator: org.apache.sling.ide.test.impl.Activator
 Bundle-ActivationPolicy: lazy
