@@ -45,20 +45,52 @@
     <sling:include resource="<%= resource %>" replaceSelectors="trail"/>
     <h1><%= title %></h1>
     <div style="width:100%; display:block; float:left;">
-    <div style="width:70%; float:left; display:block;">
+      <div style="width:70%; float:left; display:block;">
         <img src="<%= request.getContextPath() %><%= imagePath %>"/>
-    </div>
-    <div style="width:30%; float:left; padding:15px; display:block;">
+      </div>
+      <div style="width:30%; float:left; padding:15px; display:block;">
         <p><%=ResponseUtil.escapeXml(attributes.get(SlingshotConstants.PROPERTY_DESCRIPTION, ""))%></p>
         <% if ( attributes.get(SlingshotConstants.PROPERTY_LOCATION) != null ) { %>
             <p>Location</p>
             <p><%=ResponseUtil.escapeXml(attributes.get(SlingshotConstants.PROPERTY_LOCATION, ""))%></p>
         <% } %>
-       <% if ( slingRequest.getRemoteUser() != null && slingRequest.getRemoteUser().equals(SlingshotUtil.getUserId(resource)) )  { %>
+        <% if ( slingRequest.getRemoteUser() != null && slingRequest.getRemoteUser().equals(SlingshotUtil.getUserId(resource)) )  { %>
         <button class="ui-button ui-form-button ui-slingshot-clickable" 
                 data-link="<%= request.getContextPath() %><%=resource.getName() %>.edit.html" type="button">Edit</button>
-       <% } %>
-    </div>
+        <% } %>
+        <div class="metro">
+          <div id="rating" 
+               data-score-hint="Rating: " 
+               data-show-score="true" 
+               data-role="rating" 
+               data-stars="5" 
+               data-score="<%= SlingshotUtil.getRating(resource) %>" 
+               data-static="false" 
+               class="rating large" style="height: auto;">
+               <ul><li></li><li></li><li></li><li></li><li></li></ul>
+               <span class="score-hint">Rating: <%= SlingshotUtil.getRating(resource) %></span>
+          </div>
+          <div class="fg-green rating active" id="own_rating" style="height: auto;">
+          <ul><li title="bad" class="rated"></li><li title="poor"></li><li title="regular"></li><li title="good"></li><li title="gorgeous"></li></ul><span class="score-hint">Current score: <%= SlingshotUtil.getOwnRating(resource, request.getRemoteUser()) %></span></div>
+                    <script>
+                        $(function(){
+                            $("#own_rating").rating({
+                                static: false,
+                                score: <%= SlingshotUtil.getOwnRating(resource, request.getRemoteUser()) %>,
+                                stars: 5,
+                                showHint: true,
+                                showScore: true,
+                                click: function(value, rating) {
+                                    rating.rate(value);
+                                	$.post( "<%= resource.getName() %>/ratings", { <%= SlingshotConstants.PROPERTY_RATING %> : value }, function( data ) {
+                                		  $("#rating").rating("rate", data.rating);
+                                		}, "json");
+                                }
+                            });
+                        });
+                    </script>
+        </div>
+      </div>
     </div>
     <hr/>
     <sling:include resource="<%= resource %>" replaceSelectors="comments"/>

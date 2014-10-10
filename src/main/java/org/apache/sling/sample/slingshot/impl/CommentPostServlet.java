@@ -58,19 +58,19 @@ public class CommentPostServlet extends SlingAllMethodsServlet {
 
         final String userId = request.getRemoteUser();
 
+        logger.debug("New comment from {} : {} - {}", new Object[] {userId, title, description});
         // TODO - check values
 
         // save comment
         ResourceResolver resolver = null;
         try {
-            final Map<String, Object> loginmap = new HashMap<String, Object>();
-            loginmap.put(ResourceResolverFactory.USER_IMPERSONATION, userId);
-            resolver = factory.getAdministrativeResourceResolver(loginmap);
+            resolver = factory.getAdministrativeResourceResolver(null);
 
             final Map<String, Object> properties = new HashMap<String, Object>();
             properties.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, SlingshotConstants.RESOURCETYPE_COMMENT);
             properties.put(SlingshotConstants.PROPERTY_TITLE, title);
             properties.put(SlingshotConstants.PROPERTY_DESCRIPTION, description);
+            properties.put(SlingshotConstants.PROPERTY_USER, userId);
 
             // we try it five times
             PersistenceException exception = null;
