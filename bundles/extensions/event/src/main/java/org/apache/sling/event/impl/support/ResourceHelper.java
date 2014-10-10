@@ -288,6 +288,7 @@ public abstract class ResourceHelper {
     throws PersistenceException {
         // TODO - we should rather fix ResourceUtil.getOrCreateResource:
         //        on concurrent writes, create might fail!
+        PersistenceException mostRecentPE = null;
         for(int i=0;i<5;i++) {
             try {
                 return ResourceUtil.getOrCreateResource(resolver,
@@ -298,8 +299,9 @@ public abstract class ResourceHelper {
             } catch ( final PersistenceException pe ) {
                 //in case of exception, revert to last clean state and retry SLING-4014
                 resolver.revert();
+                mostRecentPE = pe;
             }
         }
-        throw new PersistenceException("Unable to create resource with path " + path);
+        throw new PersistenceException("Unable to create resource with path " + path, mostRecentPE);
     }
 }
