@@ -54,7 +54,9 @@ public abstract class SlingshotConstants {
 
     public static final String PROPERTY_TAGS = "tags";
 
-    public static final String PROPERTY_USER = "jcr:createdBy";
+    public static final String PROPERTY_USER = "user";
 
     public static final String PROPERTY_CREATED = "jcr:created";
+
+    public static final String PROPERTY_RATING = "rating";
 }

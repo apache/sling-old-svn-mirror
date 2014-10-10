@@ -16,6 +16,7 @@
  */
 package org.apache.sling.sample.slingshot.impl;
 
+
 public abstract class Util {
 
     private static final String ALLOWED_CHARS = "abcdefghijklmnopqrstuvwxyz0123456789_";
@@ -51,4 +52,6 @@ public abstract class Util {
 
         return sb.toString();
     }
+
+
 }

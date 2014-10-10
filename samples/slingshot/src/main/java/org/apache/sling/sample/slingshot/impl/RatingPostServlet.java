@@ -17,8 +17,7 @@
 package org.apache.sling.sample.slingshot.impl;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.PrintWriter;
 
 import javax.servlet.ServletException;
 
@@ -31,6 +30,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.sample.slingshot.SlingshotConstants;
+import org.apache.sling.sample.slingshot.SlingshotUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,28 +48,18 @@ public class RatingPostServlet extends SlingAllMethodsServlet {
     protected void doPost(final SlingHttpServletRequest request,
             final SlingHttpServletResponse response)
     throws ServletException, IOException {
-        final String title = request.getParameter(SlingshotConstants.PROPERTY_TITLE);
-        final String description = request.getParameter(SlingshotConstants.PROPERTY_DESCRIPTION);
+        final String rating = request.getParameter(SlingshotConstants.PROPERTY_RATING);
 
         final String userId = request.getRemoteUser();
 
-        // TODO - check values
+        logger.info("New rating from {} : {}", userId, rating);
 
         // save comment
         ResourceResolver resolver = null;
         try {
-            final Map<String, Object> loginmap = new HashMap<String, Object>();
-            loginmap.put(ResourceResolverFactory.USER_IMPERSONATION, userId);
-            resolver = factory.getAdministrativeResourceResolver(loginmap);
+            resolver = factory.getAdministrativeResourceResolver(null);
 
-            final Map<String, Object> properties = new HashMap<String, Object>();
-            properties.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, SlingshotConstants.RESOURCETYPE_COMMENT);
-            properties.put(SlingshotConstants.PROPERTY_TITLE, title);
-            properties.put(SlingshotConstants.PROPERTY_DESCRIPTION, description);
-
-            resolver.create(request.getResource(), "bla", properties);
-
-            resolver.commit();
+            SlingshotUtil.setOwnRating(request.getResource().getParent(), userId, Integer.valueOf(rating));
         } catch ( final LoginException le ) {
             throw new ServletException("Unable to login", le);
         } finally {
@@ -78,10 +68,15 @@ public class RatingPostServlet extends SlingAllMethodsServlet {
             }
         }
 
-        // send redirect at the end
-        final String path = request.getResource().getParent().getPath();
+        response.setContentType("application/json");
+        response.setCharacterEncoding("utf-8");
+        response.setStatus(200);
 
-        response.sendRedirect(request.getContextPath() + path + ".html");
+        final PrintWriter pw = response.getWriter();
+        pw.print("{ ");
+        pw.print(" \"rating\" : ");
+        pw.print(String.valueOf(SlingshotUtil.getRating(request.getResource().getParent())));
+        pw.println("}");
     }
 
 }
