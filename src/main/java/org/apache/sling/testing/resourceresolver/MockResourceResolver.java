@@ -18,13 +18,12 @@
  */
 package org.apache.sling.testing.resourceresolver;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -133,7 +132,7 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
             String parentPath = ResourceUtil.getParent(path);
             Resource parentResource = getResourceInternal(parentPath);
             if (parentResource!=null) {
-                ValueMap props = parentResource.getValueMap();
+                ValueMap props = ResourceUtil.getValueMap(parentResource);
                 if (props.containsKey(name)) {
                     return new MockPropertyResource(path, props, this);
                 }
@@ -217,7 +216,7 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
         return children.iterator();
     }
 
-    @Override
+    // part of Resource API 2.5.0
     public Iterable<Resource> getChildren(final Resource parent) {
         return new Iterable<Resource>() {
 
@@ -312,7 +311,7 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
         }
         
         Resource mockResource = new MockResource(path, properties, this);
-        this.temporaryResources.put(path, mockResource.getValueMap());
+        this.temporaryResources.put(path, ResourceUtil.getValueMap(mockResource));
         return mockResource;
     }
 
@@ -327,7 +326,7 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
         synchronized ( this.resources ) {
             for(final String path : this.deletedResources ) {
                 if ( this.resources.remove(path) != null && this.options.getEventAdmin() != null ) {
-                    final Map<String, Object> props = new HashMap<String, Object>();
+                    final Dictionary<String, Object> props = new Hashtable<String, Object>();
                     props.put(SlingConstants.PROPERTY_PATH, path);
                     final Event e = new Event(SlingConstants.TOPIC_RESOURCE_REMOVED, props);
                     this.options.getEventAdmin().sendEvent(e);
@@ -338,7 +337,7 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
                 final boolean changed = this.resources.containsKey(path);
                 this.resources.put(path, this.temporaryResources.get(path));
                 if ( this.options.getEventAdmin() != null ) {
-                    final Map<String, Object> props = new HashMap<String, Object>();
+                    final Dictionary<String, Object> props = new Hashtable<String, Object>();
                     props.put(SlingConstants.PROPERTY_PATH, path);
                     if ( this.resources.get(path).get(ResourceResolver.PROPERTY_RESOURCE_TYPE) != null ) {
                         props.put(SlingConstants.PROPERTY_RESOURCE_TYPE, this.resources.get(path).get(ResourceResolver.PROPERTY_RESOURCE_TYPE));
@@ -380,7 +379,7 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
         this.temporaryResources.put(path, props);
     }
 
-    @Override
+    // part of Resource API 2.6.0
     public boolean hasChildren(Resource resource) {
         return this.listChildren(resource).hasNext();
     }

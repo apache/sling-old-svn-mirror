@@ -34,6 +34,7 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.junit.Before;
 import org.junit.Test;
@@ -93,7 +94,7 @@ public class SlingCrudResourceResolverTest {
         assertNotNull(resource1);
         assertEquals("node1", resource1.getName());
 
-        ValueMap props = resource1.getValueMap();
+        ValueMap props = ResourceUtil.getValueMap(resource1);
         assertEquals(STRING_VALUE, props.get("stringProp", String.class));
         assertArrayEquals(STRING_ARRAY_VALUE, props.get("stringArrayProp", String[].class));
         assertEquals((Integer) INTEGER_VALUE, props.get("integerProp", Integer.class));
@@ -104,14 +105,14 @@ public class SlingCrudResourceResolverTest {
     @Test
     public void testDateProperty() throws IOException {
         Resource resource1 = resourceResolver.getResource(testRoot.getPath() + "/node1");
-        ValueMap props = resource1.getValueMap();
+        ValueMap props = ResourceUtil.getValueMap(resource1);
         assertEquals(DATE_VALUE, props.get("dateProp", Date.class));
     }
 
     @Test
     public void testDatePropertyToCalendar() throws IOException {
         Resource resource1 = resourceResolver.getResource(testRoot.getPath() + "/node1");
-        ValueMap props = resource1.getValueMap();
+        ValueMap props = ResourceUtil.getValueMap(resource1);
         Calendar calendarValue = props.get("dateProp", Calendar.class);
         assertNotNull(calendarValue);
         assertEquals(DATE_VALUE, calendarValue.getTime());
@@ -120,14 +121,14 @@ public class SlingCrudResourceResolverTest {
     @Test
     public void testCalendarProperty() throws IOException {
         Resource resource1 = resourceResolver.getResource(testRoot.getPath() + "/node1");
-        ValueMap props = resource1.getValueMap();
+        ValueMap props = ResourceUtil.getValueMap(resource1);
         assertEquals(CALENDAR_VALUE.getTime(), props.get("calendarProp", Calendar.class).getTime());
     }
 
     @Test
     public void testCalendarPropertyToDate() throws IOException {
         Resource resource1 = resourceResolver.getResource(testRoot.getPath() + "/node1");
-        ValueMap props = resource1.getValueMap();
+        ValueMap props = ResourceUtil.getValueMap(resource1);
         Date dateValue = props.get("calendarProp", Date.class);
         assertNotNull(dateValue);
         assertEquals(CALENDAR_VALUE.getTime(), dateValue);
@@ -155,7 +156,7 @@ public class SlingCrudResourceResolverTest {
 
         // read second time to ensure not the original input stream was returned
         // and this time using another syntax
-        InputStream is2 = resource1.getValueMap().get("binaryProp", InputStream.class);
+        InputStream is2 = ResourceUtil.getValueMap(resource1).get("binaryProp", InputStream.class);
         byte[] dataFromResource2 = IOUtils.toByteArray(is2);
         is2.close();
         assertArrayEquals(BINARY_VALUE, dataFromResource2);

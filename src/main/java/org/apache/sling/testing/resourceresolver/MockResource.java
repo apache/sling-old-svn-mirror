@@ -26,6 +26,7 @@ import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ModifiableValueMapDecorator;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
@@ -96,7 +97,7 @@ public class MockResource extends AbstractResource {
         }
         else if ( type == InputStream.class ) {
             InputStream is = getFileResourceInputStream();
-            if (is!=null) {
+            if (is != null) {
                 return (AdapterType)is;
             }
         }
@@ -115,13 +116,13 @@ public class MockResource extends AbstractResource {
         else if (NT_FILE.equals(resourceType)) {
             Resource contentResource = getChild(JCR_CONTENT);
             if (contentResource != null) {
-                return contentResource.getValueMap().get(JCR_DATA, InputStream.class);
+                return ResourceUtil.getValueMap(contentResource).get(JCR_DATA, InputStream.class);
             }
         }
         return null;
     }
 
-    @Override
+    // part of Resource API 2.7.0
     public ValueMap getValueMap() {
         return this.props;
     }
