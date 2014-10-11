@@ -80,7 +80,7 @@ public class MockResourceResolverFactory implements ResourceResolverFactory {
         return new MockResourceResolver(options, this, resources);
     }
 
-    @Override
+    // part of Resource API 2.5.0
     public ResourceResolver getServiceResourceResolver(
             Map<String, Object> authenticationInfo) throws LoginException {
         return new MockResourceResolver(options, this, resources);
@@ -94,7 +94,7 @@ public class MockResourceResolverFactory implements ResourceResolverFactory {
     /**
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getThreadResourceResolver()
      */
-    @Override
+    // part of Resource API 2.8.0
     public ResourceResolver getThreadResourceResolver() {
         ResourceResolver result = null;
         final Stack<ResourceResolver> resolverStack = resolverStackHolder.get();

@@ -28,6 +28,7 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,7 +59,7 @@ public class CreateDeleteResourceResolverTest {
     public void testCreateDeleteCreate() throws PersistenceException {
         // create new node without commit
         Resource resource = resourceResolver.create(testRoot, "node", PROPS1);
-        assertEquals(PROPS1, resource.getValueMap());
+        assertEquals(PROPS1, ResourceUtil.getValueMap(resource));
         
         // delete node without commit
         resourceResolver.delete(resource);
@@ -66,14 +67,14 @@ public class CreateDeleteResourceResolverTest {
 
         // create node again with different properties without commit
         resource = resourceResolver.create(testRoot, "node", PROPS2);
-        assertEquals(PROPS2, resource.getValueMap());
+        assertEquals(PROPS2, ResourceUtil.getValueMap(resource));
     }
 
     @Test
     public void testCreateDeleteCreateCommit() throws PersistenceException {
         // create new node without commit
         Resource resource = resourceResolver.create(testRoot, "node", PROPS1);
-        assertEquals(PROPS1, resource.getValueMap());
+        assertEquals(PROPS1, ResourceUtil.getValueMap(resource));
         
         // delete node without commit
         resourceResolver.delete(resource);
@@ -81,7 +82,7 @@ public class CreateDeleteResourceResolverTest {
 
         // create node again with different properties with commit
         resource = resourceResolver.create(testRoot, "node", PROPS2);
-        assertEquals(PROPS2, resource.getValueMap());
+        assertEquals(PROPS2, ResourceUtil.getValueMap(resource));
         resourceResolver.commit();
     }
 
@@ -89,7 +90,7 @@ public class CreateDeleteResourceResolverTest {
     public void testCreateCommitDeleteCreateCommit() throws PersistenceException {
         // create new node with commit
         Resource resource = resourceResolver.create(testRoot, "node", PROPS1);
-        assertEquals(PROPS1, resource.getValueMap());
+        assertEquals(PROPS1, ResourceUtil.getValueMap(resource));
         resourceResolver.commit();
         
         // delete node without commit
@@ -98,7 +99,7 @@ public class CreateDeleteResourceResolverTest {
 
         // create node again with different properties with commit
         resource = resourceResolver.create(testRoot, "node", PROPS2);
-        assertEquals(PROPS2, resource.getValueMap());
+        assertEquals(PROPS2, ResourceUtil.getValueMap(resource));
         resourceResolver.commit();
     }
 
@@ -106,7 +107,7 @@ public class CreateDeleteResourceResolverTest {
     public void testCreateCommitDeleteCommitCreateCommit() throws PersistenceException {
         // create new node with commit
         Resource resource = resourceResolver.create(testRoot, "node", PROPS1);
-        assertEquals(PROPS1, resource.getValueMap());
+        assertEquals(PROPS1, ResourceUtil.getValueMap(resource));
         resourceResolver.commit();
         
         // delete node with commit
@@ -116,7 +117,7 @@ public class CreateDeleteResourceResolverTest {
 
         // create node again with different properties with commit
         resource = resourceResolver.create(testRoot, "node", PROPS2);
-        assertEquals(PROPS2, resource.getValueMap());
+        assertEquals(PROPS2, ResourceUtil.getValueMap(resource));
         resourceResolver.commit();
     }
 
