@@ -29,7 +29,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ModifiableValueMapDecorator;
-import org.apache.sling.api.wrappers.ValueMapDecorator;
 
 public class MockResource extends AbstractResource {
 
@@ -89,7 +88,7 @@ public class MockResource extends AbstractResource {
     @Override
     public <AdapterType> AdapterType adaptTo(final Class<AdapterType> type) {
         if ( type == ValueMap.class ) {
-            return (AdapterType)new ValueMapDecorator(this.props);
+            return (AdapterType)this.props;
         }
         else if ( type == ModifiableValueMap.class ) {
             ((MockResourceResolver)this.resolver).addChanged(this.path, this.props);
