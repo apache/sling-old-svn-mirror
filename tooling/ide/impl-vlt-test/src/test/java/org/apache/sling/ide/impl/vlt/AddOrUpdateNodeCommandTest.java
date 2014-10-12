@@ -36,6 +36,7 @@ import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.jackrabbit.core.TransientRepository;
 import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.transport.ResourceProxy;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class AddOrUpdateNodeCommandTest {
@@ -188,6 +189,43 @@ public class AddOrUpdateNodeCommandTest {
 
             content = session.getRootNode().getNode("content");
             assertThat(content.getPrimaryNodeType().getName(), equalTo("nt:folder"));
+
+        } finally {
+            session.removeItem("/content");
+            session.save();
+            session.logout();
+
+            IOUtils.closeQuietly(cndInput);
+        }
+    }
+
+    @Test
+    @Ignore("SLING-4036")
+    public void updateNtUnstructuredToNodeWithRequiredProperty() throws Exception {
+
+        File out = new File(new File("target"), "jackrabbit");
+        TransientRepository repo = new TransientRepository(new File(out, "repository.xml"), new File(out, "repository"));
+        SimpleCredentials credentials = new SimpleCredentials("admin", "admin".toCharArray());
+        Session session = repo.login(credentials);
+
+        InputStream cndInput = getClass().getResourceAsStream("mandatory.cnd"); // TODO - should be test-definitions.cnd
+        CndImporter.registerNodeTypes(new InputStreamReader(cndInput), session);
+
+        try {
+            Node content = session.getRootNode().addNode("content", "nt:unstructured");
+
+            session.save();
+
+            ResourceProxy resource = newResource("/content", "custom");
+            resource.getProperties().put("attribute", "some value");
+
+            AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo, credentials, null, resource, logger);
+            cmd.execute().get();
+
+            session.refresh(false);
+
+            content = session.getRootNode().getNode("content");
+            assertThat(content.getPrimaryNodeType().getName(), equalTo("custom"));
 
         } finally {
             session.removeItem("/content");
