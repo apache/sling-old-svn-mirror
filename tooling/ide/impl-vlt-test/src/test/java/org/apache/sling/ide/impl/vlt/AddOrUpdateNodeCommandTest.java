@@ -20,6 +20,8 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import javax.jcr.Node;
 import javax.jcr.Property;
@@ -29,6 +31,8 @@ import javax.jcr.SimpleCredentials;
 import javax.jcr.Value;
 import javax.jcr.nodetype.NodeType;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.jackrabbit.core.TransientRepository;
 import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.transport.ResourceProxy;
@@ -120,6 +124,78 @@ public class AddOrUpdateNodeCommandTest {
     public void multiValuesPropertyToSingle() throws Exception {
 
         doPropertyChangeTest(new String[] { "Title", "Title 2" }, "Title");
+    }
+
+    @Test
+    public void changeNtFolderToSlingFolderWithAddedProperty() throws Exception {
+
+        File out = new File(new File("target"), "jackrabbit");
+        TransientRepository repo = new TransientRepository(new File(out, "repository.xml"), new File(out, "repository"));
+        SimpleCredentials credentials = new SimpleCredentials("admin", "admin".toCharArray());
+        Session session = repo.login(credentials);
+
+        InputStream cndInput = getClass().getResourceAsStream("folder.cnd");
+        CndImporter.registerNodeTypes(new InputStreamReader(cndInput), session);
+
+        try {
+            session.getRootNode().addNode("content", "nt:folder");
+
+            session.save();
+
+            ResourceProxy resource = newResource("/content", "sling:Folder");
+            resource.getProperties().put("newProperty", "some/value");
+
+            AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo, credentials, null, resource, logger);
+            cmd.execute().get();
+
+            session.refresh(false);
+
+            Node content = session.getRootNode().getNode("content");
+            assertThat(content.getPrimaryNodeType().getName(), equalTo("sling:Folder"));
+
+        } finally {
+            session.removeItem("/content");
+            session.save();
+            session.logout();
+
+            IOUtils.closeQuietly(cndInput);
+        }
+    }
+
+    @Test
+    public void changeSlingFolderToNtFolderWithExistingProperty() throws Exception {
+
+        File out = new File(new File("target"), "jackrabbit");
+        TransientRepository repo = new TransientRepository(new File(out, "repository.xml"), new File(out, "repository"));
+        SimpleCredentials credentials = new SimpleCredentials("admin", "admin".toCharArray());
+        Session session = repo.login(credentials);
+
+        InputStream cndInput = getClass().getResourceAsStream("folder.cnd");
+        CndImporter.registerNodeTypes(new InputStreamReader(cndInput), session);
+
+        try {
+            Node content = session.getRootNode().addNode("content", "sling:Folder");
+            content.setProperty("newProperty", "some/value");
+
+            session.save();
+
+            ResourceProxy resource = newResource("/content", "nt:folder");
+
+            AddOrUpdateNodeCommand cmd = new AddOrUpdateNodeCommand(repo, credentials, null, resource, logger);
+            cmd.execute().get();
+
+            session.refresh(false);
+
+            content = session.getRootNode().getNode("content");
+            assertThat(content.getPrimaryNodeType().getName(), equalTo("nt:folder"));
+
+        } finally {
+            session.removeItem("/content");
+            session.save();
+            session.logout();
+
+            IOUtils.closeQuietly(cndInput);
+        }
     }
 
     private ResourceProxy newResource(String path, String primaryType) {

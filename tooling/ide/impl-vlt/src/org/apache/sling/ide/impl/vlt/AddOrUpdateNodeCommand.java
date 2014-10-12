@@ -64,7 +64,6 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
     private ResourceProxy resource;
     private FileInfo fileInfo;
-    private boolean primaryTypeHasChanged;
 
     public AddOrUpdateNodeCommand(Repository jcrRepo, Credentials credentials, FileInfo fileInfo,
             ResourceProxy resource, Logger logger) {
@@ -102,13 +101,6 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
         for (ResourceProxy child : resource.getCoveredChildren()) {
             update(child, session);
-        }
-
-        // save the changes so that the primary node type is propagated
-        // however, we can't do that too early, since required properties might not be set
-        // so we save right before checking for orderable child nodes
-        if (primaryTypeHasChanged) {
-            session.save();
         }
     }
 
@@ -199,10 +191,17 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
             updateMixins(node, mixinTypes);
         }
 
+        // remove old properties first
+        // this supports the scenario where the node type is changed to a less permissive one
+        for (String propertyToRemove : propertiesToRemove) {
+            node.getProperty(propertyToRemove).remove();
+            getLogger().trace("Removed property {0} from node at {1}", propertyToRemove, node.getPath());
+        }
+        
         String primaryType = (String) resource.getProperties().get(JcrConstants.JCR_PRIMARYTYPE);
         if (!node.getPrimaryNodeType().getName().equals(primaryType) && node.getDepth() != 0) {
             node.setPrimaryType(primaryType);
-            primaryTypeHasChanged = true;
+            session.save();
             getLogger().trace("Set new primary type {0} for node at {1}", primaryType, node.getPath());
         }
 
@@ -289,12 +288,6 @@ public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
                         + propertyName + "' with value '" + propertyValue + "'");
             }
         }
-
-        for (String propertyToRemove : propertiesToRemove) {
-            node.getProperty(propertyToRemove).remove();
-            getLogger().trace("Removed property {0} from node at {1}", propertyToRemove, node.getPath());
-        }
-
     }
 
     private void ensurePropertyDefinitionMatchers(Property property, int expectedType, boolean expectedMultiplicity)
