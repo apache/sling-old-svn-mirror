@@ -61,6 +61,7 @@ public interface ResourceResolverFactory {
      * the user for which to create a resource resolver and change the password during login.
      * <p>
      * The type of this property, if present, is <code>String</code>.
+     * @since 2.7
      */
     String NEW_PASSWORD = "user.newpassword";
 
