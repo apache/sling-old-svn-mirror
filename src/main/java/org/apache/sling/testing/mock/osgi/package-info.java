@@ -20,4 +20,3 @@
  * Mock implementation of selected OSGi APIs.
  */
 package org.apache.sling.testing.mock.osgi;
-
