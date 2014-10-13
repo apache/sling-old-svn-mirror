@@ -79,6 +79,11 @@ import org.slf4j.LoggerFactory;
 })
 public class JcrResourceProviderFactory implements ResourceProviderFactory {
 
+    /** TODO - this is a copy from ResourceResolverFactory to avoid a dependency to the new 2.8.2 API just for this constants.
+     * This should be replaced once we update.
+     */
+    private static final String NEW_PASSWORD = "user.newpassword";
+
     /** Logger */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -437,8 +442,8 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
         }
 
         if (creds instanceof SimpleCredentials
-                && authenticationInfo.get(ResourceResolverFactory.NEW_PASSWORD) instanceof String) {
-            ((SimpleCredentials) creds).setAttribute(ResourceResolverFactory.NEW_PASSWORD, authenticationInfo.get(ResourceResolverFactory.NEW_PASSWORD));
+                && authenticationInfo.get(NEW_PASSWORD) instanceof String) {
+            ((SimpleCredentials) creds).setAttribute(NEW_PASSWORD, authenticationInfo.get(NEW_PASSWORD));
         }
 
         return creds;
