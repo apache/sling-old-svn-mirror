@@ -27,7 +27,7 @@
         <url.version>2.1.0</url.version>
         <org.ops4j.pax.logging.DefaultServiceLog.level>WARN</org.ops4j.pax.logging.DefaultServiceLog.level>
         <org.ops4j.pax.url.mvn.settings></org.ops4j.pax.url.mvn.settings>
-        <oak.version>1.0.6</oak.version>
+        <oak.version>1.0.7</oak.version>
         <sling.oak.server.version>${project.version}</sling.oak.server.version>
     </properties>
 
