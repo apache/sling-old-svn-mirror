@@ -194,11 +194,11 @@
         <module>testing/junit/healthcheck</module>
         <module>testing/junit/remote</module>
         <module>testing/junit/performance</module>
-        <module>testing/resourceresolver-mock</module>
-        <module>testing/jcr-mock</module>
-        <module>testing/osgi-mock</module>
-        <module>testing/sling-mock</module>
-        <module>testing/sling-mock-jackrabbit</module>
+        <module>testing/mocks/resourceresolver-mock</module>
+        <module>testing/mocks/jcr-mock</module>
+        <module>testing/mocks/osgi-mock</module>
+        <module>testing/mocks/sling-mock</module>
+        <module>testing/mocks/sling-mock-jackrabbit</module>
         <module>testing/sling-pax-util</module>
         
         <!-- Installer -->
