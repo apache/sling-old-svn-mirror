@@ -127,7 +127,7 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
         Resource resource = getResourceInternal(path);
         
         // if not resource found check if this is a reference to a property
-        if (resource == null) {
+        if (resource == null && path != null) {
             String name = ResourceUtil.getName(path);
             String parentPath = ResourceUtil.getParent(path);
             Resource parentResource = getResourceInternal(parentPath);
@@ -143,6 +143,10 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
     }
     
     private Resource getResourceInternal(final String path) {
+        if (path == null) {
+            return null;
+        }
+        
         String normalizedPath = ResourceUtil.normalize(path);
         if ( normalizedPath.startsWith("/") ) {
             if ( this.deletedResources.contains(normalizedPath) ) {
