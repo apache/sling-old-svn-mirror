@@ -179,6 +179,15 @@ public class ContentXmlHandlerTest {
         assertThat("root has 1 property, binary property is ignored", root.getProperties().entrySet(), hasSize(1));
     }
 
+    @Test
+    public void escapedBraceAtStartOfPropertyValue() throws Exception {
+
+        ResourceProxy root = parseContentXmlFile("escaped-braces-at-start-of-property.xml", "/");
+        assertThat("properties[org.apache.sling.commons.log.pattern]",
+                root.getProperties(), hasEntry("org.apache.sling.commons.log.pattern",
+                        (Object) "{0,date,dd.MM.yyyy HH:mm:ss.SSS} *{4}* [{2}] {3} {5}"));
+    }
+
     private static Matcher<Calendar> millis(long millis) {
 
         return new CalendarTimeInMillisMatcher(millis);
