@@ -1632,6 +1632,9 @@ public class JobManagerImpl
             }
             return null;
         }
+        if ( name != null ) {
+            logger.info("Job is using deprecated name feature: {}", Utility.toString(topic, name, properties));
+        }
         Job result = this.addJobInteral(topic, name, properties, errors);
         if ( result == null && name != null ) {
             result = this.getJobByName(name);
