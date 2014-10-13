@@ -166,6 +166,7 @@
         <!-- Extensions -->
         <module>bundles/extensions/adapter</module>
         <module>bundles/extensions/bundleresource</module>
+        <module>bundles/extensions/dea</module>
         <module>bundles/extensions/discovery/api</module>
         <module>bundles/extensions/discovery/impl</module>
         <module>bundles/extensions/discovery/support</module>
