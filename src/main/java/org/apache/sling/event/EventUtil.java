@@ -30,13 +30,23 @@ import org.osgi.service.event.Event;
 /**
  * The <code>EventUtil</code> class is an utility class for
  * clustered environments.
+ * @deprecated
  */
+@Deprecated
 public abstract class EventUtil {
 
-    /** This event property indicates, if the event should be distributed in the cluster (default false). */
+    /**
+     * This event property indicates, if the event should be distributed in the cluster (default false).
+     * @deprecated
+     s*/
+    @Deprecated
     public static final String PROPERTY_DISTRIBUTE = "event.distribute";
 
-    /** This event property specifies the application node. */
+    /**
+     * This event property specifies the application node.
+     * @deprecated
+     */
+    @Deprecated
     public static final String PROPERTY_APPLICATION = "event.application";
 
     /**
@@ -261,7 +271,10 @@ public abstract class EventUtil {
      * @param topic
      * @param properties
      * @return An OSGi event.
+     * @deprecated Event senders should rather just directly include the property
+     *             {@link #PROPERTY_DISTRIBUTE} with an empty string value.
      */
+    @Deprecated
     public static Event createDistributableEvent(final String topic,
                                                  final Dictionary<String, Object> properties) {
         final Dictionary<String, Object> newProperties;
@@ -283,7 +296,9 @@ public abstract class EventUtil {
      * Should this event be distributed in the cluster?
      * @param event
      * @return <code>true</code> if the event should be distributed.
+     * @deprecated
      */
+    @Deprecated
     public static boolean shouldDistribute(final Event event) {
         return event.getProperty(PROPERTY_DISTRIBUTE) != null;
     }
@@ -292,7 +307,10 @@ public abstract class EventUtil {
      * Is this a local event?
      * @param event
      * @return <code>true</code> if this is a local event
+     * @deprecated Event handlers should rather filter just for the property
+     *             being available (remote) or missing (local)
      */
+    @Deprecated
     public static boolean isLocal(final Event event) {
         final String appId = getApplicationId(event);
         return appId == null || appId.equals(Environment.APPLICATION_ID);
@@ -302,7 +320,9 @@ public abstract class EventUtil {
      * Return the application id the event was created at.
      * @param event
      * @return The application id or null if the event has been created locally.
+     * @deprecated
      */
+    @Deprecated
     public static String getApplicationId(final Event event) {
         return (String)event.getProperty(PROPERTY_APPLICATION);
     }
@@ -310,7 +330,9 @@ public abstract class EventUtil {
     /**
      * Improved toString method for an Event.
      * This method prints out the event topic and all of the properties.
+     * @deprecated The new event admin version provides a better toString() method
      */
+    @Deprecated
     public static String toString(final Event e) {
         if ( e == null ) {
             return "<null>";
