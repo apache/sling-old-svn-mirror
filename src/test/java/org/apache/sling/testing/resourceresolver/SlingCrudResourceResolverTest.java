@@ -21,6 +21,7 @@ package org.apache.sling.testing.resourceresolver;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -33,7 +34,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
-import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -177,18 +177,24 @@ public class SlingCrudResourceResolverTest {
     }
 
     @Test
-    public void testPrimaryTypeResourceType() throws PersistenceException {
+    public void testPrimaryTypeResourceType() {
         Resource resource1 = resourceResolver.getResource(testRoot.getPath() + "/node1");
         assertEquals(NT_UNSTRUCTURED, resource1.getResourceType());
     }
 
     @Test
-    public void testNormalizePath() throws PersistenceException {
+    public void testNormalizePath() {
         Resource resource1 = resourceResolver.getResource(testRoot.getPath() + "/./node1");
         assertEquals("node1", resource1.getName());
 
         Resource resource11 = resourceResolver.getResource(testRoot.getPath() + "/node1/../node1/node11");
         assertEquals("node11", resource11.getName());
+    }
+
+    @Test
+    public void testGetResourceNullPath() {
+        Resource resource = resourceResolver.getResource((String)null);
+        assertNull(resource);
     }
 
 }
