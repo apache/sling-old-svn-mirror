@@ -30,7 +30,9 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.util.ISO8601;
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -132,6 +134,18 @@ public class SlingCrudResourceResolverTest {
         Date dateValue = props.get("calendarProp", Date.class);
         assertNotNull(dateValue);
         assertEquals(CALENDAR_VALUE.getTime(), dateValue);
+    }
+    
+    @Test
+    public void testStringToCalendarConversion() throws IOException {
+        Resource resource1 = resourceResolver.getResource(testRoot.getPath() + "/node1");
+        ModifiableValueMap modProps = resource1.adaptTo(ModifiableValueMap.class);
+        modProps.put("dateISO8601String", ISO8601.format(CALENDAR_VALUE));
+        resourceResolver.commit();
+        
+        resource1 = resourceResolver.getResource(testRoot.getPath() + "/node1");
+        ValueMap props = ResourceUtil.getValueMap(resource1);
+        assertEquals(CALENDAR_VALUE.getTime(), props.get("calendarProp", Calendar.class).getTime());
     }
     
     @Test

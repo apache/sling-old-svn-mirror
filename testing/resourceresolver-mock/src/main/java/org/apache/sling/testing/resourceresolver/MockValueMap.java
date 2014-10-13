@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.util.ISO8601;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 
 /**
@@ -50,8 +51,16 @@ public class MockValueMap extends ValueMapDecorator {
     @SuppressWarnings("unchecked")
     @Override
     public <T> T get(String name, Class<T> type) {
-        if (type==Date.class) {
-            Calendar calendar = super.get(name, Calendar.class);
+        if (type == Calendar.class) {
+            // Support conversion of String to Calendar if value conforms to ISO8601 date format
+            Object value = get(name);
+            if (value instanceof String) {
+                return (T)ISO8601.parse((String)value);
+            }
+        }
+        else if (type == Date.class) {
+            // Support conversion from Calendar to Date
+            Calendar calendar = get(name, Calendar.class);
             if (calendar != null) {
                 return (T)calendar.getTime();
             }
@@ -59,8 +68,9 @@ public class MockValueMap extends ValueMapDecorator {
                 return null;
             }
         }
-        else if (type==InputStream.class) {
-            byte[] data = super.get(name, byte[].class);
+        else if (type == InputStream.class) {
+            // Support conversion from byte array to InputStream
+            byte[] data = get(name, byte[].class);
             if (data!=null) {
                 return (T)new ByteArrayInputStream(data);
             }
@@ -84,11 +94,13 @@ public class MockValueMap extends ValueMapDecorator {
     
     private static Object convertForWrite(Object value) {
         if (value instanceof Date) {
+            // Store Date values as Calendar values 
             Calendar calendar = Calendar.getInstance();
             calendar.setTime((Date)value);
             value = calendar;
         }
         else if (value instanceof InputStream) {
+            // Store InputStream values as byte array
             try {
                 value = IOUtils.toByteArray((InputStream)value);
             } catch (IOException ex) {
