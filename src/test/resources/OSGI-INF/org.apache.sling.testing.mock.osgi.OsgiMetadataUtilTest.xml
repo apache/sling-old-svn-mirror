@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<components xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0">
+  <scr:component name="org.apache.sling.testing.mock.osgi.OsgiMetadataUtilTest$ServiceWithMetadata" activate="activate">
+    <implementation class="org.apache.sling.testing.mock.osgi.OsgiMetadataUtilTest$ServiceWithMetadata"/>
+    <service servicefactory="false">
+      <provide interface="org.apache.sling.models.spi.Injector"/>
+      <provide interface="org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory"/>
+      <provide interface="java.lang.Comparable"/>
+    </service>
+    <property name="service.ranking" type="Integer" value="5000"/>
+    <property name="service.vendor" value="The Apache Software Foundation"/>
+    <property name="service.pid" value="org.apache.sling.models.impl.injectors.OSGiServiceInjector"/>
+  </scr:component>
+</components>
