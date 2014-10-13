@@ -239,7 +239,9 @@ public class ContentXmlHandler extends DefaultHandler {
                 values = new String[] { rawValue };
             }
 
+            // no hint -> string type
             if (hintEnd == -1) {
+                unescape(values);
                 if (values.length == 1 && !explicitMultiValue) {
                     return values[0];
                 }
@@ -255,6 +257,15 @@ public class ContentXmlHandler extends DefaultHandler {
             }
 
             throw new IllegalArgumentException("Unknown typeHint value '" + rawHint + "'");
+        }
+
+        private static void unescape(String[] values) {
+
+            for (int i = 0; i < values.length; i++) {
+                if (values[i].length() > 0 && values[i].charAt(0) == '\\') {
+                    values[i] = values[i].substring(1);
+                }
+            }
         }
 
         private final String rawHint;
