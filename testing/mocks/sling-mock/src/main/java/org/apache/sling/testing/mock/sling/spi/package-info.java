@@ -17,7 +17,6 @@
  * under the License.
  */
 /**
- * Mock implementation of selected OSGi APIs.
+ * SPI for hooking in alternative resource type adapter implementations.
  */
-package org.apache.sling.testing.mock.osgi;
-
+package org.apache.sling.testing.mock.sling.spi;
