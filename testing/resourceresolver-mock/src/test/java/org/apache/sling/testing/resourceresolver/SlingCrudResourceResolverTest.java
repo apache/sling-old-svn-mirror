@@ -168,4 +168,13 @@ public class SlingCrudResourceResolverTest {
         assertEquals(NT_UNSTRUCTURED, resource1.getResourceType());
     }
 
+    @Test
+    public void testNormalizePath() throws PersistenceException {
+        Resource resource1 = resourceResolver.getResource(testRoot.getPath() + "/./node1");
+        assertEquals("node1", resource1.getName());
+
+        Resource resource11 = resourceResolver.getResource(testRoot.getPath() + "/node1/../node1/node11");
+        assertEquals("node11", resource11.getName());
+    }
+
 }

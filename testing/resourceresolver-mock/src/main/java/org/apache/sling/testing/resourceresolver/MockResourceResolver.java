@@ -143,25 +143,26 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
     }
     
     private Resource getResourceInternal(final String path) {
-        if ( path.startsWith("/") ) {
-            if ( this.deletedResources.contains(path) ) {
+        String normalizedPath = ResourceUtil.normalize(path);
+        if ( normalizedPath.startsWith("/") ) {
+            if ( this.deletedResources.contains(normalizedPath) ) {
                 return null;
             }
-            final Map<String, Object> tempProps = this.temporaryResources.get(path);
+            final Map<String, Object> tempProps = this.temporaryResources.get(normalizedPath);
             if ( tempProps != null ) {
-                final Resource rsrc = new MockResource(path, tempProps, this);
+                final Resource rsrc = new MockResource(normalizedPath, tempProps, this);
                 return rsrc;
             }
             synchronized ( this.resources ) {
-                final Map<String, Object> props = this.resources.get(path);
+                final Map<String, Object> props = this.resources.get(normalizedPath);
                 if ( props != null ) {
-                    final Resource rsrc = new MockResource(path, props, this);
+                    final Resource rsrc = new MockResource(normalizedPath, props, this);
                     return rsrc;
                 }
             }
         } else {
             for(final String s : this.getSearchPath() ) {
-                final Resource rsrc = this.getResource(s + '/' + path);
+                final Resource rsrc = this.getResource(s + '/' + normalizedPath);
                 if ( rsrc != null ) {
                     return rsrc;
                 }
