@@ -1,0 +1,156 @@
+{
+  "jcr:primaryType": "sling:OrderedFolder",
+  "jcr:createdBy": "admin",
+  "jcr:title": "Sample",
+  "jcr:created": "Thu Aug 07 2014 16:32:56 GMT+0200",
+  "portraits": {
+    "jcr:primaryType": "sling:OrderedFolder",
+    "jcr:createdBy": "admin",
+    "jcr:title": "Portraits",
+    "jcr:created": "Thu Aug 07 2014 16:32:57 GMT+0200",
+    "scott_reynolds.jpg": {
+      "jcr:primaryType": "dam:Asset",
+      "jcr:mixinTypes": ["mix:versionable"],
+      "jcr:createdBy": "admin",
+      "jcr:versionHistory": "d56a56fa-2a34-487d-b349-53b51033ffc4",
+      "jcr:predecessors": ["f08611ae-e7ed-4b85-99fa-2c4a623e49c2"],
+      "jcr:created": "Thu Aug 07 2014 16:32:58 GMT+0200",
+      "jcr:baseVersion": "f08611ae-e7ed-4b85-99fa-2c4a623e49c2",
+      "jcr:isCheckedOut": true,
+      "jcr:uuid": "442d55b6-d534-4faf-9394-c9c20d095985",
+      "jcr:content": {
+        "jcr:primaryType": "dam:AssetContent",
+        "jcr:lastModifiedBy": "admin",
+        "app:name": "scott_reynolds.jpg",
+        "jcr:lastModified": "Wed May 08 2013 10:21:57 GMT+0200",
+        "app:parentPath": "/content/dam/sample/portraits",
+        "renditions": {
+          "jcr:primaryType": "nt:folder",
+          "jcr:createdBy": "admin",
+          "jcr:created": "Thu Aug 07 2014 16:32:58 GMT+0200",
+          "dam.thumbnail.48.48.png": {
+            "jcr:primaryType": "nt:file",
+            "jcr:createdBy": "admin",
+            "jcr:created": "Thu Aug 07 2014 16:32:58 GMT+0200",
+            "jcr:content": {
+              "jcr:primaryType": "nt:resource",
+              "jcr:lastModifiedBy": "admin",
+              "jcr:mimeType": "image/png",
+              "jcr:lastModified": "Thu Aug 07 2014 16:32:58 GMT+0200",
+              ":jcr:data": 5071,
+              "jcr:uuid": "1a8cda3f-ac06-4779-89e2-55e3929cfc3e"
+            }
+          },
+          "dam.thumbnail.140.100.png": {
+            "jcr:primaryType": "nt:file",
+            "jcr:createdBy": "admin",
+            "jcr:created": "Thu Aug 07 2014 16:32:58 GMT+0200",
+            "jcr:content": {
+              "jcr:primaryType": "nt:resource",
+              "jcr:lastModifiedBy": "admin",
+              "jcr:mimeType": "image/png",
+              "jcr:lastModified": "Thu Aug 07 2014 16:32:58 GMT+0200",
+              ":jcr:data": 34023,
+              "jcr:uuid": "5cbcbf47-a33e-4f33-b9d9-55c9d5f7dd85"
+            }
+          },
+          "original": {
+            "jcr:primaryType": "nt:file",
+            "jcr:createdBy": "admin",
+            "jcr:created": "Thu Aug 07 2014 16:32:58 GMT+0200",
+            "jcr:content": {
+              "jcr:primaryType": "nt:resource",
+              "jcr:lastModifiedBy": "admin",
+              "jcr:mimeType": "image/jpeg",
+              "jcr:lastModified": "Thu Aug 07 2014 16:32:58 GMT+0200",
+              ":jcr:data": 46825,
+              "jcr:uuid": "5673bb2d-0fc3-485d-9767-57241c1b4a30"
+            }
+          },
+          "dam.thumbnail.319.319.png": {
+            "jcr:primaryType": "nt:file",
+            "jcr:createdBy": "admin",
+            "jcr:created": "Thu Aug 07 2014 16:32:58 GMT+0200",
+            "jcr:content": {
+              "jcr:primaryType": "nt:resource",
+              "jcr:lastModifiedBy": "admin",
+              "jcr:mimeType": "image/png",
+              "jcr:lastModified": "Thu Aug 07 2014 16:32:58 GMT+0200",
+              ":jcr:data": 162594,
+              "jcr:uuid": "176a4ba8-c03b-4f90-815e-d84070d15dc2"
+            }
+          }
+        },
+        "metadata": {
+          "jcr:primaryType": "nt:unstructured",
+          "jcr:mixinTypes": ["app:Taggable"],
+          "dam:UserComment": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+          "dam:ExposureCompensation": 2,
+          "tiff:Compression": 6,
+          "tiff:Make": "Canon\u0000",
+          "dam:Physicalwidthininches": 4.483333110809326,
+          "exif:CustomRendered": 0,
+          "dam:JpgFromRawStart": 1054,
+          "dam:Fileformat": "JPEG",
+          "exif:MaxApertureValue": 4.64385986328125,
+          "dam:Progressive": "no",
+          "exif:FNumber": 5,
+          "tiff:ImageLength": 595,
+          "exif:FlashpixVersion": "0100",
+          "tiff:YResolution": 180,
+          "dam:OtherImageStart": 1054,
+          "exif:FocalLength": 39,
+          "exif:ColorSpace": 65535,
+          "jcr:lastModifiedBy": "admin",
+          "xmp:CreatorTool": "Adobe Photoshop 7.0",
+          "dam:SensingMethod": 2,
+          "dam:extracted": "Wed Oct 06 2010 15:53:22 GMT+0200",
+          "dam:ApertureValue": 4.64385986328125,
+          "dc:format": "image/jpeg",
+          "dam:Bitsperpixel": 24,
+          "exif:FileSource": 3,
+          "dam:OtherImageLength": 2788,
+          "exif:ExifVersion": "0221",
+          "tiff:YCbCrPositioning": 1,
+          "dam:MIMEtype": "image/jpeg",
+          "tiff:Orientation": 1,
+          "dam:FocalPlaneXResolution": 3443.946188340807,
+          "dam:JpgFromRawLength": 2788,
+          "dam:Physicalwidthindpi": 180,
+          "dam:Physicalheightindpi": 180,
+          "exif:Flash": 0,
+          "exif:CompressedBitsPerPixel": 3,
+          "tiff:ResolutionUnit": 2,
+          "dam:ShutterSpeedValue": 5.906890869140625,
+          "exif:ComponentsConfiguration": ["[B@d19c55"],
+          "dam:FocalPlaneResolutionUnit": 2,
+          "dc:modified": "Wed Oct 06 2010 15:53:23 GMT+0200",
+          "dam:Numberofimages": 1,
+          "exif:ExposureMode": 0,
+          "exif:ExposureTime": 0.016666666666666666,
+          "tiff:XResolution": 180,
+          "dam:ExifOffset": 220,
+          "dam:PreviewImageStart": 1054,
+          "exif:WhiteBalance": 0,
+          "app:tags": [
+            "stockphotography:business/business_people",
+            "properties:style/color",
+            "properties:orientation/landscape"
+          ],
+          "jcr:lastModified": "Wed May 08 2013 10:21:57 GMT+0200",
+          "dam:Numberoftextualcomments": 0,
+          "xmp:ModifyDate": "Sat Oct 01 2005 15:16:30 GMT+0200",
+          "tiff:ImageWidth": 807,
+          "exif:DateTimeOriginal": "Sat Oct 01 2005 15:16:30 GMT+0200",
+          "dam:ModifyDate": "Thu Oct 20 2005 12:56:51 GMT+0200",
+          "tiff:Model": "Canon EOS 300D DIGITAL\u0000",
+          "exif:MeteringMode": 5,
+          "exif:SceneCaptureType": 0,
+          "dc:title": "Scott Reynolds",
+          "dam:PreviewImageLength": 2788,
+          "dam:FocalPlaneYResolution": 3442.016806722689
+        }
+      }
+    }
+  }
+}
