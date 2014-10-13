@@ -1,0 +1,16 @@
+.ui-form { width:470px; margin: 0 auto;}
+.ui-form .ui-widget-header h1 { margin:10px; text-align:center;}
+.ui-form .ui-widget-content {padding:10px;}
+.ui-form .ui-form-label {display: inline-block; width:150px; height: 25px; margin:10px;border: 1px solid #000000; color: #ffffff; background-color: #33cc33; text-align:center; font-weight: bold; vertical-align:middle;}
+.ui-form .ui-form-field {display: inline-block; width:244px; height: 25px; margin:10px;border: 1px solid #000000; vertical-align:middle;}
+.ui-form .ui-form-label label {vertical-align:middle; line-height:25px;}
+.ui-form-field input {width: 100%;}
+.ui-form-button {width:200px; height: 25px; margin:10px; border: 1px solid #000000; color: #ffffff; vertical-align:middle; background-color: #33cc33;}
+.ui-form-button-login { width:418px;}
+.ui-form-button-new {background-color: #aaaaff; width:197px;}
+.ui-form-button-help {background-color: #aaaaff; width:197px;}
+.ui-body-app {background: url("images/background.jpg") no-repeat center center fixed; -webkit-background-size: cover; -moz-background-size: cover; -o-background-size: cover; background-size: cover;}
+.ui-slingshot-content {margin: 20px; padding: 10px;}
+.ui-slingshot-main {margin: 20px; padding: 10px; background-color: #dddddd; }
+.ui-slingshot-main h1 {margin: 10px; text-align:center; }
+.ui-slingshot-comments {float:none; margin:10px; padding: 10px; display:block; width:100%;}
