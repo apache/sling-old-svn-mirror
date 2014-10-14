@@ -66,6 +66,9 @@
             **/launchpad/webapp/integrationtest
         </integration.test.code.path>
 
+        <!-- optionally exclude some integration tests  -->
+        <failsafe.exclude></failsafe.exclude>
+
         <!--
             Set this to true to stop mvn once the integration test Jetty instance is
             started. Useful to manually test the integration testing webapp.
@@ -242,6 +245,9 @@
                                 <include>**/*Test.java</include>
                                 <include>**/*IT.java</include>
                             </includes>
+                            <excludes>
+                                <exclude>${failsafe.exclude}</exclude>
+                            </excludes>
                             <excludedGroups>${sling.it.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
                                 <launchpad.http.server.url>http://${test.host}:${http.port}/</launchpad.http.server.url>
