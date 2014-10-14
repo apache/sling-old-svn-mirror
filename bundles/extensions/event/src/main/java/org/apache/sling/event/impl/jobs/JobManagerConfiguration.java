@@ -22,6 +22,13 @@ import java.util.Calendar;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Modified;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.event.impl.support.Environment;
 
@@ -29,6 +36,24 @@ import org.apache.sling.event.impl.support.Environment;
  * Configuration of the job handling
  *
  */
+@Component(immediate=true, metatype=true,
+           label="Apache Sling Job Manager",
+           description="This is the central service of the job handling.",
+           name="org.apache.sling.event.impl.jobs.jcr.PersistenceHandler")
+@Service(value={JobManagerConfiguration.class})
+@Properties({
+    @Property(name=JobManagerConfiguration.PROPERTY_DISABLE_DISTRIBUTION,
+              boolValue=JobManagerConfiguration.DEFAULT_DISABLE_DISTRIBUTION,
+              label="Disable Distribution",
+              description="If the distribution is disabled, all jobs will be processed on the leader only! "
+                        + "Please use this switch with care."),
+    @Property(name=JobManagerConfiguration.PROPERTY_REPOSITORY_PATH,
+              value=JobManagerConfiguration.DEFAULT_REPOSITORY_PATH, propertyPrivate=true),
+    @Property(name=JobManagerConfiguration.PROPERTY_SCHEDULED_JOBS_PATH,
+              value=JobManagerConfiguration.DEFAULT_SCHEDULED_JOBS_PATH, propertyPrivate=true),
+    @Property(name=JobManagerConfiguration.PROPERTY_BACKGROUND_LOAD_DELAY,
+              longValue=JobManagerConfiguration.DEFAULT_BACKGROUND_LOAD_DELAY, propertyPrivate=true),
+})
 public class JobManagerConfiguration {
 
     /** Default resource path for jobs. */
@@ -97,10 +122,24 @@ public class JobManagerConfiguration {
     /** The resource path where scheduled jobs are stored - ending with a slash. */
     private String scheduledJobsPathWithSlash;
 
-    public JobManagerConfiguration(final Map<String, Object> props) {
+    /**
+     * Update with a new configuration
+     */
+    @Modified
+    public void update(final Map<String, Object> props) {
+        this.disabledDistribution = PropertiesUtil.toBoolean(props.get(PROPERTY_DISABLE_DISTRIBUTION), DEFAULT_DISABLE_DISTRIBUTION);
+        this.backgroundLoadDelay = PropertiesUtil.toLong(props.get(PROPERTY_BACKGROUND_LOAD_DELAY), DEFAULT_BACKGROUND_LOAD_DELAY);
+    }
+
+    /**
+     * Activate this component.
+     * @param props Configuration properties
+     */
+    @Activate
+    protected void activate(final Map<String, Object> props) throws LoginException {
         this.update(props);
         this.jobsBasePathWithSlash = PropertiesUtil.toString(props.get(PROPERTY_REPOSITORY_PATH),
-                            DEFAULT_REPOSITORY_PATH) + '/';
+                DEFAULT_REPOSITORY_PATH) + '/';
 
         // create initial resources
         this.assignedJobsPath = this.jobsBasePathWithSlash + "assigned";
@@ -118,16 +157,8 @@ public class JobManagerConfiguration {
         this.storedSuccessfulJobsPath = this.jobsBasePathWithSlash + "finished";
 
         this.scheduledJobsPath = PropertiesUtil.toString(props.get(PROPERTY_SCHEDULED_JOBS_PATH),
-                DEFAULT_SCHEDULED_JOBS_PATH);
+            DEFAULT_SCHEDULED_JOBS_PATH);
         this.scheduledJobsPathWithSlash = this.scheduledJobsPath + "/";
-    }
-
-    /**
-     * Update with a new configuration
-     */
-    public void update(final Map<String, Object> props) {
-        this.disabledDistribution = PropertiesUtil.toBoolean(props.get(PROPERTY_DISABLE_DISTRIBUTION), DEFAULT_DISABLE_DISTRIBUTION);
-        this.backgroundLoadDelay = PropertiesUtil.toLong(props.get(PROPERTY_BACKGROUND_LOAD_DELAY), DEFAULT_BACKGROUND_LOAD_DELAY);
     }
 
     /**
@@ -222,7 +253,7 @@ public class JobManagerConfiguration {
     }
 
     public boolean isLocalJob(final String jobPath) {
-        return jobPath.startsWith(this.localJobsPathWithSlash);
+        return jobPath != null && jobPath.startsWith(this.localJobsPathWithSlash);
     }
 
     public boolean isJob(final String jobPath) {
