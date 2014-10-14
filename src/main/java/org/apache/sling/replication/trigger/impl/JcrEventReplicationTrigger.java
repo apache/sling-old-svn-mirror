@@ -19,97 +19,44 @@
 package org.apache.sling.replication.trigger.impl;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.jcr.observation.Event;
-import javax.jcr.observation.EventIterator;
-import javax.jcr.observation.EventListener;
 import java.util.Map;
 
-import org.apache.jackrabbit.api.observation.JackrabbitEvent;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
-import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * A JCR observation based {@link org.apache.sling.replication.trigger.ReplicationTrigger}.
- * It filters events having {@link javax.jcr.observation.ObservationManager#setUserData(String)} set to
- * {@link #DO_NOT_REPLICATE}
  */
-public class JcrEventReplicationTrigger implements ReplicationTrigger {
-
-    public static final String DO_NOT_REPLICATE = "do.not.replicate";
+public class JcrEventReplicationTrigger extends AbstractJcrEventTrigger implements ReplicationTrigger {
 
     public static final String TYPE = "jcrEvent";
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    private final SlingRepository repository;
-    private final String path;
-
-    private Session adminSession;
-
-    public JcrEventReplicationTrigger(SlingRepository repository, String path) {
-        this.repository = repository;
-        this.path = path;
+    public JcrEventReplicationTrigger(SlingRepository repository, String path, String serviceName) {
+        super(repository, path, serviceName);
     }
 
     public JcrEventReplicationTrigger(Map<String, Object> properties, SlingRepository repository) {
-        this(repository, PropertiesUtil.toString(properties.get("path"), null));
+        this(repository, PropertiesUtil.toString(properties.get(PATH), null), PropertiesUtil.toString(properties.get(SERVICENAME), null));
     }
 
-    public void register(String handlerId, ReplicationTriggerRequestHandler requestHandler) {
-        log.info("activating ExampleObservation");
-        try {
-            adminSession = repository.loginService("replicationService", null);
-            adminSession.getWorkspace().getObservationManager().addEventListener(
-                    new JcrEventReplicationTriggerHandler(requestHandler), Event.NODE_ADDED | Event.NODE_MOVED | Event.NODE_REMOVED | Event.PROPERTY_CHANGED |
-                            Event.PROPERTY_ADDED | Event.PROPERTY_REMOVED, path, true, null, null, false);
-        } catch (RepositoryException e) {
-            log.error("unable to register session", e);
+    @Override
+    protected ReplicationRequest processEvent(Event event) throws RepositoryException {
+        log.info("triggering replication from jcr event {}", event);
+        ReplicationRequest replicationRequest = null;
+        Object pathProperty = event.getPath();
+        if (pathProperty != null) {
+            String replicatingPath = String.valueOf(pathProperty);
+            replicationRequest = new ReplicationRequest(System.currentTimeMillis(), Event.NODE_REMOVED ==
+                    event.getType() ? ReplicationActionType.DELETE : ReplicationActionType.ADD, replicatingPath);
         }
-    }
-
-    public void unregister(String handlerId) {
-        if (adminSession != null) {
-            adminSession.logout();
-        }
-    }
-
-    private class JcrEventReplicationTriggerHandler implements EventListener {
-        private final ReplicationTriggerRequestHandler requestHandler;
-
-        public JcrEventReplicationTriggerHandler(ReplicationTriggerRequestHandler requestHandler) {
-            this.requestHandler = requestHandler;
-        }
-
-        public void onEvent(EventIterator eventIterator) {
-            try {
-                while (eventIterator.hasNext()) {
-                    Event event = eventIterator.nextEvent();
-                    if (event instanceof JackrabbitEvent && !((JackrabbitEvent)event).isExternal()) {
-                        String userData = event.getUserData();
-                        log.debug("event userData is {}", userData);
-                        if (!DO_NOT_REPLICATE.equals(userData)) {
-                            log.info("triggering replication from jcr event {}", event);
-
-                            Object pathProperty = event.getPath();
-                            if (pathProperty != null) {
-                                String replicatingPath = String.valueOf(pathProperty);
-                                requestHandler.handle(new ReplicationRequest(System.currentTimeMillis(), Event.NODE_MOVED ==
-                                        event.getType() ? ReplicationActionType.DELETE : ReplicationActionType.ADD, replicatingPath));
-                            }
-                        }
-                    }
-                }
-            } catch (RepositoryException e) {
-                log.error("Error while treating events", e);
-            }
-        }
-
+        return replicationRequest;
     }
 }

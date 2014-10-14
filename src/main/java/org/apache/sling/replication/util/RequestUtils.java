@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.transport.impl;
+package org.apache.sling.replication.util;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
@@ -27,6 +27,9 @@ import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationParameter;
 import org.apache.sling.replication.communication.ReplicationRequest;
 
+/**
+ * Utility class for HTTP / Replication request related operations.
+ */
 public class RequestUtils {
 
     public static ReplicationRequest fromServletRequest(HttpServletRequest request) {
@@ -40,7 +43,7 @@ public class RequestUtils {
 
     public static URI appendReplicationRequest(URI uri, ReplicationRequest replicationRequest) throws URISyntaxException {
         URIBuilder uriBuilder = new URIBuilder(uri);
-        uriBuilder.addParameter(ReplicationParameter.ACTION.toString(), ReplicationActionType.POLL.getName());
+        uriBuilder.addParameter(ReplicationParameter.ACTION.toString(), replicationRequest.getAction().getName());
         for (String path : replicationRequest.getPaths()) {
             uriBuilder.addParameter(ReplicationParameter.PATH.toString(), path);
         }

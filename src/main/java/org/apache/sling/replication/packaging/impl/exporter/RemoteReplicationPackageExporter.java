@@ -48,7 +48,6 @@ public class RemoteReplicationPackageExporter implements ReplicationPackageExpor
                                             int pollItems) {
         this.packageBuilder = packageBuilder;
 
-
         List<ReplicationTransportHandler> transportHandlers = new ArrayList<ReplicationTransportHandler>();
 
         for (String endpoint : endpoints) {

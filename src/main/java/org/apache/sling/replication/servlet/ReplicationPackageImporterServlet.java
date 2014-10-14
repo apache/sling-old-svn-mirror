@@ -68,6 +68,7 @@ public class ReplicationPackageImporterServlet extends SlingAllMethodsServlet {
             if (replicationPackage != null) {
                 success = replicationPackageImporter.importPackage(replicationPackage);
             } else {
+                // TODO : this should not just cause a warning as it means package was not imported correctly
                 log.warn("cannot read a replication package from the given stream");
             }
         } catch (final Exception e) {
