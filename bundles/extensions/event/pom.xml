@@ -76,7 +76,7 @@
                         <Embed-Dependency>
                             jackrabbit-jcr-commons;inline="org/apache/jackrabbit/util/ISO9075.*|org/apache/jackrabbit/util/ISO8601.*|org/apache/jackrabbit/util/XMLChar.*",
                             org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/PropertiesUtil.*",
-                            quartz;inline="org/quartz/CronExpression.*"
+                            quartz;inline="org/quartz/CronExpression.*|org/quartz/ValueSet.*"
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
