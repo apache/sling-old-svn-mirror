@@ -140,7 +140,7 @@ public abstract class ResourceHelper {
             return ResourceHelper.filterName(queueName);
         }
     }
-    
+
     /**
      * Filter the node name for not allowed characters and replace them.
      * @param resourceName The suggested resource name.
@@ -266,8 +266,7 @@ public abstract class ResourceHelper {
     public static void getOrCreateBasePath(final ResourceResolver resolver,
             final String path)
     throws PersistenceException {
-        // TODO - we should rather fix ResourceUtil.getOrCreateResource:
-        //        on concurrent writes, create might fail!
+        PersistenceException mostRecentPE = null;
         for(int i=0;i<5;i++) {
             try {
                 ResourceUtil.getOrCreateResource(resolver,
@@ -277,17 +276,17 @@ public abstract class ResourceHelper {
                         true);
                 return;
             } catch ( final PersistenceException pe ) {
-                // ignore
+                //in case of exception, revert to last clean state and retry SLING-4014
+                resolver.revert();
+                mostRecentPE = pe;
             }
         }
-        throw new PersistenceException("Unable to create resource with path " + path);
+        throw new PersistenceException("Unable to create resource with path " + path, mostRecentPE);
     }
 
     public static Resource getOrCreateResource(final ResourceResolver resolver,
             final String path, final Map<String, Object> props)
     throws PersistenceException {
-        // TODO - we should rather fix ResourceUtil.getOrCreateResource:
-        //        on concurrent writes, create might fail!
         PersistenceException mostRecentPE = null;
         for(int i=0;i<5;i++) {
             try {
