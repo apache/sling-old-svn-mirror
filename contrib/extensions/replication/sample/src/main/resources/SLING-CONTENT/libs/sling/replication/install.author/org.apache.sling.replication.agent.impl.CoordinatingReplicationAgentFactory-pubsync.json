@@ -2,11 +2,13 @@
     "jcr:primaryType": "sling:OsgiConfig",
     "name": "pubsync",
 
+    "serviceName" : "replicationService",
+
+
     "packageExporter": [
         "authenticationProvider/type=service",
 
         "packageBuilder/type=vlt",
-        "packageBuilder/servicename=replicationService",
 
         "endpoints[0]=http://localhost:4503/libs/sling/replication/services/exporters/reverse-pubsync",
         "endpoints[1]=http://localhost:4504/libs/sling/replication/services/exporters/reverse-pubsync",
@@ -14,11 +16,15 @@
         "endpoints.strategy=All"
     ],
 
+    "packageExporterStrategy" : [
+        "type=privilege",
+        "jcrPrivilege=jcr:read"
+    ],
+
     "packageImporter": [
         "authenticationProvider/type=service",
 
         "packageBuilder/type=vlt",
-        "packageBuilder/servicename=replicationService",
 
         "endpoints[0]=http://localhost:4503/libs/sling/replication/services/importers/default",
         "endpoints[1]=http://localhost:4504/libs/sling/replication/services/importers/default",

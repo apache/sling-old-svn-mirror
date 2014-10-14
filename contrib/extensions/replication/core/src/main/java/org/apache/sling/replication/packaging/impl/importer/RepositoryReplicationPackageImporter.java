@@ -32,6 +32,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.util.Text;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.event.ReplicationEventFactory;
@@ -112,11 +113,11 @@ public class RepositoryReplicationPackageImporter implements ReplicationPackageI
         }
     }
 
-    public boolean importPackage(ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {
+    public boolean importPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {
         return false;
     }
 
-    public ReplicationPackage readPackage(InputStream stream) throws ReplicationPackageReadingException {
+    public ReplicationPackage readPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageReadingException {
         return null;
     }
 }

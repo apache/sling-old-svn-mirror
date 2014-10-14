@@ -21,6 +21,7 @@ package org.apache.sling.replication.packaging.impl.exporter;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
@@ -60,15 +61,15 @@ public class RemoteReplicationPackageExporter implements ReplicationPackageExpor
                 transportEndpointStrategyType);
     }
 
-    public List<ReplicationPackage> exportPackage(ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
+    public List<ReplicationPackage> exportPackage(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
         try {
-            return transportHandler.retrievePackages(replicationRequest);
+            return transportHandler.retrievePackages(resourceResolver, replicationRequest);
         } catch (Exception e) {
             throw new ReplicationPackageBuildingException(e);
         }
     }
 
-    public ReplicationPackage exportPackageById(String replicationPackageId) {
-        return packageBuilder.getPackage(replicationPackageId);
+    public ReplicationPackage exportPackageById(ResourceResolver resourceResolver, String replicationPackageId) {
+        return packageBuilder.getPackage(resourceResolver, replicationPackageId);
     }
 }

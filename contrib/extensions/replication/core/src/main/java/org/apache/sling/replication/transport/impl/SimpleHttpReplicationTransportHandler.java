@@ -33,6 +33,7 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.entity.ContentType;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
@@ -72,7 +73,7 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
         this.maxNumberOfPackages = maxNumberOfPackages;
     }
 
-    public void deliverPackage(ReplicationPackage replicationPackage) throws ReplicationTransportException {
+    public void deliverPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationTransportException {
         log.info("delivering package {} to {} using auth {}",
                 new Object[]{
                         replicationPackage.getId(),
@@ -119,7 +120,7 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
 
     }
 
-    public List<ReplicationPackage> retrievePackages(ReplicationRequest replicationRequest) throws ReplicationTransportException {
+    public List<ReplicationPackage> retrievePackages(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationTransportException {
         log.debug("polling from {}", replicationEndpoint.getUri());
 
         try {
@@ -143,7 +144,7 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
                 while ((httpResponse = executor.execute(req).returnResponse())
                         .getStatusLine().getStatusCode() == 200
                         && polls < maxNumberOfPackages) {
-                    ReplicationPackage responsePackage = packageBuilder.readPackage(httpResponse.getEntity().getContent());
+                    ReplicationPackage responsePackage = packageBuilder.readPackage(resourceResolver, httpResponse.getEntity().getContent());
 
                     result.add(responsePackage);
                     polls++;

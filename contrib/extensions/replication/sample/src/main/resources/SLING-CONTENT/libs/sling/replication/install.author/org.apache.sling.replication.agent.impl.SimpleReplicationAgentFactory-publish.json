@@ -2,10 +2,16 @@
     "jcr:primaryType": "sling:OsgiConfig",
     "name": "publish",
 
+    "serviceName" : "replicationService",
+
     "packageExporter": [
         "type=local",
-        "packageBuilder/type=vlt",
-        "packageBuilder/servicename=replicationService"
+        "packageBuilder/type=vlt"
+    ],
+
+    "packageExporterStrategy" : [
+        "type=privilege",
+        "jcrPrivilege=jcr:read"
     ],
 
     "packageImporter": [
@@ -14,8 +20,7 @@
 
         "authenticationProvider/type=service",
 
-        "packageBuilder/type=vlt",
-        "packageBuilder/servicename=replicationService"
+        "packageBuilder/type=vlt"
     ],
 
     "queueProvider.target" : "(name=sjh)",

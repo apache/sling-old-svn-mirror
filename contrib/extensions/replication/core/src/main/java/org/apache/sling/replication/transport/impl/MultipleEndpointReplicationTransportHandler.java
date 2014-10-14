@@ -21,6 +21,7 @@ package org.apache.sling.replication.transport.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.transport.ReplicationTransportException;
@@ -42,7 +43,7 @@ public class MultipleEndpointReplicationTransportHandler implements ReplicationT
         this.endpointStrategyType = endpointStrategyType;
     }
 
-    private List<ReplicationPackage> doTransport(ReplicationRequest replicationRequest, ReplicationPackage replicationPackage) throws ReplicationTransportException {
+    private List<ReplicationPackage> doTransport(ResourceResolver resourceResolver, ReplicationRequest replicationRequest, ReplicationPackage replicationPackage) throws ReplicationTransportException {
 
         int offset = 0;
         if (endpointStrategyType.equals(TransportEndpointStrategyType.One)) {
@@ -57,9 +58,9 @@ public class MultipleEndpointReplicationTransportHandler implements ReplicationT
 
             ReplicationTransportHandler transportHelper = transportHelpers.get(currentId);
             if (replicationPackage != null) {
-                transportHelper.deliverPackage(replicationPackage);
+                transportHelper.deliverPackage(resourceResolver, replicationPackage);
             } else if (replicationRequest != null) {
-                List<ReplicationPackage> retrievedPackages = transportHelper.retrievePackages(replicationRequest);
+                List<ReplicationPackage> retrievedPackages = transportHelper.retrievePackages(resourceResolver, replicationRequest);
                 result.addAll(retrievedPackages);
             }
 
@@ -71,12 +72,12 @@ public class MultipleEndpointReplicationTransportHandler implements ReplicationT
         return result;
     }
 
-    public void deliverPackage(ReplicationPackage replicationPackage) throws ReplicationTransportException {
-        doTransport(null, replicationPackage);
+    public void deliverPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationTransportException {
+        doTransport(resourceResolver, null, replicationPackage);
     }
 
-    public List<ReplicationPackage> retrievePackages(ReplicationRequest replicationRequest) throws ReplicationTransportException {
-        return doTransport(replicationRequest, null);
+    public List<ReplicationPackage> retrievePackages(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationTransportException {
+        return doTransport(resourceResolver, replicationRequest, null);
     }
 
 

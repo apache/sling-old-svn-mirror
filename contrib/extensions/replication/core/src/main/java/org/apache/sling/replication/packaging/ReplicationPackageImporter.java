@@ -20,6 +20,7 @@ package org.apache.sling.replication.packaging;
 
 import java.io.InputStream;
 
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 
 /**
@@ -33,7 +34,7 @@ public interface ReplicationPackageImporter {
      * @param replicationPackage - the package to be imported
      * @return <code>true</code> if the import succeeded, <code>false</code> otherwise
      */
-    boolean importPackage(ReplicationPackage replicationPackage) throws ReplicationPackageReadingException;
+    boolean importPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationPackageReadingException;
 
     /**
      * reads a stream and tries to convert it to a {@link ReplicationPackage} this provider can read and install
@@ -42,6 +43,6 @@ public interface ReplicationPackageImporter {
      * @return a {@link ReplicationPackage} if it can read it from the stream
      * @throws ReplicationPackageReadingException when the stream cannot be read as a {@link ReplicationPackage}
      */
-    ReplicationPackage readPackage(InputStream stream) throws ReplicationPackageReadingException;
+    ReplicationPackage readPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageReadingException;
 
 }

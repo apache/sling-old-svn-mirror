@@ -7,6 +7,10 @@
         "name=void"
     ],
 
+    "packageExporterStrategy" : [
+        "type=default"
+    ],
+
     "packageImporter": [
         "type=service",
         "name=cache-flush"

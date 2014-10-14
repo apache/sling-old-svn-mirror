@@ -34,6 +34,7 @@ import org.apache.jackrabbit.vault.packaging.ExportOptions;
 import org.apache.jackrabbit.vault.packaging.JcrPackage;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.event.ReplicationEventFactory;
@@ -61,24 +62,22 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
 
     private final Packaging packaging;
 
-    private final String subServiceName;
-
     private static final String TYPE = "vlt";
 
-    public FileVaultReplicationPackageBuilder(String subServiceName, SlingRepository repository, Packaging packaging,
+    public FileVaultReplicationPackageBuilder(SlingRepository repository, Packaging packaging,
                                               ReplicationEventFactory replicationEventFactory) {
         super(TYPE, replicationEventFactory);
 
-        this.subServiceName = subServiceName;
         this.repository = repository;
         this.packaging = packaging;
     }
 
-    protected ReplicationPackage createPackageForAdd(ReplicationRequest request)
+    @Override
+    protected ReplicationPackage createPackageForAdd(ResourceResolver resourceResolver, ReplicationRequest request)
             throws ReplicationPackageBuildingException {
         Session session = null;
         try {
-            session = getSession();
+            session = getSession(resourceResolver);
 
             final String[] paths = request.getPaths();
 
@@ -114,14 +113,7 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
     }
 
     @Override
-    protected Session getSession() throws RepositoryException {
-        Session session = repository.loginService(subServiceName, null);
-        ReplicationJcrUtils.setDoNotReplicate(session);
-        return session;
-    }
-
-    @Override
-    protected ReplicationPackage readPackageInternal(final InputStream stream)
+    protected ReplicationPackage readPackageInternal(ResourceResolver resourceResolver, final InputStream stream)
             throws ReplicationPackageReadingException {
         log.debug("reading a stream");
         ReplicationPackage pkg = null;
@@ -148,7 +140,7 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
 
 
     @Override
-    protected ReplicationPackage getPackageInternal(String id) {
+    protected ReplicationPackage getPackageInternal(ResourceResolver resourceResolver, String id) {
         ReplicationPackage replicationPackage = null;
         try {
             File file = new File(id);
@@ -168,12 +160,12 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
 
 
     @Override
-    public boolean installPackageInternal(ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {
+    public boolean installPackageInternal(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {
         log.debug("reading a replication package stream");
 
         Session session = null;
         try {
-            session = getSession();
+            session = getSession(resourceResolver);
 //            if (session != null) {
 //                final JcrPackage jcrPackage = packaging.getPackageManager(getSession())
 //                        .open(PackageId.fromString(replicationPackage.getId()));

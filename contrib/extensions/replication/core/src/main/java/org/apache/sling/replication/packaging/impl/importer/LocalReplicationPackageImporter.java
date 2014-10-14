@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.event.ReplicationEventType;
 import org.apache.sling.replication.packaging.ReplicationPackage;
@@ -53,10 +54,10 @@ public class LocalReplicationPackageImporter implements ReplicationPackageImport
     }
 
 
-    public boolean importPackage(ReplicationPackage replicationPackage) {
+    public boolean importPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) {
         boolean success = false;
         try {
-            success = packageBuilder.installPackage(replicationPackage);
+            success = packageBuilder.installPackage(resourceResolver, replicationPackage);
 
             if (success) {
                 log.info("replication package read and installed for path(s) {}", Arrays.toString(replicationPackage.getPaths()));
@@ -76,9 +77,9 @@ public class LocalReplicationPackageImporter implements ReplicationPackageImport
         return success;
     }
 
-    public ReplicationPackage readPackage(InputStream stream) throws ReplicationPackageReadingException {
+    public ReplicationPackage readPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageReadingException {
         try {
-            return packageBuilder.readPackage(stream);
+            return packageBuilder.readPackage(resourceResolver, stream);
         } catch (Exception e) {
             log.error("cannot read a package from the given stream");
         }

@@ -16,22 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.trigger;
+
+package org.apache.sling.replication.packaging.impl.exporter.strategy;
+
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.packaging.ReplicationPackage;
+import org.apache.sling.replication.packaging.ReplicationPackageExporter;
+import org.apache.sling.replication.packaging.ReplicationPackageExporterStrategy;
+import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 
-/**
- * An handler for {@link org.apache.sling.replication.communication.ReplicationRequest}s passed to a
- * {@link org.apache.sling.replication.trigger.ReplicationTrigger}
- */
-public interface ReplicationTriggerRequestHandler {
+import java.util.List;
 
-    /**
-     * handle the request according to the trigger implementation.
-     *
-     * @param request a replication request
-     */
-    void handle(ReplicationRequest request);
+public class DefaultReplicationPackageExporterStrategy implements ReplicationPackageExporterStrategy {
 
+    public static final String NAME = "default";
+
+    public List<ReplicationPackage> exportPackages(ResourceResolver resourceResolver, ReplicationRequest replicationRequest,
+                                                   ReplicationPackageExporter packageExporter) throws ReplicationPackageBuildingException {
+        return packageExporter.exportPackage(resourceResolver, replicationRequest);
+    }
 }

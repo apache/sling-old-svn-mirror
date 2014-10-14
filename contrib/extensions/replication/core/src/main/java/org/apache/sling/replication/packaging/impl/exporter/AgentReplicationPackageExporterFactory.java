@@ -29,6 +29,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.communication.ReplicationRequest;
@@ -72,7 +73,7 @@ public class AgentReplicationPackageExporterFactory implements ReplicationPackag
         queueName = PropertiesUtil.toString(config.get(QUEUE_NAME), "");
     }
 
-    public List<ReplicationPackage> exportPackage(ReplicationRequest replicationRequest) {
+    public List<ReplicationPackage> exportPackage(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) {
 
         List<ReplicationPackage> result = new ArrayList<ReplicationPackage>();
         try {
@@ -82,7 +83,7 @@ public class AgentReplicationPackageExporterFactory implements ReplicationPackag
             ReplicationQueueItem info = queue.getHead();
             ReplicationPackage replicationPackage;
             if (info != null) {
-                replicationPackage = replicationPackageBuilder.getPackage(info.getId());
+                replicationPackage = replicationPackageBuilder.getPackage(resourceResolver, info.getId());
                 queue.remove(info.getId());
                 if (replicationPackage != null) {
                     result.add(replicationPackage);
@@ -96,7 +97,7 @@ public class AgentReplicationPackageExporterFactory implements ReplicationPackag
         return result;
     }
 
-    public ReplicationPackage exportPackageById(String replicationPackageId) {
+    public ReplicationPackage exportPackageById(ResourceResolver resourceResolver, String replicationPackageId) {
         return null;
     }
 }

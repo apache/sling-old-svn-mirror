@@ -77,18 +77,17 @@ public class SimpleReplicationAgentFactory implements ReplicationComponentProvid
     @Property(label = "Name")
     public static final String NAME = "name";
 
-    @Property(boolValue = true, label = "Replicate using aggregated paths")
-    public static final String USE_AGGREGATE_PATHS = "useAggregatePaths";
-
     @Property(boolValue = false, label = "Use this agent as a passive one (only queueing)")
     public static final String IS_PASSIVE = "isPassive";
-
 
     @Property(label = "Package Exporter", cardinality = 100)
     public static final String PACKAGE_EXPORTER = "packageExporter";
 
     @Property(label = "Package Importer", cardinality = 100)
     public static final String PACKAGE_IMPORTER = "packageImporter";
+
+    @Property(label = "Service Name")
+    public static final String SERVICE_NAME = "serviceName";
 
     @Property(label = "Target ReplicationQueueProvider", name = QUEUEPROVIDER_TARGET, value = DEFAULT_QUEUEPROVIDER)
     @Reference(name = "queueProvider", target = DEFAULT_QUEUEPROVIDER)

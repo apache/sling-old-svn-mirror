@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.agent;
 
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.communication.ReplicationResponse;
 import org.apache.sling.replication.queue.ReplicationQueue;
@@ -55,6 +56,6 @@ public interface ReplicationAgent {
      * @return a {@link ReplicationResponse}
      * @throws AgentReplicationException
      */
-    ReplicationResponse execute(ReplicationRequest replicationRequest) throws AgentReplicationException;
+    ReplicationResponse execute(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws AgentReplicationException;
 
 }

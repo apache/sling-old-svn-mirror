@@ -31,6 +31,7 @@ import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ContentType;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
@@ -82,7 +83,7 @@ public class AdvancedHttpReplicationTransportHandler extends SimpleHttpReplicati
     }
 
     @Override
-    public void deliverPackage(ReplicationPackage replicationPackage) throws ReplicationTransportException {
+    public void deliverPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationTransportException {
         log.info("delivering package {} to {} using auth {}",
                 new Object[]{replicationPackage.getId(),
                         replicationEndpoint.getUri(), transportAuthenticationProvider});
