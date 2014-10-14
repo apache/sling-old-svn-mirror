@@ -36,9 +36,8 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.event.impl.jobs.JobImpl;
-import org.apache.sling.event.impl.jobs.JobManagerImpl;
+import org.apache.sling.event.impl.jobs.JobManagerConfiguration;
 import org.apache.sling.event.jobs.Job;
-import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.consumer.JobExecutionContext;
 import org.apache.sling.event.jobs.consumer.JobExecutionResult;
 import org.apache.sling.event.jobs.consumer.JobExecutor;
@@ -74,7 +73,7 @@ public class HistoryCleanUpTask implements JobExecutor {
     private ResourceResolverFactory resourceResolverFactory;
 
     @Reference
-    private JobManager jobManager;
+    private JobManagerConfiguration configuration;
 
     @Override
     public JobExecutionResult process(final Job job, final JobExecutionContext context) {
@@ -106,13 +105,13 @@ public class HistoryCleanUpTask implements JobExecutor {
             resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
 
             if ( stateList == null || stateList.contains(Job.JobState.SUCCEEDED.name()) ) {
-                this.cleanup(removeDate, resolver, context, ((JobManagerImpl)jobManager).getConfiguration().getStoredSuccessfulJobsPath(), topics, null);
+                this.cleanup(removeDate, resolver, context, configuration.getStoredSuccessfulJobsPath(), topics, null);
             }
             if ( stateList == null || stateList.contains(Job.JobState.DROPPED.name())
                  || stateList.contains(Job.JobState.ERROR.name())
                  || stateList.contains(Job.JobState.GIVEN_UP.name())
                  || stateList.contains(Job.JobState.STOPPED.name())) {
-                this.cleanup(removeDate, resolver, context, ((JobManagerImpl)jobManager).getConfiguration().getStoredCancelledJobsPath(), topics, stateList);
+                this.cleanup(removeDate, resolver, context, configuration.getStoredCancelledJobsPath(), topics, stateList);
             }
 
         } catch (final PersistenceException pe) {

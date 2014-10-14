@@ -34,7 +34,6 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
@@ -94,23 +93,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Implementation of the job manager.
  */
-@Component(immediate=true, metatype=true,
-           label="Apache Sling Job Manager",
-           description="This is the central service of the job handling.",
-           name="org.apache.sling.event.impl.jobs.jcr.PersistenceHandler")
+@Component(immediate=true)
 @Service(value={JobManager.class, EventHandler.class, TopologyEventListener.class, Runnable.class})
 @Properties({
-    @Property(name=JobManagerConfiguration.PROPERTY_DISABLE_DISTRIBUTION,
-            boolValue=JobManagerConfiguration.DEFAULT_DISABLE_DISTRIBUTION,
-            label="Disable Distribution",
-            description="If the distribution is disabled, all jobs will be processed on the leader only! Please use this switch " +
-                        "with care."),
-    @Property(name=JobManagerConfiguration.PROPERTY_REPOSITORY_PATH,
-             value=JobManagerConfiguration.DEFAULT_REPOSITORY_PATH, propertyPrivate=true),
-    @Property(name=JobManagerConfiguration.PROPERTY_SCHEDULED_JOBS_PATH,
-             value=JobManagerConfiguration.DEFAULT_SCHEDULED_JOBS_PATH, propertyPrivate=true),
-    @Property(name=JobManagerConfiguration.PROPERTY_BACKGROUND_LOAD_DELAY,
-             longValue=JobManagerConfiguration.DEFAULT_BACKGROUND_LOAD_DELAY, propertyPrivate=true),
     @Property(name="scheduler.period", longValue=60, propertyPrivate=true),
     @Property(name="scheduler.concurrent", boolValue=false, propertyPrivate=true),
     @Property(name=EventConstants.EVENT_TOPIC,
@@ -156,7 +141,9 @@ public class JobManagerImpl
     private ThreadPoolManager threadPoolManager;
 
     /** The job manager configuration. */
+    @Reference
     private JobManagerConfiguration configuration;
+
 
     private volatile TopologyCapabilities topologyCapabilities;
 
@@ -191,7 +178,6 @@ public class JobManagerImpl
      */
     @Activate
     protected void activate(final Map<String, Object> props) throws LoginException {
-        this.configuration = new JobManagerConfiguration(props);
         this.jobScheduler = new JobSchedulerImpl(this.configuration, this.resourceResolverFactory, this.scheduler, this);
         this.maintenanceTask = new MaintenanceTask(this.configuration, this.resourceResolverFactory);
         this.backgroundLoader = new BackgroundLoader(this, this.configuration, this.resourceResolverFactory);
@@ -212,19 +198,6 @@ public class JobManagerImpl
     }
 
     /**
-     * Configure this component.
-     * @param props Configuration properties
-     */
-    @Modified
-    protected void update(final Map<String, Object> props) {
-        this.configuration.update(props);
-        final TopologyCapabilities caps = this.topologyCapabilities;
-        if ( caps != null ) {
-            caps.update(this.configuration.disableDistribution());
-        }
-    }
-
-    /**
      * Deactivate this component.
      */
     @Deactivate
@@ -236,7 +209,6 @@ public class JobManagerImpl
         this.backgroundLoader = null;
 
         this.maintenanceTask = null;
-        this.configuration = null;
         final Iterator<AbstractJobQueue> i = this.queues.values().iterator();
         while ( i.hasNext() ) {
             final AbstractJobQueue jbq = i.next();
@@ -603,7 +575,7 @@ public class JobManagerImpl
 
     private void startProcessing(final TopologyView view) {
         // create new capabilities and update view
-        this.topologyCapabilities = new TopologyCapabilities(view, this.configuration.disableDistribution());
+        this.topologyCapabilities = new TopologyCapabilities(view, this.configuration);
 
         this.backgroundLoader.start();
     }
@@ -1653,9 +1625,5 @@ public class JobManagerImpl
             return this.addJob(job.getTopic(), job.getName(), job.getProperties());
         }
         return null;
-    }
-
-    public JobManagerConfiguration getConfiguration() {
-        return this.configuration;
     }
 }

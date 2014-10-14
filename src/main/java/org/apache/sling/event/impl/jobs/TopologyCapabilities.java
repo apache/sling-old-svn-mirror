@@ -68,8 +68,8 @@ public class TopologyCapabilities {
     /** Instance comparator. */
     private final InstanceDescriptionComparator instanceComparator;
 
-    /** Disable distribution flag. */
-    private boolean disableDistribution;
+    /** JobManagerConfiguration. */
+    private final JobManagerConfiguration jobManagerConfiguration;
 
     public static final class InstanceDescriptionComparator implements Comparator<InstanceDescription> {
 
@@ -118,8 +118,8 @@ public class TopologyCapabilities {
         return allInstances;
     }
 
-    public TopologyCapabilities(final TopologyView view, final boolean disableDistribution) {
-        this.disableDistribution = disableDistribution;
+    public TopologyCapabilities(final TopologyView view, final JobManagerConfiguration config) {
+        this.jobManagerConfiguration = config;
         this.instanceComparator = new InstanceDescriptionComparator(view.getLocalInstance().getClusterView().getId());
         this.isLeader = view.getLocalInstance().isLeader();
         this.allInstances = getAllInstancesMap(view);
@@ -141,13 +141,6 @@ public class TopologyCapabilities {
             this.instanceMap.put(desc.getSlingId(), desc);
         }
         this.instanceCapabilities = newCaps;
-    }
-
-    /**
-     * Update the configuration
-     */
-    public void update(final boolean disableDistribution2) {
-        this.disableDistribution = disableDistribution2;
     }
 
     public boolean isSame(final Map<String, String> newAllInstancesMap) {
@@ -229,7 +222,7 @@ public class TopologyCapabilities {
                 final List<InstanceDescription> localTargets = new ArrayList<InstanceDescription>();
                 for(final InstanceDescription desc : potentialTargets) {
                     if ( desc.getClusterView().getId().equals(createdOnInstance.getClusterView().getId()) ) {
-                        if ( !this.disableDistribution || desc.isLeader() ) {
+                        if ( !this.jobManagerConfiguration.disableDistribution() || desc.isLeader() ) {
                             localTargets.add(desc);
                         }
                     }
