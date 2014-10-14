@@ -42,7 +42,7 @@ import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.apache.sling.replication.serialization.impl.AbstractReplicationPackageBuilder;
-import org.apache.sling.replication.trigger.impl.JcrEventReplicationTrigger;
+import org.apache.sling.replication.util.ReplicationJcrUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,7 +116,7 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
     @Override
     protected Session getSession() throws RepositoryException {
         Session session = repository.loginService(subServiceName, null);
-        session.getWorkspace().getObservationManager().setUserData(JcrEventReplicationTrigger.DO_NOT_REPLICATE);
+        ReplicationJcrUtils.setDoNotReplicate(session);
         return session;
     }
 
@@ -182,7 +182,10 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
             File file = new File(replicationPackage.getId());
             if (file.exists()) {
                 VaultPackage pkg = packaging.getPackageManager().open(file);
-                pkg.extract(session, new ImportOptions());
+                ImportOptions opts = new ImportOptions();
+                // TODO : make it possible to expose the VLT ImportMode / ACLHandling in a generic way (from the ReplicationRequest?)
+//                opts.setImportMode(ImportMode.MERGE);
+                pkg.extract(session, opts);
                 return true;
             }
         } catch (Exception e) {

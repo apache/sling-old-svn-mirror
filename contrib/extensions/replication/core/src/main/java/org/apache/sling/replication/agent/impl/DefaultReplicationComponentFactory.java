@@ -51,6 +51,7 @@ import org.apache.sling.replication.transport.authentication.impl.UserCredential
 import org.apache.sling.replication.trigger.ReplicationTrigger;
 import org.apache.sling.replication.trigger.impl.ChainReplicateReplicationTrigger;
 import org.apache.sling.replication.trigger.impl.JcrEventReplicationTrigger;
+import org.apache.sling.replication.trigger.impl.PersistingJcrEventReplicationTrigger;
 import org.apache.sling.replication.trigger.impl.RemoteEventReplicationTrigger;
 import org.apache.sling.replication.trigger.impl.ResourceEventReplicationTrigger;
 import org.apache.sling.replication.trigger.impl.ScheduledReplicationTrigger;
@@ -269,6 +270,8 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
             return new ChainReplicateReplicationTrigger(properties, bundleContext);
         } else if (JcrEventReplicationTrigger.TYPE.equals(factory)) {
             return new JcrEventReplicationTrigger(properties, repository);
+        } else if (PersistingJcrEventReplicationTrigger.TYPE.equals(factory)) {
+            return new PersistingJcrEventReplicationTrigger(properties, repository);
         }
 
         return null;

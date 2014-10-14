@@ -87,7 +87,6 @@ public class AdvancedHttpReplicationTransportHandler extends SimpleHttpReplicati
                 new Object[]{replicationPackage.getId(),
                         replicationEndpoint.getUri(), transportAuthenticationProvider});
 
-
         try {
             Executor executor = Executor.newInstance();
             TransportAuthenticationContext context = new TransportAuthenticationContext();

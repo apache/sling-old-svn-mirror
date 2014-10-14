@@ -38,7 +38,7 @@ import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.communication.ReplicationResponse;
 import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
 import org.apache.sling.replication.resources.ReplicationConstants;
-import org.apache.sling.replication.transport.impl.RequestUtils;
+import org.apache.sling.replication.util.RequestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

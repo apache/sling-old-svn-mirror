@@ -23,6 +23,7 @@
 
     "trigger0": [
         "type=jcrEvent",
-        "path=/content/usergenerated"
+        "path=/content/usergenerated",
+        "servicename=replicationService"
     ]
 }
