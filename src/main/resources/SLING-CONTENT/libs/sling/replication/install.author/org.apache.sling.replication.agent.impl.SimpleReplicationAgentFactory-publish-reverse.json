@@ -4,20 +4,26 @@
 
     "enabled" : true,
 
+    "serviceName" : "replicationService",
+
+
     "packageExporter": [
         "type=remote",
         "endpoints[0]=http://localhost:4503/libs/sling/replication/services/exporters/reverse",
 
         "authenticationProvider/type=service",
 
-        "packageBuilder/type=vlt",
-        "packageBuilder/servicename=replicationService"
+        "packageBuilder/type=vlt"
+    ],
+
+    "packageExporterStrategy" : [
+        "type=privilege",
+        "jcrPrivilege=jcr:read"
     ],
 
     "packageImporter": [
         "type=local",
         "packageBuilder/type=vlt",
-        "packageBuilder/servicename=replicationService"
     ],
 
     "trigger0": [
