@@ -23,8 +23,12 @@ import java.util.Calendar;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobUtil;
@@ -33,6 +37,7 @@ import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
+import org.slf4j.Logger;
 
 public abstract class Utility {
 
@@ -252,5 +257,65 @@ public abstract class Utility {
         appendProperties(sb, ((JobImpl)job).getProperties());
         sb.append("]");
         return sb.toString();
+    }
+
+    /**
+     * Read a job
+     */
+    public static JobImpl readJob(final Logger logger, final Resource resource) {
+        JobImpl job = null;
+        if ( resource != null ) {
+            try {
+                final ValueMap vm = ResourceHelper.getValueMap(resource);
+
+                // check job topic and job id
+                final String errorMessage = Utility.checkJobTopic(vm.get(ResourceHelper.PROPERTY_JOB_TOPIC));
+                final String jobId = vm.get(ResourceHelper.PROPERTY_JOB_ID, String.class);
+                if ( errorMessage == null && jobId != null ) {
+                    final String topic = vm.get(ResourceHelper.PROPERTY_JOB_TOPIC, String.class);
+                    final Map<String, Object> jobProperties = ResourceHelper.cloneValueMap(vm);
+
+                    jobProperties.put(JobImpl.PROPERTY_RESOURCE_PATH, resource.getPath());
+                    // convert to integers (JCR supports only long...)
+                    jobProperties.put(Job.PROPERTY_JOB_RETRIES, vm.get(Job.PROPERTY_JOB_RETRIES, Integer.class));
+                    jobProperties.put(Job.PROPERTY_JOB_RETRY_COUNT, vm.get(Job.PROPERTY_JOB_RETRY_COUNT, Integer.class));
+                    if ( vm.get(Job.PROPERTY_JOB_PROGRESS_STEPS) != null ) {
+                        jobProperties.put(Job.PROPERTY_JOB_PROGRESS_STEPS, vm.get(Job.PROPERTY_JOB_PROGRESS_STEPS, Integer.class));
+                    }
+                    if ( vm.get(Job.PROPERTY_JOB_PROGRESS_STEP) != null ) {
+                        jobProperties.put(Job.PROPERTY_JOB_PROGRESS_STEP, vm.get(Job.PROPERTY_JOB_PROGRESS_STEP, Integer.class));
+                    }
+                    @SuppressWarnings("unchecked")
+                    final List<Exception> readErrorList = (List<Exception>) jobProperties.get(ResourceHelper.PROPERTY_MARKER_READ_ERROR_LIST);
+                    if ( readErrorList != null ) {
+                        for(final Exception e : readErrorList) {
+                            logger.warn("Unable to read job from " + resource.getPath(), e);
+                        }
+                    }
+                    job = new JobImpl(topic,
+                            (String)jobProperties.get(ResourceHelper.PROPERTY_JOB_NAME),
+                            jobId,
+                            jobProperties);
+                } else {
+                    if ( errorMessage != null ) {
+                        logger.warn("{} : {}", errorMessage, resource.getPath());
+                    } else if ( jobId == null ) {
+                        logger.warn("Discarding job - no job id found : {}", resource.getPath());
+                    }
+                    // remove the job as the topic is invalid anyway
+                    try {
+                        resource.getResourceResolver().delete(resource);
+                        resource.getResourceResolver().commit();
+                    } catch ( final PersistenceException ignore) {
+                        logger.debug("Unable to remove job resource.", ignore);
+                    }
+                }
+            } catch (final InstantiationException ie) {
+                // something happened with the resource in the meantime
+                logger.debug("Unable to instantiate resource.", ie);
+            }
+
+        }
+        return job;
     }
 }

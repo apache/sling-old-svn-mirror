@@ -249,7 +249,7 @@ public class BackgroundLoader implements Runnable {
                                 } else {
                                     if (ResourceHelper.RESOURCE_TYPE_JOB.equals(resource.getResourceType()) ) {
                                         this.logger.debug("Reading local job from {}", path);
-                                        final JobImpl job = this.jobManager.readJob(resource);
+                                        final JobImpl job = Utility.readJob(logger, resource);
                                         if ( job != null ) {
                                             if ( job.hasReadErrors() ) {
                                                 synchronized ( this.unloadedJobs ) {
@@ -479,7 +479,7 @@ public class BackgroundLoader implements Runnable {
                                             while ( this.isRunning() && jobIter.hasNext() ) {
                                                 final Resource jobResource = jobIter.next();
 
-                                                final JobImpl job = this.jobManager.readJob(jobResource);
+                                                final JobImpl job = Utility.readJob(logger, jobResource);
                                                 if ( job != null && job.getCreated().compareTo(now) <= 0 ) {
                                                     logger.debug("Found job {}", jobResource.getName());
                                                     jobs.add(job);
@@ -528,7 +528,7 @@ public class BackgroundLoader implements Runnable {
     private boolean loadJobInTheBackground(final Resource jobResource) {
         // sanity check for the path
         if ( this.configuration.isLocalJob(jobResource.getPath()) ) {
-            final JobImpl job = this.jobManager.readJob(jobResource);
+            final JobImpl job = Utility.readJob(logger, jobResource);
             if ( job != null ) {
                 // check if the job is currently running
                 if ( this.firstRun  || job.getProcessingStarted() == null ) {
