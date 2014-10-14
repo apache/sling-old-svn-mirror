@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackage;
@@ -65,10 +66,10 @@ public class RemoteReplicationPackageImporter implements ReplicationPackageImpor
 
     }
 
-    public boolean importPackage(ReplicationPackage replicationPackage) {
+    public boolean importPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) {
         boolean result = false;
         try {
-            transportHandler.deliverPackage(replicationPackage);
+            transportHandler.deliverPackage(resourceResolver, replicationPackage);
             result = true;
         } catch (Exception e) {
             log.error("failed in importing package {} ", replicationPackage, e);
@@ -76,7 +77,7 @@ public class RemoteReplicationPackageImporter implements ReplicationPackageImpor
         return result;
     }
 
-    public ReplicationPackage readPackage(InputStream stream) throws ReplicationPackageReadingException {
+    public ReplicationPackage readPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageReadingException {
         return null;
     }
 

@@ -63,9 +63,6 @@ public class FileVaultReplicationPackageBuilderFactory {
     @Property
     public static final String NAME = "name";
 
-    @Property
-    public static final String SERVICENAME = "servicename";
-
     @Reference
     private SlingRepository repository;
 
@@ -108,13 +105,7 @@ public class FileVaultReplicationPackageBuilderFactory {
                                                                  SlingRepository repository, Packaging packaging,
                                                                  ReplicationEventFactory replicationEventFactory) {
 
-        String serviceName = PropertiesUtil.toString(config.get(SERVICENAME), "").trim();
-
-        if (serviceName.length() == 0) {
-            throw new IllegalArgumentException("Service Name cannot be empty");
-        }
-
-        return new FileVaultReplicationPackageBuilder(serviceName, repository, packaging, replicationEventFactory);
+        return new FileVaultReplicationPackageBuilder(repository, packaging, replicationEventFactory);
 
     }
 

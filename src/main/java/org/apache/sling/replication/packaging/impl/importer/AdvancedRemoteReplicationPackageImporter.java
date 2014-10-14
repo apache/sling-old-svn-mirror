@@ -31,6 +31,7 @@ import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.event.ReplicationEventFactory;
@@ -123,10 +124,10 @@ public class AdvancedRemoteReplicationPackageImporter implements ReplicationPack
     }
 
 
-    public boolean importPackage(ReplicationPackage replicationPackage) {
+    public boolean importPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) {
         boolean result = false;
         try {
-            transportHandler.deliverPackage(replicationPackage);
+            transportHandler.deliverPackage(resourceResolver, replicationPackage);
             result = true;
         } catch (Exception e) {
             log.error("failed delivery", e);
@@ -134,7 +135,7 @@ public class AdvancedRemoteReplicationPackageImporter implements ReplicationPack
         return result;
     }
 
-    public ReplicationPackage readPackage(InputStream stream) throws ReplicationPackageReadingException {
+    public ReplicationPackage readPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageReadingException {
         return null;
     }
 

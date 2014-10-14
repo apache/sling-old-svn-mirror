@@ -20,6 +20,7 @@ package org.apache.sling.replication.serialization;
 
 import java.io.InputStream;
 
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 
@@ -31,11 +32,13 @@ public interface ReplicationPackageBuilder {
     /**
      * creates a {@link org.apache.sling.replication.packaging.ReplicationPackage} for a specific {@link ReplicationRequest}
      *
-     * @param request the {@link ReplicationRequest} to create the package for
+     *
+     * @param resourceResolver
+     * @param request the {@link org.apache.sling.replication.communication.ReplicationRequest} to create the package for
      * @return a {@link org.apache.sling.replication.packaging.ReplicationPackage}
      * @throws ReplicationPackageBuildingException
      */
-    ReplicationPackage createPackage(ReplicationRequest request) throws ReplicationPackageBuildingException;
+    ReplicationPackage createPackage(ResourceResolver resourceResolver, ReplicationRequest request) throws ReplicationPackageBuildingException;
 
     /**
      * reads a stream and tries to convert it to a {@link ReplicationPackage} this provider can read and install
@@ -44,7 +47,7 @@ public interface ReplicationPackageBuilder {
      * @return a {@link ReplicationPackage} if it can read it from the stream
      * @throws ReplicationPackageReadingException when the stream cannot be read as a {@link ReplicationPackage}
      */
-    ReplicationPackage readPackage(InputStream stream) throws ReplicationPackageReadingException;
+    ReplicationPackage readPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageReadingException;
 
     /**
      * get an already created (and saved into the repository) {@link ReplicationPackage} by its id
@@ -52,7 +55,7 @@ public interface ReplicationPackageBuilder {
      * @param id a <code>String</code> representing the unique identifier of an already created {@link ReplicationPackage}
      * @return a {@link ReplicationPackage} if one with such an id exists, <code>null</code> otherwise
      */
-    ReplicationPackage getPackage(String id);
+    ReplicationPackage getPackage(ResourceResolver resourceResolver, String id);
 
     /**
      * Installs the given replicationPackage into the repository
@@ -61,6 +64,6 @@ public interface ReplicationPackageBuilder {
      * @return <code>true</code> if the package was installed successfully
      * @throws ReplicationPackageReadingException
      */
-    boolean installPackage(ReplicationPackage replicationPackage) throws ReplicationPackageReadingException;
+    boolean installPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationPackageReadingException;
 
 }

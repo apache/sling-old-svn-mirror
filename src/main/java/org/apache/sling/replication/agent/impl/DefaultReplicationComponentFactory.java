@@ -29,6 +29,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.vault.packaging.Packaging;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -37,9 +38,12 @@ import org.apache.sling.replication.agent.ReplicationComponentFactory;
 import org.apache.sling.replication.agent.ReplicationComponentProvider;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
+import org.apache.sling.replication.packaging.ReplicationPackageExporterStrategy;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
+import org.apache.sling.replication.packaging.impl.exporter.strategy.DefaultReplicationPackageExporterStrategy;
 import org.apache.sling.replication.packaging.impl.exporter.LocalReplicationPackageExporterFactory;
 import org.apache.sling.replication.packaging.impl.exporter.RemoteReplicationPackageExporterFactory;
+import org.apache.sling.replication.packaging.impl.exporter.strategy.PrivilegeReplicationPackageExporterStrategy;
 import org.apache.sling.replication.packaging.impl.importer.LocalReplicationPackageImporterFactory;
 import org.apache.sling.replication.packaging.impl.importer.RemoteReplicationPackageImporterFactory;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
@@ -83,6 +87,9 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
 
     @Reference
     private ReplicationEventFactory replicationEventFactory;
+
+    @Reference
+    private ResourceResolverFactory resourceResolverFactory;
 
     @Reference
     private SlingRepository repository;
@@ -131,6 +138,9 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
             Map<String, Object> exporterProperties = extractMap("packageExporter", properties);
             ReplicationPackageExporter packageExporter = createExporter(exporterProperties, componentProvider);
 
+            Map<String, Object> exporterStrategyProperties = extractMap("packageExporterStrategy", properties);
+            ReplicationPackageExporterStrategy packageExporterStrategy = createExporterStrategy(exporterStrategyProperties, componentProvider);
+
             Map<String, Object> queueDistributionStrategyProperties = extractMap("queueDistributionStrategy", properties);
             ReplicationQueueDistributionStrategy queueDistributionStrategy = createDistributionStrategy(queueDistributionStrategyProperties, componentProvider);
 
@@ -142,19 +152,41 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
 
             String name = PropertiesUtil.toString(properties.get(SimpleReplicationAgentFactory.NAME), String.valueOf(new Random().nextInt(1000)));
 
-            boolean useAggregatePaths = PropertiesUtil.toBoolean(properties.get(SimpleReplicationAgentFactory.USE_AGGREGATE_PATHS), true);
+            String serviceName = PropertiesUtil.toString(properties.get(SimpleReplicationAgentFactory.SERVICE_NAME), null);
+
 
             boolean isPassive = PropertiesUtil.toBoolean(properties.get(SimpleReplicationAgentFactory.IS_PASSIVE), false);
 
 
-            return new SimpleReplicationAgent(name, useAggregatePaths, isPassive,
-                    packageImporter, packageExporter, queueProvider, queueDistributionStrategy, replicationEventFactory, triggers);
+            return new SimpleReplicationAgent(name, isPassive, serviceName,
+                    packageImporter, packageExporter, packageExporterStrategy,
+                    queueProvider, queueDistributionStrategy, replicationEventFactory, resourceResolverFactory, triggers);
 
         }
 
         return null;
 
     }
+
+    private ReplicationPackageExporterStrategy createExporterStrategy(Map<String, Object> properties, ReplicationComponentProvider componentProvider) {
+
+        String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), "service");
+
+        if ("service".equals(factory)) {
+            String name = PropertiesUtil.toString(properties.get(NAME), null);
+            return componentProvider.getComponent(ReplicationPackageExporterStrategy.class, name);
+
+        }
+        else if (DefaultReplicationPackageExporterStrategy.NAME.equals(factory)) {
+            return new DefaultReplicationPackageExporterStrategy();
+        }
+        else if (PrivilegeReplicationPackageExporterStrategy.NAME.equals(factory)) {
+            return new PrivilegeReplicationPackageExporterStrategy(properties);
+        }
+
+        return null;
+    }
+
 
     public ReplicationPackageExporter createExporter(Map<String, Object> properties, ReplicationComponentProvider componentProvider) {
 

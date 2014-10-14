@@ -29,6 +29,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
@@ -63,10 +64,11 @@ public class ReplicationPackageImporterServlet extends SlingAllMethodsServlet {
         response.setCharacterEncoding("utf-8");
 
         InputStream stream = request.getInputStream();
+        ResourceResolver resourceResolver = request.getResourceResolver();
         try {
-            ReplicationPackage replicationPackage = replicationPackageImporter.readPackage(stream);
+            ReplicationPackage replicationPackage = replicationPackageImporter.readPackage(resourceResolver, stream);
             if (replicationPackage != null) {
-                success = replicationPackageImporter.importPackage(replicationPackage);
+                success = replicationPackageImporter.importPackage(resourceResolver, replicationPackage);
             } else {
                 // TODO : this should not just cause a warning as it means package was not imported correctly
                 log.warn("cannot read a replication package from the given stream");

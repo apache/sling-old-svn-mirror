@@ -20,6 +20,7 @@ package org.apache.sling.replication.transport;
 
 import java.util.List;
 
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
@@ -33,17 +34,21 @@ public interface ReplicationTransportHandler {
     /**
      * Delivers a given {@link ReplicationPackage}
      *
-     * @param replicationPackage a {@link ReplicationPackage} to transport
+     *
+     * @param resourceResolver
+     * @param replicationPackage a {@link org.apache.sling.replication.packaging.ReplicationPackage} to transport
      * @throws ReplicationTransportException if any error occurs during the transport
      */
-    void deliverPackage(ReplicationPackage replicationPackage) throws ReplicationTransportException;
+    void deliverPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationTransportException;
 
     /**
      * Retrieves a list of {@link ReplicationPackage}
      *
+     *
+     * @param resourceResolver
      * @param replicationRequest the replication request
      * @throws ReplicationTransportException if any error occurs during the transport
      */
-    List<ReplicationPackage> retrievePackages(ReplicationRequest replicationRequest) throws ReplicationTransportException;
+    List<ReplicationPackage> retrievePackages(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationTransportException;
 
 }

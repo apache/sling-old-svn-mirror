@@ -25,6 +25,7 @@ import java.io.InputStream;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
@@ -38,11 +39,11 @@ public class VoidReplicationPackageBuilder implements ReplicationPackageBuilder 
 
     static final String NAME = "void";
 
-    public ReplicationPackage createPackage(ReplicationRequest request) throws ReplicationPackageBuildingException {
+    public ReplicationPackage createPackage(ResourceResolver resourceResolver, ReplicationRequest request) throws ReplicationPackageBuildingException {
         return new VoidReplicationPackage(request);
     }
 
-    public ReplicationPackage readPackage(InputStream stream) throws ReplicationPackageReadingException {
+    public ReplicationPackage readPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageReadingException {
         try {
             return VoidReplicationPackage.fromStream(stream);
         } catch (Exception e) {
@@ -50,7 +51,7 @@ public class VoidReplicationPackageBuilder implements ReplicationPackageBuilder 
         }
     }
 
-    public ReplicationPackage getPackage(String id) {
+    public ReplicationPackage getPackage(ResourceResolver resourceResolver, String id) {
         try {
             return VoidReplicationPackage.fromStream(new ByteArrayInputStream(id.getBytes("UTF-8")));
         } catch (IOException ex) {
@@ -58,7 +59,7 @@ public class VoidReplicationPackageBuilder implements ReplicationPackageBuilder 
         }
     }
 
-    public boolean installPackage(ReplicationPackage replicationPackage) {
+    public boolean installPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) {
         return false;
     }
 }

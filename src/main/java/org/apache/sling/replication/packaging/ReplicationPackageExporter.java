@@ -21,6 +21,7 @@ package org.apache.sling.replication.packaging;
 
 import java.util.List;
 
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 
@@ -37,12 +38,12 @@ public interface ReplicationPackageExporter {
      *
      * @return a <code>List</code> of {@link org.apache.sling.replication.packaging.ReplicationPackage}s
      */
-    List<ReplicationPackage> exportPackage(ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException;
+    List<ReplicationPackage> exportPackage(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException;
 
     /**
      * Exports a {@link org.apache.sling.replication.packaging.ReplicationPackage} given its 'id', if it already exists.
      *
      * @return a {@link org.apache.sling.replication.packaging.ReplicationPackage} if available, <code>null</code> otherwise
      */
-    ReplicationPackage exportPackageById(String replicationPackageId);
+    ReplicationPackage exportPackageById(ResourceResolver resourceResolver, String replicationPackageId);
 }

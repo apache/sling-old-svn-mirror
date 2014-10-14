@@ -18,12 +18,11 @@
  */
 package org.apache.sling.replication.agent.impl;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Dictionary;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
+import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.replication.agent.AgentReplicationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.agent.ReplicationComponent;
@@ -33,6 +32,7 @@ import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.event.ReplicationEventType;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
+import org.apache.sling.replication.packaging.ReplicationPackageExporterStrategy;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
@@ -69,32 +69,43 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
 
     private final String name;
 
-    private final boolean useAggregatePaths;
+    private final ReplicationPackageExporterStrategy replicationPackageExporterStrategy;
+    private final ResourceResolverFactory resourceResolverFactory;
+    private final String subServiceName;
 
     public SimpleReplicationAgent(String name,
-                                  boolean useAggregatePaths,
                                   boolean passive,
+                                  String subServiceName,
                                   ReplicationPackageImporter replicationPackageImporter,
                                   ReplicationPackageExporter replicationPackageExporter,
+                                  ReplicationPackageExporterStrategy replicationPackageExporterStrategy,
                                   ReplicationQueueProvider queueProvider,
                                   ReplicationQueueDistributionStrategy queueDistributionStrategy,
                                   ReplicationEventFactory replicationEventFactory,
+                                  ResourceResolverFactory resourceResolverFactory,
                                   List<ReplicationTrigger> triggers) {
+        this.subServiceName = subServiceName;
+        this.replicationPackageExporterStrategy = replicationPackageExporterStrategy;
+        this.resourceResolverFactory = resourceResolverFactory;
 
         // check configuration is valid
         if (name == null
                 || replicationPackageImporter == null
                 || replicationPackageExporter == null
+                || replicationPackageExporterStrategy == null
                 || queueProvider == null
                 || queueDistributionStrategy == null
-                || replicationEventFactory == null) {
+                || replicationEventFactory == null
+                || resourceResolverFactory == null) {
 
             String errorMessage = Arrays.toString(new Object[]{name,
                     replicationPackageImporter,
                     replicationPackageExporter,
+                    replicationPackageExporterStrategy,
                     queueProvider,
                     queueDistributionStrategy,
-                    replicationEventFactory});
+                    replicationEventFactory,
+                    resourceResolverFactory});
             throw new IllegalArgumentException("all arguments are required: " + errorMessage);
         }
 
@@ -104,15 +115,14 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
         this.replicationPackageExporter = replicationPackageExporter;
         this.queueProvider = queueProvider;
         this.queueDistributionStrategy = queueDistributionStrategy;
-        this.useAggregatePaths = useAggregatePaths;
         this.replicationEventFactory = replicationEventFactory;
         this.triggers = triggers == null ? new ArrayList<ReplicationTrigger>() : triggers;
     }
 
-    public ReplicationResponse execute(ReplicationRequest replicationRequest)
+    public ReplicationResponse execute(ResourceResolver resourceResolver, ReplicationRequest replicationRequest)
             throws AgentReplicationException {
         try {
-            return schedule(buildPackages(replicationRequest));
+            return schedule(buildPackages(resourceResolver, replicationRequest));
         } catch (Exception e) {
             log.error("Error executing replication request {}", replicationRequest, e);
             throw new AgentReplicationException(e);
@@ -124,22 +134,15 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
         return passive;
     }
 
-    private List<ReplicationPackage> buildPackages(ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
+    private List<ReplicationPackage> buildPackages(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
 
         List<ReplicationPackage> replicationPackages = new ArrayList<ReplicationPackage>();
 
-        if (useAggregatePaths) {
-            List<ReplicationPackage> exportedPackages = replicationPackageExporter.exportPackage(replicationRequest);
-            replicationPackages.addAll(exportedPackages);
-        } else {
-            for (String path : replicationRequest.getPaths()) {
-                ReplicationRequest splitReplicationRequest = new ReplicationRequest(replicationRequest.getTime(),
-                        replicationRequest.getAction(),
-                        path);
-                List<ReplicationPackage> exportedPackages = replicationPackageExporter.exportPackage(splitReplicationRequest);
-                replicationPackages.addAll(exportedPackages);
-            }
-        }
+
+        List<ReplicationPackage> exportedPackages = replicationPackageExporterStrategy.exportPackages(resourceResolver,
+                replicationRequest,
+                replicationPackageExporter);
+        replicationPackages.addAll(exportedPackages);
 
         return replicationPackages;
     }
@@ -239,10 +242,12 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
     private boolean processTransportQueue(ReplicationQueueItem queueItem) {
         boolean success = false;
         log.debug("reading package with id {}", queueItem.getId());
+        ResourceResolver resourceResolver = getResourceResolver();
         try {
-            ReplicationPackage replicationPackage = replicationPackageExporter.exportPackageById(queueItem.getId());
+
+            ReplicationPackage replicationPackage = replicationPackageExporter.exportPackageById(resourceResolver, queueItem.getId());
             if (replicationPackage != null) {
-                replicationPackageImporter.importPackage(replicationPackage);
+                replicationPackageImporter.importPackage(resourceResolver, replicationPackage);
 
                 Dictionary<Object, Object> properties = new Properties();
                 properties.put("replication.package.paths", replicationPackage.getPaths());
@@ -256,6 +261,20 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
             log.error("could not process transport queue", e);
         }
         return success;
+    }
+
+    private ResourceResolver getResourceResolver() {
+        ResourceResolver resourceResolver = null;
+
+        Map<String, Object> authenticationInfo = new HashMap<String, Object>();
+        authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, subServiceName);
+        try {
+            resourceResolver = resourceResolverFactory.getServiceResourceResolver(authenticationInfo);
+        } catch (LoginException e) {
+            log.error("cannot obtain a resource resolver");
+        }
+
+        return resourceResolver;
     }
 
     class PackageQueueProcessor implements ReplicationQueueProcessor {
@@ -274,7 +293,8 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
 
         public void handle(ReplicationRequest request) {
             try {
-                agent.execute(request);
+                ResourceResolver resourceResolver = getResourceResolver();
+                agent.execute(resourceResolver, request);
             } catch (AgentReplicationException e) {
                 log.error("Error executing handler", e);
             }

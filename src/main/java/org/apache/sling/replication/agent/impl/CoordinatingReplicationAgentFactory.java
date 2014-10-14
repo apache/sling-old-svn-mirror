@@ -78,8 +78,8 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
     @Property(label = "Name")
     public static final String NAME = "name";
 
-    @Property(boolValue = true, label = "Replicate using aggregated paths")
-    public static final String USE_AGGREGATE_PATHS = "useAggregatePaths";
+    @Property(label = "Service Name")
+    public static final String SERVICE_NAME = "serviceName";
 
     @Property(label = "Package Exporter", cardinality = 100)
     public static final String PACKAGE_EXPORTER = "packageExporter";

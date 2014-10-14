@@ -28,6 +28,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
@@ -77,12 +78,12 @@ public class LocalReplicationPackageImporterFactory implements ReplicationPackag
 
     }
 
-    public boolean importPackage(ReplicationPackage replicationPackage) {
-        return importer.importPackage(replicationPackage);
+    public boolean importPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) {
+        return importer.importPackage(resourceResolver, replicationPackage);
     }
 
-    public ReplicationPackage readPackage(InputStream stream) throws ReplicationPackageReadingException {
-        return importer.readPackage(stream);
+    public ReplicationPackage readPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageReadingException {
+        return importer.readPackage(resourceResolver, stream);
     }
 
 }

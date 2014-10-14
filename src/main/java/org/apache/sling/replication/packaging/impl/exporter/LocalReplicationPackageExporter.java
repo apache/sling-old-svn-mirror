@@ -21,6 +21,7 @@ package org.apache.sling.replication.packaging.impl.exporter;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
@@ -39,16 +40,16 @@ public class LocalReplicationPackageExporter implements ReplicationPackageExport
         this.packageBuilder = packageBuilder;
     }
 
-    public List<ReplicationPackage> exportPackage(ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
+    public List<ReplicationPackage> exportPackage(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
         List<ReplicationPackage> result = new ArrayList<ReplicationPackage>();
 
-        ReplicationPackage createdPackage = packageBuilder.createPackage(replicationRequest);
+        ReplicationPackage createdPackage = packageBuilder.createPackage(resourceResolver, replicationRequest);
         result.add(createdPackage);
 
         return result;
     }
 
-    public ReplicationPackage exportPackageById(String replicationPackageId) {
-        return packageBuilder.getPackage(replicationPackageId);
+    public ReplicationPackage exportPackageById(ResourceResolver resourceResolver, String replicationPackageId) {
+        return packageBuilder.getPackage(resourceResolver, replicationPackageId);
     }
 }

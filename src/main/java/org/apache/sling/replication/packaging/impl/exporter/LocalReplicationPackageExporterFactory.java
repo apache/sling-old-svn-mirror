@@ -27,6 +27,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
@@ -69,11 +70,11 @@ public class LocalReplicationPackageExporterFactory implements ReplicationPackag
     }
 
 
-    public List<ReplicationPackage> exportPackage(ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
-        return exporter.exportPackage(replicationRequest);
+    public List<ReplicationPackage> exportPackage(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
+        return exporter.exportPackage(resourceResolver, replicationRequest);
     }
 
-    public ReplicationPackage exportPackageById(String replicationPackageId) {
-        return exporter.exportPackageById(replicationPackageId);
+    public ReplicationPackage exportPackageById(ResourceResolver resourceResolver, String replicationPackageId) {
+        return exporter.exportPackageById(resourceResolver, replicationPackageId);
     }
 }

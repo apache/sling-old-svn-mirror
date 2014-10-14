@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.event.ReplicationEventFactory;
@@ -35,6 +36,7 @@ import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
+import org.apache.sling.replication.util.ReplicationJcrUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +44,8 @@ import org.slf4j.LoggerFactory;
  * base abstract implementation of a JCR based {@link ReplicationPackageBuilder}
  */
 public abstract class AbstractReplicationPackageBuilder implements ReplicationPackageBuilder {
+
+    public static final String USER_DATA = "vlt.pb.data";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -54,11 +58,11 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
         this.replicationEventFactory = replicationEventFactory;
     }
 
-    public ReplicationPackage createPackage(ReplicationRequest request)
+    public ReplicationPackage createPackage(ResourceResolver resourceResolver, ReplicationRequest request)
             throws ReplicationPackageBuildingException {
         ReplicationPackage replicationPackage;
         if (ReplicationActionType.ADD.equals(request.getAction())) {
-            replicationPackage = createPackageForAdd(request);
+            replicationPackage = createPackageForAdd(resourceResolver, request);
         } else if (ReplicationActionType.DELETE.equals(request.getAction())) {
             replicationPackage = new VoidReplicationPackage(request, type);
         } else if (ReplicationActionType.POLL.equals(request.getAction())) {
@@ -76,10 +80,8 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
         return replicationPackage;
     }
 
-    protected abstract ReplicationPackage createPackageForAdd(ReplicationRequest request)
-            throws ReplicationPackageBuildingException;
 
-    public ReplicationPackage readPackage(InputStream stream) throws ReplicationPackageReadingException {
+    public ReplicationPackage readPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageReadingException {
         ReplicationPackage replicationPackage = null;
         if (!stream.markSupported()) {
             stream = new BufferedInputStream(stream);
@@ -100,19 +102,19 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
         }
         stream.mark(-1);
         if (replicationPackage == null) {
-            replicationPackage = readPackageInternal(stream);
+            replicationPackage = readPackageInternal(resourceResolver, stream);
         }
         return replicationPackage;
     }
 
 
-    public boolean installPackage(ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {
+    public boolean installPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {
         ReplicationActionType actionType = ReplicationActionType.fromName(replicationPackage.getAction());
         boolean installed;
         if (ReplicationActionType.DELETE.equals(actionType)) {
-            installed = installDeletePackage(replicationPackage);
+            installed = installDeletePackage(resourceResolver, replicationPackage);
         } else {
-            installed = installPackageInternal(replicationPackage);
+            installed = installPackageInternal(resourceResolver, replicationPackage);
         }
 
         if (installed && replicationEventFactory != null) {
@@ -125,11 +127,11 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
         return installed;
     }
 
-    private boolean installDeletePackage(ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {
+    private boolean installDeletePackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {
         Session session = null;
         try {
             if (replicationPackage != null) {
-                session = getSession();
+                session = getSession(resourceResolver);
                 for (String path : replicationPackage.getPaths()) {
                     if (session.itemExists(path)) {
                         session.removeItem(path);
@@ -149,7 +151,7 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
         return false;
     }
 
-    public ReplicationPackage getPackage(String id) {
+    public ReplicationPackage getPackage(ResourceResolver resourceResolver, String id) {
         ReplicationPackage replicationPackage = null;
         try {
             replicationPackage = VoidReplicationPackage.fromStream(new ByteArrayInputStream(id.getBytes("UTF-8")));
@@ -158,20 +160,31 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
         }
 
         if (replicationPackage == null) {
-            replicationPackage = getPackageInternal(id);
+            replicationPackage = getPackageInternal(resourceResolver, id);
         }
         return replicationPackage;
     }
 
-    protected abstract Session getSession() throws RepositoryException;
+    protected Session getSession(ResourceResolver resourceResolver) throws RepositoryException {
+        Session session = resourceResolver.adaptTo(Session.class);
+        if (session != null) {
+            ReplicationJcrUtils.setDoNotReplicate(session);
+        }
+        return session;
+    }
 
-    protected abstract ReplicationPackage readPackageInternal(InputStream stream)
+
+    protected abstract ReplicationPackage createPackageForAdd(ResourceResolver resourceResolver, ReplicationRequest request)
+            throws ReplicationPackageBuildingException;
+
+
+    protected abstract ReplicationPackage readPackageInternal(ResourceResolver resourceResolver, InputStream stream)
             throws ReplicationPackageReadingException;
 
 
-    protected abstract boolean installPackageInternal(ReplicationPackage replicationPackage)
+    protected abstract boolean installPackageInternal(ResourceResolver resourceResolver, ReplicationPackage replicationPackage)
             throws ReplicationPackageReadingException;
 
-    protected abstract ReplicationPackage getPackageInternal(String id);
+    protected abstract ReplicationPackage getPackageInternal(ResourceResolver resourceResolver, String id);
 
 }

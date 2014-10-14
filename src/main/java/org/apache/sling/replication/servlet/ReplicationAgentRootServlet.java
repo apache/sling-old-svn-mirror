@@ -28,6 +28,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.replication.agent.AgentReplicationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
@@ -71,10 +72,12 @@ public class ReplicationAgentRootServlet extends SlingAllMethodsServlet {
         ReplicationRequest replicationRequest = new ReplicationRequest(System.currentTimeMillis(),
                 action, paths);
 
+        ResourceResolver resourceResolver = request.getResourceResolver();
+
         boolean failed = false;
         for (ReplicationAgent agent : agents) {
             try {
-                agent.execute(replicationRequest);
+                agent.execute(resourceResolver, replicationRequest);
             } catch (AgentReplicationException e) {
                 log.warn("agent {} failed", agent.getName(), e);
 

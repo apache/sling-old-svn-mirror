@@ -32,6 +32,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.http.entity.ContentType;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
@@ -68,10 +69,11 @@ public class ReplicationPackageExporterServlet extends SlingAllMethodsServlet {
         response.setContentType(ContentType.APPLICATION_OCTET_STREAM.toString());
 
         ReplicationRequest replicationRequest = RequestUtils.fromServletRequest(request);
+        ResourceResolver resourceResolver = request.getResourceResolver();
 
         try {
             // get first item
-            List<ReplicationPackage> replicationPackages = replicationPackageExporter.exportPackage(replicationRequest);
+            List<ReplicationPackage> replicationPackages = replicationPackageExporter.exportPackage(resourceResolver, replicationRequest);
 
             if (replicationPackages.size() > 0) {
                 log.info("{} package(s) available for fetching, the first will be delivered", replicationPackages.size());
