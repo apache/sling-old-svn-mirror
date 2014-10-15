@@ -32,13 +32,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.util.ISO9075;
-import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.QuerySyntaxException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
@@ -61,9 +59,6 @@ public class BackgroundLoader implements Runnable {
 
     /** The job manager configuration. */
     private final JobManagerConfiguration configuration;
-
-    /** Resource resolver factory. */
-    private final ResourceResolverFactory resourceResolverFactory;
 
     /** Is this still active? */
     private final AtomicBoolean active = new AtomicBoolean(false);
@@ -96,11 +91,9 @@ public class BackgroundLoader implements Runnable {
      * Create and activate the loader.
      */
     public BackgroundLoader(final JobManagerImpl jobManagerImpl,
-            final JobManagerConfiguration configuration2,
-            final ResourceResolverFactory resourceResolverFactory2) {
+            final JobManagerConfiguration config) {
         this.useSearch = JobManagerConfiguration.DEFAULT_BACKGROUND_LOAD_SEARCH;
-        this.resourceResolverFactory = resourceResolverFactory2;
-        this.configuration = configuration2;
+        this.configuration = config;
         this.jobManager = jobManagerImpl;
         this.active.set(true);
         logger.debug("Activating Sling Job Background Loader");
@@ -239,9 +232,8 @@ public class BackgroundLoader implements Runnable {
                     } else if ( nextPathOrJob instanceof String ) {
                         final String path = (String)nextPathOrJob;
                         if ( !END_TOKEN.equals(path) && this.isRunning() ) {
-                            ResourceResolver resolver = null;
+                            final ResourceResolver resolver = this.configuration.createResourceResolver();
                             try {
-                                resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
                                 final Resource resource = resolver.getResource(path);
                                 if ( resource == null ) {
                                     // this should actually never happen, just a sanity check (see SLING-2971)
@@ -261,13 +253,8 @@ public class BackgroundLoader implements Runnable {
                                         }
                                     }
                                 }
-                            } catch ( final LoginException le ) {
-                                // administrative login should always work
-                                this.ignoreException(le);
                             } finally {
-                                if ( resolver != null ) {
-                                    resolver.close();
-                                }
+                                resolver.close();
                             }
                         }
                     }
@@ -290,10 +277,8 @@ public class BackgroundLoader implements Runnable {
 
         if ( this.useSearch ) {
             logger.debug("Using search for background loading...");
-            ResourceResolver resolver = null;
+            final ResourceResolver resolver = this.configuration.createResourceResolver();
             try {
-                resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-
                 final Calendar startDate = Calendar.getInstance();
                 startDate.setTimeInMillis(startTime);
 
@@ -325,25 +310,19 @@ public class BackgroundLoader implements Runnable {
                 }
             } catch (final QuerySyntaxException qse) {
                 this.ignoreException(qse);
-            } catch (final LoginException le) {
-                this.ignoreException(le);
             } catch (final UnsupportedOperationException t ) {
                 // this is thrown by Oak if the search is taking "too long"
                 this.logger.error("Unexpected unsupported operation exception. This is most probably because of Apache Jackrabbit Oak " +
                                   "complaining about to long running query. Switching to traversal now.");
                 this.useSearch = false;
             } finally {
-                if ( resolver != null ) {
-                    resolver.close();
-                }
+                resolver.close();
             }
         }
         if ( !useSearch ) {
             logger.debug("Using traversal for background loading...");
-            ResourceResolver resolver = null;
+            final ResourceResolver resolver = this.configuration.createResourceResolver();
             try {
-                resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-
                 final Resource baseResource = resolver.getResource(this.configuration.getLocalJobsPath());
 
                 final Comparator<Resource> resourceComparator = new Comparator<Resource>() {
@@ -510,12 +489,8 @@ public class BackgroundLoader implements Runnable {
                         }
                     }
                 }
-            } catch (final LoginException le) {
-                this.ignoreException(le);
             } finally {
-                if ( resolver != null ) {
-                    resolver.close();
-                }
+                resolver.close();
             }
         }
 

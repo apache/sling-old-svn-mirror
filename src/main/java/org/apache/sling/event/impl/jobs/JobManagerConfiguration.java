@@ -27,10 +27,17 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.event.impl.support.Environment;
+import org.apache.sling.event.impl.support.ResourceHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Configuration of the job handling
@@ -55,6 +62,9 @@ import org.apache.sling.event.impl.support.Environment;
               longValue=JobManagerConfiguration.DEFAULT_BACKGROUND_LOAD_DELAY, propertyPrivate=true),
 })
 public class JobManagerConfiguration {
+
+    /** Logger. */
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /** Default resource path for jobs. */
     public static final String DEFAULT_REPOSITORY_PATH = "/var/eventing/jobs";
@@ -122,21 +132,16 @@ public class JobManagerConfiguration {
     /** The resource path where scheduled jobs are stored - ending with a slash. */
     private String scheduledJobsPathWithSlash;
 
-    /**
-     * Update with a new configuration
-     */
-    @Modified
-    public void update(final Map<String, Object> props) {
-        this.disabledDistribution = PropertiesUtil.toBoolean(props.get(PROPERTY_DISABLE_DISTRIBUTION), DEFAULT_DISABLE_DISTRIBUTION);
-        this.backgroundLoadDelay = PropertiesUtil.toLong(props.get(PROPERTY_BACKGROUND_LOAD_DELAY), DEFAULT_BACKGROUND_LOAD_DELAY);
-    }
+    @Reference
+    private ResourceResolverFactory resourceResolverFactory;
 
     /**
      * Activate this component.
      * @param props Configuration properties
+     * @throws RuntimeException If the default paths can't be created
      */
     @Activate
-    protected void activate(final Map<String, Object> props) throws LoginException {
+    protected void activate(final Map<String, Object> props) {
         this.update(props);
         this.jobsBasePathWithSlash = PropertiesUtil.toString(props.get(PROPERTY_REPOSITORY_PATH),
                 DEFAULT_REPOSITORY_PATH) + '/';
@@ -159,6 +164,45 @@ public class JobManagerConfiguration {
         this.scheduledJobsPath = PropertiesUtil.toString(props.get(PROPERTY_SCHEDULED_JOBS_PATH),
             DEFAULT_SCHEDULED_JOBS_PATH);
         this.scheduledJobsPathWithSlash = this.scheduledJobsPath + "/";
+
+        // create initial resources
+        final ResourceResolver resolver = this.createResourceResolver();
+        try {
+            ResourceHelper.getOrCreateBasePath(resolver, this.getLocalJobsPath());
+            ResourceHelper.getOrCreateBasePath(resolver, this.getUnassignedJobsPath());
+            ResourceHelper.getOrCreateBasePath(resolver, this.getLocksPath());
+        } catch ( final PersistenceException pe ) {
+            logger.error("Unable to create default paths: " + pe.getMessage(), pe);
+            throw new RuntimeException(pe);
+        } finally {
+            resolver.close();
+        }
+    }
+
+    /**
+     * Update with a new configuration
+     */
+    @Modified
+    public void update(final Map<String, Object> props) {
+        this.disabledDistribution = PropertiesUtil.toBoolean(props.get(PROPERTY_DISABLE_DISTRIBUTION), DEFAULT_DISABLE_DISTRIBUTION);
+        this.backgroundLoadDelay = PropertiesUtil.toLong(props.get(PROPERTY_BACKGROUND_LOAD_DELAY), DEFAULT_BACKGROUND_LOAD_DELAY);
+    }
+
+    /**
+     * Create a new resource resolver for reading and writing the resource tree.
+     * The resolver needs to be closed by the client.
+     * @return A resource resolver
+     * @throw RuntimeException if the resolver can't be created.
+     */
+    public ResourceResolver createResourceResolver() {
+        ResourceResolver resolver = null;
+        try {
+            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
+        } catch ( final LoginException le) {
+            logger.error("Unable to create new resource resolver: " + le.getMessage(), le);
+            throw new RuntimeException(le);
+        }
+        return resolver;
     }
 
     /**

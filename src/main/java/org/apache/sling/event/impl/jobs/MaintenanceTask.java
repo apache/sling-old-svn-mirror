@@ -27,11 +27,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.discovery.InstanceDescription;
@@ -55,9 +53,6 @@ public class MaintenanceTask {
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    /** Resource resolver factory. */
-    private final ResourceResolverFactory resourceResolverFactory;
-
     /** Job manager configuration. */
     private final JobManagerConfiguration configuration;
 
@@ -72,8 +67,7 @@ public class MaintenanceTask {
     /**
      * Constructor
      */
-    public MaintenanceTask(final JobManagerConfiguration config, final ResourceResolverFactory factory) {
-        this.resourceResolverFactory = factory;
+    public MaintenanceTask(final JobManagerConfiguration config) {
         this.configuration = config;
     }
 
@@ -81,9 +75,8 @@ public class MaintenanceTask {
             final QueueConfigurationManager queueManager) {
         if ( caps != null && caps.isLeader() ) {
             this.logger.debug("Checking for stopped instances...");
-            ResourceResolver resolver = null;
+            final ResourceResolver resolver = this.configuration.createResourceResolver();
             try {
-                resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
                 final Resource jobsRoot = resolver.getResource(this.configuration.getAssginedJobsPath());
                 this.logger.debug("Got jobs root {}", jobsRoot);
 
@@ -100,12 +93,8 @@ public class MaintenanceTask {
                         }
                     }
                 }
-            } catch ( final LoginException le ) {
-                this.ignoreException(le);
             } finally {
-                if ( resolver != null ) {
-                    resolver.close();
-                }
+                resolver.close();
             }
         }
     }
@@ -120,9 +109,8 @@ public class MaintenanceTask {
             final QueueConfigurationManager queueManager) {
         if ( caps != null && caps.isLeader() ) {
             logger.debug("Checking unassigned jobs...");
-            ResourceResolver resolver = null;
+            final ResourceResolver resolver = this.configuration.createResourceResolver();
             try {
-                resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
                 final Resource unassignedRoot = resolver.getResource(this.configuration.getUnassignedJobsPath());
                 logger.debug("Got unassigned root {}", unassignedRoot);
 
@@ -130,12 +118,8 @@ public class MaintenanceTask {
                 if ( unassignedRoot != null ) {
                     assignJobs(caps, queueManager, unassignedRoot, false);
                 }
-            } catch ( final LoginException le ) {
-                this.ignoreException(le);
             } finally {
-                if ( resolver != null ) {
-                    resolver.close();
-                }
+                resolver.close();
             }
         }
     }
@@ -356,9 +340,8 @@ public class MaintenanceTask {
         if ( caps != null && caps.isLeader() ) {
             this.logger.debug("Cleaning up job resource tree: removing obsolete locks");
             final List<Resource> candidates = new ArrayList<Resource>();
-            ResourceResolver resolver = null;
+            final ResourceResolver resolver = this.configuration.createResourceResolver();
             try {
-                resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
                 final Resource parentResource = resolver.getResource(this.configuration.getLocksPath());
                 final Calendar startDate = Calendar.getInstance();
                 startDate.add(Calendar.MINUTE, -2);
@@ -421,12 +404,8 @@ public class MaintenanceTask {
             } catch (final QuerySyntaxException qse) {
                 this.ignoreException(qse);
 */
-            } catch (final LoginException le) {
-                this.ignoreException(le);
             } finally {
-                if ( resolver != null ) {
-                    resolver.close();
-                }
+                resolver.close();
             }
         }
     }
@@ -463,9 +442,8 @@ public class MaintenanceTask {
      */
     private void simpleEmptyFolderCleanup(final TopologyCapabilities caps, final String basePath) {
         this.logger.debug("Cleaning up job resource tree: looking for empty folders");
-        ResourceResolver resolver = null;
+        final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
             final Calendar cleanUpDate = Calendar.getInstance();
             // go back ten minutes
             cleanUpDate.add(Calendar.HOUR, -1);
@@ -513,12 +491,8 @@ public class MaintenanceTask {
         } catch (final PersistenceException pe) {
             // in the case of an error, we just log this as a warning
             this.logger.warn("Exception during job resource tree cleanup.", pe);
-        } catch (final LoginException ignore) {
-            this.ignoreException(ignore);
         } finally {
-            if ( resolver != null ) {
-                resolver.close();
-            }
+            resolver.close();
         }
     }
 
@@ -527,10 +501,8 @@ public class MaintenanceTask {
      */
     private void fullEmptyFolderCleanup(final TopologyCapabilities caps, final String basePath) {
         this.logger.debug("Cleaning up job resource tree: removing ALL empty folders");
-        ResourceResolver resolver = null;
+        final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-
             final Resource baseResource = resolver.getResource(basePath);
             // sanity check - should never be null
             if ( baseResource != null ) {
@@ -614,12 +586,8 @@ public class MaintenanceTask {
         } catch (final PersistenceException pe) {
             // in the case of an error, we just log this as a warning
             this.logger.warn("Exception during job resource tree cleanup.", pe);
-        } catch (final LoginException ignore) {
-            this.ignoreException(ignore);
         } finally {
-            if ( resolver != null ) {
-                resolver.close();
-            }
+            resolver.close();
         }
     }
 
@@ -629,9 +597,8 @@ public class MaintenanceTask {
      * @param targetId New target or <code>null</code> if unknown
      */
     public void reassignJob(final JobImpl job, final String targetId) {
-        ResourceResolver resolver = null;
+        final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
             final Resource jobResource = resolver.getResource(job.getResourcePath());
             if ( jobResource != null ) {
                 try {
@@ -659,12 +626,8 @@ public class MaintenanceTask {
                     this.ignoreException(ie);
                 }
             }
-        } catch (final LoginException ignore) {
-            this.ignoreException(ignore);
         } finally {
-            if ( resolver != null ) {
-                resolver.close();
-            }
+            resolver.close();
         }
     }
 
@@ -683,21 +646,15 @@ public class MaintenanceTask {
      */
     private void processJobsFromPreviousVersions(final TopologyCapabilities caps,
             final QueueConfigurationManager queueManager) {
-        ResourceResolver resolver = null;
+        final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-
             this.processJobsFromPreviousVersions(caps, queueManager, resolver.getResource(this.configuration.getPreviousVersionAnonPath()));
             this.processJobsFromPreviousVersions(caps, queueManager, resolver.getResource(this.configuration.getPreviousVersionIdentifiedPath()));
             this.checkedForPreviousVersion = true;
         } catch ( final PersistenceException pe ) {
             this.logger.warn("Problems moving jobs from previous version.", pe);
-        } catch ( final LoginException le ) {
-            this.ignoreException(le);
         } finally {
-            if ( resolver != null ) {
-                resolver.close();
-            }
+            resolver.close();
         }
     }
 

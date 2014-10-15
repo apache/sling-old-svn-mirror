@@ -36,13 +36,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.api.SlingConstants;
-import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.QuerySyntaxException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.scheduler.JobContext;
@@ -87,8 +85,6 @@ public class JobSchedulerImpl
     /** Is this active? */
     private volatile boolean active;
 
-    private final ResourceResolverFactory resourceResolverFactory;
-
     private final JobManagerConfiguration config;
 
     private final Scheduler scheduler;
@@ -104,11 +100,9 @@ public class JobSchedulerImpl
     private final Map<String, ScheduledJobInfoImpl> scheduledJobs = new HashMap<String, ScheduledJobInfoImpl>();
 
     public JobSchedulerImpl(final JobManagerConfiguration configuration,
-            final ResourceResolverFactory resourceResolverFactory,
             final Scheduler scheduler,
             final JobManagerImpl jobManager) {
         this.config = configuration;
-        this.resourceResolverFactory = resourceResolverFactory;
         this.scheduler = scheduler;
         this.running = true;
         this.jobManager = jobManager;
@@ -199,9 +193,8 @@ public class JobSchedulerImpl
                 if ( event.getTopic().equals(SlingConstants.TOPIC_RESOURCE_ADDED)
                      || event.getTopic().equals(SlingConstants.TOPIC_RESOURCE_CHANGED)) {
                     final String path = (String)event.getProperty(SlingConstants.PROPERTY_PATH);
-                    ResourceResolver resolver = null;
+                    final ResourceResolver resolver = this.config.createResourceResolver();;
                     try {
-                        resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
                         final Resource eventResource = resolver.getResource(path);
                         if ( ResourceHelper.RESOURCE_TYPE_SCHEDULED_JOB.equals(eventResource.getResourceType()) ) {
                             final ReadResult result = this.readScheduledJob(eventResource);
@@ -215,12 +208,8 @@ public class JobSchedulerImpl
                                 }
                             }
                         }
-                    } catch (final LoginException le) {
-                        this.ignoreException(le);
                     } finally {
-                        if ( resolver != null ) {
-                            resolver.close();
-                        }
+                        resolver.close();
                     }
                 } else if ( event.getTopic().equals(SlingConstants.TOPIC_RESOURCE_REMOVED) ) {
                     final String path = (String)event.getProperty(SlingConstants.PROPERTY_PATH);
@@ -341,9 +330,8 @@ public class JobSchedulerImpl
     }
 
     public void unschedule(final ScheduledJobInfoImpl info) {
-        ResourceResolver resolver = null;
+        final ResourceResolver resolver = this.config.createResourceResolver();
         try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
             final StringBuilder sb = new StringBuilder(this.config.getScheduledJobsPathWithSlash());
             sb.append('/');
             sb.append(ResourceHelper.filterName(info.getName()));
@@ -354,15 +342,11 @@ public class JobSchedulerImpl
                 resolver.delete(eventResource);
                 resolver.commit();
             }
-        } catch (final LoginException le) {
-            this.ignoreException(le);
         } catch (final PersistenceException pe) {
             // we ignore the exception if removing fails
             ignoreException(pe);
         } finally {
-            if ( resolver != null ) {
-                resolver.close();
-            }
+            resolver.close();
         }
     }
 
@@ -387,11 +371,10 @@ public class JobSchedulerImpl
                         @Override
                         public void run() {
                             synchronized (unloadedEvents) {
-                                ResourceResolver resolver = null;
+                                final ResourceResolver resolver = config.createResourceResolver();
                                 final Set<String> newUnloadedEvents = new HashSet<String>();
                                 newUnloadedEvents.addAll(unloadedEvents);
                                 try {
-                                    resolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
                                     for(final String path : unloadedEvents ) {
                                         newUnloadedEvents.remove(path);
                                         final Resource eventResource = resolver.getResource(path);
@@ -409,13 +392,8 @@ public class JobSchedulerImpl
                                             }
                                         }
                                     }
-                                } catch (final LoginException re) {
-                                    // unable to create resource resolver so we try it again next time
-                                    ignoreException(re);
                                 } finally {
-                                    if ( resolver != null ) {
-                                        resolver.close();
-                                    }
+                                    resolver.close();
                                     unloadedEvents.clear();
                                     unloadedEvents.addAll(newUnloadedEvents);
                                 }
@@ -446,9 +424,8 @@ public class JobSchedulerImpl
      * Load all scheduled jobs from the resource tree
      */
     private void loadScheduledJobs(final long startTime) {
-        ResourceResolver resolver = null;
+        final ResourceResolver resolver = this.config.createResourceResolver();
         try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
             final Calendar startDate = Calendar.getInstance();
             startDate.setTimeInMillis(startTime);
 
@@ -489,12 +466,8 @@ public class JobSchedulerImpl
 
         } catch (final QuerySyntaxException qse) {
             this.ignoreException(qse);
-        } catch (final LoginException le) {
-            this.ignoreException(le);
         } finally {
-            if ( resolver != null ) {
-                resolver.close();
-            }
+            resolver.close();
         }
     }
 
@@ -545,9 +518,8 @@ public class JobSchedulerImpl
             final boolean suspend,
             final List<ScheduleInfoImpl> scheduleInfos)
     throws PersistenceException {
-        ResourceResolver resolver = null;
+        final ResourceResolver resolver = this.config.createResourceResolver();
         try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
 
             // create properties
             final Map<String, Object> properties = new HashMap<String, Object>();
@@ -605,15 +577,9 @@ public class JobSchedulerImpl
             properties.put(ResourceHelper.PROPERTY_SCHEDULE_INFO, scheduleInfos);
 
             return this.addOrUpdateScheduledJob(properties);
-        } catch ( final LoginException le ) {
-            // we ignore this
-            this.ignoreException(le);
         } finally {
-            if ( resolver != null ) {
-                resolver.close();
-            }
+            resolver.close();
         }
-        return null;
     }
 
     /**
@@ -763,9 +729,8 @@ public class JobSchedulerImpl
     }
 
     public void setSuspended(final ScheduledJobInfoImpl info, final boolean flag) {
-        ResourceResolver resolver = null;
+        final ResourceResolver resolver = config.createResourceResolver();
         try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
             final StringBuilder sb = new StringBuilder(this.config.getScheduledJobsPathWithSlash());
             sb.append('/');
             sb.append(ResourceHelper.filterName(info.getName()));
@@ -781,15 +746,11 @@ public class JobSchedulerImpl
                 }
                 resolver.commit();
             }
-        } catch (final LoginException le) {
-            this.ignoreException(le);
         } catch (final PersistenceException pe) {
             // we ignore the exception if removing fails
             ignoreException(pe);
         } finally {
-            if ( resolver != null ) {
-                resolver.close();
-            }
+            resolver.close();
         }
     }
 }

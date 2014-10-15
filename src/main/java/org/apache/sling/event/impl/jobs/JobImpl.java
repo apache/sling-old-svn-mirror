@@ -36,7 +36,7 @@ import org.apache.sling.event.jobs.Queue;
 /**
  * This object encapsulates all information about a job.
  */
-public class JobImpl implements Job {
+public class JobImpl implements Job, Comparable<JobImpl> {
 
     /** Internal job property containing the resource path. */
     public static final String PROPERTY_RESOURCE_PATH = "slingevent:path";
@@ -376,6 +376,15 @@ public class JobImpl implements Job {
     @Override
     public Calendar getProgressETA() {
         return this.getProperty(Job.PROPERTY_JOB_PROGRESS_ETA, Calendar.class);
+    }
+
+    @Override
+    public int compareTo(final JobImpl o) {
+        int result = this.getCreated().compareTo(o.getCreated());
+        if ( result == 0 ) {
+            result = this.getTopic().compareTo(o.getTopic());
+        }
+        return result;
     }
 
     @Override
