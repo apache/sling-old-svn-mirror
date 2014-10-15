@@ -26,7 +26,6 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang3.CharEncoding;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.adapter.SlingAdaptable;
@@ -39,7 +38,7 @@ public class MockSlingHttpServletResponse extends SlingAdaptable implements Slin
     private static final String CHARSET_SEPARATOR = ";charset=";
 
     private String contentType;
-    private String characterEncoding = CharEncoding.ISO_8859_1;
+    private String characterEncoding;
     private int contentLength;
     private int status = HttpServletResponse.SC_OK;
     private int bufferSize = 1024 * 8;
