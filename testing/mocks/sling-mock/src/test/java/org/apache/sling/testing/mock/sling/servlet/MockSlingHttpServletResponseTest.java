@@ -47,11 +47,19 @@ public class MockSlingHttpServletResponseTest {
     @Test
     public void testContentTypeCharset() throws Exception {
         assertNull(response.getContentType());
-        assertEquals(CharEncoding.ISO_8859_1, response.getCharacterEncoding());
+        assertNull(response.getCharacterEncoding());
 
+        response.setContentType("image/gif");
+        assertEquals("image/gif", response.getContentType());
+        assertNull(response.getCharacterEncoding());
+        
         response.setContentType("text/plain;charset=UTF-8");
         assertEquals("text/plain;charset=UTF-8", response.getContentType());
         assertEquals(CharEncoding.UTF_8, response.getCharacterEncoding());
+        
+        response.setCharacterEncoding(CharEncoding.ISO_8859_1);
+        assertEquals("text/plain;charset=ISO-8859-1", response.getContentType());
+        assertEquals(CharEncoding.ISO_8859_1, response.getCharacterEncoding());
     }
 
     @Test
