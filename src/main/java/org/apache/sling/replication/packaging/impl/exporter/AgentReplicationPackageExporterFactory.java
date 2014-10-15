@@ -18,7 +18,6 @@
  */
 package org.apache.sling.replication.packaging.impl.exporter;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -30,17 +29,12 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.agent.ReplicationComponent;
 import org.apache.sling.replication.agent.ReplicationComponentFactory;
 import org.apache.sling.replication.agent.ReplicationComponentProvider;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
-import org.apache.sling.replication.queue.ReplicationQueue;
-import org.apache.sling.replication.queue.ReplicationQueueItem;
-import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
