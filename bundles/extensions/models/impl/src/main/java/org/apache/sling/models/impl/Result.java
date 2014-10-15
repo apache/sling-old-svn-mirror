@@ -31,13 +31,14 @@ import org.slf4j.Logger;
 public class Result<ModelType> {
 
     enum FailureType {
-        ADAPTABLE_DOES_NOT_MATCH("Adaptable is not acceptable for the model class"), FAILED_CALLING_POST_CONSTRUCT(
-                "Failure calling post-construct method"), NO_MODEL_ANNOTATION(
-                "Provided Adapter class does not have a Model annotation"), NO_USABLE_CONSTRUCTOR(
-                "Unable to find a useable constructor"), OTHER("Unclassified problem"), MISSING_METHODS(
-                "Required methods %s on model %s were not able to be injected."), MISSING_FIELDS(
-                "Required fields %s on model %s were not able to be injected."), MISSING_CONSTRUCTOR_PARAMS(
-                "Required constructor parameteres %s on model %s were not able to be injected.");
+        ADAPTABLE_DOES_NOT_MATCH("Adaptable is not acceptable for the model class"),
+        FAILED_CALLING_POST_CONSTRUCT("Failure calling post-construct method"),
+        NO_MODEL_ANNOTATION("Provided Adapter class does not have a Model annotation"),
+        NO_USABLE_CONSTRUCTOR("Unable to find a useable constructor"),
+        OTHER("Unclassified problem"),
+        MISSING_METHODS("Required methods %s on model %s were not able to be injected."),
+        MISSING_FIELDS("Required fields %s on model %s were not able to be injected."),
+        MISSING_CONSTRUCTOR_PARAMS("Required constructor parameteres %s on model %s were not able to be injected.");
 
         private String message;
 
