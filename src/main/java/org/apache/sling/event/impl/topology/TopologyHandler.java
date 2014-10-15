@@ -22,25 +22,30 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
-import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.event.impl.jobs.JobManagerConfiguration;
+import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
+import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueConfigurationChangeListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
 /**
- * The topology handler listens for topology events
+ * The topology handler listens for topology events.
+ *
+ * TODO - config changes should actually do a real stop/start
  */
 @Component(immediate=true)
 @Service(value={TopologyHandler.class, TopologyEventListener.class})
 public class TopologyHandler
-    implements TopologyEventListener {
+    implements TopologyEventListener, QueueConfigurationChangeListener {
 
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -51,20 +56,75 @@ public class TopologyHandler
     @Reference
     private JobManagerConfiguration configuration;
 
+    @Reference
+    private QueueConfigurationManager queueManager;
+
     /** The topology capabilities. */
     private volatile TopologyCapabilities topologyCapabilities;
 
-    private void stopProcessing() {
+    @Activate
+    protected void activate() {
+        this.queueManager.addListener(this);
+    }
+
+    @Deactivate
+    protected void dectivate() {
+        this.queueManager.removeListener(this);
+    }
+
+
+    @Override
+    public void configChanged() {
+        final TopologyCapabilities caps = this.topologyCapabilities;
+        if ( caps != null ) {
+            synchronized ( this.listeners ) {
+ //               this.stopProcessing(false);
+
+                this.startProcessing(Type.PROPERTIES_CHANGED, caps, true);
+            }
+        }
+    }
+
+    private void stopProcessing(final boolean deactivate) {
+        boolean notify = this.topologyCapabilities != null;
         // deactivate old capabilities - this stops all background processes
-        if ( this.topologyCapabilities != null ) {
+        if ( deactivate && this.topologyCapabilities != null ) {
             this.topologyCapabilities.deactivate();
         }
         this.topologyCapabilities = null;
+
+        if ( notify ) {
+            // stop all listeners
+            this.notifiyListeners();
+        }
     }
 
-    private void startProcessing(final TopologyView view) {
+    private void startProcessing(final Type eventType, final TopologyCapabilities newCaps, final boolean isConfigChange) {
         // create new capabilities and update view
-        this.topologyCapabilities = new TopologyCapabilities(view, this.configuration);
+        this.topologyCapabilities = newCaps;
+
+        // before we propagate the new topology we do some maintenance
+        if ( eventType == Type.TOPOLOGY_INIT ) {
+            final UpgradeTask task = new UpgradeTask();
+            task.run(this.configuration, this.topologyCapabilities, queueManager);
+
+            final RestartTask rt = new RestartTask();
+            rt.run(this.configuration);
+        }
+
+        final MaintenanceTask mt = new MaintenanceTask(this.configuration);
+        mt.run(topologyCapabilities, queueManager, !isConfigChange, isConfigChange);
+
+        if ( !isConfigChange ) {
+            // start listeners
+            this.notifiyListeners();
+        }
+    }
+
+    private void notifiyListeners() {
+        for(final TopologyAware l : this.listeners) {
+            l.topologyChanged(this.topologyCapabilities);
+        }
     }
 
     /**
@@ -86,22 +146,15 @@ public class TopologyHandler
         synchronized ( this.listeners ) {
 
             if ( event.getType() == Type.TOPOLOGY_CHANGING ) {
-               this.stopProcessing();
+               this.stopProcessing(true);
 
-               for(final TopologyAware l : this.listeners) {
-                   l.topologyChanged(this.topologyCapabilities);
-               }
             } else if ( event.getType() == Type.TOPOLOGY_INIT
                 || event.getType() == Type.TOPOLOGY_CHANGED
                 || event.getType() == Type.PROPERTIES_CHANGED ) {
 
-                this.stopProcessing();
+                this.stopProcessing(true);
 
-                this.startProcessing(event.getNewView());
-
-                for(final TopologyAware l : this.listeners) {
-                    l.topologyChanged(this.topologyCapabilities);
-                }
+                this.startProcessing(event.getType(), new TopologyCapabilities(event.getNewView(), this.queueManager, this.configuration), false);
             }
 
         }
