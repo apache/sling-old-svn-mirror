@@ -34,6 +34,7 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.event.impl.EnvironmentComponent;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.slf4j.Logger;
@@ -131,6 +132,10 @@ public class JobManagerConfiguration {
 
     /** The resource path where scheduled jobs are stored - ending with a slash. */
     private String scheduledJobsPathWithSlash;
+
+    /** The environment component. */
+    @Reference
+    private EnvironmentComponent environment;
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;

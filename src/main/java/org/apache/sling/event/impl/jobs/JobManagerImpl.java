@@ -49,12 +49,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.commons.threads.ThreadPoolManager;
-import org.apache.sling.discovery.TopologyEvent;
-import org.apache.sling.discovery.TopologyEvent.Type;
-import org.apache.sling.discovery.TopologyEventListener;
-import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.event.EventUtil;
-import org.apache.sling.event.impl.EnvironmentComponent;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
@@ -69,6 +64,9 @@ import org.apache.sling.event.impl.jobs.stats.TopicStatisticsImpl;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.impl.support.ScheduleInfoImpl;
+import org.apache.sling.event.impl.topology.TopologyAware;
+import org.apache.sling.event.impl.topology.TopologyCapabilities;
+import org.apache.sling.event.impl.topology.TopologyHandler;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobBuilder;
 import org.apache.sling.event.jobs.JobManager;
@@ -93,7 +91,7 @@ import org.slf4j.LoggerFactory;
  * Implementation of the job manager.
  */
 @Component(immediate=true)
-@Service(value={JobManager.class, EventHandler.class, TopologyEventListener.class, Runnable.class})
+@Service(value={JobManager.class, EventHandler.class, Runnable.class})
 @Properties({
     @Property(name="scheduler.period", longValue=60, propertyPrivate=true),
     @Property(name="scheduler.concurrent", boolValue=false, propertyPrivate=true),
@@ -108,14 +106,13 @@ import org.slf4j.LoggerFactory;
 })
 public class JobManagerImpl
     extends StatisticsImpl
-    implements JobManager, EventHandler, TopologyEventListener, Runnable {
+    implements JobManager, EventHandler, Runnable, TopologyAware {
 
     /** Default logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    /** The environment component. */
     @Reference
-    private EnvironmentComponent environment;
+    private TopologyHandler topologyHandler;
 
     @Reference
     private EventAdmin eventAdmin;
@@ -178,6 +175,7 @@ public class JobManagerImpl
         this.maintenanceTask = new MaintenanceTask(this.configuration);
         this.backgroundLoader = new BackgroundLoader(this, this.configuration);
 
+        this.topologyHandler.addListener(this);
         logger.info("Apache Sling Job Manager started on instance {}", Environment.APPLICATION_ID);
     }
 
@@ -187,6 +185,8 @@ public class JobManagerImpl
     @Deactivate
     protected void deactivate() {
         logger.info("Apache Sling Job Manager stopping on instance {}", Environment.APPLICATION_ID);
+        this.topologyHandler.removeListener(this);
+
         this.jobScheduler.deactivate();
 
         this.backgroundLoader.deactivate();
@@ -490,48 +490,24 @@ public class JobManagerImpl
             }
         }
 
-        // deactivate old capabilities - this stops all background processes
-        if ( this.topologyCapabilities != null ) {
-            this.topologyCapabilities.deactivate();
-        }
         this.topologyCapabilities = null;
     }
 
-    private void startProcessing(final TopologyView view) {
+    private void startProcessing(final TopologyCapabilities caps) {
         // create new capabilities and update view
-        this.topologyCapabilities = new TopologyCapabilities(view, this.configuration);
+        this.topologyCapabilities = caps;
 
         this.backgroundLoader.start();
     }
 
-    /**
-     * @see org.apache.sling.discovery.TopologyEventListener#handleTopologyEvent(org.apache.sling.discovery.TopologyEvent)
-     */
     @Override
-    public void handleTopologyEvent(final TopologyEvent event) {
-        this.logger.info("Received topology event {}", event);
-
-        // check if there is a change of properties which doesn't affect us
-        if ( event.getType() == Type.PROPERTIES_CHANGED ) {
-            final Map<String, String> newAllInstances = TopologyCapabilities.getAllInstancesMap(event.getNewView());
-            if ( this.topologyCapabilities != null && this.topologyCapabilities.isSame(newAllInstances) ) {
-                logger.info("No changes in capabilities - ignoring event");
-                return;
-            }
-        }
-
-        if ( event.getType() == Type.TOPOLOGY_CHANGING ) {
-           this.stopProcessing();
-
-        } else if ( event.getType() == Type.TOPOLOGY_INIT
-            || event.getType() == Type.TOPOLOGY_CHANGED
-            || event.getType() == Type.PROPERTIES_CHANGED ) {
-
+    public void topologyChanged(final TopologyCapabilities caps) {
+        if ( caps == null ) {
             this.stopProcessing();
-
-            this.startProcessing(event.getNewView());
+        } else {
+            this.startProcessing(caps);
         }
-        this.jobScheduler.handleTopologyEvent(event);
+        this.jobScheduler.topologyChanged(caps);
     }
 
     /**

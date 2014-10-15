@@ -42,6 +42,7 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.discovery.PropertyProvider;
 import org.apache.sling.event.impl.support.TopicMatcher;
 import org.apache.sling.event.impl.support.TopicMatcherHelper;
+import org.apache.sling.event.impl.topology.TopologyCapabilities;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.apache.sling.event.jobs.consumer.JobConsumer.JobResult;

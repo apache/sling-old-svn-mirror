@@ -46,12 +46,11 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.scheduler.JobContext;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
-import org.apache.sling.discovery.TopologyEvent;
-import org.apache.sling.discovery.TopologyEvent.Type;
-import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.impl.support.ScheduleInfoImpl;
+import org.apache.sling.event.impl.topology.TopologyAware;
+import org.apache.sling.event.impl.topology.TopologyCapabilities;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobBuilder;
 import org.apache.sling.event.jobs.ScheduleInfo;
@@ -68,7 +67,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class JobSchedulerImpl
-    implements EventHandler, TopologyEventListener, org.apache.sling.commons.scheduler.Job {
+    implements EventHandler, TopologyAware, org.apache.sling.commons.scheduler.Job {
 
     private static final String TOPIC_READ_JOB = "org/apache/sling/event/impl/jobs/READSCHEDULEDJOB";
 
@@ -592,17 +591,14 @@ public class JobSchedulerImpl
         }
     }
 
-    /**
-     * @see org.apache.sling.discovery.TopologyEventListener#handleTopologyEvent(org.apache.sling.discovery.TopologyEvent)
-     */
     @Override
-    public void handleTopologyEvent(final TopologyEvent event) {
-        if ( event.getType() == Type.TOPOLOGY_CHANGING ) {
+    public void topologyChanged(final TopologyCapabilities caps) {
+        if ( caps == null ) {
             this.active = false;
             this.stopScheduling();
-        } else if ( event.getType() == Type.TOPOLOGY_CHANGED || event.getType() == Type.TOPOLOGY_INIT ) {
+        } else {
             final boolean previouslyActive = this.active;
-            this.active = event.getNewView().getLocalInstance().isLeader();
+            this.active = caps.isLeader();
             if ( this.active && !previouslyActive ) {
                 this.startScheduling();
             }
