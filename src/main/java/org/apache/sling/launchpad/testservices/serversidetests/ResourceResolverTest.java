@@ -96,6 +96,7 @@ public class ResourceResolverTest {
         }
         
         final int oldEventsCount = eventsCounter.getEventsCount(MAPPING_EVENT_TOPIC);
+        logger.debug("Waiting for event counter {} to change from current value {}", MAPPING_EVENT_TOPIC, oldEventsCount);
         session.save();
         final long timeout = System.currentTimeMillis() + updateTimeout;
         while(System.currentTimeMillis() < timeout) {
@@ -111,6 +112,7 @@ public class ResourceResolverTest {
             }
         }
         eventTimeoutTopic = MAPPING_EVENT_TOPIC;
+        logger.error("Timeout waiting for event counter {} to change from current value {}", MAPPING_EVENT_TOPIC, oldEventsCount);
         fail("Timeout waiting for " + MAPPING_EVENT_TOPIC + " event, after " + updateTimeout + " msec");
     }
     
