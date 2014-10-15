@@ -73,7 +73,11 @@ public class EventsCounterImpl extends SlingSafeMethodsServlet implements EventH
     
     public int getEventsCount(String topic) {
         final AtomicInteger counter = counters.get(topic);
-        return counter == null ? 0 : counter.get();
+        if(counter == null) {
+            log.debug("getEventsCount({}) returns 0, counter not found", topic);
+            return 0;
+        }
+        return counter.get();
     }
 
     @Override
