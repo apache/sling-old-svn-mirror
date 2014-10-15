@@ -52,12 +52,12 @@ import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueIn
 import org.apache.sling.event.impl.jobs.queues.AbstractJobQueue;
 import org.apache.sling.event.impl.jobs.queues.QueueManager;
 import org.apache.sling.event.impl.jobs.stats.StatisticsManager;
+import org.apache.sling.event.impl.jobs.topology.TopologyAware;
+import org.apache.sling.event.impl.jobs.topology.TopologyCapabilities;
+import org.apache.sling.event.impl.jobs.topology.TopologyHandler;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.impl.support.ScheduleInfoImpl;
-import org.apache.sling.event.impl.topology.TopologyAware;
-import org.apache.sling.event.impl.topology.TopologyCapabilities;
-import org.apache.sling.event.impl.topology.TopologyHandler;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobBuilder;
 import org.apache.sling.event.jobs.JobManager;
