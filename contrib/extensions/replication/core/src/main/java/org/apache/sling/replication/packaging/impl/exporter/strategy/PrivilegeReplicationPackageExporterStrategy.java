@@ -31,7 +31,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.Privilege;
-import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.Map;
 
@@ -76,7 +75,7 @@ public class PrivilegeReplicationPackageExporterStrategy implements ReplicationP
             throws RepositoryException, ReplicationPackageBuildingException {
         AccessControlManager acMgr = session.getAccessControlManager();
 
-        Privilege[] privileges = new Privilege[] { acMgr.privilegeFromName(jcrPrivilege) };
+        Privilege[] privileges = new Privilege[] { acMgr.privilegeFromName(jcrPrivilege), acMgr.privilegeFromName(Privilege.JCR_READ) };
         for (String path : paths) {
             if(!acMgr.hasPrivileges(path, privileges)) {
                 throw new ReplicationPackageBuildingException("Not enough privileges");
@@ -89,7 +88,7 @@ public class PrivilegeReplicationPackageExporterStrategy implements ReplicationP
             throws RepositoryException, ReplicationPackageBuildingException {
         AccessControlManager acMgr = session.getAccessControlManager();
 
-        Privilege[] privileges = new Privilege[] { acMgr.privilegeFromName(jcrPrivilege) };
+        Privilege[] privileges = new Privilege[] { acMgr.privilegeFromName(jcrPrivilege), acMgr.privilegeFromName(Privilege.JCR_REMOVE_NODE)  };
         for (String path : paths) {
             if(session.nodeExists(path) && !acMgr.hasPrivileges(path, privileges)) {
                 throw new ReplicationPackageBuildingException("Not enough privileges");

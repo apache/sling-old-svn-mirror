@@ -141,7 +141,15 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
 
         List<ReplicationPackage> exportedPackages = replicationPackageExporterStrategy.exportPackages(resourceResolver,
                 replicationRequest,
-                replicationPackageExporter);
+                new ReplicationPackageExporter() {
+                    public List<ReplicationPackage> exportPackage(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
+                        return replicationPackageExporter.exportPackage(getAgentResourceResolver(), replicationRequest);
+                    }
+
+                    public ReplicationPackage exportPackageById(ResourceResolver resourceResolver, String replicationPackageId) {
+                        return replicationPackageExporter.exportPackageById(getAgentResourceResolver(), replicationPackageId);
+                    }
+                });
         replicationPackages.addAll(exportedPackages);
 
         return replicationPackages;
@@ -242,7 +250,7 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
     private boolean processTransportQueue(ReplicationQueueItem queueItem) {
         boolean success = false;
         log.debug("reading package with id {}", queueItem.getId());
-        ResourceResolver resourceResolver = getResourceResolver();
+        ResourceResolver resourceResolver = getAgentResourceResolver();
         try {
 
             ReplicationPackage replicationPackage = replicationPackageExporter.exportPackageById(resourceResolver, queueItem.getId());
@@ -263,7 +271,7 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
         return success;
     }
 
-    private ResourceResolver getResourceResolver() {
+    private ResourceResolver getAgentResourceResolver() {
         ResourceResolver resourceResolver = null;
 
         Map<String, Object> authenticationInfo = new HashMap<String, Object>();
@@ -293,7 +301,7 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
 
         public void handle(ReplicationRequest request) {
             try {
-                ResourceResolver resourceResolver = getResourceResolver();
+                ResourceResolver resourceResolver = getAgentResourceResolver();
                 agent.execute(resourceResolver, request);
             } catch (AgentReplicationException e) {
                 log.error("Error executing handler", e);
