@@ -46,9 +46,7 @@ import org.osgi.framework.Constants;
             value=ConfigurationConstants.DEFAULT_TYPE,
             options={@PropertyOption(name="UNORDERED",value="Parallel"),
                      @PropertyOption(name="ORDERED",value="Ordered"),
-                     @PropertyOption(name="TOPIC_ROUND_ROBIN",value="Topic Round Robin"),
-                     @PropertyOption(name="IGNORE",value="Ignore"),
-                     @PropertyOption(name="DROP",value="Drop")}),
+                     @PropertyOption(name="TOPIC_ROUND_ROBIN",value="Topic Round Robin")}),
     @Property(name=ConfigurationConstants.PROP_TOPICS,
             unbounded=PropertyUnbounded.ARRAY),
     @Property(name=ConfigurationConstants.PROP_MAX_PARALLEL,
@@ -182,6 +180,9 @@ public class InternalQueueConfiguration
             if ( maxParallelProcesses < 1 ) {
                 return false;
             }
+        }
+        if ( type == Type.IGNORE || type == Type.DROP ) {
+            return false;
         }
         return true;
     }

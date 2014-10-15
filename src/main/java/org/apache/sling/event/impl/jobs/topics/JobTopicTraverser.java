@@ -78,10 +78,14 @@ public class JobTopicTraverser {
 
                             Collections.sort(jobs);
 
+                            boolean stop = false;
                             for(final JobImpl job : jobs) {
                                 if ( !handler.handle(job) ) {
-                                    return;
+                                    stop = true;
                                 }
+                            }
+                            if ( stop ) {
+                                return;
                             }
                         }
                     }
