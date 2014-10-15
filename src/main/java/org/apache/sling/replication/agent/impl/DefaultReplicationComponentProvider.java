@@ -28,6 +28,7 @@ import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.agent.ReplicationComponentProvider;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
@@ -45,6 +46,7 @@ import org.slf4j.LoggerFactory;
 @Service(ReplicationComponentProvider.class)
 @Property(name = "name", value = "default")
 @References({
+        @Reference(name = "replicationAgent", referenceInterface = ReplicationAgent.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
         @Reference(name = "replicationPackageImporter", referenceInterface = ReplicationPackageImporter.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
         @Reference(name = "replicationPackageExporter", referenceInterface = ReplicationPackageExporter.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
         @Reference(name = "replicationQueueProvider", referenceInterface = ReplicationQueueProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
@@ -58,6 +60,7 @@ public class DefaultReplicationComponentProvider implements ReplicationComponent
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    Map<String, ReplicationAgent> replicationAgentMap = new ConcurrentHashMap<String, ReplicationAgent>();
     Map<String, ReplicationQueueProvider> replicationQueueProviderMap = new ConcurrentHashMap<String, ReplicationQueueProvider>();
     Map<String, ReplicationQueueDistributionStrategy> replicationQueueDistributionStrategyMap = new ConcurrentHashMap<String, ReplicationQueueDistributionStrategy>();
     Map<String, TransportAuthenticationProvider> transportAuthenticationProviderMap = new ConcurrentHashMap<String, TransportAuthenticationProvider>();
@@ -165,5 +168,23 @@ public class DefaultReplicationComponentProvider implements ReplicationComponent
         }
 
     }
+
+    private void bindReplicationAgent(ReplicationAgent replicationAgent, Map<String, Object> config) {
+
+        String name = (String) config.get("name");
+        if (name != null) {
+            replicationAgentMap.put(name, replicationAgent);
+        }
+    }
+
+    private void unbindReplicationAgent(ReplicationAgent replicationAgent, Map<String, Object> config) {
+
+        String name = (String) config.get("name");
+        if (name != null) {
+            replicationAgentMap.remove(name);
+        }
+
+    }
+
 
 }

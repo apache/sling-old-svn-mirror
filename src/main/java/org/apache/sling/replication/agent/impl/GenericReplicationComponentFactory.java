@@ -46,7 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component(metatype = true,
-        label = "Generic Replication Components Factory",
+        label = "Sling Replication - Generic Components Factory",
         description = "OSGi configuration factory for generic Replication Components",
         configurationFactory = true,
         specVersion = "1.1",

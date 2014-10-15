@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Map;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.event.ReplicationEventFactory;
@@ -39,6 +40,9 @@ import org.slf4j.LoggerFactory;
  */
 
 public class LocalReplicationPackageImporter implements ReplicationPackageImporter {
+
+    public static final String NAME = "local";
+    
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final ReplicationPackageBuilder packageBuilder;
@@ -46,9 +50,24 @@ public class LocalReplicationPackageImporter implements ReplicationPackageImport
     private final ReplicationEventFactory replicationEventFactory;
 
 
+
+    public LocalReplicationPackageImporter(Map<String, Object> config,
+                                                              ReplicationPackageBuilder packageBuilder,
+                                                              ReplicationEventFactory replicationEventFactory) {
+
+        this(packageBuilder, replicationEventFactory);
+    }
+
     public LocalReplicationPackageImporter(ReplicationPackageBuilder packageBuilder,
                                            ReplicationEventFactory replicationEventFactory) {
 
+        if (packageBuilder == null) {
+            throw new IllegalArgumentException("A package builder is required");
+        }
+
+        if (replicationEventFactory == null) {
+            throw new IllegalArgumentException("An event factory is required");
+        }
         this.replicationEventFactory = replicationEventFactory;
         this.packageBuilder = packageBuilder;
     }

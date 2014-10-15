@@ -29,9 +29,11 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.replication.agent.ReplicationComponentFactory;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
+import org.apache.sling.replication.packaging.impl.exporter.LocalReplicationPackageExporter;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.slf4j.Logger;
@@ -41,7 +43,8 @@ import org.slf4j.LoggerFactory;
  * {@link org.apache.sling.replication.packaging.ReplicationPackageImporter} implementation which imports a FileVault
  * based {@link ReplicationPackage} locally.
  */
-@Component(label = "Default Replication Package Importer",
+@Component(label = "Sling Replication - Local Package Importer Factory",
+        metatype = true,
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE)
@@ -49,36 +52,24 @@ import org.slf4j.LoggerFactory;
 public class LocalReplicationPackageImporterFactory implements ReplicationPackageImporter {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    @Property(value = LocalReplicationPackageImporter.NAME, propertyPrivate = true)
+    private static final String TYPE = "type";
+
     @Property
     private static final String NAME = "name";
 
-    @Property(value = "importers/local", propertyPrivate = true)
-    private static final String FACTORY_NAME = "factoryName";
-
-    @Property(label = "Target ReplicationPackageBuilder", name = "ReplicationPackageBuilder.target")
-    @Reference(name = "ReplicationPackageBuilder", policy = ReferencePolicy.STATIC)
-    private ReplicationPackageBuilder packageBuilder;
-
     @Reference
-    private ReplicationEventFactory replicationEventFactory;
+    private ReplicationComponentFactory componentFactory;
 
-    LocalReplicationPackageImporter importer;
+    ReplicationPackageImporter importer;
 
     @Activate
     public void activate(Map<String, Object> config) {
-        importer = getInstance(config, packageBuilder, replicationEventFactory);
+        importer = componentFactory.createComponent(ReplicationPackageImporter.class, config, null);
     }
 
-    public static LocalReplicationPackageImporter getInstance(Map<String, Object> config,
-                                                              ReplicationPackageBuilder packageBuilder, ReplicationEventFactory replicationEventFactory) {
-        if (packageBuilder == null) {
-            throw new IllegalArgumentException("A package builder is required");
-        }
-        return new LocalReplicationPackageImporter(packageBuilder, replicationEventFactory);
 
-    }
-
-    public boolean importPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) {
+    public boolean importPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {
         return importer.importPackage(resourceResolver, replicationPackage);
     }
 

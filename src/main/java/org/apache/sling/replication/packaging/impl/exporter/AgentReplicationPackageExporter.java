@@ -32,63 +32,64 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.agent.ReplicationComponent;
-import org.apache.sling.replication.agent.ReplicationComponentFactory;
-import org.apache.sling.replication.agent.ReplicationComponentProvider;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
-import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(label = "Sling Replication - Agent Based Package Exporter",
-        metatype = true,
-        configurationFactory = true,
-        specVersion = "1.1",
-        policy = ConfigurationPolicy.REQUIRE)
-@Service(value = ReplicationPackageExporter.class)
-public class AgentReplicationPackageExporterFactory implements ReplicationPackageExporter, ReplicationComponentProvider {
+public class AgentReplicationPackageExporter implements ReplicationPackageExporter {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(value = AgentReplicationPackageExporter.NAME, propertyPrivate = true)
-    private static final String TYPE = "type";
+    public static final String NAME = "agent";
+    public static final String QUEUE_NAME = "queue";
 
-    @Property
-    private static final String NAME = "name";
-
-    @Property(label = "Target ReplicationAgent", name = "ReplicationAgent.target")
-    @Reference(name = "ReplicationAgent", policy = ReferencePolicy.STATIC)
     private ReplicationAgent agent;
+    private final ReplicationPackageBuilder packageBuilder;
+    private String queueName;
 
-    @Reference
-    ReplicationComponentFactory replicationComponentFactory;
-
-    ReplicationPackageExporter packageExporter;
-
-
-    @Activate
-    public void activate(Map<String, Object> config) throws Exception {
-
-        packageExporter = replicationComponentFactory.createComponent(ReplicationPackageExporter.class, config, this);
+    public AgentReplicationPackageExporter(Map<String, Object> config, ReplicationAgent agent, ReplicationPackageBuilder packageBuilder) {
+        this (PropertiesUtil.toString(config.get(QUEUE_NAME), ""), agent, packageBuilder);
     }
 
-    public List<ReplicationPackage> exportPackage(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
+    public AgentReplicationPackageExporter(String queueName, ReplicationAgent agent, ReplicationPackageBuilder packageBuilder) {
 
-       return packageExporter.exportPackage(resourceResolver, replicationRequest);
+        if (agent == null || packageBuilder == null) {
+            throw new IllegalArgumentException("Agent and package builder are required");
+        }
+        this.queueName = queueName;
+        this.agent = agent;
+        this.packageBuilder = packageBuilder;
+    }
+
+    public List<ReplicationPackage> exportPackage(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) {
+
+        List<ReplicationPackage> result = new ArrayList<ReplicationPackage>();
+        try {
+            log.info("getting item from queue {}", queueName);
+
+            ReplicationQueue queue = agent.getQueue(queueName);
+            ReplicationQueueItem info = queue.getHead();
+            ReplicationPackage replicationPackage;
+            if (info != null) {
+                replicationPackage = packageBuilder.getPackage(resourceResolver, info.getId());
+                queue.remove(info.getId());
+                if (replicationPackage != null) {
+                    result.add(replicationPackage);
+                }
+            }
+
+        } catch (Exception ex) {
+            log.error("Error exporting package", ex);
+        }
+
+        return result;
     }
 
     public ReplicationPackage exportPackageById(ResourceResolver resourceResolver, String replicationPackageId) {
-        return packageExporter.exportPackageById(resourceResolver, replicationPackageId);
-    }
-
-    public <ComponentType> ComponentType getComponent(Class<ComponentType> type, String componentName) {
-        if (type.isAssignableFrom(ReplicationAgent.class)) {
-            return (ComponentType) agent;
-        }
         return null;
     }
 }

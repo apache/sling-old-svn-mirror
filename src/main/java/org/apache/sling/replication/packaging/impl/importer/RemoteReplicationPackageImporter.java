@@ -21,8 +21,10 @@ package org.apache.sling.replication.packaging.impl.importer;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackage;
@@ -31,6 +33,7 @@ import org.apache.sling.replication.serialization.ReplicationPackageReadingExcep
 import org.apache.sling.replication.transport.ReplicationTransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.replication.transport.impl.MultipleEndpointReplicationTransportHandler;
+import org.apache.sling.replication.transport.impl.ReplicationTransportConstants;
 import org.apache.sling.replication.transport.impl.SimpleHttpReplicationTransportHandler;
 import org.apache.sling.replication.transport.impl.TransportEndpointStrategyType;
 import org.slf4j.Logger;
@@ -41,6 +44,10 @@ import org.slf4j.LoggerFactory;
  */
 public class RemoteReplicationPackageImporter implements ReplicationPackageImporter {
 
+    private static final String ENDPOINT_STRATEGY = ReplicationTransportConstants.ENDPOINT_STRATEGY;
+
+    public static final String NAME = "remote";
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private TransportAuthenticationProvider transportAuthenticationProviderFactory;
@@ -49,9 +56,25 @@ public class RemoteReplicationPackageImporter implements ReplicationPackageImpor
 
     private ReplicationTransportHandler transportHandler;
 
+
+    public RemoteReplicationPackageImporter(Map<String, Object> config, TransportAuthenticationProvider transportAuthenticationProvider) {
+
+        this(transportAuthenticationProvider,
+                PropertiesUtil.toStringArray(config.get(ReplicationTransportConstants.ENDPOINTS), new String[0]),
+                PropertiesUtil.toString(config.get(ENDPOINT_STRATEGY), TransportEndpointStrategyType.One.name()));
+
+    }
+
     public RemoteReplicationPackageImporter(TransportAuthenticationProvider transportAuthenticationProvider,
                                             String[] endpoints,
-                                            TransportEndpointStrategyType transportEndpointStrategyType) {
+                                            String  transportEndpointStrategyName) {
+
+        if (transportAuthenticationProvider == null) {
+            throw new IllegalArgumentException("transportAuthenticationProviderFactory is required");
+        }
+
+        TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(transportEndpointStrategyName);
+
 
         List<ReplicationTransportHandler> transportHandlers = new ArrayList<ReplicationTransportHandler>();
 

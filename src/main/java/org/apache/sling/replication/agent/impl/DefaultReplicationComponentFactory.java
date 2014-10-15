@@ -40,16 +40,17 @@ import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.packaging.ReplicationPackageExporterStrategy;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
+import org.apache.sling.replication.packaging.impl.exporter.*;
 import org.apache.sling.replication.packaging.impl.exporter.strategy.DefaultReplicationPackageExporterStrategy;
-import org.apache.sling.replication.packaging.impl.exporter.LocalReplicationPackageExporterFactory;
-import org.apache.sling.replication.packaging.impl.exporter.RemoteReplicationPackageExporterFactory;
 import org.apache.sling.replication.packaging.impl.exporter.strategy.PrivilegeReplicationPackageExporterStrategy;
+import org.apache.sling.replication.packaging.impl.importer.LocalReplicationPackageImporter;
 import org.apache.sling.replication.packaging.impl.importer.LocalReplicationPackageImporterFactory;
+import org.apache.sling.replication.packaging.impl.importer.RemoteReplicationPackageImporter;
 import org.apache.sling.replication.packaging.impl.importer.RemoteReplicationPackageImporterFactory;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
-import org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilderFactory;
+import org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilder;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.replication.transport.authentication.impl.UserCredentialsTransportAuthenticationProvider;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
@@ -78,7 +79,7 @@ import org.slf4j.LoggerFactory;
         immediate = true
 )
 @Service(ReplicationComponentFactory.class)
-public class DefaultReplicationComponentFactory implements ReplicationComponentFactory {
+public class DefaultReplicationComponentFactory implements ReplicationComponentFactory, ReplicationComponentProvider {
 
     public static final String COMPONENT_TYPE = "type";
     public static final String NAME = "name";
@@ -107,9 +108,12 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
         this.bundleContext = bundleContext;
     }
 
-
     public <ComponentType> ComponentType createComponent(Class<ComponentType> type, Map<String, Object> properties,
                                                          ReplicationComponentProvider componentProvider) {
+
+        if (componentProvider == null) {
+            componentProvider = this;
+        }
         try {
             if (type.isAssignableFrom(ReplicationAgent.class)) {
                 return (ComponentType) createAgent(properties, componentProvider);
@@ -117,12 +121,17 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
                 return (ComponentType) createTrigger(properties, componentProvider);
             } else if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
                 return (ComponentType) createTransportAuthenticationProvider(properties, componentProvider);
+            } else if (type.isAssignableFrom(ReplicationPackageImporter.class)) {
+                return (ComponentType) createImporter(properties, componentProvider);
+            } else if (type.isAssignableFrom(ReplicationPackageExporter.class)) {
+                return (ComponentType) createExporter(properties, componentProvider);
             }
-
-        } catch (Throwable t) {
-            log.error("Cannot create component", t);
-
         }
+        catch (IllegalArgumentException e) {
+            log.debug("Cannot create component", e);
+        }
+
+
         return null;
     }
 
@@ -196,19 +205,29 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
             String name = PropertiesUtil.toString(properties.get(NAME), null);
             return componentProvider.getComponent(ReplicationPackageExporter.class, name);
 
-        } else if ("local".equals(factory)) {
+        } else if (LocalReplicationPackageExporter.NAME.equals(factory)) {
             Map<String, Object> builderProperties = extractMap("packageBuilder", properties);
             ReplicationPackageBuilder packageBuilder = createBuilder(builderProperties);
-            return LocalReplicationPackageExporterFactory.getInstance(packageBuilder);
-        } else if ("remote".equals(factory)) {
+            return new LocalReplicationPackageExporter(packageBuilder);
+        } else if (RemoteReplicationPackageExporter.NAME.equals(factory)) {
             Map<String, Object> authenticationProviderProperties = extractMap("authenticationProvider", properties);
             TransportAuthenticationProvider authenticationProvider = createTransportAuthenticationProvider(authenticationProviderProperties, componentProvider);
 
             Map<String, Object> builderProperties = extractMap("packageBuilder", properties);
             ReplicationPackageBuilder packageBuilder = createBuilder(builderProperties);
 
-            return RemoteReplicationPackageExporterFactory.getInstance(properties, packageBuilder, authenticationProvider);
+            return new  RemoteReplicationPackageExporter(properties, packageBuilder, authenticationProvider);
+        } else if (AgentReplicationPackageExporter.NAME.equals(factory)) {
+            Map<String, Object> builderProperties = extractMap("packageBuilder", properties);
+            ReplicationPackageBuilder packageBuilder = createBuilder(builderProperties);
+
+            Map<String, Object> agentProperties = extractMap("agent", properties);
+            String agentName = PropertiesUtil.toString(agentProperties.get(NAME), null);
+            ReplicationAgent agent = componentProvider.getComponent(ReplicationAgent.class, agentName);
+
+            return new AgentReplicationPackageExporter(properties, agent, packageBuilder);
         }
+
 
         return null;
     }
@@ -220,15 +239,15 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
         if ("service".equals(factory)) {
             String name = PropertiesUtil.toString(properties.get(NAME), null);
             return componentProvider.getComponent(ReplicationPackageImporter.class, name);
-        } else if ("local".equals(factory)) {
+        } else if (LocalReplicationPackageImporter.NAME.equals(factory)) {
             Map<String, Object> builderProperties = extractMap("packageBuilder", properties);
             ReplicationPackageBuilder packageBuilder = createBuilder(builderProperties);
-            return LocalReplicationPackageImporterFactory.getInstance(properties, packageBuilder, replicationEventFactory);
-        } else if ("remote".equals(factory)) {
+            return new LocalReplicationPackageImporter(properties, packageBuilder, replicationEventFactory);
+        } else if (RemoteReplicationPackageImporter.NAME.equals(factory)) {
             Map<String, Object> authenticationProviderProperties = extractMap("authenticationProvider", properties);
             TransportAuthenticationProvider authenticationProvider = createTransportAuthenticationProvider(authenticationProviderProperties, componentProvider);
 
-            return RemoteReplicationPackageImporterFactory.getInstance(properties, authenticationProvider);
+            return new RemoteReplicationPackageImporter(properties, authenticationProvider);
         }
 
         return null;
@@ -274,8 +293,8 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
     public ReplicationPackageBuilder createBuilder(Map<String, Object> properties) {
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), "service");
 
-        if ("vlt".equals(factory)) {
-            return FileVaultReplicationPackageBuilderFactory.getInstance(properties, repository, packaging, replicationEventFactory);
+        if (FileVaultReplicationPackageBuilder.NAME.equals(factory)) {
+            return new FileVaultReplicationPackageBuilder(packaging, replicationEventFactory);
         }
 
         return null;
@@ -333,4 +352,7 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
         return result;
     }
 
+    public <ComponentType> ComponentType getComponent(Class<ComponentType> type, String componentName) {
+        return null;
+    }
 }
