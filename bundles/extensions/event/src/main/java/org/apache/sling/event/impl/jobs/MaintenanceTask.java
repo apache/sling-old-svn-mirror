@@ -38,6 +38,7 @@ import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueIn
 import org.apache.sling.event.impl.support.BatchResourceRemover;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
+import org.apache.sling.event.impl.topology.TopologyCapabilities;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.slf4j.Logger;
