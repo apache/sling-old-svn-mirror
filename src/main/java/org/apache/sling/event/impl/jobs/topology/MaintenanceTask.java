@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.event.impl.topology;
+package org.apache.sling.event.impl.jobs.topology;
 
 import java.util.HashMap;
 import java.util.Iterator;

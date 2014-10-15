@@ -27,7 +27,7 @@ import java.util.Map;
 
 import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
-import org.apache.sling.event.impl.topology.TopologyCapabilities;
+import org.apache.sling.event.impl.jobs.topology.TopologyCapabilities;
 
 public class InstanceDescriptionComparatorTest {
 
