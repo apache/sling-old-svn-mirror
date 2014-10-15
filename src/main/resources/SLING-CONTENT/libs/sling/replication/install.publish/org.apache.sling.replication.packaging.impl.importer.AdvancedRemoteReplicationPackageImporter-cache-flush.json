@@ -8,6 +8,6 @@
         "delete -> Change : REMOVE" ],
     "useCustomBody": true,
     "customBody": "",
-    "TransportAuthenticationProviderFactory.target": "(name=nop)",
+    "TransportAuthenticationProvider.target": "(name=nop)",
     "endpoints": [ "http://localhost:8000/invalidatecache" ]
 }
