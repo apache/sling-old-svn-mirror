@@ -18,7 +18,6 @@
  */
 package org.apache.sling.replication.serialization.impl.vlt;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -31,11 +30,9 @@ import org.apache.jackrabbit.vault.fs.config.DefaultMetaInf;
 import org.apache.jackrabbit.vault.fs.config.DefaultWorkspaceFilter;
 import org.apache.jackrabbit.vault.fs.io.ImportOptions;
 import org.apache.jackrabbit.vault.packaging.ExportOptions;
-import org.apache.jackrabbit.vault.packaging.JcrPackage;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackage;
@@ -43,7 +40,6 @@ import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.apache.sling.replication.serialization.impl.AbstractReplicationPackageBuilder;
-import org.apache.sling.replication.util.ReplicationJcrUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

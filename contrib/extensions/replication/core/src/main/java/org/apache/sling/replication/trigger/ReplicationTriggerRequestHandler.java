@@ -18,7 +18,6 @@
  */
 package org.apache.sling.replication.trigger;
 
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.communication.ReplicationRequest;
 
 /**

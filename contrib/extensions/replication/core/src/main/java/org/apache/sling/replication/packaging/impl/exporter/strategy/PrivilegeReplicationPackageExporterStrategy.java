@@ -18,6 +18,13 @@
  */
 package org.apache.sling.replication.packaging.impl.exporter.strategy;
 
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.Privilege;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.communication.ReplicationActionType;
@@ -26,13 +33,6 @@ import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.packaging.ReplicationPackageExporterStrategy;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.security.AccessControlManager;
-import javax.jcr.security.Privilege;
-import java.util.List;
-import java.util.Map;
 
 public class PrivilegeReplicationPackageExporterStrategy implements ReplicationPackageExporterStrategy {
     public static final String NAME = "privilege";

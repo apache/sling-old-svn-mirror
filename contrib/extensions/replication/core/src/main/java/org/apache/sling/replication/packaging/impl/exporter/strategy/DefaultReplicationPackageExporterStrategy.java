@@ -20,14 +20,14 @@
 package org.apache.sling.replication.packaging.impl.exporter.strategy;
 
 
+import java.util.List;
+
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.packaging.ReplicationPackageExporterStrategy;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
-
-import java.util.List;
 
 public class DefaultReplicationPackageExporterStrategy implements ReplicationPackageExporterStrategy {
 
