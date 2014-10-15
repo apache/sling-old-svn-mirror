@@ -43,7 +43,7 @@ public interface ModelFactory {
      * @return false in case the given class can not be adapted from the given adaptable
      * @throws InvalidModelException in case the given class does not have a model annotation
      */
-    public boolean canCreateFromAdaptable(Class<?> modelClass, Object adaptable) throws InvalidModelException;
+    public boolean canCreateFromAdaptable(Object adaptable, Class<?> modelClass) throws InvalidModelException;
 
     /**
      * 

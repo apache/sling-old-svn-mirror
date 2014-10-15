@@ -179,7 +179,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     }
 
     @Override
-    public boolean canCreateFromAdaptable(Class<?> modelClass, Object adaptable) throws InvalidModelException {
+    public boolean canCreateFromAdaptable(Object adaptable, Class<?> modelClass) throws InvalidModelException {
         return innerCanCreateFromAdaptable(modelClass, adaptable);
     }
 
@@ -897,7 +897,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     private Object adaptIfNecessary(Object value, Class<?> type, Type genericType, Result<?> parentResult) {
         if (!isAcceptableType(type, genericType, value)) {
             Class<?> declaredType = type;
-            if (isModelClass(type) && canCreateFromAdaptable(type, value)) {
+            if (isModelClass(type) && canCreateFromAdaptable(value, type)) {
                 Result<?> result = internalCreateModel(value, type);
                 if (result.getModel() == null) {
                     parentResult.appendFailures(result);
