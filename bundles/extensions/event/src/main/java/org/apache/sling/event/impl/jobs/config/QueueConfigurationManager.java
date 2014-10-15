@@ -31,7 +31,9 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 
 /**
@@ -40,6 +42,10 @@ import org.osgi.util.tracker.ServiceTracker;
 @Component
 @Service(value=QueueConfigurationManager.class)
 public class QueueConfigurationManager {
+
+    public interface QueueConfigurationChangeListener {
+        void configChanged();
+    }
 
     /** Configurations - ordered by service ranking. */
     private volatile InternalQueueConfiguration[] orderedConfigs = new InternalQueueConfiguration[0];
@@ -53,6 +59,9 @@ public class QueueConfigurationManager {
     @Reference
     private MainQueueConfiguration mainQueueConfiguration;
 
+    /** Listeners. */
+    private final List<QueueConfigurationChangeListener> listeners = new ArrayList<QueueConfigurationChangeListener>();
+
     /**
      * Activate this component.
      * Create the service tracker and start it.
@@ -61,7 +70,24 @@ public class QueueConfigurationManager {
     protected void activate(final BundleContext bundleContext)
     throws LoginException, PersistenceException {
         this.configTracker = new ServiceTracker(bundleContext,
-                InternalQueueConfiguration.class.getName(), null);
+                InternalQueueConfiguration.class.getName(), new ServiceTrackerCustomizer() {
+
+                    @Override
+                    public void removedService(final ServiceReference reference, final Object service) {
+                        bundleContext.ungetService(reference);
+                        updateListeners();
+                    }
+
+                    @Override
+                    public void modifiedService(ServiceReference reference, Object service) {
+                        // nothing to do
+                    }
+
+                    @Override
+                    public Object addingService(final ServiceReference reference) {
+                        return bundleContext.getService(reference);
+                    }
+                });
         this.configTracker.open();
     }
 
@@ -144,5 +170,25 @@ public class QueueConfigurationManager {
 
     public int getChangeCount() {
         return this.configTracker.getTrackingCount();
+    }
+
+    public void addListener(final QueueConfigurationChangeListener listener) {
+        synchronized ( this.listeners ) {
+            this.listeners.add(listener);
+        }
+    }
+
+    public void removeListener(final QueueConfigurationChangeListener listener) {
+        synchronized ( this.listeners ) {
+            this.listeners.remove(listener);
+        }
+    }
+
+    private void updateListeners() {
+        synchronized ( listeners ) {
+            for(final QueueConfigurationChangeListener l : listeners) {
+                l.configChanged();
+            }
+        }
     }
 }

@@ -117,10 +117,6 @@ public class JobManagerImpl
     @Reference
     private EventAdmin eventAdmin;
 
-    /** The configuration manager. */
-    @Reference
-    private QueueConfigurationManager queueConfigManager;
-
     @Reference
     private Scheduler scheduler;
 
@@ -137,6 +133,8 @@ public class JobManagerImpl
     @Reference
     private JobManagerConfiguration configuration;
 
+    @Reference
+    private QueueConfigurationManager queueManager;
 
     private volatile TopologyCapabilities topologyCapabilities;
 
@@ -248,7 +246,7 @@ public class JobManagerImpl
         // invoke maintenance task
         final MaintenanceTask task = this.maintenanceTask;
         if ( task != null ) {
-            task.run(this.topologyCapabilities, this.queueConfigManager, this.schedulerRuns - 1);
+            task.run(this.topologyCapabilities, this.schedulerRuns - 1);
         }
         logger.debug("Job manager maintenance: Finished #{}", this.schedulerRuns);
     }
@@ -270,7 +268,11 @@ public class JobManagerImpl
         }
 
         // get the queue configuration
-        final QueueInfo queueInfo = queueConfigManager.getQueueInfo(job.getTopic());
+        final TopologyCapabilities caps = this.topologyCapabilities;
+        final QueueInfo queueInfo = caps != null ? caps.getQueueInfo(job.getTopic()) : null;
+        if ( queueInfo == null ) {
+            return; // TODO
+        }
         final InternalQueueConfiguration config = queueInfo.queueConfiguration;
 
         // Sanity check if queue configuration has changed
@@ -288,7 +290,6 @@ public class JobManagerImpl
         } else {
 
             if ( reassign ) {
-                final TopologyCapabilities caps = this.topologyCapabilities;
                 reassignTargetId = (caps == null ? null : caps.detectTarget(job.getTopic(), job.getProperties(), queueInfo));
 
             } else {
@@ -1167,7 +1168,7 @@ public class JobManagerImpl
             final String jobName,
             final Map<String, Object> jobProperties,
             final List<String> errors) {
-        final QueueInfo info = this.queueConfigManager.getQueueInfo(jobTopic);
+        final QueueInfo info = this.queueManager.getQueueInfo(jobTopic);
         if ( info.queueConfiguration.getType() == QueueConfiguration.Type.DROP ) {
             if ( logger.isDebugEnabled() ) {
                 logger.debug("Dropping job due to configuration of queue {} : {}", info.queueName, Utility.toString(jobTopic, jobName, jobProperties));
@@ -1280,7 +1281,7 @@ public class JobManagerImpl
     }
 
     public void reassign(final JobImpl job) {
-        final QueueInfo queueInfo = queueConfigManager.getQueueInfo(job.getTopic());
+        final QueueInfo queueInfo = queueManager.getQueueInfo(job.getTopic());
         final InternalQueueConfiguration config = queueInfo.queueConfiguration;
 
         // Sanity check if queue configuration has changed
@@ -1351,7 +1352,7 @@ public class JobManagerImpl
         final JobImpl job = (JobImpl)this.getJobById(jobId);
         if ( job != null && !this.configuration.isStoragePath(job.getResourcePath()) ) {
             // get the queue configuration
-            final QueueInfo queueInfo = queueConfigManager.getQueueInfo(job.getTopic());
+            final QueueInfo queueInfo = this.queueManager.getQueueInfo(job.getTopic());
             final AbstractJobQueue queue;
             synchronized ( queuesLock ) {
                 queue = this.queues.get(queueInfo.queueName);
@@ -1361,6 +1362,7 @@ public class JobManagerImpl
                 stopped = queue.stopJob(job);
             }
             if ( forward && !stopped ) {
+                // TODO why not remove the resource?
                 // send remote event
                 final Map<String, Object> props = new HashMap<String, Object>();
                 props.put(Utility.PROPERTY_ID, jobId);

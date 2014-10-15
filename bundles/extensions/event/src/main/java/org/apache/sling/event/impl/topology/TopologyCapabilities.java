@@ -30,6 +30,8 @@ import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.JobManagerConfiguration;
+import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
+import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.jobs.QueueConfiguration;
@@ -72,6 +74,9 @@ public class TopologyCapabilities {
 
     /** JobManagerConfiguration. */
     private final JobManagerConfiguration jobManagerConfiguration;
+
+    /** Queue config manager. */
+    private final QueueConfigurationManager queueManager;
 
     public static final class InstanceDescriptionComparator implements Comparator<InstanceDescription> {
 
@@ -120,8 +125,11 @@ public class TopologyCapabilities {
         return allInstances;
     }
 
-    public TopologyCapabilities(final TopologyView view, final JobManagerConfiguration config) {
+    public TopologyCapabilities(final TopologyView view,
+            final QueueConfigurationManager queueManager,
+            final JobManagerConfiguration config) {
         this.jobManagerConfiguration = config;
+        this.queueManager = queueManager;
         this.instanceComparator = new InstanceDescriptionComparator(view.getLocalInstance().getClusterView().getId());
         this.isLeader = view.getLocalInstance().isLeader();
         this.allInstances = getAllInstancesMap(view);
@@ -156,11 +164,11 @@ public class TopologyCapabilities {
     public boolean isActive() {
         return this.active;
     }
-
+/*
     public long getChangeCount() {
         return this.changeCount;
     }
-
+*/
     public boolean isActive(final String instanceId) {
         return this.allInstances.containsKey(instanceId);
     }
@@ -280,4 +288,17 @@ public class TopologyCapabilities {
         return this.instanceCapabilities;
     }
 
+    public QueueInfo getQueueInfo(final String topic) {
+        if ( this.active ) {
+            return this.queueManager.getQueueInfo(topic);
+        }
+        return null;
+    }
+
+    public InternalQueueConfiguration[] getQueueConfigurations() {
+        if ( this.active ) {
+            return this.queueManager.getConfigurations();
+        }
+        return null;
+    }
 }
