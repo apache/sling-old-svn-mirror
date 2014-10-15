@@ -68,6 +68,8 @@ public class JobImpl implements Job, Comparable<JobImpl> {
 
     private final List<Exception> readErrorList;
 
+    private final long counter;
+
     /**
      * Create a new job instance
      *
@@ -90,6 +92,8 @@ public class JobImpl implements Job, Comparable<JobImpl> {
 
         this.properties = new ValueMapDecorator(properties);
         this.properties.put(NotificationConstants.NOTIFICATION_PROPERTY_JOB_ID, jobId);
+        final int lastPos = jobId.lastIndexOf('_');
+        this.counter = Long.valueOf(jobId.substring(lastPos + 1));
     }
 
     /**
@@ -382,7 +386,13 @@ public class JobImpl implements Job, Comparable<JobImpl> {
     public int compareTo(final JobImpl o) {
         int result = this.getCreated().compareTo(o.getCreated());
         if ( result == 0 ) {
-            result = this.getTopic().compareTo(o.getTopic());
+            if ( this.counter < o.counter ) {
+                result = -1;
+            } else if ( this.counter > o.counter ) {
+                result = 1;
+            } else {
+                result = this.jobId.compareTo(o.jobId);
+            }
         }
         return result;
     }
