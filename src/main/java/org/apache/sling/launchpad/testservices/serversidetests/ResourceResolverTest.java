@@ -47,6 +47,7 @@ import org.apache.sling.launchpad.testservices.events.EventsCounter;
 import org.apache.sling.launchpad.testservices.exported.FakeSlingHttpServletRequest;
 import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -69,6 +70,7 @@ public class ResourceResolverTest {
     private String [] vanity;
     private static List<String> toDelete = new ArrayList<String>();
     private static ResourceResolverFactory cleanupResolverFactory;
+    private static String eventTimeoutTopic;
     
     @TestReference
     private EventsCounter eventsCounter;
@@ -88,6 +90,11 @@ public class ResourceResolverTest {
      *  that signals that mappings have been updated.
      */
     private void saveMappings(Session session) throws Exception {
+        if(eventTimeoutTopic != null) {
+            // Avoid wasting a lot of time if events are not detected in timely fashion
+            fail("Event timeout (" + eventTimeoutTopic + ") detected in previous tests, failing saveMappings()");
+        }
+        
         final int oldEventsCount = eventsCounter.getEventsCount(MAPPING_EVENT_TOPIC);
         session.save();
         final long timeout = System.currentTimeMillis() + updateTimeout;
@@ -103,6 +110,7 @@ public class ResourceResolverTest {
             } catch(InterruptedException ignore) {
             }
         }
+        eventTimeoutTopic = MAPPING_EVENT_TOPIC;
         fail("Timeout waiting for " + MAPPING_EVENT_TOPIC + " event, after " + updateTimeout + " msec");
     }
     
@@ -160,6 +168,12 @@ public class ResourceResolverTest {
         
     }
 
+    @AfterClass
+    @BeforeClass
+    public static void clearTimeouts() {
+        eventTimeoutTopic = null;
+    }
+    
     @AfterClass
     public static void deleteTestNodes() throws Exception {
         final ResourceResolver resolver = cleanupResolverFactory.getAdministrativeResourceResolver(null);
