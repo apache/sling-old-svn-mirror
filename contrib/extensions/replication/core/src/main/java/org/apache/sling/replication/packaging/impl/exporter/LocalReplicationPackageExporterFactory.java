@@ -19,6 +19,7 @@
 package org.apache.sling.replication.packaging.impl.exporter;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -28,6 +29,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.replication.agent.ReplicationComponentFactory;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
@@ -40,7 +42,8 @@ import org.slf4j.LoggerFactory;
  * {@link org.apache.sling.replication.packaging.ReplicationPackageExporter} implementation which creates a FileVault based
  * {@link org.apache.sling.replication.packaging.ReplicationPackage} locally.
  */
-@Component(label = "Local Replication Package Exporter",
+@Component(label = "Sling Replication - Local Package Exporter Factory",
+        metatype = true,
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE)
@@ -49,24 +52,20 @@ public class LocalReplicationPackageExporterFactory implements ReplicationPackag
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    @Property(value = LocalReplicationPackageExporter.NAME, propertyPrivate = true)
+    private static final String TYPE = "type";
+
     @Property
     private static final String NAME = "name";
 
-
-    @Property(label = "Target ReplicationPackageBuilder", name = "ReplicationPackageBuilder.target")
-    @Reference(name = "ReplicationPackageBuilder", policy = ReferencePolicy.STATIC)
-    private ReplicationPackageBuilder packageBuilder;
-
+    @Reference
+    ReplicationComponentFactory replicationComponentFactory;
 
     ReplicationPackageExporter exporter;
 
     @Activate
-    public void activate() {
-        exporter = getInstance(packageBuilder);
-    }
-
-    public static ReplicationPackageExporter getInstance(ReplicationPackageBuilder packageBuilder) {
-        return new LocalReplicationPackageExporter(packageBuilder);
+    public void activate(Map<String, Object> config) {
+        exporter = replicationComponentFactory.createComponent(ReplicationPackageExporter.class, config, null);
     }
 
 

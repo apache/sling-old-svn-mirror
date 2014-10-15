@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
  * An OSGi service factory for {@link ReplicationAgent}s which references already existing OSGi services.
  */
 @Component(metatype = true,
-        label = "Simple Replication Agents Factory",
+        label = "Sling Replication - Simple Agents Factory",
         description = "OSGi configuration factory for agents",
         configurationFactory = true,
         specVersion = "1.1",

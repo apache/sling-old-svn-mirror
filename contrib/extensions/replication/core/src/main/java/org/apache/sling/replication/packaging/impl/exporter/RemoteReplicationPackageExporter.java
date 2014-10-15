@@ -20,8 +20,10 @@ package org.apache.sling.replication.packaging.impl.exporter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
@@ -31,6 +33,7 @@ import org.apache.sling.replication.serialization.ReplicationPackageBuildingExce
 import org.apache.sling.replication.transport.ReplicationTransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.replication.transport.impl.MultipleEndpointReplicationTransportHandler;
+import org.apache.sling.replication.transport.impl.ReplicationTransportConstants;
 import org.apache.sling.replication.transport.impl.SimpleHttpReplicationTransportHandler;
 import org.apache.sling.replication.transport.impl.TransportEndpointStrategyType;
 
@@ -39,15 +42,38 @@ import org.apache.sling.replication.transport.impl.TransportEndpointStrategyType
  */
 public class RemoteReplicationPackageExporter implements ReplicationPackageExporter {
 
+
+    public static final String NAME = "remote";
+    public static final String POLL_ITEMS = "poll.items";
+
+
     private final ReplicationPackageBuilder packageBuilder;
 
     ReplicationTransportHandler transportHandler;
 
-    public RemoteReplicationPackageExporter(ReplicationPackageBuilder packageBuilder, TransportAuthenticationProvider transportAuthenticationProvider,
+
+    public RemoteReplicationPackageExporter(Map<String, Object> config,
+                                            ReplicationPackageBuilder packageBuilder,
+                                            TransportAuthenticationProvider transportAuthenticationProvider) {
+
+        this(packageBuilder, transportAuthenticationProvider,
+                PropertiesUtil.toStringArray(config.get(ReplicationTransportConstants.ENDPOINTS), new String[0]),
+                PropertiesUtil.toString(config.get(ReplicationTransportConstants.ENDPOINT_STRATEGY), "One"),
+                PropertiesUtil.toInteger(config.get(POLL_ITEMS), Integer.MAX_VALUE));
+    }
+
+    public RemoteReplicationPackageExporter(ReplicationPackageBuilder packageBuilder,
+                                            TransportAuthenticationProvider transportAuthenticationProvider,
                                             String[] endpoints,
-                                            TransportEndpointStrategyType transportEndpointStrategyType,
+                                            String transportEndpointStrategyName,
                                             int pollItems) {
+        if (packageBuilder == null) {
+            throw new IllegalArgumentException("packageBuilder is required");
+        }
+
         this.packageBuilder = packageBuilder;
+
+        TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(transportEndpointStrategyName);
 
         List<ReplicationTransportHandler> transportHandlers = new ArrayList<ReplicationTransportHandler>();
 

@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory;
  * An OSGi service factory for 'Coordinate' {@link org.apache.sling.replication.agent.ReplicationAgent}s.
  */
 @Component(metatype = true,
-        label = "Coordinating Replication Agents Factory",
+        label = "Sling Replication - Coordinating Agents Factory",
         description = "OSGi configuration factory for coordinate agents",
         configurationFactory = true,
         specVersion = "1.1",

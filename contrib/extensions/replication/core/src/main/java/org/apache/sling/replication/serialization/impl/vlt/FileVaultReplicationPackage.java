@@ -85,7 +85,7 @@ public class FileVaultReplicationPackage implements ReplicationPackage {
     }
 
     public String getType() {
-        return FileVaultReplicationPackageBuilderFactory.NAME;
+        return FileVaultReplicationPackageBuilder.NAME;
     }
 
     public String getAction() {

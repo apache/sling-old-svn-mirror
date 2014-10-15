@@ -4,10 +4,11 @@
 
     "isPassive": true,
 
+    "serviceName" : "replicationService",
+
     "packageExporter": [
         "type=local",
         "packageBuilder/type=vlt",
-        "packageBuilder/servicename=replicationService"
     ],
 
     "packageExporterStrategy" : [
@@ -18,7 +19,6 @@
     "packageImporter": [
         "type=local",
         "packageBuilder/type=vlt",
-        "packageBuilder/servicename=replicationService"
     ],
 
 

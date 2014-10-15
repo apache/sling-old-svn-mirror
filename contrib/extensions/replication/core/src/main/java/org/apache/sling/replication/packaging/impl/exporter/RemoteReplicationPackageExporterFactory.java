@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.packaging.impl.exporter;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,6 +33,8 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.replication.agent.ReplicationComponentFactory;
+import org.apache.sling.replication.agent.ReplicationComponentProvider;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
@@ -46,27 +49,27 @@ import org.slf4j.LoggerFactory;
 /**
  * Default implementation of {@link org.apache.sling.replication.packaging.ReplicationPackageExporter}
  */
-@Component(label = "Remote Replication Package Exporter",
+@Component(label = "Sling Replication - Remote Package Exporter Factory",
+        metatype = true,
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE)
 @Service(value = ReplicationPackageExporter.class)
-public class RemoteReplicationPackageExporterFactory implements ReplicationPackageExporter {
+public class RemoteReplicationPackageExporterFactory implements ReplicationPackageExporter, ReplicationComponentProvider {
     private final Logger log = LoggerFactory.getLogger(getClass());
+
+    @Property(value = RemoteReplicationPackageExporter.NAME, propertyPrivate = true)
+    private static final String TYPE = "type";
 
     @Property
     private static final String NAME = "name";
 
-    @Property(value = "exporters/remote", propertyPrivate = true)
-    private static final String FACTORY_NAME = "factoryName";
-
     @Property(name = ReplicationTransportConstants.TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
-    @Reference(name = "TransportAuthenticationProviderFactory", policy = ReferencePolicy.DYNAMIC)
+    @Reference(name = "TransportAuthenticationProvider", policy = ReferencePolicy.STATIC)
     private volatile TransportAuthenticationProvider transportAuthenticationProvider;
 
-    @Property(label = "Target ReplicationPackageBuilder", name = "ReplicationPackageBuilder.target")
-    @Reference(name = "ReplicationPackageBuilder", policy = ReferencePolicy.DYNAMIC)
-    private volatile ReplicationPackageBuilder packageBuilder;
+    @Property(cardinality = 100)
+    public static final String ENDPOINTS = ReplicationTransportConstants.ENDPOINTS;
 
     @Property(name = "poll items", description = "number of subsequent poll requests to make", intValue = 1)
     public static final String POLL_ITEMS = "poll.items";
@@ -82,33 +85,17 @@ public class RemoteReplicationPackageExporterFactory implements ReplicationPacka
     )
     private static final String ENDPOINT_STRATEGY = ReplicationTransportConstants.ENDPOINT_STRATEGY;
 
+
+    @Reference
+    ReplicationComponentFactory replicationComponentFactory;
+
     ReplicationPackageExporter exporter;
 
     @Activate
     protected void activate(Map<String, Object> config) throws Exception {
-        exporter = getInstance(config, packageBuilder, transportAuthenticationProvider);
+        exporter = replicationComponentFactory.createComponent(ReplicationPackageExporter.class, config, this);
     }
 
-    public static ReplicationPackageExporter getInstance(Map<String, Object> config,
-                                                         ReplicationPackageBuilder packageBuilder,
-                                                         TransportAuthenticationProvider transportAuthenticationProvider) {
-
-        if (packageBuilder == null) {
-            throw new IllegalArgumentException("packageBuilder is required");
-        }
-
-        String[] endpoints = PropertiesUtil.toStringArray(config.get(ReplicationTransportConstants.ENDPOINTS), new String[0]);
-
-        int pollItems = PropertiesUtil.toInteger(config.get(POLL_ITEMS), Integer.MAX_VALUE);
-
-        String endpointStrategyName = PropertiesUtil.toString(config.get(ReplicationTransportConstants.ENDPOINT_STRATEGY), "One");
-        TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(endpointStrategyName);
-
-        return new RemoteReplicationPackageExporter(packageBuilder, transportAuthenticationProvider,
-                endpoints,
-                transportEndpointStrategyType,
-                pollItems);
-    }
 
     @Deactivate
     protected void deactivate() {
@@ -121,5 +108,13 @@ public class RemoteReplicationPackageExporterFactory implements ReplicationPacka
 
     public ReplicationPackage exportPackageById(ResourceResolver resourceResolver, String replicationPackageId) {
         return exporter.exportPackageById(resourceResolver, replicationPackageId);
+    }
+
+    public <ComponentType> ComponentType getComponent(Class<ComponentType> type, String componentName) {
+        if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
+            return (ComponentType) transportAuthenticationProvider;
+        }
+
+        return null;
     }
 }

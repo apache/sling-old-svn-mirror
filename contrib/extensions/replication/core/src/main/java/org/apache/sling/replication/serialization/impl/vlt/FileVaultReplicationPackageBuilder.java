@@ -58,17 +58,13 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private SlingRepository repository;
-
     private final Packaging packaging;
 
-    private static final String TYPE = "vlt";
+    public static final String NAME = "vlt";
 
-    public FileVaultReplicationPackageBuilder(SlingRepository repository, Packaging packaging,
-                                              ReplicationEventFactory replicationEventFactory) {
-        super(TYPE, replicationEventFactory);
+    public FileVaultReplicationPackageBuilder(Packaging packaging, ReplicationEventFactory replicationEventFactory) {
+        super(NAME, replicationEventFactory);
 
-        this.repository = repository;
         this.packaging = packaging;
     }
 
@@ -100,9 +96,8 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
             opts.setMetaInf(inf);
             opts.setRootPath("/");
             File tmpFile = File.createTempFile("rp-vlt-create-" + System.nanoTime(), ".zip");
-            packaging.getPackageManager().assemble(session, opts, tmpFile);
-            JcrPackage jcrPackage = packaging.getPackageManager(session).upload(tmpFile, false, true, null);
-            return new FileVaultReplicationPackage(jcrPackage.getPackage());
+            VaultPackage vaultPackage = packaging.getPackageManager().assemble(session, opts, tmpFile);
+            return new FileVaultReplicationPackage(vaultPackage);
         } catch (Exception e) {
             throw new ReplicationPackageBuildingException(e);
         } finally {
@@ -148,10 +143,6 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
                 VaultPackage pkg = packaging.getPackageManager().open(file);
                 replicationPackage = new FileVaultReplicationPackage(pkg);
             }
-//            else {
-//                VaultPackage pkg = packaging.getPackageManager(getSession()).open(PackageId.fromString(id)).getPackage();
-//                replicationPackage = new FileVaultReplicationPackage(pkg);
-//            }
         } catch (Exception e) {
             log.warn("could not find a package with id : {}", id);
         }
@@ -166,11 +157,6 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
         Session session = null;
         try {
             session = getSession(resourceResolver);
-//            if (session != null) {
-//                final JcrPackage jcrPackage = packaging.getPackageManager(getSession())
-//                        .open(PackageId.fromString(replicationPackage.getId()));
-//                jcrPackage.install(new ImportOptions());
-//            }
             File file = new File(replicationPackage.getId());
             if (file.exists()) {
                 VaultPackage pkg = packaging.getPackageManager().open(file);

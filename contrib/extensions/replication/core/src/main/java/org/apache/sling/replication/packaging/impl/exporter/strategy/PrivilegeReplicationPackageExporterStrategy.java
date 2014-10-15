@@ -79,7 +79,7 @@ public class PrivilegeReplicationPackageExporterStrategy implements ReplicationP
         for (String path : paths) {
             if(!acMgr.hasPrivileges(path, privileges)) {
                 throw new ReplicationPackageBuildingException("Not enough privileges");
-            };
+            }
         }
 
     }
@@ -92,7 +92,7 @@ public class PrivilegeReplicationPackageExporterStrategy implements ReplicationP
         for (String path : paths) {
             if(session.nodeExists(path) && !acMgr.hasPrivileges(path, privileges)) {
                 throw new ReplicationPackageBuildingException("Not enough privileges");
-            };
+            }
         }
 
     }
