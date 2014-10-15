@@ -19,10 +19,14 @@
 package org.apache.sling.event.impl.jobs;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -318,4 +322,38 @@ public abstract class Utility {
         }
         return job;
     }
+
+    private static final Comparator<Resource> RESOURCE_COMPARATOR = new Comparator<Resource>() {
+
+        @Override
+        public int compare(final Resource o1, final Resource o2) {
+            final int value1 = Integer.valueOf(o1.getName());
+            final int value2 = Integer.valueOf(o2.getName());
+            if ( value1 < value2 ) {
+                return -1;
+            } else if ( value1 > value2 ) {
+                return 1;
+            }
+            return 0;
+        }
+    };
+
+    /**
+     * Helper method to read all children of a resource and sort them by name
+     * @param type The type of resources (for debugging)
+     * @param rsrc The parent resource
+     * @return Sorted list of children.
+     */
+    public static List<Resource> getSortedChildren(final Logger logger, final String type, final Resource rsrc) {
+        final List<Resource> children = new ArrayList<Resource>();
+        final Iterator<Resource> monthIter = rsrc.listChildren();
+        while ( monthIter.hasNext() ) {
+            final Resource monthResource = monthIter.next();
+            children.add(monthResource);
+            logger.debug("Found {} : {}",  type, monthResource.getName());
+        }
+        Collections.sort(children, RESOURCE_COMPARATOR);
+        return children;
+    }
+
 }

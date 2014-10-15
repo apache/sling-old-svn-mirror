@@ -46,7 +46,6 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.QuerySyntaxException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.commons.threads.ThreadPoolManager;
@@ -126,9 +125,6 @@ public class JobManagerImpl
     private QueueConfigurationManager queueConfigManager;
 
     @Reference
-    private ResourceResolverFactory resourceResolverFactory;
-
-    @Reference
     private Scheduler scheduler;
 
     @Reference
@@ -178,21 +174,9 @@ public class JobManagerImpl
      */
     @Activate
     protected void activate(final Map<String, Object> props) throws LoginException {
-        this.jobScheduler = new JobSchedulerImpl(this.configuration, this.resourceResolverFactory, this.scheduler, this);
-        this.maintenanceTask = new MaintenanceTask(this.configuration, this.resourceResolverFactory);
-        this.backgroundLoader = new BackgroundLoader(this, this.configuration, this.resourceResolverFactory);
-
-        // create initial resources
-        final ResourceResolver resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-        try {
-            ResourceHelper.getOrCreateBasePath(resolver, this.configuration.getLocalJobsPath());
-            ResourceHelper.getOrCreateBasePath(resolver, this.configuration.getUnassignedJobsPath());
-            ResourceHelper.getOrCreateBasePath(resolver, this.configuration.getLocksPath());
-        } catch ( final PersistenceException pe ) {
-            this.ignoreException(pe);
-        } finally {
-            resolver.close();
-        }
+        this.jobScheduler = new JobSchedulerImpl(this.configuration, this.scheduler, this);
+        this.maintenanceTask = new MaintenanceTask(this.configuration);
+        this.backgroundLoader = new BackgroundLoader(this, this.configuration);
 
         logger.info("Apache Sling Job Manager started on instance {}", Environment.APPLICATION_ID);
     }
@@ -706,9 +690,8 @@ public class JobManagerImpl
                 final boolean isHistoryJob = this.configuration.isStoragePath(job.getResourcePath());
                 // if history job, simply remove - otherwise move to history!
                 if ( isHistoryJob ) {
-                    ResourceResolver resolver = null;
+                    final ResourceResolver resolver = this.configuration.createResourceResolver();
                     try {
-                        resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
                         final Resource jobResource = resolver.getResource(job.getResourcePath());
                         if ( jobResource != null ) {
                             resolver.delete(jobResource);
@@ -718,16 +701,11 @@ public class JobManagerImpl
                             logger.debug("Unable to remove job with id - resource already removed: {}", jobId);
                         }
                         Utility.sendNotification(this.eventAdmin, NotificationConstants.TOPIC_JOB_REMOVED, job, null);
-                    } catch ( final LoginException le ) {
-                        this.ignoreException(le);
-                        result = false;
                     } catch ( final PersistenceException pe) {
                         this.ignoreException(pe);
                         result = false;
                     } finally {
-                        if ( resolver != null ) {
-                            resolver.close();
-                        }
+                        resolver.close();
                     }
                 } else {
                     this.finishJob(job, Job.JobState.DROPPED, true, -1);
@@ -768,10 +746,8 @@ public class JobManagerImpl
      */
     @Override
     public Job getJobByName(final String name) {
-        ResourceResolver resolver = null;
+        final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-
             final StringBuilder buf = new StringBuilder(64);
 
             buf.append("//element(*,");
@@ -795,12 +771,8 @@ public class JobManagerImpl
             }
         } catch (final QuerySyntaxException qse) {
             this.ignoreException(qse);
-        } catch (final LoginException le) {
-            this.ignoreException(le);
         } finally {
-            if ( resolver != null ) {
-                resolver.close();
-            }
+            resolver.close();
         }
         return null;
     }
@@ -811,10 +783,8 @@ public class JobManagerImpl
     @Override
     public Job getJobById(final String id) {
         logger.debug("Getting job by id: {}", id);
-        ResourceResolver resolver = null;
+        final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-
             final StringBuilder buf = new StringBuilder(64);
 
             buf.append("//element(*,");
@@ -844,12 +814,8 @@ public class JobManagerImpl
             }
         } catch (final QuerySyntaxException qse) {
             this.ignoreException(qse);
-        } catch (final LoginException le) {
-            this.ignoreException(le);
         } finally {
-            if ( resolver != null ) {
-                resolver.close();
-            }
+            resolver.close();
         }
         logger.debug("Job not found with id: {}", id);
         return null;
@@ -906,10 +872,8 @@ public class JobManagerImpl
                                        || type == QueryType.GIVEN_UP
                                        || type == QueryType.STOPPED;
         final List<Job> result = new ArrayList<Job>();
-        ResourceResolver resolver = null;
+        final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-
             final StringBuilder buf = new StringBuilder(64);
 
             buf.append("//element(*,");
@@ -1058,12 +1022,8 @@ public class JobManagerImpl
              }
         } catch (final QuerySyntaxException qse) {
             this.ignoreException(qse);
-        } catch (final LoginException le) {
-            this.ignoreException(le);
         } finally {
-            if ( resolver != null ) {
-                resolver.close();
-            }
+            resolver.close();
         }
         return result;
     }
@@ -1078,9 +1038,8 @@ public class JobManagerImpl
                           final boolean keepJobInHistory,
                           final long duration) {
         final boolean isSuccess = (state == Job.JobState.SUCCEEDED);
-        ResourceResolver resolver = null;
+        final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
             final Resource jobResource = resolver.getResource(job.getResourcePath());
             if ( jobResource != null ) {
                 try {
@@ -1123,12 +1082,8 @@ public class JobManagerImpl
                     this.ignoreException(ie);
                 }
             }
-        } catch (final LoginException ignore) {
-            this.ignoreException(ignore);
         } finally {
-            if ( resolver != null ) {
-                resolver.close();
-            }
+            resolver.close();
         }
     }
 
@@ -1140,9 +1095,8 @@ public class JobManagerImpl
      * @return true if the job could be updated.
      */
     public boolean reschedule(final JobImpl job) {
-        ResourceResolver resolver = null;
+        final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
             final Resource jobResource = resolver.getResource(job.getResourcePath());
             if ( jobResource != null ) {
                 final ModifiableValueMap mvm = jobResource.adaptTo(ModifiableValueMap.class);
@@ -1158,12 +1112,8 @@ public class JobManagerImpl
                     // ignore
                 }
             }
-        } catch ( final LoginException ignore ) {
-            // ignore
         } finally {
-            if ( resolver != null ) {
-                resolver.close();
-            }
+            resolver.close();
         }
 
         return false;
@@ -1177,9 +1127,8 @@ public class JobManagerImpl
             logger.debug("Trying to get lock for {}", id);
         }
         boolean hasLock = false;
-        ResourceResolver resolver = null;
+        final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
             final String lockName = ResourceHelper.filterName(id);
             final StringBuilder sb = new StringBuilder(this.configuration.getLocksPath());
             sb.append('/');
@@ -1222,12 +1171,8 @@ public class JobManagerImpl
                     this.ignoreException(ignore);
                 }
             }
-        } catch (final LoginException ignore) {
-            this.ignoreException(ignore);
         } finally {
-            if ( resolver != null ) {
-                resolver.close();
-            }
+            resolver.close();
         }
         if ( logger.isDebugEnabled() ) {
             logger.debug("Lock for {} = {}", id, hasLock);
@@ -1269,10 +1214,8 @@ public class JobManagerImpl
                         logger.debug("Persisting job {} into queue {}", Utility.toString(jobTopic, jobName, jobProperties), info.queueName);
                     }
                 }
-                ResourceResolver resolver = null;
+                final ResourceResolver resolver = this.configuration.createResourceResolver();
                 try {
-                    resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-
                     final JobImpl job = this.writeJob(resolver,
                             jobTopic,
                             jobName,
@@ -1287,13 +1230,8 @@ public class JobManagerImpl
                 } catch (final PersistenceException re ) {
                     // something went wrong, so let's log it
                     this.logger.error("Exception during persisting new job '" + Utility.toString(jobTopic, jobName, jobProperties) + "'", re);
-                } catch (final LoginException le) {
-                    // there is nothing we can do except log!
-                    this.logger.error("Exception during persisting new job '" + Utility.toString(jobTopic, jobName, jobProperties) + "'", le);
                 } finally {
-                    if ( resolver != null ) {
-                        resolver.close();
-                    }
+                    resolver.close();
                 }
                 if ( errors != null ) {
                     errors.add("Unable to persist new job.");
@@ -1396,9 +1334,8 @@ public class JobManagerImpl
      * Update the property of a job in the resource tree
      */
     public boolean persistJobProperties(final JobImpl job, final String... propNames) {
-        ResourceResolver resolver = null;
+        final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
             final Resource jobResource = resolver.getResource(job.getResourcePath());
             if ( jobResource != null ) {
                 final ModifiableValueMap mvm = jobResource.adaptTo(ModifiableValueMap.class);
@@ -1420,12 +1357,8 @@ public class JobManagerImpl
             }
         } catch ( final PersistenceException ignore ) {
             this.ignoreException(ignore);
-        } catch ( final LoginException ignore ) {
-            this.ignoreException(ignore);
         } finally {
-            if ( resolver != null ) {
-                resolver.close();
-            }
+            resolver.close();
         }
         return false;
     }
