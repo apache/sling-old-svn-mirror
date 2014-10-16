@@ -65,8 +65,6 @@ public abstract class ResourceHelper {
     public static final String PROPERTY_SCHEDULE_SUSPENDED = "slingevent:scheduleSuspended";
 
     public static final String PROPERTY_JOB_ID = "slingevent:eventId";
-    @Deprecated
-    public static final String PROPERTY_JOB_NAME = "event.job.id";
     public static final String PROPERTY_JOB_TOPIC = "event.job.topic";
 
     /** List of ignored properties to write to the repository. */

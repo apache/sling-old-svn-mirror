@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -36,11 +35,8 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobUtil;
-import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.osgi.service.event.Event;
-import org.osgi.service.event.EventAdmin;
-import org.osgi.service.event.EventConstants;
 import org.slf4j.Logger;
 
 public abstract class Utility {
@@ -101,76 +97,6 @@ public abstract class Utility {
         return msg;
     }
 
-    /** Event property containing the time for job start and job finished events. */
-    public static final String PROPERTY_TIME = "time";
-
-    /**
-     * Helper method for sending the notification events.
-     */
-    public static void sendNotification(final EventAdmin eventAdmin,
-            final String eventTopic,
-            final String jobTopic,
-            final String jobName,
-            final Map<String, Object> jobProperties,
-            final Long time) {
-        if ( eventAdmin != null ) {
-            // create job object
-            final Map<String, Object> jobProps;
-            if ( jobProperties == null ) {
-                jobProps = new HashMap<String, Object>();
-            } else {
-                jobProps = jobProperties;
-            }
-            final Job job = new JobImpl(jobTopic, jobName, "<unknown>", jobProps);
-            sendNotificationInternal(eventAdmin, eventTopic, job, time);
-        }
-    }
-
-    /**
-     * Helper method for sending the notification events.
-     */
-    public static void sendNotification(final EventAdmin eventAdmin,
-            final String eventTopic,
-            final Job job,
-            final Long time) {
-        if ( eventAdmin != null ) {
-            // create new copy of job object
-            final Job jobCopy = new JobImpl(job.getTopic(), job.getName(), job.getId(), ((JobImpl)job).getProperties());
-            sendNotificationInternal(eventAdmin, eventTopic, jobCopy, time);
-        }
-    }
-
-    /**
-     * Helper method for sending the notification events.
-     */
-    private static void sendNotificationInternal(final EventAdmin eventAdmin,
-            final String eventTopic,
-            final Job job,
-            final Long time) {
-        final Dictionary<String, Object> eventProps = new Hashtable<String, Object>();
-        // add basic job properties
-        eventProps.put(NotificationConstants.NOTIFICATION_PROPERTY_JOB_ID, job.getId());
-        eventProps.put(NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC, job.getTopic());
-        if ( job.getName() != null ) {
-            eventProps.put(JobUtil.NOTIFICATION_PROPERTY_JOB_NAME, job.getName());
-        }
-        // copy payload
-        for(final String name : job.getPropertyNames()) {
-            eventProps.put(name, job.getProperty(name));
-        }
-        // remove async handler
-        eventProps.remove(JobConsumer.PROPERTY_JOB_ASYNC_HANDLER);
-        // add timestamp
-        eventProps.put(EventConstants.TIMESTAMP, System.currentTimeMillis());
-        // add internal time information
-        if ( time != null ) {
-            eventProps.put(PROPERTY_TIME, time);
-        }
-        // compatibility:
-        eventProps.put(JobUtil.PROPERTY_NOTIFICATION_JOB, toEvent(job));
-        eventAdmin.postEvent(new Event(eventTopic, eventProps));
-    }
-
     /**
      * Create an event from a job
      * @param job The job
@@ -180,7 +106,7 @@ public abstract class Utility {
         final Map<String, Object> eventProps = new HashMap<String, Object>();
         eventProps.putAll(((JobImpl)job).getProperties());
         if ( job.getName() != null ) {
-            eventProps.put(ResourceHelper.PROPERTY_JOB_NAME, job.getName());
+            eventProps.put(JobUtil.PROPERTY_JOB_NAME, job.getName());
         }
         eventProps.put(ResourceHelper.PROPERTY_JOB_ID, job.getId());
         eventProps.remove(JobConsumer.PROPERTY_JOB_ASYNC_HANDLER);
@@ -197,7 +123,7 @@ public abstract class Utility {
             boolean first = true;
             for(final String propName : properties.keySet()) {
                 if ( propName.equals(ResourceHelper.PROPERTY_JOB_ID)
-                    || propName.equals(ResourceHelper.PROPERTY_JOB_NAME)
+                    || propName.equals(JobUtil.PROPERTY_JOB_NAME)
                     || propName.equals(ResourceHelper.PROPERTY_JOB_TOPIC) ) {
                    continue;
                 }
@@ -297,7 +223,7 @@ public abstract class Utility {
                         }
                     }
                     job = new JobImpl(topic,
-                            (String)jobProperties.get(ResourceHelper.PROPERTY_JOB_NAME),
+                            (String)jobProperties.get(JobUtil.PROPERTY_JOB_NAME),
                             jobId,
                             jobProperties);
                 } else {

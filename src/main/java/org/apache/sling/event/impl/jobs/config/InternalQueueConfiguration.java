@@ -36,38 +36,80 @@ import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.osgi.framework.Constants;
 
-@Component(metatype=true,name="org.apache.sling.event.jobs.QueueConfiguration",
-        label="%queue.name", description="%queue.description",
-        configurationFactory=true,policy=ConfigurationPolicy.REQUIRE)
+@Component(metatype=true,
+           name="org.apache.sling.event.jobs.QueueConfiguration",
+           label="Apache Sling Job Queue Configuration",
+           description="The configuration of a job processing queue.",
+           configurationFactory=true, policy=ConfigurationPolicy.REQUIRE)
 @Service(value={InternalQueueConfiguration.class})
 @Properties({
-    @Property(name=ConfigurationConstants.PROP_NAME),
-    @Property(name=ConfigurationConstants.PROP_TYPE,
-            value=ConfigurationConstants.DEFAULT_TYPE,
-            options={@PropertyOption(name="UNORDERED",value="Parallel"),
-                     @PropertyOption(name="ORDERED",value="Ordered"),
-                     @PropertyOption(name="TOPIC_ROUND_ROBIN",value="Topic Round Robin")}),
+    @Property(name=ConfigurationConstants.PROP_NAME,
+              label="Name",
+              description="The name of the queue. If matching is used the token {0} can be used to substitute the real value."),
     @Property(name=ConfigurationConstants.PROP_TOPICS,
-            unbounded=PropertyUnbounded.ARRAY),
+              unbounded=PropertyUnbounded.ARRAY,
+              label="Topics",
+              description="This value is required and lists the topics processed by "
+                        + "this queue. The value is a list of strings. If a string ends with a dot, "
+                        + "all topics in exactly this package match. If the string ends with a star, "
+                        + "all topics in this package and all subpackages match. If the string neither "
+                        + "ends with a dot nor with a star, this is assumed to define an exact topic."),
+    @Property(name=ConfigurationConstants.PROP_TYPE,
+              value=ConfigurationConstants.DEFAULT_TYPE,
+              options={@PropertyOption(name="UNORDERED",value="Parallel"),
+                       @PropertyOption(name="ORDERED",value="Ordered"),
+                       @PropertyOption(name="TOPIC_ROUND_ROBIN",value="Topic Round Robin")},
+              label="Type",
+              description="The queue type."),
     @Property(name=ConfigurationConstants.PROP_MAX_PARALLEL,
-            intValue=ConfigurationConstants.DEFAULT_MAX_PARALLEL),
+              intValue=ConfigurationConstants.DEFAULT_MAX_PARALLEL,
+              label="Maximum Parallel Jobs",
+              description="The maximum number of parallel jobs started for this queue. "
+                        + "A value of -1 is substituted with the number of available processors."),
     @Property(name=ConfigurationConstants.PROP_RETRIES,
-            intValue=ConfigurationConstants.DEFAULT_RETRIES),
+              intValue=ConfigurationConstants.DEFAULT_RETRIES,
+              label="Maximum Retries",
+              description="The maximum number of times a failed job slated "
+                        + "for retries is actually retried. If a job has been retried this number of "
+                        + "times and still fails, it is not rescheduled and assumed to have failed. The "
+                        + "default value is 10."),
     @Property(name=ConfigurationConstants.PROP_RETRY_DELAY,
-            longValue=ConfigurationConstants.DEFAULT_RETRY_DELAY),
+              longValue=ConfigurationConstants.DEFAULT_RETRY_DELAY,
+              label="Retry Delay",
+              description="The number of milliseconds to sleep between two "
+                        + "consecutive retries of a job which failed and was set to be retried. The "
+                        + "default value is 2 seconds. This value is only relevant if there is a single "
+                        + "failed job in the queue. If there are multiple failed jobs, each job is "
+                        + "retried in turn without an intervening delay."),
     @Property(name=ConfigurationConstants.PROP_PRIORITY,
-            value=ConfigurationConstants.DEFAULT_PRIORITY,
-            options={@PropertyOption(name="NORM",value="Norm"),
-                     @PropertyOption(name="MIN",value="Min"),
-                     @PropertyOption(name="MAX",value="Max")}),
+              value=ConfigurationConstants.DEFAULT_PRIORITY,
+              options={@PropertyOption(name="NORM",value="Norm"),
+                       @PropertyOption(name="MIN",value="Min"),
+                       @PropertyOption(name="MAX",value="Max")},
+              label="Priority",
+              description="The priority for the threads used by this queue. Default is norm."),
     @Property(name=ConfigurationConstants.PROP_KEEP_JOBS,
-              boolValue=ConfigurationConstants.DEFAULT_KEEP_JOBS),
+              boolValue=ConfigurationConstants.DEFAULT_KEEP_JOBS,
+              label="Keep History",
+              description="If this option is enabled, successful finished jobs are kept "
+                        + "to provide a complete history."),
     @Property(name=ConfigurationConstants.PROP_PREFER_RUN_ON_CREATION_INSTANCE,
-              boolValue=ConfigurationConstants.DEFAULT_PREFER_RUN_ON_CREATION_INSTANCE),
+              boolValue=ConfigurationConstants.DEFAULT_PREFER_RUN_ON_CREATION_INSTANCE,
+              label="Prefer Creation Instance",
+              description="If this option is enabled, the jobs are tried to "
+                        + "be run on the instance where the job was created."),
     @Property(name=ConfigurationConstants.PROP_THREAD_POOL_SIZE,
-              intValue=ConfigurationConstants.DEFAULT_THREAD_POOL_SIZE),
-    @Property(name=Constants.SERVICE_RANKING, intValue=0, propertyPrivate=false,
-              label="%queue.ranking.name", description="%queue.ranking.description")
+              intValue=ConfigurationConstants.DEFAULT_THREAD_POOL_SIZE,
+              label="Thread Pool Size",
+              description="Optional configuration value for a thread pool to be used by "
+                        + "this queue. If this is value has a positive number of threads configuration, this queue uses "
+                        + "an own thread pool with the configured number of threads."),
+    @Property(name=Constants.SERVICE_RANKING,
+              intValue=0,
+              propertyPrivate=false,
+              label="Ranking",
+              description="Integer value defining the ranking of this queue configuration. "
+                        + "If more than one queue matches a job topic, the one with the highest ranking is used.")
 })
 public class InternalQueueConfiguration
     implements QueueConfiguration, Comparable<InternalQueueConfiguration> {

@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
+import org.apache.sling.event.jobs.JobUtil;
 import org.osgi.service.event.Event;
 
 final class ScheduleInfo implements Serializable {
@@ -66,7 +67,7 @@ final class ScheduleInfo implements Serializable {
         }
 
         final String id = (String)event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_ID);
-        final String jId = (String)event.getProperty(ResourceHelper.PROPERTY_JOB_NAME);
+        final String jId = (String)event.getProperty(JobUtil.PROPERTY_JOB_NAME);
 
         this.jobId = getJobId(topic, id, jId);
     }

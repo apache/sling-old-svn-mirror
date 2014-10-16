@@ -116,7 +116,7 @@
                         -Xmx2048m -XX:MaxPermSize=512m
                     </argLine>
                     <includes>
-                        <include>**/it/OrderedQueueTest*</include>
+                        <include>**/it/Ordered*</include>
                     </includes>
                 </configuration>
             </plugin>

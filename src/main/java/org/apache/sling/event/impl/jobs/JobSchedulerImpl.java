@@ -53,6 +53,7 @@ import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.impl.support.ScheduleInfoImpl;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobBuilder;
+import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.ScheduleInfo;
 import org.apache.sling.event.jobs.ScheduleInfo.ScheduleType;
 import org.apache.sling.event.jobs.ScheduledJobInfo;
@@ -534,7 +535,7 @@ public class JobSchedulerImpl
 
             properties.put(ResourceHelper.PROPERTY_JOB_TOPIC, jobTopic);
             if ( jobName != null ) {
-                properties.put(ResourceHelper.PROPERTY_JOB_NAME, jobName);
+                properties.put(JobUtil.PROPERTY_JOB_NAME, jobName);
             }
             properties.put(Job.PROPERTY_JOB_CREATED, Calendar.getInstance());
             properties.put(Job.PROPERTY_JOB_CREATED_INSTANCE, Environment.APPLICATION_ID);

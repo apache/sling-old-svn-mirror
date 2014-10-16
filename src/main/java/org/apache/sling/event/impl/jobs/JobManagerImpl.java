@@ -49,6 +49,7 @@ import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
+import org.apache.sling.event.impl.jobs.notifications.NotificationUtility;
 import org.apache.sling.event.impl.jobs.queues.AbstractJobQueue;
 import org.apache.sling.event.impl.jobs.queues.QueueManager;
 import org.apache.sling.event.impl.jobs.stats.StatisticsManager;
@@ -61,6 +62,7 @@ import org.apache.sling.event.impl.support.ScheduleInfoImpl;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobBuilder;
 import org.apache.sling.event.jobs.JobManager;
+import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.JobsIterator;
 import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.Queue;
@@ -399,7 +401,7 @@ public class JobManagerImpl
                         } else {
                             logger.debug("Unable to remove job with id - resource already removed: {}", jobId);
                         }
-                        Utility.sendNotification(this.eventAdmin, NotificationConstants.TOPIC_JOB_REMOVED, job, null);
+                        NotificationUtility.sendNotification(this.eventAdmin, NotificationConstants.TOPIC_JOB_REMOVED, job, null);
                     } catch ( final PersistenceException pe) {
                         this.ignoreException(pe);
                         result = false;
@@ -452,7 +454,7 @@ public class JobManagerImpl
             buf.append("//element(*,");
             buf.append(ResourceHelper.RESOURCE_TYPE_JOB);
             buf.append(")[@");
-            buf.append(ISO9075.encode(ResourceHelper.PROPERTY_JOB_NAME));
+            buf.append(ISO9075.encode(JobUtil.PROPERTY_JOB_NAME));
             buf.append(" = '");
             buf.append(name);
             buf.append("']");
@@ -895,7 +897,7 @@ public class JobManagerImpl
             if ( logger.isDebugEnabled() ) {
                 logger.debug("Dropping job due to configuration of queue {} : {}", info.queueName, Utility.toString(jobTopic, jobName, jobProperties));
             }
-            Utility.sendNotification(this.eventAdmin, NotificationConstants.TOPIC_JOB_CANCELLED, jobTopic, jobName, jobProperties, null);
+            NotificationUtility.sendNotification(this.eventAdmin, NotificationConstants.TOPIC_JOB_CANCELLED, jobTopic, jobName, jobProperties, null);
         } else {
             // check for unique jobs
             if ( jobName != null && !this.lock(jobTopic, jobName) ) {
@@ -966,7 +968,7 @@ public class JobManagerImpl
         properties.put(ResourceHelper.PROPERTY_JOB_ID, jobId);
         properties.put(ResourceHelper.PROPERTY_JOB_TOPIC, jobTopic);
         if ( jobName != null ) {
-            properties.put(ResourceHelper.PROPERTY_JOB_NAME, jobName);
+            properties.put(JobUtil.PROPERTY_JOB_NAME, jobName);
         }
         properties.put(Job.PROPERTY_JOB_QUEUE_NAME, info.queueConfiguration.getName());
         properties.put(Job.PROPERTY_JOB_RETRY_COUNT, 0);

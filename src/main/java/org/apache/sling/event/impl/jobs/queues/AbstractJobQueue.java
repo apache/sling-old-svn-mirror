@@ -39,6 +39,7 @@ import org.apache.sling.event.impl.jobs.TestLogger;
 import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
 import org.apache.sling.event.impl.jobs.deprecated.JobStatusNotifier;
+import org.apache.sling.event.impl.jobs.notifications.NotificationUtility;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
@@ -370,7 +371,7 @@ public abstract class AbstractJobQueue
 
                 if ( consumer != null ) {
                     final long queueTime = handler.started - handler.queued;
-                    Utility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_STARTED, job, queueTime);
+                    NotificationUtility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_STARTED, job, queueTime);
                     synchronized ( this.processingJobsLists ) {
                         this.processingJobsLists.put(job.getId(), handler);
                     }
@@ -592,7 +593,7 @@ public abstract class AbstractJobQueue
                     this.logger.debug("Finished job {}", Utility.toString(handler.getJob()));
                 }
                 info.processingTime = System.currentTimeMillis() - handler.started;
-                Utility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_FINISHED, handler.getJob(), info.processingTime);
+                NotificationUtility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_FINISHED, handler.getJob(), info.processingTime);
                 break;
             case QUEUED : // check if we exceeded the number of retries
                 final int retries = (Integer) handler.getJob().getProperty(Job.PROPERTY_JOB_RETRIES);
@@ -603,7 +604,7 @@ public abstract class AbstractJobQueue
                     if ( this.logger.isDebugEnabled() ) {
                         this.logger.debug("Cancelled job {}", Utility.toString(handler.getJob()));
                     }
-                    Utility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_CANCELLED, handler.getJob(), null);
+                    NotificationUtility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_CANCELLED, handler.getJob(), null);
                 } else {
                     info.reschedule = true;
                     this.reschedule(handler);
@@ -611,14 +612,14 @@ public abstract class AbstractJobQueue
                         this.logger.debug("Failed job {}", Utility.toString(handler.getJob()));
                     }
                     handler.queued = System.currentTimeMillis();
-                    Utility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_FAILED, handler.getJob(), null);
+                    NotificationUtility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_FAILED, handler.getJob(), null);
                 }
                 break;
             default : // consumer cancelled the job (STOPPED, GIVEN_UP, ERROR)
                 if ( this.logger.isDebugEnabled() ) {
                     this.logger.debug("Cancelled job {}", Utility.toString(handler.getJob()));
                 }
-                Utility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_CANCELLED, handler.getJob(), null);
+                NotificationUtility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_CANCELLED, handler.getJob(), null);
                 break;
         }
 
@@ -726,7 +727,7 @@ public abstract class AbstractJobQueue
                 logger.debug("Received ack for job {}", Utility.toString(ack.getJob()));
             }
             final long queueTime = ack.started - ack.queued;
-            Utility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_STARTED, ack.getJob(), queueTime);
+            NotificationUtility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_STARTED, ack.getJob(), queueTime);
             synchronized ( this.processingJobsLists ) {
                 this.processingJobsLists.put(jobId, ack);
             }

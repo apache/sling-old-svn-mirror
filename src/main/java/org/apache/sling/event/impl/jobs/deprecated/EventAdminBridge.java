@@ -160,7 +160,7 @@ public class EventAdminBridge
                     }
                 } else {
                     final String jobTopic = (String)event.getProperty(ResourceHelper.PROPERTY_JOB_TOPIC);
-                    final String jobName = (String)event.getProperty(ResourceHelper.PROPERTY_JOB_NAME);
+                    final String jobName = (String)event.getProperty(JobUtil.PROPERTY_JOB_NAME);
 
                     final Map<String, Object> props =  new EventPropertiesMap(event);
                     props.put(JobImpl.PROPERTY_BRIDGED_EVENT, Boolean.TRUE);

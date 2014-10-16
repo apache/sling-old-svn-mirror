@@ -27,13 +27,10 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingConstants;
-import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.impl.jobs.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.TestLogger;
-import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
-import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
+import org.apache.sling.event.impl.jobs.notifications.NotificationUtility;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.Statistics;
@@ -48,14 +45,13 @@ import org.slf4j.LoggerFactory;
 @Service(value={EventHandler.class, StatisticsManager.class})
 @Properties({
     @Property(name=EventConstants.EVENT_TOPIC,
-          value={SlingConstants.TOPIC_RESOURCE_ADDED,
+          value={NotificationConstants.TOPIC_JOB_ADDED,
                  NotificationConstants.TOPIC_JOB_STARTED,
                  NotificationConstants.TOPIC_JOB_CANCELLED,
                  NotificationConstants.TOPIC_JOB_FAILED,
                  NotificationConstants.TOPIC_JOB_FINISHED,
                  NotificationConstants.TOPIC_JOB_REMOVED})
 })
-// TODO register event handlers on activate to allow for filters!
 public class StatisticsManager implements EventHandler {
 
     /** Logger. */
@@ -106,70 +102,57 @@ public class StatisticsManager implements EventHandler {
 
     @Override
     public void handleEvent(final Event event) {
-        if ( SlingConstants.TOPIC_RESOURCE_ADDED.equals(event.getTopic()) ) {
-            final String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
-            if ( this.configuration.isLocalJob(path) ) {
-                final int topicStart = this.configuration.getLocalJobsPath().length() + 1;
-                final int topicEnd = path.indexOf("/", topicStart);
-                final String topic;
-                if ( topicEnd == -1 ) {
-                    topic = path.substring(topicStart).replace('.', '/');
-                } else {
-                    topic = path.substring(topicStart, topicEnd).replace('.', '/');
-                }
-                this.baseStatistics.incQueued();
-                final QueueInfo info = this.queueConfigurationManager.getQueueInfo(topic);
-                final StatisticsImpl queueStats = getStatisticsForQueue(info.queueName);
-                queueStats.incQueued();
+        final String topic = (String)event.getProperty(NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC);
+        if ( topic != null ) { // this is just a sanity check
+            final String queueName = (String)event.getProperty(Job.PROPERTY_JOB_QUEUE_NAME);
+            final StatisticsImpl queueStats = getStatisticsForQueue(queueName);
+
+            TopicStatisticsImpl ts = (TopicStatisticsImpl)this.topicStatistics.get(topic);
+            if ( ts == null ) {
+                this.topicStatistics.putIfAbsent(topic, new TopicStatisticsImpl(topic));
+                ts = (TopicStatisticsImpl)this.topicStatistics.get(topic);
             }
-        } else {
-            if ( EventUtil.isLocal(event) ) {
-                // job notifications
-                final String topic = (String)event.getProperty(NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC);
-                if ( topic != null ) { // this is just a sanity check
-                    final String queueName = (String)event.getProperty(Job.PROPERTY_JOB_QUEUE_NAME);
-                    final StatisticsImpl queueStats = getStatisticsForQueue(queueName);
 
-                    TopicStatisticsImpl ts = (TopicStatisticsImpl)this.topicStatistics.get(topic);
-                    if ( ts == null ) {
-                        this.topicStatistics.putIfAbsent(topic, new TopicStatisticsImpl(topic));
-                        ts = (TopicStatisticsImpl)this.topicStatistics.get(topic);
-                    }
+            if ( event.getTopic().equals(NotificationConstants.TOPIC_JOB_ADDED) ) {
+                this.baseStatistics.incQueued();
+                queueStats.incQueued();
 
-                    if ( event.getTopic().equals(NotificationConstants.TOPIC_JOB_CANCELLED) ) {
-                        ts.addCancelled();
-                        this.baseStatistics.cancelledJob();
-                        if ( queueStats != null ) {
-                            queueStats.cancelledJob();
-                        }
-                    } else if ( event.getTopic().equals(NotificationConstants.TOPIC_JOB_FAILED) ) {
-                        ts.addFailed();
-                        this.baseStatistics.failedJob();
-                        if ( queueStats != null ) {
-                            queueStats.failedJob();
-                        }
-                    } else if ( event.getTopic().equals(NotificationConstants.TOPIC_JOB_FINISHED) ) {
-                        final Long time = (Long)event.getProperty(Utility.PROPERTY_TIME);
-                        ts.addFinished(time == null ? -1 : time);
-                        this.baseStatistics.finishedJob(time == null ? -1 : time);
-                        if ( queueStats != null ) {
-                            queueStats.finishedJob(time == null ? -1 : time);
-                        }
-                    } else if ( event.getTopic().equals(NotificationConstants.TOPIC_JOB_STARTED) ) {
-                        final Long time = (Long)event.getProperty(Utility.PROPERTY_TIME);
-                        ts.addActivated(time == null ? -1 : time);
-                        this.baseStatistics.addActive(time == null ? -1 : time);
-                        if ( queueStats != null ) {
-                            queueStats.addActive(time == null ? -1 : time);
-                        }
-                    } else if ( NotificationConstants.TOPIC_JOB_REMOVED.equals(event.getTopic()) ) {
-                        this.baseStatistics.decQueued();
-                        this.baseStatistics.cancelledJob();
-                        if ( queueStats != null ) {
-                            queueStats.decQueued();
-                            queueStats.cancelledJob();
-                        }
-                    }
+            } else if ( event.getTopic().equals(NotificationConstants.TOPIC_JOB_CANCELLED) ) {
+                ts.addCancelled();
+                this.baseStatistics.cancelledJob();
+                if ( queueStats != null ) {
+                    queueStats.cancelledJob();
+                }
+
+            } else if ( event.getTopic().equals(NotificationConstants.TOPIC_JOB_FAILED) ) {
+                ts.addFailed();
+                this.baseStatistics.failedJob();
+                if ( queueStats != null ) {
+                    queueStats.failedJob();
+                }
+
+            } else if ( event.getTopic().equals(NotificationConstants.TOPIC_JOB_FINISHED) ) {
+                final Long time = (Long)event.getProperty(NotificationUtility.PROPERTY_TIME);
+                ts.addFinished(time == null ? -1 : time);
+                this.baseStatistics.finishedJob(time == null ? -1 : time);
+                if ( queueStats != null ) {
+                    queueStats.finishedJob(time == null ? -1 : time);
+                }
+
+            } else if ( event.getTopic().equals(NotificationConstants.TOPIC_JOB_STARTED) ) {
+                final Long time = (Long)event.getProperty(NotificationUtility.PROPERTY_TIME);
+                ts.addActivated(time == null ? -1 : time);
+                this.baseStatistics.addActive(time == null ? -1 : time);
+                if ( queueStats != null ) {
+                    queueStats.addActive(time == null ? -1 : time);
+                }
+
+            } else if ( event.getTopic().equals(NotificationConstants.TOPIC_JOB_REMOVED) ) {
+                this.baseStatistics.decQueued();
+                this.baseStatistics.cancelledJob();
+                if ( queueStats != null ) {
+                    queueStats.decQueued();
+                    queueStats.cancelledJob();
                 }
             }
         }

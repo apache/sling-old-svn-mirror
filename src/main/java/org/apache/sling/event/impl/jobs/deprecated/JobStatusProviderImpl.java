@@ -32,6 +32,7 @@ import org.apache.sling.event.JobsIterator;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.JobManager.QueryType;
+import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.Queue;
 import org.osgi.service.event.Event;
 
@@ -57,7 +58,7 @@ public class JobStatusProviderImpl
     public boolean removeJob(final String topic, final String jobId) {
         if ( jobId != null && topic != null ) {
             final Event job = this.jobManager.findJob(topic,
-                    Collections.singletonMap(ResourceHelper.PROPERTY_JOB_NAME, (Object)jobId));
+                    Collections.singletonMap(JobUtil.PROPERTY_JOB_NAME, (Object)jobId));
             if ( job != null ) {
                 return this.removeJob((String)job.getProperty(ResourceHelper.PROPERTY_JOB_ID));
             }
@@ -81,7 +82,7 @@ public class JobStatusProviderImpl
     public void forceRemoveJob(final String topic, final String jobId) {
         if ( jobId != null && topic != null ) {
             final Event job = this.jobManager.findJob(topic,
-                    Collections.singletonMap(ResourceHelper.PROPERTY_JOB_NAME, (Object)jobId));
+                    Collections.singletonMap(JobUtil.PROPERTY_JOB_NAME, (Object)jobId));
             if ( job != null ) {
                 this.forceRemoveJob((String)job.getProperty(ResourceHelper.PROPERTY_JOB_ID));
             }
