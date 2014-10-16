@@ -39,8 +39,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The topology handler listens for topology events.
- *
- * TODO - config changes should actually do a real stop/start
  */
 @Component(immediate=true)
 @Service(value={TopologyHandler.class, TopologyEventListener.class})
@@ -72,13 +70,12 @@ public class TopologyHandler
         this.queueConfigManager.removeListener(this);
     }
 
-
     @Override
     public void configChanged() {
         final TopologyCapabilities caps = this.topologyCapabilities;
         if ( caps != null ) {
             synchronized ( this.listeners ) {
- //               this.stopProcessing(false);
+                this.stopProcessing(false);
 
                 this.startProcessing(Type.PROPERTIES_CHANGED, caps, true);
             }
