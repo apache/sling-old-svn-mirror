@@ -7,7 +7,7 @@
         "name=void"
     ],
 
-    "packageExporterStrategy" : [
+    "requestAuthorizationStrategy" : [
         "type=default"
     ],
 

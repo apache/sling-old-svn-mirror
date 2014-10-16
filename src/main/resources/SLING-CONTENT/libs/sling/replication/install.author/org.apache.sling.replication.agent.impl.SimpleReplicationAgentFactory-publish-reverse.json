@@ -16,7 +16,7 @@
         "packageBuilder/type=vlt"
     ],
 
-    "packageExporterStrategy" : [
+    "requestAuthorizationStrategy" : [
         "type=privilege",
         "jcrPrivilege=jcr:read"
     ],
