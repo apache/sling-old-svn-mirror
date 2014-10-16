@@ -31,6 +31,7 @@ import javax.jcr.nodetype.NodeType;
 class ItemData {
     
     private final String path;
+    private final String name;
     private final boolean isNode;
     private final String uuid;
     private final NodeType nodeType;
@@ -40,6 +41,7 @@ class ItemData {
     private ItemData(String path, boolean isNode, String uuid, NodeType nodeType) {
         super();
         this.path = path;
+        this.name = ResourceUtil.getName(path);
         this.uuid = uuid;
         this.isNode = isNode;
         this.nodeType = nodeType;
@@ -50,7 +52,7 @@ class ItemData {
     }
     
     public String getName() {
-        return ResourceUtil.getName(path);
+        return name;
     }
 
     public boolean isNode() {
