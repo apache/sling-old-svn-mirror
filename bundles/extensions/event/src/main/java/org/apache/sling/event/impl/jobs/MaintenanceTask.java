@@ -20,10 +20,8 @@ package org.apache.sling.event.impl.jobs;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -32,8 +30,6 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.event.impl.jobs.topology.TopologyCapabilities;
 import org.apache.sling.event.impl.support.BatchResourceRemover;
-import org.apache.sling.event.impl.support.ResourceHelper;
-import org.apache.sling.event.jobs.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -129,37 +125,6 @@ public class MaintenanceTask {
                     this.ignoreException(pe);
                     resolver.refresh();
                 }
-
-/* Old implementation using a query
-                final StringBuilder buf = new StringBuilder(64);
-
-                buf.append("//element(*)[@");
-                buf.append(ISO9075.encode(ResourceResolver.PROPERTY_RESOURCE_TYPE));
-                buf.append(" = '");
-                buf.append(Utility.RESOURCE_TYPE_LOCK);
-                buf.append("' and @");
-                buf.append(ISO9075.encode(Utility.PROPERTY_LOCK_CREATED));
-                buf.append(" < xs:dateTime('");
-                buf.append(ISO8601.format(startDate));
-                buf.append("')]");
-                final Iterator<Resource> result = resolver.findResources(buf.toString(), "xpath");
-
-                while ( caps.isActive() && result.hasNext() ) {
-                    final Resource lockResource = result.next();
-                    // sanity check for the path
-                    if ( this.configuration.isLock(lockResource.getPath()) ) {
-                        try {
-                            resolver.delete(lockResource);
-                            resolver.commit();
-                        } catch ( final PersistenceException pe) {
-                            this.ignoreException(pe);
-                            resolver.refresh();
-                        }
-                    }
-                }
-            } catch (final QuerySyntaxException qse) {
-                this.ignoreException(qse);
-*/
             } finally {
                 resolver.close();
             }
@@ -342,46 +307,6 @@ public class MaintenanceTask {
         } catch (final PersistenceException pe) {
             // in the case of an error, we just log this as a warning
             this.logger.warn("Exception during job resource tree cleanup.", pe);
-        } finally {
-            resolver.close();
-        }
-    }
-
-    /**
-     * Reassign a job to a different target
-     * @param job The job
-     * @param targetId New target or <code>null</code> if unknown
-     */
-    public void reassignJob(final JobImpl job, final String targetId) {
-        final ResourceResolver resolver = this.configuration.createResourceResolver();
-        try {
-            final Resource jobResource = resolver.getResource(job.getResourcePath());
-            if ( jobResource != null ) {
-                try {
-                    final ValueMap vm = ResourceHelper.getValueMap(jobResource);
-                    final String newPath = this.configuration.getUniquePath(targetId, job.getTopic(), job.getId(), job.getProperties());
-
-                    final Map<String, Object> props = new HashMap<String, Object>(vm);
-                    props.remove(Job.PROPERTY_JOB_QUEUE_NAME);
-                    if ( targetId == null ) {
-                        props.remove(Job.PROPERTY_JOB_TARGET_INSTANCE);
-                    } else {
-                        props.put(Job.PROPERTY_JOB_TARGET_INSTANCE, targetId);
-                    }
-                    props.remove(Job.PROPERTY_JOB_STARTED_TIME);
-
-                    try {
-                        ResourceHelper.getOrCreateResource(resolver, newPath, props);
-                        resolver.delete(jobResource);
-                        resolver.commit();
-                    } catch ( final PersistenceException pe ) {
-                        this.ignoreException(pe);
-                    }
-                } catch (final InstantiationException ie) {
-                    // something happened with the resource in the meantime
-                    this.ignoreException(ie);
-                }
-            }
         } finally {
             resolver.close();
         }

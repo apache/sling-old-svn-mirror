@@ -116,6 +116,7 @@ public final class ParallelJobQueue extends AbstractJobQueue {
         // this job again
         final long delay = this.getRetryDelay(handler);
         if ( delay > 0 ) {
+            handler.addToRetryList();
             final Date fireDate = new Date();
             fireDate.setTime(System.currentTimeMillis() + delay);
 
@@ -123,6 +124,7 @@ public final class ParallelJobQueue extends AbstractJobQueue {
             final Runnable t = new Runnable() {
                 @Override
                 public void run() {
+                    handler.removeFromRetryList();
                     ParallelJobQueue.super.reschedule(handler);
                 }
             };

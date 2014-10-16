@@ -107,4 +107,13 @@ public class JobHandler {
     public String toString() {
         return "JobHandler(" + this.job.getId() + ")";
     }
+
+    public void addToRetryList() {
+        this.jobManager.addJobToRetryList(this.job);
+
+    }
+
+    public void removeFromRetryList() {
+        this.jobManager.removeJobFromRetryList(this.job);
+    }
 }

@@ -46,7 +46,6 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.event.EventUtil;
-import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
 import org.apache.sling.event.impl.jobs.notifications.NotificationUtility;
@@ -379,12 +378,20 @@ public class JobManagerImpl
     private boolean internalRemoveJobById(final String jobId, final boolean forceRemove) {
         logger.debug("Trying to remove job {}", jobId);
         boolean result = true;
-        final JobImpl job = (JobImpl)this.getJobById(jobId);
+        JobImpl job = (JobImpl)this.getJobById(jobId);
         if ( job != null ) {
-            logger.debug("Found removal job: {}", job);
+            if ( logger.isDebugEnabled() ) {
+                logger.debug("Found removal job: {}", Utility.toString(job));
+            }
+            final JobImpl retryJob = this.getJobFromRetryList(jobId);
+            if ( retryJob != null ) {
+                job = retryJob;
+            }
             // currently running?
             if ( !forceRemove && job.getProcessingStarted() != null ) {
-                logger.debug("Unable to remove job - job is started: {}", job);
+                if ( logger.isDebugEnabled() ) {
+                    logger.debug("Unable to remove job - job is started: {}", Utility.toString(job));
+                }
                 result = false;
             } else {
                 final boolean isHistoryJob = this.configuration.isStoragePath(job.getResourcePath());
@@ -506,7 +513,7 @@ public class JobManagerImpl
                     final JobImpl job = Utility.readJob(logger, jobResource);
                     if ( job != null ) {
                         if ( logger.isDebugEnabled() ) {
-                            logger.debug("Found job with id {} = {}", id, job);
+                            logger.debug("Found job with id {} = {}", id, Utility.toString(job));
                         }
                         return job;
                     }
@@ -987,15 +994,49 @@ public class JobManagerImpl
         return new JobImpl(jobTopic, jobName, jobId, properties);
     }
 
+    /**
+     * Reassign a job to a new instance
+     * @param job The job to reassign.
+     */
     public void reassign(final JobImpl job) {
         final QueueInfo queueInfo = queueManager.getQueueInfo(job.getTopic());
-        final InternalQueueConfiguration config = queueInfo.queueConfiguration;
 
         // Sanity check if queue configuration has changed
-        String targetId = null;
         final TopologyCapabilities caps = this.topologyCapabilities;
-        targetId = (caps == null ? null : caps.detectTarget(job.getTopic(), job.getProperties(), queueInfo));
-        this.maintenanceTask.reassignJob(job, targetId);
+        final String targetId = (caps == null ? null : caps.detectTarget(job.getTopic(), job.getProperties(), queueInfo));
+
+        final ResourceResolver resolver = this.configuration.createResourceResolver();
+        try {
+            final Resource jobResource = resolver.getResource(job.getResourcePath());
+            if ( jobResource != null ) {
+                try {
+                    final ValueMap vm = ResourceHelper.getValueMap(jobResource);
+                    final String newPath = this.configuration.getUniquePath(targetId, job.getTopic(), job.getId(), job.getProperties());
+
+                    final Map<String, Object> props = new HashMap<String, Object>(vm);
+                    props.remove(Job.PROPERTY_JOB_QUEUE_NAME);
+                    if ( targetId == null ) {
+                        props.remove(Job.PROPERTY_JOB_TARGET_INSTANCE);
+                    } else {
+                        props.put(Job.PROPERTY_JOB_TARGET_INSTANCE, targetId);
+                    }
+                    props.remove(Job.PROPERTY_JOB_STARTED_TIME);
+
+                    try {
+                        ResourceHelper.getOrCreateResource(resolver, newPath, props);
+                        resolver.delete(jobResource);
+                        resolver.commit();
+                    } catch ( final PersistenceException pe ) {
+                        this.ignoreException(pe);
+                    }
+                } catch (final InstantiationException ie) {
+                    // something happened with the resource in the meantime
+                    this.ignoreException(ie);
+                }
+            }
+        } finally {
+            resolver.close();
+        }
     }
 
     /**
@@ -1172,6 +1213,31 @@ public class JobManagerImpl
         if ( job != null && this.configuration.isStoragePath(job.getResourcePath()) ) {
             this.internalRemoveJobById(jobId, true);
             return this.addJob(job.getTopic(), job.getName(), job.getProperties());
+        }
+        return null;
+    }
+
+    private final List<JobImpl> retryList = new ArrayList<JobImpl>();
+
+    public void addJobToRetryList(final JobImpl job) {
+        synchronized ( retryList ) {
+            retryList.add(job);
+        }
+    }
+
+    public void removeJobFromRetryList(final JobImpl job) {
+        synchronized ( retryList ) {
+            retryList.remove(job);
+        }
+    }
+
+    private JobImpl getJobFromRetryList(final String jobId) {
+        synchronized ( retryList ) {
+            for(final JobImpl j : retryList) {
+                if ( jobId.equals(j.getId())) {
+                    return j;
+                }
+            }
         }
         return null;
     }
