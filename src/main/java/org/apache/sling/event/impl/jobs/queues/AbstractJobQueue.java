@@ -286,7 +286,7 @@ public abstract class AbstractJobQueue
                 if ( process ) {
                     if ( handler.reschedule() ) {
                         this.logger.info("No acknowledge received for job {} stored at {}. Requeueing job.", Utility.toString(handler.getJob()), handler.getJob().getId());
-                        this.reschedule(handler);
+                        handler.getJob().retry();
                         this.services.topicManager.reschedule(handler);
                         this.notifyFinished(true);
                     }
@@ -607,7 +607,7 @@ public abstract class AbstractJobQueue
                     NotificationUtility.sendNotification(this.services.eventAdmin, NotificationConstants.TOPIC_JOB_CANCELLED, handler.getJob(), null);
                 } else {
                     info.reschedule = true;
-                    this.reschedule(handler);
+                    handler.getJob().retry();
                     if ( this.logger.isDebugEnabled() ) {
                         this.logger.debug("Failed job {}", Utility.toString(handler.getJob()));
                     }
@@ -680,7 +680,7 @@ public abstract class AbstractJobQueue
             final boolean keepJobs = resultState != Job.JobState.SUCCEEDED || this.configuration.isKeepJobs();
             handler.finished(resultState, keepJobs, rescheduleInfo.processingTime);
         } else {
-            this.services.topicManager.reschedule(handler);
+            this.reschedule(handler);
         }
         this.notifyFinished(rescheduleInfo.reschedule);
 
@@ -820,8 +820,7 @@ public abstract class AbstractJobQueue
     }
 
     protected void reschedule(final JobHandler handler) {
-        // update event with retry count and retries
-        handler.getJob().retry();
+        this.services.topicManager.reschedule(handler);
     }
 
     /**

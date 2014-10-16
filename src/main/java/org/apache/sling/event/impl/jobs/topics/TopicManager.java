@@ -249,7 +249,7 @@ public class TopicManager implements EventHandler, TopologyAware {
             this.queueLocks.remove(queueName);
         }
         if ( logger.isDebugEnabled() ) {
-            logger.debug("Took new job for {} : {}", queueName, Utility.toString(result));
+            logger.debug("Returning job for {} : {}", queueName, Utility.toString(result));
         }
         return (result != null ? new JobHandler( result, (JobManagerImpl)this.jobManager) : null);
     }

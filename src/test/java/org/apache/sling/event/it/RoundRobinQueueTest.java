@@ -45,7 +45,6 @@ import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventHandler;
-import org.slf4j.LoggerFactory;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
@@ -123,7 +122,6 @@ public class RoundRobinQueueTest extends AbstractJobHandlingTest {
 
                     @Override
                     public void handleEvent(final Event event) {
-                        LoggerFactory.getLogger("test").info("Received finished event {}", event.getProperty(NotificationConstants.NOTIFICATION_PROPERTY_JOB_ID));
                         count.incrementAndGet();
                     }
                 });
