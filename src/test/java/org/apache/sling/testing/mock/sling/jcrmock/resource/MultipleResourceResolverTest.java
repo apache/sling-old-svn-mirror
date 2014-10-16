@@ -16,16 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.testing.mock.sling.rrmock.resource;
+package org.apache.sling.testing.mock.sling.jcrmock.resource;
 
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
-import org.apache.sling.testing.mock.sling.resource.AbstractSlingCrudResourceResolverTest;
+import org.apache.sling.testing.mock.sling.resource.AbstractMultipleResourceResolverTest;
 
-public class SlingCrudResourceResolverTest extends AbstractSlingCrudResourceResolverTest {
+public class MultipleResourceResolverTest extends AbstractMultipleResourceResolverTest {
 
     @Override
     protected ResourceResolverType getResourceResolverType() {
-        return ResourceResolverType.RESOURCERESOLVER_MOCK;
+        return ResourceResolverType.JCR_MOCK;
     }
 
 }
