@@ -190,6 +190,7 @@ public class TopologyCapabilities {
 
     /**
      * Return the potential targets (Sling IDs) sorted by ID
+     * @return A list of instance descriptions. The list might be empty.
      */
     public List<InstanceDescription> getPotentialTargets(final String jobTopic, final Map<String, Object> jobProperties) {
         // calculate potential targets

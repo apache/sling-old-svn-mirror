@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The check topolgoy task checks for changes in the topology and queue configuration
+ * The check topology task checks for changes in the topology and queue configuration
  * and reassigns jobs.
  * If the leader instance finds a dead instance it reassigns its jobs to live instances.
  * The leader instance also checks for unassigned jobs and tries to assign them.
@@ -67,6 +67,10 @@ public class CheckTopologyTask {
         this.queueConfigManager = queueConfigurationManager;
     }
 
+    /**
+     * Reassign jobs from stopped instance.
+     * @param caps Current topology capabilities.
+     */
     private void reassignJobsFromStoppedInstances(final TopologyCapabilities caps) {
         if ( caps != null && caps.isLeader() && caps.isActive() ) {
             this.logger.debug("Checking for stopped instances...");
@@ -85,6 +89,97 @@ public class CheckTopologyTask {
                         if ( !caps.isActive(instanceId) ) {
                             logger.debug("Found stopped instance {}", instanceId);
                             assignJobs(caps, instanceResource, true);
+                        }
+                    }
+                }
+            } finally {
+                resolver.close();
+            }
+        }
+    }
+
+    /**
+     * Reassign stale jobs from this instance
+     * @param caps Current topology capabilities.
+     */
+    private void reassignStableJobs(final TopologyCapabilities caps) {
+        if ( caps != null && caps.isActive() ) {
+            this.logger.debug("Checking for stale jobs...");
+            final ResourceResolver resolver = this.configuration.createResourceResolver();
+            try {
+                final Resource jobsRoot = resolver.getResource(this.configuration.getLocalJobsPath());
+
+                // this resource should exist, but we check anyway
+                if ( jobsRoot != null ) {
+                    // check if this instance supports bridged jobs
+                    final List<InstanceDescription> bridgedTargets = caps.getPotentialTargets("/", null);
+                    boolean flag = false;
+                    for(final InstanceDescription desc : bridgedTargets) {
+                        if ( desc.isLocal() ) {
+                            flag = true;
+                            break;
+                        }
+                    }
+                    final boolean supportsBridged = flag;
+
+                    final Iterator<Resource> topicIter = jobsRoot.listChildren();
+                    while ( caps.isActive() && topicIter.hasNext() ) {
+                        final Resource topicResource = topicIter.next();
+
+                        final String topicName = topicResource.getName().replace('.', '/');
+                        this.logger.debug("Checking topic {}..." , topicName);
+                        final List<InstanceDescription> potentialTargets = caps.getPotentialTargets(topicName, null);
+                        boolean reassign = true;
+                        for(final InstanceDescription desc : potentialTargets) {
+                            if ( desc.isLocal() ) {
+                                reassign = false;
+                                break;
+                            }
+                        }
+                        if ( reassign ) {
+                            final QueueInfo info = this.queueConfigManager.getQueueInfo(topicName);
+                            JobTopicTraverser.traverse(this.logger, topicResource, new JobTopicTraverser.ResourceCallback() {
+
+                                @Override
+                                public boolean handle(final Resource rsrc) {
+                                    try {
+                                        final ValueMap vm = ResourceHelper.getValueMap(rsrc);
+                                        if ( !supportsBridged || vm.get(JobImpl.PROPERTY_BRIDGED_EVENT) == null ) {
+                                            final String targetId = caps.detectTarget(topicName, vm, info);
+
+                                            final Map<String, Object> props = new HashMap<String, Object>(vm);
+                                            props.remove(Job.PROPERTY_JOB_STARTED_TIME);
+
+                                            final String newPath;
+                                            if ( targetId != null ) {
+                                                newPath = configuration.getAssginedJobsPath() + '/' + targetId + '/' + topicResource.getName() + rsrc.getPath().substring(topicResource.getPath().length());
+                                                props.put(Job.PROPERTY_JOB_QUEUE_NAME, info.queueName);
+                                                props.put(Job.PROPERTY_JOB_TARGET_INSTANCE, targetId);
+                                            } else {
+                                                newPath = configuration.getUnassignedJobsPath() + '/' + topicResource.getName() + rsrc.getPath().substring(topicResource.getPath().length());
+                                                props.remove(Job.PROPERTY_JOB_QUEUE_NAME);
+                                                props.remove(Job.PROPERTY_JOB_TARGET_INSTANCE);
+                                            }
+                                            try {
+                                                ResourceHelper.getOrCreateResource(resolver, newPath, props);
+                                                resolver.delete(rsrc);
+                                                resolver.commit();
+                                            } catch ( final PersistenceException pe ) {
+                                                ignoreException(pe);
+                                                resolver.refresh();
+                                                resolver.revert();
+                                            }
+                                        }
+                                    } catch (final InstantiationException ie) {
+                                        // something happened with the resource in the meantime
+                                        ignoreException(ie);
+                                        resolver.refresh();
+                                        resolver.revert();
+                                    }
+                                    return caps.isActive();
+                                }
+                            });
+
                         }
                     }
                 }
@@ -226,6 +321,10 @@ public class CheckTopologyTask {
         // if topology changed, reschedule assigned jobs for stopped instances
         if ( topologyChanged ) {
             this.reassignJobsFromStoppedInstances(topologyCapabilities);
+        }
+        // check for all topics
+        if ( topologyChanged || configChanged ) {
+            this.reassignStableJobs(topologyCapabilities);
         }
         // try to assign unassigned jobs
         if ( topologyChanged || configChanged ) {
