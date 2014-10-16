@@ -174,6 +174,7 @@ public class QueueJobCache {
             // topic round robin
             boolean done = true;
             do {
+                done = true;
                 for(final Map.Entry<String, List<JobImpl>> entry : topicCache.entrySet()) {
                     if ( !entry.getValue().isEmpty() ) {
                         this.cache.add(entry.getValue().remove(0));

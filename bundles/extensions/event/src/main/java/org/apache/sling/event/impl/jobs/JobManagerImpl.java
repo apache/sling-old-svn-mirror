@@ -269,7 +269,7 @@ public class JobManagerImpl
      */
     @Override
     public synchronized Statistics getStatistics() {
-        return this.statisticsManager.getOverallStatistics();
+        return this.statisticsManager.getGlobalStatistics();
     }
 
     /**
