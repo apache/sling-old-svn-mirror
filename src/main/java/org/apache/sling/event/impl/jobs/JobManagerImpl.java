@@ -976,7 +976,7 @@ public class JobManagerImpl
         // create path and resource
         properties.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, ResourceHelper.RESOURCE_TYPE_JOB);
         if ( logger.isDebugEnabled() ) {
-            logger.debug("Storing new job {} at {}", properties, path);
+            logger.debug("Storing new job {} at {}", Utility.toString(jobTopic, jobName, properties), path);
         }
         ResourceHelper.getOrCreateResource(resolver,
                 path,

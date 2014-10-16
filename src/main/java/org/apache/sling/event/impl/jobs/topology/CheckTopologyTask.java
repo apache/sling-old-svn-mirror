@@ -18,6 +18,7 @@
  */
 package org.apache.sling.event.impl.jobs.topology;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -117,6 +118,9 @@ public class CheckTopologyTask {
         }
     }
 
+    /** Properties to include bridge job consumers for the quick test. */
+    private static final Map<String, Object> BRIDGED_JOB = Collections.singletonMap(JobImpl.PROPERTY_BRIDGED_EVENT, (Object)Boolean.TRUE);
+
     /**
      * Try to assign all jobs from the jobs root.
      * The jobs are stored by topic
@@ -136,15 +140,8 @@ public class CheckTopologyTask {
             final String topicName = topicResource.getName().replace('.', '/');
             logger.debug("Found topic {}", topicName);
 
-            final String checkTopic;
-            if ( topicName.equals(JobImpl.PROPERTY_BRIDGED_EVENT) ) {
-                checkTopic = "/";
-            } else {
-                checkTopic = topicName;
-            }
-
             // first check if there is an instance for these topics
-            final List<InstanceDescription> potentialTargets = caps.getPotentialTargets(checkTopic, null);
+            final List<InstanceDescription> potentialTargets = caps.getPotentialTargets(topicName, BRIDGED_JOB);
             if ( potentialTargets != null && potentialTargets.size() > 0 ) {
                 final QueueInfo info = this.queueConfigManager.getQueueInfo(topicName);
                 logger.debug("Found queue {} for {}", info.queueConfiguration, topicName);
