@@ -41,8 +41,12 @@ import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.JobProcessor;
 import org.apache.sling.event.jobs.JobUtil;
+import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
+import org.apache.sling.event.jobs.consumer.JobExecutionContext;
+import org.apache.sling.event.jobs.consumer.JobExecutionResult;
+import org.apache.sling.event.jobs.consumer.JobExecutor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -105,10 +109,10 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
      * The job is executed once and finished successfully.
      */
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testSimpleJobExecution() throws Exception {
+    public void testSimpleJobExecutionUsingBridge() throws Exception {
         final Barrier cb = new Barrier(2);
 
-        final ServiceRegistration reg = this.registerEventHandler("sling/test",
+        final ServiceRegistration reg = this.registerEventHandler(TOPIC,
                 new EventHandler() {
                     @Override
                     public void handleEvent(Event event) {
@@ -129,28 +133,80 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
         }
     }
 
+    /**
+     * Test simple job execution.
+     * The job is executed once and finished successfully.
+     */
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testManyJobs() throws Exception {
-        final ServiceRegistration reg1 = this.registerEventHandler("sling/test",
-                new EventHandler() {
-                    @Override
-                    public void handleEvent(Event event) {
-                        JobUtil.processJob(event, new JobProcessor() {
+    public void testSimpleJobExecutionUsingJobConsumer() throws Exception {
+        final Barrier cb = new Barrier(2);
 
-                            @Override
-                            public boolean process(Event job) {
-                                try {
-                                    Thread.sleep(200);
-                                } catch (InterruptedException ie) {
-                                    // ignore
-                                }
-                                return true;
-                            }
-                        });
+        final ServiceRegistration reg = this.registerJobConsumer(TOPIC,
+                new JobConsumer() {
+
+            @Override
+                    public JobResult process(final Job job) {
+                        cb.block();
+                        return JobResult.OK;
                     }
                  });
+
+        try {
+            this.eventAdmin.sendEvent(getJobEvent(null));
+            assertTrue("No event received in the given time.", cb.block(5));
+            cb.reset();
+            assertFalse("Unexpected event received in the given time.", cb.block(5));
+        } finally {
+            reg.unregister();
+        }
+    }
+
+    /**
+     * Test simple job execution.
+     * The job is executed once and finished successfully.
+     */
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testSimpleJobExecutionUsingJobExecutor() throws Exception {
+        final Barrier cb = new Barrier(2);
+
+        final ServiceRegistration reg = this.registerJobExecutor(TOPIC,
+                new JobExecutor() {
+
+                    @Override
+                    public JobExecutionResult process(final Job job, final JobExecutionContext context) {
+                        cb.block();
+                        return context.result().succeeded();
+                    }
+                });
+
+        try {
+            this.eventAdmin.sendEvent(getJobEvent(null));
+            assertTrue("No event received in the given time.", cb.block(5));
+            cb.reset();
+            assertFalse("Unexpected event received in the given time.", cb.block(5));
+        } finally {
+            reg.unregister();
+        }
+    }
+
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testManyJobs() throws Exception {
+        final ServiceRegistration reg1 = this.registerJobConsumer(TOPIC,
+                new JobConsumer() {
+
+                    @Override
+                    public JobResult process(final Job job) {
+                        try {
+                            Thread.sleep(10);
+                        } catch (InterruptedException ie) {
+                            // ignore
+                        }
+                        return JobResult.OK;
+                    }
+
+                 });
         final AtomicInteger count = new AtomicInteger(0);
-        final ServiceRegistration reg2 = this.registerEventHandler(JobUtil.TOPIC_JOB_FINISHED,
+        final ServiceRegistration reg2 = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
                 new EventHandler() {
                     @Override
                     public void handleEvent(Event event) {
@@ -162,8 +218,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
             // we start "some" jobs
             final int COUNT = 300;
             for(int i = 0; i < COUNT; i++ ) {
-//                final String queueName = "queue" + (i % 20);
-                this.eventAdmin.sendEvent(this.getJobEvent(null));
+                this.getJobManager().addJob(TOPIC, null);
             }
             while ( count.get() < COUNT ) {
                 try {
@@ -359,7 +414,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
                 });
         try {
             final JobManager jobManager = this.getJobManager();
-            final Job job = jobManager.addJob(TOPIC, null, null);
+            final Job job = jobManager.addJob(TOPIC, null);
 
             assertTrue("No event received in the given time.", cb.block(5));
             cb.reset();
@@ -428,7 +483,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
                         return JobResult.FAILED;
                     }
                 });
-        final ServiceRegistration eh1Reg = this.registerEventHandler(JobUtil.TOPIC_JOB_CANCELLED,
+        final ServiceRegistration eh1Reg = this.registerEventHandler(NotificationConstants.TOPIC_JOB_CANCELLED,
                 new EventHandler() {
 
                     @Override
@@ -437,7 +492,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
                         cancelled.add(id);
                     }
                 });
-        final ServiceRegistration eh2Reg = this.registerEventHandler(JobUtil.TOPIC_JOB_FAILED,
+        final ServiceRegistration eh2Reg = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FAILED,
                 new EventHandler() {
 
                     @Override
@@ -446,7 +501,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
                         failed.add(id);
                     }
                 });
-        final ServiceRegistration eh3Reg = this.registerEventHandler(JobUtil.TOPIC_JOB_FINISHED,
+        final ServiceRegistration eh3Reg = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
                 new EventHandler() {
 
                     @Override
@@ -455,7 +510,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
                         finished.add(id);
                     }
                 });
-        final ServiceRegistration eh4Reg = this.registerEventHandler(JobUtil.TOPIC_JOB_STARTED,
+        final ServiceRegistration eh4Reg = this.registerEventHandler(NotificationConstants.TOPIC_JOB_STARTED,
                 new EventHandler() {
 
                     @Override
@@ -534,7 +589,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
                         unprocessedCount.incrementAndGet();
                     }
                 });
-        final ServiceRegistration eh3 = this.registerEventHandler(JobUtil.TOPIC_JOB_FINISHED,
+        final ServiceRegistration eh3 = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
                 new EventHandler() {
 
                     @Override

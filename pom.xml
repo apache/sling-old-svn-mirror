@@ -116,7 +116,7 @@
                         -Xmx2048m -XX:MaxPermSize=512m
                     </argLine>
                     <includes>
-                        <include>**/it/Foo*</include>
+                        <include>**/it/*</include>
                     </includes>
                 </configuration>
             </plugin>
