@@ -66,7 +66,6 @@ import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.JobsIterator;
 import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.Queue;
-import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.ScheduledJobInfo;
 import org.apache.sling.event.jobs.Statistics;
 import org.apache.sling.event.jobs.TopicStatistics;
@@ -211,8 +210,8 @@ public class JobManagerImpl
      */
     @Override
     public void restart() {
-        // TODO reset statistics
-        // TODO reload queues?
+        // nothing to do as this is deprecated, let's log a warning
+        logger.warn("Deprecated JobManager.restart() is called.");
     }
 
     /**
@@ -893,45 +892,37 @@ public class JobManagerImpl
             final Map<String, Object> jobProperties,
             final List<String> errors) {
         final QueueInfo info = this.queueManager.getQueueInfo(jobTopic);
-        if ( info.queueConfiguration.getType() == QueueConfiguration.Type.DROP ) {
-            if ( logger.isDebugEnabled() ) {
-                logger.debug("Dropping job due to configuration of queue {} : {}", info.queueName, Utility.toString(jobTopic, jobName, jobProperties));
-            }
-            NotificationUtility.sendNotification(this.eventAdmin, NotificationConstants.TOPIC_JOB_CANCELLED, jobTopic, jobName, jobProperties, null);
+        // check for unique jobs
+        if ( jobName != null && !this.lock(jobTopic, jobName) ) {
+            logger.debug("Discarding duplicate job {}", Utility.toString(jobTopic, jobName, jobProperties));
+            return null;
         } else {
-            // check for unique jobs
-            if ( jobName != null && !this.lock(jobTopic, jobName) ) {
-                logger.debug("Discarding duplicate job {}", Utility.toString(jobTopic, jobName, jobProperties));
-                return null;
-            } else {
-                if ( info.queueConfiguration.getType() != QueueConfiguration.Type.IGNORE ) {
-                    final TopologyCapabilities caps = this.topologyCapabilities;
-                    info.targetId = (caps == null ? null : caps.detectTarget(jobTopic, jobProperties, info));
+            final TopologyCapabilities caps = this.topologyCapabilities;
+            info.targetId = (caps == null ? null : caps.detectTarget(jobTopic, jobProperties, info));
+
+            if ( logger.isDebugEnabled() ) {
+                if ( info.targetId != null ) {
+                    logger.debug("Persisting job {} into queue {}, target={}", new Object[] {Utility.toString(jobTopic, jobName, jobProperties), info.queueName, info.targetId});
+                } else {
+                    logger.debug("Persisting job {} into queue {}", Utility.toString(jobTopic, jobName, jobProperties), info.queueName);
                 }
-                if ( logger.isDebugEnabled() ) {
-                    if ( info.targetId != null ) {
-                        logger.debug("Persisting job {} into queue {}, target={}", new Object[] {Utility.toString(jobTopic, jobName, jobProperties), info.queueName, info.targetId});
-                    } else {
-                        logger.debug("Persisting job {} into queue {}", Utility.toString(jobTopic, jobName, jobProperties), info.queueName);
-                    }
-                }
-                final ResourceResolver resolver = this.configuration.createResourceResolver();
-                try {
-                    final JobImpl job = this.writeJob(resolver,
-                            jobTopic,
-                            jobName,
-                            jobProperties,
-                            info);
-                    return job;
-                } catch (final PersistenceException re ) {
-                    // something went wrong, so let's log it
-                    this.logger.error("Exception during persisting new job '" + Utility.toString(jobTopic, jobName, jobProperties) + "'", re);
-                } finally {
-                    resolver.close();
-                }
-                if ( errors != null ) {
-                    errors.add("Unable to persist new job.");
-                }
+            }
+            final ResourceResolver resolver = this.configuration.createResourceResolver();
+            try {
+                final JobImpl job = this.writeJob(resolver,
+                        jobTopic,
+                        jobName,
+                        jobProperties,
+                        info);
+                return job;
+            } catch (final PersistenceException re ) {
+                // something went wrong, so let's log it
+                this.logger.error("Exception during persisting new job '" + Utility.toString(jobTopic, jobName, jobProperties) + "'", re);
+            } finally {
+                resolver.close();
+            }
+            if ( errors != null ) {
+                errors.add("Unable to persist new job.");
             }
         }
         return null;
@@ -1001,19 +992,10 @@ public class JobManagerImpl
         final InternalQueueConfiguration config = queueInfo.queueConfiguration;
 
         // Sanity check if queue configuration has changed
-        if ( config.getType() == QueueConfiguration.Type.DROP ) {
-            if ( logger.isDebugEnabled() ) {
-                logger.debug("Dropping job due to configuration of queue {} : {}", queueInfo.queueName, Utility.toString(job));
-            }
-            this.finishJob(job, Job.JobState.DROPPED, false, -1); // DROP means complete removal
-        } else {
-            String targetId = null;
-            if ( config.getType() != QueueConfiguration.Type.IGNORE ) {
-                final TopologyCapabilities caps = this.topologyCapabilities;
-                targetId = (caps == null ? null : caps.detectTarget(job.getTopic(), job.getProperties(), queueInfo));
-            }
-            this.maintenanceTask.reassignJob(job, targetId);
-        }
+        String targetId = null;
+        final TopologyCapabilities caps = this.topologyCapabilities;
+        targetId = (caps == null ? null : caps.detectTarget(job.getTopic(), job.getProperties(), queueInfo));
+        this.maintenanceTask.reassignJob(job, targetId);
     }
 
     /**

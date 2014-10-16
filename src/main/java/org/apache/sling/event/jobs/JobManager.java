@@ -77,7 +77,9 @@ public interface JobManager {
      * Restart the job manager.
      * This method restarts the job manager and all queues - currently processed jobs will be finished.
      * The job manager should only be restarted if really necessary!
+     * @deprecated This method does nothing
      */
+    @Deprecated
     void restart();
 
     /**

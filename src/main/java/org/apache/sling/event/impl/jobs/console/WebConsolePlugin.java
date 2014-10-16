@@ -154,8 +154,6 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
             }
         } else if ( "test".equals(cmd) ) {
             this.startTestJob();
-        } else if ( "restart".equals(cmd) ) {
-            this.jobManager.restart();
         } else if ( "dropall".equals(cmd) ) {
             final Queue q = this.getQueue(req);
             if ( q != null ) {
@@ -193,9 +191,6 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
                    "</form>");
         pw.println("<script type='text/javascript'>");
         pw.println("function eventingsubmit(action, queue) {" +
-                   " if ( action == 'restart' ) {" +
-                   "   if ( !confirm('Do you really want to restart the job handling?') ) { return; }" +
-                   " }" +
                    " document.forms['eventingcmd'].action.value = action;" +
                    " document.forms['eventingcmd'].queue.value = queue;" +
                    " document.forms['eventingcmd'].submit();" +
@@ -205,7 +200,6 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
                 msg != null ? " : " + msg : "");
         pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>");
         pw.println("<span style='float: left; margin-left: 1em'>Apache Sling Job Handling: Overall Statistics</span>");
-        this.printForm(pw, null, "Restart!", "restart");
         this.printForm(pw, null, "Reset Stats", "reset");
         pw.println("</div>");
 

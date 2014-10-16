@@ -35,6 +35,8 @@ import org.apache.sling.event.impl.support.TopicMatcherHelper;
 import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.osgi.framework.Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component(metatype=true,
            name="org.apache.sling.event.jobs.QueueConfiguration",
@@ -113,6 +115,9 @@ import org.osgi.framework.Constants;
 })
 public class InternalQueueConfiguration
     implements QueueConfiguration, Comparable<InternalQueueConfiguration> {
+
+    /** Logger. */
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /** The name of the queue. */
     private String name;
@@ -224,6 +229,7 @@ public class InternalQueueConfiguration
             }
         }
         if ( type == Type.IGNORE || type == Type.DROP ) {
+            logger.warn("Queue is using deprecated queue type. Ignoring queue {} with type {}", name, type);
             return false;
         }
         return true;

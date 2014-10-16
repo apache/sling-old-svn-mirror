@@ -36,7 +36,6 @@ import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueIn
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
-import org.apache.sling.event.jobs.QueueConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -163,19 +162,11 @@ public class UpgradeTask {
             if ( potentialTargets != null && potentialTargets.size() > 0 ) {
                 final QueueInfo info = queueManager.getQueueInfo(topic);
                 logger.debug("Found queue {} for {}", info.queueConfiguration, topic);
-                // if queue is configured to drop, we drop
-                if ( info.queueConfiguration.getType() ==  QueueConfiguration.Type.DROP) {
-                    resolver.delete(jobResource);
-                    resolver.commit();
-                    return;
-                }
-                if ( info.queueConfiguration.getType() != QueueConfiguration.Type.IGNORE ) {
-                    targetId = caps.detectTarget(topic, vm, info);
-                    if ( targetId != null ) {
-                        properties.put(Job.PROPERTY_JOB_QUEUE_NAME, info.queueName);
-                        properties.put(Job.PROPERTY_JOB_TARGET_INSTANCE, targetId);
-                        properties.put(Job.PROPERTY_JOB_RETRIES, info.queueConfiguration.getMaxRetries());
-                    }
+                targetId = caps.detectTarget(topic, vm, info);
+                if ( targetId != null ) {
+                    properties.put(Job.PROPERTY_JOB_QUEUE_NAME, info.queueName);
+                    properties.put(Job.PROPERTY_JOB_TARGET_INSTANCE, targetId);
+                    properties.put(Job.PROPERTY_JOB_RETRIES, info.queueConfiguration.getMaxRetries());
                 }
             }
 
