@@ -35,7 +35,6 @@ import org.apache.sling.event.impl.jobs.InternalJobState;
 import org.apache.sling.event.impl.jobs.JobExecutionResultImpl;
 import org.apache.sling.event.impl.jobs.JobHandler;
 import org.apache.sling.event.impl.jobs.JobImpl;
-import org.apache.sling.event.impl.jobs.TestLogger;
 import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
 import org.apache.sling.event.impl.jobs.deprecated.JobStatusNotifier;
@@ -123,7 +122,7 @@ public abstract class AbstractJobQueue
         this.queueName = name;
         this.configuration = config;
         this.services = services;
-        this.logger = new TestLogger(LoggerFactory.getLogger(this.getClass().getName() + '.' + name));
+        this.logger = LoggerFactory.getLogger(this.getClass().getName() + '.' + name);
         this.running = true;
     }
 
@@ -307,7 +306,7 @@ public abstract class AbstractJobQueue
             }
 
             // if we're suspended we drop the current item
-            if ( this.running && info != null && !checkSuspended() ) {
+            if ( this.running && info != null && !checkSuspended(info) ) {
                 // if we still have a job and are running, let's go
                 this.start(info);
             }
@@ -321,10 +320,11 @@ public abstract class AbstractJobQueue
     /**
      * Check if the queue is suspended and go into suspend mode
      */
-    private boolean checkSuspended() {
+    private boolean checkSuspended(final JobHandler handler) {
         boolean wasSuspended = false;
         synchronized ( this.suspendLock ) {
             while ( this.suspendedSince != -1 ) {
+                this.services.topicManager.reschedule(handler);
                 logger.debug("Sleeping as queue {} is suspended.", this.getName());
                 wasSuspended = true;
                 final long diff = System.currentTimeMillis() - this.suspendedSince;

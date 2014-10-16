@@ -97,7 +97,7 @@ public class JobManagerImpl
     implements JobManager, EventHandler, Runnable, TopologyAware {
 
     /** Default logger. */
-    private final Logger logger = new TestLogger(LoggerFactory.getLogger(this.getClass()));
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Reference
     private TopologyHandler topologyHandler;
@@ -891,7 +891,7 @@ public class JobManagerImpl
      * Persist the job in the resource tree
      * @param jobTopic The required job topic
      * @param jobName The optional job name
-     * @param jobProperties The optional job properties
+     * @param passedJobProperties The optional job properties
      * @return The persisted job or <code>null</code>.
      */
     private Job addJobInteral(final String jobTopic,
