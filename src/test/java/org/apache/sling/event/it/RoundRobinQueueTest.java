@@ -31,7 +31,7 @@ import org.apache.sling.event.impl.Barrier;
 import org.apache.sling.event.impl.jobs.config.ConfigurationConstants;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
-import org.apache.sling.event.jobs.JobUtil;
+import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
@@ -45,6 +45,7 @@ import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventHandler;
+import org.slf4j.LoggerFactory;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
@@ -117,18 +118,19 @@ public class RoundRobinQueueTest extends AbstractJobHandlingTest {
                         return JobResult.OK;
                     }
                 });
-        final ServiceRegistration ehReg = this.registerEventHandler(JobUtil.TOPIC_JOB_FINISHED,
+        final ServiceRegistration ehReg = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
                 new EventHandler() {
 
                     @Override
                     public void handleEvent(final Event event) {
+                        LoggerFactory.getLogger("test").info("Received finished event {}", event.getProperty(NotificationConstants.NOTIFICATION_PROPERTY_JOB_ID));
                         count.incrementAndGet();
                     }
                 });
 
         try {
             // we first sent one event to get the queue started
-            jobManager.addJob(TOPIC + "/start", null, null);
+            jobManager.addJob(TOPIC + "/start", null);
             assertTrue("No event received in the given time.", cb.block(5));
             cb.reset();
 
@@ -143,7 +145,7 @@ public class RoundRobinQueueTest extends AbstractJobHandlingTest {
             // first jobs without id
             for(int i = 0; i < NUM_JOBS; i++ ) {
                 final String subTopic = TOPIC + "/sub" + (i % 10);
-                jobManager.addJob(subTopic, null, null);
+                jobManager.addJob(subTopic, null);
             }
             // second jobs with id
             for(int i = 0; i < NUM_JOBS; i++ ) {
