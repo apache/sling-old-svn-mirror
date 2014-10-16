@@ -28,6 +28,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.config.DefaultMetaInf;
 import org.apache.jackrabbit.vault.fs.config.DefaultWorkspaceFilter;
+import org.apache.jackrabbit.vault.fs.io.AccessControlHandling;
 import org.apache.jackrabbit.vault.fs.io.ImportOptions;
 import org.apache.jackrabbit.vault.packaging.ExportOptions;
 import org.apache.jackrabbit.vault.packaging.Packaging;
@@ -158,7 +159,7 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
                 VaultPackage pkg = packaging.getPackageManager().open(file);
                 ImportOptions opts = new ImportOptions();
                 // TODO : make it possible to expose the VLT ImportMode / ACLHandling in a generic way (from the ReplicationRequest?)
-//                opts.setImportMode(ImportMode.MERGE);
+                opts.setAccessControlHandling(AccessControlHandling.OVERWRITE);
                 pkg.extract(session, opts);
                 return true;
             }
