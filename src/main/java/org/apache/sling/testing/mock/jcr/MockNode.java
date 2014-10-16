@@ -49,11 +49,8 @@ import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
  */
 class MockNode extends AbstractItem implements Node {
 
-    private final ItemData itemData;
-
     public MockNode(final ItemData itemData, final Session session) {
-        super(itemData.getPath(), session);
-        this.itemData = itemData;
+        super(itemData, session);
     }
 
     @Override

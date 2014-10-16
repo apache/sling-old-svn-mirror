@@ -32,27 +32,27 @@ import org.apache.commons.lang3.StringUtils;
  */
 abstract class AbstractItem implements Item {
 
-    private final String path;
+    protected final ItemData itemData;
     private final Session session;
 
-    public AbstractItem(final String path, final Session session) {
-        this.path = path;
+    public AbstractItem(final ItemData itemData, final Session session) {
+        this.itemData = itemData;
         this.session = session;
     }
 
     @Override
     public String getName() {
-        return ResourceUtil.getName(this.path);
+        return this.itemData.getName();
     }
 
     @Override
     public String getPath() {
-        return this.path;
+        return this.itemData.getPath();
     }
 
     @Override
     public Node getParent() throws RepositoryException {
-        return (Node) getSession().getItem(ResourceUtil.getParent(this.path));
+        return (Node) getSession().getItem(ResourceUtil.getParent(getPath()));
     }
 
     @Override
@@ -75,14 +75,14 @@ abstract class AbstractItem implements Item {
         if (depth < 0 || depth > getDepth()) {
             throw new ItemNotFoundException();
         }
-        return this.session.getItem(ResourceUtil.getParent(this.path, depth));
+        return this.session.getItem(ResourceUtil.getParent(getPath(), depth));
     }
 
     protected String makeAbsolutePath(final String relativePath) {
         String absolutePath = relativePath;
         // ensure the path is absolute and normalized
         if (!StringUtils.startsWith(absolutePath, "/")) {
-            absolutePath = this.path + "/" + absolutePath; // NOPMD
+            absolutePath = getPath() + "/" + absolutePath; // NOPMD
         }
         return ResourceUtil.normalize(absolutePath);
     }
@@ -98,10 +98,10 @@ abstract class AbstractItem implements Item {
 
     @Override
     public int getDepth() throws RepositoryException {
-        if (StringUtils.equals("/", this.path)) {
+        if (StringUtils.equals("/", getPath())) {
             return 0;
         } else {
-            return StringUtils.countMatches(this.path, "/");
+            return StringUtils.countMatches(getPath(), "/");
         }
     }
 
