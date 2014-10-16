@@ -36,15 +36,13 @@ import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.agent.ReplicationComponentFactory;
 import org.apache.sling.replication.agent.ReplicationComponentProvider;
+import org.apache.sling.replication.agent.ReplicationRequestAuthorizationStrategy;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
-import org.apache.sling.replication.packaging.ReplicationPackageExporterStrategy;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
 import org.apache.sling.replication.packaging.impl.exporter.AgentReplicationPackageExporter;
 import org.apache.sling.replication.packaging.impl.exporter.LocalReplicationPackageExporter;
 import org.apache.sling.replication.packaging.impl.exporter.RemoteReplicationPackageExporter;
-import org.apache.sling.replication.packaging.impl.exporter.strategy.DefaultReplicationPackageExporterStrategy;
-import org.apache.sling.replication.packaging.impl.exporter.strategy.PrivilegeReplicationPackageExporterStrategy;
 import org.apache.sling.replication.packaging.impl.importer.LocalReplicationPackageImporter;
 import org.apache.sling.replication.packaging.impl.importer.RemoteReplicationPackageImporter;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
@@ -147,8 +145,8 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
             Map<String, Object> exporterProperties = extractMap("packageExporter", properties);
             ReplicationPackageExporter packageExporter = createExporter(exporterProperties, componentProvider);
 
-            Map<String, Object> exporterStrategyProperties = extractMap("packageExporterStrategy", properties);
-            ReplicationPackageExporterStrategy packageExporterStrategy = createExporterStrategy(exporterStrategyProperties, componentProvider);
+            Map<String, Object> authorizationStrategyProperties = extractMap("requestAuthorizationStrategy", properties);
+            ReplicationRequestAuthorizationStrategy packageExporterStrategy = createAuthorizationStrategy(authorizationStrategyProperties, componentProvider);
 
             Map<String, Object> queueDistributionStrategyProperties = extractMap("queueDistributionStrategy", properties);
             ReplicationQueueDistributionStrategy queueDistributionStrategy = createDistributionStrategy(queueDistributionStrategyProperties, componentProvider);
@@ -177,20 +175,17 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
 
     }
 
-    private ReplicationPackageExporterStrategy createExporterStrategy(Map<String, Object> properties, ReplicationComponentProvider componentProvider) {
+    private ReplicationRequestAuthorizationStrategy createAuthorizationStrategy(Map<String, Object> properties, ReplicationComponentProvider componentProvider) {
 
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), "service");
 
         if ("service".equals(factory)) {
             String name = PropertiesUtil.toString(properties.get(NAME), null);
-            return componentProvider.getComponent(ReplicationPackageExporterStrategy.class, name);
+            return componentProvider.getComponent(ReplicationRequestAuthorizationStrategy.class, name);
 
         }
-        else if (DefaultReplicationPackageExporterStrategy.NAME.equals(factory)) {
-            return new DefaultReplicationPackageExporterStrategy();
-        }
-        else if (PrivilegeReplicationPackageExporterStrategy.NAME.equals(factory)) {
-            return new PrivilegeReplicationPackageExporterStrategy(properties);
+        else if (PrivilegeReplicationRequestAuthorizationStrategy.NAME.equals(factory)) {
+            return new PrivilegeReplicationRequestAuthorizationStrategy(properties);
         }
 
         return null;

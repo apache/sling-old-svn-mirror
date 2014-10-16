@@ -16,28 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.packaging;
+package org.apache.sling.replication.agent;
 
 import java.util.List;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.packaging.ReplicationPackage;
+import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 
 /**
- * Strategy for exporting packages
+ * Strategy for authorizing requests
  */
-public interface ReplicationPackageExporterStrategy {
+public interface ReplicationRequestAuthorizationStrategy {
 
     /**
      * @param resourceResolver   a {@link org.apache.sling.api.resource.ResourceResolver} representing the calling 'user'
      * @param replicationRequest a request bringing metadata for getting {@link org.apache.sling.replication.packaging.ReplicationPackage}s
      *                           to be exported
-     * @param packageExporter an exporter to be used to generate {@link org.apache.sling.replication.packaging.ReplicationPackage}s
-     * @return
-     * @throws ReplicationPackageBuildingException
+     * @throws AgentReplicationException
      */
-    List<ReplicationPackage> exportPackages(ResourceResolver resourceResolver, ReplicationRequest replicationRequest,
-                                            ReplicationPackageExporter packageExporter) throws ReplicationPackageBuildingException;
+    void checkPermission(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws AgentReplicationException;
 
 }

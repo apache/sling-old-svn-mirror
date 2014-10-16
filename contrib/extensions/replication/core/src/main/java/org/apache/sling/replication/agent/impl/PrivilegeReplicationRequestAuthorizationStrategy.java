@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.packaging.impl.exporter.strategy;
+package org.apache.sling.replication.agent.impl;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -27,31 +27,33 @@ import java.util.Map;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.replication.agent.AgentReplicationException;
+import org.apache.sling.replication.agent.ReplicationRequestAuthorizationStrategy;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
-import org.apache.sling.replication.packaging.ReplicationPackageExporterStrategy;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 
-public class PrivilegeReplicationPackageExporterStrategy implements ReplicationPackageExporterStrategy {
+public class PrivilegeReplicationRequestAuthorizationStrategy implements ReplicationRequestAuthorizationStrategy {
     public static final String NAME = "privilege";
     public static final String JCR_PRIVILEGE = "jcrPrivilege";
 
     private final String jcrPrivilege;
 
-    public PrivilegeReplicationPackageExporterStrategy(Map<String, Object> config) {
+    public PrivilegeReplicationRequestAuthorizationStrategy(Map<String, Object> config) {
         this(PropertiesUtil.toString(config.get(JCR_PRIVILEGE), null));
     }
 
-    public PrivilegeReplicationPackageExporterStrategy(String jcrPrivilege) {
+    public PrivilegeReplicationRequestAuthorizationStrategy(String jcrPrivilege) {
         if (jcrPrivilege == null) {
             throw new IllegalArgumentException("Jcr Privilege is required");
         }
 
         this.jcrPrivilege = jcrPrivilege;
     }
-    public List<ReplicationPackage> exportPackages(ResourceResolver resourceResolver, ReplicationRequest replicationRequest, ReplicationPackageExporter packageExporter) throws ReplicationPackageBuildingException {
+
+    public void checkPermission(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws AgentReplicationException {
         Session session = resourceResolver.adaptTo(Session.class);
 
         try {
@@ -64,34 +66,33 @@ public class PrivilegeReplicationPackageExporterStrategy implements ReplicationP
 
         }
         catch (RepositoryException e) {
-            throw new ReplicationPackageBuildingException("Not enough privileges");
+            throw new AgentReplicationException("Not enough privileges");
         }
 
-        return packageExporter.exportPackage(resourceResolver, replicationRequest);
 
     }
 
     private void checkPermissionForAdd(Session session, String[] paths)
-            throws RepositoryException, ReplicationPackageBuildingException {
+            throws RepositoryException, AgentReplicationException {
         AccessControlManager acMgr = session.getAccessControlManager();
 
         Privilege[] privileges = new Privilege[] { acMgr.privilegeFromName(jcrPrivilege), acMgr.privilegeFromName(Privilege.JCR_READ) };
         for (String path : paths) {
             if(!acMgr.hasPrivileges(path, privileges)) {
-                throw new ReplicationPackageBuildingException("Not enough privileges");
+                throw new AgentReplicationException("Not enough privileges");
             }
         }
 
     }
 
     private void checkPermissionForDelete(Session session, String[] paths)
-            throws RepositoryException, ReplicationPackageBuildingException {
+            throws RepositoryException, AgentReplicationException {
         AccessControlManager acMgr = session.getAccessControlManager();
 
         Privilege[] privileges = new Privilege[] { acMgr.privilegeFromName(jcrPrivilege), acMgr.privilegeFromName(Privilege.JCR_REMOVE_NODE)  };
         for (String path : paths) {
             if(session.nodeExists(path) && !acMgr.hasPrivileges(path, privileges)) {
-                throw new ReplicationPackageBuildingException("Not enough privileges");
+                throw new AgentReplicationException("Not enough privileges");
             }
         }
 
