@@ -20,7 +20,6 @@ package org.apache.sling.testing.mock.jcr;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import javax.jcr.ItemNotFoundException;
@@ -56,14 +55,14 @@ public class MockNodeTest {
     public void testGetNodes() throws RepositoryException {
         NodeIterator nodes = this.node1.getNodes();
         assertEquals(1, nodes.getSize());
-        assertSame(this.node11, nodes.next());
+        assertEquals(this.node11, nodes.nextNode());
 
         assertTrue(this.node1.hasNodes());
         assertFalse(this.node11.hasNodes());
 
         nodes = this.node1.getNodes("^node.*$");
         assertEquals(1, nodes.getSize());
-        assertSame(this.node11, nodes.next());
+        assertEquals(this.node11, nodes.nextNode());
 
         nodes = this.node1.getNodes("unknown?");
         assertEquals(0, nodes.getSize());
@@ -73,14 +72,14 @@ public class MockNodeTest {
     public void testGetProperties() throws RepositoryException {
         PropertyIterator properties = this.node1.getProperties();
         assertEquals(1, properties.getSize());
-        assertSame(this.prop1, properties.next());
+        assertEquals(this.prop1, properties.next());
 
         assertTrue(this.node1.hasProperties());
         assertFalse(this.node11.hasProperties());
 
         properties = this.node1.getProperties("^prop.*$");
         assertEquals(1, properties.getSize());
-        assertSame(this.prop1, properties.next());
+        assertEquals(this.prop1, properties.next());
 
         properties = this.node1.getProperties("unknown?");
         assertEquals(0, properties.getSize());
@@ -114,11 +113,11 @@ public class MockNodeTest {
     public void testGetPrimaryItem() throws RepositoryException {
         Node dataParent = this.node1.addNode("dataParent");
         Property dataProperty = dataParent.setProperty(JcrConstants.JCR_DATA, "data");
-        assertSame(dataProperty, dataParent.getPrimaryItem());
+        assertEquals(dataProperty, dataParent.getPrimaryItem());
 
         Node contentParent = this.node1.addNode("contentParent");
         Node contentNode = contentParent.addNode(JcrConstants.JCR_CONTENT);
-        assertSame(contentNode, contentParent.getPrimaryItem());
+        assertEquals(contentNode, contentParent.getPrimaryItem());
     }
 
     @Test(expected = ItemNotFoundException.class)

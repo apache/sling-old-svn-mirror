@@ -18,7 +18,6 @@
  */
 package org.apache.sling.testing.mock.jcr;
 
-import javax.jcr.Item;
 import javax.jcr.RepositoryException;
 
 /**
@@ -26,6 +25,6 @@ import javax.jcr.RepositoryException;
  */
 interface ItemFilter {
 
-    boolean accept(Item item) throws RepositoryException;
+    boolean accept(ItemData item) throws RepositoryException;
 
 }
