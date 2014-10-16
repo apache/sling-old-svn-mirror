@@ -32,13 +32,13 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.replication.agent.AgentReplicationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.agent.ReplicationComponent;
+import org.apache.sling.replication.agent.ReplicationRequestAuthorizationStrategy;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.communication.ReplicationResponse;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.event.ReplicationEventType;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
-import org.apache.sling.replication.packaging.ReplicationPackageExporterStrategy;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
@@ -75,7 +75,7 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
 
     private final String name;
 
-    private final ReplicationPackageExporterStrategy replicationPackageExporterStrategy;
+    private final ReplicationRequestAuthorizationStrategy replicationRequestAuthorizationStrategy;
     private final ResourceResolverFactory resourceResolverFactory;
     private final String subServiceName;
 
@@ -84,21 +84,20 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
                                   String subServiceName,
                                   ReplicationPackageImporter replicationPackageImporter,
                                   ReplicationPackageExporter replicationPackageExporter,
-                                  ReplicationPackageExporterStrategy replicationPackageExporterStrategy,
+                                  ReplicationRequestAuthorizationStrategy replicationRequestAuthorizationStrategy,
                                   ReplicationQueueProvider queueProvider,
                                   ReplicationQueueDistributionStrategy queueDistributionStrategy,
                                   ReplicationEventFactory replicationEventFactory,
                                   ResourceResolverFactory resourceResolverFactory,
                                   List<ReplicationTrigger> triggers) {
-        this.subServiceName = subServiceName;
-        this.replicationPackageExporterStrategy = replicationPackageExporterStrategy;
-        this.resourceResolverFactory = resourceResolverFactory;
+
 
         // check configuration is valid
         if (name == null
                 || replicationPackageImporter == null
                 || replicationPackageExporter == null
-                || replicationPackageExporterStrategy == null
+                || subServiceName == null
+                || replicationRequestAuthorizationStrategy == null
                 || queueProvider == null
                 || queueDistributionStrategy == null
                 || replicationEventFactory == null
@@ -107,7 +106,8 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
             String errorMessage = Arrays.toString(new Object[]{name,
                     replicationPackageImporter,
                     replicationPackageExporter,
-                    replicationPackageExporterStrategy,
+                    subServiceName,
+                    replicationRequestAuthorizationStrategy,
                     queueProvider,
                     queueDistributionStrategy,
                     replicationEventFactory,
@@ -115,6 +115,9 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
             throw new IllegalArgumentException("all arguments are required: " + errorMessage);
         }
 
+        this.subServiceName = subServiceName;
+        this.replicationRequestAuthorizationStrategy = replicationRequestAuthorizationStrategy;
+        this.resourceResolverFactory = resourceResolverFactory;
         this.name = name;
         this.passive = passive;
         this.replicationPackageImporter = replicationPackageImporter;
@@ -128,7 +131,9 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
     public ReplicationResponse execute(ResourceResolver resourceResolver, ReplicationRequest replicationRequest)
             throws AgentReplicationException {
         try {
-            return schedule(buildPackages(resourceResolver, replicationRequest));
+            replicationRequestAuthorizationStrategy.checkPermission(resourceResolver, replicationRequest);
+            List<ReplicationPackage> replicationPackages = buildPackages(replicationRequest);
+            return schedule(replicationPackages);
         } catch (Exception e) {
             log.error("Error executing replication request {}", replicationRequest, e);
             throw new AgentReplicationException(e);
@@ -140,23 +145,11 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
         return passive;
     }
 
-    private List<ReplicationPackage> buildPackages(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
+    private List<ReplicationPackage> buildPackages(ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
 
-        List<ReplicationPackage> replicationPackages = new ArrayList<ReplicationPackage>();
+        ResourceResolver agentResourceResolver = getAgentResourceResolver();
 
-
-        List<ReplicationPackage> exportedPackages = replicationPackageExporterStrategy.exportPackages(resourceResolver,
-                replicationRequest,
-                new ReplicationPackageExporter() {
-                    public List<ReplicationPackage> exportPackage(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
-                        return replicationPackageExporter.exportPackage(getAgentResourceResolver(), replicationRequest);
-                    }
-
-                    public ReplicationPackage exportPackageById(ResourceResolver resourceResolver, String replicationPackageId) {
-                        return replicationPackageExporter.exportPackageById(getAgentResourceResolver(), replicationPackageId);
-                    }
-                });
-        replicationPackages.addAll(exportedPackages);
+        List<ReplicationPackage> replicationPackages = replicationPackageExporter.exportPackage(agentResourceResolver, replicationRequest);
 
         return replicationPackages;
     }
