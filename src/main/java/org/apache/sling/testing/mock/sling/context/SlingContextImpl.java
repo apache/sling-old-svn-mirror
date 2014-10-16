@@ -27,8 +27,10 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.sling.api.adapter.AdapterFactory;
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.mime.MimeTypeService;
@@ -73,6 +75,7 @@ public class SlingContextImpl {
     // default to publish instance run mode
     static final Set<String> DEFAULT_RUN_MODES = ImmutableSet.<String> builder().add("publish").build();
 
+    protected ResourceResolverFactory resourceResolverFactory;
     protected MockModelAdapterFactory modelAdapterFactory;
     protected ResourceResolverType resourceResolverType;
     protected ComponentContext componentContext;
@@ -95,7 +98,15 @@ public class SlingContextImpl {
      */
     protected void setUp() {
         MockSling.setAdapterManagerBundleContext(bundleContext());
+        this.resourceResolverFactory = newResourceResolverFactory();
         registerDefaultServices();
+    }
+    
+    /**
+     * Initialize mocked resource resolver factory.
+     */
+    protected ResourceResolverFactory newResourceResolverFactory() {
+        return ContextResourceResolverFactory.get(this.resourceResolverType);
     }
 
     /**
@@ -103,6 +114,9 @@ public class SlingContextImpl {
      */
     protected void registerDefaultServices() {
 
+        // resource resolver factory
+        registerService(ResourceResolverFactory.class, this.resourceResolverFactory);
+        
         // adapter factories
         modelAdapterFactory = new MockModelAdapterFactory(componentContext());
         registerService(AdapterFactory.class, modelAdapterFactory);
@@ -187,15 +201,15 @@ public class SlingContextImpl {
      */
     public final ResourceResolver resourceResolver() {
         if (this.resourceResolver == null) {
-            this.resourceResolver = createMockResourceResolver();
+            try {
+                this.resourceResolver = this.resourceResolverFactory.getResourceResolver(null);
+            } catch (LoginException ex) {
+                throw new RuntimeException("Creating resource resolver failed.", ex);
+            }
         }
         return this.resourceResolver;
     }
     
-    protected ResourceResolver createMockResourceResolver() {
-        return ContextResourceResolverFactory.initializeResourceResolver(resourceResolverType());
-    }
-
     /**
      * @return Sling request
      */

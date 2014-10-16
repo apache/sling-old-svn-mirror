@@ -34,6 +34,7 @@ import javax.inject.Inject;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.models.annotations.Model;
@@ -191,6 +192,12 @@ public class SlingContextImplTest {
         assertEquals(2, newRunModes.size());
         assertTrue(newRunModes.contains("mode1"));
         assertTrue(newRunModes.contains("mode2"));
+    }
+    
+    @Test
+    public void testResourceResolverFactory() {
+        ResourceResolverFactory factory = context.getService(ResourceResolverFactory.class);
+        assertNotNull(factory);
     }
 
     @Model(adaptables = SlingHttpServletRequest.class)
