@@ -5,7 +5,7 @@ import org.slf4j.Marker;
 
 public class TestLogger implements Logger {
 
-    private final boolean DEBUG = true;
+    private final boolean DEBUG = false;
 
     private final Logger logger;
 
