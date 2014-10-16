@@ -137,7 +137,7 @@ public class QueueManager
      */
     private void maintain() {
         this.schedulerRuns++;
-        logger.debug("Job manager maintenance: Starting #{}", this.schedulerRuns);
+        logger.debug("Queue manager maintenance: Starting #{}", this.schedulerRuns);
 
         // check for unprocessed jobs first
         logger.debug("Checking for unprocessed jobs...");
@@ -168,7 +168,7 @@ public class QueueManager
                 }
             }
         }
-        logger.debug("Job manager maintenance: Finished #{}", this.schedulerRuns);
+        logger.debug("Queue manager maintenance: Finished #{}", this.schedulerRuns);
     }
 
     /**
