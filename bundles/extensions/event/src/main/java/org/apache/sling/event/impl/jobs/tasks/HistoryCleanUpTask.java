@@ -28,11 +28,9 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.event.impl.jobs.JobImpl;
@@ -70,9 +68,6 @@ public class HistoryCleanUpTask implements JobExecutor {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Reference
-    private ResourceResolverFactory resourceResolverFactory;
-
-    @Reference
     private JobManagerConfiguration configuration;
 
     @Override
@@ -100,10 +95,8 @@ public class HistoryCleanUpTask implements JobExecutor {
         } else {
             stateList = null;
         }
-        ResourceResolver resolver = null;
+        final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-
             if ( stateList == null || stateList.contains(Job.JobState.SUCCEEDED.name()) ) {
                 this.cleanup(removeDate, resolver, context, configuration.getStoredSuccessfulJobsPath(), topics, null);
             }
@@ -117,12 +110,8 @@ public class HistoryCleanUpTask implements JobExecutor {
         } catch (final PersistenceException pe) {
             // in the case of an error, we just log this as a warning
             this.logger.warn("Exception during job resource tree cleanup.", pe);
-        } catch (final LoginException ignore) {
-            this.ignoreException(ignore);
         } finally {
-            if ( resolver != null ) {
-                resolver.close();
-            }
+            resolver.close();
         }
         return context.result().succeeded();
     }

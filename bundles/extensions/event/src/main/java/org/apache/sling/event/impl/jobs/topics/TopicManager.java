@@ -41,6 +41,7 @@ import org.apache.sling.event.impl.jobs.JobHandler;
 import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.JobManagerImpl;
+import org.apache.sling.event.impl.jobs.JobTopicTraverser;
 import org.apache.sling.event.impl.jobs.TestLogger;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
@@ -182,10 +183,7 @@ public class TopicManager implements EventHandler, TopologyAware {
             }
             final QueueInfo info = this.queueConfigMgr.getQueueInfo(topic);
             if ( changed ) {
-                logger.debug("Adding new topic {}", topic);
                 topicsChanged.set(true);
-                logger.info("Starting queue {}", info.queueName);
-
                 this.queueManager.start(this, info);
             } else {
                 final QueueJobCache cache = this.queueJobCaches.get(info.queueName);
@@ -240,6 +238,7 @@ public class TopicManager implements EventHandler, TopologyAware {
     private final Map<String, Object> queueLocks = new ConcurrentHashMap<String, Object>();
 
     public JobHandler take(final String queueName) {
+        logger.debug("Taking new job for {}", queueName);
         Object lock = new Object();
         this.queueLocks.put(queueName, lock);
         JobImpl result = null;
@@ -249,7 +248,9 @@ public class TopicManager implements EventHandler, TopologyAware {
                 final Map<String, QueueJobCache> mapping = this.updateConfiguration();
                 final QueueJobCache cache = mapping.get(queueName);
                 if ( cache != null ) {
+                    logger.debug("Getting new job from cache...");
                     result = cache.getNextJob();
+                    logger.debug("Job from cache={}", result);
                     if ( result != null ) {
                         isWaiting = false;
                     }
@@ -273,6 +274,7 @@ public class TopicManager implements EventHandler, TopologyAware {
         } finally {
             this.queueLocks.remove(queueName);
         }
+        logger.debug("Took new job for {} : {}", queueName, result);
         return (result != null ? new JobHandler( result, (JobManagerImpl)this.jobManager) : null);
     }
 
@@ -309,7 +311,7 @@ public class TopicManager implements EventHandler, TopologyAware {
                         for(final String t : topics) {
                             final Resource topicResource = baseResource.getChild(t.replace('/', '.'));
                             if ( topicResource != null ) {
-                                JobTopicTraverser.traverse(logger, topicResource, new JobTopicTraverser.Handler() {
+                                JobTopicTraverser.traverse(logger, topicResource, new JobTopicTraverser.JobCallback() {
 
                                     @Override
                                     public boolean handle(final JobImpl job) {
@@ -346,11 +348,22 @@ public class TopicManager implements EventHandler, TopologyAware {
         if ( this.isActive.get() ) {
             this.initialScan();
             for(final Map.Entry<String, QueueJobCache> entry : this.updateConfiguration().entrySet()) {
-                logger.info("Starting queue {}", entry.getKey());
-
                 this.queueManager.start(this, entry.getValue().getQueueInfo());
             }
         }
     }
 
+    public void reschedule(final JobImpl job) {
+        final QueueInfo info = this.queueConfigMgr.getQueueInfo(job.getTopic());
+        final QueueJobCache cache = this.queueJobCaches.get(info.queueName);
+        if ( cache != null ) {
+            cache.reschedule(job);
+            final Object lock = this.queueLocks.get(info.queueName);
+            if ( lock != null ) {
+                synchronized ( lock ) {
+                    lock.notify();
+                }
+            }
+        }
+    }
 }

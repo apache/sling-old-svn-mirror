@@ -108,12 +108,12 @@ public class TopologyHandler
             final UpgradeTask task = new UpgradeTask();
             task.run(this.configuration, this.topologyCapabilities, queueManager);
 
-            final RestartTask rt = new RestartTask();
+            final FindUnfinishedJobsTask rt = new FindUnfinishedJobsTask();
             rt.run(this.configuration);
         }
 
-        final MaintenanceTask mt = new MaintenanceTask(this.configuration);
-        mt.run(topologyCapabilities, queueManager, !isConfigChange, isConfigChange);
+        final CheckTopologyTask mt = new CheckTopologyTask(this.configuration);
+        mt.run(topologyCapabilities, !isConfigChange, isConfigChange);
 
         if ( !isConfigChange ) {
             // start listeners
@@ -160,6 +160,10 @@ public class TopologyHandler
         }
     }
 
+    /**
+     * Add a topology aware listener
+     * @param service Listener to notify about changes.
+     */
     public void addListener(final TopologyAware service) {
         synchronized ( this.listeners ) {
             this.listeners.add(service);
@@ -167,6 +171,10 @@ public class TopologyHandler
         }
     }
 
+    /**
+     * Remove a topology aware listener
+     * @param service Listener to notify about changes.
+     */
     public void removeListener(final TopologyAware service) {
         synchronized ( this.listeners )  {
             this.listeners.remove(service);
