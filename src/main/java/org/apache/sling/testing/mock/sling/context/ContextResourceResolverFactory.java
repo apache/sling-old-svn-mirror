@@ -22,7 +22,9 @@ import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 
@@ -35,42 +37,43 @@ final class ContextResourceResolverFactory {
         // static methods only
     }
 
-    public static ResourceResolver initializeResourceResolver(final ResourceResolverType resourceResolverType) {
+    public static ResourceResolverFactory get(final ResourceResolverType resourceResolverType) {
         try {
-            ResourceResolver resourceResolver = MockSling.newResourceResolver(resourceResolverType);
+            ResourceResolverFactory factory = MockSling.newResourceResolverFactory(resourceResolverType);
 
             switch (resourceResolverType) {
             case JCR_MOCK:
-                initializeJcrMock(resourceResolver);
+                initializeJcrMock(factory);
                 break;
             case JCR_JACKRABBIT:
-                initializeJcrJackrabbit(resourceResolver);
+                initializeJcrJackrabbit(factory);
                 break;
             case RESOURCERESOLVER_MOCK:
-                initializeResourceResolverMock(resourceResolver);
+                initializeResourceResolverMock(factory);
                 break;
             default:
                 throw new IllegalArgumentException("Invalid resource resolver type: " + resourceResolverType);
             }
 
-            return resourceResolver;
+            return factory;
         } catch (Throwable ex) {
-            throw new RuntimeException("Unable to initialize " + resourceResolverType + " resource resolver.", ex);
+            throw new RuntimeException("Unable to initialize " + resourceResolverType + " resource resolver factory.", ex);
         }
     }
 
-    private static void initializeJcrMock(final ResourceResolver resourceResolver) throws RepositoryException {
+    private static void initializeJcrMock(ResourceResolverFactory factory) throws RepositoryException, LoginException {
         // register default namespaces
-        NamespaceRegistry namespaceRegistry = resourceResolver.adaptTo(Session.class).getWorkspace()
-                .getNamespaceRegistry();
+        ResourceResolver resolver = factory.getResourceResolver(null);
+        Session session = resolver.adaptTo(Session.class);
+        NamespaceRegistry namespaceRegistry = session.getWorkspace().getNamespaceRegistry();
         namespaceRegistry.registerNamespace("sling", "http://sling.apache.org/jcr/sling/1.0");
     }
 
-    private static void initializeJcrJackrabbit(final ResourceResolver resourceResolver) {
-        // TODO: register sling node types
+    private static void initializeJcrJackrabbit(ResourceResolverFactory factory) {
+        // register sling node types?
     }
 
-    private static void initializeResourceResolverMock(final ResourceResolver resourceResolver) {
+    private static void initializeResourceResolverMock(ResourceResolverFactory factory) {
         // nothing to do
     }
 
