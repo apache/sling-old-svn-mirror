@@ -39,20 +39,27 @@ import org.apache.jackrabbit.value.BinaryValue;
  */
 class MockProperty extends AbstractItem implements Property {
 
-    private Value[] values;
-    private boolean isMultiple;
+    private final ItemData itemData;
 
-    public MockProperty(final String path, final Session session) throws RepositoryException {
-        super(path, session);
-        this.values = new Value[] { getSession().getValueFactory().createValue("") };
+    public MockProperty(final ItemData itemData, final Session session) {
+        super(itemData.getPath(), session);
+        this.itemData = itemData;
+        if (this.itemData.getValues() == null) {
+            try {
+                this.itemData.setValues(new Value[] { getSession().getValueFactory().createValue("") });
+            }
+            catch (RepositoryException ex) {
+                throw new RuntimeException("Initializing property failed.", ex);
+            }
+        }
     }
 
     private Value internalGetValue() throws ValueFormatException {
-        if (this.values.length > 1) {
+        if (this.itemData.getValues().length > 1) {
             throw new ValueFormatException(this
                     + " is a multi-valued property, so it's values can only be retrieved as an array");
         } else {
-            return this.values[0];
+            return this.itemData.getValues()[0];
         }
     }
 
@@ -63,89 +70,91 @@ class MockProperty extends AbstractItem implements Property {
 
     @Override
     public Value[] getValues() {
-        Value[] valuesCopy = new Value[this.values.length];
-        for (int i = 0; i < this.values.length; i++) {
-            valuesCopy[i] = this.values[i];
+        Value[] valuesCopy = new Value[this.itemData.getValues().length];
+        for (int i = 0; i < this.itemData.getValues().length; i++) {
+            valuesCopy[i] = this.itemData.getValues()[i];
         }
         return valuesCopy;
     }
 
     @Override
     public void setValue(final Value newValue) {
-        this.values = new Value[] { newValue };
-        this.isMultiple = false;
+        this.itemData.setValues(new Value[] { newValue });
+        this.itemData.setMultiple(false);
     }
 
     @Override
     public void setValue(final Value[] newValues) {
-        this.values = new Value[newValues.length];
+        Value[] values = new Value[newValues.length];
         for (int i = 0; i < newValues.length; i++) {
-            this.values[i] = newValues[i];
+            values[i] = newValues[i];
         }
-        this.isMultiple = true;
+        this.itemData.setValues(values);
+        this.itemData.setMultiple(true);
     }
 
     @Override
     public void setValue(final String newValue) throws RepositoryException {
-        this.values = new Value[] { getSession().getValueFactory().createValue(newValue) };
-        this.isMultiple = false;
+        this.itemData.setValues(new Value[] { getSession().getValueFactory().createValue(newValue) });
+        this.itemData.setMultiple(false);
     }
 
     @Override
     public void setValue(final String[] newValues) throws RepositoryException {
-        this.values = new Value[newValues.length];
+        Value[] values = new Value[newValues.length];
         for (int i = 0; i < newValues.length; i++) {
-            this.values[i] = getSession().getValueFactory().createValue(newValues[i]);
+            values[i] = getSession().getValueFactory().createValue(newValues[i]);
         }
-        this.isMultiple = true;
+        this.itemData.setValues(values);
+        this.itemData.setMultiple(true);
     }
 
     @Override
     public void setValue(final InputStream newValue) throws RepositoryException {
-        this.values = new Value[] { new BinaryValue(newValue) };
-        this.isMultiple = false;
+        this.itemData.setValues(new Value[] { new BinaryValue(newValue) });
+        this.itemData.setMultiple(false);
     }
 
     @Override
     public void setValue(final long newValue) throws RepositoryException {
-        this.values = new Value[] { getSession().getValueFactory().createValue(newValue) };
-        this.isMultiple = false;
+        this.itemData.setValues(new Value[] { getSession().getValueFactory().createValue(newValue) });
+        this.itemData.setMultiple(false);
     }
 
     @Override
     public void setValue(final double newValue) throws RepositoryException {
-        this.values = new Value[] { getSession().getValueFactory().createValue(newValue) };
-        this.isMultiple = false;
+        this.itemData.setValues(new Value[] { getSession().getValueFactory().createValue(newValue) });
+        this.itemData.setMultiple(false);
     }
 
     @Override
     public void setValue(final Calendar newValue) throws RepositoryException {
-        this.values = new Value[] { getSession().getValueFactory().createValue(newValue) };
-        this.isMultiple = false;
+        this.itemData.setValues(new Value[] { getSession().getValueFactory().createValue(newValue) });
+        this.itemData.setMultiple(false);
     }
 
     @Override
     public void setValue(final boolean newValue) throws RepositoryException {
-        this.values = new Value[] { getSession().getValueFactory().createValue(newValue) };
-        this.isMultiple = false;
+        this.itemData.setValues(new Value[] { getSession().getValueFactory().createValue(newValue) });
+        this.itemData.setMultiple(false);
     }
 
     @Override
     public void setValue(final Node newValue) throws RepositoryException {
-        this.values = new Value[] { getSession().getValueFactory().createValue(newValue) };
-        this.isMultiple = false;
+        this.itemData.setValues(new Value[] { getSession().getValueFactory().createValue(newValue) });
+        this.itemData.setMultiple(false);
     }
 
     @Override
     public void setValue(final Binary newValue) throws RepositoryException {
-        this.values = new Value[] { new BinaryValue(newValue) };
-        this.isMultiple = false;
+        this.itemData.setValues(new Value[] { new BinaryValue(newValue) });
+        this.itemData.setMultiple(false);
     }
 
     @Override
     public void setValue(final BigDecimal newValue) throws RepositoryException {
-        this.values = new Value[] { getSession().getValueFactory().createValue(newValue) };
-        this.isMultiple = false;
+        this.itemData.setValues(new Value[] { getSession().getValueFactory().createValue(newValue) });
+        this.itemData.setMultiple(false);
     }
 
     @Override
@@ -191,7 +200,7 @@ class MockProperty extends AbstractItem implements Property {
 
     @Override
     public int getType() throws RepositoryException {
-        return this.values[0].getType();
+        return this.itemData.getValues()[0].getType();
     }
 
     @Override
@@ -201,9 +210,9 @@ class MockProperty extends AbstractItem implements Property {
 
     @Override
     public long[] getLengths() throws RepositoryException {
-        long[] lengths = new long[this.values.length];
-        for (int i = 0; i < this.values.length; i++) {
-            lengths[i] = this.values[i].getString().length();
+        long[] lengths = new long[this.itemData.getValues().length];
+        for (int i = 0; i < this.itemData.getValues().length; i++) {
+            lengths[i] = this.itemData.getValues()[i].getString().length();
         }
         return lengths;
     }
@@ -215,7 +224,7 @@ class MockProperty extends AbstractItem implements Property {
 
     @Override
     public boolean isMultiple() {
-        return this.isMultiple;
+        return this.itemData.isMultiple();
     }
 
     @Override
@@ -223,6 +232,19 @@ class MockProperty extends AbstractItem implements Property {
         return new MockPropertyDefinition();
     }
 
+    @Override
+    public int hashCode() {
+        return itemData.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof MockProperty) {
+            return itemData.equals(((MockProperty)obj).itemData);
+        }
+        return false;
+    }
+    
     // --- unsupported operations ---
     @Override
     public Node getNode() {

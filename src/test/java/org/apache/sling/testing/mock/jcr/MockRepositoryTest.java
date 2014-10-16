@@ -22,9 +22,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
+import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 
 import org.junit.Before;
@@ -39,25 +43,52 @@ public class MockRepositoryTest {
 
     @Before
     public void setUp() {
-        this.repository = MockJcr.newRepository();
+        repository = MockJcr.newRepository();
     }
 
     @Test
     public void testLogin() throws RepositoryException {
-        assertNotNull(this.repository.login());
-        assertNotNull(this.repository.login(new SimpleCredentials(USER_NAME, PASSWORD)));
-        assertNotNull(this.repository.login(MockJcr.DEFAULT_WORKSPACE));
-        assertNotNull(this.repository.login(new SimpleCredentials(USER_NAME, PASSWORD), MockJcr.DEFAULT_WORKSPACE));
+        assertNotNull(repository.login());
+        assertNotNull(repository.login(new SimpleCredentials(USER_NAME, PASSWORD)));
+        assertNotNull(repository.login(MockJcr.DEFAULT_WORKSPACE));
+        assertNotNull(repository.login(new SimpleCredentials(USER_NAME, PASSWORD), MockJcr.DEFAULT_WORKSPACE));
     }
 
     @Test
     public void testDescriptor() {
-        assertEquals(0, this.repository.getDescriptorKeys().length);
-        assertNull(this.repository.getDescriptor("test"));
-        assertNull(this.repository.getDescriptorValue("test"));
-        assertNull(this.repository.getDescriptorValues("test"));
-        assertFalse(this.repository.isStandardDescriptor("test"));
-        assertFalse(this.repository.isSingleValueDescriptor("test"));
+        assertEquals(0, repository.getDescriptorKeys().length);
+        assertNull(repository.getDescriptor("test"));
+        assertNull(repository.getDescriptorValue("test"));
+        assertNull(repository.getDescriptorValues("test"));
+        assertFalse(repository.isStandardDescriptor("test"));
+        assertFalse(repository.isSingleValueDescriptor("test"));
+    }
+    
+    @Test
+    public void testMultipleSessions() throws RepositoryException {
+        Session session1 = repository.login();
+        Session session2 = repository.login();
+
+        // add a node in session 1
+        Node root = session1.getRootNode();
+        root.addNode("test");
+        session1.save();
+        
+        // try to get node in session 2
+        Node testNode2 = session2.getNode("/test");
+        assertNotNull(testNode2);
+        
+        // delete node and make sure it is removed in session 1 as well
+        testNode2.remove();
+        session2.save();
+        
+        try {
+            session1.getNode("/test");
+            fail("Node was not removed");
+        }
+        catch (PathNotFoundException ex) {
+            // expected
+        }
     }
 
 }

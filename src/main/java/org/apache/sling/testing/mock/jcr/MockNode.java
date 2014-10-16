@@ -21,7 +21,6 @@ package org.apache.sling.testing.mock.jcr;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.Calendar;
-import java.util.UUID;
 import java.util.regex.Pattern;
 
 import javax.jcr.Binary;
@@ -50,12 +49,11 @@ import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
  */
 class MockNode extends AbstractItem implements Node {
 
-    private final UUID uuid = UUID.randomUUID();
-    private final NodeType nodeType;
+    private final ItemData itemData;
 
-    public MockNode(final String path, final Session session, final NodeType nodeType) {
-        super(path, session);
-        this.nodeType = nodeType;
+    public MockNode(final ItemData itemData, final Session session) {
+        super(itemData.getPath(), session);
+        this.itemData = itemData;
     }
 
     @Override
@@ -66,8 +64,9 @@ class MockNode extends AbstractItem implements Node {
     @Override
     public Node addNode(final String relPath, final String primaryNodeTypeName) throws RepositoryException {
         String path = makeAbsolutePath(relPath);
-        Node node = new MockNode(path, getSession(), new MockNodeType(primaryNodeTypeName));
-        getMockedSession().addItem(node);
+        ItemData itemData = ItemData.newNode(path, new MockNodeType(primaryNodeTypeName));
+        Node node = new MockNode(itemData, getSession());
+        getMockedSession().addItem(itemData);
         return node;
     }
 
@@ -81,8 +80,8 @@ class MockNode extends AbstractItem implements Node {
     public NodeIterator getNodes() throws RepositoryException {
         RangeIterator items = getMockedSession().listChildren(getPath(), new ItemFilter() {
             @Override
-            public boolean accept(final Item item) {
-                return item instanceof Node;
+            public boolean accept(final ItemData item) {
+                return item.isNode();
             }
         });
         return new NodeIteratorAdapter(items, items.getSize());
@@ -93,8 +92,8 @@ class MockNode extends AbstractItem implements Node {
         final Pattern pattern = Pattern.compile(namePattern);
         RangeIterator items = getMockedSession().listChildren(getPath(), new ItemFilter() {
             @Override
-            public boolean accept(final Item item) throws RepositoryException {
-                return (item instanceof Node) && pattern.matcher(item.getName()).matches();
+            public boolean accept(final ItemData item) throws RepositoryException {
+                return item.isNode() && pattern.matcher(item.getName()).matches();
             }
         });
         return new NodeIteratorAdapter(items, items.getSize());
@@ -104,8 +103,8 @@ class MockNode extends AbstractItem implements Node {
     public PropertyIterator getProperties() throws RepositoryException {
         RangeIterator items = getMockedSession().listChildren(getPath(), new ItemFilter() {
             @Override
-            public boolean accept(final Item item) {
-                return item instanceof Property;
+            public boolean accept(final ItemData item) {
+                return item.isProperty();
             }
         });
         return new PropertyIteratorAdapter(items, items.getSize());
@@ -116,8 +115,8 @@ class MockNode extends AbstractItem implements Node {
         final Pattern pattern = Pattern.compile(namePattern);
         RangeIterator items = getMockedSession().listChildren(getPath(), new ItemFilter() {
             @Override
-            public boolean accept(final Item item) throws RepositoryException {
-                return (item instanceof Property) && pattern.matcher(item.getName()).matches();
+            public boolean accept(final ItemData item) throws RepositoryException {
+                return item.isProperty() && pattern.matcher(item.getName()).matches();
             }
         });
         return new PropertyIteratorAdapter(items, items.getSize());
@@ -131,7 +130,7 @@ class MockNode extends AbstractItem implements Node {
 
     @Override
     public String getIdentifier() {
-        return this.uuid.toString();
+        return this.itemData.getUuid();
     }
 
     @Override
@@ -163,98 +162,110 @@ class MockNode extends AbstractItem implements Node {
 
     @Override
     public Property setProperty(final String name, final Value value) throws RepositoryException {
-        Property property = new MockProperty(getPath() + "/" + name, getSession());
+        ItemData itemData = ItemData.newProperty(getPath() + "/" + name);
+        Property property = new MockProperty(itemData, getSession());
         property.setValue(value);
-        getMockedSession().addItem(property);
+        getMockedSession().addItem(itemData);
         return property;
     }
 
     @Override
     public Property setProperty(final String name, final Value[] values) throws RepositoryException {
-        Property property = new MockProperty(getPath() + "/" + name, getSession());
+        ItemData itemData = ItemData.newProperty(getPath() + "/" + name);
+        Property property = new MockProperty(itemData, getSession());
         property.setValue(values);
-        getMockedSession().addItem(property);
+        getMockedSession().addItem(itemData);
         return property;
     }
 
     @Override
     public Property setProperty(final String name, final String[] values) throws RepositoryException {
-        Property property = new MockProperty(getPath() + "/" + name, getSession());
+        ItemData itemData = ItemData.newProperty(getPath() + "/" + name);
+        Property property = new MockProperty(itemData, getSession());
         property.setValue(values);
-        getMockedSession().addItem(property);
+        getMockedSession().addItem(itemData);
         return property;
     }
 
     @Override
     public Property setProperty(final String name, final String value) throws RepositoryException {
-        Property property = new MockProperty(getPath() + "/" + name, getSession());
+        ItemData itemData = ItemData.newProperty(getPath() + "/" + name);
+        Property property = new MockProperty(itemData, getSession());
         property.setValue(value);
-        getMockedSession().addItem(property);
+        getMockedSession().addItem(itemData);
         return property;
     }
 
     @Override
     @SuppressWarnings("deprecation")
     public Property setProperty(final String name, final InputStream value) throws RepositoryException {
-        Property property = new MockProperty(getPath() + "/" + name, getSession());
+        ItemData itemData = ItemData.newProperty(getPath() + "/" + name);
+        Property property = new MockProperty(itemData, getSession());
         property.setValue(value);
-        getMockedSession().addItem(property);
+        getMockedSession().addItem(itemData);
         return property;
     }
 
     @Override
     public Property setProperty(final String name, final boolean value) throws RepositoryException {
-        Property property = new MockProperty(getPath() + "/" + name, getSession());
+        ItemData itemData = ItemData.newProperty(getPath() + "/" + name);
+        Property property = new MockProperty(itemData, getSession());
         property.setValue(value);
-        getMockedSession().addItem(property);
+        getMockedSession().addItem(itemData);
         return property;
     }
 
     @Override
     public Property setProperty(final String name, final double value) throws RepositoryException {
-        Property property = new MockProperty(getPath() + "/" + name, getSession());
+        ItemData itemData = ItemData.newProperty(getPath() + "/" + name);
+        Property property = new MockProperty(itemData, getSession());
         property.setValue(value);
-        getMockedSession().addItem(property);
+        getMockedSession().addItem(itemData);
         return property;
     }
 
     @Override
     public Property setProperty(final String name, final long value) throws RepositoryException {
-        Property property = new MockProperty(getPath() + "/" + name, getSession());
+        ItemData itemData = ItemData.newProperty(getPath() + "/" + name);
+        Property property = new MockProperty(itemData, getSession());
         property.setValue(value);
-        getMockedSession().addItem(property);
+        getMockedSession().addItem(itemData);
         return property;
     }
 
     @Override
     public Property setProperty(final String name, final Calendar value) throws RepositoryException {
-        Property property = new MockProperty(getPath() + "/" + name, getSession());
+        ItemData itemData = ItemData.newProperty(getPath() + "/" + name);
+        Property property = new MockProperty(itemData, getSession());
         property.setValue(value);
-        getMockedSession().addItem(property);
+        getMockedSession().addItem(itemData);
         return property;
     }
 
     @Override
     public Property setProperty(final String name, final Node value) throws RepositoryException {
-        Property property = new MockProperty(getPath() + "/" + name, getSession());
+        ItemData itemData = ItemData.newProperty(getPath() + "/" + name);
+        Property property = new MockProperty(itemData, getSession());
         property.setValue(value);
-        getMockedSession().addItem(property);
+        getMockedSession().addItem(itemData);
         return property;
     }
 
     @Override
     public Property setProperty(final String name, final Binary value) throws RepositoryException {
-        Property property = new MockProperty(getPath() + "/" + name, getSession());
+        ItemData itemData = ItemData.newProperty(getPath() + "/" + name);
+        Property property = new MockProperty(itemData, getSession());
         property.setValue(value);
-        getMockedSession().addItem(property);
+        getMockedSession().addItem(itemData);
         return property;
     }
 
     @Override
     public Property setProperty(final String name, final BigDecimal value) throws RepositoryException {
-        Property property = new MockProperty(getPath() + "/" + name, getSession());
+        ItemData itemData = ItemData.newProperty(getPath() + "/" + name);
+        Property property = new MockProperty(itemData, getSession());
         property.setValue(value);
-        getMockedSession().addItem(property);
+        getMockedSession().addItem(itemData);
         return property;
     }
 
@@ -265,12 +276,12 @@ class MockNode extends AbstractItem implements Node {
 
     @Override
     public boolean isNodeType(final String nodeTypeName) throws RepositoryException {
-        return this.nodeType.isNodeType(nodeTypeName);
+        return this.itemData.getNodeType().isNodeType(nodeTypeName);
     }
 
     @Override
     public NodeType getPrimaryNodeType() {
-        return this.nodeType;
+        return this.itemData.getNodeType();
     }
 
     @Override
@@ -283,6 +294,19 @@ class MockNode extends AbstractItem implements Node {
         } else {
             throw new ItemNotFoundException();
         }
+    }
+    
+    @Override
+    public int hashCode() {
+        return itemData.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof MockNode) {
+            return itemData.equals(((MockNode)obj).itemData);
+        }
+        return false;
     }
 
     // --- unsupported operations ---
