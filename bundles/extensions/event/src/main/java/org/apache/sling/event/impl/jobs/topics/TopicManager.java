@@ -19,9 +19,7 @@
 package org.apache.sling.event.impl.jobs.topics;
 
 import java.util.Collections;
-import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -32,8 +30,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.sling.api.SlingConstants;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -43,6 +42,7 @@ import org.apache.sling.event.impl.jobs.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.JobManagerImpl;
 import org.apache.sling.event.impl.jobs.JobTopicTraverser;
 import org.apache.sling.event.impl.jobs.TestLogger;
+import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
 import org.apache.sling.event.impl.jobs.queues.QueueManager;
@@ -51,9 +51,8 @@ import org.apache.sling.event.impl.jobs.topology.TopologyCapabilities;
 import org.apache.sling.event.impl.jobs.topology.TopologyHandler;
 import org.apache.sling.event.impl.support.BatchResourceRemover;
 import org.apache.sling.event.jobs.JobManager;
+import org.apache.sling.event.jobs.NotificationConstants;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
@@ -65,7 +64,9 @@ import org.slf4j.LoggerFactory;
  *
  * TODO - Check syncing of take/update/stop. This might not be 100% correct yet.
  */
-@Component
+@Component(immediate=true)
+@Service(value=EventHandler.class)
+@Property(name=EventConstants.EVENT_TOPIC, value=NotificationConstants.TOPIC_JOB_ADDED)
 public class TopicManager implements EventHandler, TopologyAware {
 
     /** Logger. */
@@ -92,9 +93,6 @@ public class TopicManager implements EventHandler, TopologyAware {
     /** A set of all topics. Access needs synchronization. */
     private final Set<String> topics = new TreeSet<String>();
 
-    /** Service registration for the event handler. */
-    private volatile ServiceRegistration eventHandlerRegistration;
-
     /** Marker if a new topic has been added. */
     private final AtomicBoolean topicsChanged = new AtomicBoolean(false);
 
@@ -105,32 +103,18 @@ public class TopicManager implements EventHandler, TopologyAware {
 
     /**
      * Activate this component.
-     * Register an event handler.
      */
     @Activate
     protected void activate(final BundleContext bundleContext) {
-        final Dictionary<String, Object> properties = new Hashtable<String, Object>();
-        properties.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Job Topic Manager Event Handler");
-        properties.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        properties.put(EventConstants.EVENT_TOPIC, SlingConstants.TOPIC_RESOURCE_ADDED);
-        properties.put(EventConstants.EVENT_FILTER,
-                "(" + SlingConstants.PROPERTY_PATH + "=" +
-                      this.configuration.getLocalJobsPath() + "/*)");
-        this.eventHandlerRegistration = bundleContext.registerService(EventHandler.class.getName(), this, properties);
         this.topologyHandler.addListener(this);
     }
 
     /**
      * Deactivate this component.
-     * Unregister the event handler.
      */
     @Deactivate
     protected void deactivate() {
         this.topologyHandler.removeListener(this);
-        if ( this.eventHandlerRegistration != null ) {
-            this.eventHandlerRegistration.unregister();
-            this.eventHandlerRegistration = null;
-        }
     }
 
     /**
@@ -165,16 +149,8 @@ public class TopicManager implements EventHandler, TopologyAware {
      */
     @Override
     public void handleEvent(final Event event) {
-        final String path = (String)event.getProperty(SlingConstants.PROPERTY_PATH);
-        if ( this.configuration.isLocalJob(path) ) {
-            final int topicStart = this.configuration.getLocalJobsPath().length() + 1;
-            final int topicEnd = path.indexOf("/", topicStart);
-            final String topic;
-            if ( topicEnd == -1 ) {
-                topic = path.substring(topicStart).replace('.', '/');
-            } else {
-                topic = path.substring(topicStart, topicEnd).replace('.', '/');
-            }
+        final String topic = (String)event.getProperty(NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC);
+        if ( topic != null ) {
             boolean changed = false;
             synchronized ( topics ) {
                 final int len = topics.size();
@@ -272,7 +248,9 @@ public class TopicManager implements EventHandler, TopologyAware {
         } finally {
             this.queueLocks.remove(queueName);
         }
-        logger.debug("Took new job for {} : {}", queueName, result);
+        if ( logger.isDebugEnabled() ) {
+            logger.debug("Took new job for {} : {}", queueName, Utility.toString(result));
+        }
         return (result != null ? new JobHandler( result, (JobManagerImpl)this.jobManager) : null);
     }
 

@@ -148,8 +148,8 @@ public abstract class Utility {
                 }
             }
         }
-
     }
+
     /**
      * Improved toString method for a job.
      * This method prints out the job topic and all of the properties.
@@ -175,18 +175,21 @@ public abstract class Utility {
      * This method prints out the job topic and all of the properties.
      */
     public static String toString(final Job job) {
-        final StringBuilder sb = new StringBuilder("Sling Job ");
-        sb.append("[topic=");
-        sb.append(job.getTopic());
-        sb.append(", id=");
-        sb.append(job.getId());
-        if ( job.getName() != null ) {
-            sb.append(", name=");
-            sb.append(job.getName());
+        if ( job != null ) {
+            final StringBuilder sb = new StringBuilder("Sling Job ");
+            sb.append("[topic=");
+            sb.append(job.getTopic());
+            sb.append(", id=");
+            sb.append(job.getId());
+            if ( job.getName() != null ) {
+                sb.append(", name=");
+                sb.append(job.getName());
+            }
+            appendProperties(sb, ((JobImpl)job).getProperties());
+            sb.append("]");
+            return sb.toString();
         }
-        appendProperties(sb, ((JobImpl)job).getProperties());
-        sb.append("]");
-        return sb.toString();
+        return "<null>";
     }
 
     /**

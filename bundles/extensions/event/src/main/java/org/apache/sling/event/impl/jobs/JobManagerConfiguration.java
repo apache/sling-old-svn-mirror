@@ -256,8 +256,7 @@ public class JobManagerConfiguration {
             final String topic,
             final String jobId,
             final Map<String, Object> jobProperties) {
-        final boolean isBridged = (jobProperties != null ? jobProperties.containsKey(JobImpl.PROPERTY_BRIDGED_EVENT) : false);
-        final String topicName = (isBridged ? JobImpl.PROPERTY_BRIDGED_EVENT : topic.replace('/', '.'));
+        final String topicName = topic.replace('/', '.');
         final StringBuilder sb = new StringBuilder();
         if ( targetId != null ) {
             sb.append(this.assignedJobsPath);
@@ -340,7 +339,7 @@ public class JobManagerConfiguration {
      * @return The complete storage path
      */
     public String getStoragePath(final JobImpl finishedJob, final boolean isSuccess) {
-        final String topicName = (finishedJob.isBridgedEvent() ? JobImpl.PROPERTY_BRIDGED_EVENT : finishedJob.getTopic().replace('/', '.'));
+        final String topicName = finishedJob.getTopic().replace('/', '.');
         final StringBuilder sb = new StringBuilder();
         if ( isSuccess ) {
             sb.append(this.storedSuccessfulJobsPath);
