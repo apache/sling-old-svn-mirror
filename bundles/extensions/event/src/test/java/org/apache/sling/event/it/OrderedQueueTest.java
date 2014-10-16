@@ -96,7 +96,7 @@ public class OrderedQueueTest extends AbstractJobHandlingTest {
         final ServiceRegistration jcReg = this.registerJobConsumer("sling/orderedtest/*",
                 new JobConsumer() {
 
-                    private int lastCounter = -1;
+                    private volatile int lastCounter = -1;
 
                     @Override
                     public JobResult process(final Job job) {
