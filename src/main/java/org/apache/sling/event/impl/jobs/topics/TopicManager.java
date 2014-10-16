@@ -248,9 +248,7 @@ public class TopicManager implements EventHandler, TopologyAware {
                 final Map<String, QueueJobCache> mapping = this.updateConfiguration();
                 final QueueJobCache cache = mapping.get(queueName);
                 if ( cache != null ) {
-                    logger.debug("Getting new job from cache...");
                     result = cache.getNextJob();
-                    logger.debug("Job from cache={}", result);
                     if ( result != null ) {
                         isWaiting = false;
                     }
@@ -353,11 +351,11 @@ public class TopicManager implements EventHandler, TopologyAware {
         }
     }
 
-    public void reschedule(final JobImpl job) {
-        final QueueInfo info = this.queueConfigMgr.getQueueInfo(job.getTopic());
+    public void reschedule(final JobHandler handler) {
+        final QueueInfo info = this.queueConfigMgr.getQueueInfo(handler.getJob().getTopic());
         final QueueJobCache cache = this.queueJobCaches.get(info.queueName);
         if ( cache != null ) {
-            cache.reschedule(job);
+            cache.reschedule(handler);
             final Object lock = this.queueLocks.get(info.queueName);
             if ( lock != null ) {
                 synchronized ( lock ) {

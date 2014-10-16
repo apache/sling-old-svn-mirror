@@ -65,8 +65,6 @@ public class JobHandler {
      * @return <code>true</code> if rescheduling was successful, <code>false</code> otherwise.
      */
     public boolean reschedule() {
-        // update event with retry count and retries
-        this.job.retry();
         return this.jobManager.reschedule(this.job);
     }
 

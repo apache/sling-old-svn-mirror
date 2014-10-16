@@ -277,15 +277,16 @@ public abstract class AbstractJobQueue
             }
             final Iterator<JobHandler> jobIter = restartJobs.iterator();
             while ( jobIter.hasNext() ) {
-                final JobHandler info = jobIter.next();
+                final JobHandler handler = jobIter.next();
                 boolean process = false;
                 synchronized ( this.startedJobsLists ) {
-                    process = this.startedJobsLists.remove(info.getJob().getId()) != null;
+                    process = this.startedJobsLists.remove(handler.getJob().getId()) != null;
                 }
                 if ( process ) {
-                    if ( info.reschedule() ) {
-                        this.logger.info("No acknowledge received for job {} stored at {}. Requeueing job.", Utility.toString(info.getJob()), info.getJob().getId());
-                        this.reschedule(info);
+                    if ( handler.reschedule() ) {
+                        this.logger.info("No acknowledge received for job {} stored at {}. Requeueing job.", Utility.toString(handler.getJob()), handler.getJob().getId());
+                        this.reschedule(handler);
+                        this.services.topicManager.reschedule(handler);
                         this.notifyFinished(true);
                     }
                 }
@@ -678,10 +679,9 @@ public abstract class AbstractJobQueue
             final boolean keepJobs = resultState != Job.JobState.SUCCEEDED || this.configuration.isKeepJobs();
             handler.finished(resultState, keepJobs, rescheduleInfo.processingTime);
         } else {
-            this.services.topicManager.reschedule(handler.getJob());
+            this.services.topicManager.reschedule(handler);
         }
         this.notifyFinished(rescheduleInfo.reschedule);
-
 
         return rescheduleInfo.reschedule;
     }
@@ -820,7 +820,7 @@ public abstract class AbstractJobQueue
 
     protected void reschedule(final JobHandler handler) {
         // update event with retry count and retries
-        handler.reschedule();
+        handler.getJob().retry();
     }
 
     /**
