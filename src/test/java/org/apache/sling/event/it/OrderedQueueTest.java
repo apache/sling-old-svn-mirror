@@ -103,7 +103,7 @@ public class OrderedQueueTest extends AbstractJobHandlingTest {
                         final int counter = job.getProperty("counter", -10);
                         assertNotEquals("Counter property is missing", -10, counter);
                         assertTrue("Counter should only increment by max of 1 " + counter + " - " + lastCounter,
-                                   counter == lastCounter || counter == lastCounter +1);
+                                counter == lastCounter || counter == lastCounter +1);
                         lastCounter = counter;
                         if ("sling/orderedtest/start".equals(job.getTopic()) ) {
                             cb.block();

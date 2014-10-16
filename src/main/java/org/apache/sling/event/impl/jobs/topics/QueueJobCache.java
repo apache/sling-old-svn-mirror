@@ -21,6 +21,7 @@ package org.apache.sling.event.impl.jobs.topics;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,13 +30,18 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.JobManagerConfiguration;
+import org.apache.sling.event.impl.jobs.JobTopicTraverser;
 import org.apache.sling.event.impl.jobs.TestLogger;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
+import org.apache.sling.event.jobs.QueueConfiguration.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * TODO - note last scan time and not all new observation events to avoid unnecessary rescan
+ * The queue job cache caches jobs per queue based on the topics the queue is actively
+ * processing.
+ *
+ * TODO cache needs to be synchronized!
  */
 public class QueueJobCache {
 
@@ -49,7 +55,9 @@ public class QueueJobCache {
 
     private final Set<String> topics;
 
-    private final Map<String, List<JobImpl>> cache = new HashMap<String, List<JobImpl>>();
+    private final Set<String> topicsWithNewJobs = new HashSet<String>();
+
+    private final List<JobImpl> cache = new ArrayList<JobImpl>();
 
     private final QueueInfo info;
 
@@ -59,99 +67,145 @@ public class QueueJobCache {
         this.configuration = configuration;
         this.info = info;
         this.topics = topics;
-        for(final String topic : topics) {
-            this.cache.put(topic, new ArrayList<JobImpl>());
-        }
+        this.topicsWithNewJobs.addAll(topics);
     }
 
+    /**
+     * Return the queue info for this queue.
+     * @return The queue info
+     */
     public QueueInfo getQueueInfo() {
         return this.info;
     }
 
+    /**
+     * All topics of this queue.
+     * @return The topics.
+     */
     public Set<String> getTopics() {
         return this.topics;
     }
 
     /**
      * Get the next job - this method is not called concurrently
-     * TODO This is very expensive atm
      */
     public JobImpl getNextJob() {
         JobImpl result = null;
 
-        // check state of cache
-        this.loadJobs();
+        if ( this.cache.isEmpty() ) {
+            final Set<String> checkingTopics = new HashSet<String>();
+            synchronized ( this.topicsWithNewJobs ) {
+                checkingTopics.addAll(this.topicsWithNewJobs);
+                this.topicsWithNewJobs.clear();
+            }
+            if ( !checkingTopics.isEmpty() ) {
+                this.loadJobs(checkingTopics);
+            }
+        }
 
-        final List<JobImpl> allJobs = new ArrayList<JobImpl>();
-        for(final Map.Entry<String, List<JobImpl>> entry : this.cache.entrySet()) {
-            allJobs.addAll(entry.getValue());
+        if ( !this.cache.isEmpty() ) {
+            result = this.cache.remove(0);
         }
-        Collections.sort(allJobs);
-        if ( allJobs.size() > 0 ) {
-            result = allJobs.get(0);
-        }
+
         return result;
     }
 
     /**
      * Load the next N x numberOf(topics) jobs
      */
-    private void loadJobs() {
+    private void loadJobs( final Set<String> checkingTopics) {
         logger.debug("Starting jobs loading...");
 
-        ResourceResolver resolver = null;
+        final Map<String, List<JobImpl>> topicCache = new HashMap<String, List<JobImpl>>();
+
+        final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
-            for(final String topic : this.topics) {
-                final List<JobImpl> list = this.cache.get(topic);
-                if ( list.size() < this.maxPreloadLimit ) {
-                    list.clear();
-                    if ( resolver == null ) {
-                        resolver = this.configuration.createResourceResolver();
-                    }
+            for(final String topic : checkingTopics) {
+                final Resource baseResource = resolver.getResource(this.configuration.getLocalJobsPath());
 
-                    final Resource baseResource = resolver.getResource(this.configuration.getLocalJobsPath());
+                final List<JobImpl> list = new ArrayList<JobImpl>();
+                topicCache.put(topic, list);
 
-                    // sanity check - should never be null
-                    if ( baseResource != null ) {
-                        final Resource topicResource = baseResource.getChild(topic.replace('/', '.'));
-                        if ( topicResource != null ) {
-                            loadJobs(topic, topicResource);
-                        }
+                // sanity check - should never be null
+                if ( baseResource != null ) {
+                    final Resource topicResource = baseResource.getChild(topic.replace('/', '.'));
+                    if ( topicResource != null ) {
+                        loadJobs(topic, topicResource, list);
                     }
                 }
             }
         } finally {
-            if ( resolver != null ) {
-                resolver.close();
-            }
+            resolver.close();
         }
-        logger.debug("Finished jobs loading");
+        orderTopics(topicCache);
+
+        logger.debug("Finished jobs loading {}", this.cache.size());
+    }
+
+    /**
+     * Order the topics based on the queue type and put them in the cache.
+     * @param topicCache The topic based cache
+     */
+    private void orderTopics(final Map<String, List<JobImpl>> topicCache) {
+        if ( this.info.queueConfiguration.getType() == Type.ORDERED
+             || this.info.queueConfiguration.getType() == Type.UNORDERED) {
+            for(final List<JobImpl> list : topicCache.values()) {
+                this.cache.addAll(list);
+            }
+            Collections.sort(this.cache);
+        } else {
+            // topic round robin
+            boolean done = true;
+            do {
+                for(final Map.Entry<String, List<JobImpl>> entry : topicCache.entrySet()) {
+                    if ( !entry.getValue().isEmpty() ) {
+                        this.cache.add(entry.getValue().remove(0));
+                        if ( !entry.getValue().isEmpty() ) {
+                            done = false;
+                        }
+                    }
+                }
+            } while ( !done ) ;
+        }
     }
 
     /**
      * Load the next N x numberOf(topics) jobs
      */
-    private void loadJobs(final String topic, final Resource topicResource) {
+    private void loadJobs(final String topic, final Resource topicResource, final List<JobImpl> list) {
         logger.debug("Loading jobs from topic {}", topic);
-        final List<JobImpl> result = this.cache.get(topic);
 
-        JobTopicTraverser.traverse(logger, topicResource, new JobTopicTraverser.Handler() {
+        JobTopicTraverser.traverse(logger, topicResource, new JobTopicTraverser.JobCallback() {
 
             @Override
             public boolean handle(final JobImpl job) {
                 if ( job.getProcessingStarted() == null && !job.hasReadErrors() ) {
-                    result.add(job);
+                    list.add(job);
                 } else {
                     logger.debug("Discarding job because {} or {}", job.getProcessingStarted(), job.hasReadErrors());
                 }
-                return result.size() < maxPreloadLimit;
+                return list.size() < maxPreloadLimit;
             }
         });
-        logger.debug("Caching {} jobs for topic {}", result.size(), topic);
+        logger.debug("Caching {} jobs for topic {}", list.size(), topic);
     }
 
+    /**
+     * Mark the topic to contain new jobs.
+     * @param topic The topic
+     */
     public void handleNewJob(final String topic) {
-        // TODO Auto-generated method stub
+        logger.debug("Update cache to handle new event for topic {}", topic);
+        synchronized ( this.topicsWithNewJobs ) {
+            this.topicsWithNewJobs.add(topic);
+        }
+    }
 
+    public void reschedule(final JobImpl job) {
+        if ( this.info.queueConfiguration.getType() == Type.ORDERED ) {
+            this.cache.add(0, job);
+        } else {
+            this.cache.add(job);
+        }
     }
 }

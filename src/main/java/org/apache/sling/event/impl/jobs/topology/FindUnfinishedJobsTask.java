@@ -26,12 +26,16 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.JobManagerConfiguration;
-import org.apache.sling.event.impl.jobs.topics.JobTopicTraverser;
+import org.apache.sling.event.impl.jobs.JobTopicTraverser;
 import org.apache.sling.event.jobs.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RestartTask {
+/**
+ * This task is executed when the job handling starts.
+ * It checks for unfinished jobs from a previous start and corrects their state.
+ */
+public class FindUnfinishedJobsTask {
 
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -73,7 +77,7 @@ public class RestartTask {
     private void initTopic(final Resource topicResource) {
         logger.debug("Initializing topic {}...", topicResource.getName());
 
-        JobTopicTraverser.traverse(logger, topicResource, new JobTopicTraverser.Handler() {
+        JobTopicTraverser.traverse(logger, topicResource, new JobTopicTraverser.JobCallback() {
 
             @Override
             public boolean handle(final JobImpl job) {

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.event.impl.jobs.topics;
+package org.apache.sling.event.impl.jobs;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,20 +24,68 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.event.impl.jobs.JobImpl;
-import org.apache.sling.event.impl.jobs.Utility;
 import org.slf4j.Logger;
 
+/**
+ * The job topic traverser is an utility class to traverse all jobs
+ * of a specific topic in order of creation.
+ */
 public class JobTopicTraverser {
 
-    public interface Handler {
+    /**
+     * Callback called for each found job.
+     */
+    public interface JobCallback {
+
+        /**
+         * Callback handle for a job
+         * @param job The job to handle
+         * @return <code>true</code> If processing should continue, <code>false</code> otherwise.
+         */
         boolean handle(final JobImpl job);
+    }
+
+    /**
+     * Callback called for each found resource.
+     */
+    public interface ResourceCallback {
+
+        /**
+         * Callback handle for a resource
+         * @param rsrc The resource to handle
+         * @return <code>true</code> If processing should continue, <code>false</code> otherwise.
+         */
+        boolean handle(final Resource rsrc);
+    }
+
+    /**
+     * Traverse the topic and call the callback for each found job.
+     *
+     * Once the callback notifies to stop traversing by returning false, the current minute
+     * will be processed completely (to ensure correct ordering of jobs) and then the
+     * traversal stops.
+     *
+     * @param logger        The logger to use for debug logging
+     * @param topicResource The topic resource
+     * @param handler       The callback
+     */
+    public static void traverse(final Logger logger,
+            final Resource topicResource,
+            final JobCallback handler) {
+        traverse(logger, topicResource, handler, null);
     }
 
     public static void traverse(final Logger logger,
             final Resource topicResource,
-            final Handler handler) {
-        logger.debug("Processing topic {}", topicResource.getName());
+            final ResourceCallback handler) {
+        traverse(logger, topicResource, null, handler);
+    }
+
+    private static void traverse(final Logger logger,
+            final Resource topicResource,
+            final JobCallback jobHandler,
+            final ResourceCallback resourceHandler) {
+        logger.debug("Processing topic {}", topicResource.getName().replace('.', '/'));
         // now years
         for(final Resource yearResource: Utility.getSortedChildren(logger, "year", topicResource)) {
             final int year = Integer.valueOf(yearResource.getName());
@@ -69,23 +117,31 @@ public class JobTopicTraverser {
                             while ( jobIter.hasNext() ) {
                                 final Resource jobResource = jobIter.next();
 
-                                final JobImpl job = Utility.readJob(logger, jobResource);
-                                if ( job != null ) {
-                                    logger.debug("Found job {}", jobResource.getName());
-                                    jobs.add(job);
+                                if ( resourceHandler != null ) {
+                                    if ( !resourceHandler.handle(jobResource) ) {
+                                        return;
+                                    }
+                                } else {
+                                    final JobImpl job = Utility.readJob(logger, jobResource);
+                                    if ( job != null ) {
+                                        logger.debug("Found job {}", jobResource.getName());
+                                        jobs.add(job);
+                                    }
                                 }
                             }
 
-                            Collections.sort(jobs);
+                            if ( jobHandler != null ) {
+                                Collections.sort(jobs);
 
-                            boolean stop = false;
-                            for(final JobImpl job : jobs) {
-                                if ( !handler.handle(job) ) {
-                                    stop = true;
+                                boolean stop = false;
+                                for(final JobImpl job : jobs) {
+                                    if ( !jobHandler.handle(job) ) {
+                                        stop = true;
+                                    }
                                 }
-                            }
-                            if ( stop ) {
-                                return;
+                                if ( stop ) {
+                                    return;
+                                }
                             }
                         }
                     }

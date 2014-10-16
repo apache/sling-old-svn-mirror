@@ -677,8 +677,11 @@ public abstract class AbstractJobQueue
             // we keep cancelled jobs and succeeded jobs if the queue is configured like this.
             final boolean keepJobs = resultState != Job.JobState.SUCCEEDED || this.configuration.isKeepJobs();
             handler.finished(resultState, keepJobs, rescheduleInfo.processingTime);
+        } else {
+            this.services.topicManager.reschedule(handler.getJob());
         }
         this.notifyFinished(rescheduleInfo.reschedule);
+
 
         return rescheduleInfo.reschedule;
     }
