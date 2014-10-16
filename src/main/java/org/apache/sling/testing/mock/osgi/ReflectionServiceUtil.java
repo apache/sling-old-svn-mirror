@@ -85,7 +85,7 @@ final class ReflectionServiceUtil {
                         + targetClass.getName(), ex);
             } catch (InvocationTargetException ex) {
                 throw new RuntimeException("Unable to invoke activate/deactivate method for class "
-                        + targetClass.getName(), ex);
+                        + targetClass.getName(), ex.getCause());
             }
         }
         log.warn("Method {}(ComponentContext) not found in class {}", methodName, targetClass.getName());
@@ -119,7 +119,8 @@ final class ReflectionServiceUtil {
         // try to inject services
         boolean allInjected = true;
         for (Reference reference : references) {
-            allInjected = allInjected && injectServiceReference(reference, target, bundleContext);
+            boolean injectSuccess = injectServiceReference(reference, target, bundleContext);
+            allInjected = allInjected && injectSuccess;
         }
         return allInjected;
     }
@@ -179,7 +180,7 @@ final class ReflectionServiceUtil {
                                 + targetClass.getName(), ex);
                     } catch (InvocationTargetException ex) {
                         throw new RuntimeException("Unable to invoke method " + bindMethodName + " for class "
-                                + targetClass.getName(), ex);
+                                + targetClass.getName(), ex.getCause());
                     }
                 }
                 return true;
@@ -200,7 +201,7 @@ final class ReflectionServiceUtil {
                                     + targetClass.getName(), ex);
                         } catch (InvocationTargetException ex) {
                             throw new RuntimeException("Unable to invoke method " + bindMethodName + " for class "
-                                    + targetClass.getName(), ex);
+                                    + targetClass.getName(), ex.getCause());
                         }
                     }
                     return true;
@@ -221,7 +222,7 @@ final class ReflectionServiceUtil {
                                             + " for class " + targetClass.getName(), ex);
                                 } catch (InvocationTargetException ex) {
                                     throw new RuntimeException("Unable to invoke method " + bindMethodName
-                                            + " for class " + targetClass.getName(), ex);
+                                            + " for class " + targetClass.getName(), ex.getCause());
                                 }
                             }
                         }
