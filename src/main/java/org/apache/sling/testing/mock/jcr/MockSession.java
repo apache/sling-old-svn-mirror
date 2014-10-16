@@ -21,7 +21,6 @@ package org.apache.sling.testing.mock.jcr;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -41,6 +40,7 @@ import javax.jcr.Workspace;
 import javax.jcr.retention.RetentionManager;
 import javax.jcr.security.AccessControlManager;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
 import org.apache.jackrabbit.value.ValueFactoryImpl;
 import org.xml.sax.ContentHandler;
@@ -53,14 +53,12 @@ class MockSession implements Session {
 
     private final Repository repository;
     private final Workspace workspace;
+    private final Map<String, ItemData> items;
 
-    // Use linked hashmap to ensure ordering when adding items is preserved.
-    private final Map<String, Item> items = new LinkedHashMap<String, Item>();
-
-    public MockSession(final Repository repository) {
+    public MockSession(Repository repository, Map<String,ItemData> items) {
         this.repository = repository;
         this.workspace = new MockWorkspace(this);
-        this.items.put("/", new MockNode("/", this, MockNodeTypes.NT_UNSTRUCTURED));
+        this.items = items;
     }
 
     @Override
@@ -70,9 +68,14 @@ class MockSession implements Session {
 
     @Override
     public Item getItem(final String absPath) throws RepositoryException {
-        Item item = this.items.get(absPath);
-        if (item != null) {
-            return item;
+        ItemData itemData = this.items.get(absPath);
+        if (itemData != null) {
+            if (itemData.isNode()) {
+                return new MockNode(itemData, this);
+            }
+            else {
+                return new MockProperty(itemData, this);
+            }
         } else {
             throw new PathNotFoundException(String.format("No item found at: %s.", absPath));
         }
@@ -90,12 +93,9 @@ class MockSession implements Session {
 
     @Override
     public Node getNodeByIdentifier(final String id) throws RepositoryException {
-        for (Item item : this.items.values()) {
-            if (item instanceof Node) {
-                Node node = (Node) item;
-                if (node.getIdentifier().equals(id)) {
-                    return node;
-                }
+        for (ItemData item : this.items.values()) {
+            if (item.isNode() && StringUtils.equals(item.getUuid(), id)) {
+                return new MockNode(item, this);
             }
         }
         throw new ItemNotFoundException(String.format("No node found with id: %s.", id));
@@ -138,7 +138,7 @@ class MockSession implements Session {
 
     @Override
     public Node getRootNode() {
-        return (Node) this.items.get("/");
+        return (Node)this.items.get("/").getItem(this);
     }
 
     @Override
@@ -151,8 +151,8 @@ class MockSession implements Session {
      * @param item item
      * @throws RepositoryException
      */
-    void addItem(final Item item) throws RepositoryException {
-        this.items.put(item.getPath(), item);
+    void addItem(final ItemData itemData) throws RepositoryException {
+        this.items.put(itemData.getPath(), itemData);
     }
 
     /**
@@ -182,9 +182,9 @@ class MockSession implements Session {
         Pattern pattern = Pattern.compile("^" + Pattern.quote(parentPath) + "/[^/]+$");
 
         // collect child resources
-        for (Item item : this.items.values()) {
+        for (ItemData item : this.items.values()) {
             if (pattern.matcher(item.getPath()).matches() && (filter == null || filter.accept(item))) {
-                children.add(item);
+                children.add(item.getItem(this));
             }
         }
 

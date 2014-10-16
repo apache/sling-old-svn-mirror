@@ -22,7 +22,6 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import javax.jcr.ItemNotFoundException;
@@ -60,7 +59,7 @@ public class MockSessionTest {
     @Test
     public void testNodePropertyCreateRead() throws RepositoryException {
         Node rootNode = this.session.getNode("/");
-        assertSame(rootNode, this.session.getRootNode());
+        assertEquals(rootNode, this.session.getRootNode());
 
         Node node1 = rootNode.addNode("node1");
         node1.setProperty("prop1a", "value1a");
@@ -69,16 +68,16 @@ public class MockSessionTest {
         Node node2 = rootNode.addNode("node2");
         node2.setProperty("prop2", "value2");
 
-        assertSame(node1, rootNode.getNode("node1"));
-        assertSame(node1, this.session.getNode("/node1"));
-        assertSame(node1, this.session.getItem("/node1"));
-        assertSame(node1, this.session.getNodeByIdentifier(node1.getIdentifier()));
+        assertEquals(node1, rootNode.getNode("node1"));
+        assertEquals(node1, this.session.getNode("/node1"));
+        assertEquals(node1, this.session.getItem("/node1"));
+        assertEquals(node1, this.session.getNodeByIdentifier(node1.getIdentifier()));
         assertTrue(this.session.nodeExists("/node1"));
         assertTrue(this.session.itemExists("/node1"));
-        assertSame(node2, rootNode.getNode("node2"));
-        assertSame(node2, this.session.getNode("/node2"));
-        assertSame(node2, this.session.getItem("/node2"));
-        assertSame(node2, this.session.getNodeByIdentifier(node2.getIdentifier()));
+        assertEquals(node2, rootNode.getNode("node2"));
+        assertEquals(node2, this.session.getNode("/node2"));
+        assertEquals(node2, this.session.getItem("/node2"));
+        assertEquals(node2, this.session.getNodeByIdentifier(node2.getIdentifier()));
         assertTrue(this.session.nodeExists("/node2"));
         assertTrue(this.session.itemExists("/node2"));
 
@@ -86,16 +85,16 @@ public class MockSessionTest {
         Property prop1b = node1.getProperty("prop1b");
         Property prop2 = node2.getProperty("prop2");
 
-        assertSame(prop1a, this.session.getProperty("/node1/prop1a"));
-        assertSame(prop1a, this.session.getItem("/node1/prop1a"));
+        assertEquals(prop1a, this.session.getProperty("/node1/prop1a"));
+        assertEquals(prop1a, this.session.getItem("/node1/prop1a"));
         assertTrue(this.session.propertyExists("/node1/prop1a"));
         assertTrue(this.session.itemExists("/node1/prop1a"));
-        assertSame(prop1b, this.session.getProperty("/node1/prop1b"));
-        assertSame(prop1b, this.session.getItem("/node1/prop1b"));
+        assertEquals(prop1b, this.session.getProperty("/node1/prop1b"));
+        assertEquals(prop1b, this.session.getItem("/node1/prop1b"));
         assertTrue(this.session.propertyExists("/node1/prop1b"));
         assertTrue(this.session.itemExists("/node1/prop1b"));
-        assertSame(prop2, this.session.getProperty("/node2/prop2"));
-        assertSame(prop2, this.session.getItem("/node2/prop2"));
+        assertEquals(prop2, this.session.getProperty("/node2/prop2"));
+        assertEquals(prop2, this.session.getItem("/node2/prop2"));
         assertTrue(this.session.propertyExists("/node2/prop2"));
         assertTrue(this.session.itemExists("/node2/prop2"));
 

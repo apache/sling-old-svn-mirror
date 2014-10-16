@@ -18,6 +18,9 @@
  */
 package org.apache.sling.testing.mock.jcr;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import javax.jcr.Credentials;
 import javax.jcr.Repository;
 import javax.jcr.Session;
@@ -32,9 +35,16 @@ import org.apache.commons.lang3.ArrayUtils;
  */
 class MockRepository implements Repository {
 
+    // Use linked hashmap to ensure ordering when adding items is preserved.
+    private final Map<String, ItemData> items = new LinkedHashMap<String, ItemData>();
+    
+    public MockRepository() {
+        this.items.put("/", ItemData.newNode("/", MockNodeTypes.NT_UNSTRUCTURED));
+    }
+    
     @Override
     public Session login() {
-        return new MockSession(this);
+        return new MockSession(this, items);
     }
 
     @Override
