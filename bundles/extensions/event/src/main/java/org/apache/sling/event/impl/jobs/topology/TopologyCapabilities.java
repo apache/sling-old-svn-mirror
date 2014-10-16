@@ -30,8 +30,6 @@ import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.JobManagerConfiguration;
-import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
-import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.jobs.QueueConfiguration;
@@ -63,9 +61,6 @@ public class TopologyCapabilities {
     /** Is this still active? */
     private volatile boolean active = true;
 
-    /** Change count. */
-    private final long changeCount = System.currentTimeMillis();
-
     /** All instances. */
     private final Map<String, String> allInstances;
 
@@ -74,9 +69,6 @@ public class TopologyCapabilities {
 
     /** JobManagerConfiguration. */
     private final JobManagerConfiguration jobManagerConfiguration;
-
-    /** Queue config manager. */
-    private final QueueConfigurationManager queueManager;
 
     public static final class InstanceDescriptionComparator implements Comparator<InstanceDescription> {
 
@@ -125,11 +117,14 @@ public class TopologyCapabilities {
         return allInstances;
     }
 
+    /**
+     * Create a new instance
+     * @param view The new view
+     * @param config The current job manager configuration.
+     */
     public TopologyCapabilities(final TopologyView view,
-            final QueueConfigurationManager queueManager,
             final JobManagerConfiguration config) {
         this.jobManagerConfiguration = config;
-        this.queueManager = queueManager;
         this.instanceComparator = new InstanceDescriptionComparator(view.getLocalInstance().getClusterView().getId());
         this.isLeader = view.getLocalInstance().isLeader();
         this.allInstances = getAllInstancesMap(view);
@@ -153,22 +148,36 @@ public class TopologyCapabilities {
         this.instanceCapabilities = newCaps;
     }
 
+    /**
+     * Is this capabilities the same as represented by the provided instance map?
+     * @param newAllInstancesMap The instance map
+     * @return {@code true} if they represent the same state.
+     */
     public boolean isSame(final Map<String, String> newAllInstancesMap) {
         return this.allInstances.equals(newAllInstancesMap);
     }
 
+    /**
+     * Deactivate this object.
+     */
     public void deactivate() {
         this.active = false;
     }
 
+    /**
+     * Is this object still active?
+     * If it is not active anymore it should not be used!
+     * @return {@code true} if still active.
+     */
     public boolean isActive() {
         return this.active;
     }
-/*
-    public long getChangeCount() {
-        return this.changeCount;
-    }
-*/
+
+    /**
+     * Is this instance still active?
+     * @param instanceId The instance id
+     * @return {@code true} if the instance is active.
+     */
     public boolean isActive(final String instanceId) {
         return this.allInstances.containsKey(instanceId);
     }
@@ -284,21 +293,11 @@ public class TopologyCapabilities {
         return null;
     }
 
+    /**
+     * Get the instance capabilities.
+     * @return The map of instance capabilities.
+     */
     public Map<String, List<InstanceDescription>> getInstanceCapabilities() {
         return this.instanceCapabilities;
-    }
-
-    public QueueInfo getQueueInfo(final String topic) {
-        if ( this.active ) {
-            return this.queueManager.getQueueInfo(topic);
-        }
-        return null;
-    }
-
-    public InternalQueueConfiguration[] getQueueConfigurations() {
-        if ( this.active ) {
-            return this.queueManager.getConfigurations();
-        }
-        return null;
     }
 }

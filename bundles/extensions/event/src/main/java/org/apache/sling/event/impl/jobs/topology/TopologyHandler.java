@@ -57,19 +57,19 @@ public class TopologyHandler
     private JobManagerConfiguration configuration;
 
     @Reference
-    private QueueConfigurationManager queueManager;
+    private QueueConfigurationManager queueConfigManager;
 
     /** The topology capabilities. */
     private volatile TopologyCapabilities topologyCapabilities;
 
     @Activate
     protected void activate() {
-        this.queueManager.addListener(this);
+        this.queueConfigManager.addListener(this);
     }
 
     @Deactivate
     protected void dectivate() {
-        this.queueManager.removeListener(this);
+        this.queueConfigManager.removeListener(this);
     }
 
 
@@ -106,13 +106,13 @@ public class TopologyHandler
         // before we propagate the new topology we do some maintenance
         if ( eventType == Type.TOPOLOGY_INIT ) {
             final UpgradeTask task = new UpgradeTask();
-            task.run(this.configuration, this.topologyCapabilities, queueManager);
+            task.run(this.configuration, this.topologyCapabilities, queueConfigManager);
 
             final FindUnfinishedJobsTask rt = new FindUnfinishedJobsTask();
             rt.run(this.configuration);
         }
 
-        final CheckTopologyTask mt = new CheckTopologyTask(this.configuration);
+        final CheckTopologyTask mt = new CheckTopologyTask(this.configuration, this.queueConfigManager);
         mt.run(topologyCapabilities, !isConfigChange, isConfigChange);
 
         if ( !isConfigChange ) {
@@ -154,7 +154,7 @@ public class TopologyHandler
 
                 this.stopProcessing(true);
 
-                this.startProcessing(event.getType(), new TopologyCapabilities(event.getNewView(), this.queueManager, this.configuration), false);
+                this.startProcessing(event.getType(), new TopologyCapabilities(event.getNewView(), this.configuration), false);
             }
 
         }

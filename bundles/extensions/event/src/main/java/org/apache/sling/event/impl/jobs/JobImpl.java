@@ -398,6 +398,22 @@ public class JobImpl implements Job, Comparable<JobImpl> {
     }
 
     @Override
+    public int hashCode() {
+        return this.jobId.hashCode();
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if ( obj == this ) {
+            return true;
+        }
+        if ( obj instanceof JobImpl ) {
+            return this.jobId.equals(((JobImpl)obj).jobId);
+        }
+        return false;
+    }
+
+    @Override
     public String toString() {
         return "JobImpl [properties=" + properties + ", topic=" + topic
                 + ", path=" + path + ", name=" + name + ", jobId=" + jobId

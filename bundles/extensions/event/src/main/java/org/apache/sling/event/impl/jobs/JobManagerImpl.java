@@ -808,7 +808,7 @@ public class JobManagerImpl
                     resolver.commit();
                     return true;
                 } catch ( final PersistenceException pe ) {
-                    // ignore
+                    ignoreException(pe);
                 }
             }
         } finally {

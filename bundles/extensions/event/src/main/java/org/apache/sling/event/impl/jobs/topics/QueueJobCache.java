@@ -28,6 +28,7 @@ import java.util.Set;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.event.impl.jobs.JobHandler;
 import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.JobTopicTraverser;
@@ -51,16 +52,27 @@ public class QueueJobCache {
     /** The maximum of pre loaded jobs for a topic. */
     private final int maxPreloadLimit = 10;
 
+    /** The job manager configuration. */
     private final JobManagerConfiguration configuration;
 
+    /** The set of topics handled by this queue. */
     private final Set<String> topics;
 
+    /** The set of new topics to scan. */
     private final Set<String> topicsWithNewJobs = new HashSet<String>();
 
+    /** The cache of current objects. */
     private final List<JobImpl> cache = new ArrayList<JobImpl>();
 
+    /** The queue info. */
     private final QueueInfo info;
 
+    /**
+     * Create a new queue job cache
+     * @param configuration Current job manager configuration
+     * @param info The queue info
+     * @param topics The topics handled by this queue.
+     */
     public QueueJobCache(final JobManagerConfiguration configuration,
             final QueueInfo info,
             final Set<String> topics) {
@@ -87,24 +99,29 @@ public class QueueJobCache {
     }
 
     /**
-     * Get the next job - this method is not called concurrently
+     * Get the next job.
+     * This method is not called concurrently, however
+     * {@link #reschedule(JobImpl)} and {@link #handleNewJob(String)}
+     * can be called concurrently.
      */
     public JobImpl getNextJob() {
         JobImpl result = null;
 
-        if ( this.cache.isEmpty() ) {
-            final Set<String> checkingTopics = new HashSet<String>();
-            synchronized ( this.topicsWithNewJobs ) {
-                checkingTopics.addAll(this.topicsWithNewJobs);
-                this.topicsWithNewJobs.clear();
+        synchronized ( this.cache ) {
+            if ( this.cache.isEmpty() ) {
+                final Set<String> checkingTopics = new HashSet<String>();
+                synchronized ( this.topicsWithNewJobs ) {
+                    checkingTopics.addAll(this.topicsWithNewJobs);
+                    this.topicsWithNewJobs.clear();
+                }
+                if ( !checkingTopics.isEmpty() ) {
+                    this.loadJobs(checkingTopics);
+                }
             }
-            if ( !checkingTopics.isEmpty() ) {
-                this.loadJobs(checkingTopics);
-            }
-        }
 
-        if ( !this.cache.isEmpty() ) {
-            result = this.cache.remove(0);
+            if ( !this.cache.isEmpty() ) {
+                result = this.cache.remove(0);
+            }
         }
 
         return result;
@@ -201,11 +218,15 @@ public class QueueJobCache {
         }
     }
 
-    public void reschedule(final JobImpl job) {
-        if ( this.info.queueConfiguration.getType() == Type.ORDERED ) {
-            this.cache.add(0, job);
-        } else {
-            this.cache.add(job);
+    public void reschedule(final JobHandler handler) {
+        synchronized ( this.cache ) {
+            if ( handler.reschedule() ) {
+                if ( this.info.queueConfiguration.getType() == Type.ORDERED ) {
+                    this.cache.add(0, handler.getJob());
+                } else {
+                    this.cache.add(handler.getJob());
+                }
+            }
         }
     }
 }

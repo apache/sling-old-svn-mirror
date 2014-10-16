@@ -31,6 +31,7 @@ import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.JobTopicTraverser;
+import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
@@ -53,11 +54,16 @@ public class CheckTopologyTask {
     /** Job manager configuration. */
     private final JobManagerConfiguration configuration;
 
+    /** Queue configuration manager. */
+    private final QueueConfigurationManager queueConfigManager;
+
     /**
      * Constructor
      */
-    public CheckTopologyTask(final JobManagerConfiguration config) {
+    public CheckTopologyTask(final JobManagerConfiguration config,
+            final QueueConfigurationManager queueConfigurationManager) {
         this.configuration = config;
+        this.queueConfigManager = queueConfigurationManager;
     }
 
     private void reassignJobsFromStoppedInstances(final TopologyCapabilities caps) {
@@ -140,7 +146,7 @@ public class CheckTopologyTask {
             // first check if there is an instance for these topics
             final List<InstanceDescription> potentialTargets = caps.getPotentialTargets(checkTopic, null);
             if ( potentialTargets != null && potentialTargets.size() > 0 ) {
-                final QueueInfo info = caps.getQueueInfo(topicName);
+                final QueueInfo info = this.queueConfigManager.getQueueInfo(topicName);
                 logger.debug("Found queue {} for {}", info.queueConfiguration, topicName);
 
                 JobTopicTraverser.traverse(this.logger, topicResource, new JobTopicTraverser.ResourceCallback() {
