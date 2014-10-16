@@ -39,11 +39,8 @@ import org.apache.jackrabbit.value.BinaryValue;
  */
 class MockProperty extends AbstractItem implements Property {
 
-    private final ItemData itemData;
-
     public MockProperty(final ItemData itemData, final Session session) {
-        super(itemData.getPath(), session);
-        this.itemData = itemData;
+        super(itemData, session);
         if (this.itemData.getValues() == null) {
             try {
                 this.itemData.setValues(new Value[] { getSession().getValueFactory().createValue("") });
