@@ -250,20 +250,9 @@ public class QueueManager
     }
 
     /**
-     * @see org.apache.sling.event.jobs.JobManager#restart()
+     * Outdate all queues.
      */
     public void restart() {
-        // let's rename/close all queues and clear them
-        synchronized ( queuesLock ) {
-            final List<AbstractJobQueue> queues = new ArrayList<AbstractJobQueue>(this.queues.values());
-            for(final AbstractJobQueue queue : queues ) {
-                queue.clear();
-                this.outdateQueue(queue);
-            }
-        }
-    }
-
-    private void stopProcessing() {
         // let's rename/close all queues and clear them
         synchronized ( queuesLock ) {
             final List<AbstractJobQueue> queues = new ArrayList<AbstractJobQueue>(this.queues.values());

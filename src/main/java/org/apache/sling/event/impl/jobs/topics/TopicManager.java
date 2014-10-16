@@ -62,6 +62,7 @@ import org.slf4j.LoggerFactory;
  * Topic manager
  *
  * TODO - Check syncing of take/update/stop. This might not be 100% correct yet.
+ * TODO - Block take() if inactive
  */
 @Component(immediate=true)
 @Service(value=EventHandler.class)
@@ -325,9 +326,15 @@ public class TopicManager implements EventHandler, TopologyAware {
             for(final Map.Entry<String, QueueJobCache> entry : this.updateConfiguration().entrySet()) {
                 this.queueManager.start(this, entry.getValue().getQueueInfo());
             }
+        } else {
+            this.queueManager.restart();
         }
     }
 
+    /**
+     * Reschedule a job
+     * @param handler The job handler
+     */
     public void reschedule(final JobHandler handler) {
         final QueueInfo info = this.queueConfigMgr.getQueueInfo(handler.getJob().getTopic());
         final QueueJobCache cache = this.queueJobCaches.get(info.queueName);
