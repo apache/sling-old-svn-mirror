@@ -94,7 +94,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(ResourceHelper.PROPERTY_JOB_TOPIC, "sling/test");
         if ( id != null ) {
-            props.put(ResourceHelper.PROPERTY_JOB_NAME, id);
+            props.put(JobUtil.PROPERTY_JOB_NAME, id);
         }
 
         return new Event(JobUtil.TOPIC_JOB, props);
@@ -232,7 +232,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
 
             assertEquals(1, jobManager.findJobs(JobManager.QueryType.ALL, "sling/test", -1, (Map<String, Object>[])null).size());
             // job is currently waiting, therefore cancel fails
-            final Event e1 = jobManager.findJob("sling/test", Collections.singletonMap(ResourceHelper.PROPERTY_JOB_NAME, (Object)"myid2"));
+            final Event e1 = jobManager.findJob("sling/test", Collections.singletonMap(JobUtil.PROPERTY_JOB_NAME, (Object)"myid2"));
             assertNotNull(e1);
             assertFalse(jobManager.removeJob((String)e1.getProperty(ResourceHelper.PROPERTY_JOB_ID)));
             cb2.block(); // and continue job
@@ -240,7 +240,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
             sleep(200);
 
             // the job is now in the queue again
-            final Event e2 = jobManager.findJob("sling/test", Collections.singletonMap(ResourceHelper.PROPERTY_JOB_NAME, (Object)"myid2"));
+            final Event e2 = jobManager.findJob("sling/test", Collections.singletonMap(JobUtil.PROPERTY_JOB_NAME, (Object)"myid2"));
             assertNotNull(e2);
             assertTrue(jobManager.removeJob((String)e2.getProperty(ResourceHelper.PROPERTY_JOB_ID)));
             assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, "sling/test", -1, (Map<String, Object>[])null).size());
@@ -313,7 +313,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
 
             assertEquals(1, jobManager.findJobs(JobManager.QueryType.ALL, "sling/test", -1, (Map<String, Object>[])null).size());
             // job is currently sleeping, but force cancel always waits!
-            final Event e = jobManager.findJob("sling/test", Collections.singletonMap(ResourceHelper.PROPERTY_JOB_NAME, (Object)"myid3"));
+            final Event e = jobManager.findJob("sling/test", Collections.singletonMap(JobUtil.PROPERTY_JOB_NAME, (Object)"myid3"));
             assertNotNull(e);
             jobManager.forceRemoveJob((String)e.getProperty(ResourceHelper.PROPERTY_JOB_ID));
             // the job is now removed
@@ -433,8 +433,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
 
                     @Override
                     public void handleEvent(Event event) {
-                        final Event job = (Event) event.getProperty(JobUtil.PROPERTY_NOTIFICATION_JOB);
-                        final String id = (String)job.getProperty(ResourceHelper.PROPERTY_JOB_NAME);
+                        final String id = (String)event.getProperty(JobUtil.NOTIFICATION_PROPERTY_JOB_NAME);
                         cancelled.add(id);
                     }
                 });
@@ -443,8 +442,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
 
                     @Override
                     public void handleEvent(Event event) {
-                        final Event job = (Event) event.getProperty(JobUtil.PROPERTY_NOTIFICATION_JOB);
-                        final String id = (String)job.getProperty(ResourceHelper.PROPERTY_JOB_NAME);
+                        final String id = (String)event.getProperty(JobUtil.NOTIFICATION_PROPERTY_JOB_NAME);
                         failed.add(id);
                     }
                 });
@@ -453,8 +451,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
 
                     @Override
                     public void handleEvent(Event event) {
-                        final Event job = (Event) event.getProperty(JobUtil.PROPERTY_NOTIFICATION_JOB);
-                        final String id = (String)job.getProperty(ResourceHelper.PROPERTY_JOB_NAME);
+                        final String id = (String)event.getProperty(JobUtil.NOTIFICATION_PROPERTY_JOB_NAME);
                         finished.add(id);
                     }
                 });
@@ -463,8 +460,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
 
                     @Override
                     public void handleEvent(Event event) {
-                        final Event job = (Event) event.getProperty(JobUtil.PROPERTY_NOTIFICATION_JOB);
-                        final String id = (String)job.getProperty(ResourceHelper.PROPERTY_JOB_NAME);
+                        final String id = (String)event.getProperty(JobUtil.NOTIFICATION_PROPERTY_JOB_NAME);
                         started.add(id);
                     }
                 });

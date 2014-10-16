@@ -38,8 +38,11 @@ import org.apache.sling.commons.threads.ThreadPoolManager;
 /**
  * The configurable eventing thread pool.
  */
-@Component(label="%event.pool.name",
-        description="%event.pool.description",
+@Component(label="Apache Sling Job Thread Pool",
+        description="This is the thread pool used by the Apache Sling job handling. The "
+                  + "threads from this pool are merely used for executing jobs. By limiting this pool, it is "
+                  + "possible to limit the maximum number of parallel processed jobs - regardless of the queue "
+                  + "configuration.",
         metatype=true)
 @Service(value=EventingThreadPool.class)
 public class EventingThreadPool implements ThreadPool {
@@ -52,7 +55,10 @@ public class EventingThreadPool implements ThreadPool {
 
     private static final int DEFAULT_POOL_SIZE = 35;
 
-    @Property(intValue=DEFAULT_POOL_SIZE)
+    @Property(intValue=DEFAULT_POOL_SIZE,
+              label="Pool Size",
+              description="The size of the thread pool. This pool is used to execute jobs and therefore "
+                        + "limits the maximum number of jobs executed in parallel.")
     private static final String PROPERTY_POOL_SIZE = "minPoolSize";
 
     public EventingThreadPool() {

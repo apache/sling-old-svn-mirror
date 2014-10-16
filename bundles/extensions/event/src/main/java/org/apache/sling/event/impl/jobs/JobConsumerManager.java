@@ -58,8 +58,10 @@ import org.slf4j.LoggerFactory;
 /**
  * This component manages/keeps track of all job consumer services.
  */
-@Component(label="%job.consumermanager.name",
-           description="%job.consumermanager.description",
+@Component(label="Apache Sling Job Consumer Manager",
+           description="The consumer manager controls the job consumer (= processors). "
+                     + "It can be used to temporarily disable job processing on the current instance. Other instances "
+                     + "in a cluster are not affected.",
            metatype=true)
 @Service(value=JobConsumerManager.class)
 @References({
@@ -76,10 +78,20 @@ import org.slf4j.LoggerFactory;
                     + "only used on the current instance. This option should always be disabled!")
 public class JobConsumerManager {
 
-    @Property(unbounded=PropertyUnbounded.ARRAY, value = "*")
+    @Property(unbounded=PropertyUnbounded.ARRAY, value = "*",
+              label="Topic Whitelist",
+              description="This is a list of topics which currently should be "
+                        + "processed by this instance. Leaving it empty, all job consumers are disabled. Putting a '*' as "
+                        + "one entry, enables all job consumers. Adding separate topics enables job consumers for exactly "
+                        + "this topic.")
     private static final String PROPERTY_WHITELIST = "job.consumermanager.whitelist";
 
-    @Property(unbounded=PropertyUnbounded.ARRAY)
+    @Property(unbounded=PropertyUnbounded.ARRAY,
+              label="Topic Blacklist",
+              description="This is a list of topics which currently shouldn't be "
+                        + "processed by this instance. Leaving it empty, all job consumers are enabled. Putting a '*' as "
+                        + "one entry, disables all job consumers. Adding separate topics disables job consumers for exactly "
+                        + "this topic.")
     private static final String PROPERTY_BLACKLIST = "job.consumermanager.blacklist";
 
     /** The map with the consumers, keyed by topic, sorted by service ranking. */
