@@ -116,7 +116,7 @@
                         -Xmx2048m -XX:MaxPermSize=512m
                     </argLine>
                     <includes>
-                        <include>**/it/ChaosTest*</include>
+                        <include>**/it/Foo*</include>
                     </includes>
                 </configuration>
             </plugin>
