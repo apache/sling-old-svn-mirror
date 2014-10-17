@@ -60,22 +60,22 @@ public class MaintenanceTask {
             final long cleanUpCounter) {
         if ( topologyCapabilities != null ) {
             // Clean up
-            final String cleanUpAssignedPath;;
+            final String cleanUpUnassignedPath;;
             if ( topologyCapabilities.isLeader() ) {
-                cleanUpAssignedPath = this.configuration.getUnassignedJobsPath();
+                cleanUpUnassignedPath = this.configuration.getUnassignedJobsPath();
             } else {
-                cleanUpAssignedPath = null;
+                cleanUpUnassignedPath = null;
             }
 
             if ( cleanUpCounter % 60 == 0 ) { // full clean up is done every hour
                 this.fullEmptyFolderCleanup(topologyCapabilities, this.configuration.getLocalJobsPath());
-                if ( cleanUpAssignedPath != null ) {
-                    this.fullEmptyFolderCleanup(topologyCapabilities, cleanUpAssignedPath);
+                if ( cleanUpUnassignedPath != null ) {
+                    this.fullEmptyFolderCleanup(topologyCapabilities, cleanUpUnassignedPath);
                 }
             } else if ( cleanUpCounter % 5 == 0 ) { // simple clean up every 5 minutes
                 this.simpleEmptyFolderCleanup(topologyCapabilities, this.configuration.getLocalJobsPath());
-                if ( cleanUpAssignedPath != null ) {
-                    this.simpleEmptyFolderCleanup(topologyCapabilities, cleanUpAssignedPath);
+                if ( cleanUpUnassignedPath != null ) {
+                    this.simpleEmptyFolderCleanup(topologyCapabilities, cleanUpUnassignedPath);
                 }
             }
         }
