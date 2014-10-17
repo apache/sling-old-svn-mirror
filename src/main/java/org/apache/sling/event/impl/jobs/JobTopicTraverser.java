@@ -142,7 +142,15 @@ public class JobTopicTraverser {
                             // now jobs
                             final List<JobImpl> jobs = new ArrayList<JobImpl>();
                             // we use an iterator to skip removed entries
-                            final Iterator<Resource> jobIter = minuteResource.listChildren();
+                            // see SLING-4073
+                            Iterator<Resource> jobIter = null;
+                            do {
+                                try {
+                                    jobIter = minuteResource.listChildren();
+                                } catch ( final IllegalStateException ise) {
+                                    // ignore
+                                }
+                            } while ( jobIter == null );
                             while ( jobIter.hasNext() ) {
                                 try {
                                     final Resource jobResource = jobIter.next();
