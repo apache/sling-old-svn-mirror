@@ -18,8 +18,14 @@
  */
 package org.apache.sling.event.impl.jobs.topology;
 
-
+/**
+ * Listener interface to get topology / queue changes.
+ */
 public interface TopologyAware {
 
+    /**
+     * Notify about a change.
+     * @param caps The new topology capabilities or {@code null}
+     */
     void topologyChanged(final TopologyCapabilities caps);
 }

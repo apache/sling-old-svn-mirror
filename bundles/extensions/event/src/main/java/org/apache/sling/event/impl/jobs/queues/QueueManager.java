@@ -19,9 +19,11 @@
 package org.apache.sling.event.impl.jobs.queues;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -41,9 +43,9 @@ import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueIn
 import org.apache.sling.event.impl.jobs.jmx.QueueStatusEvent;
 import org.apache.sling.event.impl.jobs.jmx.QueuesMBeanImpl;
 import org.apache.sling.event.impl.jobs.stats.StatisticsManager;
-import org.apache.sling.event.impl.jobs.topics.TopicManager;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
+import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.jmx.QueuesMBean;
@@ -90,7 +92,7 @@ public class QueueManager
     private StatisticsManager statisticsManager;
 
     @Reference
-    private QueueConfigurationManager queueManager;
+    private QueueConfigurationManager queueConfigurationManager;
 
     /** Lock object for the queues map - we don't want to sync directly on the concurrent map. */
     private final Object queuesLock = new Object();
@@ -175,9 +177,15 @@ public class QueueManager
      * This method first searches the corresponding queue - if such a queue
      * does not exist yet, it is created and started.
      *
+     * @param topicManager The topic manager
+     * @param jobManager The job manager
+     * @param queueInfo The queue info
      * @param topic The topic
      */
-    public void start(final TopicManager topicManager, final QueueInfo queueInfo) {
+    public void start(final TopicManager topicManager,
+            final JobManager jobManager,
+            final QueueInfo queueInfo,
+            final String topic) {
         final InternalQueueConfiguration config = queueInfo.queueConfiguration;
         // get or create queue
         AbstractJobQueue queue = null;
@@ -198,6 +206,10 @@ public class QueueManager
                 services.threadPoolManager = this.threadPoolManager;
                 services.topicManager = topicManager;
                 services.statisticsManager = statisticsManager;
+                services.jobManager = jobManager;
+                final Set<String> topics = new HashSet<String>();
+                topics.add(topic);
+                services.cache = new QueueJobCache(configuration, queueInfo, topics);
                 if ( config.getType() == QueueConfiguration.Type.ORDERED ) {
                     queue = new OrderedJobQueue(queueInfo.queueName, config, services);
                 } else if ( config.getType() == QueueConfiguration.Type.UNORDERED ) {
@@ -211,6 +223,8 @@ public class QueueManager
                     ((QueuesMBeanImpl)queuesMBean).sendEvent(new QueueStatusEvent(queue, null));
                     queue.start();
                 }
+            } else {
+                queue.wakeUpQueue(topic);
             }
         }
     }

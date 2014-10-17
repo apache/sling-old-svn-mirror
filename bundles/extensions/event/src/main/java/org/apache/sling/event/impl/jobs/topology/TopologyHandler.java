@@ -112,10 +112,8 @@ public class TopologyHandler
         final CheckTopologyTask mt = new CheckTopologyTask(this.configuration, this.queueConfigManager);
         mt.run(topologyCapabilities, !isConfigChange, isConfigChange);
 
-        if ( !isConfigChange ) {
-            // start listeners
-            this.notifiyListeners();
-        }
+        // start listeners
+        this.notifiyListeners();
     }
 
     private void notifiyListeners() {
