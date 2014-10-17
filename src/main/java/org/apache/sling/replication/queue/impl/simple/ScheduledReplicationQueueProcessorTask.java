@@ -30,14 +30,14 @@ import org.slf4j.LoggerFactory;
 /**
  * a simple scheduled {@link SimpleReplicationQueue}s processor
  */
-public class ScheduledReplicationQueueProcessor implements Runnable {
+public class ScheduledReplicationQueueProcessorTask implements Runnable {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final ReplicationQueueProvider queueProvider;
     private final ReplicationQueueProcessor queueProcessor;
 
-    public ScheduledReplicationQueueProcessor(ReplicationQueueProvider queueProvider,
-                                              ReplicationQueueProcessor queueProcessor) {
+    public ScheduledReplicationQueueProcessorTask(ReplicationQueueProvider queueProvider,
+                                                  ReplicationQueueProcessor queueProcessor) {
         this.queueProvider = queueProvider;
         this.queueProcessor = queueProcessor;
     }

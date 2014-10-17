@@ -45,6 +45,7 @@ public class RepositoryTransportAuthenticationProvider implements TransportAuthe
     public Session authenticate(SlingRepository authenticable, TransportAuthenticationContext context)
             throws TransportAuthenticationException {
         String path = context.getAttribute("path", String.class);
+        String privilege = context.getAttribute("privilege", String.class);
 
         if (path == null) {
             throw new TransportAuthenticationException(
@@ -54,12 +55,16 @@ public class RepositoryTransportAuthenticationProvider implements TransportAuthe
         Session session = null;
         try {
             session = authenticable.loginService(serviceName, null);
-            if (!session.nodeExists(path)) {
+
+            if (session == null) {
+                throw new TransportAuthenticationException("failed to authenticate" + path);
+            }
+            if (!session.hasPermission(path, privilege)) {
                 session.logout();
-                throw new TransportAuthenticationException("failed to read path " + path);
+                throw new TransportAuthenticationException("failed to access path " + path + " with privilege " + privilege);
             }
 
-            log.info("authenticated path {} ", path);
+            log.info("authenticated path {} with privilege {}", path, privilege);
             return session;
         } catch (RepositoryException re) {
             if (session != null) {

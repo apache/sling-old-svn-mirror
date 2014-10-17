@@ -67,6 +67,16 @@ public class JobHandlingReplicationQueueProvider extends AbstractReplicationQueu
 
     private BundleContext context;
 
+
+    protected JobHandlingReplicationQueueProvider(JobManager jobManager, ConfigurationAdmin configAdmin, BundleContext context) {
+        this.jobManager = jobManager;
+        this.configAdmin = configAdmin;
+        this.context = context;
+    }
+
+    public JobHandlingReplicationQueueProvider() {
+    }
+
     @Override
     protected ReplicationQueue getOrCreateQueue(String agentName, String queueName)
             throws ReplicationQueueException {
@@ -97,8 +107,13 @@ public class JobHandlingReplicationQueueProvider extends AbstractReplicationQueu
 
     @Override
     protected void deleteQueue(ReplicationQueue queue) {
-        Queue q = jobManager.getQueue(queue.getName());
-        q.removeAll();
+        String queueName = queue.getName();
+        Queue q = jobManager.getQueue(queueName);
+        if (q != null) {
+            q.removeAll();
+        } else {
+            log.warn("cannot delete non existing queue {} ", queueName);
+        }
     }
 
     public void enableQueueProcessing(String agentName, ReplicationQueueProcessor queueProcessor) {
@@ -111,7 +126,9 @@ public class JobHandlingReplicationQueueProvider extends AbstractReplicationQueu
             log.info("registering job consumer for agent {}", agentName);
             ServiceRegistration jobReg = context.registerService(JobConsumer.class.getName(),
                     new ReplicationAgentJobConsumer(queueProcessor), jobProps);
-            jobs.put(agentName, jobReg);
+            if (jobReg != null) {
+                jobs.put(agentName, jobReg);
+            }
             log.info("job consumer for agent {} registered", agentName);
         }
     }
@@ -133,9 +150,10 @@ public class JobHandlingReplicationQueueProvider extends AbstractReplicationQueu
     }
 
     @Deactivate
-    private void deactivate(BundleContext context) {
+    private void deactivate() {
         for (ServiceRegistration jobReg : jobs.values()) {
             jobReg.unregister();
         }
+        this.context = null;
     }
 }
