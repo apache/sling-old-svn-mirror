@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.event.impl.jobs.topics;
+package org.apache.sling.event.impl.jobs.queues;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -41,7 +42,6 @@ import org.slf4j.LoggerFactory;
  * The queue job cache caches jobs per queue based on the topics the queue is actively
  * processing.
  *
- * TODO cache needs to be synchronized!
  */
 public class QueueJobCache {
 
@@ -77,7 +77,7 @@ public class QueueJobCache {
             final Set<String> topics) {
         this.configuration = configuration;
         this.info = info;
-        this.topics = topics;
+        this.topics = new ConcurrentSkipListSet<String>(topics);
         this.topicsWithNewJobs.addAll(topics);
     }
 
@@ -216,6 +216,7 @@ public class QueueJobCache {
         synchronized ( this.topicsWithNewJobs ) {
             this.topicsWithNewJobs.add(topic);
         }
+        this.topics.add(topic);
     }
 
     public void reschedule(final JobHandler handler) {

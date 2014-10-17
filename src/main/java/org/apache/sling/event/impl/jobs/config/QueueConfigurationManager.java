@@ -141,6 +141,11 @@ public class QueueConfigurationManager {
         public InternalQueueConfiguration queueConfiguration;
         public String queueName;
         public String targetId;
+
+        @Override
+        public String toString() {
+            return queueName;
+        }
     }
 
     /**

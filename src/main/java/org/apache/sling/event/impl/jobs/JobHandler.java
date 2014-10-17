@@ -37,7 +37,8 @@ public class JobHandler {
 
     private final JobManagerImpl jobManager;
 
-    public JobHandler(final JobImpl job, final JobManagerImpl jobManager) {
+    public JobHandler(final JobImpl job,
+            final JobManagerImpl jobManager) {
         this.job = job;
         this.jobManager = jobManager;
     }
@@ -48,7 +49,7 @@ public class JobHandler {
 
     public boolean startProcessing(final Queue queue) {
         this.isStopped = false;
-        return this.jobManager.persistJobProperties(this.job, this.job.prepare(queue));
+        return this.persistJobProperties(this.job.prepare(queue));
     }
 
     /**
@@ -62,6 +63,7 @@ public class JobHandler {
 
     /**
      * Reschedule the job
+     * Update the retry count and remove the started time.
      * @return <code>true</code> if rescheduling was successful, <code>false</code> otherwise.
      */
     public boolean reschedule() {
@@ -72,14 +74,18 @@ public class JobHandler {
         this.jobManager.finishJob(this.job, Job.JobState.DROPPED, true, -1);
     }
 
+    /**
+     * Reassign to a new instance.
+     */
     public void reassign() {
         this.jobManager.reassign(this.job);
     }
 
-    public void persistJobProperties(final String... propNames) {
-        if ( propNames != null ) {
-            this.jobManager.persistJobProperties(this.job, propNames);
-        }
+    /**
+     * Update the property of a job in the resource tree
+     */
+    public boolean persistJobProperties(final String... propNames) {
+        return this.jobManager.persistJobProperties(this.job, propNames);
     }
 
     public boolean isStopped() {

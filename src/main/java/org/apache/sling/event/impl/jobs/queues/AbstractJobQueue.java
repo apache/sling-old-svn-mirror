@@ -35,6 +35,7 @@ import org.apache.sling.event.impl.jobs.InternalJobState;
 import org.apache.sling.event.impl.jobs.JobExecutionResultImpl;
 import org.apache.sling.event.impl.jobs.JobHandler;
 import org.apache.sling.event.impl.jobs.JobImpl;
+import org.apache.sling.event.impl.jobs.JobManagerImpl;
 import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
 import org.apache.sling.event.impl.jobs.deprecated.JobStatusNotifier;
@@ -150,6 +151,10 @@ public abstract class AbstractJobQueue
         return this.services.statisticsManager.getQueueStatistics(this.queueName);
     }
 
+    public QueueJobCache getCache() {
+        return this.services.cache;
+    }
+
     /**
      * Start the job queue.
      */
@@ -158,7 +163,7 @@ public abstract class AbstractJobQueue
 
             @Override
             public void run() {
-                while ( running ) {
+                while ( running && !isOutdated()) {
                     logger.info("Starting job queue {}", queueName);
                     logger.debug("Configuration for job queue={}", configuration);
 
@@ -186,8 +191,7 @@ public abstract class AbstractJobQueue
      * Outdate this queue.
      */
     public void outdate() {
-        if ( !this.isOutdated() ) {
-            this.isOutdated.set(true);
+        if ( this.isOutdated.compareAndSet(false, true) ) {
             final String name = this.getName() + "<outdated>(" + this.hashCode() + ")";
             this.logger.info("Outdating queue {}, renaming to {}.", this.queueName, name);
             this.queueName = name;
@@ -229,8 +233,8 @@ public abstract class AbstractJobQueue
             this.logger.debug("Waking up waiting queue {}", this.queueName);
             this.notifyFinished(false);
         }
-        // continue queue processing to stop the queue
-        this.services.topicManager.stop(this.getName());
+        // stop the queue
+        this.stopWaitingForNextJob();
 
         synchronized ( this.processingJobsLists ) {
             this.processingJobsLists.clear();
@@ -286,7 +290,7 @@ public abstract class AbstractJobQueue
                     if ( handler.reschedule() ) {
                         this.logger.info("No acknowledge received for job {} stored at {}. Requeueing job.", Utility.toString(handler.getJob()), handler.getJob().getId());
                         handler.getJob().retry();
-                        this.services.topicManager.reschedule(handler);
+                        this.requeue(handler);
                         this.notifyFinished(true);
                     }
                 }
@@ -298,7 +302,7 @@ public abstract class AbstractJobQueue
      * Execute the queue
      */
     private void runJobQueue() {
-        while ( this.running ) {
+        while ( this.running && !this.isOutdated()) {
             JobHandler info = null;
             if ( info == null ) {
                 // so let's wait/get the next job from the queue
@@ -306,15 +310,81 @@ public abstract class AbstractJobQueue
             }
 
             // if we're suspended we drop the current item
-            if ( this.running && info != null && !checkSuspended(info) ) {
+            if ( this.running && info != null && !this.isOutdated() && !checkSuspended(info) ) {
                 // if we still have a job and are running, let's go
                 this.start(info);
             }
         }
     }
 
+    private volatile boolean isWaitingForNextJob = false;
+    private final Object nextJobLock = new Object();
+
+    /**
+     * Take a new job for this queue.
+     * This method blocks until a job is available or the queue is stopped.
+     * @param queueName The queue name
+     * @return A new job or {@code null} if {@link #stop(String)} is called.
+     */
     private JobHandler take() {
-        return this.services.topicManager.take(this.getName());
+        logger.debug("Taking new job for {}", queueName);
+        JobImpl result = null;
+
+        this.isWaitingForNextJob = true;
+        while ( this.isWaitingForNextJob && !this.isOutdated()) {
+            result = this.services.cache.getNextJob();
+            if ( result != null ) {
+                isWaitingForNextJob = false;
+            } else {
+                // block
+                synchronized ( nextJobLock ) {
+                    if ( isWaitingForNextJob ) {
+                        try {
+                            nextJobLock.wait();
+                        } catch ( final InterruptedException ignore ) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }
+                }
+            }
+        }
+        this.isWaitingForNextJob = false;
+
+        if ( logger.isDebugEnabled() ) {
+            logger.debug("Returning job for {} : {}", queueName, Utility.toString(result));
+        }
+        return (result != null ? new JobHandler( result, (JobManagerImpl)this.services.jobManager) : null);
+    }
+
+    /**
+     * Stop waiting for a job
+     * @param queueName The queue name.
+     */
+    private void stopWaitingForNextJob() {
+        synchronized ( nextJobLock ) {
+            this.isWaitingForNextJob = false;
+            nextJobLock.notify();
+        }
+    }
+
+    /**
+     * Inform the queue about a job for the topic
+     * @param topic A new topic.
+     */
+    public void wakeUpQueue(final String topic) {
+        this.services.cache.handleNewJob(topic);
+        this.stopWaitingForNextJob();
+    }
+
+    /**
+     * Put a job back in the queue
+     * @param handler The job handler
+     */
+    private void requeue(final JobHandler handler) {
+        this.services.cache.reschedule(handler);
+        synchronized ( this.nextJobLock ) {
+            this.nextJobLock.notify();
+        }
     }
 
     /**
@@ -324,7 +394,7 @@ public abstract class AbstractJobQueue
         boolean wasSuspended = false;
         synchronized ( this.suspendLock ) {
             while ( this.suspendedSince != -1 ) {
-                this.services.topicManager.reschedule(handler);
+                this.requeue(handler);
                 logger.debug("Sleeping as queue {} is suspended.", this.getName());
                 wasSuspended = true;
                 final long diff = System.currentTimeMillis() - this.suspendedSince;
@@ -820,7 +890,7 @@ public abstract class AbstractJobQueue
     }
 
     protected void reschedule(final JobHandler handler) {
-        this.services.topicManager.reschedule(handler);
+        this.requeue(handler);
     }
 
     /**
@@ -851,5 +921,6 @@ public abstract class AbstractJobQueue
     protected abstract void start(final JobHandler handler);
 
     protected abstract void notifyFinished(boolean reschedule);
+
 }
 

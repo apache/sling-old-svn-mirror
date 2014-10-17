@@ -22,7 +22,7 @@ import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.event.impl.jobs.JobConsumerManager;
 import org.apache.sling.event.impl.jobs.stats.StatisticsManager;
-import org.apache.sling.event.impl.jobs.topics.TopicManager;
+import org.apache.sling.event.jobs.JobManager;
 import org.osgi.service.event.EventAdmin;
 
 public class QueueServices {
@@ -38,4 +38,8 @@ public class QueueServices {
     public TopicManager topicManager;
 
     public StatisticsManager statisticsManager;
+
+    public QueueJobCache cache;
+
+    public JobManager jobManager;
 }
