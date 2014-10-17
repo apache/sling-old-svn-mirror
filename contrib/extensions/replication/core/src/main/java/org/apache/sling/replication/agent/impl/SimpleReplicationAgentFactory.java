@@ -19,7 +19,6 @@
 package org.apache.sling.replication.agent.impl;
 
 import java.util.Dictionary;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Random;
@@ -61,43 +60,50 @@ import org.slf4j.LoggerFactory;
         policy = ConfigurationPolicy.REQUIRE
 )
 public class SimpleReplicationAgentFactory implements ReplicationComponentProvider {
-    public static final String QUEUEPROVIDER_TARGET = "queueProvider.target";
+    private static final String QUEUE_PROVIDER_TARGET = ReplicationComponentFactory.COMPONENT_QUEUE_PROVIDER + ".target";
+    private static final String QUEUE_DISTRIBUTION_TARGET = ReplicationComponentFactory.COMPONENT_QUEUE_DISTRIBUTION_STRATEGY + ".target";
+    private static final String TRANSPORT_AUTHENTICATION_PROVIDER_TARGET = ReplicationComponentFactory.COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER + ".target";
 
-    public static final String QUEUE_DISTRIBUTION_TARGET = "queueDistributionStrategy.target";
+    private static final String DEFAULT_QUEUEPROVIDER = "(name=" + JobHandlingReplicationQueueProvider.NAME + ")";
+    private static final String DEFAULT_DISTRIBUTION = "(name=" + SingleQueueDistributionStrategy.NAME + ")";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private static final String DEFAULT_QUEUEPROVIDER = "(name=" + JobHandlingReplicationQueueProvider.NAME + ")";
 
-    private static final String DEFAULT_DISTRIBUTION = "(name=" + SingleQueueDistributionStrategy.NAME + ")";
 
     @Property(boolValue = true, label = "Enabled")
-    private static final String ENABLED = "enabled";
+    private static final String ENABLED = ReplicationComponentFactory.COMPONENT_ENABLED;
+
+    @Property(value = ReplicationComponentFactory.AGENT_SIMPLE, propertyPrivate = true)
+    private static final String TYPE = ReplicationComponentFactory.COMPONENT_TYPE;
 
     @Property(label = "Name")
-    public static final String NAME = "name";
+    public static final String NAME = ReplicationComponentFactory.COMPONENT_NAME;
 
     @Property(boolValue = false, label = "Use this agent as a passive one (only queueing)")
-    public static final String IS_PASSIVE = "isPassive";
+    public static final String IS_PASSIVE = ReplicationComponentFactory.AGENT_SIMPLE_PROPERTY_IS_PASSIVE;
 
-    @Property(label = "Package Exporter", cardinality = 100)
-    public static final String PACKAGE_EXPORTER = "packageExporter";
+    @Property(label = "Request Authorization Strategy Properties", cardinality = 100)
+    public static final String REQUEST_AUTHORIZATION_STRATEGY = ReplicationComponentFactory.COMPONENT_REQUEST_AUTHORIZATION_STRATEGY;
 
-    @Property(label = "Package Importer", cardinality = 100)
-    public static final String PACKAGE_IMPORTER = "packageImporter";
+    @Property(label = "Package Exporter Properties", cardinality = 100)
+    public static final String PACKAGE_EXPORTER = ReplicationComponentFactory.COMPONENT_PACKAGE_EXPORTER;
+
+    @Property(label = "Package Importer Properties", cardinality = 100)
+    public static final String PACKAGE_IMPORTER = ReplicationComponentFactory.COMPONENT_PACKAGE_IMPORTER;
 
     @Property(label = "Service Name")
-    public static final String SERVICE_NAME = "serviceName";
+    public static final String SERVICE_NAME = ReplicationComponentFactory.AGENT_SIMPLE_PROPERTY_SERVICE_NAME;
 
-    @Property(label = "Target ReplicationQueueProvider", name = QUEUEPROVIDER_TARGET, value = DEFAULT_QUEUEPROVIDER)
-    @Reference(name = "queueProvider", target = DEFAULT_QUEUEPROVIDER)
+    @Property(label = "Target ReplicationQueueProvider", name = QUEUE_PROVIDER_TARGET, value = DEFAULT_QUEUEPROVIDER)
+    @Reference(name = ReplicationComponentFactory.COMPONENT_QUEUE_PROVIDER, target = DEFAULT_QUEUEPROVIDER)
     private volatile ReplicationQueueProvider queueProvider;
 
     @Property(label = "Target QueueDistributionStrategy", name = QUEUE_DISTRIBUTION_TARGET, value = DEFAULT_DISTRIBUTION)
-    @Reference(name = "queueDistributionStrategy", target = DEFAULT_DISTRIBUTION)
+    @Reference(name = ReplicationComponentFactory.COMPONENT_QUEUE_DISTRIBUTION_STRATEGY, target = DEFAULT_DISTRIBUTION)
     private volatile ReplicationQueueDistributionStrategy queueDistributionStrategy;
 
-    @Property(label = "Target TransportAuthenticationProvider", name = "transportAuthenticationProvider.target")
+    @Property(label = "Target TransportAuthenticationProvider", name = TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
     @Reference(name = "transportAuthenticationProvider", policy = ReferencePolicy.DYNAMIC,
             cardinality = ReferenceCardinality.OPTIONAL_UNARY)
     private volatile TransportAuthenticationProvider transportAuthenticationProvider;
@@ -133,19 +139,8 @@ public class SimpleReplicationAgentFactory implements ReplicationComponentProvid
                     .toString(config.get(NAME), String.valueOf(new Random().nextInt(1000)));
             props.put(NAME, name);
 
-
-            String queue = PropertiesUtil.toString(config.get(QUEUEPROVIDER_TARGET), DEFAULT_QUEUEPROVIDER);
-            props.put(QUEUEPROVIDER_TARGET, queue);
-
-            String distribution = PropertiesUtil.toString(config.get(QUEUE_DISTRIBUTION_TARGET), DEFAULT_DISTRIBUTION);
-            props.put(QUEUE_DISTRIBUTION_TARGET, distribution);
-
             if (componentReg == null && componentFactory != null) {
-                Map<String, Object> properties = new HashMap<String, Object>();
-                properties.putAll(config);
-
-                properties.put("type", "simple");
-                ReplicationAgent agent = componentFactory.createComponent(ReplicationAgent.class, properties, this);
+                ReplicationAgent agent = componentFactory.createComponent(ReplicationAgent.class, config, this);
 
                 log.debug("activated agent {}", agent != null ? agent.getName() : null);
 

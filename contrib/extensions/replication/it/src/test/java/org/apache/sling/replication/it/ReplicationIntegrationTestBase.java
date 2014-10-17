@@ -60,10 +60,7 @@ public abstract class ReplicationIntegrationTestBase {
             setAgentProperties(author, "publish",
                     "packageImporter", "type=remote",
                     "packageImporter", "endpoints[0]=" + remoteImporterUrl,
-                    "packageImporter", "authenticationProvider/type=service",
-                    "packageImporter", "authenticationProvider/name=publishAdmin",
-                    "packageImporter", "packageBuilder/type=vlt",
-                    "packageImporter", "packageBuilder/servicename=replicationService");
+                    "packageImporter", "packageBuilder/type=vlt");
 
             Thread.sleep(3000);
 
@@ -75,10 +72,8 @@ public abstract class ReplicationIntegrationTestBase {
             setAgentProperties(author, "publish-reverse",
                     "packageExporter", "type=remote",
                     "packageExporter", "endpoints[0]=" + remoteExporterUrl,
-                    "packageExporter", "authenticationProvider/type=service",
-                    "packageExporter", "authenticationProvider/name=publishAdmin",
-                    "packageExporter", "packageBuilder/type=vlt",
-                    "packageExporter", "packageBuilder/servicename=replicationService");
+
+                    "packageExporter", "packageBuilder/type=vlt");
 
             Thread.sleep(3000);
             assertExists(authorClient, agentUrl("publish-reverse"));

@@ -33,6 +33,7 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.replication.agent.ReplicationComponentFactory;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackage;
@@ -42,7 +43,6 @@ import org.apache.sling.replication.transport.ReplicationTransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.replication.transport.impl.AdvancedHttpReplicationTransportHandler;
 import org.apache.sling.replication.transport.impl.MultipleEndpointReplicationTransportHandler;
-import org.apache.sling.replication.transport.impl.ReplicationTransportConstants;
 import org.apache.sling.replication.transport.impl.TransportEndpointStrategyType;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -58,12 +58,17 @@ import org.slf4j.LoggerFactory;
         policy = ConfigurationPolicy.REQUIRE)
 @Service(value = ReplicationPackageImporter.class)
 public class AdvancedRemoteReplicationPackageImporter implements ReplicationPackageImporter {
+    private static final String TRANSPORT_AUTHENTICATION_PROVIDER_TARGET = ReplicationComponentFactory.COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER + ".target";
+
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(name = ReplicationTransportConstants.TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
+    @Property(name = TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
     @Reference(name = "TransportAuthenticationProvider", policy = ReferencePolicy.DYNAMIC)
     private volatile TransportAuthenticationProvider transportAuthenticationProvider;
+
+    @Property(cardinality = 100)
+    public static final String ENDPOINTS = "endpoints";
 
     @Property(options = {
             @PropertyOption(name = "All",
@@ -74,7 +79,7 @@ public class AdvancedRemoteReplicationPackageImporter implements ReplicationPack
             )},
             value = "One"
     )
-    private static final String ENDPOINT_STRATEGY = ReplicationTransportConstants.ENDPOINT_STRATEGY;
+    private static final String ENDPOINT_STRATEGY = "endpoint.strategy";
 
     @Property(boolValue = false)
     private static final String USE_CUSTOM_HEADERS = "useCustomHeaders";
@@ -96,8 +101,8 @@ public class AdvancedRemoteReplicationPackageImporter implements ReplicationPack
     @Activate
     protected void activate(BundleContext context, Map<String, ?> config) throws Exception {
 
-        String[] endpoints = PropertiesUtil.toStringArray(config.get(ReplicationTransportConstants.ENDPOINTS), new String[0]);
-        String endpointStrategyName = PropertiesUtil.toString(config.get(ReplicationTransportConstants.ENDPOINT_STRATEGY),
+        String[] endpoints = PropertiesUtil.toStringArray(config.get(ENDPOINTS), new String[0]);
+        String endpointStrategyName = PropertiesUtil.toString(config.get(ENDPOINT_STRATEGY),
                 TransportEndpointStrategyType.One.name());
         TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(endpointStrategyName);
 

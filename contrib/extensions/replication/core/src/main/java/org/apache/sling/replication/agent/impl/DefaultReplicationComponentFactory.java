@@ -37,6 +37,7 @@ import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.agent.ReplicationComponentFactory;
 import org.apache.sling.replication.agent.ReplicationComponentProvider;
 import org.apache.sling.replication.agent.ReplicationRequestAuthorizationStrategy;
+import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
@@ -78,9 +79,6 @@ import org.slf4j.LoggerFactory;
 )
 @Service(ReplicationComponentFactory.class)
 public class DefaultReplicationComponentFactory implements ReplicationComponentFactory, ReplicationComponentProvider {
-
-    public static final String COMPONENT_TYPE = "type";
-    public static final String NAME = "name";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -135,34 +133,33 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
 
     public ReplicationAgent createAgent(Map<String, Object> properties, ReplicationComponentProvider componentProvider) {
 
-        String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), "simple");
+        String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), ReplicationComponentFactory.AGENT_SIMPLE);
 
-        if ("simple".equals(factory)) {
+        if (ReplicationComponentFactory.AGENT_SIMPLE.equals(factory)) {
 
-            Map<String, Object> importerProperties = extractMap("packageImporter", properties);
-            ReplicationPackageImporter packageImporter = createImporter(importerProperties, componentProvider);
-
-            Map<String, Object> exporterProperties = extractMap("packageExporter", properties);
+            Map<String, Object> exporterProperties = extractMap(COMPONENT_PACKAGE_EXPORTER, properties);
             ReplicationPackageExporter packageExporter = createExporter(exporterProperties, componentProvider);
 
-            Map<String, Object> authorizationStrategyProperties = extractMap("requestAuthorizationStrategy", properties);
+            Map<String, Object> importerProperties = extractMap(COMPONENT_PACKAGE_IMPORTER, properties);
+            ReplicationPackageImporter packageImporter = createImporter(importerProperties, componentProvider);
+
+            Map<String, Object> authorizationStrategyProperties = extractMap(COMPONENT_REQUEST_AUTHORIZATION_STRATEGY, properties);
             ReplicationRequestAuthorizationStrategy packageExporterStrategy = createAuthorizationStrategy(authorizationStrategyProperties, componentProvider);
 
-            Map<String, Object> queueDistributionStrategyProperties = extractMap("queueDistributionStrategy", properties);
+            Map<String, Object> queueDistributionStrategyProperties = extractMap(COMPONENT_QUEUE_DISTRIBUTION_STRATEGY, properties);
             ReplicationQueueDistributionStrategy queueDistributionStrategy = createDistributionStrategy(queueDistributionStrategyProperties, componentProvider);
 
-            Map<String, Object> queueProviderProperties = extractMap("queueProvider", properties);
+            Map<String, Object> queueProviderProperties = extractMap(COMPONENT_QUEUE_PROVIDER, properties);
             ReplicationQueueProvider queueProvider = createQueueProvider(queueProviderProperties, componentProvider);
 
-            List<Map<String, Object>> triggersProperties = extractMapList("trigger", properties);
+            List<Map<String, Object>> triggersProperties = extractMapList(COMPONENT_TRIGGER, properties);
             List<ReplicationTrigger> triggers = createTriggerList(triggersProperties, componentProvider);
 
-            String name = PropertiesUtil.toString(properties.get(SimpleReplicationAgentFactory.NAME), String.valueOf(new Random().nextInt(1000)));
+            String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), String.valueOf(new Random().nextInt(1000)));
 
-            String serviceName = PropertiesUtil.toString(properties.get(SimpleReplicationAgentFactory.SERVICE_NAME), null);
+            String serviceName = PropertiesUtil.toString(properties.get(ReplicationComponentFactory.AGENT_SIMPLE_PROPERTY_SERVICE_NAME), null);
 
-
-            boolean isPassive = PropertiesUtil.toBoolean(properties.get(SimpleReplicationAgentFactory.IS_PASSIVE), false);
+            boolean isPassive = PropertiesUtil.toBoolean(properties.get(ReplicationComponentFactory.AGENT_SIMPLE_PROPERTY_IS_PASSIVE), false);
 
 
             return new SimpleReplicationAgent(name, isPassive, serviceName,
@@ -177,15 +174,16 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
 
     private ReplicationRequestAuthorizationStrategy createAuthorizationStrategy(Map<String, Object> properties, ReplicationComponentProvider componentProvider) {
 
-        String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), "service");
+        String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
-        if ("service".equals(factory)) {
-            String name = PropertiesUtil.toString(properties.get(NAME), null);
+        if (COMPONENT_TYPE_SERVICE.equals(factory)) {
+            String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
             return componentProvider.getComponent(ReplicationRequestAuthorizationStrategy.class, name);
 
         }
-        else if (PrivilegeReplicationRequestAuthorizationStrategy.NAME.equals(factory)) {
-            return new PrivilegeReplicationRequestAuthorizationStrategy(properties);
+        else if (REQUEST_AUTHORIZATION_STRATEGY_PRIVILEGE.equals(factory)) {
+            String jcrPrivilege = PropertiesUtil.toString(properties.get(REQUEST_AUTHORIZATION_STRATEGY_PRIVILEGE_PROPERTY_JCR_PRIVILEGE), null);
+            return new PrivilegeReplicationRequestAuthorizationStrategy(jcrPrivilege);
         }
 
         return null;
@@ -194,31 +192,33 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
 
     public ReplicationPackageExporter createExporter(Map<String, Object> properties, ReplicationComponentProvider componentProvider) {
 
-        String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), "service");
+        String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
-        if ("service".equals(factory)) {
-            String name = PropertiesUtil.toString(properties.get(NAME), null);
+        if (COMPONENT_TYPE_SERVICE.equals(factory)) {
+            String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
             return componentProvider.getComponent(ReplicationPackageExporter.class, name);
 
-        } else if (LocalReplicationPackageExporter.NAME.equals(factory)) {
-            Map<String, Object> builderProperties = extractMap("packageBuilder", properties);
+        } else if (PACKAGE_EXPORTER_LOCAL.equals(factory)) {
+            Map<String, Object> builderProperties = extractMap(COMPONENT_PACKAGE_BUILDER, properties);
             ReplicationPackageBuilder packageBuilder = createBuilder(builderProperties);
             return new LocalReplicationPackageExporter(packageBuilder);
-        } else if (RemoteReplicationPackageExporter.NAME.equals(factory)) {
-            Map<String, Object> authenticationProviderProperties = extractMap("authenticationProvider", properties);
+        } else if (PACKAGE_EXPORTER_REMOTE.equals(factory)) {
+            Map<String, Object> authenticationProviderProperties = extractMap(COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER, properties);
             TransportAuthenticationProvider authenticationProvider = createTransportAuthenticationProvider(authenticationProviderProperties, componentProvider);
 
-            Map<String, Object> builderProperties = extractMap("packageBuilder", properties);
+            Map<String, Object> builderProperties = extractMap(COMPONENT_PACKAGE_BUILDER, properties);
             ReplicationPackageBuilder packageBuilder = createBuilder(builderProperties);
 
-            return new  RemoteReplicationPackageExporter(properties, packageBuilder, authenticationProvider);
-        } else if (AgentReplicationPackageExporter.NAME.equals(factory)) {
-            Map<String, Object> builderProperties = extractMap("packageBuilder", properties);
-            ReplicationPackageBuilder packageBuilder = createBuilder(builderProperties);
 
-            Map<String, Object> agentProperties = extractMap("agent", properties);
-            String agentName = PropertiesUtil.toString(agentProperties.get(NAME), null);
-            ReplicationAgent agent = componentProvider.getComponent(ReplicationAgent.class, agentName);
+            String[] endpoints = PropertiesUtil.toStringArray(properties.get(PACKAGE_EXPORTER_REMOTE_PROPERTY_ENDPOINTS), new String[0]);
+            String endpointStrategyName = PropertiesUtil.toString(properties.get(PACKAGE_EXPORTER_REMOTE_PROPERTY_ENDPOINTS_STRATEGY), "One");
+            int pollItems = PropertiesUtil.toInteger(properties.get(PACKAGE_EXPORTER_REMOTE_PROPERTY_POLL_ITEMS), Integer.MAX_VALUE);
+
+            return new  RemoteReplicationPackageExporter(packageBuilder, authenticationProvider, endpoints, endpointStrategyName, pollItems);
+        } else if (PACKAGE_EXPORTER_AGENT.equals(factory)) {
+            Map<String, Object> builderProperties = extractMap(COMPONENT_PACKAGE_BUILDER, properties);
+            ReplicationPackageBuilder packageBuilder = createBuilder(builderProperties);
+            ReplicationAgent agent = componentProvider.getComponent(ReplicationAgent.class, null);
 
             return new AgentReplicationPackageExporter(properties, agent, packageBuilder);
         }
@@ -229,30 +229,33 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
 
     public ReplicationPackageImporter createImporter(Map<String, Object> properties, ReplicationComponentProvider componentProvider) {
 
-        String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), "service");
+        String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
-        if ("service".equals(factory)) {
-            String name = PropertiesUtil.toString(properties.get(NAME), null);
+        if (COMPONENT_TYPE_SERVICE.equals(factory)) {
+            String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
             return componentProvider.getComponent(ReplicationPackageImporter.class, name);
-        } else if (LocalReplicationPackageImporter.NAME.equals(factory)) {
-            Map<String, Object> builderProperties = extractMap("packageBuilder", properties);
+        } else if (PACKAGE_IMPORTER_LOCAL.equals(factory)) {
+            Map<String, Object> builderProperties = extractMap(COMPONENT_PACKAGE_BUILDER, properties);
             ReplicationPackageBuilder packageBuilder = createBuilder(builderProperties);
-            return new LocalReplicationPackageImporter(properties, packageBuilder, replicationEventFactory);
-        } else if (RemoteReplicationPackageImporter.NAME.equals(factory)) {
-            Map<String, Object> authenticationProviderProperties = extractMap("authenticationProvider", properties);
+            return new LocalReplicationPackageImporter(packageBuilder, replicationEventFactory);
+        } else if (PACKAGE_IMPORTER_REMOTE.equals(factory)) {
+            Map<String, Object> authenticationProviderProperties = extractMap(COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER, properties);
             TransportAuthenticationProvider authenticationProvider = createTransportAuthenticationProvider(authenticationProviderProperties, componentProvider);
 
-            return new RemoteReplicationPackageImporter(properties, authenticationProvider);
+            String[] endpoints = PropertiesUtil.toStringArray(properties.get(PACKAGE_EXPORTER_REMOTE_PROPERTY_ENDPOINTS), new String[0]);
+            String endpointStrategyName = PropertiesUtil.toString(properties.get(PACKAGE_EXPORTER_REMOTE_PROPERTY_ENDPOINTS_STRATEGY), "One");
+
+            return new RemoteReplicationPackageImporter(authenticationProvider, endpoints, endpointStrategyName);
         }
 
         return null;
     }
 
     public ReplicationQueueProvider createQueueProvider(Map<String, Object> properties, ReplicationComponentProvider componentProvider) {
-        String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), "service");
+        String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
-        if ("service".equals(factory)) {
-            String name = PropertiesUtil.toString(properties.get(NAME), null);
+        if (COMPONENT_TYPE_SERVICE.equals(factory)) {
+            String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
             return componentProvider.getComponent(ReplicationQueueProvider.class, name);
         }
 
@@ -260,10 +263,10 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
     }
 
     public ReplicationQueueDistributionStrategy createDistributionStrategy(Map<String, Object> properties, ReplicationComponentProvider componentProvider) {
-        String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), "service");
+        String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
-        if ("service".equals(factory)) {
-            String name = PropertiesUtil.toString(properties.get(NAME), null);
+        if (COMPONENT_TYPE_SERVICE.equals(factory)) {
+            String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
             return componentProvider.getComponent(ReplicationQueueDistributionStrategy.class, name);
 
         }
@@ -272,23 +275,25 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
     }
 
     public TransportAuthenticationProvider createTransportAuthenticationProvider(Map<String, Object> properties, ReplicationComponentProvider componentProvider) {
-        String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), "service");
+        String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
-        if ("service".equals(factory)) {
-            String name = PropertiesUtil.toString(properties.get(NAME), null);
+        if (COMPONENT_TYPE_SERVICE.equals(factory)) {
+            String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
             return componentProvider.getComponent(TransportAuthenticationProvider.class, name);
 
-        } else if ("user".equals(factory)) {
-            return new UserCredentialsTransportAuthenticationProvider(properties);
+        } else if (TRANSPORT_AUTHENTICATION_PROVIDER_USER.equals(factory)) {
+            String username = PropertiesUtil.toString(properties.get(TRANSPORT_AUTHENTICATION_PROVIDER_USER_PROPERTY_USERNAME), "").trim();
+            String password = PropertiesUtil.toString(properties.get(TRANSPORT_AUTHENTICATION_PROVIDER_USER_PROPERTY_PASSWORD), "").trim();
+            return new UserCredentialsTransportAuthenticationProvider(username, password);
         }
 
         return null;
     }
 
     public ReplicationPackageBuilder createBuilder(Map<String, Object> properties) {
-        String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), "service");
+        String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
-        if (FileVaultReplicationPackageBuilder.NAME.equals(factory)) {
+        if (PACKAGE_BUILDER_FILEVLT.equals(factory)) {
             return new FileVaultReplicationPackageBuilder(packaging, replicationEventFactory);
         }
 
@@ -297,27 +302,44 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
 
 
     private ReplicationTrigger createTrigger(Map<String, Object> properties, ReplicationComponentProvider componentProvider) {
-        String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), "service");
+        String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
-        if ("service".equals(factory)) {
-            String name = PropertiesUtil.toString(properties.get(NAME), null);
+        if (COMPONENT_TYPE_SERVICE.equals(factory)) {
+            String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
             return componentProvider.getComponent(ReplicationTrigger.class, name);
 
-        } else if (RemoteEventReplicationTrigger.TYPE.equals(factory)) {
-            Map<String, Object> authenticationProviderProperties = extractMap("authenticationProvider", properties);
+        } else if (TRIGGER_REMOTE_EVENT.equals(factory)) {
+            Map<String, Object> authenticationProviderProperties = extractMap(COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER, properties);
 
             TransportAuthenticationProvider authenticationProvider = createTransportAuthenticationProvider(authenticationProviderProperties, componentProvider);
-            return new RemoteEventReplicationTrigger(properties, authenticationProvider, scheduler);
-        } else if (ResourceEventReplicationTrigger.TYPE.equals(factory)) {
-            return new ResourceEventReplicationTrigger(properties, bundleContext);
-        } else if (ScheduledReplicationTrigger.TYPE.equals(factory)) {
-            return new ScheduledReplicationTrigger(properties, scheduler);
-        } else if (ChainReplicateReplicationTrigger.TYPE.equals(factory)) {
-            return new ChainReplicateReplicationTrigger(properties, bundleContext);
-        } else if (JcrEventReplicationTrigger.TYPE.equals(factory)) {
-            return new JcrEventReplicationTrigger(properties, repository);
-        } else if (PersistingJcrEventReplicationTrigger.TYPE.equals(factory)) {
-            return new PersistingJcrEventReplicationTrigger(properties, repository);
+            String endpoint = PropertiesUtil.toString(properties.get(TRIGGER_REMOTE_EVENT_PROPERTY_ENDPOINT), null);
+
+            return new RemoteEventReplicationTrigger(endpoint, authenticationProvider, scheduler);
+        } else if (TRIGGER_RESOURCE_EVENT.equals(factory)) {
+            String path = PropertiesUtil.toString(properties.get(TRIGGER_RESOURCE_EVENT_PROPERTY_PATH), null);
+
+            return new ResourceEventReplicationTrigger(path, bundleContext);
+        } else if (TRIGGER_SCHEDULED_EVENT.equals(factory)) {
+            String action = PropertiesUtil.toString(properties.get(TRIGGER_SCHEDULED_EVENT_PROPERTY_ACTION), ReplicationActionType.POLL.name());
+            String path = PropertiesUtil.toString(properties.get(TRIGGER_SCHEDULED_EVENT_PROPERTY_PATH), "/");
+            int interval = PropertiesUtil.toInteger(properties.get(TRIGGER_SCHEDULED_EVENT_PROPERTY_SECONDS), 30);
+
+            return new ScheduledReplicationTrigger(action, path, interval, scheduler);
+        } else if (TRIGGER_REPLICATION_EVENT.equals(factory)) {
+            String path = PropertiesUtil.toString(properties.get(TRIGGER_REPLICATION_EVENT_PROPERTY_PATH), null);
+
+            return new ChainReplicateReplicationTrigger(path, bundleContext);
+        } else if (TRIGGER_JCR_EVENT.equals(factory)) {
+            String path = PropertiesUtil.toString(properties.get(TRIGGER_JCR_EVENT_PROPERTY_PATH), null);
+            String serviceName = PropertiesUtil.toString(properties.get(TRIGGER_JCR_EVENT_PROPERTY_SERVICE_NAME), null);
+
+            return new JcrEventReplicationTrigger(repository, path, serviceName);
+        } else if (TRIGGER_PERSISTED_JCR_EVENT.equals(factory)) {
+            String path = PropertiesUtil.toString(properties.get(TRIGGER_PERSISTED_JCR_EVENT_PROPERTY_PATH), null);
+            String serviceName = PropertiesUtil.toString(properties.get(TRIGGER_PERSISTED_JCR_EVENT_PROPERTY_SERVICE_NAME), null);
+            String nuggetsPath = PropertiesUtil.toString(properties.get(TRIGGER_PERSISTED_JCR_EVENT_PROPERTY_NUGGETS_PATH), null);
+
+            return new PersistingJcrEventReplicationTrigger(repository, path, serviceName, nuggetsPath);
         }
 
         return null;

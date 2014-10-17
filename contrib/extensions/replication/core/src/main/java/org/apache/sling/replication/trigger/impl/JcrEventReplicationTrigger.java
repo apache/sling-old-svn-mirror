@@ -35,17 +35,12 @@ import org.slf4j.LoggerFactory;
  */
 public class JcrEventReplicationTrigger extends AbstractJcrEventTrigger implements ReplicationTrigger {
 
-    public static final String TYPE = "jcrEvent";
-
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     public JcrEventReplicationTrigger(SlingRepository repository, String path, String serviceName) {
         super(repository, path, serviceName);
     }
 
-    public JcrEventReplicationTrigger(Map<String, Object> properties, SlingRepository repository) {
-        this(repository, PropertiesUtil.toString(properties.get(PATH), null), PropertiesUtil.toString(properties.get(SERVICENAME), null));
-    }
 
     @Override
     protected ReplicationRequest processEvent(Event event) throws RepositoryException {

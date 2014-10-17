@@ -44,8 +44,6 @@ import org.slf4j.LoggerFactory;
  */
 public class ResourceEventReplicationTrigger implements ReplicationTrigger, ReplicationComponent {
 
-    public static final String TYPE = "resourceEvent";
-    public static final String PATH = "path";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -53,9 +51,6 @@ public class ResourceEventReplicationTrigger implements ReplicationTrigger, Repl
     private final String path;
     private final Map<String, ServiceRegistration> registrations = new ConcurrentHashMap<String, ServiceRegistration>();
 
-    public ResourceEventReplicationTrigger(Map<String, Object> config, BundleContext bundleContext) {
-        this(PropertiesUtil.toString(config.get(PATH), null), bundleContext);
-    }
 
     public ResourceEventReplicationTrigger(String path, BundleContext bundleContext) {
         if (bundleContext == null) {

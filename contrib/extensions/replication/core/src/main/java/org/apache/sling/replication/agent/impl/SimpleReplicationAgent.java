@@ -264,6 +264,10 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
                 replicationPackage.delete();
                 success = true;
             }
+            else {
+                log.warn("replication package with id {} does not exist", queueItem.getId());
+            }
+
         } catch (ReplicationPackageReadingException e) {
             log.error("could not process transport queue", e);
         }

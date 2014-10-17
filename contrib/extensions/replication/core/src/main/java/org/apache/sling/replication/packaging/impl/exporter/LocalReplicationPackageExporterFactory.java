@@ -50,11 +50,11 @@ public class LocalReplicationPackageExporterFactory implements ReplicationPackag
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(value = LocalReplicationPackageExporter.NAME, propertyPrivate = true)
-    private static final String TYPE = "type";
+    @Property(value = ReplicationComponentFactory.PACKAGE_EXPORTER_LOCAL, propertyPrivate = true)
+    private static final String TYPE = ReplicationComponentFactory.COMPONENT_TYPE;
 
     @Property
-    private static final String NAME = "name";
+    private static final String NAME = ReplicationComponentFactory.COMPONENT_NAME;
 
     @Reference
     ReplicationComponentFactory replicationComponentFactory;

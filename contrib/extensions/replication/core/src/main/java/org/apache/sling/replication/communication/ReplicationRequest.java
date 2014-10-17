@@ -31,6 +31,10 @@ public class ReplicationRequest {
 
     private final String[] paths;
 
+    public ReplicationRequest(ReplicationActionType action, String[] paths) {
+        this(System.currentTimeMillis(), action, paths);
+    }
+
     public ReplicationRequest(long time, ReplicationActionType action, String... paths) {
         this.time = time;
         this.action = action;
@@ -40,7 +44,7 @@ public class ReplicationRequest {
     /**
      * get the time this replication request was created
      *
-     * @return a <code>long</code> representing the replication request creation time
+     * @return a <code>long</code> representing the replication request creation time e.g. as returend by {@code System#currentTimeMillis}
      */
     public long getTime() {
         return time;

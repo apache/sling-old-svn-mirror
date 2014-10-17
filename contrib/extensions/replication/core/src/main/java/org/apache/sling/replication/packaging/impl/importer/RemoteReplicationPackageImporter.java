@@ -33,7 +33,6 @@ import org.apache.sling.replication.serialization.ReplicationPackageReadingExcep
 import org.apache.sling.replication.transport.ReplicationTransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.replication.transport.impl.MultipleEndpointReplicationTransportHandler;
-import org.apache.sling.replication.transport.impl.ReplicationTransportConstants;
 import org.apache.sling.replication.transport.impl.SimpleHttpReplicationTransportHandler;
 import org.apache.sling.replication.transport.impl.TransportEndpointStrategyType;
 import org.slf4j.Logger;
@@ -44,26 +43,10 @@ import org.slf4j.LoggerFactory;
  */
 public class RemoteReplicationPackageImporter implements ReplicationPackageImporter {
 
-    private static final String ENDPOINT_STRATEGY = ReplicationTransportConstants.ENDPOINT_STRATEGY;
-
-    public static final String NAME = "remote";
-
     private final Logger log = LoggerFactory.getLogger(getClass());
-
-    private TransportAuthenticationProvider transportAuthenticationProviderFactory;
-
-    private ReplicationEventFactory replicationEventFactory;
 
     private ReplicationTransportHandler transportHandler;
 
-
-    public RemoteReplicationPackageImporter(Map<String, Object> config, TransportAuthenticationProvider transportAuthenticationProvider) {
-
-        this(transportAuthenticationProvider,
-                PropertiesUtil.toStringArray(config.get(ReplicationTransportConstants.ENDPOINTS), new String[0]),
-                PropertiesUtil.toString(config.get(ENDPOINT_STRATEGY), TransportEndpointStrategyType.One.name()));
-
-    }
 
     public RemoteReplicationPackageImporter(TransportAuthenticationProvider transportAuthenticationProvider,
                                             String[] endpoints,

@@ -30,12 +30,12 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.replication.agent.ReplicationComponentFactory;
+import org.apache.sling.replication.agent.ReplicationComponentProvider;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
-import org.apache.sling.replication.packaging.impl.exporter.LocalReplicationPackageExporter;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
-import org.apache.sling.replication.transport.impl.ReplicationTransportConstants;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,22 +49,24 @@ import org.slf4j.LoggerFactory;
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE)
 @Service(value = ReplicationPackageImporter.class)
-public class RemoteReplicationPackageImporterFactory implements ReplicationPackageImporter {
+public class RemoteReplicationPackageImporterFactory implements ReplicationPackageImporter, ReplicationComponentProvider {
+    private static final String TRANSPORT_AUTHENTICATION_PROVIDER_TARGET = ReplicationComponentFactory.COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER + ".target";
+
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(value = LocalReplicationPackageExporter.NAME, propertyPrivate = true)
-    private static final String TYPE = "type";
+    @Property(value = ReplicationComponentFactory.PACKAGE_IMPORTER_REMOTE, propertyPrivate = true)
+    private static final String TYPE = ReplicationComponentFactory.COMPONENT_TYPE;
 
     @Property
-    private static final String NAME = "name";
+    private static final String NAME = ReplicationComponentFactory.COMPONENT_NAME;
 
-    @Property(name = ReplicationTransportConstants.TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
+    @Property(name = TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
     @Reference(name = "TransportAuthenticationProvider", policy = ReferencePolicy.STATIC)
     private volatile TransportAuthenticationProvider transportAuthenticationProvider;
 
     @Property(cardinality = 100)
-    public static final String ENDPOINTS = ReplicationTransportConstants.ENDPOINTS;
+    public static final String ENDPOINTS = ReplicationComponentFactory.PACKAGE_IMPORTER_REMOTE_PROPERTY_ENDPOINTS;
 
     @Property(options = {
             @PropertyOption(name = "All",
@@ -75,18 +77,21 @@ public class RemoteReplicationPackageImporterFactory implements ReplicationPacka
             )},
             value = "One"
     )
-    private static final String ENDPOINT_STRATEGY = ReplicationTransportConstants.ENDPOINT_STRATEGY;
+    private static final String ENDPOINT_STRATEGY = ReplicationComponentFactory.PACKAGE_IMPORTER_REMOTE_PROPERTY_ENDPOINTS_STRATEGY;
 
-    private RemoteReplicationPackageImporter importer;
+    private ReplicationPackageImporter importer;
+
+    @Reference
+    ReplicationComponentFactory replicationComponentFactory;
 
     @Activate
     protected void activate(BundleContext context, Map<String, Object> config) throws Exception {
 
-        importer = new RemoteReplicationPackageImporter(config, transportAuthenticationProvider);
+        importer = replicationComponentFactory.createComponent(ReplicationPackageImporter.class, config, this);
 
     }
 
-    public boolean importPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) {
+    public boolean importPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {
         return importer.importPackage(resourceResolver, replicationPackage);
     }
 
@@ -94,4 +99,11 @@ public class RemoteReplicationPackageImporterFactory implements ReplicationPacka
         return importer.readPackage(resourceResolver, stream);
     }
 
+    public <ComponentType> ComponentType getComponent(Class<ComponentType> type, String componentName) {
+        if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
+            return (ComponentType) transportAuthenticationProvider;
+        }
+
+        return null;
+    }
 }

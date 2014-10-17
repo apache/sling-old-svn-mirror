@@ -48,11 +48,11 @@ import org.slf4j.LoggerFactory;
 public class AgentReplicationPackageExporterFactory implements ReplicationPackageExporter, ReplicationComponentProvider {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(value = AgentReplicationPackageExporter.NAME, propertyPrivate = true)
-    private static final String TYPE = "type";
+    @Property(value = ReplicationComponentFactory.PACKAGE_EXPORTER_AGENT, propertyPrivate = true)
+    private static final String TYPE = ReplicationComponentFactory.COMPONENT_TYPE;
 
     @Property
-    private static final String NAME = "name";
+    private static final String NAME = ReplicationComponentFactory.COMPONENT_NAME;
 
     @Property(label = "Target ReplicationAgent", name = "ReplicationAgent.target")
     @Reference(name = "ReplicationAgent", policy = ReferencePolicy.STATIC)

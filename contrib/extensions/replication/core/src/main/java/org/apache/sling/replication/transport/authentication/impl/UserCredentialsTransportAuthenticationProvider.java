@@ -36,9 +36,6 @@ import org.slf4j.LoggerFactory;
 public class UserCredentialsTransportAuthenticationProvider implements
         TransportAuthenticationProvider {
 
-    public final static String USERNAME = "username";
-    public final static String PASSWORD = "password";
-
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final String username;
@@ -46,16 +43,12 @@ public class UserCredentialsTransportAuthenticationProvider implements
     private final String password;
 
 
-    public UserCredentialsTransportAuthenticationProvider(Map<String, Object> config) {
-        username = PropertiesUtil.toString(config.get(USERNAME), "").trim();
-        password = PropertiesUtil.toString(config.get(PASSWORD), "").trim();
 
+    public UserCredentialsTransportAuthenticationProvider(String username, String password) {
         if (username.length() == 0 || password.length() == 0) {
             throw new IllegalArgumentException("Username and password are required");
         }
-    }
 
-    public UserCredentialsTransportAuthenticationProvider(String username, String password) {
         this.username = username;
         this.password = password;
     }

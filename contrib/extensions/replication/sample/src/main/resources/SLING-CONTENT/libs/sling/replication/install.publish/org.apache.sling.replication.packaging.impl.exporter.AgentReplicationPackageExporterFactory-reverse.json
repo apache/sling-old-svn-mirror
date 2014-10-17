@@ -3,7 +3,6 @@
     "name": "reverse",
 
     "packageBuilder": [ "type=vlt" ],
-    "agent" : [ "type=service"],
 
     "ReplicationAgent.target": "(name=reverse)"
 }

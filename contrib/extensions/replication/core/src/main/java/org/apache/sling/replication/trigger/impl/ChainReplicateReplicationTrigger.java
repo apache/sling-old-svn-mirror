@@ -44,7 +44,6 @@ import org.slf4j.LoggerFactory;
  */
 public class ChainReplicateReplicationTrigger implements ReplicationTrigger, ReplicationComponent {
 
-    public static final String TYPE = "replicateEvent";
     public static final String PATH = "path";
 
 
@@ -54,10 +53,6 @@ public class ChainReplicateReplicationTrigger implements ReplicationTrigger, Rep
     private final BundleContext bundleContext;
     private final Map<String, ServiceRegistration> registrations = new ConcurrentHashMap<String, ServiceRegistration>();
 
-
-    public ChainReplicateReplicationTrigger(Map<String, Object> config, BundleContext bundleContext) {
-        this(PropertiesUtil.toString(config.get(PATH), null), bundleContext);
-    }
 
     public ChainReplicateReplicationTrigger(String pathPrefix, BundleContext bundleContext) {
         this.bundleContext = bundleContext;

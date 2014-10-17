@@ -4,10 +4,12 @@
 
     "serviceName" : "replicationService",
 
+    "requestAuthorizationStrategy" : [
+        "type=privilege",
+        "jcrPrivilege=jcr:read"
+    ],
 
     "packageExporter": [
-        "authenticationProvider/type=service",
-
         "packageBuilder/type=vlt",
 
         "endpoints[0]=http://localhost:4503/libs/sling/replication/services/exporters/reverse-pubsync",
@@ -16,14 +18,7 @@
         "endpoints.strategy=All"
     ],
 
-    "packageExporterStrategy" : [
-        "type=privilege",
-        "jcrPrivilege=jcr:read"
-    ],
-
     "packageImporter": [
-        "authenticationProvider/type=service",
-
         "packageBuilder/type=vlt",
 
         "endpoints[0]=http://localhost:4503/libs/sling/replication/services/importers/default",

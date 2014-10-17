@@ -5,7 +5,7 @@
     "componentType": "trigger",
 
     "properties": [
-        "type=replicateEvent"
+        "type=replicationEvent"
 
     ]
 

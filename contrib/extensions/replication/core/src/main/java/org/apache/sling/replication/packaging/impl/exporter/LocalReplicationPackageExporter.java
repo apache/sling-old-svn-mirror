@@ -34,8 +34,6 @@ import org.apache.sling.replication.serialization.ReplicationPackageBuildingExce
  */
 public class LocalReplicationPackageExporter implements ReplicationPackageExporter {
 
-    public static final String NAME = "local";
-
     private ReplicationPackageBuilder packageBuilder;
 
     public LocalReplicationPackageExporter(ReplicationPackageBuilder packageBuilder) {
