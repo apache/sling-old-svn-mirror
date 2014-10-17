@@ -110,7 +110,7 @@ public abstract class AbstractJobHandlingTest {
                 mavenBundle("org.apache.tika", "tika-bundle", "1.2"),
 
                 mavenBundle("org.apache.felix", "org.apache.felix.http.jetty", "2.2.2"),
-                mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.3.2"),
+                mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.4.2"),
                 mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.8.2"),
                 mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.0"),
                 mavenBundle("org.apache.felix", "org.apache.felix.inventory", "1.0.4"),
@@ -120,22 +120,22 @@ public abstract class AbstractJobHandlingTest {
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.json", "2.0.6"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.mime", "2.1.4"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.classloader", "1.3.2"),
-                mavenBundle("org.apache.sling", "org.apache.sling.commons.scheduler", "2.4.2"),
+                mavenBundle("org.apache.sling", "org.apache.sling.commons.scheduler", "2.4.4"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.threads", "3.2.0"),
 
                 mavenBundle("org.apache.sling", "org.apache.sling.launchpad.api", "1.1.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.auth.core", "1.1.6"),
-                mavenBundle("org.apache.sling", "org.apache.sling.discovery.api", "1.0.0"),
+                mavenBundle("org.apache.sling", "org.apache.sling.auth.core", "1.3.0"),
+                mavenBundle("org.apache.sling", "org.apache.sling.discovery.api", "1.0.2"),
                 mavenBundle("org.apache.sling", "org.apache.sling.discovery.standalone", "1.0.0"),
 
-                mavenBundle("org.apache.sling", "org.apache.sling.api", "2.7.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.settings", "1.3.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.resourceresolver", "1.1.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.adapter", "2.1.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.jcr.resource", "2.3.6"),
-                mavenBundle("org.apache.sling", "org.apache.sling.jcr.classloader", "3.2.0"),
+                mavenBundle("org.apache.sling", "org.apache.sling.api", "2.8.0"),
+                mavenBundle("org.apache.sling", "org.apache.sling.settings", "1.3.4"),
+                mavenBundle("org.apache.sling", "org.apache.sling.resourceresolver", "1.1.6"),
+                mavenBundle("org.apache.sling", "org.apache.sling.adapter", "2.1.2"),
+                mavenBundle("org.apache.sling", "org.apache.sling.jcr.resource", "2.3.8"),
+                mavenBundle("org.apache.sling", "org.apache.sling.jcr.classloader", "3.2.2"),
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.contentloader", "2.1.8"),
-                mavenBundle("org.apache.sling", "org.apache.sling.engine", "2.3.2"),
+                mavenBundle("org.apache.sling", "org.apache.sling.engine", "2.3.6"),
                 mavenBundle("org.apache.sling", "org.apache.sling.serviceusermapper", "1.0.0"),
 
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.jcr-wrapper", "2.0.0"),
@@ -168,6 +168,7 @@ public abstract class AbstractJobHandlingTest {
         try {
             Thread.sleep(time);
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             // ignore
         }
     }

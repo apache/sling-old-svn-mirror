@@ -62,18 +62,18 @@ public class RoundRobinQueueTest extends AbstractJobHandlingTest {
     public void setup() throws IOException {
         super.setup();
 
-        // create ordered test queue
-        final org.osgi.service.cm.Configuration orderedConfig = this.configAdmin.createFactoryConfiguration("org.apache.sling.event.jobs.QueueConfiguration", null);
-        final Dictionary<String, Object> orderedProps = new Hashtable<String, Object>();
-        orderedProps.put(ConfigurationConstants.PROP_NAME, QUEUE_NAME);
-        orderedProps.put(ConfigurationConstants.PROP_TYPE, QueueConfiguration.Type.TOPIC_ROUND_ROBIN.name());
-        orderedProps.put(ConfigurationConstants.PROP_TOPICS, TOPIC + "/*");
-        orderedProps.put(ConfigurationConstants.PROP_RETRIES, 2);
-        orderedProps.put(ConfigurationConstants.PROP_RETRY_DELAY, 2000L);
-        orderedProps.put(ConfigurationConstants.PROP_MAX_PARALLEL, MAX_PAR);
-        orderedConfig.update(orderedProps);
+        // create round robin test queue
+        final org.osgi.service.cm.Configuration rrConfig = this.configAdmin.createFactoryConfiguration("org.apache.sling.event.jobs.QueueConfiguration", null);
+        final Dictionary<String, Object> rrProps = new Hashtable<String, Object>();
+        rrProps.put(ConfigurationConstants.PROP_NAME, QUEUE_NAME);
+        rrProps.put(ConfigurationConstants.PROP_TYPE, QueueConfiguration.Type.TOPIC_ROUND_ROBIN.name());
+        rrProps.put(ConfigurationConstants.PROP_TOPICS, TOPIC + "/*");
+        rrProps.put(ConfigurationConstants.PROP_RETRIES, 2);
+        rrProps.put(ConfigurationConstants.PROP_RETRY_DELAY, 2000L);
+        rrProps.put(ConfigurationConstants.PROP_MAX_PARALLEL, MAX_PAR);
+        rrConfig.update(rrProps);
 
-        queueConfPid = orderedConfig.getPid();
+        queueConfPid = rrConfig.getPid();
 
         this.sleep(1000L);
     }
