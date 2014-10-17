@@ -29,6 +29,11 @@ import org.slf4j.Logger;
 /**
  * The job topic traverser is an utility class to traverse all jobs
  * of a specific topic in order of creation.
+ *
+ * The traverser can be used with two different callbacks,
+ * the resource callback is called with a resource object,
+ * the job callback with a job object created from the
+ * resource.
  */
 public class JobTopicTraverser {
 
@@ -38,7 +43,9 @@ public class JobTopicTraverser {
     public interface JobCallback {
 
         /**
-         * Callback handle for a job
+         * Callback handle for a job.
+         * If the callback signals to stop traversing, the current minute is still
+         * processed completely (to ensure correct ordering of jobs).
          * @param job The job to handle
          * @return <code>true</code> If processing should continue, <code>false</code> otherwise.
          */
@@ -51,7 +58,11 @@ public class JobTopicTraverser {
     public interface ResourceCallback {
 
         /**
-         * Callback handle for a resource
+         * Callback handle for a resource.
+         * The callback is called in sorted order on a minute base, all resources within a minute
+         * are not necessarily called in correct time order!
+         * If the callback signals to stop traversing, the traversal is stopped
+         * immediately.
          * @param rsrc The resource to handle
          * @return <code>true</code> If processing should continue, <code>false</code> otherwise.
          */
@@ -75,12 +86,29 @@ public class JobTopicTraverser {
         traverse(logger, topicResource, handler, null);
     }
 
+    /**
+     * Traverse the topic and call the callback for each found resource.
+     *
+     * Once the callback notifies to stop traversing by returning false, the
+     * traversal stops.
+     *
+     * @param logger        The logger to use for debug logging
+     * @param topicResource The topic resource
+     * @param handler       The callback
+     */
     public static void traverse(final Logger logger,
             final Resource topicResource,
             final ResourceCallback handler) {
         traverse(logger, topicResource, null, handler);
     }
 
+    /**
+     * Internal method for traversal
+     * @param logger        The logger to use for debug logging
+     * @param topicResource The topic resource
+     * @param jobHandler    The job callback
+     * @param resourceHandler    The resource callback
+     */
     private static void traverse(final Logger logger,
             final Resource topicResource,
             final JobCallback jobHandler,
@@ -113,20 +141,24 @@ public class JobTopicTraverser {
 
                             // now jobs
                             final List<JobImpl> jobs = new ArrayList<JobImpl>();
+                            // we use an iterator to skip removed entries
                             final Iterator<Resource> jobIter = minuteResource.listChildren();
                             while ( jobIter.hasNext() ) {
-                                final Resource jobResource = jobIter.next();
-
-                                if ( resourceHandler != null ) {
-                                    if ( !resourceHandler.handle(jobResource) ) {
-                                        return;
+                                try {
+                                    final Resource jobResource = jobIter.next();
+                                    if ( resourceHandler != null ) {
+                                        if ( !resourceHandler.handle(jobResource) ) {
+                                            return;
+                                        }
+                                    } else {
+                                        final JobImpl job = Utility.readJob(logger, jobResource);
+                                        if ( job != null ) {
+                                            logger.debug("Found job {}", jobResource.getName());
+                                            jobs.add(job);
+                                        }
                                     }
-                                } else {
-                                    final JobImpl job = Utility.readJob(logger, jobResource);
-                                    if ( job != null ) {
-                                        logger.debug("Found job {}", jobResource.getName());
-                                        jobs.add(job);
-                                    }
+                                } catch ( final IllegalStateException ise) {
+                                    // ignore
                                 }
                             }
 
