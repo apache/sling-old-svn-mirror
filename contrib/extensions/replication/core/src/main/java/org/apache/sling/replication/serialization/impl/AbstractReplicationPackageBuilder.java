@@ -45,8 +45,6 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractReplicationPackageBuilder implements ReplicationPackageBuilder {
 
-    public static final String USER_DATA = "vlt.pb.data";
-
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final String type;

@@ -44,8 +44,9 @@ public class LocalReplicationPackageExporter implements ReplicationPackageExport
         List<ReplicationPackage> result = new ArrayList<ReplicationPackage>();
 
         ReplicationPackage createdPackage = packageBuilder.createPackage(resourceResolver, replicationRequest);
-        result.add(createdPackage);
-
+        if (createdPackage != null) {
+            result.add(createdPackage);
+        }
         return result;
     }
 

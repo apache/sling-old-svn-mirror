@@ -45,6 +45,13 @@ public class SimpleReplicationQueueProvider extends AbstractReplicationQueueProv
 
     public static final String NAME = "simple";
 
+    protected SimpleReplicationQueueProvider(Scheduler scheduler) {
+        this.scheduler = scheduler;
+    }
+
+    public SimpleReplicationQueueProvider() {
+    }
+
     protected ReplicationQueue getOrCreateQueue(String agentName, String selector)
             throws ReplicationQueueException {
         return new SimpleReplicationQueue(agentName, selector);
@@ -58,7 +65,7 @@ public class SimpleReplicationQueueProvider extends AbstractReplicationQueueProv
         ScheduleOptions options = scheduler.NOW(-1, 10)
                 .canRunConcurrently(false)
                 .name(getJobName(agentName));
-        scheduler.schedule(new ScheduledReplicationQueueProcessor(this, queueProcessor), options);
+        scheduler.schedule(new ScheduledReplicationQueueProcessorTask(this, queueProcessor), options);
     }
 
     public void disableQueueProcessing(String agentName) {
