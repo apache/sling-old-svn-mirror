@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor 
+	license agreements. See the NOTICE file distributed with this work for additional 
+	information regarding copyright ownership. The ASF licenses this file to 
+	you under the Apache License, Version 2.0 (the "License"); you may not use 
+	this file except in compliance with the License. You may obtain a copy of 
+	the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required 
+	by applicable law or agreed to in writing, software distributed under the 
+	License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS 
+	OF ANY KIND, either express or implied. See the License for the specific 
+	language governing permissions and limitations under the License. -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.apache.sling</groupId>
+	<artifactId>resource-editor</artifactId>
+	<packaging>bundle</packaging>
+	<version>1.0-SNAPSHOT</version>
+	<name>Apache Sling Resource Editor</name>
+	<description>A resource editor for Apache Sling.</description>
+	<repositories>
+		<repository>
+			<id>com.springsource.repository.bundles.release</id>
+			<name>SpringSource Enterprise Bundle Repository - SpringSource Bundle
+			Releases</name>
+			<url>http://repository.springsource.com/maven/bundles/release</url>
+		</repository>
+
+		<repository>
+			<id>com.springsource.repository.bundles.external</id>
+			<name>SpringSource Enterprise Bundle Repository - External Bundle
+			Releases</name>
+			<url>http://repository.springsource.com/maven/bundles/external</url>
+		</repository>
+	</repositories>
+	<scm>
+		<developerConnection>scm:git:https://sandroboehme@github.com/sandroboehme/resourceeditor.git</developerConnection>
+		<url>https://github.com/sandroboehme/resourceeditor</url>
+	</scm>
+
+	<build>
+		<resources>
+			<resource>
+				<directory>src/main/less</directory>
+			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+		</resources>
+		<plugins>
+			<plugin>
+				<groupId>org.lesscss</groupId>
+				<artifactId>lesscss-maven-plugin</artifactId>
+				<version>1.7.0.1.1-SNAPSHOT</version>
+				<configuration>
+					<outputDirectory>${project.basedir}/src/main/resources/SLING-INF/libs/reseditor/content/css</outputDirectory>
+					<includes>
+						<include>bootstrap.less</include>
+					</includes>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>compile</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-scr-plugin</artifactId>
+				<version>1.7.2</version>
+				<executions>
+					<execution>
+						<id>generate-scr-descriptor</id>
+						<goals>
+							<goal>scr</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<version>2.3.7</version>
+				<extensions>true</extensions>
+				<configuration>
+					<instructions>
+						<Sling-Initial-Content>SLING-INF/libs/sling/servlet/default/reseditor;overwrite:=true;path:=/libs/sling/servlet/default/reseditor,SLING-INF/libs/reseditor;overwrite:=true;path:=/libs/reseditor</Sling-Initial-Content>
+						<Import-Package>*,javax.servlet;version="[2.5.0,
+							3.1.0)",javax.servlet.http;version="[2.5.0,
+							3.1.0)",javax.servlet.jsp.jstl.core,javax.servlet.jsp.jstl.fmt,javax.servlet.jsp.jstl.sql,javax.servlet.jsp.jstl.tlv,
+							org.apache.xalan.serialize,org.apache.xalan.templates,org.apache.xml.utils,org.apache.xpath,org.apache.xpath.objects,
+							org.apache.taglibs.standard,org.apache.taglibs.standard.extra.spath,org.apache.taglibs.standard.functions,org.apache.taglibs.standard.lang.jstl,org.apache.taglibs.standard.lang.jstl.parser,org.apache.taglibs.standard.lang.jstl.test,org.apache.taglibs.standard.lang.jstl.test.beans,org.apache.taglibs.standard.lang.support,org.apache.taglibs.standard.resources,org.apache.taglibs.standard.tag.common.core,org.apache.taglibs.standard.tag.common.fmt,org.apache.taglibs.standard.tag.common.sql,org.apache.taglibs.standard.tag.common.xml,org.apache.taglibs.standard.tag.el.core,org.apache.taglibs.standard.tag.el.fmt,org.apache.taglibs.standard.tag.el.sql,org.apache.taglibs.standard.tag.el.xml,org.apache.taglibs.standard.tag.rt.core,org.apache.taglibs.standard.tag.rt.fmt,org.apache.taglibs.standard.tag.rt.sql,org.apache.taglibs.standard.tag.rt.xml,org.apache.taglibs.standard.tei,org.apache.taglibs.standard.tlv,
+						</Import-Package>
+						<Require-Bundle>de.sandroboehme.jsnodetypes</Require-Bundle>
+						<Private-Package>
+							org.apache.sling.reseditor.*
+						</Private-Package>
+					</instructions>
+					<remoteOBR>www.jcrbrowser.org</remoteOBR>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.sling</groupId>
+				<artifactId>maven-sling-plugin</artifactId>
+				<version>2.1.0</version>
+				<executions>
+					<execution>
+						<id>install-bundle</id>
+						<goals>
+							<goal>validate</goal>
+							<goal>install</goal>
+						</goals>
+						<configuration>
+							<mountByFS>true</mountByFS>
+							<slingUrl>http://localhost:8080/system/console</slingUrl>
+							<user>admin</user>
+							<password>admin</password>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.2.2</version>
+			</plugin>
+
+		</plugins>
+		<extensions>
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-webdav-jackrabbit</artifactId>
+				<version>2.2</version>
+			</extension>
+		</extensions>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>2.5</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.compendium</artifactId>
+			<version>4.2.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.core</artifactId>
+			<version>4.2.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax.jcr</groupId>
+			<artifactId>jcr</artifactId>
+			<version>2.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.sling</groupId>
+			<artifactId>org.apache.sling.api</artifactId>
+			<version>2.2.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.5.10</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.scr.annotations</artifactId>
+			<version>1.6.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.11</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+	<distributionManagement>
+<!-- 		<repository> -->
+<!-- 			<id>localSling</id> -->
+<!-- 			<url>dav:http://localhost:8080/obr</url> -->
+<!-- 		</repository> -->
+		<repository>
+			<id>www.jcrbrowser.org</id>
+			<url>dav:http://www.jcrbrowser.org/sling/obr</url>
+		</repository>
+	</distributionManagement>
+</project>
