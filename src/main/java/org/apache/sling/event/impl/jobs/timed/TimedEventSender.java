@@ -552,6 +552,15 @@ public class TimedEventSender
                 properties.remove(EventConstants.EVENT_TOPIC);
                 properties.put(TimedEventStatusProvider.PROPERTY_EVENT_ID, topic.replace('/', '.') + '/' + eventResource.getName());
 
+                final Object date = properties.get(EventUtil.PROPERTY_TIMED_EVENT_DATE);
+                if ( date != null && !(date instanceof Date) ) {
+                    if ( date instanceof Calendar ) {
+                        properties.put(EventUtil.PROPERTY_TIMED_EVENT_DATE, ((Calendar)date).getTime() );
+                    } else {
+                        logger.error("Unable to read event: date property is neither date nor calendar!");
+                        return null;
+                    }
+                }
                 try {
                     result.event = new Event(topic, properties);
                     return result;
