@@ -18,6 +18,9 @@
  */
 package org.apache.sling.event.it;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Dictionary;
@@ -29,6 +32,10 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.sling.discovery.TopologyEvent;
+import org.apache.sling.discovery.TopologyEvent.Type;
+import org.apache.sling.discovery.TopologyEventListener;
+import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.event.impl.jobs.config.ConfigurationConstants;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
@@ -42,6 +49,8 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventHandler;
@@ -233,11 +242,67 @@ public class ChaosTest extends AbstractJobHandlingTest {
     }
 
     /**
-     * Setup chaos threads
+     * Setup chaos thread(s)
+     *
+     * Chaos is right now created by sending topology changing/changed events randomly
      */
     private void setupChaosThreads(final List<Thread> threads,
             final AtomicLong finishedThreads) {
-        // no chaos for now
+        final List<TopologyView> views = new ArrayList<TopologyView>();
+        // register topology listener
+        final ServiceRegistration reg = this.bc.registerService(TopologyEventListener.class.getName(), new TopologyEventListener() {
+
+            @Override
+            public void handleTopologyEvent(final TopologyEvent event) {
+                if ( event.getType() == Type.TOPOLOGY_INIT ) {
+                    views.add(event.getNewView());
+                }
+            }
+        }, null);
+        while ( views.isEmpty() ) {
+            this.sleep(10);
+        }
+        reg.unregister();
+        final TopologyView view = views.get(0);
+
+        try {
+            final ServiceReference[] refs = this.bc.getServiceReferences(TopologyEventListener.class.getName(), "(objectClass=org.apache.sling.event.impl.jobs.topology.TopologyHandler)");
+            assertNotNull(refs);
+            assertEquals(1, refs.length);
+            final TopologyEventListener tel = (TopologyEventListener)bc.getService(refs[0]);
+
+            threads.add(new Thread() {
+
+                private final Random random = new Random();
+
+                @Override
+                public void run() {
+                    final long startTime = System.currentTimeMillis();
+                    // this thread runs 30 seconds longer than the job creation thread
+                    final long endTime = startTime + (DURATION +30) * 1000;
+                    while ( System.currentTimeMillis() < endTime ) {
+                        final int sleepTime = random.nextInt(25) + 15;
+                        try {
+                            Thread.sleep(sleepTime * 1000);
+                        } catch ( final InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                        }
+                        tel.handleTopologyEvent(new TopologyEvent(Type.TOPOLOGY_CHANGING, view, null));
+                        final int changingTime = random.nextInt(20) + 3;
+                        try {
+                            Thread.sleep(changingTime * 1000);
+                        } catch ( final InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                        }
+                        tel.handleTopologyEvent(new TopologyEvent(Type.TOPOLOGY_CHANGED, view, view));
+                    }
+                    tel.getClass().getName();
+                    finishedThreads.incrementAndGet();
+                }
+            });
+        } catch (InvalidSyntaxException e) {
+            e.printStackTrace();
+        }
     }
 
     @Test(timeout=DURATION * 3000)
