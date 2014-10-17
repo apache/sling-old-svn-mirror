@@ -31,6 +31,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.JobManagerConfiguration;
+import org.apache.sling.event.impl.jobs.JobTopicTraverser;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
 import org.apache.sling.event.impl.support.Environment;
@@ -58,6 +59,84 @@ public class UpgradeTask {
         if ( topologyCapabilities.isLeader() ) {
             this.processJobsFromPreviousVersions(configuration, topologyCapabilities, queueManager);
         }
+        this.upgradeBridgedJobs(configuration, topologyCapabilities, queueManager);
+    }
+
+    /**
+     * Upgrade bridged jobs.
+     * In previous versions, bridged jobs were stored under a special topic.
+     * This has changed, the jobs are now stored with their real topic.
+     */
+    private void upgradeBridgedJobs(final JobManagerConfiguration configuration,
+            final TopologyCapabilities caps,
+            final QueueConfigurationManager queueManager) {
+        final String path = configuration.getLocalJobsPath() + '/' + JobImpl.PROPERTY_BRIDGED_EVENT;
+        final ResourceResolver resolver = configuration.createResourceResolver();
+        try {
+            final Resource rootResource = resolver.getResource(path);
+            if ( rootResource != null ) {
+                upgradeBridgedJobs(configuration, rootResource, caps, queueManager);
+            }
+            if ( caps.isLeader() ) {
+                final Resource unassignedRoot = resolver.getResource(configuration.getUnassignedJobsPath() + '/' + JobImpl.PROPERTY_BRIDGED_EVENT);
+                if ( unassignedRoot != null ) {
+                    upgradeBridgedJobs(configuration, unassignedRoot, caps, queueManager);
+                }
+            }
+        } finally {
+            resolver.close();
+        }
+    }
+
+    /**
+     * Upgrade bridge jobs
+     * @param rootResource  The root resource (topic resource)
+     * @param topologyCapabilities The capabilities
+     * @param queueManager The queue manager
+     */
+    private void upgradeBridgedJobs(final JobManagerConfiguration configuration,
+            final Resource topicResource,
+            final TopologyCapabilities caps,
+            final QueueConfigurationManager queueManager) {
+        final String topicName = topicResource.getName().replace('.', '/');
+        final QueueInfo info = queueManager.getQueueInfo(topicName);
+        JobTopicTraverser.traverse(logger, topicResource, new JobTopicTraverser.ResourceCallback() {
+
+            @Override
+            public boolean handle(final Resource rsrc) {
+                try {
+                    final ValueMap vm = ResourceHelper.getValueMap(rsrc);
+                    final String targetId = caps.detectTarget(topicName, vm, info);
+
+                    final Map<String, Object> props = new HashMap<String, Object>(vm);
+                    final String newPath;
+                    if ( targetId != null ) {
+                        newPath = configuration.getAssginedJobsPath() + '/' + targetId + '/' + topicResource.getName() + rsrc.getPath().substring(topicResource.getPath().length());
+                        props.put(Job.PROPERTY_JOB_QUEUE_NAME, info.queueName);
+                        props.put(Job.PROPERTY_JOB_TARGET_INSTANCE, targetId);
+                    } else {
+                        newPath = configuration.getUnassignedJobsPath() + '/' + topicResource.getName() + rsrc.getPath().substring(topicResource.getPath().length());
+                        props.remove(Job.PROPERTY_JOB_QUEUE_NAME);
+                        props.remove(Job.PROPERTY_JOB_TARGET_INSTANCE);
+                    }
+                    props.remove(Job.PROPERTY_JOB_STARTED_TIME);
+                    try {
+                        ResourceHelper.getOrCreateResource(topicResource.getResourceResolver(), newPath, props);
+                        topicResource.getResourceResolver().delete(rsrc);
+                        topicResource.getResourceResolver().commit();
+                    } catch ( final PersistenceException pe ) {
+                        logger.warn("Unable to move job from previous version " + rsrc.getPath(), pe);
+                        topicResource.getResourceResolver().refresh();
+                        topicResource.getResourceResolver().revert();
+                    }
+                } catch (final InstantiationException ie) {
+                    logger.warn("Unable to move job from previous version " + rsrc.getPath(), ie);
+                    topicResource.getResourceResolver().refresh();
+                    topicResource.getResourceResolver().revert();
+                }
+                return caps.isActive();
+            }
+        });
     }
 
     /**
