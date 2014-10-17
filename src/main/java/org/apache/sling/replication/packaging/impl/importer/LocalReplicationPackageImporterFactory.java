@@ -48,11 +48,11 @@ import org.slf4j.LoggerFactory;
 public class LocalReplicationPackageImporterFactory implements ReplicationPackageImporter {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(value = LocalReplicationPackageImporter.NAME, propertyPrivate = true)
-    private static final String TYPE = "type";
+    @Property(value = ReplicationComponentFactory.PACKAGE_IMPORTER_LOCAL, propertyPrivate = true)
+    private static final String TYPE = ReplicationComponentFactory.COMPONENT_TYPE;
 
     @Property
-    private static final String NAME = "name";
+    private static final String NAME = ReplicationComponentFactory.COMPONENT_NAME;
 
     @Reference
     private ReplicationComponentFactory componentFactory;

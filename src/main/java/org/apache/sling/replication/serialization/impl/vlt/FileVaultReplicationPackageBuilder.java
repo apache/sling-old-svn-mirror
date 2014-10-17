@@ -53,14 +53,14 @@ import org.slf4j.LoggerFactory;
 public class FileVaultReplicationPackageBuilder extends AbstractReplicationPackageBuilder implements
         ReplicationPackageBuilder {
 
+    public static String PACKAGING_TYPE = "vlt";
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final Packaging packaging;
 
-    public static final String NAME = "vlt";
-
     public FileVaultReplicationPackageBuilder(Packaging packaging, ReplicationEventFactory replicationEventFactory) {
-        super(NAME, replicationEventFactory);
+        super(PACKAGING_TYPE, replicationEventFactory);
 
         this.packaging = packaging;
     }

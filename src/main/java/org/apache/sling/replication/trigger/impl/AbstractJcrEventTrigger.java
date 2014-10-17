@@ -40,9 +40,6 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractJcrEventTrigger implements ReplicationTrigger, EventListener {
 
-    protected static final String PATH = "path";
-    protected static final String SERVICENAME = "servicename";
-
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final String path;
     private final String serviceUser;
@@ -57,9 +54,6 @@ public abstract class AbstractJcrEventTrigger implements ReplicationTrigger, Eve
         this.serviceUser = serviceUser;
     }
 
-    public AbstractJcrEventTrigger(Map<String, Object> properties, SlingRepository repository) {
-        this(repository, PropertiesUtil.toString(properties.get(PATH), null), PropertiesUtil.toString(properties.get(SERVICENAME), null));
-    }
 
     public void register(String handlerId, ReplicationTriggerRequestHandler requestHandler) {
         try {

@@ -53,14 +53,16 @@ import org.slf4j.LoggerFactory;
         policy = ConfigurationPolicy.REQUIRE
 )
 public class GenericReplicationComponentFactory implements ReplicationComponentProvider {
+    private static final String TRANSPORT_AUTHENTICATION_PROVIDER_TARGET = ReplicationComponentFactory.COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER + ".target";
+
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Property(boolValue = true, label = "Enabled")
-    private static final String ENABLED = "enabled";
+    private static final String ENABLED = ReplicationComponentFactory.COMPONENT_ENABLED;
 
     @Property(label = "Name")
-    public static final String NAME = "name";
+    public static final String NAME = ReplicationComponentFactory.COMPONENT_NAME;
 
     @Property(label = "Properties")
     public static final String PROPERTIES = "properties";
@@ -74,7 +76,7 @@ public class GenericReplicationComponentFactory implements ReplicationComponentP
     @Reference
     private ReplicationComponentFactory componentFactory;
 
-    @Property(label = "Target TransportAuthenticationProvider", name = "transportAuthenticationProvider.target")
+    @Property(label = "Target TransportAuthenticationProvider", name = TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
     @Reference(name = "transportAuthenticationProvider", policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_UNARY)
     private volatile TransportAuthenticationProvider transportAuthenticationProvider;
 
@@ -114,12 +116,12 @@ public class GenericReplicationComponentFactory implements ReplicationComponentP
                 String componentClass = null;
                 Object componentObject = null;
 
-                if ("agent".equals(componentType)) {
+                if (ReplicationComponentFactory.COMPONENT_AGENT.equals(componentType)) {
                     ReplicationAgent agent = componentFactory.createComponent(ReplicationAgent.class, properties, this);
                     componentClass = ReplicationAgent.class.getName();
                     componentObject = agent;
 
-                } else if ("trigger".equals(componentType)) {
+                } else if (ReplicationComponentFactory.COMPONENT_TRIGGER.equals(componentType)) {
 
                     ReplicationTrigger trigger = componentFactory.createComponent(ReplicationTrigger.class, properties, this);
 

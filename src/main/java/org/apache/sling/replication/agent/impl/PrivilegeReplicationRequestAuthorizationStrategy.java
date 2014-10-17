@@ -36,14 +36,9 @@ import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 
 public class PrivilegeReplicationRequestAuthorizationStrategy implements ReplicationRequestAuthorizationStrategy {
-    public static final String NAME = "privilege";
-    public static final String JCR_PRIVILEGE = "jcrPrivilege";
+
 
     private final String jcrPrivilege;
-
-    public PrivilegeReplicationRequestAuthorizationStrategy(Map<String, Object> config) {
-        this(PropertiesUtil.toString(config.get(JCR_PRIVILEGE), null));
-    }
 
     public PrivilegeReplicationRequestAuthorizationStrategy(String jcrPrivilege) {
         if (jcrPrivilege == null) {

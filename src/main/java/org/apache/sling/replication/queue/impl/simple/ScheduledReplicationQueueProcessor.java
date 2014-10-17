@@ -38,11 +38,9 @@ public class ScheduledReplicationQueueProcessor implements Runnable {
 
     public ScheduledReplicationQueueProcessor(ReplicationQueueProvider queueProvider,
                                               ReplicationQueueProcessor queueProcessor) {
-
         this.queueProvider = queueProvider;
         this.queueProcessor = queueProcessor;
     }
-
 
     public void run() {
         try {

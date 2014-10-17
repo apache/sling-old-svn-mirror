@@ -37,7 +37,6 @@ import org.slf4j.LoggerFactory;
 public class AgentReplicationPackageExporter implements ReplicationPackageExporter {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public static final String NAME = "agent";
     public static final String QUEUE_NAME = "queue";
 
     private ReplicationAgent agent;

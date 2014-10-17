@@ -20,10 +20,8 @@ package org.apache.sling.replication.transport.authentication.impl;
 
 import java.util.Map;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.scr.annotations.*;
+import org.apache.sling.replication.agent.ReplicationComponentFactory;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationException;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
@@ -38,20 +36,26 @@ import org.slf4j.LoggerFactory;
 public class UserCredentialsTransportAuthenticationProviderFactory implements
         TransportAuthenticationProvider {
 
-    @Property
-    public final static String USERNAME = UserCredentialsTransportAuthenticationProvider.USERNAME;
+    @Property(value = ReplicationComponentFactory.TRANSPORT_AUTHENTICATION_PROVIDER_USER, propertyPrivate = true)
+    private static final String TYPE = ReplicationComponentFactory.COMPONENT_TYPE;
 
     @Property
-    public final static String PASSWORD = UserCredentialsTransportAuthenticationProvider.PASSWORD;
+    public final static String USERNAME = ReplicationComponentFactory.TRANSPORT_AUTHENTICATION_PROVIDER_USER_PROPERTY_USERNAME;
+
+    @Property
+    public final static String PASSWORD = ReplicationComponentFactory.TRANSPORT_AUTHENTICATION_PROVIDER_USER_PROPERTY_PASSWORD;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
 
-    private UserCredentialsTransportAuthenticationProvider transportAuthenticationProvider;
+    @Reference
+    ReplicationComponentFactory replicationComponentFactory;
+
+    private TransportAuthenticationProvider transportAuthenticationProvider;
 
 
     public void activate(Map<String, Object> config) {
-        transportAuthenticationProvider = new UserCredentialsTransportAuthenticationProvider(config);
+        transportAuthenticationProvider = replicationComponentFactory.createComponent(TransportAuthenticationProvider.class, config, null);
     }
 
     public Object authenticate(Object authenticable, TransportAuthenticationContext context)

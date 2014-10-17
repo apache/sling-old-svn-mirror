@@ -41,8 +41,6 @@ import org.slf4j.LoggerFactory;
 
 public class LocalReplicationPackageImporter implements ReplicationPackageImporter {
 
-    public static final String NAME = "local";
-    
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final ReplicationPackageBuilder packageBuilder;
@@ -50,13 +48,6 @@ public class LocalReplicationPackageImporter implements ReplicationPackageImport
     private final ReplicationEventFactory replicationEventFactory;
 
 
-
-    public LocalReplicationPackageImporter(Map<String, Object> config,
-                                                              ReplicationPackageBuilder packageBuilder,
-                                                              ReplicationEventFactory replicationEventFactory) {
-
-        this(packageBuilder, replicationEventFactory);
-    }
 
     public LocalReplicationPackageImporter(ReplicationPackageBuilder packageBuilder,
                                            ReplicationEventFactory replicationEventFactory) {

@@ -38,7 +38,6 @@ import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
-import org.apache.sling.replication.transport.impl.ReplicationTransportConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,20 +51,23 @@ import org.slf4j.LoggerFactory;
         policy = ConfigurationPolicy.REQUIRE)
 @Service(value = ReplicationPackageExporter.class)
 public class RemoteReplicationPackageExporterFactory implements ReplicationPackageExporter, ReplicationComponentProvider {
+    private static final String TRANSPORT_AUTHENTICATION_PROVIDER_TARGET = ReplicationComponentFactory.COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER + ".target";
+
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(value = RemoteReplicationPackageExporter.NAME, propertyPrivate = true)
-    private static final String TYPE = "type";
+    @Property(value = ReplicationComponentFactory.PACKAGE_EXPORTER_REMOTE, propertyPrivate = true)
+    private static final String TYPE = ReplicationComponentFactory.COMPONENT_TYPE;
 
     @Property
-    private static final String NAME = "name";
+    private static final String NAME = ReplicationComponentFactory.COMPONENT_NAME;
 
-    @Property(name = ReplicationTransportConstants.TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
+    @Property(name = TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
     @Reference(name = "TransportAuthenticationProvider", policy = ReferencePolicy.STATIC)
     private volatile TransportAuthenticationProvider transportAuthenticationProvider;
 
     @Property(cardinality = 100)
-    public static final String ENDPOINTS = ReplicationTransportConstants.ENDPOINTS;
+    public static final String ENDPOINTS = ReplicationComponentFactory.PACKAGE_EXPORTER_REMOTE_PROPERTY_ENDPOINTS;
 
     @Property(name = "poll items", description = "number of subsequent poll requests to make", intValue = 1)
     public static final String POLL_ITEMS = "poll.items";
@@ -79,7 +81,7 @@ public class RemoteReplicationPackageExporterFactory implements ReplicationPacka
             )},
             value = "One"
     )
-    private static final String ENDPOINT_STRATEGY = ReplicationTransportConstants.ENDPOINT_STRATEGY;
+    private static final String ENDPOINT_STRATEGY = ReplicationComponentFactory.PACKAGE_EXPORTER_REMOTE_PROPERTY_ENDPOINTS_STRATEGY;
 
 
     @Reference

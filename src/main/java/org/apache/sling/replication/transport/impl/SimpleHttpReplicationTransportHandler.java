@@ -74,53 +74,59 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
     }
 
     public void deliverPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationTransportException {
-        log.info("delivering package {} to {} using auth {}",
-                new Object[]{
-                        replicationPackage.getId(),
-                        replicationEndpoint.getUri(),
-                        transportAuthenticationProvider
-                });
+        String host = replicationEndpoint.getUri().getHost();
+        if (replicationPackage instanceof HttpPackage && host.equals(
+                ((HttpPackage) replicationPackage).getOrigin())) {
+            log.info("skipping replication of package {} to same origin {}", replicationPackage.getId(), host);
+        } else {
+            log.info("delivering package {} to {} using auth {}",
+                    new Object[]{
+                            replicationPackage.getId(),
+                            replicationEndpoint.getUri(),
+                            transportAuthenticationProvider
+                    });
 
-        try {
-            Executor executor = Executor.newInstance();
-
-            TransportAuthenticationContext context = new TransportAuthenticationContext();
-            context.addAttribute("endpoint", replicationEndpoint);
-            executor = transportAuthenticationProvider.authenticate(executor, context);
-
-            Request req = Request.Post(replicationEndpoint.getUri()).useExpectContinue();
-
-            InputStream inputStream = null;
-            Response response = null;
             try {
+                Executor executor = Executor.newInstance();
 
-                inputStream = replicationPackage.createInputStream();
+                TransportAuthenticationContext context = new TransportAuthenticationContext();
+                context.addAttribute("endpoint", replicationEndpoint);
+                executor = transportAuthenticationProvider.authenticate(executor, context);
 
-                if (inputStream != null) {
-                    req = req.bodyStream(inputStream, ContentType.APPLICATION_OCTET_STREAM);
+                Request req = Request.Post(replicationEndpoint.getUri()).useExpectContinue();
+
+                InputStream inputStream = null;
+                Response response = null;
+                try {
+
+                    inputStream = replicationPackage.createInputStream();
+
+                    if (inputStream != null) {
+                        req = req.bodyStream(inputStream, ContentType.APPLICATION_OCTET_STREAM);
+                    }
+                    response = executor.execute(req);
+                } finally {
+                    IOUtils.closeQuietly(inputStream);
                 }
-                response = executor.execute(req);
-            } finally {
-                IOUtils.closeQuietly(inputStream);
-            }
 
-            if (response != null) {
-                Content content = response.returnContent();
-                log.info("Replication content of type {} for {} delivered: {}", new Object[]{
-                        replicationPackage.getType(),
-                        Arrays.toString(replicationPackage.getPaths()),
-                        content
-                });
-            } else {
-                throw new IOException("response is empty");
+                if (response != null) {
+                    Content content = response.returnContent();
+                    log.info("Replication content of type {} for {} delivered: {}", new Object[]{
+                            replicationPackage.getType(),
+                            Arrays.toString(replicationPackage.getPaths()),
+                            content
+                    });
+                } else {
+                    throw new IOException("response is empty");
+                }
+            } catch (Exception ex) {
+                throw new ReplicationTransportException(ex);
             }
-        } catch (Exception ex) {
-            throw new ReplicationTransportException(ex);
         }
 
     }
 
-    public List<ReplicationPackage> retrievePackages(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationTransportException {
+    public List<ReplicationPackage> retrievePackages(final ResourceResolver resourceResolver, final ReplicationRequest replicationRequest) throws ReplicationTransportException {
         log.debug("polling from {}", replicationEndpoint.getUri());
 
         try {
@@ -144,17 +150,50 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
                 while ((httpResponse = executor.execute(req).returnResponse())
                         .getStatusLine().getStatusCode() == 200
                         && polls < maxNumberOfPackages) {
-                    ReplicationPackage responsePackage = packageBuilder.readPackage(resourceResolver, httpResponse.getEntity().getContent());
+                    final ReplicationPackage responsePackage = packageBuilder.readPackage(resourceResolver, httpResponse.getEntity().getContent());
+                    HttpPackage httpPackage = new HttpPackage() {
+                        public String getOrigin() {
+                            return replicationEndpoint.getUri().getHost();
+                        }
 
-                    result.add(responsePackage);
+                        public String getId() {
+                            return responsePackage.getId();
+                        }
+
+                        public String[] getPaths() {
+                            return responsePackage.getPaths();
+                        }
+
+                        public String getAction() {
+                            return responsePackage.getAction();
+                        }
+
+                        public String getType() {
+                            return responsePackage.getType();
+                        }
+
+                        public InputStream createInputStream() throws IOException {
+                            return responsePackage.createInputStream();
+                        }
+
+                        public long getLength() {
+                            return responsePackage.getLength();
+                        }
+
+                        public void close() {
+                            responsePackage.close();
+                        }
+
+                        public void delete() {
+                            responsePackage.delete();
+                        }
+                    };
+
+                    result.add(httpPackage);
                     polls++;
                 }
 
-                if (polls > 0) {
-                    log.info("polled {} packages from {}", polls, replicationEndpoint.getUri());
-                } else {
-                    log.debug("polled {} packages from {}", polls, replicationEndpoint.getUri());
-                }
+                log.info("polled {} packages from {}", polls, replicationEndpoint.getUri());
 
             } catch (HttpHostConnectException e) {
                 log.warn("could not connect to {} - skipping", replicationEndpoint.getUri());
@@ -165,6 +204,12 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
         } catch (Exception ex) {
             throw new ReplicationTransportException(ex);
         }
+
+    }
+
+    private interface HttpPackage extends ReplicationPackage {
+
+        String getOrigin();
 
     }
 }

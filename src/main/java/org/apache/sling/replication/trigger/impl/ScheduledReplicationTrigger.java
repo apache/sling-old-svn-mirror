@@ -36,12 +36,6 @@ import org.slf4j.LoggerFactory;
  */
 public class ScheduledReplicationTrigger implements ReplicationTrigger {
 
-    public static final String TYPE = "scheduledEvent";
-
-    public static final String ACTION = "action";
-    public static final String PATH = "path";
-    public static final String SECONDS = "seconds";
-
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final ReplicationActionType replicationAction;
@@ -50,15 +44,9 @@ public class ScheduledReplicationTrigger implements ReplicationTrigger {
 
     private final Scheduler scheduler;
 
-    public ScheduledReplicationTrigger(Map<String, Object> config, Scheduler scheduler) {
-        this(ReplicationActionType.fromName(PropertiesUtil.toString(config.get(ACTION), ReplicationActionType.POLL.name())),
-                PropertiesUtil.toString(config.get(PATH), "/"),
-                PropertiesUtil.toInteger(config.get(SECONDS), 30),
-                scheduler);
-    }
 
-    public ScheduledReplicationTrigger(ReplicationActionType replicationAction, String path, int secondsInterval, Scheduler scheduler) {
-        this.replicationAction = replicationAction;
+    public ScheduledReplicationTrigger(String replicationActionName, String path, int secondsInterval, Scheduler scheduler) {
+        this.replicationAction = ReplicationActionType.fromName(replicationActionName);
         this.path = path;
         this.secondsInterval = secondsInterval;
         this.scheduler = scheduler;

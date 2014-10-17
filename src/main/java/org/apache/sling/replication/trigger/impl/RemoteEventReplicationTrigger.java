@@ -58,21 +58,12 @@ public class RemoteEventReplicationTrigger implements ReplicationTrigger {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public final static String TYPE = "remoteEvent";
-    public final static String ENDPOINT = "endpoint";
-
     private final ReplicationEndpoint endpoint;
     private final TransportAuthenticationProvider<CredentialsProvider, CredentialsProvider> authenticationProvider;
 
     private Scheduler scheduler;
 
     private Map<String, Future<HttpResponse>> requests = new ConcurrentHashMap<String, Future<HttpResponse>>();
-
-    public RemoteEventReplicationTrigger(Map<String, Object> config, TransportAuthenticationProvider<CredentialsProvider, CredentialsProvider> authenticationProvider, Scheduler scheduler) {
-        this(PropertiesUtil.toString(config.get(ENDPOINT), null),
-                authenticationProvider,
-                scheduler);
-    }
 
     public RemoteEventReplicationTrigger(String endpoint, TransportAuthenticationProvider<CredentialsProvider, CredentialsProvider> authenticationProvider, Scheduler scheduler) {
         if (endpoint == null) {

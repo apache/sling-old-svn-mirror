@@ -49,7 +49,6 @@ public class RepositoryTransportAuthenticationProvider implements TransportAuthe
         if (path == null) {
             throw new TransportAuthenticationException(
                     "the path to authenticate is missing from the context");
-
         }
 
         Session session = null;

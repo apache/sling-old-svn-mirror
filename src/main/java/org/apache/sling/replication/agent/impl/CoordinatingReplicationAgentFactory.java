@@ -62,40 +62,46 @@ import org.slf4j.LoggerFactory;
         policy = ConfigurationPolicy.REQUIRE
 )
 public class CoordinatingReplicationAgentFactory implements ReplicationComponentProvider {
-    public static final String QUEUEPROVIDER_TARGET = "queueProvider.target";
+    private static final String QUEUE_PROVIDER_TARGET = ReplicationComponentFactory.COMPONENT_QUEUE_PROVIDER + ".target";
+    private static final String QUEUE_DISTRIBUTION_TARGET = ReplicationComponentFactory.COMPONENT_QUEUE_DISTRIBUTION_STRATEGY + ".target";
+    private static final String TRANSPORT_AUTHENTICATION_PROVIDER_TARGET = ReplicationComponentFactory.COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER + ".target";
 
-    public static final String QUEUE_DISTRIBUTION_TARGET = "queueDistributionStrategy.target";
+    private static final String DEFAULT_QUEUEPROVIDER = "(name=" + JobHandlingReplicationQueueProvider.NAME + ")";
+    private static final String DEFAULT_DISTRIBUTION = "(name=" + SingleQueueDistributionStrategy.NAME + ")";
+
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private static final String DEFAULT_QUEUEPROVIDER = "(name=" + JobHandlingReplicationQueueProvider.NAME + ")";
-
-    private static final String DEFAULT_DISTRIBUTION = "(name=" + SingleQueueDistributionStrategy.NAME + ")";
-
     @Property(boolValue = true, label = "Enabled")
-    private static final String ENABLED = "enabled";
+    private static final String ENABLED = ReplicationComponentFactory.COMPONENT_ENABLED;
+
+    @Property(value = ReplicationComponentFactory.AGENT_SIMPLE, propertyPrivate = true)
+    private static final String TYPE = ReplicationComponentFactory.COMPONENT_TYPE;
 
     @Property(label = "Name")
-    public static final String NAME = "name";
+    public static final String NAME = ReplicationComponentFactory.COMPONENT_NAME;
+
+    @Property(boolValue = true, propertyPrivate = true)
+    public static final String IS_PASSIVE = ReplicationComponentFactory.AGENT_SIMPLE_PROPERTY_IS_PASSIVE;
 
     @Property(label = "Service Name")
-    public static final String SERVICE_NAME = "serviceName";
+    public static final String SERVICE_NAME = ReplicationComponentFactory.AGENT_SIMPLE_PROPERTY_SERVICE_NAME;
 
     @Property(label = "Package Exporter", cardinality = 100)
-    public static final String PACKAGE_EXPORTER = "packageExporter";
+    public static final String PACKAGE_EXPORTER = ReplicationComponentFactory.COMPONENT_PACKAGE_EXPORTER;
 
     @Property(label = "Package Importer", cardinality = 100)
-    public static final String PACKAGE_IMPORTER = "packageImporter";
+    public static final String PACKAGE_IMPORTER = ReplicationComponentFactory.COMPONENT_PACKAGE_IMPORTER;
 
-    @Property(label = "Target ReplicationQueueProvider", name = QUEUEPROVIDER_TARGET, value = DEFAULT_QUEUEPROVIDER)
-    @Reference(name = "queueProvider", target = DEFAULT_QUEUEPROVIDER)
+    @Property(label = "Target ReplicationQueueProvider", name = QUEUE_PROVIDER_TARGET, value = DEFAULT_QUEUEPROVIDER)
+    @Reference(name = ReplicationComponentFactory.COMPONENT_QUEUE_PROVIDER, target = DEFAULT_QUEUEPROVIDER)
     private volatile ReplicationQueueProvider queueProvider;
 
     @Property(label = "Target QueueDistributionStrategy", name = QUEUE_DISTRIBUTION_TARGET, value = DEFAULT_DISTRIBUTION)
-    @Reference(name = "queueDistributionStrategy", target = DEFAULT_DISTRIBUTION)
+    @Reference(name = ReplicationComponentFactory.COMPONENT_QUEUE_DISTRIBUTION_STRATEGY, target = DEFAULT_DISTRIBUTION)
     private volatile ReplicationQueueDistributionStrategy queueDistributionStrategy;
 
-    @Property(label = "Target TransportAuthenticationProvider", name = "transportAuthenticationProvider.target")
+    @Property(label = "Target TransportAuthenticationProvider", name = TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
     @Reference(name = "transportAuthenticationProvider")
     private volatile TransportAuthenticationProvider transportAuthenticationProvider;
 
@@ -125,40 +131,25 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
                     .toString(config.get(NAME), String.valueOf(new Random().nextInt(1000)));
             props.put(NAME, name);
 
-
-            String queue = PropertiesUtil.toString(config.get(QUEUEPROVIDER_TARGET), DEFAULT_QUEUEPROVIDER);
-            props.put(QUEUEPROVIDER_TARGET, queue);
-
-            String distribution = PropertiesUtil.toString(config.get(QUEUE_DISTRIBUTION_TARGET), DEFAULT_DISTRIBUTION);
-            props.put(QUEUE_DISTRIBUTION_TARGET, distribution);
-
             if (componentReg == null) {
                 Map<String, Object> properties = new HashMap<String, Object>();
                 properties.putAll(config);
 
-                properties.put("type", "simple");
-                properties.put("isPassive", false);
+                String[] packageImporterProperties = PropertiesUtil.toStringArray(properties.get(PACKAGE_IMPORTER));
+                List<String> packageImporterPropertiesList = new ArrayList<String>();
+                packageImporterPropertiesList.addAll(Arrays.asList(packageImporterProperties));
+                packageImporterPropertiesList.add("type=remote");
+                packageImporterProperties = packageImporterPropertiesList.toArray(new String[packageImporterPropertiesList.size()]);
+                properties.put(PACKAGE_IMPORTER, packageImporterProperties);
 
-                {
-                    String[] packageImporterProperties = PropertiesUtil.toStringArray(properties.get(PACKAGE_IMPORTER));
-                    List<String> packageImporterPropertiesList = new ArrayList<String>();
-                    packageImporterPropertiesList.addAll(Arrays.asList(packageImporterProperties));
-                    packageImporterPropertiesList.add("type=remote");
-                    packageImporterProperties = packageImporterPropertiesList.toArray(new String[packageImporterPropertiesList.size()]);
-                    properties.put(PACKAGE_IMPORTER, packageImporterProperties);
-                }
+                String[] packageExporterProperties = PropertiesUtil.toStringArray(properties.get(PACKAGE_EXPORTER));
+                List<String> packageExporterPropertiesList = new ArrayList<String>();
+                packageExporterPropertiesList.addAll(Arrays.asList(packageExporterProperties));
+                packageExporterPropertiesList.add("type=remote");
+                packageExporterProperties = packageExporterPropertiesList.toArray(new String[packageExporterPropertiesList.size()]);
+                properties.put(PACKAGE_EXPORTER, packageExporterProperties);
 
-                {
-                    String[] packageExporterProperties = PropertiesUtil.toStringArray(properties.get(PACKAGE_EXPORTER));
-                    List<String> packageExporterPropertiesList = new ArrayList<String>();
-                    packageExporterPropertiesList.addAll(Arrays.asList(packageExporterProperties));
-                    packageExporterPropertiesList.add("type=remote");
-                    packageExporterProperties = packageExporterPropertiesList.toArray(new String[packageExporterPropertiesList.size()]);
-                    properties.put(PACKAGE_EXPORTER, packageExporterProperties);
-                }
-
-
-                properties.put("trigger0", new String[] { "type=scheduledEvent" });
+                properties.put("trigger0", new String[]{"type=scheduledEvent"});
 
                 ReplicationAgent agent = componentFactory.createComponent(ReplicationAgent.class, properties, this);
 
@@ -198,11 +189,9 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
         if (type.isAssignableFrom(ReplicationQueueProvider.class)) {
             return (ComponentType) queueProvider;
 
-        }
-        else if (type.isAssignableFrom(ReplicationQueueDistributionStrategy.class)) {
+        } else if (type.isAssignableFrom(ReplicationQueueDistributionStrategy.class)) {
             return (ComponentType) queueDistributionStrategy;
-        }
-        else if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
+        } else if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
             return (ComponentType) transportAuthenticationProvider;
         }
         return null;

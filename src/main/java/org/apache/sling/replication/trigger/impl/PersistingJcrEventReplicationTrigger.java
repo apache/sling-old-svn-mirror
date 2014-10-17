@@ -42,21 +42,15 @@ public class PersistingJcrEventReplicationTrigger extends AbstractJcrEventTrigge
     private static final String NUGGETS_PATH_PROPERTY = "nuggets.path";
     private static final String DEFAULT_NUGGETS_PATH = "/var/nuggets";
 
-    public static final String TYPE = "persistedJcrEvent";
-
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final String nuggetsPath;
 
     public PersistingJcrEventReplicationTrigger(SlingRepository repository, String path, String servicename, String nuggetsPath) {
         super(repository, path, servicename);
-        this.nuggetsPath = nuggetsPath;
+        this.nuggetsPath = nuggetsPath == null? DEFAULT_NUGGETS_PATH : nuggetsPath;
     }
 
-    public PersistingJcrEventReplicationTrigger(Map<String, Object> properties, SlingRepository repository) {
-        super(properties, repository);
-        this.nuggetsPath = PropertiesUtil.toString(properties.get(NUGGETS_PATH_PROPERTY), DEFAULT_NUGGETS_PATH);
-    }
 
     @Override
     protected ReplicationRequest processEvent(Event event) throws RepositoryException {
