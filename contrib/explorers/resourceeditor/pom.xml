@@ -51,7 +51,7 @@
 			<plugin>
 				<groupId>org.lesscss</groupId>
 				<artifactId>lesscss-maven-plugin</artifactId>
-				<version>1.7.0.1.1-SNAPSHOT</version>
+				<version>1.7.0.1.1</version>
 				<configuration>
 					<outputDirectory>${project.basedir}/src/main/resources/SLING-INF/libs/reseditor/content/css</outputDirectory>
 					<includes>
