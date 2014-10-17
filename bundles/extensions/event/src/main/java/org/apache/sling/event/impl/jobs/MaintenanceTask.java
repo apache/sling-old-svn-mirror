@@ -157,8 +157,8 @@ public class MaintenanceTask {
     }
 
     /**
-     * Simple empty folder removes empty folders for the last five minutes
-     * from an hour ago!
+     * Simple empty folder removes empty folders for the last ten minutes
+     * starting five minutes ago.
      * If folder for minute 59 is removed, we check the hour folder as well.
      */
     private void simpleEmptyFolderCleanup(final TopologyCapabilities caps, final String basePath) {
@@ -166,8 +166,8 @@ public class MaintenanceTask {
         final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
             final Calendar cleanUpDate = Calendar.getInstance();
-            // go back ten minutes
-            cleanUpDate.add(Calendar.HOUR, -1);
+            // go back five minutes
+            cleanUpDate.add(Calendar.MINUTE, -5);
 
             final Resource baseResource = resolver.getResource(basePath);
             // sanity check - should never be null
@@ -176,7 +176,7 @@ public class MaintenanceTask {
                 while ( caps.isActive() && topicIter.hasNext() ) {
                     final Resource topicResource = topicIter.next();
 
-                    for(int i = 0; i < 5; i++) {
+                    for(int i = 0; i < 10; i++) {
                         if ( caps.isActive() ) {
                             final StringBuilder sb = new StringBuilder(topicResource.getPath());
                             sb.append('/');
@@ -187,6 +187,8 @@ public class MaintenanceTask {
                             sb.append(cleanUpDate.get(Calendar.DAY_OF_MONTH));
                             sb.append('/');
                             sb.append(cleanUpDate.get(Calendar.HOUR_OF_DAY));
+                            sb.append('/');
+                            sb.append(cleanUpDate.get(Calendar.MINUTE));
                             final String path = sb.toString();
 
                             final Resource dateResource = resolver.getResource(path);
@@ -203,6 +205,7 @@ public class MaintenanceTask {
                                     resolver.commit();
                                 }
                             }
+                            // go back another minute in time
                             cleanUpDate.add(Calendar.MINUTE, -1);
                         }
                     }
