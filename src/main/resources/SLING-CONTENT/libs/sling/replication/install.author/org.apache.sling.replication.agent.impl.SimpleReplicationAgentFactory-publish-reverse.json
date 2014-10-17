@@ -11,8 +11,6 @@
         "type=remote",
         "endpoints[0]=http://localhost:4503/libs/sling/replication/services/exporters/reverse",
 
-        "authenticationProvider/type=service",
-
         "packageBuilder/type=vlt"
     ],
 
@@ -23,7 +21,7 @@
 
     "packageImporter": [
         "type=local",
-        "packageBuilder/type=vlt",
+        "packageBuilder/type=vlt"
     ],
 
     "trigger0": [
@@ -34,9 +32,7 @@
 
     "trigger1": [
         "type=remoteEvent",
-        "endpoint=http://localhost:4503/libs/sling/replication/services/triggers/content-changed.event",
-
-        "authenticationProvider/type=service"
+        "endpoint=http://localhost:4503/libs/sling/replication/services/triggers/content-changed.event"
     ],
 
 

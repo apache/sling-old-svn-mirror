@@ -4,14 +4,14 @@
 
     "serviceName" : "replicationService",
 
-    "packageExporter": [
-        "type=local",
-        "packageBuilder/type=vlt"
-    ],
-
     "requestAuthorizationStrategy" : [
         "type=privilege",
         "jcrPrivilege=jcr:read"
+    ],
+
+    "packageExporter": [
+        "type=local",
+        "packageBuilder/type=vlt"
     ],
 
     "packageImporter": [
