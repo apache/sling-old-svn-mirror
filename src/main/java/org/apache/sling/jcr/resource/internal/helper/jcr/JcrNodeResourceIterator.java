@@ -91,7 +91,7 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
             try {
                 final Node n = nodes.nextNode();
                 Resource resource = new JcrNodeResource(resourceResolver,
-                    null, // do not eagerly initialize path due to performance considerations
+                    n.getPath(),
                     n, dynamicClassLoader);
                 LOGGER.debug("seek: Returning Resource {}", resource);
                 return resource;

@@ -75,13 +75,6 @@ abstract class JcrItemResource<T extends Item> // this should be package private
      * @see org.apache.sling.api.resource.Resource#getPath()
      */
     public String getPath() {
-        if (path == null) {
-            try {
-                path = getItem().getPath();
-            } catch (RepositoryException e) {
-                throw new IllegalStateException("Failed to retrieve path from Item:", e);
-            }
-        }
         return path;
     }
 
