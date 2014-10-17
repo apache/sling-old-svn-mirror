@@ -40,9 +40,9 @@
     </properties>
     
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/resourceresolver-mock</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/resourceresolver-mock</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/testing/resourceresolver-mock</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/mocks/resourceresolver-mock</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/mocks/resourceresolver-mock</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/testing/mocks/resourceresolver-mock</url>
     </scm>
 
     <reporting>
