@@ -34,7 +34,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.event.impl.jobs.JobImpl;
-import org.apache.sling.event.impl.jobs.JobManagerConfiguration;
+import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.consumer.JobExecutionContext;
 import org.apache.sling.event.jobs.consumer.JobExecutionResult;

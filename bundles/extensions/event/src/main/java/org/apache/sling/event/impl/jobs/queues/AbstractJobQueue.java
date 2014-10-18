@@ -25,9 +25,13 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.impl.EventingThreadPool;
@@ -35,11 +39,12 @@ import org.apache.sling.event.impl.jobs.InternalJobState;
 import org.apache.sling.event.impl.jobs.JobExecutionResultImpl;
 import org.apache.sling.event.impl.jobs.JobHandler;
 import org.apache.sling.event.impl.jobs.JobImpl;
-import org.apache.sling.event.impl.jobs.JobManagerImpl;
+import org.apache.sling.event.impl.jobs.JobTopicTraverser;
 import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
 import org.apache.sling.event.impl.jobs.deprecated.JobStatusNotifier;
 import org.apache.sling.event.impl.jobs.notifications.NotificationUtility;
+import org.apache.sling.event.impl.support.BatchResourceRemover;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
@@ -149,10 +154,6 @@ public abstract class AbstractJobQueue
     @Override
     public Statistics getStatistics() {
         return this.services.statisticsManager.getQueueStatistics(this.queueName);
-    }
-
-    public QueueJobCache getCache() {
-        return this.services.cache;
     }
 
     /**
@@ -353,7 +354,7 @@ public abstract class AbstractJobQueue
         if ( logger.isDebugEnabled() ) {
             logger.debug("Returning job for {} : {}", queueName, Utility.toString(result));
         }
-        return (result != null ? new JobHandler( result, (JobManagerImpl)this.services.jobManager) : null);
+        return (result != null ? new JobHandler( result, this.services.configuration) : null);
     }
 
     /**
@@ -371,8 +372,8 @@ public abstract class AbstractJobQueue
      * Inform the queue about a job for the topic
      * @param topic A new topic.
      */
-    public void wakeUpQueue(final String topic) {
-        this.services.cache.handleNewJob(topic);
+    public void wakeUpQueue(final Set<String> topics) {
+        this.services.cache.handleNewJob(topics);
         this.stopWaitingForNextJob();
     }
 
@@ -847,7 +848,52 @@ public abstract class AbstractJobQueue
      */
     @Override
     public synchronized void removeAll() {
-        this.services.topicManager.removeAll(this.getName());
+        final Set<String> topics = this.services.cache.getTopics();
+        logger.debug("Removing all jobs for queue {} : {}", queueName, topics);
+
+        if ( !topics.isEmpty() ) {
+
+            final ResourceResolver resolver = this.services.configuration.createResourceResolver();
+            try {
+                final Resource baseResource = resolver.getResource(this.services.configuration.getLocalJobsPath());
+
+                // sanity check - should never be null
+                if ( baseResource != null ) {
+                    final BatchResourceRemover brr = new BatchResourceRemover();
+
+                    for(final String t : topics) {
+                        final Resource topicResource = baseResource.getChild(t.replace('/', '.'));
+                        if ( topicResource != null ) {
+                            JobTopicTraverser.traverse(logger, topicResource, new JobTopicTraverser.JobCallback() {
+
+                                @Override
+                                public boolean handle(final JobImpl job) {
+                                    final Resource jobResource = topicResource.getResourceResolver().getResource(job.getResourcePath());
+                                    // sanity check
+                                    if ( jobResource != null ) {
+                                        try {
+                                            brr.delete(jobResource);
+                                        } catch ( final PersistenceException ignore) {
+                                            logger.error("Unable to remove job " + job, ignore);
+                                            topicResource.getResourceResolver().revert();
+                                            topicResource.getResourceResolver().refresh();
+                                        }
+                                    }
+                                    return true;
+                                }
+                            });
+                        }
+                    }
+                    try {
+                        resolver.commit();
+                    } catch ( final PersistenceException ignore) {
+                        logger.error("Unable to remove jobs", ignore);
+                    }
+                }
+            } finally {
+                resolver.close();
+            }
+        }
     }
 
     /**

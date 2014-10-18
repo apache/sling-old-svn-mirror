@@ -19,7 +19,6 @@
 package org.apache.sling.event.impl.jobs.queues;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -36,8 +35,8 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.event.impl.jobs.JobConsumerManager;
-import org.apache.sling.event.impl.jobs.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
+import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
 import org.apache.sling.event.impl.jobs.jmx.QueueStatusEvent;
@@ -45,7 +44,6 @@ import org.apache.sling.event.impl.jobs.jmx.QueuesMBeanImpl;
 import org.apache.sling.event.impl.jobs.stats.StatisticsManager;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
-import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.jmx.QueuesMBean;
@@ -177,15 +175,11 @@ public class QueueManager
      * This method first searches the corresponding queue - if such a queue
      * does not exist yet, it is created and started.
      *
-     * @param topicManager The topic manager
-     * @param jobManager The job manager
      * @param queueInfo The queue info
-     * @param topic The topic
+     * @param topics The topics
      */
-    public void start(final TopicManager topicManager,
-            final JobManager jobManager,
-            final QueueInfo queueInfo,
-            final String topic) {
+    public void start(final QueueInfo queueInfo,
+            final Set<String> topics) {
         final InternalQueueConfiguration config = queueInfo.queueConfiguration;
         // get or create queue
         AbstractJobQueue queue = null;
@@ -200,15 +194,12 @@ public class QueueManager
             }
             if ( queue == null ) {
                 final QueueServices services = new QueueServices();
+                services.configuration = this.configuration;
                 services.eventAdmin = this.eventAdmin;
                 services.jobConsumerManager = this.jobConsumerManager;
                 services.scheduler = this.scheduler;
                 services.threadPoolManager = this.threadPoolManager;
-                services.topicManager = topicManager;
                 services.statisticsManager = statisticsManager;
-                services.jobManager = jobManager;
-                final Set<String> topics = new HashSet<String>();
-                topics.add(topic);
                 services.cache = new QueueJobCache(configuration, queueInfo, topics);
                 if ( config.getType() == QueueConfiguration.Type.ORDERED ) {
                     queue = new OrderedJobQueue(queueInfo.queueName, config, services);
@@ -224,7 +215,7 @@ public class QueueManager
                     queue.start();
                 }
             } else {
-                queue.wakeUpQueue(topic);
+                queue.wakeUpQueue(topics);
             }
         }
     }

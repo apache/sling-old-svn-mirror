@@ -16,16 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.event.impl.jobs.topology;
+package org.apache.sling.event.impl.jobs.config;
 
 /**
  * Listener interface to get topology / queue changes.
+ * Components interested in configuration changes can subscribe
+ * themselves using the {@link JobManagerConfiguration}.
  */
-public interface TopologyAware {
+public interface ConfigurationChangeListener {
 
     /**
-     * Notify about a change.
-     * @param caps The new topology capabilities or {@code null}
+     * Notify about a configuration change.
+     * @param active {@code true} if job processing is active, otherwise {@code false}
      */
-    void topologyChanged(final TopologyCapabilities caps);
+    void configurationChanged(final boolean active);
 }

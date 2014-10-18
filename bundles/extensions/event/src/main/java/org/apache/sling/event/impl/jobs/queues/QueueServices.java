@@ -21,11 +21,13 @@ package org.apache.sling.event.impl.jobs.queues;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.event.impl.jobs.JobConsumerManager;
+import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.stats.StatisticsManager;
-import org.apache.sling.event.jobs.JobManager;
 import org.osgi.service.event.EventAdmin;
 
 public class QueueServices {
+
+    public JobManagerConfiguration configuration;
 
     public JobConsumerManager jobConsumerManager;
 
@@ -35,11 +37,7 @@ public class QueueServices {
 
     public Scheduler scheduler;
 
-    public TopicManager topicManager;
-
     public StatisticsManager statisticsManager;
 
     public QueueJobCache cache;
-
-    public JobManager jobManager;
 }

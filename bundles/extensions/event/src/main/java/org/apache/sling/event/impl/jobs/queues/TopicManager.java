@@ -18,6 +18,7 @@
  */
 package org.apache.sling.event.impl.jobs.queues;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -31,19 +32,12 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.event.impl.jobs.JobImpl;
-import org.apache.sling.event.impl.jobs.JobManagerConfiguration;
-import org.apache.sling.event.impl.jobs.JobTopicTraverser;
-import org.apache.sling.event.impl.jobs.TestLogger;
+import org.apache.sling.event.impl.jobs.config.ConfigurationChangeListener;
+import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
-import org.apache.sling.event.impl.jobs.topology.TopologyAware;
-import org.apache.sling.event.impl.jobs.topology.TopologyCapabilities;
-import org.apache.sling.event.impl.jobs.topology.TopologyHandler;
-import org.apache.sling.event.impl.support.BatchResourceRemover;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.NotificationConstants;
 import org.osgi.framework.BundleContext;
@@ -60,10 +54,10 @@ import org.slf4j.LoggerFactory;
 @Component(immediate=true)
 @Service(value=EventHandler.class)
 @Property(name=EventConstants.EVENT_TOPIC, value=NotificationConstants.TOPIC_JOB_ADDED)
-public class TopicManager implements EventHandler, TopologyAware {
+public class TopicManager implements EventHandler, ConfigurationChangeListener {
 
     /** Logger. */
-    private final Logger logger = new TestLogger(LoggerFactory.getLogger(this.getClass()));
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Reference
     private JobManagerConfiguration configuration;
@@ -72,16 +66,10 @@ public class TopicManager implements EventHandler, TopologyAware {
     private QueueConfigurationManager queueConfigMgr;
 
     @Reference
-    private TopologyHandler topologyHandler;
-
-    @Reference
     private QueueManager queueManager;
 
     @Reference
     private JobManager jobManager;
-
-    /** The mapping from a topic to a queue info. */
-    private final Map<String, QueueInfo> topicMapping = new HashMap<String, QueueInfo>();
 
     /** Flag whether the manager is active or suspended. */
     private final AtomicBoolean isActive = new AtomicBoolean(false);
@@ -91,7 +79,7 @@ public class TopicManager implements EventHandler, TopologyAware {
      */
     @Activate
     protected void activate(final BundleContext bundleContext) {
-        this.topologyHandler.addListener(this);
+        this.configuration.addListener(this);
     }
 
     /**
@@ -99,7 +87,7 @@ public class TopicManager implements EventHandler, TopologyAware {
      */
     @Deactivate
     protected void deactivate() {
-        this.topologyHandler.removeListener(this);
+        this.configuration.removeListener(this);
     }
 
     /**
@@ -107,22 +95,19 @@ public class TopicManager implements EventHandler, TopologyAware {
      * @param caps The new topology capabilities or {@code null} if currently unknown.
      */
     @Override
-    public void topologyChanged(final TopologyCapabilities caps) {
-        logger.debug("Topology changed {}", caps);
-        synchronized ( this.topicMapping ) {
-            if ( caps != null ) {
-                final Set<String> topics = this.initialScan();
-                this.updateTopicMapping(topics);
-                // start queues
-                for(final Map.Entry<String, QueueInfo> entry : this.topicMapping.entrySet() ) {
-                    this.queueManager.start(this, this.jobManager, entry.getValue(), entry.getKey());
-                }
-                this.isActive.set(true);
-            } else {
-                this.isActive.set(false);
-                this.queueManager.restart();
-                this.topicMapping.clear();
+    public void configurationChanged(final boolean active) {
+        logger.debug("Topology changed {}", active);
+        if ( active ) {
+            final Set<String> topics = this.initialScan();
+            final Map<QueueInfo, Set<String>> mapping = this.updateTopicMapping(topics);
+            // start queues
+            for(final Map.Entry<QueueInfo, Set<String>> entry : mapping.entrySet() ) {
+                this.queueManager.start(entry.getKey(), entry.getValue());
             }
+            this.isActive.set(true);
+        } else {
+            this.isActive.set(false);
+            this.queueManager.restart();
         }
     }
 
@@ -159,89 +144,28 @@ public class TopicManager implements EventHandler, TopologyAware {
     @Override
     public void handleEvent(final Event event) {
         final String topic = (String)event.getProperty(NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC);
-        synchronized ( this.topicMapping ) {
-            if ( this.isActive.get() && topic != null ) {
-                QueueInfo info = this.topicMapping.get(topic);
-                if ( info == null ) {
-                    info = this.queueConfigMgr.getQueueInfo(topic);
-                    this.topicMapping.put(topic, info);
-                }
-                this.queueManager.start(this, this.jobManager, info, topic);
-            }
+        if ( this.isActive.get() && topic != null ) {
+            final QueueInfo info = this.queueConfigMgr.getQueueInfo(topic);
+            this.queueManager.start(info, Collections.singleton(topic));
         }
     }
 
     /**
      * Get the latest mapping from queue name to topics
      */
-    private void updateTopicMapping(final Set<String> topics) {
-        this.topicMapping.clear();
-
+    private Map<QueueInfo, Set<String>> updateTopicMapping(final Set<String> topics) {
+        final Map<QueueInfo, Set<String>> mapping = new HashMap<QueueConfigurationManager.QueueInfo, Set<String>>();
         for(final String topic : topics) {
             final QueueInfo queueInfo = this.queueConfigMgr.getQueueInfo(topic);
-            this.topicMapping.put(topic, queueInfo);
-        }
-
-        this.logger.debug("Established new topic mapping: {}", this.topicMapping);
-    }
-
-    /**
-     * Remove all jobs for a queue.
-     * @param queueName The queue name
-     */
-    public void removeAll(final String queueName) {
-        final Set<String> topics = new HashSet<String>();
-        synchronized ( this.topicMapping ) {
-            for(final Map.Entry<String, QueueInfo> entry : this.topicMapping.entrySet()) {
-                if ( entry.getValue().queueName.equals(queueName) ) {
-                    topics.add(entry.getKey());
-                }
+            Set<String> queueTopics = mapping.get(queueInfo);
+            if ( queueTopics == null ) {
+                queueTopics = new HashSet<String>();
+                mapping.put(queueInfo, queueTopics);
             }
+            queueTopics.add(topic);
         }
-        logger.debug("Removing all jobs for queue {} : {}", queueName, topics);
 
-        if ( !topics.isEmpty() ) {
-
-            final ResourceResolver resolver = this.configuration.createResourceResolver();
-            try {
-                final Resource baseResource = resolver.getResource(this.configuration.getLocalJobsPath());
-
-                // sanity check - should never be null
-                if ( baseResource != null ) {
-                    final BatchResourceRemover brr = new BatchResourceRemover();
-
-                    for(final String t : topics) {
-                        final Resource topicResource = baseResource.getChild(t.replace('/', '.'));
-                        if ( topicResource != null ) {
-                            JobTopicTraverser.traverse(logger, topicResource, new JobTopicTraverser.JobCallback() {
-
-                                @Override
-                                public boolean handle(final JobImpl job) {
-                                    final Resource jobResource = topicResource.getResourceResolver().getResource(job.getResourcePath());
-                                    // sanity check
-                                    if ( jobResource != null ) {
-                                        try {
-                                            brr.delete(jobResource);
-                                        } catch ( final PersistenceException ignore) {
-                                            logger.error("Unable to remove job " + job, ignore);
-                                            topicResource.getResourceResolver().revert();
-                                            topicResource.getResourceResolver().refresh();
-                                        }
-                                    }
-                                    return true;
-                                }
-                            });
-                        }
-                    }
-                    try {
-                        resolver.commit();
-                    } catch ( final PersistenceException ignore) {
-                        logger.error("Unable to remove jobs", ignore);
-                    }
-                }
-            } finally {
-                resolver.close();
-            }
-        }
+        this.logger.debug("Established new topic mapping: {}", mapping);
+        return mapping;
     }
 }
