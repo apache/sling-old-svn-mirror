@@ -19,6 +19,7 @@
 package org.apache.sling.event.impl.jobs.queues;
 
 import java.util.Date;
+import java.util.Set;
 
 import org.apache.sling.event.impl.jobs.JobHandler;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
@@ -35,8 +36,9 @@ public final class ParallelJobQueue extends AbstractJobQueue {
 
     public ParallelJobQueue(final String name,
                            final InternalQueueConfiguration config,
-                           final QueueServices services) {
-        super(name, config, services);
+                           final QueueServices services,
+                           final Set<String> topics) {
+        super(name, config, services, topics);
     }
 
     @Override

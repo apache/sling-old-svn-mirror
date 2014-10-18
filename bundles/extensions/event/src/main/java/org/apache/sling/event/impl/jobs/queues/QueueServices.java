@@ -38,6 +38,4 @@ public class QueueServices {
     public Scheduler scheduler;
 
     public StatisticsManager statisticsManager;
-
-    public QueueJobCache cache;
 }
