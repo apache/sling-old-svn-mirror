@@ -46,7 +46,6 @@ import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.impl.jobs.config.ConfigurationChangeListener;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
-import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
 import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
 import org.apache.sling.event.impl.jobs.notifications.NotificationUtility;
@@ -116,9 +115,6 @@ public class JobManagerImpl
     /** The job manager configuration. */
     @Reference
     private JobManagerConfiguration configuration;
-
-    @Reference
-    private QueueConfigurationManager queueManager;
 
     @Reference
     private StatisticsManager statisticsManager;
@@ -797,7 +793,7 @@ public class JobManagerImpl
             final String jobName,
             final Map<String, Object> jobProperties,
             final List<String> errors) {
-        final QueueInfo info = this.queueManager.getQueueInfo(jobTopic);
+        final QueueInfo info = this.configuration.getQueueConfigurationManager().getQueueInfo(jobTopic);
         // check for unique jobs
         if ( jobName != null && !this.lock(jobTopic, jobName) ) {
             logger.debug("Discarding duplicate job {}", Utility.toString(jobTopic, jobName, jobProperties));
@@ -912,7 +908,7 @@ public class JobManagerImpl
         final JobImpl job = (JobImpl)this.getJobById(jobId);
         if ( job != null && !this.configuration.isStoragePath(job.getResourcePath()) ) {
             // get the queue configuration
-            final QueueInfo queueInfo = this.queueManager.getQueueInfo(job.getTopic());
+            final QueueInfo queueInfo = this.configuration.getQueueConfigurationManager().getQueueInfo(job.getTopic());
             final AbstractJobQueue queue = (AbstractJobQueue)this.qManager.getQueue(queueInfo.queueName);
 
             boolean stopped = false;

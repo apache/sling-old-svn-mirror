@@ -28,7 +28,6 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
-import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
 import org.apache.sling.event.impl.jobs.notifications.NotificationUtility;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.NotificationConstants;
@@ -59,10 +58,6 @@ public class StatisticsManager implements EventHandler {
     /** The job manager configuration. */
     @Reference
     private JobManagerConfiguration configuration;
-
-    /** The queue configuration manager. */
-    @Reference
-    private QueueConfigurationManager queueConfigurationManager;
 
     /** Global statistics. */
     private final StatisticsImpl globalStatistics = new StatisticsImpl() {

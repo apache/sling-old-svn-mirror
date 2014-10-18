@@ -455,13 +455,13 @@ public class JobManagerConfiguration implements TopologyEventListener, QueueConf
         // before we propagate the new topology we do some maintenance
         if ( eventType == Type.TOPOLOGY_INIT ) {
             final UpgradeTask task = new UpgradeTask();
-            task.run(this, this.topologyCapabilities, queueConfigManager);
+            task.run(this, this.topologyCapabilities);
 
             final FindUnfinishedJobsTask rt = new FindUnfinishedJobsTask();
             rt.run(this);
         }
 
-        final CheckTopologyTask mt = new CheckTopologyTask(this, this.queueConfigManager);
+        final CheckTopologyTask mt = new CheckTopologyTask(this);
         mt.run(topologyCapabilities, !isConfigChange, isConfigChange);
 
         // start listeners
