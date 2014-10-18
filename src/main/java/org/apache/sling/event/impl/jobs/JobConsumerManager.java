@@ -40,7 +40,7 @@ import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.discovery.PropertyProvider;
-import org.apache.sling.event.impl.jobs.topology.TopologyCapabilities;
+import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
 import org.apache.sling.event.impl.support.TopicMatcher;
 import org.apache.sling.event.impl.support.TopicMatcherHelper;
 import org.apache.sling.event.jobs.Job;

@@ -46,8 +46,8 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.scheduler.JobContext;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
-import org.apache.sling.event.impl.jobs.topology.TopologyAware;
-import org.apache.sling.event.impl.jobs.topology.TopologyCapabilities;
+import org.apache.sling.event.impl.jobs.config.ConfigurationChangeListener;
+import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.impl.support.ScheduleInfoImpl;
@@ -68,7 +68,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class JobSchedulerImpl
-    implements EventHandler, TopologyAware, org.apache.sling.commons.scheduler.Job {
+    implements EventHandler, ConfigurationChangeListener, org.apache.sling.commons.scheduler.Job {
 
     private static final String TOPIC_READ_JOB = "org/apache/sling/event/impl/jobs/READSCHEDULEDJOB";
 
@@ -85,7 +85,7 @@ public class JobSchedulerImpl
     /** Is this active? */
     private volatile boolean active;
 
-    private final JobManagerConfiguration config;
+    private final JobManagerConfiguration configuration;
 
     private final Scheduler scheduler;
 
@@ -102,7 +102,7 @@ public class JobSchedulerImpl
     public JobSchedulerImpl(final JobManagerConfiguration configuration,
             final Scheduler scheduler,
             final JobManagerImpl jobManager) {
-        this.config = configuration;
+        this.configuration = configuration;
         this.scheduler = scheduler;
         this.running = true;
         this.jobManager = jobManager;
@@ -121,12 +121,14 @@ public class JobSchedulerImpl
             }
         });
         backgroundThread.start();
+        this.configuration.addListener(this);
     }
 
     /**
      * Deactivate this component.
      */
     public void deactivate() {
+        this.configuration.removeListener(this);
         this.running = false;
         this.stopScheduling();
         synchronized ( this.scheduledJobs ) {
@@ -193,7 +195,7 @@ public class JobSchedulerImpl
                 if ( event.getTopic().equals(SlingConstants.TOPIC_RESOURCE_ADDED)
                      || event.getTopic().equals(SlingConstants.TOPIC_RESOURCE_CHANGED)) {
                     final String path = (String)event.getProperty(SlingConstants.PROPERTY_PATH);
-                    final ResourceResolver resolver = this.config.createResourceResolver();;
+                    final ResourceResolver resolver = this.configuration.createResourceResolver();;
                     try {
                         final Resource eventResource = resolver.getResource(path);
                         if ( ResourceHelper.RESOURCE_TYPE_SCHEDULED_JOB.equals(eventResource.getResourceType()) ) {
@@ -330,10 +332,9 @@ public class JobSchedulerImpl
     }
 
     public void unschedule(final ScheduledJobInfoImpl info) {
-        final ResourceResolver resolver = this.config.createResourceResolver();
+        final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
-            final StringBuilder sb = new StringBuilder(this.config.getScheduledJobsPathWithSlash());
-            sb.append('/');
+            final StringBuilder sb = new StringBuilder(this.configuration.getScheduledJobsPath(true));
             sb.append(ResourceHelper.filterName(info.getName()));
             final String path = sb.toString();
 
@@ -371,7 +372,7 @@ public class JobSchedulerImpl
                         @Override
                         public void run() {
                             synchronized (unloadedEvents) {
-                                final ResourceResolver resolver = config.createResourceResolver();
+                                final ResourceResolver resolver = configuration.createResourceResolver();
                                 final Set<String> newUnloadedEvents = new HashSet<String>();
                                 newUnloadedEvents.addAll(unloadedEvents);
                                 try {
@@ -406,7 +407,7 @@ public class JobSchedulerImpl
             } else {
                 final String path = (String)event.getProperty(SlingConstants.PROPERTY_PATH);
                 final String resourceType = (String)event.getProperty(SlingConstants.PROPERTY_RESOURCE_TYPE);
-                if ( path != null && path.startsWith(this.config.getScheduledJobsPathWithSlash())
+                if ( path != null && path.startsWith(this.configuration.getScheduledJobsPath(true))
                      && (resourceType == null || ResourceHelper.RESOURCE_TYPE_SCHEDULED_JOB.equals(resourceType))) {
                     logger.debug("Received resource event for {} : {}", path, resourceType);
                     try {
@@ -424,7 +425,7 @@ public class JobSchedulerImpl
      * Load all scheduled jobs from the resource tree
      */
     private void loadScheduledJobs(final long startTime) {
-        final ResourceResolver resolver = this.config.createResourceResolver();
+        final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
             final Calendar startDate = Calendar.getInstance();
             startDate.setTimeInMillis(startTime);
@@ -445,7 +446,7 @@ public class JobSchedulerImpl
             while ( result.hasNext() ) {
                 final Resource eventResource = result.next();
                 // sanity check for the path
-                if ( eventResource.getPath().startsWith(this.config.getScheduledJobsPathWithSlash()) ) {
+                if ( eventResource.getPath().startsWith(this.configuration.getScheduledJobsPath(true)) ) {
                     final ReadResult readResult = this.readScheduledJob(eventResource);
                     if ( readResult != null ) {
                         if ( readResult.hasReadErrors ) {
@@ -518,7 +519,7 @@ public class JobSchedulerImpl
             final boolean suspend,
             final List<ScheduleInfoImpl> scheduleInfos)
     throws PersistenceException {
-        final ResourceResolver resolver = this.config.createResourceResolver();
+        final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
 
             // create properties
@@ -556,7 +557,7 @@ public class JobSchedulerImpl
             // create path and resource
             properties.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, ResourceHelper.RESOURCE_TYPE_SCHEDULED_JOB);
 
-            final String path = this.config.getScheduledJobsPathWithSlash() + ResourceHelper.filterName(scheduleName);
+            final String path = this.configuration.getScheduledJobsPath(true) + ResourceHelper.filterName(scheduleName);
 
             // update existing resource
             final Resource existingInfo = resolver.getResource(path);
@@ -593,13 +594,13 @@ public class JobSchedulerImpl
     }
 
     @Override
-    public void topologyChanged(final TopologyCapabilities caps) {
-        if ( caps == null ) {
+    public void configurationChanged(final boolean active) {
+        if ( !active ) {
             this.active = false;
             this.stopScheduling();
         } else {
             final boolean previouslyActive = this.active;
-            this.active = caps.isLeader();
+            this.active = this.configuration.getTopologyCapabilities().isLeader();
             if ( this.active && !previouslyActive ) {
                 this.startScheduling();
             }
@@ -726,10 +727,9 @@ public class JobSchedulerImpl
     }
 
     public void setSuspended(final ScheduledJobInfoImpl info, final boolean flag) {
-        final ResourceResolver resolver = config.createResourceResolver();
+        final ResourceResolver resolver = configuration.createResourceResolver();
         try {
-            final StringBuilder sb = new StringBuilder(this.config.getScheduledJobsPathWithSlash());
-            sb.append('/');
+            final StringBuilder sb = new StringBuilder(this.configuration.getScheduledJobsPath(true));
             sb.append(ResourceHelper.filterName(info.getName()));
             final String path = sb.toString();
 

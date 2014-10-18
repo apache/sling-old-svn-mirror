@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.event.impl.jobs;
+package org.apache.sling.event.impl.jobs.tasks;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -28,7 +28,9 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.event.impl.jobs.topology.TopologyCapabilities;
+import org.apache.sling.event.impl.jobs.Utility;
+import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
+import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
 import org.apache.sling.event.impl.support.BatchResourceRemover;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +40,7 @@ import org.slf4j.LoggerFactory;
  *
  * In the default configuration, this task runs every minute
  */
-public class MaintenanceTask {
+public class CleanUpTask {
 
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -49,7 +51,7 @@ public class MaintenanceTask {
     /**
      * Constructor
      */
-    public MaintenanceTask(final JobManagerConfiguration config) {
+    public CleanUpTask(final JobManagerConfiguration config) {
         this.configuration = config;
     }
 

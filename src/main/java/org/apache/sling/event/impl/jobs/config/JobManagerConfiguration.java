@@ -16,14 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.event.impl.jobs;
+package org.apache.sling.event.impl.jobs.config;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -34,9 +38,17 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.discovery.TopologyEvent;
+import org.apache.sling.discovery.TopologyEvent.Type;
+import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.event.impl.EnvironmentComponent;
+import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueConfigurationChangeListener;
+import org.apache.sling.event.impl.jobs.tasks.CheckTopologyTask;
+import org.apache.sling.event.impl.jobs.tasks.FindUnfinishedJobsTask;
+import org.apache.sling.event.impl.jobs.tasks.UpgradeTask;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
+import org.apache.sling.event.jobs.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +60,7 @@ import org.slf4j.LoggerFactory;
            label="Apache Sling Job Manager",
            description="This is the central service of the job handling.",
            name="org.apache.sling.event.impl.jobs.jcr.PersistenceHandler")
-@Service(value={JobManagerConfiguration.class})
+@Service(value={JobManagerConfiguration.class, TopologyEventListener.class})
 @Properties({
     @Property(name=JobManagerConfiguration.PROPERTY_DISABLE_DISTRIBUTION,
               boolValue=JobManagerConfiguration.DEFAULT_DISABLE_DISTRIBUTION,
@@ -62,10 +74,10 @@ import org.slf4j.LoggerFactory;
     @Property(name=JobManagerConfiguration.PROPERTY_BACKGROUND_LOAD_DELAY,
               longValue=JobManagerConfiguration.DEFAULT_BACKGROUND_LOAD_DELAY, propertyPrivate=true),
 })
-public class JobManagerConfiguration {
+public class JobManagerConfiguration implements TopologyEventListener, QueueConfigurationChangeListener {
 
     /** Logger. */
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger("org.apache.sling.event.impl.jobs");
 
     /** Default resource path for jobs. */
     public static final String DEFAULT_REPOSITORY_PATH = "/var/eventing/jobs";
@@ -133,12 +145,21 @@ public class JobManagerConfiguration {
     /** The resource path where scheduled jobs are stored - ending with a slash. */
     private String scheduledJobsPathWithSlash;
 
+    /** List of topology awares. */
+    private final List<ConfigurationChangeListener> listeners = new ArrayList<ConfigurationChangeListener>();
+
     /** The environment component. */
     @Reference
     private EnvironmentComponent environment;
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
+
+    @Reference
+    private QueueConfigurationManager queueConfigManager;
+
+    /** The topology capabilities. */
+    private volatile TopologyCapabilities topologyCapabilities;
 
     /**
      * Activate this component.
@@ -182,15 +203,24 @@ public class JobManagerConfiguration {
         } finally {
             resolver.close();
         }
+        this.queueConfigManager.addListener(this);
     }
 
     /**
      * Update with a new configuration
      */
     @Modified
-    public void update(final Map<String, Object> props) {
+    protected void update(final Map<String, Object> props) {
         this.disabledDistribution = PropertiesUtil.toBoolean(props.get(PROPERTY_DISABLE_DISTRIBUTION), DEFAULT_DISABLE_DISTRIBUTION);
         this.backgroundLoadDelay = PropertiesUtil.toLong(props.get(PROPERTY_BACKGROUND_LOAD_DELAY), DEFAULT_BACKGROUND_LOAD_DELAY);
+    }
+
+    /**
+     * Deactivate
+     */
+    @Deactivate
+    protected void deactivate() {
+        this.queueConfigManager.removeListener(this);
     }
 
     /**
@@ -208,6 +238,26 @@ public class JobManagerConfiguration {
             throw new RuntimeException(le);
         }
         return resolver;
+    }
+
+    /**
+     * Get the current topology capabilities.
+     * @return The capabilities or {@code null}
+     */
+    public TopologyCapabilities getTopologyCapabilities() {
+        return this.topologyCapabilities;
+    }
+
+    public QueueConfigurationManager getQueueConfigurationManager() {
+        return this.queueConfigManager;
+    }
+
+    /**
+     * Get main logger.
+     * @return The main logger.
+     */
+    public Logger getMainLogger() {
+        return this.logger;
     }
 
     /**
@@ -334,12 +384,13 @@ public class JobManagerConfiguration {
 
     /**
      * Get the storage path for finished jobs.
-     * @param finishedJob The finished job
+     * @param topic Topic of the finished job
+     * @param jobId The job id of the finished job.
      * @param isSuccess Whether processing was successful or not
      * @return The complete storage path
      */
-    public String getStoragePath(final JobImpl finishedJob, final boolean isSuccess) {
-        final String topicName = finishedJob.getTopic().replace('/', '.');
+    public String getStoragePath(final String topic, final String jobId, final boolean isSuccess) {
+        final String topicName = topic.replace('/', '.');
         final StringBuilder sb = new StringBuilder();
         if ( isSuccess ) {
             sb.append(this.storedSuccessfulJobsPath);
@@ -349,7 +400,7 @@ public class JobManagerConfiguration {
         sb.append('/');
         sb.append(topicName);
         sb.append('/');
-        sb.append(finishedJob.getId());
+        sb.append(jobId);
 
         return sb.toString();
 
@@ -362,11 +413,138 @@ public class JobManagerConfiguration {
         return path.startsWith(this.storedCancelledJobsPath) || path.startsWith(this.storedSuccessfulJobsPath);
     }
 
-    public String getScheduledJobsPath() {
-        return this.scheduledJobsPath;
+    /**
+     * Get the scheduled jobs path
+     * @param slash If {@code false} the path is returned, if {@code true} the path appended with a slash is returned.
+     * @return The path for the scheduled jobs
+     */
+    public String getScheduledJobsPath(final boolean slash) {
+        return (slash ? this.scheduledJobsPathWithSlash : this.scheduledJobsPath);
     }
 
-    public String getScheduledJobsPathWithSlash() {
-        return this.scheduledJobsPathWithSlash;
+    @Override
+    public void configChanged() {
+        final TopologyCapabilities caps = this.topologyCapabilities;
+        if ( caps != null ) {
+            synchronized ( this.listeners ) {
+                this.stopProcessing(false);
+
+                this.startProcessing(Type.PROPERTIES_CHANGED, caps, true);
+            }
+        }
+    }
+
+    private void stopProcessing(final boolean deactivate) {
+        boolean notify = this.topologyCapabilities != null;
+        // deactivate old capabilities - this stops all background processes
+        if ( deactivate && this.topologyCapabilities != null ) {
+            this.topologyCapabilities.deactivate();
+        }
+        this.topologyCapabilities = null;
+
+        if ( notify ) {
+            // stop all listeners
+            this.notifiyListeners();
+        }
+    }
+
+    private void startProcessing(final Type eventType, final TopologyCapabilities newCaps, final boolean isConfigChange) {
+        // create new capabilities and update view
+        this.topologyCapabilities = newCaps;
+
+        // before we propagate the new topology we do some maintenance
+        if ( eventType == Type.TOPOLOGY_INIT ) {
+            final UpgradeTask task = new UpgradeTask();
+            task.run(this, this.topologyCapabilities, queueConfigManager);
+
+            final FindUnfinishedJobsTask rt = new FindUnfinishedJobsTask();
+            rt.run(this);
+        }
+
+        final CheckTopologyTask mt = new CheckTopologyTask(this, this.queueConfigManager);
+        mt.run(topologyCapabilities, !isConfigChange, isConfigChange);
+
+        // start listeners
+        this.notifiyListeners();
+    }
+
+    private void notifiyListeners() {
+        for(final ConfigurationChangeListener l : this.listeners) {
+            l.configurationChanged(this.topologyCapabilities != null);
+        }
+    }
+
+    /**
+     * @see org.apache.sling.discovery.TopologyEventListener#handleTopologyEvent(org.apache.sling.discovery.TopologyEvent)
+     */
+    @Override
+    public void handleTopologyEvent(final TopologyEvent event) {
+        this.logger.debug("Received topology event {}", event);
+
+        // check if there is a change of properties which doesn't affect us
+        if ( event.getType() == Type.PROPERTIES_CHANGED ) {
+            final Map<String, String> newAllInstances = TopologyCapabilities.getAllInstancesMap(event.getNewView());
+            if ( this.topologyCapabilities != null && this.topologyCapabilities.isSame(newAllInstances) ) {
+                logger.debug("No changes in capabilities - ignoring event");
+                return;
+            }
+        }
+
+        synchronized ( this.listeners ) {
+
+            if ( event.getType() == Type.TOPOLOGY_CHANGING ) {
+               this.stopProcessing(true);
+
+            } else if ( event.getType() == Type.TOPOLOGY_INIT
+                || event.getType() == Type.TOPOLOGY_CHANGED
+                || event.getType() == Type.PROPERTIES_CHANGED ) {
+
+                this.stopProcessing(true);
+
+                this.startProcessing(event.getType(), new TopologyCapabilities(event.getNewView(), this), false);
+            }
+
+        }
+    }
+
+    /**
+     * Add a topology aware listener
+     * @param service Listener to notify about changes.
+     */
+    public void addListener(final ConfigurationChangeListener service) {
+        synchronized ( this.listeners ) {
+            this.listeners.add(service);
+            service.configurationChanged(this.topologyCapabilities != null);
+        }
+    }
+
+    /**
+     * Remove a topology aware listener
+     * @param service Listener to notify about changes.
+     */
+    public void removeListener(final ConfigurationChangeListener service) {
+        synchronized ( this.listeners )  {
+            this.listeners.remove(service);
+        }
+    }
+
+    private final Map<String, Job> retryList = new HashMap<String, Job>();
+
+    public void addJobToRetryList(final Job job) {
+        synchronized ( retryList ) {
+            retryList.put(job.getId(), job);
+        }
+    }
+
+    public void removeJobFromRetryList(final Job job) {
+        synchronized ( retryList ) {
+            retryList.remove(job.getId());
+        }
+    }
+
+    public Job getJobFromRetryList(final String jobId) {
+        synchronized ( retryList ) {
+            return retryList.get(jobId);
+        }
     }
 }

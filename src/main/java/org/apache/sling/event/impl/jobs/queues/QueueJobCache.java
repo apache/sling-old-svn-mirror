@@ -31,8 +31,8 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.event.impl.jobs.JobHandler;
 import org.apache.sling.event.impl.jobs.JobImpl;
-import org.apache.sling.event.impl.jobs.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.JobTopicTraverser;
+import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
 import org.apache.sling.event.jobs.QueueConfiguration.Type;
 import org.slf4j.Logger;
@@ -211,12 +211,12 @@ public class QueueJobCache {
      * Mark the topic to contain new jobs.
      * @param topic The topic
      */
-    public void handleNewJob(final String topic) {
-        logger.debug("Update cache to handle new event for topic {}", topic);
+    public void handleNewJob(final Set<String> topics) {
+        logger.debug("Update cache to handle new event for topics {}", topics);
         synchronized ( this.topicsWithNewJobs ) {
-            this.topicsWithNewJobs.add(topic);
+            this.topicsWithNewJobs.addAll(topics);
         }
-        this.topics.add(topic);
+        this.topics.addAll(topics);
     }
 
     public void reschedule(final JobHandler handler) {

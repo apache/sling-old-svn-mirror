@@ -266,7 +266,7 @@ public class ChaosTest extends AbstractJobHandlingTest {
         final TopologyView view = views.get(0);
 
         try {
-            final ServiceReference[] refs = this.bc.getServiceReferences(TopologyEventListener.class.getName(), "(objectClass=org.apache.sling.event.impl.jobs.topology.TopologyHandler)");
+            final ServiceReference[] refs = this.bc.getServiceReferences(TopologyEventListener.class.getName(), "(objectClass=org.apache.sling.event.impl.jobs.config.JobManagerConfiguration)");
             assertNotNull(refs);
             assertEquals(1, refs.length);
             final TopologyEventListener tel = (TopologyEventListener)bc.getService(refs[0]);

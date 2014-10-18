@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.event.impl.jobs.topology;
+package org.apache.sling.event.impl.jobs.config;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,7 +29,6 @@ import java.util.TreeMap;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.event.impl.jobs.JobImpl;
-import org.apache.sling.event.impl.jobs.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.jobs.QueueConfiguration;
