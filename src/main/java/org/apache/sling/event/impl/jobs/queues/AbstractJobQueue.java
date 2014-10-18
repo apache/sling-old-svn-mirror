@@ -112,6 +112,9 @@ public abstract class AbstractJobQueue
     /** A marker for closing the queue. */
     private final AtomicBoolean closeMarker = new AtomicBoolean(false);
 
+    /** The job cache. */
+    private final QueueJobCache cache;
+
     /**
      * Create a new queue
      * @param name The queue name
@@ -119,7 +122,8 @@ public abstract class AbstractJobQueue
      */
     public AbstractJobQueue(final String name,
                             final InternalQueueConfiguration config,
-                            final QueueServices services) {
+                            final QueueServices services,
+                            final Set<String> topics) {
         if ( config.getOwnThreadPoolSize() > 0 ) {
             this.threadPool = new EventingThreadPool(services.threadPoolManager, config.getOwnThreadPoolSize());
         } else {
@@ -130,6 +134,7 @@ public abstract class AbstractJobQueue
         this.services = services;
         this.logger = LoggerFactory.getLogger(this.getClass().getName() + '.' + name);
         this.running = true;
+        this.cache = new QueueJobCache(services.configuration, config.getType(), topics);
     }
 
     /**
@@ -333,7 +338,7 @@ public abstract class AbstractJobQueue
 
         this.isWaitingForNextJob = true;
         while ( this.isWaitingForNextJob && !this.isOutdated()) {
-            result = this.services.cache.getNextJob();
+            result = this.cache.getNextJob();
             if ( result != null ) {
                 isWaitingForNextJob = false;
             } else {
@@ -373,7 +378,7 @@ public abstract class AbstractJobQueue
      * @param topic A new topic.
      */
     public void wakeUpQueue(final Set<String> topics) {
-        this.services.cache.handleNewJob(topics);
+        this.cache.handleNewJob(topics);
         this.stopWaitingForNextJob();
     }
 
@@ -382,7 +387,7 @@ public abstract class AbstractJobQueue
      * @param handler The job handler
      */
     private void requeue(final JobHandler handler) {
-        this.services.cache.reschedule(handler);
+        this.cache.reschedule(handler);
         synchronized ( this.nextJobLock ) {
             this.nextJobLock.notify();
         }
@@ -848,7 +853,7 @@ public abstract class AbstractJobQueue
      */
     @Override
     public synchronized void removeAll() {
-        final Set<String> topics = this.services.cache.getTopics();
+        final Set<String> topics = this.cache.getTopics();
         logger.debug("Removing all jobs for queue {} : {}", queueName, topics);
 
         if ( !topics.isEmpty() ) {

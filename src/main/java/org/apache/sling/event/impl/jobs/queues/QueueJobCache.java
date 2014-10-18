@@ -33,7 +33,7 @@ import org.apache.sling.event.impl.jobs.JobHandler;
 import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.JobTopicTraverser;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
-import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
+import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.QueueConfiguration.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,8 +63,8 @@ public class QueueJobCache {
     /** The cache of current objects. */
     private final List<JobImpl> cache = new ArrayList<JobImpl>();
 
-    /** The queue info. */
-    private final QueueInfo info;
+    /** The queue type. */
+    private final QueueConfiguration.Type queueType;
 
     /**
      * Create a new queue job cache
@@ -73,20 +73,12 @@ public class QueueJobCache {
      * @param topics The topics handled by this queue.
      */
     public QueueJobCache(final JobManagerConfiguration configuration,
-            final QueueInfo info,
+            final QueueConfiguration.Type queueType,
             final Set<String> topics) {
         this.configuration = configuration;
-        this.info = info;
+        this.queueType = queueType;
         this.topics = new ConcurrentSkipListSet<String>(topics);
         this.topicsWithNewJobs.addAll(topics);
-    }
-
-    /**
-     * Return the queue info for this queue.
-     * @return The queue info
-     */
-    public QueueInfo getQueueInfo() {
-        return this.info;
     }
 
     /**
@@ -163,8 +155,8 @@ public class QueueJobCache {
      * @param topicCache The topic based cache
      */
     private void orderTopics(final Map<String, List<JobImpl>> topicCache) {
-        if ( this.info.queueConfiguration.getType() == Type.ORDERED
-             || this.info.queueConfiguration.getType() == Type.UNORDERED) {
+        if ( this.queueType == Type.ORDERED
+             || this.queueType == Type.UNORDERED) {
             for(final List<JobImpl> list : topicCache.values()) {
                 this.cache.addAll(list);
             }
@@ -222,7 +214,7 @@ public class QueueJobCache {
     public void reschedule(final JobHandler handler) {
         synchronized ( this.cache ) {
             if ( handler.reschedule() ) {
-                if ( this.info.queueConfiguration.getType() == Type.ORDERED ) {
+                if ( this.queueType == Type.ORDERED ) {
                     this.cache.add(0, handler.getJob());
                 } else {
                     this.cache.add(handler.getJob());
