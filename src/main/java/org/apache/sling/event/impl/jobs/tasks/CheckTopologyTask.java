@@ -32,9 +32,8 @@ import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.JobTopicTraverser;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
-import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
-import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
+import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
 import org.slf4j.Logger;
@@ -56,16 +55,11 @@ public class CheckTopologyTask {
     /** Job manager configuration. */
     private final JobManagerConfiguration configuration;
 
-    /** Queue configuration manager. */
-    private final QueueConfigurationManager queueConfigManager;
-
     /**
      * Constructor
      */
-    public CheckTopologyTask(final JobManagerConfiguration config,
-            final QueueConfigurationManager queueConfigurationManager) {
+    public CheckTopologyTask(final JobManagerConfiguration config) {
         this.configuration = config;
-        this.queueConfigManager = queueConfigurationManager;
     }
 
     /**
@@ -138,7 +132,7 @@ public class CheckTopologyTask {
                             }
                         }
                         if ( reassign ) {
-                            final QueueInfo info = this.queueConfigManager.getQueueInfo(topicName);
+                            final QueueInfo info = this.configuration.getQueueConfigurationManager().getQueueInfo(topicName);
                             JobTopicTraverser.traverse(this.logger, topicResource, new JobTopicTraverser.ResourceCallback() {
 
                                 @Override
@@ -239,7 +233,7 @@ public class CheckTopologyTask {
             // first check if there is an instance for these topics
             final List<InstanceDescription> potentialTargets = caps.getPotentialTargets(topicName, BRIDGED_JOB);
             if ( potentialTargets != null && potentialTargets.size() > 0 ) {
-                final QueueInfo info = this.queueConfigManager.getQueueInfo(topicName);
+                final QueueInfo info = this.configuration.getQueueConfigurationManager().getQueueInfo(topicName);
                 logger.debug("Found queue {} for {}", info.queueConfiguration, topicName);
 
                 JobTopicTraverser.traverse(this.logger, topicResource, new JobTopicTraverser.ResourceCallback() {

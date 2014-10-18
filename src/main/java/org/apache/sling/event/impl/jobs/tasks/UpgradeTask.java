@@ -32,9 +32,8 @@ import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.JobTopicTraverser;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
-import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
-import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
+import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
@@ -55,12 +54,11 @@ public class UpgradeTask {
      * Upgrade
      */
     public void run(final JobManagerConfiguration configuration,
-            final TopologyCapabilities topologyCapabilities,
-            final QueueConfigurationManager queueManager) {
+            final TopologyCapabilities topologyCapabilities) {
         if ( topologyCapabilities.isLeader() ) {
-            this.processJobsFromPreviousVersions(configuration, topologyCapabilities, queueManager);
+            this.processJobsFromPreviousVersions(configuration, topologyCapabilities);
         }
-        this.upgradeBridgedJobs(configuration, topologyCapabilities, queueManager);
+        this.upgradeBridgedJobs(configuration, topologyCapabilities);
     }
 
     /**
@@ -69,19 +67,18 @@ public class UpgradeTask {
      * This has changed, the jobs are now stored with their real topic.
      */
     private void upgradeBridgedJobs(final JobManagerConfiguration configuration,
-            final TopologyCapabilities caps,
-            final QueueConfigurationManager queueManager) {
+            final TopologyCapabilities caps) {
         final String path = configuration.getLocalJobsPath() + '/' + JobImpl.PROPERTY_BRIDGED_EVENT;
         final ResourceResolver resolver = configuration.createResourceResolver();
         try {
             final Resource rootResource = resolver.getResource(path);
             if ( rootResource != null ) {
-                upgradeBridgedJobs(configuration, rootResource, caps, queueManager);
+                upgradeBridgedJobs(configuration, rootResource, caps);
             }
             if ( caps.isLeader() ) {
                 final Resource unassignedRoot = resolver.getResource(configuration.getUnassignedJobsPath() + '/' + JobImpl.PROPERTY_BRIDGED_EVENT);
                 if ( unassignedRoot != null ) {
-                    upgradeBridgedJobs(configuration, unassignedRoot, caps, queueManager);
+                    upgradeBridgedJobs(configuration, unassignedRoot, caps);
                 }
             }
         } finally {
@@ -97,10 +94,9 @@ public class UpgradeTask {
      */
     private void upgradeBridgedJobs(final JobManagerConfiguration configuration,
             final Resource topicResource,
-            final TopologyCapabilities caps,
-            final QueueConfigurationManager queueManager) {
+            final TopologyCapabilities caps) {
         final String topicName = topicResource.getName().replace('.', '/');
-        final QueueInfo info = queueManager.getQueueInfo(topicName);
+        final QueueInfo info = configuration.getQueueConfigurationManager().getQueueInfo(topicName);
         JobTopicTraverser.traverse(logger, topicResource, new JobTopicTraverser.ResourceCallback() {
 
             @Override
@@ -144,12 +140,11 @@ public class UpgradeTask {
      * Handle jobs from previous versions (<= 3.1.4) by moving them to the unassigned area
      */
     private void processJobsFromPreviousVersions(final JobManagerConfiguration configuration,
-            final TopologyCapabilities caps,
-            final QueueConfigurationManager queueManager) {
+            final TopologyCapabilities caps) {
         final ResourceResolver resolver = configuration.createResourceResolver();
         try {
-            this.processJobsFromPreviousVersions(configuration, caps, queueManager, resolver.getResource(configuration.getPreviousVersionAnonPath()));
-            this.processJobsFromPreviousVersions(configuration, caps, queueManager, resolver.getResource(configuration.getPreviousVersionIdentifiedPath()));
+            this.processJobsFromPreviousVersions(configuration, caps, resolver.getResource(configuration.getPreviousVersionAnonPath()));
+            this.processJobsFromPreviousVersions(configuration, caps, resolver.getResource(configuration.getPreviousVersionIdentifiedPath()));
         } catch ( final PersistenceException pe ) {
             this.logger.warn("Problems moving jobs from previous version.", pe);
         } finally {
@@ -162,14 +157,13 @@ public class UpgradeTask {
      */
     private void processJobsFromPreviousVersions(final JobManagerConfiguration configuration,
             final TopologyCapabilities caps,
-            final QueueConfigurationManager queueManager,
             final Resource rsrc) throws PersistenceException {
         if ( rsrc != null && caps.isActive() ) {
             if ( rsrc.isResourceType(ResourceHelper.RESOURCE_TYPE_JOB) ) {
-                this.moveJobFromPreviousVersion(configuration, caps, queueManager, rsrc);
+                this.moveJobFromPreviousVersion(configuration, caps, rsrc);
             } else {
                 for(final Resource child : rsrc.getChildren()) {
-                    this.processJobsFromPreviousVersions(configuration, caps, queueManager, child);
+                    this.processJobsFromPreviousVersions(configuration, caps, child);
                 }
                 if ( caps.isActive() ) {
                     rsrc.getResourceResolver().delete(rsrc);
@@ -185,7 +179,6 @@ public class UpgradeTask {
      */
     private void moveJobFromPreviousVersion(final JobManagerConfiguration configuration,
             final TopologyCapabilities caps,
-            final QueueConfigurationManager queueManager,
             final Resource jobResource)
     throws PersistenceException {
         final ResourceResolver resolver = jobResource.getResourceResolver();
@@ -240,7 +233,7 @@ public class UpgradeTask {
             final List<InstanceDescription> potentialTargets = caps.getPotentialTargets("/", null);
             String targetId = null;
             if ( potentialTargets != null && potentialTargets.size() > 0 ) {
-                final QueueInfo info = queueManager.getQueueInfo(topic);
+                final QueueInfo info = configuration.getQueueConfigurationManager().getQueueInfo(topic);
                 logger.debug("Found queue {} for {}", info.queueConfiguration, topic);
                 targetId = caps.detectTarget(topic, vm, info);
                 if ( targetId != null ) {
