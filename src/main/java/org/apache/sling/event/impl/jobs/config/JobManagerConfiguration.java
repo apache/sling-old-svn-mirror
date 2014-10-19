@@ -536,9 +536,18 @@ public class JobManagerConfiguration implements TopologyEventListener, QueueConf
         }
     }
 
-    public void removeJobFromRetryList(final Job job) {
+    public List<Job> clearJobRetryList() {
+        final List<Job> result = new ArrayList<Job>();
+        synchronized ( this.retryList ) {
+            result.addAll(retryList.values());
+            retryList.clear();
+        }
+        return result;
+    }
+
+    public boolean removeJobFromRetryList(final Job job) {
         synchronized ( retryList ) {
-            retryList.remove(job.getId());
+            return retryList.remove(job.getId()) != null;
         }
     }
 

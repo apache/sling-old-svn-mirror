@@ -305,7 +305,7 @@ public class ChaosTest extends AbstractJobHandlingTest {
         }
     }
 
-    @Test(timeout=DURATION * 3000)
+    @Test(timeout=DURATION * 2000)
     public void testDoChaos() throws Exception {
         final JobManager jobManager = this.getJobManager();
 
@@ -333,13 +333,15 @@ public class ChaosTest extends AbstractJobHandlingTest {
         final List<Thread> threads = new ArrayList<Thread>();
         final AtomicLong finishedThreads = new AtomicLong();
 
-        final ServiceRegistration eventHandler = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
+        final ServiceRegistration eventHandler = this.registerEventHandler("org/apache/sling/event/notification/job/*",
                 new EventHandler() {
 
                     @Override
                     public void handleEvent(final Event event) {
-                        final String topic = (String) event.getProperty(NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC);
-                        finished.get(topic).incrementAndGet();
+                        if ( NotificationConstants.TOPIC_JOB_FINISHED.equals(event.getTopic())) {
+                            final String topic = (String) event.getProperty(NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC);
+                            finished.get(topic).incrementAndGet();
+                        }
                     }
                 });
         try {
