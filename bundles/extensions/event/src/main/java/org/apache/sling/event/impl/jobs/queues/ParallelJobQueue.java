@@ -126,8 +126,9 @@ public final class ParallelJobQueue extends AbstractJobQueue {
             final Runnable t = new Runnable() {
                 @Override
                 public void run() {
-                    handler.removeFromRetryList();
-                    ParallelJobQueue.super.reschedule(handler);
+                    if ( handler.removeFromRetryList() ) {
+                        ParallelJobQueue.super.reschedule(handler);
+                    }
                 }
             };
             services.scheduler.schedule(t, services.scheduler.AT(fireDate).name(jobName));

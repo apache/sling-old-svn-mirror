@@ -250,8 +250,8 @@ public class JobHandler {
 
     }
 
-    public void removeFromRetryList() {
-        this.configuration.removeJobFromRetryList(this.job);
+    public boolean removeFromRetryList() {
+        return this.configuration.removeJobFromRetryList(this.job);
     }
 
     @Override

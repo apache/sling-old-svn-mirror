@@ -41,6 +41,8 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.event.impl.jobs.JobConsumerManager;
+import org.apache.sling.event.impl.jobs.JobHandler;
+import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.config.ConfigurationChangeListener;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
@@ -51,6 +53,7 @@ import org.apache.sling.event.impl.jobs.jmx.QueuesMBeanImpl;
 import org.apache.sling.event.impl.jobs.stats.StatisticsManager;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
+import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.QueueConfiguration;
@@ -282,6 +285,11 @@ public class QueueManager
                 this.outdateQueue(queue);
             }
         }
+        final List<Job> rescheduleList = this.configuration.clearJobRetryList();
+        for(final Job j : rescheduleList) {
+            final JobHandler jh = new JobHandler((JobImpl)j, this.configuration);
+            jh.reschedule();
+        }
     }
 
     /**
@@ -328,6 +336,7 @@ public class QueueManager
     @Override
     public void configurationChanged(final boolean active) {
         logger.debug("Topology changed {}", active);
+        this.isActive.set(active);
         if ( active ) {
             final Set<String> topics = this.initialScan();
             final Map<QueueInfo, Set<String>> mapping = this.updateTopicMapping(topics);
@@ -335,9 +344,7 @@ public class QueueManager
             for(final Map.Entry<QueueInfo, Set<String>> entry : mapping.entrySet() ) {
                 this.start(entry.getKey(), entry.getValue());
             }
-            this.isActive.set(true);
         } else {
-            this.isActive.set(false);
             this.restart();
         }
     }
