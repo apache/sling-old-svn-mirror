@@ -41,7 +41,7 @@ import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.event.impl.jobs.JobConsumerManager;
 import org.apache.sling.event.impl.jobs.JobManagerImpl;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
-import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
+import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
@@ -80,7 +80,7 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
     private JobManager jobManager;
 
     @Reference
-    private QueueConfigurationManager queueConfigManager;
+    private JobManagerConfiguration configuration;
 
     @Reference
     private JobConsumerManager jobConsumerManager;
@@ -363,8 +363,8 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
         }
 
         pw.println("<p class='statline'>Apache Sling Job Handling - Job Queue Configurations</p>");
-        this.printQueueConfiguration(req, pw, this.queueConfigManager.getMainQueueConfiguration());
-        final InternalQueueConfiguration[] configs = this.queueConfigManager.getConfigurations();
+        this.printQueueConfiguration(req, pw, this.configuration.getQueueConfigurationManager().getMainQueueConfiguration());
+        final InternalQueueConfiguration[] configs = this.configuration.getQueueConfigurationManager().getConfigurations();
         for(final InternalQueueConfiguration c : configs ) {
             this.printQueueConfiguration(req, pw, c);
         }

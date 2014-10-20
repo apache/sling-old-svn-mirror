@@ -72,8 +72,8 @@ import org.slf4j.LoggerFactory;
 @Component(immediate=true)
 @Service(value={Runnable.class, QueueManager.class, EventHandler.class})
 @Properties({
-    @Property(name="scheduler.period", longValue=60, propertyPrivate=true),
-    @Property(name="scheduler.concurrent", boolValue=false, propertyPrivate=true),
+    @Property(name="scheduler.period", longValue=60),
+    @Property(name="scheduler.concurrent", boolValue=false),
     @Property(name=EventConstants.EVENT_TOPIC, value=NotificationConstants.TOPIC_JOB_ADDED)
 })
 public class QueueManager
@@ -281,7 +281,6 @@ public class QueueManager
         synchronized ( queuesLock ) {
             final List<AbstractJobQueue> queues = new ArrayList<AbstractJobQueue>(this.queues.values());
             for(final AbstractJobQueue queue : queues ) {
-                queue.clear();
                 this.outdateQueue(queue);
             }
         }

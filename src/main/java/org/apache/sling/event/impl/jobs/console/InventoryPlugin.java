@@ -40,7 +40,7 @@ import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.event.impl.jobs.JobConsumerManager;
 import org.apache.sling.event.impl.jobs.JobManagerImpl;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
-import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
+import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.Queue;
@@ -69,7 +69,7 @@ public class InventoryPlugin implements InventoryPrinter {
     private JobManager jobManager;
 
     @Reference
-    private QueueConfigurationManager queueConfigManager;
+    private JobManagerConfiguration configuration;
 
     @Reference
     private JobConsumerManager jobConsumerManager;
@@ -275,8 +275,8 @@ public class InventoryPlugin implements InventoryPrinter {
 
         pw.println("Apache Sling Job Handling - Job Queue Configurations");
         pw.println("----------------------------------------------------");
-        this.printQueueConfiguration(pw, this.queueConfigManager.getMainQueueConfiguration());
-        final InternalQueueConfiguration[] configs = this.queueConfigManager.getConfigurations();
+        this.printQueueConfiguration(pw, this.configuration.getQueueConfigurationManager().getMainQueueConfiguration());
+        final InternalQueueConfiguration[] configs = this.configuration.getQueueConfigurationManager().getConfigurations();
         for(final InternalQueueConfiguration c : configs ) {
             this.printQueueConfiguration(pw, c);
         }
@@ -425,8 +425,8 @@ public class InventoryPlugin implements InventoryPrinter {
 
         pw.println(",");
         pw.println("  \"configurations\" : [");
-        this.printQueueConfigurationJson(pw, this.queueConfigManager.getMainQueueConfiguration());
-        final InternalQueueConfiguration[] configs = this.queueConfigManager.getConfigurations();
+        this.printQueueConfigurationJson(pw, this.configuration.getQueueConfigurationManager().getMainQueueConfiguration());
+        final InternalQueueConfiguration[] configs = this.configuration.getQueueConfigurationManager().getConfigurations();
         for(final InternalQueueConfiguration c : configs ) {
             pw.println(",");
             this.printQueueConfigurationJson(pw, c);

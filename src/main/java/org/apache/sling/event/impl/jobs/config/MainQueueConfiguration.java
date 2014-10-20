@@ -112,6 +112,10 @@ public class MainQueueConfiguration {
         this.mainConfiguration = InternalQueueConfiguration.fromConfiguration(queueProps);
     }
 
+    /**
+     * Return the main queue configuration object.
+     * @return The main queue configuration object.
+     */
     public InternalQueueConfiguration getMainConfiguration() {
         return this.mainConfiguration;
     }

@@ -115,6 +115,12 @@ public abstract class AbstractJobQueue
     /** The job cache. */
     private final QueueJobCache cache;
 
+    /** Flag to mark whether the queue os waiting for the next job. */
+    private volatile boolean isWaitingForNextJob = false;
+
+    /** Sync object for {@link #isWaitingForNextJob}. */
+    private final Object nextJobLock = new Object();
+
     /**
      * Create a new queue
      * @param name The queue name
@@ -225,7 +231,7 @@ public abstract class AbstractJobQueue
      * Check whether this queue can be closed
      */
     protected boolean canBeClosed() {
-        return !this.isWaiting && !this.isSuspended() && this.asyncCounter.get() == 0;
+        return !this.isWaiting && !this.isSuspended() && this.cache.isEmpty() && this.asyncCounter.get() == 0;
     }
 
     /**
@@ -323,9 +329,6 @@ public abstract class AbstractJobQueue
         }
     }
 
-    private volatile boolean isWaitingForNextJob = false;
-    private final Object nextJobLock = new Object();
-
     /**
      * Take a new job for this queue.
      * This method blocks until a job is available or the queue is stopped.
@@ -336,25 +339,25 @@ public abstract class AbstractJobQueue
         logger.debug("Taking new job for {}", queueName);
         JobImpl result = null;
 
-        this.isWaitingForNextJob = true;
-        while ( this.isWaitingForNextJob && !this.isOutdated()) {
+        while ( result == null && !this.isOutdated() && this.running ) {
+            this.isWaitingForNextJob = true;
+
             result = this.cache.getNextJob();
-            if ( result != null ) {
-                isWaitingForNextJob = false;
-            } else {
+            if ( result == null && !this.isOutdated() && this.running ) {
                 // block
                 synchronized ( nextJobLock ) {
-                    if ( isWaitingForNextJob ) {
+                    while ( isWaitingForNextJob ) {
                         try {
-                            nextJobLock.wait();
+                            nextJobLock.wait(30000);
+                            isWaitingForNextJob = false;
                         } catch ( final InterruptedException ignore ) {
                             Thread.currentThread().interrupt();
                         }
                     }
                 }
             }
+            this.isWaitingForNextJob = false;
         }
-        this.isWaitingForNextJob = false;
 
         if ( logger.isDebugEnabled() ) {
             logger.debug("Returning job for {} : {}", queueName, Utility.toString(result));
@@ -437,6 +440,7 @@ public abstract class AbstractJobQueue
     }
 
     private boolean startJobExecution(final JobHandler handler, final JobExecutor consumer) {
+        this.closeMarker.set(false);
         final JobImpl job = handler.getJob();
         if ( handler.startProcessing(this) ) {
             if ( logger.isDebugEnabled() ) {
