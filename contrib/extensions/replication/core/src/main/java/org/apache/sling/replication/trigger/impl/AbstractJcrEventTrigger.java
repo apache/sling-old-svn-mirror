@@ -43,10 +43,11 @@ public abstract class AbstractJcrEventTrigger implements ReplicationTrigger, Eve
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final String path;
     private final String serviceUser;
+
     private ReplicationTriggerRequestHandler requestHandler;
+    private Session session;
 
     protected final SlingRepository repository;
-    protected Session session;
 
     public AbstractJcrEventTrigger(SlingRepository repository, String path, String serviceUser) {
         this.repository = repository;

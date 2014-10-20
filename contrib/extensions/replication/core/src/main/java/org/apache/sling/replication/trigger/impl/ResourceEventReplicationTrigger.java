@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.sling.api.SlingConstants;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationComponent;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
@@ -86,12 +85,12 @@ public class ResourceEventReplicationTrigger implements ReplicationTrigger, Repl
         log.info("trigger agent {} on path '{}'", handlerId, path);
 
         properties.put(EventConstants.EVENT_FILTER, "(path=" + path + "/*)");
-        if (bundleContext != null) {
-            ServiceRegistration triggerPathEventRegistration = bundleContext.registerService(EventHandler.class.getName(),
-                    new TriggerAgentEventListener(requestHandler), properties);
+        ServiceRegistration triggerPathEventRegistration = bundleContext.registerService(EventHandler.class.getName(),
+                new TriggerAgentEventListener(requestHandler), properties);
+        if (triggerPathEventRegistration != null) {
             registrations.put(handlerId, triggerPathEventRegistration);
         } else {
-            log.error("cannot register trigger since bundle context is null");
+            log.error("cannot register event handler service for triggering agent");
         }
     }
 

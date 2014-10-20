@@ -46,7 +46,6 @@ public class ChainReplicateReplicationTrigger implements ReplicationTrigger, Rep
 
     public static final String PATH = "path";
 
-
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final String pathPrefix;
 
@@ -59,21 +58,21 @@ public class ChainReplicateReplicationTrigger implements ReplicationTrigger, Rep
         this.pathPrefix = pathPrefix;
     }
 
-
-
     public void register(String handlerId, ReplicationTriggerRequestHandler requestHandler) {
         // register an event handler on replication package install (on a certain path) which triggers the chain replication of that same package
         Dictionary<String, Object> properties = new Hashtable<String, Object>();
 
         // TODO : make it possible to configure the type of event handled here, currently 'package-installed' is hardcoded
         properties.put(EventConstants.EVENT_TOPIC, ReplicationEvent.getTopic(ReplicationEventType.PACKAGE_INSTALLED));
-        log.info("handler {} will chain replication on path '{}'", handlerId, pathPrefix);
+        log.info("handler {} will chain replicate on path '{}'", handlerId, pathPrefix);
 
 //            properties.put(EventConstants.EVENT_FILTER, "(path=" + path + "/*)");
         if (bundleContext != null) {
             ServiceRegistration triggerPathEventRegistration = bundleContext.registerService(EventHandler.class.getName(),
                     new TriggerAgentEventListener(requestHandler, pathPrefix), properties);
-            registrations.put(handlerId, triggerPathEventRegistration);
+            if (triggerPathEventRegistration != null) {
+                registrations.put(handlerId, triggerPathEventRegistration);
+            }
         } else {
             log.error("cannot register trigger since bundle context is null");
 

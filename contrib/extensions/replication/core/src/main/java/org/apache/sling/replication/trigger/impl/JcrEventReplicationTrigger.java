@@ -41,7 +41,6 @@ public class JcrEventReplicationTrigger extends AbstractJcrEventTrigger implemen
         super(repository, path, serviceName);
     }
 
-
     @Override
     protected ReplicationRequest processEvent(Event event) throws RepositoryException {
         log.info("triggering replication from jcr event {}", event);

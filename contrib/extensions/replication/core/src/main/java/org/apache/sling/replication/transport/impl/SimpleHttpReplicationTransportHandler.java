@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Executor;
@@ -150,47 +151,53 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
                 while ((httpResponse = executor.execute(req).returnResponse())
                         .getStatusLine().getStatusCode() == 200
                         && polls < maxNumberOfPackages) {
-                    final ReplicationPackage responsePackage = packageBuilder.readPackage(resourceResolver, httpResponse.getEntity().getContent());
-                    HttpPackage httpPackage = new HttpPackage() {
-                        public String getOrigin() {
-                            return replicationEndpoint.getUri().getHost();
-                        }
+                    HttpEntity entity = httpResponse.getEntity();
+                    if (entity != null) {
+                        final ReplicationPackage responsePackage = packageBuilder.readPackage(resourceResolver, entity.getContent());
+                        HttpPackage httpPackage = new HttpPackage() {
+                            public String getOrigin() {
+                                return replicationEndpoint.getUri().getHost();
+                            }
 
-                        public String getId() {
-                            return responsePackage.getId();
-                        }
+                            public String getId() {
+                                return responsePackage.getId();
+                            }
 
-                        public String[] getPaths() {
-                            return responsePackage.getPaths();
-                        }
+                            public String[] getPaths() {
+                                return responsePackage.getPaths();
+                            }
 
-                        public String getAction() {
-                            return responsePackage.getAction();
-                        }
+                            public String getAction() {
+                                return responsePackage.getAction();
+                            }
 
-                        public String getType() {
-                            return responsePackage.getType();
-                        }
+                            public String getType() {
+                                return responsePackage.getType();
+                            }
 
-                        public InputStream createInputStream() throws IOException {
-                            return responsePackage.createInputStream();
-                        }
+                            public InputStream createInputStream() throws IOException {
+                                return responsePackage.createInputStream();
+                            }
 
-                        public long getLength() {
-                            return responsePackage.getLength();
-                        }
+                            public long getLength() {
+                                return responsePackage.getLength();
+                            }
 
-                        public void close() {
-                            responsePackage.close();
-                        }
+                            public void close() {
+                                responsePackage.close();
+                            }
 
-                        public void delete() {
-                            responsePackage.delete();
-                        }
-                    };
+                            public void delete() {
+                                responsePackage.delete();
+                            }
+                        };
 
-                    result.add(httpPackage);
-                    polls++;
+                        result.add(httpPackage);
+                        polls++;
+                    } else {
+                        log.info("");
+                        break;
+                    }
                 }
 
                 log.info("polled {} packages from {}", polls, replicationEndpoint.getUri());
