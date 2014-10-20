@@ -60,8 +60,7 @@ public class MultipleEndpointReplicationTransportHandler implements ReplicationT
             if (replicationPackage != null) {
                 transportHelper.deliverPackage(resourceResolver, replicationPackage);
             } else if (replicationRequest != null) {
-                List<ReplicationPackage> retrievedPackages = transportHelper.retrievePackages(resourceResolver, replicationRequest);
-                result.addAll(retrievedPackages);
+                result.addAll(transportHelper.retrievePackages(resourceResolver, replicationRequest));
             }
 
             lastSuccessfulEnpointId = currentId;
