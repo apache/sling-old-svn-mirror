@@ -90,6 +90,23 @@ public class QueueJobCache {
     }
 
     /**
+     * Check whether there are jobs for this queue
+     * @return {@code true} if there is any job outstanding.
+     */
+    public boolean isEmpty() {
+        boolean result = true;
+        synchronized ( this.cache ) {
+            result = this.cache.isEmpty();
+        }
+        if ( result ) {
+            synchronized ( this.topicsWithNewJobs ) {
+                result = this.topicsWithNewJobs.isEmpty();
+            }
+        }
+        return result;
+    }
+
+    /**
      * Get the next job.
      * This method is not called concurrently, however
      * {@link #reschedule(JobImpl)} and {@link #handleNewJob(String)}

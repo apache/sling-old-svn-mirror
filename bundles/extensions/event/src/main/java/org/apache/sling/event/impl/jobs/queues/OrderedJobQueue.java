@@ -60,15 +60,13 @@ public final class OrderedJobQueue extends AbstractJobQueue {
                 }
                 if ( this.sleepDelay > 0 ) {
                     final long waitingTime = this.sleepDelay;
-                    this.sleepDelay = -1;
                     final long startTime = System.currentTimeMillis();
                     this.logger.debug("Job queue {} is sleeping {}ms for retry.", this.queueName, waitingTime);
-                    this.isWaiting = true;
-                    while ( this.isWaiting ) {
+                    while ( this.sleepDelay > 0 ) {
                         try {
                             this.syncLock.wait(waitingTime);
                             if ( System.currentTimeMillis() >= startTime + waitingTime ) {
-                                this.isWaiting = false;
+                                this.sleepDelay = -1;
                             }
                         } catch (final InterruptedException e) {
                             this.ignoreException(e);

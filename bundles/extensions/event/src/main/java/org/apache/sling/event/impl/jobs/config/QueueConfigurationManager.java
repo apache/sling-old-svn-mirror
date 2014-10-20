@@ -22,18 +22,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.event.impl.support.ResourceHelper;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 
 /**
@@ -41,21 +35,25 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
  */
 @Component
 @Service(value=QueueConfigurationManager.class)
+@Reference(referenceInterface=InternalQueueConfiguration.class, policy=ReferencePolicy.DYNAMIC,
+           cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
+           bind="bindConfig", unbind="unbindConfig", updated="updateConfig")
 public class QueueConfigurationManager {
 
     public interface QueueConfigurationChangeListener {
         void configChanged();
     }
 
+    /** Empty configuration array. */
+    private static final InternalQueueConfiguration[] EMPTY_CONFIGS = new InternalQueueConfiguration[0];
+
     /** Configurations - ordered by service ranking. */
-    private volatile InternalQueueConfiguration[] orderedConfigs = new InternalQueueConfiguration[0];
+    private volatile InternalQueueConfiguration[] orderedConfigs = EMPTY_CONFIGS;
 
-    /** Service tracker for the configurations. */
-    private ServiceTracker configTracker;
+    /** All configurations. */
+    private final List<InternalQueueConfiguration> configurations = new ArrayList<InternalQueueConfiguration>();
 
-    /** Tracker count to detect changes. */
-    private volatile int lastTrackerCount = -1;
-
+    /** The main queue configuration. */
     @Reference
     private MainQueueConfiguration mainQueueConfiguration;
 
@@ -63,76 +61,63 @@ public class QueueConfigurationManager {
     private final List<QueueConfigurationChangeListener> listeners = new ArrayList<QueueConfigurationChangeListener>();
 
     /**
-     * Activate this component.
-     * Create the service tracker and start it.
+     * Add a new queue configuration.
+     * @param config A new queue configuration.
      */
-    @Activate
-    protected void activate(final BundleContext bundleContext)
-    throws LoginException, PersistenceException {
-        this.configTracker = new ServiceTracker(bundleContext,
-                InternalQueueConfiguration.class.getName(), new ServiceTrackerCustomizer() {
-
-                    @Override
-                    public void removedService(final ServiceReference reference, final Object service) {
-                        bundleContext.ungetService(reference);
-                        updateListeners();
-                    }
-
-                    @Override
-                    public void modifiedService(ServiceReference reference, Object service) {
-                        // nothing to do
-                    }
-
-                    @Override
-                    public Object addingService(final ServiceReference reference) {
-                        return bundleContext.getService(reference);
-                    }
-                });
-        this.configTracker.open();
+    protected void bindConfig(final InternalQueueConfiguration config) {
+        synchronized ( configurations ) {
+            configurations.add(config);
+            this.createConfigurationCache();
+        }
     }
 
     /**
-     * Deactivate this component.
-     * Stop the service tracker.
+     * Remove a queue configuration.
+     * @param config The queue configuraiton.
      */
-    @Deactivate
-    protected void deactivate() {
-        if ( this.configTracker != null ) {
-            this.configTracker.close();
-            this.configTracker = null;
+    protected void unbindConfig(final InternalQueueConfiguration config) {
+        synchronized ( configurations ) {
+            configurations.remove(config);
+            this.createConfigurationCache();
+        }
+    }
+
+    /**
+     * Update a queue configuration.
+     * @param config The queue configuraiton.
+     */
+    protected void updateConfig(final InternalQueueConfiguration config) {
+        // InternalQueueConfiguration does not implement modified atm,
+        // but we handle this case anyway
+        synchronized ( configurations ) {
+            this.createConfigurationCache();
+        }
+    }
+
+    /**
+     * Create the configurations cache used by clients.
+     */
+    private void createConfigurationCache() {
+        if ( this.configurations.isEmpty() ) {
+            this.orderedConfigs = EMPTY_CONFIGS;
+        } else {
+            Collections.sort(configurations);
+            orderedConfigs = configurations.toArray(new InternalQueueConfiguration[configurations.size()]);
         }
     }
 
     /**
      * Return all configurations.
+     * @return An array with all queue configurations except the main queue. Array might be empty.
      */
     public InternalQueueConfiguration[] getConfigurations() {
-        final int count = this.configTracker.getTrackingCount();
-        InternalQueueConfiguration[] configurations = this.orderedConfigs;
-        if ( this.lastTrackerCount < count ) {
-            synchronized ( this ) {
-                configurations = this.orderedConfigs;
-                if ( this.lastTrackerCount < count ) {
-                    final Object[] trackedConfigs = this.configTracker.getServices();
-                    if ( trackedConfigs == null || trackedConfigs.length == 0 ) {
-                        configurations = new InternalQueueConfiguration[0];
-                    } else {
-                        final List<InternalQueueConfiguration> configs = new ArrayList<InternalQueueConfiguration>();
-                        for(final Object entry : trackedConfigs) {
-                            final InternalQueueConfiguration config = (InternalQueueConfiguration)entry;
-                            configs.add(config);
-                        }
-                        Collections.sort(configs);
-                        configurations = configs.toArray(new InternalQueueConfiguration[configs.size()]);
-                    }
-                    this.orderedConfigs = configurations;
-                    this.lastTrackerCount = count;
-                }
-            }
-        }
-        return configurations;
+        return orderedConfigs;
     }
 
+    /**
+     * Get the configuration for the main queue.
+     * @return The configuration for the main queue.
+     */
     public InternalQueueConfiguration getMainQueueConfiguration() {
         return this.mainQueueConfiguration.getMainConfiguration();
     }
@@ -145,6 +130,22 @@ public class QueueConfigurationManager {
         @Override
         public String toString() {
             return queueName;
+        }
+
+        @Override
+        public int hashCode() {
+            return queueName.hashCode();
+        }
+
+        @Override
+        public boolean equals(final Object obj) {
+            if ( obj == this ) {
+                return true;
+            }
+            if ( obj instanceof QueueInfo ) {
+                return ((QueueInfo)obj).queueName.equals(this.queueName);
+            }
+            return false;
         }
     }
 
@@ -171,10 +172,6 @@ public class QueueConfigurationManager {
         result.queueName = result.queueConfiguration.getName();
 
         return result;
-    }
-
-    public int getChangeCount() {
-        return this.configTracker.getTrackingCount();
     }
 
     public void addListener(final QueueConfigurationChangeListener listener) {
