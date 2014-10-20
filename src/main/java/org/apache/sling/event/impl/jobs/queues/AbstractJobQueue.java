@@ -349,6 +349,7 @@ public abstract class AbstractJobQueue
                 synchronized ( nextJobLock ) {
                     while ( isWaitingForNextJob ) {
                         try {
+                            doFull = false;
                             nextJobLock.wait(20000);
                             if ( isWaitingForNextJob ) {
                                 doFull = true;
