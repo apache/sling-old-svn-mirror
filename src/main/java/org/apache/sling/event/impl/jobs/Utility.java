@@ -45,10 +45,6 @@ public abstract class Utility {
     public static final String PROPERTY_LOCK_CREATED_APP = "lock.created.app";
     public static final String RESOURCE_TYPE_LOCK = "slingevent:Lock";
 
-    public static final String TOPIC_STOPPED = "org/apache/sling/event/impl/jobs/STOPPED";
-    public static final String TOPIC_STOP = "org/apache/sling/event/impl/jobs/STOP";
-    public static final String PROPERTY_ID = "id";
-
     /**
      * Check the job topic.
      * @return <code>null</code> if the topic is correct, otherwise an error description is returned

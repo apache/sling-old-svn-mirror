@@ -116,7 +116,7 @@
                         -Xmx2048m -XX:MaxPermSize=512m
                     </argLine>
                     <includes>
-                        <include>**/it/DisabledTest*</include>
+                        <include>**/it/*</include>
                     </includes>
                 </configuration>
             </plugin>
