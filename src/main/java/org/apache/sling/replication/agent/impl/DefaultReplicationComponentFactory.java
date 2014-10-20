@@ -100,7 +100,7 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
     private BundleContext bundleContext;
 
     @Activate
-    private void activate(BundleContext bundleContext) {
+    protected void activate(BundleContext bundleContext) {
         this.bundleContext = bundleContext;
     }
 

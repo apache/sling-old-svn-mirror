@@ -37,7 +37,6 @@ import org.apache.sling.replication.serialization.ReplicationPackageBuildingExce
 
 public class PrivilegeReplicationRequestAuthorizationStrategy implements ReplicationRequestAuthorizationStrategy {
 
-
     private final String jcrPrivilege;
 
     public PrivilegeReplicationRequestAuthorizationStrategy(String jcrPrivilege) {

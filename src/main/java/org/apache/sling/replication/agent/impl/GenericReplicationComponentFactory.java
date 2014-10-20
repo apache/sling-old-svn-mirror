@@ -87,7 +87,7 @@ public class GenericReplicationComponentFactory implements ReplicationComponentP
     private Map<String, Object> savedConfig;
 
     @Activate
-    public void activate(BundleContext context, Map<String, Object> config) {
+    protected void activate(BundleContext context, Map<String, Object> config) {
         log.debug("activating component with config {}", config);
 
         savedContext = context;
@@ -144,7 +144,7 @@ public class GenericReplicationComponentFactory implements ReplicationComponentP
     }
 
     @Deactivate
-    private void deactivate(BundleContext context) {
+    protected void deactivate(BundleContext context) {
         log.debug("deactivating component");
         if (componentReg != null) {
             ServiceReference reference = componentReg.getReference();

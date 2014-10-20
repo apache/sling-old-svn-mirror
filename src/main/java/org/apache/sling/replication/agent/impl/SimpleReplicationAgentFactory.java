@@ -122,7 +122,7 @@ public class SimpleReplicationAgentFactory implements ReplicationComponentProvid
     private Map<String, Object> savedConfig;
 
     @Activate
-    public void activate(BundleContext context, Map<String, Object> config) {
+    protected void activate(BundleContext context, Map<String, Object> config) {
 
         savedContext = context;
         savedConfig = config;
@@ -160,7 +160,7 @@ public class SimpleReplicationAgentFactory implements ReplicationComponentProvid
     }
 
     @Deactivate
-    private void deactivate(BundleContext context) {
+    protected void deactivate(BundleContext context) {
         if (componentReg != null) {
             ServiceReference reference = componentReg.getReference();
             Object service = context.getService(reference);

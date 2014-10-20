@@ -120,36 +120,4 @@ public class SettingsUtils {
 
     }
 
-    public static String[] toStringArray(Map<String, Object> objectMap) {
-
-        List<String> result = new ArrayList<String>();
-
-        for (Map.Entry<String, Object> entry : objectMap.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-
-
-            if (value instanceof Map) {
-                Map<String, Object> map = (Map<String, Object>) value;
-                for (Map.Entry<String, Object> e : map.entrySet()) {
-                    if (e.getValue() != null) {
-                        result.add(key + "[" + e.getKey() + "]=" + e.getValue().toString());
-                    }
-                }
-
-            } else if (value.getClass().isArray()) {
-                Object[] array = (Object[]) value;
-                for (int i = 0; i < array.length; i++) {
-                    if (array[i] != null) {
-                        result.add(key + "[" + i + "]=" + array[i].toString());
-                    }
-                }
-
-            } else {
-                result.add(key + "=" + value.toString());
-            }
-        }
-
-        return result.toArray(new String[result.size()]);
-    }
 }
