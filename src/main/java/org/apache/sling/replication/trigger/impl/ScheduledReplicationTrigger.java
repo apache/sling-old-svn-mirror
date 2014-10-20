@@ -18,9 +18,6 @@
  */
 package org.apache.sling.replication.trigger.impl;
 
-import java.util.Map;
-
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.replication.communication.ReplicationActionType;

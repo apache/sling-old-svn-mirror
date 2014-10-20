@@ -18,14 +18,11 @@
  */
 package org.apache.sling.replication.transport.authentication.impl;
 
-import java.util.Map;
-
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.fluent.Executor;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationException;

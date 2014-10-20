@@ -104,4 +104,54 @@ public class DefaultReplicationComponentFactoryTest {
         assertNotNull(component);
     }
 
+    @Test
+    public void testCreateAgent() throws Exception {
+
+
+    }
+
+    @Test
+    public void testCreateExporter() throws Exception {
+
+    }
+
+    @Test
+    public void testCreateImporter() throws Exception {
+
+    }
+
+    @Test
+    public void testCreateQueueProvider() throws Exception {
+
+    }
+
+    @Test
+    public void testCreateDistributionStrategy() throws Exception {
+
+    }
+
+    @Test
+    public void testCreateTransportAuthenticationProvider() throws Exception {
+
+    }
+
+    @Test
+    public void testCreateBuilder() throws Exception {
+
+    }
+
+    @Test
+    public void testExtractMap() throws Exception {
+
+    }
+
+    @Test
+    public void testExtractMapList() throws Exception {
+
+    }
+
+    @Test
+    public void testGetComponent() throws Exception {
+
+    }
 }

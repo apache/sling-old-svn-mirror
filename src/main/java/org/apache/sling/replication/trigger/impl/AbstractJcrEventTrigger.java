@@ -23,9 +23,7 @@ import javax.jcr.Session;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
-import java.util.Map;
 
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.trigger.ReplicationTrigger;

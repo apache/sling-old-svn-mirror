@@ -21,12 +21,9 @@ package org.apache.sling.replication.packaging.impl.importer;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
-import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;

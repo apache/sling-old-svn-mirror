@@ -22,18 +22,12 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.Privilege;
-import java.util.List;
-import java.util.Map;
 
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.AgentReplicationException;
 import org.apache.sling.replication.agent.ReplicationRequestAuthorizationStrategy;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
-import org.apache.sling.replication.packaging.ReplicationPackage;
-import org.apache.sling.replication.packaging.ReplicationPackageExporter;
-import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 
 public class PrivilegeReplicationRequestAuthorizationStrategy implements ReplicationRequestAuthorizationStrategy {
 

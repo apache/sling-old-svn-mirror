@@ -82,7 +82,7 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
     @Property(label = "Name")
     public static final String NAME = ReplicationComponentFactory.COMPONENT_NAME;
 
-    @Property(boolValue = true, propertyPrivate = true)
+    @Property(boolValue = false, propertyPrivate = true)
     public static final String IS_PASSIVE = ReplicationComponentFactory.AGENT_SIMPLE_PROPERTY_IS_PASSIVE;
 
     @Property(label = "Service Name")

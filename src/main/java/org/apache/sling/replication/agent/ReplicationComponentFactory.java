@@ -18,13 +18,6 @@
  */
 package org.apache.sling.replication.agent;
 
-import org.apache.sling.replication.packaging.ReplicationPackageExporter;
-import org.apache.sling.replication.packaging.ReplicationPackageImporter;
-import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
-import org.apache.sling.replication.queue.ReplicationQueueProvider;
-import org.apache.sling.replication.trigger.ReplicationTrigger;
-
-import java.util.List;
 import java.util.Map;
 
 /**

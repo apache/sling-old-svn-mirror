@@ -37,7 +37,6 @@ import org.apache.http.nio.ContentDecoder;
 import org.apache.http.nio.IOControl;
 import org.apache.http.nio.protocol.BasicAsyncRequestProducer;
 import org.apache.http.nio.protocol.BasicAsyncResponseConsumer;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.replication.communication.ReplicationActionType;
