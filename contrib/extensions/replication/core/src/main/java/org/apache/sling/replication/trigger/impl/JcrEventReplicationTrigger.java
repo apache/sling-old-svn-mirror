@@ -20,9 +20,7 @@ package org.apache.sling.replication.trigger.impl;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
-import java.util.Map;
 
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;

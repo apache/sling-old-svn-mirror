@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.Map;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.event.ReplicationEventFactory;

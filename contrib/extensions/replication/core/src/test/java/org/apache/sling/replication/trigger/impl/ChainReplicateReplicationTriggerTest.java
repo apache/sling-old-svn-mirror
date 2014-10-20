@@ -22,7 +22,6 @@ import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
 /**
