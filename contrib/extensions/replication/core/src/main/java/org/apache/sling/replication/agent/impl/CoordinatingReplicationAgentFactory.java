@@ -62,6 +62,7 @@ import org.slf4j.LoggerFactory;
         policy = ConfigurationPolicy.REQUIRE
 )
 public class CoordinatingReplicationAgentFactory implements ReplicationComponentProvider {
+
     private static final String QUEUE_PROVIDER_TARGET = ReplicationComponentFactory.COMPONENT_QUEUE_PROVIDER + ".target";
     private static final String QUEUE_DISTRIBUTION_TARGET = ReplicationComponentFactory.COMPONENT_QUEUE_DISTRIBUTION_STRATEGY + ".target";
     private static final String TRANSPORT_AUTHENTICATION_PROVIDER_TARGET = ReplicationComponentFactory.COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER + ".target";
@@ -117,7 +118,7 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
     private ServiceRegistration componentReg;
 
     @Activate
-    public void activate(BundleContext context, Map<String, Object> config) {
+    protected void activate(BundleContext context, Map<String, Object> config) {
 
         // inject configuration
         Dictionary<String, Object> props = new Hashtable<String, Object>();
@@ -136,13 +137,19 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
                 properties.putAll(config);
 
                 String[] packageImporterProperties = PropertiesUtil.toStringArray(properties.get(PACKAGE_IMPORTER));
+                String[] packageExporterProperties = PropertiesUtil.toStringArray(properties.get(PACKAGE_EXPORTER));
+
+                if (packageImporterProperties == null || packageExporterProperties == null ||
+                        packageImporterProperties.length == 0 || packageExporterProperties.length == 0) {
+                    throw new IllegalArgumentException("package exporters and importers cannot be null/empty");
+                }
+
                 List<String> packageImporterPropertiesList = new ArrayList<String>();
                 packageImporterPropertiesList.addAll(Arrays.asList(packageImporterProperties));
                 packageImporterPropertiesList.add("type=remote");
                 packageImporterProperties = packageImporterPropertiesList.toArray(new String[packageImporterPropertiesList.size()]);
                 properties.put(PACKAGE_IMPORTER, packageImporterProperties);
 
-                String[] packageExporterProperties = PropertiesUtil.toStringArray(properties.get(PACKAGE_EXPORTER));
                 List<String> packageExporterPropertiesList = new ArrayList<String>();
                 packageExporterPropertiesList.addAll(Arrays.asList(packageExporterProperties));
                 packageExporterPropertiesList.add("type=remote");
@@ -171,7 +178,7 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
     }
 
     @Deactivate
-    private void deactivate(BundleContext context) {
+    protected void deactivate(BundleContext context) {
         if (componentReg != null) {
             ServiceReference reference = componentReg.getReference();
             Object service = context.getService(reference);
