@@ -26,9 +26,6 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.api.SlingConstants;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
@@ -98,20 +95,24 @@ public class NewJobSender implements EventHandler {
         final String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
         final String rt = (String) event.getProperty(SlingConstants.PROPERTY_RESOURCE_TYPE);
         if ( ResourceHelper.RESOURCE_TYPE_JOB.equals(rt) && this.configuration.isLocalJob(path) ) {
-            // read the job
-            final ResourceResolver resolver = this.configuration.createResourceResolver();
-            try {
-                final Resource rsrc = resolver.getResource(path);
-                if ( rsrc != null ) {
-                    final Job job = Utility.readJob(this.logger, rsrc);
-                    if ( job != null ) {
-                        logger.debug("Sending job added event for {}", job);
-                        NotificationUtility.sendNotification(this.eventAdmin, NotificationConstants.TOPIC_JOB_ADDED, job, null);
-                    }
-                }
-            } finally {
-                resolver.close();
-            }
+            // get topic and id from path
+            final int topicStart = this.configuration.getLocalJobsPath().length() + 1;
+            final int topicEnd = path.indexOf('/', topicStart);
+            final String topic = path.substring(topicStart, topicEnd).replace('.', '/');
+            final String jobId = path.substring(topicEnd + 1);
+
+            // only job id and topic are guaranteed
+            final Dictionary<String, Object> properties = new Hashtable<String, Object>();
+            properties.put(NotificationConstants.NOTIFICATION_PROPERTY_JOB_ID, jobId);
+            properties.put(NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC, topic);
+
+            // we also set internally the queue name
+            final String queueName = this.configuration.getQueueConfigurationManager().getQueueInfo(topic).queueName;
+            properties.put(Job.PROPERTY_JOB_QUEUE_NAME, queueName);
+
+            final Event jobEvent = new Event(NotificationConstants.TOPIC_JOB_ADDED, properties);
+            // as this is send within handling an event, we do sync call
+            this.eventAdmin.sendEvent(jobEvent);
         }
     }
 

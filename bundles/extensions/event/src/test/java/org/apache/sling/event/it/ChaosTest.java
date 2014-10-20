@@ -25,11 +25,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.sling.discovery.TopologyEvent;
@@ -266,7 +268,8 @@ public class ChaosTest extends AbstractJobHandlingTest {
         final TopologyView view = views.get(0);
 
         try {
-            final ServiceReference[] refs = this.bc.getServiceReferences(TopologyEventListener.class.getName(), "(objectClass=org.apache.sling.event.impl.jobs.config.JobManagerConfiguration)");
+            final ServiceReference[] refs = this.bc.getServiceReferences(TopologyEventListener.class.getName(),
+                    "(objectClass=org.apache.sling.event.impl.jobs.config.JobManagerConfiguration)");
             assertNotNull(refs);
             assertEquals(1, refs.length);
             final TopologyEventListener tel = (TopologyEventListener)bc.getService(refs[0]);
@@ -309,21 +312,27 @@ public class ChaosTest extends AbstractJobHandlingTest {
     public void testDoChaos() throws Exception {
         final JobManager jobManager = this.getJobManager();
 
-        // setup created map
+        // setup added, created and finished map
+        // added and finished are filled by notifications
+        // created is filled by the threads starting jobs
+        final Map<String, AtomicLong> added = new HashMap<String, AtomicLong>();
         final Map<String, AtomicLong> created = new HashMap<String, AtomicLong>();
         final Map<String, AtomicLong> finished = new HashMap<String, AtomicLong>();
         final List<String> topics = new ArrayList<String>();
         for(int i=0;i<NUM_ORDERED_TOPICS;i++) {
+            added.put(ORDERED_TOPICS[i], new AtomicLong());
             created.put(ORDERED_TOPICS[i], new AtomicLong());
             finished.put(ORDERED_TOPICS[i], new AtomicLong());
             topics.add(ORDERED_TOPICS[i]);
         }
         for(int i=0;i<NUM_PARALLEL_TOPICS;i++) {
+            added.put(PARALLEL_TOPICS[i], new AtomicLong());
             created.put(PARALLEL_TOPICS[i], new AtomicLong());
             finished.put(PARALLEL_TOPICS[i], new AtomicLong());
             topics.add(PARALLEL_TOPICS[i]);
         }
         for(int i=0;i<NUM_ROUND_TOPICS;i++) {
+            added.put(ROUND_TOPICS[i], new AtomicLong());
             created.put(ROUND_TOPICS[i], new AtomicLong());
             finished.put(ROUND_TOPICS[i], new AtomicLong());
             topics.add(ROUND_TOPICS[i]);
@@ -338,9 +347,11 @@ public class ChaosTest extends AbstractJobHandlingTest {
 
                     @Override
                     public void handleEvent(final Event event) {
+                        final String topic = (String) event.getProperty(NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC);
                         if ( NotificationConstants.TOPIC_JOB_FINISHED.equals(event.getTopic())) {
-                            final String topic = (String) event.getProperty(NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC);
                             finished.get(topic).incrementAndGet();
+                        } else if ( NotificationConstants.TOPIC_JOB_ADDED.equals(event.getTopic())) {
+                            added.get(topic).incrementAndGet();
                         }
                     }
                 });
@@ -370,8 +381,9 @@ public class ChaosTest extends AbstractJobHandlingTest {
             }
 
             System.out.println("Waiting for job handling to finish...");
-            while ( !topics.isEmpty() ) {
-                final Iterator<String> iter = topics.iterator();
+            final Set<String> allTopics = new HashSet<String>(topics);
+            while ( !allTopics.isEmpty() ) {
+                final Iterator<String> iter = allTopics.iterator();
                 while ( iter.hasNext() ) {
                     final String topic = iter.next();
                     if ( finished.get(topic).get() == created.get(topic).get() ) {
@@ -380,6 +392,11 @@ public class ChaosTest extends AbstractJobHandlingTest {
                 }
                 this.sleep(100);
             }
+            System.out.println("Checking notifications...");
+            for(final String topic : topics) {
+                assertEquals("Checking topic " + topic, created.get(topic).get(), added.get(topic).get());
+            }
+
         } finally {
             eventHandler.unregister();
             for(final ServiceRegistration reg : registrations) {

@@ -42,7 +42,6 @@ import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.event.impl.EnvironmentComponent;
-import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueConfigurationChangeListener;
 import org.apache.sling.event.impl.jobs.tasks.CheckTopologyTask;
 import org.apache.sling.event.impl.jobs.tasks.FindUnfinishedJobsTask;
 import org.apache.sling.event.impl.jobs.tasks.UpgradeTask;
@@ -74,7 +73,7 @@ import org.slf4j.LoggerFactory;
     @Property(name=JobManagerConfiguration.PROPERTY_BACKGROUND_LOAD_DELAY,
               longValue=JobManagerConfiguration.DEFAULT_BACKGROUND_LOAD_DELAY, propertyPrivate=true),
 })
-public class JobManagerConfiguration implements TopologyEventListener, QueueConfigurationChangeListener {
+public class JobManagerConfiguration implements TopologyEventListener, ConfigurationChangeListener {
 
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger("org.apache.sling.event.impl.jobs");
@@ -220,7 +219,7 @@ public class JobManagerConfiguration implements TopologyEventListener, QueueConf
      */
     @Deactivate
     protected void deactivate() {
-        this.queueConfigManager.removeListener(this);
+        this.queueConfigManager.removeListener();
     }
 
     /**
@@ -422,8 +421,12 @@ public class JobManagerConfiguration implements TopologyEventListener, QueueConf
         return (slash ? this.scheduledJobsPathWithSlash : this.scheduledJobsPath);
     }
 
+    /**
+     * This method is invoked by the queue configuration manager
+     * whenever the queue configuration changes.
+     */
     @Override
-    public void configChanged() {
+    public void configurationChanged(final boolean active) {
         final TopologyCapabilities caps = this.topologyCapabilities;
         if ( caps != null ) {
             synchronized ( this.listeners ) {
