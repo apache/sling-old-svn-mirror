@@ -18,9 +18,14 @@
  */
 package org.apache.sling.replication.serialization.impl.vlt;
 
+import java.io.File;
+
+import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Testcase for {@link org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackage}
@@ -29,41 +34,80 @@ public class FileVaultReplicationPackageTest {
 
     @Test
     public void testGetId() throws Exception {
-
+        VaultPackage vaultPackage = mock(VaultPackage.class);
+        File file = mock(File.class);
+        when(file.getAbsolutePath()).thenReturn("/path/to/file.txt");
+        when(vaultPackage.getFile()).thenReturn(file);
+        FileVaultReplicationPackage fileVaultReplicationPackage = new FileVaultReplicationPackage(vaultPackage);
+        assertNotNull(fileVaultReplicationPackage.getId());
     }
 
     @Test
     public void testGetPaths() throws Exception {
-
+        VaultPackage vaultPackage = mock(VaultPackage.class);
+        File file = mock(File.class);
+        when(file.getAbsolutePath()).thenReturn("/path/to/file.txt");
+        when(vaultPackage.getFile()).thenReturn(file);
+        FileVaultReplicationPackage fileVaultReplicationPackage = new FileVaultReplicationPackage(vaultPackage);
+        assertNotNull(fileVaultReplicationPackage.getPaths());
     }
 
     @Test
     public void testCreateInputStream() throws Exception {
-
+        VaultPackage vaultPackage = mock(VaultPackage.class);
+        File file = File.createTempFile("sample","txt");
+        when(vaultPackage.getFile()).thenReturn(file);
+        FileVaultReplicationPackage fileVaultReplicationPackage = new FileVaultReplicationPackage(vaultPackage);
+        assertNotNull(fileVaultReplicationPackage.createInputStream());
     }
 
     @Test
     public void testGetLength() throws Exception {
-
+        VaultPackage vaultPackage = mock(VaultPackage.class);
+        File file = mock(File.class);
+        when(file.getAbsolutePath()).thenReturn("/path/to/file.txt");
+        when(vaultPackage.getFile()).thenReturn(file);
+        FileVaultReplicationPackage fileVaultReplicationPackage = new FileVaultReplicationPackage(vaultPackage);
+        assertNotNull(fileVaultReplicationPackage.getLength());
     }
 
     @Test
     public void testGetType() throws Exception {
-
+        VaultPackage vaultPackage = mock(VaultPackage.class);
+        File file = mock(File.class);
+        when(file.getAbsolutePath()).thenReturn("/path/to/file.txt");
+        when(vaultPackage.getFile()).thenReturn(file);
+        FileVaultReplicationPackage fileVaultReplicationPackage = new FileVaultReplicationPackage(vaultPackage);
+        assertNotNull(fileVaultReplicationPackage.getType());
     }
 
     @Test
     public void testGetAction() throws Exception {
-
+        VaultPackage vaultPackage = mock(VaultPackage.class);
+        File file = mock(File.class);
+        when(file.getAbsolutePath()).thenReturn("/path/to/file.txt");
+        when(vaultPackage.getFile()).thenReturn(file);
+        FileVaultReplicationPackage fileVaultReplicationPackage = new FileVaultReplicationPackage(vaultPackage);
+        assertNotNull(fileVaultReplicationPackage.getAction());
     }
 
     @Test
     public void testClose() throws Exception {
-
+        VaultPackage vaultPackage = mock(VaultPackage.class);
+        File file = mock(File.class);
+        when(file.getAbsolutePath()).thenReturn("/path/to/file.txt");
+        when(vaultPackage.getFile()).thenReturn(file);
+        FileVaultReplicationPackage fileVaultReplicationPackage = new FileVaultReplicationPackage(vaultPackage);
+        fileVaultReplicationPackage.close();
     }
 
     @Test
     public void testDelete() throws Exception {
-
+        VaultPackage vaultPackage = mock(VaultPackage.class);
+        File file = mock(File.class);
+        when(file.getAbsolutePath()).thenReturn("/path/to/file.txt");
+        when(vaultPackage.getFile()).thenReturn(file);
+        FileVaultReplicationPackage fileVaultReplicationPackage = new FileVaultReplicationPackage(vaultPackage);
+        fileVaultReplicationPackage.delete();
     }
 }
