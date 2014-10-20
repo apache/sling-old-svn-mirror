@@ -20,6 +20,7 @@ package org.apache.sling.event.impl.jobs.queues;
 
 import java.util.Date;
 import java.util.Set;
+import java.util.concurrent.Semaphore;
 
 import org.apache.sling.event.impl.jobs.JobHandler;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
@@ -30,71 +31,37 @@ import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
  */
 public final class ParallelJobQueue extends AbstractJobQueue {
 
-    private volatile int jobCount;
-
-    private final Object syncLock = new Object();
+    private final Semaphore available;
 
     public ParallelJobQueue(final String name,
                            final InternalQueueConfiguration config,
                            final QueueServices services,
                            final Set<String> topics) {
         super(name, config, services, topics);
+        this.available = new Semaphore(config.getMaxParallel(), true);
     }
 
     @Override
     public String getStateInfo() {
-        return super.getStateInfo() + ", jobCount=" + this.jobCount;
+        return super.getStateInfo() + ", jobCount=" + String.valueOf(this.configuration.getMaxParallel() - this.available.availablePermits());
     }
 
     @Override
-    protected void start(final JobHandler processInfo) {
+    protected void start(final JobHandler handler) {
         // acquire a slot
-        this.acquireSlot();
-
-        // check if we got outdated in the meantime
-        if ( this.isOutdated() ) {
-            this.freeSlot();
-            return;
-        }
-        if ( !this.executeJob(processInfo) ) {
-            this.freeSlot();
-        }
-    }
-
-    /**
-     * Acquire a processing slot.
-     * This method is called if the queue is not ordered.
-     */
-    private void acquireSlot() {
-        synchronized ( this.syncLock ) {
-            if ( jobCount >= this.configuration.getMaxParallel() ) {
-                this.isWaiting = true;
-                this.logger.debug("Job queue {} is processing {} jobs - waiting for a free slot.", this.queueName, jobCount);
-                while ( this.isWaiting ) {
-                    try {
-                        this.syncLock.wait();
-                    } catch (final InterruptedException e) {
-                        this.ignoreException(e);
-                        Thread.currentThread().interrupt();
-                    }
-                }
-                this.logger.debug("Job queue {} is continuing.", this.queueName);
+        boolean hasSlot = false;
+        while ( !hasSlot ) {
+            try {
+                this.available.acquire();
+                hasSlot = true;
+            } catch ( final InterruptedException ie) {
+                Thread.currentThread().interrupt();
             }
-            jobCount++;
         }
-    }
 
-    /**
-     * Free a slot when a job processing is finished.
-     */
-    private void freeSlot() {
-        synchronized ( this.syncLock ) {
-            jobCount--;
-            if ( this.isWaiting ) {
-                this.logger.debug("Notifying job queue {} to continue processing.", this.queueName);
-                this.isWaiting = false;
-                this.syncLock.notify();
-            }
+        // check if we got outdated in the meantime, otherwise execute
+        if ( this.isOutdated() || !this.running || !this.executeJob(handler)) {
+            this.available.release();
         }
     }
 
@@ -102,14 +69,14 @@ public final class ParallelJobQueue extends AbstractJobQueue {
     protected boolean canBeClosed() {
         boolean result = super.canBeClosed();
         if ( result ) {
-            result = this.jobCount == 0;
+            result = this.available.availablePermits() == this.configuration.getMaxParallel();
         }
         return result;
     }
 
     @Override
     protected void notifyFinished(final boolean reschedule) {
-        this.freeSlot();
+        this.available.release();
     }
 
     @Override

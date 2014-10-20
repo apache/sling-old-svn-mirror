@@ -339,16 +339,20 @@ public abstract class AbstractJobQueue
         logger.debug("Taking new job for {}", queueName);
         JobImpl result = null;
 
+        boolean doFull = false;
         while ( result == null && !this.isOutdated() && this.running ) {
             this.isWaitingForNextJob = true;
 
-            result = this.cache.getNextJob();
+            result = this.cache.getNextJob(doFull);
             if ( result == null && !this.isOutdated() && this.running ) {
                 // block
                 synchronized ( nextJobLock ) {
                     while ( isWaitingForNextJob ) {
                         try {
-                            nextJobLock.wait(30000);
+                            nextJobLock.wait(20000);
+                            if ( isWaitingForNextJob ) {
+                                doFull = true;
+                            }
                             isWaitingForNextJob = false;
                         } catch ( final InterruptedException ignore ) {
                             Thread.currentThread().interrupt();

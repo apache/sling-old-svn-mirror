@@ -43,7 +43,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.commons.threads.ThreadPoolManager;
-import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.impl.jobs.config.ConfigurationChangeListener;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
@@ -57,6 +56,7 @@ import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.impl.support.ScheduleInfoImpl;
 import org.apache.sling.event.jobs.Job;
+import org.apache.sling.event.jobs.Job.JobState;
 import org.apache.sling.event.jobs.JobBuilder;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.JobUtil;
@@ -87,7 +87,6 @@ import org.slf4j.LoggerFactory;
               value={SlingConstants.TOPIC_RESOURCE_ADDED,
                      SlingConstants.TOPIC_RESOURCE_CHANGED,
                      SlingConstants.TOPIC_RESOURCE_REMOVED,
-                     Utility.TOPIC_STOP,
                      ResourceHelper.BUNDLE_EVENT_STARTED,
                      ResourceHelper.BUNDLE_EVENT_UPDATED})
 })
@@ -219,20 +218,7 @@ public class JobManagerImpl
      */
     @Override
     public void handleEvent(final Event event) {
-        if ( SlingConstants.TOPIC_RESOURCE_ADDED.equals(event.getTopic()) ) {
-            this.jobScheduler.handleEvent(event);
-        } else if ( Utility.TOPIC_STOP.equals(event.getTopic()) ) {
-            if ( !EventUtil.isLocal(event) ) {
-                final String jobId = (String) event.getProperty(Utility.PROPERTY_ID);
-                this.stopJobById(jobId, false);
-            }
-        } else if ( ResourceHelper.BUNDLE_EVENT_STARTED.equals(event.getTopic())
-                 || ResourceHelper.BUNDLE_EVENT_UPDATED.equals(event.getTopic()) ) {
-            this.jobScheduler.handleEvent(event);
-        } else if ( SlingConstants.TOPIC_RESOURCE_CHANGED.equals(event.getTopic())
-                 || SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic()) ) {
-            this.jobScheduler.handleEvent(event);
-        }
+        this.jobScheduler.handleEvent(event);
     }
 
     @Override
@@ -916,12 +902,9 @@ public class JobManagerImpl
                 stopped = queue.stopJob(job);
             }
             if ( forward && !stopped ) {
-                // TODO why not remove the resource?
-                // send remote event
-                final Map<String, Object> props = new HashMap<String, Object>();
-                props.put(Utility.PROPERTY_ID, jobId);
-                props.put(EventUtil.PROPERTY_DISTRIBUTE, "");
-                this.eventAdmin.sendEvent(new Event(Utility.TOPIC_STOP, props));
+                // mark the job as stopped
+                final JobHandler jh = new JobHandler(job,this.configuration);
+                jh.finished(JobState.STOPPED, true, -1);
             }
         }
     }

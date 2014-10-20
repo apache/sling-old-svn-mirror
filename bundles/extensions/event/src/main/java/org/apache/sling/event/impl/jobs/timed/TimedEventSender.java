@@ -61,10 +61,10 @@ import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.TimedEventStatusProvider;
-import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.JobUtil;
+import org.apache.sling.event.jobs.NotificationConstants;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
@@ -155,7 +155,7 @@ public class TimedEventSender
         // stop background threads by putting empty objects into the queue
         this.queue.clear();
         try {
-            this.queue.put(new Event(Utility.TOPIC_STOPPED, (Dictionary<String, Object>)null));
+            this.queue.put(new Event(NotificationConstants.TOPIC_JOB_FINISHED, (Dictionary<String, Object>)null));
         } catch (final InterruptedException e) {
             this.ignoreException(e);
             Thread.currentThread().interrupt();
@@ -234,7 +234,7 @@ public class TimedEventSender
                     this.scheduler.unschedule(jobId);
                     event = null;
 
-                } else if ( !Utility.TOPIC_STOPPED.equals(event.getTopic()) ) {
+                } else if ( !NotificationConstants.TOPIC_JOB_FINISHED.equals(event.getTopic()) ) {
                     ScheduleInfo scheduleInfo = null;
                     try {
                         scheduleInfo = new ScheduleInfo(event);
@@ -255,7 +255,7 @@ public class TimedEventSender
                     }
 
                     event = null;
-                } else if (Utility.TOPIC_STOPPED.equals(event.getTopic())){
+                } else if (NotificationConstants.TOPIC_JOB_FINISHED.equals(event.getTopic())){
                     // stopScheduling() puts this event on the queue, but the intention is unclear to me.
                     // as the threadStarted flag ensures the background thread is only started once, we must not stop
                     // the thread, otherwise its never started again upon topology changes.

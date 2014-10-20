@@ -54,6 +54,7 @@ import org.apache.sling.event.impl.support.ScheduleInfoImpl;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobBuilder;
 import org.apache.sling.event.jobs.JobUtil;
+import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.ScheduleInfo;
 import org.apache.sling.event.jobs.ScheduleInfo.ScheduleType;
 import org.apache.sling.event.jobs.ScheduledJobInfo;
@@ -138,7 +139,7 @@ public class JobSchedulerImpl
         // stop background threads by putting empty objects into the queue
         this.queue.clear();
         try {
-            this.queue.put(new Event(Utility.TOPIC_STOPPED, (Dictionary<String, Object>)null));
+            this.queue.put(new Event(NotificationConstants.TOPIC_JOB_REMOVED, (Dictionary<String, Object>)null));
         } catch (final InterruptedException e) {
             this.ignoreException(e);
             Thread.currentThread().interrupt();
