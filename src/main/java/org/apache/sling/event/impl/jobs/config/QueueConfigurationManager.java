@@ -40,10 +40,6 @@ import org.apache.sling.event.impl.support.ResourceHelper;
            bind="bindConfig", unbind="unbindConfig", updated="updateConfig")
 public class QueueConfigurationManager {
 
-    public interface QueueConfigurationChangeListener {
-        void configChanged();
-    }
-
     /** Empty configuration array. */
     private static final InternalQueueConfiguration[] EMPTY_CONFIGS = new InternalQueueConfiguration[0];
 
@@ -57,8 +53,8 @@ public class QueueConfigurationManager {
     @Reference
     private MainQueueConfiguration mainQueueConfiguration;
 
-    /** Listeners. */
-    private final List<QueueConfigurationChangeListener> listeners = new ArrayList<QueueConfigurationChangeListener>();
+    /** Listener - this is the job manager configuration component. */
+    private volatile ConfigurationChangeListener changeListener;
 
     /**
      * Add a new queue configuration.
@@ -104,6 +100,7 @@ public class QueueConfigurationManager {
             Collections.sort(configurations);
             orderedConfigs = configurations.toArray(new InternalQueueConfiguration[configurations.size()]);
         }
+        this.updateListener();
     }
 
     /**
@@ -174,23 +171,28 @@ public class QueueConfigurationManager {
         return result;
     }
 
-    public void addListener(final QueueConfigurationChangeListener listener) {
-        synchronized ( this.listeners ) {
-            this.listeners.add(listener);
-        }
+    /**
+     * Add a config listener.
+     * @param listener
+     */
+    public void addListener(final ConfigurationChangeListener listener) {
+        this.changeListener = listener;
     }
 
-    public void removeListener(final QueueConfigurationChangeListener listener) {
-        synchronized ( this.listeners ) {
-            this.listeners.remove(listener);
-        }
+    /**
+     * Remove the config listener.
+     */
+    public void removeListener() {
+        this.changeListener = null;
     }
 
-    private void updateListeners() {
-        synchronized ( listeners ) {
-            for(final QueueConfigurationChangeListener l : listeners) {
-                l.configChanged();
-            }
+    /**
+     * Update the listener.
+     */
+    private void updateListener() {
+        final ConfigurationChangeListener l = this.changeListener;
+        if ( l != null ) {
+            l.configurationChanged(true);
         }
     }
 }

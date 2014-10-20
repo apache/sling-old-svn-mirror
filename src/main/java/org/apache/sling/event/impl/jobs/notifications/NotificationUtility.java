@@ -99,11 +99,7 @@ public abstract class NotificationUtility {
         if ( time != null ) {
             eventProps.put(PROPERTY_TIME, time);
         }
-        if ( NotificationConstants.TOPIC_JOB_ADDED.equals(eventTopic) ) {
-            eventAdmin.sendEvent(new Event(eventTopic, eventProps));
-        } else {
-            eventAdmin.postEvent(new Event(eventTopic, eventProps));
-        }
+        eventAdmin.postEvent(new Event(eventTopic, eventProps));
     }
 
 }

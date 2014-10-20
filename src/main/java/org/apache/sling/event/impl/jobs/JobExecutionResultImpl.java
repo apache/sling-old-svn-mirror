@@ -20,18 +20,33 @@ package org.apache.sling.event.impl.jobs;
 
 import org.apache.sling.event.jobs.consumer.JobExecutionResult;
 
+/**
+ * The job execution result.
+ */
 public class JobExecutionResultImpl implements JobExecutionResult {
 
+    /** Constant object for the success case. */
     public static final JobExecutionResultImpl SUCCEEDED = new JobExecutionResultImpl(InternalJobState.SUCCEEDED, null, null);
+    /** Constant object for the cancelled case. */
     public static final JobExecutionResultImpl CANCELLED = new JobExecutionResultImpl(InternalJobState.CANCELLED, null, null);
+    /** Constant object for the failed case. */
     public static final JobExecutionResultImpl FAILED = new JobExecutionResultImpl(InternalJobState.FAILED, null, null);
 
+    /** The state of the execution. */
     private final InternalJobState state;
 
+    /** Optional message. */
     private final String message;
 
+    /** Optional retry delay. */
     private final Long retryDelayInMs;
 
+    /**
+     * Create a new result
+     * @param state The result state
+     * @param message Optional Message
+     * @param retryDelayInMs Optional retry delay
+     */
     public JobExecutionResultImpl(final InternalJobState state,
             final String message,
             final Long retryDelayInMs) {
@@ -40,6 +55,10 @@ public class JobExecutionResultImpl implements JobExecutionResult {
         this.retryDelayInMs = retryDelayInMs;
     }
 
+    /**
+     * Get the internal state
+     * @return The state.
+     */
     public InternalJobState getState() {
         return this.state;
     }

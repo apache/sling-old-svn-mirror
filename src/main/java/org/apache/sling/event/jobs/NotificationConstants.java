@@ -84,7 +84,6 @@ public abstract class NotificationConstants {
      * Asynchronous notification event when a job is added.
      * The property {@link #NOTIFICATION_PROPERTY_JOB_TOPIC} contains the job topic,
      * the property {@link #NOTIFICATION_PROPERTY_JOB_ID} contains the unique job id.
-     * The payload of the job is available as additional job specific properties.
      * @since 1.6
      */
     public static final String TOPIC_JOB_ADDED = "org/apache/sling/event/notification/job/ADDED";
