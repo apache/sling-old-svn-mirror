@@ -38,10 +38,14 @@ final class ContextResourceResolverFactory {
     }
 
     public static ResourceResolverFactory get(final ResourceResolverType resourceResolverType) {
+        ResourceResolverType type = resourceResolverType;
+        if (type == null) {
+            type = MockSling.DEFAULT_RESOURCERESOLVER_TYPE;
+        }
         try {
-            ResourceResolverFactory factory = MockSling.newResourceResolverFactory(resourceResolverType);
+            ResourceResolverFactory factory = MockSling.newResourceResolverFactory(type);
 
-            switch (resourceResolverType) {
+            switch (type) {
             case JCR_MOCK:
                 initializeJcrMock(factory);
                 break;
@@ -52,12 +56,12 @@ final class ContextResourceResolverFactory {
                 initializeResourceResolverMock(factory);
                 break;
             default:
-                throw new IllegalArgumentException("Invalid resource resolver type: " + resourceResolverType);
+                throw new IllegalArgumentException("Invalid resource resolver type: " + type);
             }
 
             return factory;
         } catch (Throwable ex) {
-            throw new RuntimeException("Unable to initialize " + resourceResolverType + " resource resolver factory.", ex);
+            throw new RuntimeException("Unable to initialize " + type + " resource resolver factory.", ex);
         }
     }
 
