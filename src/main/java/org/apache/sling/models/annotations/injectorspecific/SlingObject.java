@@ -52,31 +52,35 @@ import org.apache.sling.models.spi.injectorspecific.InjectAnnotation;
  * <td>{@link Resource}</td>
  * <td>Resource</td>
  * <td style="text-align:center">X</td>
- * <td></td>
+ * <td style="text-align:center">X*</td>
  * <td style="text-align:center">X</td>
  * </tr>
  * <tr style="background-color:#eee">
  * <td>{@link SlingHttpServletRequest}</td>
  * <td>Sling request</td>
  * <td style="text-align:center">X</td>
- * <td></td>
- * <td></td>
+ * <td style="text-align:center">X*</td>
+ * <td style="text-align:center">X*</td>
  * </tr>
  * <tr>
  * <td>{@link SlingHttpServletResponse}</td>
  * <td>Sling response</td>
  * <td style="text-align:center">X</td>
- * <td></td>
- * <td></td>
+ * <td style="text-align:center">X*</td>
+ * <td style="text-align:center">X*</td>
  * </tr>
  * <tr style="background-color:#eee">
  * <td>{@link SlingScriptHelper}</td>
  * <td>Sling script helper</td>
  * <td style="text-align:center">X</td>
- * <td></td>
- * <td></td>
+ * <td style="text-align:center">X*</td>
+ * <td style="text-align:center">X*</td>
  * </tr>
  * </table>
+ * <p>
+ * In case of X* the class cannot be derived from the adaptable, but is derived from the request of the current thread
+ * set by a servlet filter. If the current thread is not associated with a request nothing is injected.
+ * </p>
  */
 @Target({ METHOD, FIELD, PARAMETER })
 @Retention(RUNTIME)
