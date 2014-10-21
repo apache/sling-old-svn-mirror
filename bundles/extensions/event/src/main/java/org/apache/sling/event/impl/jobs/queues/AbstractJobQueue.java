@@ -339,21 +339,16 @@ public abstract class AbstractJobQueue
         logger.debug("Taking new job for {}", queueName);
         JobImpl result = null;
 
-        boolean doFull = false;
         while ( result == null && !this.isOutdated() && this.running ) {
             this.isWaitingForNextJob = true;
 
-            result = this.cache.getNextJob(doFull);
+            result = this.cache.getNextJob();
             if ( result == null && !this.isOutdated() && this.running ) {
                 // block
                 synchronized ( nextJobLock ) {
                     while ( isWaitingForNextJob ) {
                         try {
-                            doFull = false;
                             nextJobLock.wait(20000);
-                            if ( isWaitingForNextJob ) {
-                                doFull = true;
-                            }
                             isWaitingForNextJob = false;
                         } catch ( final InterruptedException ignore ) {
                             Thread.currentThread().interrupt();
@@ -386,7 +381,7 @@ public abstract class AbstractJobQueue
      * @param topic A new topic.
      */
     public void wakeUpQueue(final Set<String> topics) {
-        this.cache.handleNewJob(topics);
+        this.cache.handleNewTopics(topics);
         this.stopWaitingForNextJob();
     }
 

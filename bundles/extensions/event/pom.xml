@@ -104,6 +104,8 @@
                             <portNames>
                                 <portName>http.port</portName>
                             </portNames>
+                            <minPortNumber>35000</minPortNumber>
+                            <maxPortNumber>45000</maxPortNumber>
                         </configuration>
                     </execution>
                 </executions>
