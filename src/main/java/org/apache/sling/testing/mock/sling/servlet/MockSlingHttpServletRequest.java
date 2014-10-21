@@ -29,6 +29,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.ListResourceBundle;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -59,14 +60,19 @@ import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.HttpConstants;
+import org.apache.sling.i18n.ResourceBundleProvider;
+import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.apache.sling.testing.mock.sling.MockSling;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
 /**
  * Mock {@link SlingHttpServletRequest} implementation.
  */
 public class MockSlingHttpServletRequest extends SlingAdaptable implements SlingHttpServletRequest {
 
-    private ResourceResolver resourceResolver;
+    private final ResourceResolver resourceResolver;
+    private final BundleContext bundleContext;
     private RequestPathInfo requestPathInfo = new MockRequestPathInfo();
     private Map<String, Object> attributeMap = new HashMap<String, Object>();
     private Map<String, String[]> parameterMap = new LinkedHashMap<String, String[]>();
@@ -80,19 +86,34 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
     private String method = HttpConstants.METHOD_GET;
     private final HeaderSupport headerSupport = new HeaderSupport();
     private final CookieSupport cookieSupport = new CookieSupport();
+    
+    private static final ResourceBundle EMPTY_RESOURCE_BUNDLE = new ListResourceBundle() {
+        @Override
+        protected Object[][] getContents() {
+            return new Object[0][0];
+        }
+    };
 
     /**
      * Instantiate with default resource resolver
      */
     public MockSlingHttpServletRequest() {
-        this.resourceResolver = MockSling.newResourceResolver();
+        this(MockSling.newResourceResolver());
     }
 
     /**
      * @param resourceResolver Resource resolver
      */
     public MockSlingHttpServletRequest(ResourceResolver resourceResolver) {
+        this(resourceResolver, MockOsgi.newBundleContext());
+    }
+
+    /**
+     * @param resourceResolver Resource resolver
+     */
+    public MockSlingHttpServletRequest(ResourceResolver resourceResolver, BundleContext bundleContext) {
         this.resourceResolver = resourceResolver;
+        this.bundleContext = bundleContext;
     }
 
     @Override
@@ -421,6 +442,27 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
         cookieSupport.addCookie(cookie);
     }
 
+    @Override
+    public ResourceBundle getResourceBundle(Locale locale) {
+        return getResourceBundle(null, locale);
+    }
+
+    @Override
+    public ResourceBundle getResourceBundle(String baseName, Locale locale) {
+        // check of ResourceBundleProvider is registered in mock OSGI context
+        ResourceBundle resourceBundle = null;
+        ServiceReference serviceReference = bundleContext.getServiceReference(ResourceBundleProvider.class.getName());
+        if (serviceReference != null) {
+            ResourceBundleProvider provider = (ResourceBundleProvider)bundleContext.getService(serviceReference);
+            resourceBundle = provider.getResourceBundle(baseName, locale);
+        }       
+        // if no ResourceBundleProvider exists return empty bundle
+        if (resourceBundle == null) {
+            resourceBundle = EMPTY_RESOURCE_BUNDLE;
+        }
+        return resourceBundle;
+    }
+    
     // --- unsupported operations ---
 
     @Override
@@ -455,16 +497,6 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     @Override
     public RequestProgressTracker getRequestProgressTracker() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ResourceBundle getResourceBundle(Locale pLocale) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ResourceBundle getResourceBundle(String baseName, Locale locale) {
         throw new UnsupportedOperationException();
     }
 

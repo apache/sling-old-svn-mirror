@@ -215,7 +215,7 @@ public class SlingContextImpl {
      */
     public final MockSlingHttpServletRequest request() {
         if (this.request == null) {
-            this.request = new MockSlingHttpServletRequest(this.resourceResolver());
+            this.request = new MockSlingHttpServletRequest(this.resourceResolver(), this.bundleContext());
 
             // initialize sling bindings
             SlingBindings bindings = new SlingBindings();
