@@ -33,7 +33,10 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.models.annotations.injectorspecific.SlingObject;
+import org.apache.sling.testing.mock.sling.ResourceResolverType;
+import org.apache.sling.testing.mock.sling.junit.SlingContext;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -42,77 +45,88 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class SlingObjectInjectorRequestTest {
 
-    private final SlingObjectInjector injector = new SlingObjectInjector();
+    @Rule
+    public SlingContext context = new SlingContext(ResourceResolverType.RESOURCERESOLVER_MOCK);
+    
+    @Mock
+    protected AnnotatedElement annotatedElement;
+    @Mock
+    protected SlingHttpServletRequest request;
+    @Mock
+    protected SlingHttpServletResponse response;
+    @Mock
+    protected SlingScriptHelper scriptHelper;
+    @Mock
+    protected ResourceResolver resourceResolver;
+    @Mock
+    protected Resource resource;
+    @Mock
+    protected SlingObjectInjectorRequestContext requestContext;
 
-    @Mock
-    private AnnotatedElement annotatedElement;
-    @Mock
-    private SlingHttpServletRequest request;
-    @Mock
-    private SlingHttpServletResponse response;
-    @Mock
-    private SlingScriptHelper scriptHelper;
-    @Mock
-    private ResourceResolver resourceResolver;
-    @Mock
-    private Resource resource;
-
+    protected SlingObjectInjector injector;
+    
     @Before
     public void setUp() {
+        context.registerService(SlingObjectInjectorRequestContext.class, this.requestContext);
+        injector = context.registerInjectActivateService(new SlingObjectInjector());
+        
         SlingBindings bindings = new SlingBindings();
         bindings.put(SlingBindings.SLING, this.scriptHelper);
+        when(this.resource.getResourceResolver()).thenReturn(this.resourceResolver);
         when(this.request.getResourceResolver()).thenReturn(this.resourceResolver);
         when(this.request.getResource()).thenReturn(this.resource);
         when(this.request.getAttribute(SlingBindings.class.getName())).thenReturn(bindings);
         when(this.scriptHelper.getResponse()).thenReturn(this.response);
     }
+    
+    protected Object adaptable() {
+        return this.request;
+    }
 
     @Test
     public void testResourceResolver() {
-        Object result = this.injector.getValue(this.request, null, ResourceResolver.class, this.annotatedElement, null);
+        Object result = this.injector.getValue(adaptable(), null, ResourceResolver.class, this.annotatedElement, null);
         assertSame(this.resourceResolver, result);
     }
 
     @Test
     public void testResource() {
-        Object result = this.injector.getValue(this.request, null, Resource.class, this.annotatedElement, null);
+        Object result = this.injector.getValue(adaptable(), null, Resource.class, this.annotatedElement, null);
         assertNull(result);
 
         when(annotatedElement.isAnnotationPresent(SlingObject.class)).thenReturn(true);
-        result = this.injector.getValue(this.request, null, Resource.class, this.annotatedElement, null);
+        result = this.injector.getValue(adaptable(), null, Resource.class, this.annotatedElement, null);
         assertSame(resource, result);
     }
 
     @Test
     public void testRequest() {
-        Object result = this.injector.getValue(this.request, null, SlingHttpServletRequest.class,
+        Object result = this.injector.getValue(adaptable(), null, SlingHttpServletRequest.class,
                 this.annotatedElement, null);
         assertSame(this.request, result);
 
-        result = this.injector.getValue(this.request, null, HttpServletRequest.class, this.annotatedElement, null);
+        result = this.injector.getValue(adaptable(), null, HttpServletRequest.class, this.annotatedElement, null);
         assertSame(this.request, result);
     }
 
     @Test
     public void testResponse() {
-        Object result = this.injector.getValue(this.request, null, SlingHttpServletResponse.class,
-                this.annotatedElement, null);
+        Object result = this.injector.getValue(adaptable(), null, SlingHttpServletResponse.class, this.annotatedElement, null);
         assertSame(this.response, result);
 
-        result = this.injector.getValue(this.request, null, HttpServletResponse.class, this.annotatedElement, null);
+        result = this.injector.getValue(adaptable(), null, HttpServletResponse.class, this.annotatedElement, null);
         assertSame(this.response, result);
     }
 
     @Test
     public void testScriptHelper() {
-        Object result = this.injector
-                .getValue(this.request, null, SlingScriptHelper.class, this.annotatedElement, null);
+        Object result = this.injector.getValue(adaptable(), null, SlingScriptHelper.class, this.annotatedElement, null);
         assertSame(this.scriptHelper, result);
     }
 
     @Test
     public void testInvalid() {
-        Object result = this.injector.getValue(this, null, SlingScriptHelper.class, this.annotatedElement, null);
+        Object result = this.injector.getValue(new StringBuffer(), null, SlingScriptHelper.class, this.annotatedElement, null);
         assertNull(result);
     }
 

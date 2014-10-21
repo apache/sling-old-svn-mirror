@@ -24,6 +24,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -54,6 +56,9 @@ public final class SlingObjectInjector implements Injector, InjectAnnotationProc
      * Injector name
      */
     public static final String NAME = "sling-object";
+    
+    @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY)
+    private SlingObjectInjectorRequestContext requestContext;
 
     @Override
     public String getName() {
@@ -71,8 +76,23 @@ public final class SlingObjectInjector implements Injector, InjectAnnotationProc
         Class<?> requestedClass = (Class<?>) type;
 
         // validate input
-        if (adaptable instanceof SlingHttpServletRequest) {
-            SlingHttpServletRequest request = (SlingHttpServletRequest) adaptable;
+        if (adaptable instanceof ResourceResolver) {
+            ResourceResolver resourceResolver = (ResourceResolver)adaptable;
+            if (requestedClass.equals(ResourceResolver.class)) {
+                return resourceResolver;
+            }
+        }
+        else if (adaptable instanceof Resource) {
+            Resource resource = (Resource)adaptable;
+            if (requestedClass.equals(ResourceResolver.class)) {
+                return resource.getResourceResolver();
+            }
+            if (requestedClass.equals(Resource.class) && element.isAnnotationPresent(SlingObject.class)) {
+                return resource;
+            }
+        }
+        SlingHttpServletRequest request = getRequest(adaptable);
+        if (request != null) {
             if (requestedClass.equals(ResourceResolver.class)) {
                 return request.getResourceResolver();
             }
@@ -82,29 +102,27 @@ public final class SlingObjectInjector implements Injector, InjectAnnotationProc
             if (requestedClass.equals(SlingHttpServletRequest.class) || requestedClass.equals(HttpServletRequest.class)) {
                 return request;
             }
-            if (requestedClass.equals(SlingHttpServletResponse.class)
-                    || requestedClass.equals(HttpServletResponse.class)) {
+            if (requestedClass.equals(SlingHttpServletResponse.class) || requestedClass.equals(HttpServletResponse.class)) {
                 return getSlingHttpServletResponse(request);
             }
             if (requestedClass.equals(SlingScriptHelper.class)) {
                 return getSlingScriptHelper(request);
             }
-        } else if (adaptable instanceof ResourceResolver) {
-            ResourceResolver resourceResolver = (ResourceResolver) adaptable;
-            if (requestedClass.equals(ResourceResolver.class)) {
-                return resourceResolver;
-            }
-        } else if (adaptable instanceof Resource) {
-            Resource resource = (Resource) adaptable;
-            if (requestedClass.equals(ResourceResolver.class)) {
-                return resource.getResourceResolver();
-            }
-            if (requestedClass.equals(Resource.class) && element.isAnnotationPresent(SlingObject.class)) {
-                return resource;
-            }
         }
 
         return null;
+    }
+
+    private SlingHttpServletRequest getRequest(final Object adaptable) {
+        if (adaptable instanceof SlingHttpServletRequest) {
+            return (SlingHttpServletRequest) adaptable;
+        }
+        else if (requestContext != null) {
+            return requestContext.getThreadRequest();
+        }
+        else {
+            return null;
+        }
     }
 
     private SlingScriptHelper getSlingScriptHelper(final SlingHttpServletRequest request) {
