@@ -203,7 +203,7 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
                 log.info("polled {} packages from {}", polls, replicationEndpoint.getUri());
 
             } catch (HttpHostConnectException e) {
-                log.warn("could not connect to {} - skipping", replicationEndpoint.getUri());
+                log.info("could not connect to {} - skipping", replicationEndpoint.getUri());
             }
 
             return result;
