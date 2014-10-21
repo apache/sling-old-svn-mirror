@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -41,7 +42,6 @@ import org.slf4j.LoggerFactory;
 /**
  * The queue job cache caches jobs per queue based on the topics the queue is actively
  * processing.
- *
  */
 public class QueueJobCache {
 
@@ -109,20 +109,16 @@ public class QueueJobCache {
     /**
      * Get the next job.
      * This method is not called concurrently, however
-     * {@link #reschedule(JobImpl)} and {@link #handleNewJob(String)}
+     * {@link #reschedule(JobImpl)} and {@link #handleNewTopics(String)}
      * can be called concurrently.
      */
-    public JobImpl getNextJob(final boolean doFull) {
+    public JobImpl getNextJob() {
         JobImpl result = null;
 
         synchronized ( this.cache ) {
             if ( this.cache.isEmpty() ) {
                 final Set<String> checkingTopics = new HashSet<String>();
                 synchronized ( this.topicsWithNewJobs ) {
-                    if ( doFull ) {
-                        logger.debug("Doing full cache update {} : {}", this.topics, this.topicsWithNewJobs);
-                        checkingTopics.addAll(this.topics);
-                    }
                     checkingTopics.addAll(this.topicsWithNewJobs);
                     this.topicsWithNewJobs.clear();
                 }
@@ -141,9 +137,10 @@ public class QueueJobCache {
 
     /**
      * Load the next N x numberOf(topics) jobs
+     * @param checkingTopics The set of topics to check.
      */
     private void loadJobs( final Set<String> checkingTopics) {
-        logger.debug("Starting jobs loading...");
+        logger.debug("Starting jobs loading from {}...", checkingTopics);
 
         final Map<String, List<JobImpl>> topicCache = new HashMap<String, List<JobImpl>>();
 
@@ -200,10 +197,15 @@ public class QueueJobCache {
     }
 
     /**
-     * Load the next N x numberOf(topics) jobs
+     * Load the next N x numberOf(topics) jobs.
+     * @param topic The topic
+     * @param topicResource The parent resource of the jobs
+     * @param list The cache which will be filled with the jobs.
      */
     private void loadJobs(final String topic, final Resource topicResource, final List<JobImpl> list) {
         logger.debug("Loading jobs from topic {}", topic);
+
+        final AtomicBoolean scanTopic = new AtomicBoolean(false);
 
         JobTopicTraverser.traverse(logger, topicResource, new JobTopicTraverser.JobCallback() {
 
@@ -212,19 +214,30 @@ public class QueueJobCache {
                 if ( job.getProcessingStarted() == null && !job.hasReadErrors() ) {
                     list.add(job);
                 } else {
-                    logger.debug("Discarding job because {} or {}", job.getProcessingStarted(), job.hasReadErrors());
+                    if ( job.hasReadErrors() ) {
+                        scanTopic.set(true);
+                    }
+                    logger.debug("Ignoring job because {} or {}", job.getProcessingStarted(), job.hasReadErrors());
+                }
+                if ( list.size() == maxPreloadLimit ) {
+                    scanTopic.set(true);
                 }
                 return list.size() < maxPreloadLimit;
             }
         });
+        if ( scanTopic.get() ) {
+            synchronized ( this.topicsWithNewJobs ) {
+                this.topicsWithNewJobs.add(topic);
+            }
+        }
         logger.debug("Caching {} jobs for topic {}", list.size(), topic);
     }
 
     /**
-     * Mark the topic to contain new jobs.
-     * @param topic The topic
+     * Inform the queue cache about topics containing new jobs
+     * @param topics The set of topics to scan
      */
-    public void handleNewJob(final Set<String> topics) {
+    public void handleNewTopics(final Set<String> topics) {
         logger.debug("Update cache to handle new event for topics {}", topics);
         synchronized ( this.topicsWithNewJobs ) {
             this.topicsWithNewJobs.addAll(topics);
@@ -232,6 +245,11 @@ public class QueueJobCache {
         this.topics.addAll(topics);
     }
 
+    /**
+     * Reschedule a job
+     * Reschedule the job and add it back into the cache.
+     * @param handler The job handler
+     */
     public void reschedule(final JobHandler handler) {
         synchronized ( this.cache ) {
             if ( handler.reschedule() ) {

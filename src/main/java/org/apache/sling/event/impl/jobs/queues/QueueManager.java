@@ -220,11 +220,10 @@ public class QueueManager
                 queue = null;
             }
             if ( queue == null ) {
-                if ( config.getType() == QueueConfiguration.Type.ORDERED ) {
+                if ( config.getType() == QueueConfiguration.Type.ORDERED
+                  || config.getType() == QueueConfiguration.Type.TOPIC_ROUND_ROBIN ) {
                     queue = new OrderedJobQueue(queueInfo.queueName, config, queueServices, topics);
                 } else if ( config.getType() == QueueConfiguration.Type.UNORDERED ) {
-                    queue = new ParallelJobQueue(queueInfo.queueName, config, queueServices, topics);
-                } else if ( config.getType() == QueueConfiguration.Type.TOPIC_ROUND_ROBIN ) {
                     queue = new ParallelJobQueue(queueInfo.queueName, config, queueServices, topics);
                 }
                 // this is just a sanity check, actually we always have a queue instance here
@@ -232,6 +231,9 @@ public class QueueManager
                     queues.put(queueInfo.queueName, queue);
                     ((QueuesMBeanImpl)queuesMBean).sendEvent(new QueueStatusEvent(queue, null));
                     queue.start();
+                } else {
+                    // we log anyway
+                    logger.error("Unable to create new queue: unknown queue type {}", config);
                 }
             } else {
                 queue.wakeUpQueue(topics);
