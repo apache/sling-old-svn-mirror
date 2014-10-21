@@ -25,14 +25,18 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
+import java.util.ListResourceBundle;
 import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
@@ -41,11 +45,14 @@ import org.apache.commons.lang3.CharEncoding;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.HttpConstants;
+import org.apache.sling.i18n.ResourceBundleProvider;
+import org.apache.sling.testing.mock.osgi.MockOsgi;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.osgi.framework.BundleContext;
 
 @RunWith(MockitoJUnitRunner.class)
 public class MockSlingHttpServletRequestTest {
@@ -54,12 +61,13 @@ public class MockSlingHttpServletRequestTest {
     private ResourceResolver resourceResolver;
     @Mock
     private Resource resource;
+    private BundleContext bundleContext = MockOsgi.newBundleContext();
 
     private MockSlingHttpServletRequest request;
 
     @Before
     public void setUp() throws Exception {
-        request = new MockSlingHttpServletRequest(resourceResolver);
+        request = new MockSlingHttpServletRequest(resourceResolver, bundleContext);
     }
 
     @Test
@@ -211,6 +219,35 @@ public class MockSlingHttpServletRequestTest {
         assertEquals(2, cookies.length);
         assertEquals("value1", cookies[0].getValue());
         assertEquals("value2", cookies[1].getValue());
+    }
+    
+    @Test
+    public void testDefaultResourceBundle() {
+        ResourceBundle bundle = request.getResourceBundle(Locale.US);
+        assertNotNull(bundle);
+        assertFalse(bundle.getKeys().hasMoreElements());
+    }
+
+    @Test
+    public void testResourceBundleFromProvider() {
+        ResourceBundleProvider provider = mock(ResourceBundleProvider.class);
+        bundleContext.registerService(ResourceBundleProvider.class.getName(), provider, null);
+        when(provider.getResourceBundle("base1", Locale.US)).thenReturn(new ListResourceBundle() {
+            @Override
+            protected Object[][] getContents() {
+                return new Object[][] {
+                        { "key1", "value1" }
+                };
+            }
+        });        
+        
+        ResourceBundle bundle = request.getResourceBundle("base1", Locale.US);
+        assertNotNull(bundle);
+        assertEquals("value1", bundle.getString("key1"));
+
+        ResourceBundle bundle2 = request.getResourceBundle("base2", Locale.US);
+        assertNotNull(bundle2);
+        assertFalse(bundle2.getKeys().hasMoreElements());
     }
 
 }
