@@ -46,8 +46,13 @@ public class JcrEventReplicationTrigger extends AbstractJcrEventTrigger implemen
         Object pathProperty = event.getPath();
         if (pathProperty != null) {
             String replicatingPath = String.valueOf(pathProperty);
+            int type = event.getType();
+            if (Event.PROPERTY_REMOVED == type || Event.PROPERTY_CHANGED == type || Event.PROPERTY_ADDED == type) {
+                replicatingPath = replicatingPath.substring(0, replicatingPath.lastIndexOf('/'));
+            }
             replicationRequest = new ReplicationRequest(System.currentTimeMillis(), Event.NODE_REMOVED ==
-                    event.getType() ? ReplicationActionType.DELETE : ReplicationActionType.ADD, replicatingPath);
+                    type ? ReplicationActionType.DELETE : ReplicationActionType.ADD, replicatingPath);
+            log.info("replicating {}", replicationRequest);
         }
         return replicationRequest;
     }
