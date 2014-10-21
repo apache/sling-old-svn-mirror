@@ -1,7 +1,7 @@
 [feature name=main]
 
 [variables]
-  ws.version=1.0.2
+  ws.version=1.0.2-from-main
 
 [artifacts]
     commons-io/commons-io/1.4/jar

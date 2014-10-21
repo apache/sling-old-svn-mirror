@@ -9,6 +9,9 @@
 #
 [feature name=:boot]
 
+[variables]
+  ws.version=1.42-from-boot
+
 # additional entries for sling.properties
 # ---------------------------------------
 # jackrabbit and oak run modes are mutually exclusive,

@@ -56,5 +56,10 @@ public abstract class ModelConstants {
 
     /** Name of the standalone run mode. */
     public static final String RUN_MODE_STANDALONE = ":standalone";
-
+    
+    /** Default start level value */
+    public static final String DEFAULT_RUN_MODE = null;
+    
+    /** Default run mode value */
+    public static final int DEFAULT_START_LEVEL = 0;
 }
