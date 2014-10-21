@@ -16,46 +16,27 @@
  */
 package org.apache.sling.provisioning.model.io;
 
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Map;
 
 import org.apache.sling.provisioning.model.Model;
 import org.apache.sling.provisioning.model.ModelUtility;
+import org.apache.sling.provisioning.model.U;
 import org.apache.sling.provisioning.model.Traceable;
 import org.junit.Test;
 
+/** Read and merge our test models, write and read them again
+ *  and verify the result at various stages.
+ */
 public class IOTest {
 
-    /**
-     * Not really a unit test...but better than nothing
-     */
     @Test public void testReadWrite() throws Exception {
-        final Model result = new Model();
-        final String[] candidates = new String[] {"boot.txt", "example.txt", "main.txt", "oak.txt"};
+        final Model result = U.readCompleteTestModel();
+        
+        U.verifyTestModel(result, false);
 
-        for(final String name : candidates) {
-            final Reader reader = new InputStreamReader(this.getClass().getResourceAsStream("/" + name), "UTF-8");
-            try {
-                final Model current = ModelReader.read(reader, name);
-                final Map<Traceable, String> errors = ModelUtility.validate(current);
-                if (errors != null ) {
-                    throw new Exception("Invalid model at " + name + " : " + errors);
-                }
-                ModelUtility.merge(result, current);
-            } finally {
-                reader.close();
-            }
-        }
-
-        final Map<Traceable, String> errors = ModelUtility.validate(result);
-        if (errors != null ) {
-            throw new Exception("Invalid assembled model : " + errors);
-        }
-
-        // write the complete model
+        // Write the merged model
         StringWriter writer = new StringWriter();
         try {
             ModelWriter.write(writer, result);
@@ -63,7 +44,7 @@ public class IOTest {
             writer.close();
         }
 
-        // and read it again
+        // read it again
         StringReader reader = new StringReader(writer.toString());
         final Model readModel = ModelReader.read(reader, "memory");
         reader.close();
@@ -71,5 +52,12 @@ public class IOTest {
         if (readErrors != null ) {
             throw new Exception("Invalid read model : " + readErrors);
         }
+        
+        // and verify the result
+        U.verifyTestModel(readModel, false);
+        
+        // Resolve variables and verify the result
+        final Model effective = ModelUtility.getEffectiveModel(readModel, null);
+        U.verifyTestModel(effective, true);
     }
 }

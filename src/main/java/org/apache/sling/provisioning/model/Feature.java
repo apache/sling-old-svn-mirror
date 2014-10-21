@@ -86,7 +86,7 @@ public class Feature
      * @param runModes The run modes or {@code null}
      * @return The feature or {@code null}.
      */
-    public RunMode getRunMode(final String[] runModes) {
+    public RunMode getRunMode(final String ... runModes) {
         final String[] sortedRunModes = RunMode.getSortedRunModesArray(runModes);
         RunMode result = null;
         for(final RunMode current : this.runModes) {
