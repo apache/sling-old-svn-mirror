@@ -27,6 +27,9 @@
         <url.version>2.1.0</url.version>
         <org.ops4j.pax.logging.DefaultServiceLog.level>WARN</org.ops4j.pax.logging.DefaultServiceLog.level>
         <org.ops4j.pax.url.mvn.settings></org.ops4j.pax.url.mvn.settings>
+        
+        <!-- Set this to enable debugging of the VM used to run pax exam -->
+        <pax.vm.options></pax.vm.options>
 
         <!-- 
             WARNING make sure oak.version and sling.oak.server.version 
@@ -79,6 +82,10 @@
                         <property>
                             <name>sling.oak.server.version</name>
                             <value>${sling.oak.server.version}</value>
+                        </property>
+                        <property>
+                            <name>pax.vm.options</name>
+                            <value>${pax.vm.options}</value>
                         </property>
                     </systemProperties>
                     <argLine>

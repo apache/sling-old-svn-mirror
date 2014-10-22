@@ -21,10 +21,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.ops4j.pax.exam.CoreOptions.junitBundles;
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+import static org.ops4j.pax.exam.CoreOptions.vmOptions;
 
-import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -51,6 +55,7 @@ import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.ops4j.pax.exam.Option;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
@@ -72,6 +77,10 @@ public abstract class CommonTests {
 
     @Inject
     protected BundleContext bundleContext;
+    
+    // TODO doesn't work yet
+    // @Inject
+    // protected ResourceResolverFactory resourceResolverFactory;
 
     /** Check some repository descriptors to make sure we're
      *  testing the expected implementation. */
@@ -126,6 +135,86 @@ public abstract class CommonTests {
             return jcrEventsCounter;
         }
     }
+    
+    public Collection<Option> commonOptions() {
+        final String localRepo = System.getProperty("maven.repo.local", "");
+        final String paxVmOptions = System.getProperty("pax.vm.options", "");
+        
+        final List<Option> opt = new LinkedList<Option>();
+        if(localRepo.length() > 0 ) {
+            opt.add(systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo));
+        }
+        if(paxVmOptions.length() > 0) {
+            opt.add(vmOptions(paxVmOptions));
+        }
+        
+        final String SLF4J_VERSION = "1.7.5";
+        opt.add(mavenBundle("org.slf4j", "slf4j-api", SLF4J_VERSION));
+        opt.add(mavenBundle("org.slf4j", "jcl-over-slf4j", SLF4J_VERSION));
+        opt.add(mavenBundle("org.slf4j", "log4j-over-slf4j", SLF4J_VERSION));
+        
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.fragment.xml", "1.0.2"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.fragment.transaction", "1.0.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.fragment.activation", "1.0.2"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.fragment.ws", "1.0.2"));
+
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "4.0.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.logservice", "1.0.2"));
+
+        opt.add(mavenBundle("commons-io", "commons-io", "1.4"));
+        opt.add(mavenBundle("commons-fileupload", "commons-fileupload", "1.3.1"));
+        opt.add(mavenBundle("commons-collections", "commons-collections", "3.2.1"));
+        opt.add(mavenBundle("commons-codec", "commons-codec", "1.9"));
+        opt.add(mavenBundle("commons-lang", "commons-lang", "2.6"));
+        opt.add(mavenBundle("commons-pool", "commons-pool", "1.6"));
+
+        opt.add(mavenBundle("org.apache.servicemix.bundles", "org.apache.servicemix.bundles.concurrent", "1.3.4_1"));
+
+        opt.add(mavenBundle("org.apache.geronimo.bundles", "commons-httpclient", "3.1_1"));
+        opt.add(mavenBundle("org.apache.tika", "tika-core", "1.2"));
+        opt.add(mavenBundle("org.apache.tika", "tika-bundle", "1.2"));
+
+        opt.add(mavenBundle("org.apache.felix", "org.apache.felix.http.jetty", "2.2.2"));
+        opt.add(mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.3.2"));
+        opt.add(mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.8.2"));
+        opt.add(mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.0"));
+        opt.add(mavenBundle("org.apache.felix", "org.apache.felix.inventory", "1.0.4"));
+
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.2.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.json", "2.0.6"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.mime", "2.1.4"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.classloader", "1.3.2"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.scheduler", "2.4.2"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.threads", "3.2.0"));
+
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.launchpad.api", "1.1.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.auth.core", "1.1.6"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.discovery.api", "1.0.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.discovery.standalone", "1.0.0"));
+
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.api", "2.7.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.settings", "1.3.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.resourceresolver", "1.1.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.adapter", "2.1.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.resource", "2.3.11-SNAPSHOT"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.classloader", "3.2.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.contentloader", "2.1.8"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.engine", "2.3.2"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.event", "3.2.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.serviceusermapper", "1.0.0"));
+        
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.testing.tools", "1.0.6"));
+        opt.add(mavenBundle("org.apache.httpcomponents", "httpcore-osgi", "4.1.2"));
+        opt.add(mavenBundle("org.apache.httpcomponents", "httpclient-osgi", "4.1.2"));
+
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.jcr-wrapper", "2.0.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.api", "2.2.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.base", "2.2.2"));
+        
+        opt.add(junitBundles());
+        return opt;
+    }
+
 
     private <ItemType extends Item> ItemType deleteAfterTests(ItemType it) throws RepositoryException {
         toDelete.add(it.getPath());
@@ -341,7 +430,7 @@ public abstract class CommonTests {
     }
 
     @Test
-    @Ignore("SLING-3599 - doesn't work with Oak yet")
+    @Ignore("SLING-3599")
     public void testOsgiResourceEvents() throws RepositoryException {
         final ResourceEventListener listener = new ResourceEventListener();
         final ServiceRegistration reg = listener.register(bundleContext, SlingConstants.TOPIC_RESOURCE_ADDED);
@@ -448,13 +537,23 @@ public abstract class CommonTests {
 
     }
 
-    public void setup() throws IOException {
+    public void setup() throws Exception {
         final ServiceTracker st = new ServiceTracker(bundleContext, SlingRepository.class.getName(), null);
         st.open(true);
         try {
             this.repository = (SlingRepository) st.waitForService(10000);
         } catch (InterruptedException e) {
         }
+        
+        // Make sure the JcrResourceProvider is initialized, as it
+        // setups conversion of JCR to OSGi events, and some tests use this 
+// TODO doesn't work yet        
+//        final ResourceResolver rr = resourceResolverFactory.getAdministrativeResourceResolver(null);
+//        try {
+//            rr.getResource("/");
+//        } finally {
+//            rr.close();
+//        }
     }
 
 }
