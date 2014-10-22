@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.testing.sling-mock-jackrabbit</artifactId>
     <version>0.1.1-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
   
     <name>Apache Sling Testing Sling Mock Jackrabbit-based Resource Resolver</name>
     <description>Implements a resource resolver type for Jackrabbit that can be used in unit tests based on Sling Mocks.</description>
@@ -93,5 +93,43 @@
         </dependency>
   
     </dependencies>
+  
+    <build>
+        <plugins>
+    
+          <!-- Publish test artifact -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>test-jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+    
+          <plugin>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>maven-bundle-plugin</artifactId>
+            <extensions>true</extensions>
+          </plugin>
+    
+          <plugin>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>maven-scr-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>generate-scr-scrdescriptor</id>
+                <goals>
+                  <goal>scr</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+    
+        </plugins>
+    </build>
   
 </project>
