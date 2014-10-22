@@ -38,7 +38,7 @@ public class Result<ModelType> {
         OTHER("Unclassified problem"),
         MISSING_METHODS("Required methods %s on model %s were not able to be injected."),
         MISSING_FIELDS("Required fields %s on model %s were not able to be injected."),
-        MISSING_CONSTRUCTOR_PARAMS("Required constructor parameteres %s on model %s were not able to be injected.");
+        MISSING_CONSTRUCTOR_PARAMS("Required constructor parameters %s on model %s were not able to be injected.");
 
         private String message;
 
