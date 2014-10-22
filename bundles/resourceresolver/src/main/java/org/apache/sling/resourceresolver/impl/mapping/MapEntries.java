@@ -616,8 +616,9 @@ public class MapEntries implements EventHandler {
         final String path;
         if (p instanceof String) {
             path = (String) p;
+            log.debug("handleEvent, topic={}, path={}", event.getTopic(), path);
         } else {
-            // not a string path or null, ignore this event
+            log.debug("handleEvent, topic={}, no path provided, event ignored", event.getTopic());
             return;
         }
 
