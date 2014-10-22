@@ -69,6 +69,8 @@ public abstract class AbstractJobHandlingTest {
     @Inject
     protected BundleContext bc;
 
+    private static final String PORT_CONFIG = "org.osgi.service.http.port";
+
     @Configuration
     public Option[] config() {
         final String bundleFileName = System.getProperty( BUNDLE_JAR_SYS_PROP );
@@ -84,6 +86,8 @@ public abstract class AbstractJobHandlingTest {
                 when( localRepo.length() > 0 ).useOptions(
                         systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
                 ),
+                when( System.getProperty(PORT_CONFIG) != null ).useOptions(
+                        systemProperty(PORT_CONFIG).value(System.getProperty(PORT_CONFIG))),
                 mavenBundle("org.apache.sling", "org.apache.sling.fragment.xml", "1.0.2"),
                 mavenBundle("org.apache.sling", "org.apache.sling.fragment.transaction", "1.0.0"),
                 mavenBundle("org.apache.sling", "org.apache.sling.fragment.activation", "1.0.2"),
@@ -109,7 +113,9 @@ public abstract class AbstractJobHandlingTest {
                 mavenBundle("org.apache.tika", "tika-core", "1.2"),
                 mavenBundle("org.apache.tika", "tika-bundle", "1.2"),
 
-                mavenBundle("org.apache.felix", "org.apache.felix.http.jetty", "2.2.2"),
+                mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", "1.0.0"),
+                mavenBundle("org.apache.felix", "org.apache.felix.http.api", "2.3.0"),
+                mavenBundle("org.apache.felix", "org.apache.felix.http.jetty", "2.3.0"),
                 mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.4.2"),
                 mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.8.2"),
                 mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.0"),
@@ -132,7 +138,7 @@ public abstract class AbstractJobHandlingTest {
                 mavenBundle("org.apache.sling", "org.apache.sling.settings", "1.3.4"),
                 mavenBundle("org.apache.sling", "org.apache.sling.resourceresolver", "1.1.6"),
                 mavenBundle("org.apache.sling", "org.apache.sling.adapter", "2.1.2"),
-                mavenBundle("org.apache.sling", "org.apache.sling.jcr.resource", "2.3.8"),
+                mavenBundle("org.apache.sling", "org.apache.sling.jcr.resource", "2.3.10"),
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.classloader", "3.2.2"),
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.contentloader", "2.1.8"),
                 mavenBundle("org.apache.sling", "org.apache.sling.engine", "2.3.6"),

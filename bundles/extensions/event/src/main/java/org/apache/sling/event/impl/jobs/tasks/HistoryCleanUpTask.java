@@ -233,14 +233,4 @@ public class HistoryCleanUpTask implements JobExecutor {
             }
         }
     }
-
-    /**
-     * Helper method which just logs the exception in debug mode.
-     * @param e
-     */
-    private void ignoreException(final Exception e) {
-        if ( this.logger.isDebugEnabled() ) {
-            this.logger.debug("Ignored exception " + e.getMessage(), e);
-        }
-    }
 }

@@ -53,6 +53,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -77,6 +78,8 @@ import org.slf4j.LoggerFactory;
           description="If this is disabled, the configuration is not persisted on save in the cluster and is "
                     + "only used on the current instance. This option should always be disabled!")
 public class JobConsumerManager {
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Property(unbounded=PropertyUnbounded.ARRAY, value = "*",
               label="Topic Whitelist",
@@ -144,7 +147,7 @@ public class JobConsumerManager {
                 this.calculateTopics(enable);
             }
             if ( enable ) {
-                LoggerFactory.getLogger(this.getClass()).info("Registering property provider with: {}", this.topics);
+                logger.debug("Registering property provider with: {}", this.topics);
                 this.propagationService = bc.registerService(PropertyProvider.class.getName(),
                         new PropertyProvider() {
 
@@ -157,7 +160,7 @@ public class JobConsumerManager {
                             }
                         }, this.getRegistrationProperties());
             } else {
-                LoggerFactory.getLogger(this.getClass()).info("Unregistering property provider with");
+                logger.debug("Unregistering property provider with");
                 this.propagationService.unregister();
                 this.propagationService = null;
             }
@@ -166,7 +169,7 @@ public class JobConsumerManager {
             synchronized ( this.topicToConsumerMap ) {
                 this.calculateTopics(true);
             }
-            LoggerFactory.getLogger(this.getClass()).info("Updating property provider with: {}", this.topics);
+            logger.debug("Updating property provider with: {}", this.topics);
             this.propagationService.setProperties(this.getRegistrationProperties());
         }
     }
@@ -297,7 +300,7 @@ public class JobConsumerManager {
                 }
             }
             if ( changed && this.propagationService != null ) {
-                LoggerFactory.getLogger(this.getClass()).info("Updating property provider with: {}", this.topics);
+                logger.debug("Updating property provider with: {}", this.topics);
                 this.propagationService.setProperties(this.getRegistrationProperties());
             }
         }
@@ -347,7 +350,7 @@ public class JobConsumerManager {
                 }
             }
             if ( changed && this.propagationService != null ) {
-                LoggerFactory.getLogger(this.getClass()).info("Updating property provider with: {}", this.topics);
+                logger.debug("Updating property provider with: {}", this.topics);
                 this.propagationService.setProperties(this.getRegistrationProperties());
             }
         }
