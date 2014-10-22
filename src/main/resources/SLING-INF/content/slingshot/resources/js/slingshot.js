@@ -39,6 +39,7 @@ $( document ).ready(function() {
                 document.location = u;
             },
             error: function() {
+        		alert("Try username slingshot1 or slingshot2 with the password being the same as the username.");
                 form.j_password.value="";
                 $(".ui-form-label").css("background-color","red");
             }
