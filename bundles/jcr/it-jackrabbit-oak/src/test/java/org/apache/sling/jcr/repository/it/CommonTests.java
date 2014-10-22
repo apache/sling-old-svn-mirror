@@ -418,7 +418,9 @@ public abstract class CommonTests {
         } finally {
             s.logout();
             cnd.close();
-            counter.close();
+            if(counter != null) {
+                counter.close();
+            }
         }
 
         // In a separate session, modify node and verify that we get events
