@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.StringTokenizer;
 
 import javax.jcr.Node;
@@ -137,10 +136,6 @@ public class JcrResourceUtil {
         ValueFactory fac = session.getValueFactory();
         if(value instanceof Calendar) {
             val = fac.createValue((Calendar)value);
-        } else if(value instanceof Date) {
-            Calendar calendarValue = Calendar.getInstance();
-            calendarValue.setTime((Date)value);
-            val = fac.createValue(calendarValue);
         } else if (value instanceof InputStream) {
             val = fac.createValue(fac.createBinary((InputStream)value));
         } else if (value instanceof Node) {

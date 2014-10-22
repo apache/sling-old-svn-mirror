@@ -254,18 +254,18 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
             assertEquals(values.get(entry.getKey()), stored);
         }
     }
-    
+
     /**
      * Test date conversions from Date to Calendar and vice versa when reading or writing from value maps.
      */
     public void testDateConversion() throws Exception {
         this.rootNode.getSession().refresh(false);
-        
+
         // prepare some date values
         Date dateValue1 = new Date(10000);
         Calendar calendarValue1 = Calendar.getInstance();
         calendarValue1.setTime(dateValue1);
-        
+
         Date dateValue2 = new Date(20000);
         Calendar calendarValue2 = Calendar.getInstance();
         calendarValue2.setTime(dateValue2);
@@ -296,9 +296,8 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
 
         // read properties
         assertEquals(calendarValue1, testNode.getProperty(PROP1).getDate());
-        assertEquals(calendarValue2, testNode.getProperty(PROP2).getDate());
         assertEquals(calendarValue3, testNode.getProperty(PROP3).getDate());
-        
+
     }
-    
+
 }

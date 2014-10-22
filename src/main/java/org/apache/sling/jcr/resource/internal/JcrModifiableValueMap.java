@@ -523,10 +523,26 @@ public final class JcrModifiableValueMap
             return (T) Boolean.valueOf(jcrValue.getBoolean());
 
         } else if (Date.class == type) {
-            return (T) jcrValue.getDate().getTime();
+            if ( jcrValue.getType() == PropertyType.BINARY ) {
+                final Object obj = deserializeObject(jcrValue);
+                if ( obj instanceof Date) {
+                    return (T) obj;
+                }
+            } else {
+                return (T) jcrValue.getDate().getTime();
+            }
 
         } else if (Calendar.class == type) {
-            return (T) jcrValue.getDate();
+            if ( jcrValue.getType() == PropertyType.BINARY ) {
+                final Object obj = deserializeObject(jcrValue);
+                if ( obj instanceof Date) {
+                    final Calendar c = Calendar.getInstance();
+                    c.setTime((Date)obj);
+                    return (T) c;
+                }
+            } else {
+                return (T) jcrValue.getDate();
+            }
 
         } else if (Value.class == type) {
             return (T) jcrValue;
@@ -544,29 +560,41 @@ public final class JcrModifiableValueMap
             }
         } else if (Serializable.class.isAssignableFrom(type)
                 && jcrValue.getType() == PropertyType.BINARY) {
-            ObjectInputStream ois = null;
-            try {
-                ois = new ObjectInputStream(jcrValue.getBinary().getStream(), this.dynamicClassLoader);
-                final Object obj = ois.readObject();
-                if ( type.isInstance(obj) ) {
-                    return (T)obj;
-                }
-            } catch (ClassNotFoundException cnfe) {
-                 // ignore and use fallback
-            } catch (IOException ioe) {
-                // ignore and use fallback
-            } finally {
-                if ( ois != null ) {
-                    try {
-                        ois.close();
-                    } catch (IOException ignore) {
-                        // ignore
-                    }
-                }
+            final Object obj = deserializeObject(jcrValue);
+            if ( type.isInstance(obj) ) {
+                return (T)obj;
             }
         }
 
         // fallback in case of unsupported type
+        return null;
+    }
+
+    /**
+     * Deserialize a binary object
+     * @param jcrValue The jcr property value
+     * @return The object or {@code null}
+     * @throws RepositoryException
+     */
+    private Object deserializeObject(final Value jcrValue) throws RepositoryException {
+        ObjectInputStream ois = null;
+        try {
+            ois = new ObjectInputStream(jcrValue.getBinary().getStream(), this.dynamicClassLoader);
+            final Object obj = ois.readObject();
+            return obj;
+        } catch (ClassNotFoundException cnfe) {
+             // ignore and use fallback
+        } catch (IOException ioe) {
+            // ignore and use fallback
+        } finally {
+            if ( ois != null ) {
+                try {
+                    ois.close();
+                } catch (IOException ignore) {
+                    // ignore
+                }
+            }
+        }
         return null;
     }
 
