@@ -17,7 +17,7 @@
  * under the License.
  */
 /**
- * SPI for hooking in alternative resource type adapter implementations.
+ * Sling Mock Jackrabbit-based Resource Resolver
  */
-@aQute.bnd.annotation.Version("1.0")
-package org.apache.sling.testing.mock.sling.spi;
+@aQute.bnd.annotation.Version("0.1")
+package org.apache.sling.testing.mock.sling.jackrabbit;

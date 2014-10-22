@@ -19,5 +19,5 @@
 /**
  * Sling context implementation for unit tests.
  */
+@aQute.bnd.annotation.Version("1.0")
 package org.apache.sling.testing.mock.sling.context;
-

@@ -19,4 +19,5 @@
 /**
  * Content builder for creating test content.
  */
+@aQute.bnd.annotation.Version("1.0")
 package org.apache.sling.testing.mock.sling.builder;
