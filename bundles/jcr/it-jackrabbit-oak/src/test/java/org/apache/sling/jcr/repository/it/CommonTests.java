@@ -46,6 +46,7 @@ import javax.jcr.observation.ObservationManager;
 import javax.jcr.query.Query;
 
 import org.apache.jackrabbit.commons.cnd.CndImporter;
+import org.apache.sling.api.SlingConstants;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.After;
 import org.junit.Ignore;
@@ -340,15 +341,18 @@ public abstract class CommonTests {
     }
 
     @Test
-    @Ignore("SLING-3479 - doesn't work with Oak 1.0 yet")
+    @Ignore("SLING-3479 - doesn't work with Oak yet")
     public void testOsgiResourceEvents() throws RepositoryException {
         final ResourceEventListener listener = new ResourceEventListener();
-        final ServiceRegistration reg = listener.register(bundleContext);
+        final ServiceRegistration reg = listener.register(bundleContext, SlingConstants.TOPIC_RESOURCE_ADDED);
         final Session s = repository.loginAdministrative(null);
         final int nPaths = 500;
-        final int timeoutMsec = 5000;
+        final int timeoutMsec = 10000;
         final String prefix = uniqueName("testOsgiResourceEvents");
 
+        // Create N nodes with a unique name under /
+        // and verify that ResourceEventListener gets an event
+        // for each of them
         try {
             for(int i=0; i  < nPaths; i++) {
                 s.getRootNode().addNode(prefix + i);
@@ -374,9 +378,10 @@ public abstract class CommonTests {
             }
 
             if(!missing.isEmpty()) {
+                final String missingStr = missing.size() > 10 ? missing.size() + " paths missing" : missing.toString();
                 fail("OSGi add resource events are missing for "
                         + missing.size() + "/" + nPaths + " paths after "
-                        + timeoutMsec + " msec: " + missing);
+                        + timeoutMsec + " msec: " + missingStr);
             }
         } finally {
             reg.unregister();
