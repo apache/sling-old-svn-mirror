@@ -18,6 +18,7 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -293,6 +294,11 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
         assertEquals(calendarValue2, vm.get(PROP2, Calendar.class));
         assertEquals(dateValue3, vm.get(PROP3, Date.class));
         assertEquals(calendarValue3, vm.get(PROP3, Calendar.class));
+
+        // check types
+        assertTrue(vm.get(PROP1) instanceof Calendar);
+        assertTrue(vm.get(PROP2) instanceof InputStream);
+        assertTrue(vm.get(PROP3) instanceof Calendar);
 
         // read properties
         assertEquals(calendarValue1, testNode.getProperty(PROP1).getDate());
