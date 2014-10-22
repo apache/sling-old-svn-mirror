@@ -37,11 +37,15 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
 public class OakRepositoryIT extends CommonTests {
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     @Inject
     protected ConfigurationAdmin configAdmin;
 
@@ -146,6 +150,8 @@ public class OakRepositoryIT extends CommonTests {
             fail("Expected repository descriptor " + propName + " to contain "
                     + expected + ", failed (descriptor=" + name + ")");
         }
+        
+        log.info("Running on Oak version {}", repository.getDescriptor("jcr.repository.version"));
     }
 
     @Override
