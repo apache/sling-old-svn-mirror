@@ -149,17 +149,14 @@ public class QueueJobCache {
 
         final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
-            for(final String topic : checkingTopics) {
-                final Resource baseResource = resolver.getResource(this.configuration.getLocalJobsPath());
+            final Resource baseResource = resolver.getResource(this.configuration.getLocalJobsPath());
+            // sanity check - should never be null
+            if ( baseResource != null ) {
+                for(final String topic : checkingTopics) {
 
-                final List<JobImpl> list = new ArrayList<JobImpl>();
-                topicCache.put(topic, list);
-
-                // sanity check - should never be null
-                if ( baseResource != null ) {
                     final Resource topicResource = baseResource.getChild(topic.replace('/', '.'));
                     if ( topicResource != null ) {
-                        loadJobs(topic, topicResource, list);
+                        topicCache.put(topic, loadJobs(topic, topicResource));
                     }
                 }
             }
@@ -203,10 +200,11 @@ public class QueueJobCache {
      * Load the next N x numberOf(topics) jobs.
      * @param topic The topic
      * @param topicResource The parent resource of the jobs
-     * @param list The cache which will be filled with the jobs.
+     * @return The cache which will be filled with the jobs.
      */
-    private void loadJobs(final String topic, final Resource topicResource, final List<JobImpl> list) {
+    private List<JobImpl> loadJobs(final String topic, final Resource topicResource) {
         logger.debug("Loading jobs from topic {}", topic);
+        final List<JobImpl> list = new ArrayList<JobImpl>();
 
         final AtomicBoolean scanTopic = new AtomicBoolean(false);
 
@@ -216,14 +214,14 @@ public class QueueJobCache {
             public boolean handle(final JobImpl job) {
                 if ( job.getProcessingStarted() == null && !job.hasReadErrors() ) {
                     list.add(job);
+                    if ( list.size() == maxPreloadLimit ) {
+                        scanTopic.set(true);
+                    }
                 } else {
                     if ( job.hasReadErrors() ) {
                         scanTopic.set(true);
                     }
                     logger.debug("Ignoring job because {} or {}", job.getProcessingStarted(), job.hasReadErrors());
-                }
-                if ( list.size() == maxPreloadLimit ) {
-                    scanTopic.set(true);
                 }
                 return list.size() < maxPreloadLimit;
             }
@@ -234,6 +232,8 @@ public class QueueJobCache {
             }
         }
         logger.debug("Caching {} jobs for topic {}", list.size(), topic);
+
+        return list;
     }
 
     /**
