@@ -112,7 +112,7 @@ public class QueueJobCache {
      * {@link #reschedule(JobImpl)} and {@link #handleNewTopics(String)}
      * can be called concurrently.
      */
-    public JobImpl getNextJob() {
+    public JobImpl getNextJob(final boolean doFull) {
         JobImpl result = null;
 
         synchronized ( this.cache ) {
@@ -121,6 +121,9 @@ public class QueueJobCache {
                 synchronized ( this.topicsWithNewJobs ) {
                     checkingTopics.addAll(this.topicsWithNewJobs);
                     this.topicsWithNewJobs.clear();
+                }
+                if ( doFull ) {
+                    checkingTopics.addAll(this.topics);
                 }
                 if ( !checkingTopics.isEmpty() ) {
                     this.loadJobs(checkingTopics);
