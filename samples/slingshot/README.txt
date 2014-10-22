@@ -1,8 +1,16 @@
-Apache Sling Slingshot Sample
+Apache Sling Slingshot Sample Application
+-----------------------------------------
 
 This bundle provides a sample application for Apache Sling.
-Slingshot provides a basic gallery application presenting folders as albums
-and files as photos.
+Slingshot provides a basic gallery application presenting categorized items.
+Users can leave comments and rate individual items.
+
+Quickstart
+==========
+Brief quickstart guide - more detailed description below:
+Launch a Sling installation (Sling 7 or later), deploy the Slingshot bundle
+and go to http://localhost:8080/slingshot.html. Login with slingshot1/slingshot1
+or slingshot2/slingshot2.
 
 Getting Started
 ===============
