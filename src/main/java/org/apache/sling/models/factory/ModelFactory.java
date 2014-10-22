@@ -25,7 +25,7 @@ package org.apache.sling.models.factory;
  */
 public interface ModelFactory {
     /**
-     * Instantiates the given Sling Model class from the given adaptable
+     * Instantiates the given Sling Model class from the given adaptable.
      * @param adaptable the adaptable to use to instantiate the Sling Model Class
      * @param type the class to instantiate
      * @return a new instance for the required model (never null)
@@ -38,19 +38,20 @@ public interface ModelFactory {
 
     /**
      * 
-     * @param modelClass the class to check
      * @param adaptable the adaptable to check
-     * @return false in case the given class can not be adapted from the given adaptable
-     * @throws InvalidModelException in case the given class does not have a model annotation
+     * @param type the class to check
+     * @return false in case the given class can not be created from the given adaptable
+     * @throws InvalidModelException in case no class with the Model annotation adapts to the requested type
      */
-    public boolean canCreateFromAdaptable(Object adaptable, Class<?> modelClass) throws InvalidModelException;
+    public boolean canCreateFromAdaptable(Object adaptable, Class<?> type) throws InvalidModelException;
 
     /**
      * 
-     * @param modelClass the class to check
-     * @return false in case the given class has no model annotation
+     * @param adaptable the adaptable to check
+     * @param type the class to check
+     * @return false in case no class with the Model annotation adapts to the requested type
      * 
      * @see org.apache.sling.models.annotations.Model
      */
-    public boolean isModelClass(Class<?> modelClass);
+    public boolean isModelClass(Object adaptable, Class<?> type);
 }
