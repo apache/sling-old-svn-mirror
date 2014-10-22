@@ -180,10 +180,11 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
     @Override
     public boolean canCreateFromAdaptable(Object adaptable, Class<?> modelClass) throws InvalidModelException {
-        return innerCanCreateFromAdaptable(modelClass, adaptable);
+        return innerCanCreateFromAdaptable(adaptable, modelClass);
     }
 
-    private static boolean innerCanCreateFromAdaptable(Class<?> modelClass, Object adaptable) throws InvalidModelException {
+    private boolean innerCanCreateFromAdaptable(Object adaptable, Class<?> modelClass) throws InvalidModelException {
+        modelClass = getImplementationTypeForAdapterType(modelClass, adaptable);
         Model modelAnnotation = modelClass.getAnnotation(Model.class);
         if (modelAnnotation == null) {
             throw new InvalidModelException(String.format("Model class '%s' does not have a model annotation", modelClass));
@@ -199,12 +200,28 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     }
 
     @Override
-    public boolean isModelClass(Class<?> modelClass) {
-        return innerIsModelClass(modelClass);
+    public boolean isModelClass(Object adaptable, Class<?> type) {
+        type = getImplementationTypeForAdapterType(type, adaptable);
+        return type.getAnnotation(Model.class) != null;
     }
 
-    private static boolean innerIsModelClass(Class<?> clazz) {
-        return clazz.getAnnotation(Model.class) != null;
+    /**
+     * 
+     * @param type
+     * @param adaptable
+     * @return the implementation type to use for the desired model type
+     * @see <a
+     *      href="http://sling.apache.org/documentation/bundles/models.html#specifying-an-alternate-adapter-class-since-sling-models-110">Specifying
+     *      an Alternate Adapter Class</a>
+     */
+    private Class<?> getImplementationTypeForAdapterType(Class<?> type, Object adaptable) {
+        // check if a different implementation class was registered for this adapter type
+        Class<?> implementationType = this.adapterImplementations.lookup(type, adaptable);
+        if (implementationType != null) {
+            log.debug("Using implementation type {} for requested adapter type {}", implementationType, type);
+            return implementationType;
+        }
+        return type;
     }
 
     @SuppressWarnings("unchecked")
@@ -220,10 +237,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         threadInvocationCounter.increase();
         try {
             // check if a different implementation class was registered for this adapter type
-            Class<?> implementationType = this.adapterImplementations.lookup(type, adaptable);
-            if (implementationType != null) {
-                type = (Class<ModelType>) implementationType;
-            }
+            type = (Class<ModelType>) getImplementationTypeForAdapterType(type, adaptable);
 
             Model modelAnnotation = type.getAnnotation(Model.class);
             if (modelAnnotation == null) {
@@ -897,7 +911,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     private Object adaptIfNecessary(Object value, Class<?> type, Type genericType, Result<?> parentResult) {
         if (!isAcceptableType(type, genericType, value)) {
             Class<?> declaredType = type;
-            if (isModelClass(type) && canCreateFromAdaptable(value, type)) {
+            if (isModelClass(value, type) && canCreateFromAdaptable(value, type)) {
                 Result<?> result = internalCreateModel(value, type);
                 if (result.getModel() == null) {
                     parentResult.appendFailures(result);
