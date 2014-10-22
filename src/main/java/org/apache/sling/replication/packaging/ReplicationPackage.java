@@ -72,13 +72,19 @@ public interface ReplicationPackage extends Serializable {
     long getLength();
 
     /**
-     * releases resources associated with this package
-     */
-    void close();
-
-    /**
      * releases all resources associated with the package id
      */
     void delete();
+
+
+    /**
+     * gets an additional info holder for this package.
+     * The additional info object contains control information rather than content information.
+     * For example info.origin can be used to skip replicating back to the originating endpoint.
+     * It should not be be serialized between instances as its main purpose is to allow
+     * inter component communication on the same instance.
+     * @return
+     */
+    ReplicationPackageInfo getInfo();
 
 }

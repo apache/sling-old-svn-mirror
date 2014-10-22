@@ -22,7 +22,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.event.jobs.Job;
+import org.apache.sling.replication.packaging.ReplicationPackageInfo;
 import org.apache.sling.replication.queue.ReplicationQueueItem;
+import org.apache.sling.replication.serialization.impl.SimpleReplicationPackageInfo;
 
 public class JobHandlingUtils {
 
@@ -34,11 +36,16 @@ public class JobHandlingUtils {
 
     protected static final String ACTION = "replication.package.action";
 
+    protected static final String ORIGIN = "replication.package.origin";
+
     public static ReplicationQueueItem getPackage(final Job job) {
+        ReplicationPackageInfo packageInfo = new SimpleReplicationPackageInfo();
+        packageInfo.setOrigin((String) job.getProperty(ORIGIN));
+
         return new ReplicationQueueItem((String) job.getProperty(ID),
                 (String[]) job.getProperty(PATHS),
                 String.valueOf(job.getProperty(ACTION)),
-                String.valueOf(job.getProperty(TYPE)));
+                String.valueOf(job.getProperty(TYPE)), packageInfo);
     }
 
     public static Map<String, Object> createFullProperties(
@@ -50,6 +57,11 @@ public class JobHandlingUtils {
         properties.put(ACTION, replicationQueueItem.getAction());
         properties.put(TYPE, replicationQueueItem.getType());
 
+        ReplicationPackageInfo packageInfo = replicationQueueItem.getPackageInfo();
+        if (packageInfo != null && packageInfo.getOrigin() != null) {
+            properties.put(ORIGIN, packageInfo.getOrigin());
+        }
+
         return properties;
     }
 
@@ -58,24 +70,6 @@ public class JobHandlingUtils {
         properties.put(ID, itemId);
         return properties;
     }
-
-//    public static Byte[] box(byte[] bytes) {
-//        if (bytes == null) return null;
-//        Byte[] result = new Byte[bytes.length];
-//        for (int i = 0; i < bytes.length; i++) {
-//            result[i] = bytes[i];
-//        }
-//        return result;
-//    }
-//
-//    public static byte[] unBox(Byte[] bytes) {
-//        if (bytes == null) return null;
-//        byte[] result = new byte[bytes.length];
-//        for (int i = 0; i < bytes.length; i++) {
-//            result[i] = bytes[i];
-//        }
-//        return result;
-//    }
 
     public static String getQueueName(Job job) {
 

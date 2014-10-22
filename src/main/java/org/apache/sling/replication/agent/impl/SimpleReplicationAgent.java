@@ -175,7 +175,8 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
         ReplicationQueueItem replicationQueueItem = new ReplicationQueueItem(replicationPackage.getId(),
                 replicationPackage.getPaths(),
                 replicationPackage.getAction(),
-                replicationPackage.getType());
+                replicationPackage.getType(),
+                replicationPackage.getInfo());
 
         // send the replication package to the queue distribution handler
         try {
@@ -246,14 +247,18 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
         }
     }
 
-    private boolean processTransportQueue(ReplicationQueueItem queueItem) {
+    private boolean processQueue(ReplicationQueueItem queueItem) {
         boolean success = false;
         log.debug("reading package with id {}", queueItem.getId());
         ResourceResolver resourceResolver = getAgentResourceResolver();
         try {
 
             ReplicationPackage replicationPackage = replicationPackageExporter.exportPackageById(resourceResolver, queueItem.getId());
+
+
             if (replicationPackage != null) {
+                replicationPackage.getInfo().fillInfo(queueItem.getPackageInfo());
+
                 replicationPackageImporter.importPackage(resourceResolver, replicationPackage);
 
                 Dictionary<Object, Object> properties = new Properties();
@@ -282,7 +287,7 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
         try {
             resourceResolver = resourceResolverFactory.getServiceResourceResolver(authenticationInfo);
         } catch (LoginException e) {
-            log.error("cannot obtain a resource resolver");
+            log.error("cannot obtain a resource resolver", e);
         }
 
         return resourceResolver;
@@ -290,8 +295,8 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
 
     class PackageQueueProcessor implements ReplicationQueueProcessor {
         public boolean process(String queueName, ReplicationQueueItem packageInfo) {
-            log.info("running package queue processor");
-            return processTransportQueue(packageInfo);
+            log.info("running package queue processor for queue {}", queueName);
+            return processQueue(packageInfo);
         }
     }
 

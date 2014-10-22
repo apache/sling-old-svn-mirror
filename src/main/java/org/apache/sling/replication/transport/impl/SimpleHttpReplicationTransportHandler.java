@@ -75,54 +75,55 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
     }
 
     public void deliverPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationTransportException {
-        String host = replicationEndpoint.getUri().getHost();
-        if (replicationPackage instanceof HttpPackage && host.equals(
-                ((HttpPackage) replicationPackage).getOrigin())) {
-            log.info("skipping replication of package {} to same origin {}", replicationPackage.getId(), host);
-        } else {
-            log.info("delivering package {} to {} using auth {}",
-                    new Object[]{
-                            replicationPackage.getId(),
-                            replicationEndpoint.getUri(),
-                            transportAuthenticationProvider
-                    });
+        String hostAndPort = getHostAndPort(replicationEndpoint.getUri());
 
+        if (hostAndPort.equals(replicationPackage.getInfo().getOrigin())) {
+            log.info("skipping replication of package {} to same origin {}", replicationPackage.getId(), hostAndPort);
+            return;
+        }
+
+
+        log.info("delivering package {} to {} using auth {}", new Object[]{
+                        replicationPackage.getId(),
+                        replicationEndpoint.getUri(),
+                        transportAuthenticationProvider
+        });
+
+        try {
+            Executor executor = Executor.newInstance();
+
+            TransportAuthenticationContext context = new TransportAuthenticationContext();
+            context.addAttribute("endpoint", replicationEndpoint);
+            executor = transportAuthenticationProvider.authenticate(executor, context);
+
+            Request req = Request.Post(replicationEndpoint.getUri()).useExpectContinue();
+
+            InputStream inputStream = null;
+            Response response = null;
             try {
-                Executor executor = Executor.newInstance();
 
-                TransportAuthenticationContext context = new TransportAuthenticationContext();
-                context.addAttribute("endpoint", replicationEndpoint);
-                executor = transportAuthenticationProvider.authenticate(executor, context);
+                inputStream = replicationPackage.createInputStream();
 
-                Request req = Request.Post(replicationEndpoint.getUri()).useExpectContinue();
-
-                InputStream inputStream = null;
-                Response response = null;
-                try {
-
-                    inputStream = replicationPackage.createInputStream();
-
-                    if (inputStream != null) {
-                        req = req.bodyStream(inputStream, ContentType.APPLICATION_OCTET_STREAM);
-                    }
-                    response = executor.execute(req);
-                } finally {
-                    IOUtils.closeQuietly(inputStream);
+                if (inputStream != null) {
+                    req = req.bodyStream(inputStream, ContentType.APPLICATION_OCTET_STREAM);
                 }
-
-                if (response != null) {
-                    Content content = response.returnContent();
-                    log.info("Replication content of type {} for {} delivered: {}", new Object[]{
-                            replicationPackage.getType(),
-                            Arrays.toString(replicationPackage.getPaths()),
-                            content
-                    });
-                } else {
-                    throw new IOException("response is empty");
-                }
-            } catch (Exception ex) {
-                throw new ReplicationTransportException(ex);
+                response = executor.execute(req);
+            } finally {
+                IOUtils.closeQuietly(inputStream);
             }
+
+            if (response != null) {
+                Content content = response.returnContent();
+                log.info("Replication content of type {} for {} delivered: {}", new Object[]{
+                        replicationPackage.getType(),
+                        Arrays.toString(replicationPackage.getPaths()),
+                        content
+                });
+            } else {
+                throw new IOException("response is empty");
+            }
+        } catch (Exception ex) {
+            throw new ReplicationTransportException(ex);
         }
 
     }
@@ -154,45 +155,15 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
                     HttpEntity entity = httpResponse.getEntity();
                     if (entity != null) {
                         final ReplicationPackage responsePackage = packageBuilder.readPackage(resourceResolver, entity.getContent());
-                        HttpPackage httpPackage = new HttpPackage() {
-                            public String getOrigin() {
-                                return replicationEndpoint.getUri().getHost();
-                            }
+                        if (responsePackage != null) {
+                            String origin = getHostAndPort(replicationURI);
+                            responsePackage.getInfo().setOrigin(origin);
+                            result.add(responsePackage);
+                        }
+                        else {
+                            log.warn("responsePackage is null");
+                        }
 
-                            public String getId() {
-                                return responsePackage.getId();
-                            }
-
-                            public String[] getPaths() {
-                                return responsePackage.getPaths();
-                            }
-
-                            public String getAction() {
-                                return responsePackage.getAction();
-                            }
-
-                            public String getType() {
-                                return responsePackage.getType();
-                            }
-
-                            public InputStream createInputStream() throws IOException {
-                                return responsePackage.createInputStream();
-                            }
-
-                            public long getLength() {
-                                return responsePackage.getLength();
-                            }
-
-                            public void close() {
-                                responsePackage.close();
-                            }
-
-                            public void delete() {
-                                responsePackage.delete();
-                            }
-                        };
-
-                        result.add(httpPackage);
                         polls++;
                     } else {
                         log.info("");
@@ -214,9 +185,8 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
 
     }
 
-    private interface HttpPackage extends ReplicationPackage {
-
-        String getOrigin();
-
+    private String getHostAndPort(URI uri) {
+        return uri.getHost() + ":" + uri.getPort();
     }
+
 }
