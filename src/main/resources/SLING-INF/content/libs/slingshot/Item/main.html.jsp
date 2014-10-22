@@ -20,6 +20,7 @@
                 org.apache.sling.api.resource.ResourceUtil,
                 org.apache.sling.api.resource.ValueMap,
                 org.apache.sling.sample.slingshot.SlingshotConstants,
+                org.apache.sling.sample.slingshot.SlingshotUtil,
                 org.apache.sling.api.request.ResponseUtil" %><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
@@ -44,6 +45,6 @@
     </div>
     <div class="brand">
         <span class="label fg-white"><%= ResponseUtil.escapeXml(itemTitle) %></span>
-        <span class="badge bg-orange"><%= count %></span>
+        <span class="badge bg-orange"><%= SlingshotUtil.getRating(resource) %></span>
     </div>
 </div>
