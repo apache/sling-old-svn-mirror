@@ -341,7 +341,7 @@ public abstract class CommonTests {
     }
 
     @Test
-    @Ignore("SLING-3479 - doesn't work with Oak yet")
+    @Ignore("SLING-3599 - doesn't work with Oak yet")
     public void testOsgiResourceEvents() throws RepositoryException {
         final ResourceEventListener listener = new ResourceEventListener();
         final ServiceRegistration reg = listener.register(bundleContext, SlingConstants.TOPIC_RESOURCE_ADDED);
