@@ -34,7 +34,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
  * Servlet filter that sets the current sling request during processing to make
  * it available for the {@sling SlingObjectInjector}.
  * 
- * TODO: it would be nice to move this to some central part e.g. in the Sling API.
+ * TODO: it would be nice to move this to some central part e.g. in the Sling Engine.
  */
 @Component(immediate = true)
 @Service({ SlingObjectInjectorRequestContext.class, Filter.class })
