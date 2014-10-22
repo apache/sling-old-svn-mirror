@@ -19,5 +19,6 @@
 /**
  * Mock implementation of selected JCR APIs.
  */
+@aQute.bnd.annotation.Version("1.0")
 package org.apache.sling.testing.mock.jcr;
 

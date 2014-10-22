@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.testing.jcr-mock</artifactId>
     <version>1.0.1-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
 
     <name>Apache Sling Testing JCR Mock</name>
     <description>Mock implementation of selected JCR APIs.</description>
@@ -93,5 +93,30 @@
         </dependency>
   
     </dependencies>
+  
+    <build>
+        <plugins>
+    
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+            </plugin>
+      
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>generate-scr-scrdescriptor</id>
+                        <goals>
+                            <goal>scr</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+    
+        </plugins>
+    </build>
   
 </project>
