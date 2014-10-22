@@ -32,11 +32,12 @@ import org.apache.jackrabbit.vault.fs.config.MetaInf;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.packaging.ReplicationPackage;
+import org.apache.sling.replication.serialization.impl.AbstractReplicationPackage;
 
 /**
  * a FileVault {@link ReplicationPackage}
  */
-public class FileVaultReplicationPackage implements ReplicationPackage {
+public class FileVaultReplicationPackage extends AbstractReplicationPackage implements ReplicationPackage {
 
     private static final long serialVersionUID = 1L;
 

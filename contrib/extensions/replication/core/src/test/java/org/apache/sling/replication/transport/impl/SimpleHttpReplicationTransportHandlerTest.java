@@ -33,6 +33,7 @@ import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
+import org.apache.sling.replication.packaging.ReplicationPackageInfo;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
@@ -44,6 +45,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.when;
 
 /**
@@ -66,6 +68,7 @@ public class SimpleHttpReplicationTransportHandlerTest {
                 authProvider, endpoint, packageBuilder, maxNoOfPackages);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
+        when(replicationPackage.getInfo()).thenReturn(mock(ReplicationPackageInfo.class));
         simpleHttpReplicationTransportHandler.deliverPackage(resourceResolver, replicationPackage);
     }
 
@@ -113,6 +116,9 @@ public class SimpleHttpReplicationTransportHandlerTest {
         when(authProvider.authenticate(any(Executor.class), any(TransportAuthenticationContext.class))).thenReturn(executor);
         ReplicationEndpoint endpoint = new ReplicationEndpoint("http://127.0.0.1:8080/some/resource");
         ReplicationPackageBuilder packageBuilder = mock(ReplicationPackageBuilder.class);
+        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
+        when(replicationPackage.getInfo()).thenReturn(mock(ReplicationPackageInfo.class));
+        when(packageBuilder.readPackage(any(ResourceResolver.class), any(InputStream.class))).thenReturn(replicationPackage);
         int maxNoOfPackages = 1;
         SimpleHttpReplicationTransportHandler simpleHttpReplicationTransportHandler = new SimpleHttpReplicationTransportHandler(
                 authProvider, endpoint, packageBuilder, maxNoOfPackages);

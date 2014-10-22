@@ -29,11 +29,12 @@ import org.apache.jackrabbit.vault.util.Text;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
+import org.apache.sling.replication.packaging.ReplicationPackageInfo;
 
 /**
  * A void {@link ReplicationPackage} is used for deletion of certain paths on the target instance
  */
-public class VoidReplicationPackage implements ReplicationPackage {
+public class VoidReplicationPackage extends AbstractReplicationPackage implements ReplicationPackage {
 
     private static final String TYPE = "VOID";
 
@@ -44,6 +45,7 @@ public class VoidReplicationPackage implements ReplicationPackage {
     private final String id;
 
     private final String action;
+
 
     public VoidReplicationPackage(ReplicationRequest request) {
         this(request, TYPE);
@@ -117,12 +119,11 @@ public class VoidReplicationPackage implements ReplicationPackage {
         return action;
     }
 
-    public void close() {
-    }
 
     public void delete() {
 
     }
+
 
     @Override
     public String toString() {

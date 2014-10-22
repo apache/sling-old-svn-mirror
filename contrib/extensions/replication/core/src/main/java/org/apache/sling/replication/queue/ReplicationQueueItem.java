@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.queue;
 
+import org.apache.sling.replication.packaging.ReplicationPackageInfo;
+
 /**
  * An item in a {@link org.apache.sling.replication.queue.ReplicationQueue}
  * <p/>
@@ -35,12 +37,15 @@ public class ReplicationQueueItem {
 
     private final String type;
 
+    private final ReplicationPackageInfo packageInfo;
 
-    public ReplicationQueueItem(String id, String[] paths, String action, String type) {
+
+    public ReplicationQueueItem(String id, String[] paths, String action, String type, ReplicationPackageInfo packageInfo) {
         this.id = id;
         this.paths = paths;
         this.action = action;
         this.type = type;
+        this.packageInfo = packageInfo;
     }
 
     public String getId() {
@@ -57,5 +62,9 @@ public class ReplicationQueueItem {
 
     public String getType() {
         return type;
+    }
+
+    public ReplicationPackageInfo getPackageInfo() {
+        return packageInfo;
     }
 }
