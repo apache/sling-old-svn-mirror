@@ -61,7 +61,7 @@ public class ResourceResolverTest {
     public static final String PROP_REDIRECT_EXTERNAL = "sling:redirect";
     public static final String MAPPING_EVENT_TOPIC = "org/apache/sling/api/resource/ResourceResolverMapping/CHANGED";
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private static final Logger logger = LoggerFactory.getLogger(ResourceResolverTest.class);
     private static ResourceResolver resResolver;
     private static Session session;
     private String rootPath;
@@ -96,7 +96,7 @@ public class ResourceResolverTest {
         }
         
         final int oldEventsCount = eventsCounter.getEventsCount(MAPPING_EVENT_TOPIC);
-        logger.debug("Waiting for event counter {} to change from current value {}", MAPPING_EVENT_TOPIC, oldEventsCount);
+        logger.debug("Saving Session and waiting for event counter {} to change from current value {}", MAPPING_EVENT_TOPIC, oldEventsCount);
         session.save();
         final long timeout = System.currentTimeMillis() + updateTimeout;
         while(System.currentTimeMillis() < timeout) {
@@ -178,6 +178,7 @@ public class ResourceResolverTest {
     
     @AfterClass
     public static void deleteTestNodes() throws Exception {
+        logger.debug("{} test done, deleting test nodes", ResourceResolverTest.class.getSimpleName());
         final ResourceResolver resolver = cleanupResolverFactory.getAdministrativeResourceResolver(null);
         final Session session = resolver.adaptTo(Session.class);
         
