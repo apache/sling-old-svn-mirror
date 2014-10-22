@@ -106,6 +106,7 @@ public class OakResourceListener extends NodeObserver implements Closeable {
             final CommitInfo commitInfo) {
         final Map<String, Object> changes = toEventProperties(added, deleted, changed);
         addCommitInfo(changes, commitInfo);
+        logger.debug("added(changes={})", changes);
         sendOsgiEvent(path, TOPIC_RESOURCE_ADDED, changes, properties);
     }
 
@@ -118,6 +119,7 @@ public class OakResourceListener extends NodeObserver implements Closeable {
             final CommitInfo commitInfo) {
         final Map<String, Object> changes = toEventProperties(added, deleted, changed);
         addCommitInfo(changes, commitInfo);
+        logger.debug("deleted(changes={})", changes);
         sendOsgiEvent(path, TOPIC_RESOURCE_REMOVED, changes, properties);
     }
 
@@ -130,6 +132,7 @@ public class OakResourceListener extends NodeObserver implements Closeable {
             final CommitInfo commitInfo) {
         final Map<String, Object> changes = toEventProperties(added, deleted, changed);
         addCommitInfo(changes, commitInfo);
+        logger.debug("changed (changes={})", changes);
         sendOsgiEvent(path, TOPIC_RESOURCE_CHANGED, changes, properties);
     }
 
