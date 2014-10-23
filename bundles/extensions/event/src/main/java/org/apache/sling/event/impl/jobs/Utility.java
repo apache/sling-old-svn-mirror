@@ -288,7 +288,7 @@ public abstract class Utility {
      */
     public static void logDeprecated(final Logger logger, final String message) {
         if ( logger.isInfoEnabled() ) {
-            logger.info("DEPRECATION-WARNING: " + message, new Exception());
+            logger.info("DEPRECATION-WARNING: " + message, new Exception(message));
         }
     }
 }
