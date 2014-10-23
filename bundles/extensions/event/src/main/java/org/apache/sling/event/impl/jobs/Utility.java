@@ -281,4 +281,14 @@ public abstract class Utility {
         return children;
     }
 
+    /**
+     * Log a deprecation warning on level info into the log
+     * @param logger The logger to use
+     * @param message The message.
+     */
+    public static void logDeprecated(final Logger logger, final String message) {
+        if ( logger.isInfoEnabled() ) {
+            logger.info("DEPRECATION-WARNING: " + message, new Exception());
+        }
+    }
 }

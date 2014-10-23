@@ -175,7 +175,7 @@ public class JobManagerImpl
     @Override
     public void restart() {
         // nothing to do as this is deprecated, let's log a warning
-        logger.warn("DEPRECATION-WARNING: Deprecated JobManager.restart() is called.");
+        Utility.logDeprecated(logger, "Deprecated JobManager.restart() is called.");
     }
 
     /**
@@ -183,7 +183,7 @@ public class JobManagerImpl
      */
     @Override
     public boolean isJobProcessingEnabled() {
-        logger.warn("DEPRECATION-WARNING: Deprecated JobManager.isJobProcessingEnabled() is called.");
+        Utility.logDeprecated(logger, "Deprecated JobManager.isJobProcessingEnabled() is called.");
         return true;
     }
 
@@ -247,7 +247,7 @@ public class JobManagerImpl
     public JobsIterator queryJobs(final QueryType type, final String topic,
             final long limit,
             final Map<String, Object>... templates) {
-        logger.warn("DEPRECATION-WARNING: Deprecated JobManager.queryJobs(...) is called.");
+        Utility.logDeprecated(logger, "Deprecated JobManager.queryJobs(...) is called.");
         final Collection<Job> list = this.findJobs(type, topic, limit, templates);
         final Iterator<Job> iter = list.iterator();
         return new JobsIterator() {
@@ -299,7 +299,7 @@ public class JobManagerImpl
 
     @Override
     public Event findJob(final String topic, final Map<String, Object> template) {
-        logger.warn("DEPRECATION-WARNING: Deprecated JobManager.findJob(...) is called.");
+        Utility.logDeprecated(logger, "Deprecated JobManager.findJob(...) is called.");
         final Job job = this.getJob(topic, template);
         if ( job != null ) {
             return Utility.toEvent(job);
@@ -312,7 +312,7 @@ public class JobManagerImpl
      */
     @Override
     public boolean removeJob(final String jobId) {
-        logger.warn("DEPRECATION-WARNING: Deprecated JobManager.removeJob(...) is called.");
+        Utility.logDeprecated(logger, "Deprecated JobManager.removeJob(...) is called.");
         return this.internalRemoveJobById(jobId, false);
     }
 
@@ -376,7 +376,7 @@ public class JobManagerImpl
      */
     @Override
     public void forceRemoveJob(final String jobId) {
-        logger.warn("DEPRECATION-WARNING: Deprecated JobManager.forceRemoveJob(...) is called.");
+        Utility.logDeprecated(logger, "Deprecated JobManager.forceRemoveJob(...) is called.");
         this.internalRemoveJobById(jobId, true);
     }
 
@@ -393,7 +393,7 @@ public class JobManagerImpl
      */
     @Override
     public Job addJob(final String topic, final String name, final Map<String, Object> properties) {
-        logger.warn("DEPRECATION-WARNING: Deprecated JobManager.add(String, String, Map) is called.");
+        Utility.logDeprecated(logger, "Deprecated JobManager.add(String, String, Map) is called.");
         return this.addJob(topic, name, properties, null);
     }
 
@@ -402,7 +402,7 @@ public class JobManagerImpl
      */
     @Override
     public Job getJobByName(final String name) {
-        logger.warn("DEPRECATION-WARNING: Deprecated JobManager.getJobByName(String) is called.");
+        Utility.logDeprecated(logger, "Deprecated JobManager.getJobByName(String) is called.");
         final StringBuilder buf = new StringBuilder(64);
 
         final ResourceResolver resolver = this.configuration.createResourceResolver();
@@ -966,7 +966,7 @@ public class JobManagerImpl
             return null;
         }
         if ( name != null ) {
-            logger.info("DEPRECATION-WARNING: Job is using deprecated name feature: {}", Utility.toString(topic, name, properties));
+            Utility.logDeprecated(logger, "Job is using deprecated name feature: " + Utility.toString(topic, name, properties));
         }
         Job result = this.addJobInteral(topic, name, properties, errors);
         if ( result == null && name != null ) {
