@@ -30,6 +30,7 @@ import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.support.TopicMatcher;
 import org.apache.sling.event.impl.support.TopicMatcherHelper;
 import org.apache.sling.event.jobs.JobUtil;
@@ -229,7 +230,7 @@ public class InternalQueueConfiguration
             }
         }
         if ( type == Type.IGNORE || type == Type.DROP ) {
-            logger.warn("DEPRECATION-WARNING: Queue is using deprecated queue type. Ignoring queue {} with type {}", name, type);
+            Utility.logDeprecated(logger, "Queue is using deprecated queue type. Ignoring queue " + name + " with type " + type);
             return false;
         }
         return true;
