@@ -48,10 +48,6 @@ wants that resource to have like resourceType so basically this config governs _
 Sub resources to an agent can also be added, as the _queue_ for example and add properties to it by specifying _queue/propertyName = propertyValue_.
 That's the mechanism to expose services as resources.
 
-### HTTP API
-
-See the [wiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=38572805).
-
 ### Replication agents configuration
 
 Replication agents configurations are proper OSGi configurations (backed by nodes of type `sling:OsgiConfig` in the repository), see [CompactSimpleReplicationAgentServiceFactory-publish.json](src/main/resources/SLING-CONTENT/libs/sling/replication/install.author/org.apache.sling.replication.agent.impl.CompactSimpleReplicationAgentFactory-publish.json).
@@ -140,4 +136,7 @@ User/client makes an `HTTP POST`request to `http://localhost:8080/libs/sling/rep
 - WebSocket support (pros: once established it's bidirectional and therefore also publish can directly push stuff to author)
 - asynchronous import of packages (pros: parallel transport and import, cons: complex management of multiple queues on different publish instances)
 
+### HTTP API
+
+See the [wiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=38572805).
 

@@ -69,8 +69,6 @@ public class SimpleReplicationAgentFactory implements ReplicationComponentProvid
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-
-
     @Property(boolValue = true, label = "Enabled")
     private static final String ENABLED = ReplicationComponentFactory.COMPONENT_ENABLED;
 
