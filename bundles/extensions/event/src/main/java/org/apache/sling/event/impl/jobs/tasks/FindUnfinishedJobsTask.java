@@ -40,14 +40,25 @@ public class FindUnfinishedJobsTask {
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public void run(final JobManagerConfiguration configuration) {
-        this.initialScan(configuration);
+    /** Job manager configuration. */
+    private final JobManagerConfiguration configuration;
+
+    /**
+     * Constructor
+     * @param The configuration
+     */
+    public FindUnfinishedJobsTask(final JobManagerConfiguration config) {
+        this.configuration = config;
+    }
+
+    public void run() {
+        this.initialScan();
     }
 
     /**
      * Scan the resource tree for unfinished jobs from previous runs
      */
-    private void initialScan(final JobManagerConfiguration configuration) {
+    private void initialScan() {
         logger.debug("Scanning repository for unfinished jobs...");
         final ResourceResolver resolver = configuration.createResourceResolver();
         try {
