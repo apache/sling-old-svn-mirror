@@ -38,7 +38,6 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.event.impl.jobs.JobConsumerManager;
-import org.apache.sling.event.impl.jobs.JobManagerImpl;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
@@ -165,7 +164,7 @@ public class InventoryPlugin implements InventoryPrinter {
         pw.println();
 
         pw.println("Topology Capabilities");
-        final TopologyCapabilities cap = ((JobManagerImpl)this.jobManager).getTopologyCapabilities();
+        final TopologyCapabilities cap = this.configuration.getTopologyCapabilities();
         if ( cap == null ) {
             pw.print("No topology information available !");
         } else {
@@ -320,7 +319,7 @@ public class InventoryPlugin implements InventoryPrinter {
         pw.printf("    \"averageWaitingTimeText\" : \"%s\"%n", formatTime(s.getAverageWaitingTime()));
         pw.print("  }");
 
-        final TopologyCapabilities cap = ((JobManagerImpl)this.jobManager).getTopologyCapabilities();
+        final TopologyCapabilities cap = this.configuration.getTopologyCapabilities();
         if ( cap != null ) {
             pw.println(",");
             pw.println("  \"capabilities\" : [");

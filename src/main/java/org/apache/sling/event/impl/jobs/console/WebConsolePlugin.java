@@ -39,7 +39,6 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.event.impl.jobs.JobConsumerManager;
-import org.apache.sling.event.impl.jobs.JobManagerImpl;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
@@ -240,7 +239,7 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
 
         pw.println("<table class='nicetable'><tbody>");
         pw.println("<tr><th colspan='2'>Topology Capabilities</th></tr>");
-        final TopologyCapabilities cap = ((JobManagerImpl)this.jobManager).getTopologyCapabilities();
+        final TopologyCapabilities cap = this.configuration.getTopologyCapabilities();
         if ( cap == null ) {
             pw.print("<tr><td colspan='2'>No topology information available !</td></tr>");
         } else {
