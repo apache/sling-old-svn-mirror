@@ -37,6 +37,12 @@
         -->
         <oak.version>1.0.7</oak.version>
         <sling.oak.server.version>${project.version}</sling.oak.server.version>
+        
+        <!-- optionally activate the webconsole -->
+        <webconsole.active>false</webconsole.active>
+        <http.port></http.port>
+        
+        <pax.exam.service.timeout>10000</pax.exam.service.timeout>
     </properties>
 
     <build>
@@ -86,6 +92,14 @@
                         <property>
                             <name>pax.vm.options</name>
                             <value>${pax.vm.options}</value>
+                        </property>
+                        <property>
+                            <name>webconsole.active</name>
+                            <value>${webconsole.active}</value>
+                        </property>
+                        <property>
+                            <name>pax.exam.service.timeout</name>
+                            <value>${pax.exam.service.timeout}</value>
                         </property>
                     </systemProperties>
                     <argLine>

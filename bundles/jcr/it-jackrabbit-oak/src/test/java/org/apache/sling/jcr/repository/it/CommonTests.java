@@ -51,12 +51,14 @@ import javax.jcr.query.Query;
 
 import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.sling.api.SlingConstants;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.ops4j.pax.exam.Option;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
@@ -78,10 +80,6 @@ public abstract class CommonTests {
     @Inject
     protected BundleContext bundleContext;
     
-    // TODO doesn't work yet
-    // @Inject
-    // protected ResourceResolverFactory resourceResolverFactory;
-
     /** Check some repository descriptors to make sure we're
      *  testing the expected implementation. */
     protected abstract void doCheckRepositoryDescriptors();
@@ -139,6 +137,7 @@ public abstract class CommonTests {
     public Collection<Option> commonOptions() {
         final String localRepo = System.getProperty("maven.repo.local", "");
         final String paxVmOptions = System.getProperty("pax.vm.options", "");
+        final boolean webconsole = "true".equals(System.getProperty("webconsole.active", "false"));
         
         final List<Option> opt = new LinkedList<Option>();
         if(localRepo.length() > 0 ) {
@@ -146,6 +145,16 @@ public abstract class CommonTests {
         }
         if(paxVmOptions.length() > 0) {
             opt.add(vmOptions(paxVmOptions));
+        }
+        
+        // Optionally add webconsole
+        if(webconsole) {
+            opt.add(mavenBundle("org.apache.felix", "org.apache.felix.webconsole", "4.2.2"));
+            opt.add(mavenBundle("org.apache.felix", "org.apache.felix.webconsole.plugins.ds", "1.0.0"));
+            opt.add(mavenBundle("org.apache.felix", "org.apache.felix.webconsole.plugins.packageadmin", "1.0.0"));
+            opt.add(mavenBundle("org.apache.felix", "org.apache.felix.webconsole.plugins.event", "1.0.2"));
+            opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.webconsole", "1.0.2"));
+            opt.add(mavenBundle("org.apache.geronimo.bundles", "json", "20090211_1"));
         }
         
         final String SLF4J_VERSION = "1.7.5";
@@ -161,7 +170,7 @@ public abstract class CommonTests {
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "4.0.0"));
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.logservice", "1.0.2"));
 
-        opt.add(mavenBundle("commons-io", "commons-io", "1.4"));
+        opt.add(mavenBundle("commons-io", "commons-io", "2.4"));
         opt.add(mavenBundle("commons-fileupload", "commons-fileupload", "1.3.1"));
         opt.add(mavenBundle("commons-collections", "commons-collections", "3.2.1"));
         opt.add(mavenBundle("commons-codec", "commons-codec", "1.9"));
@@ -192,14 +201,14 @@ public abstract class CommonTests {
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.discovery.api", "1.0.0"));
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.discovery.standalone", "1.0.0"));
 
-        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.api", "2.7.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.api", "2.8.0"));
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.settings", "1.3.0"));
-        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.resourceresolver", "1.1.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.resourceresolver", "1.1.6"));
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.adapter", "2.1.0"));
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.resource", "2.3.11-SNAPSHOT"));
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.classloader", "3.2.0"));
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.contentloader", "2.1.8"));
-        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.engine", "2.3.2"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.engine", "2.3.8"));
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.event", "3.2.0"));
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.serviceusermapper", "1.0.0"));
         
@@ -270,7 +279,7 @@ public abstract class CommonTests {
             s.logout();
         }
     }
-
+    
     @Test
     public void testRepositoryPresent() {
         assertNotNull(repository);
@@ -430,13 +439,12 @@ public abstract class CommonTests {
     }
 
     @Test
-    @Ignore("SLING-3599")
     public void testOsgiResourceEvents() throws RepositoryException {
         final ResourceEventListener listener = new ResourceEventListener();
         final ServiceRegistration reg = listener.register(bundleContext, SlingConstants.TOPIC_RESOURCE_ADDED);
         final Session s = repository.loginAdministrative(null);
-        final int nPaths = 500;
-        final int timeoutMsec = 10000;
+        final int nPaths = 2500;
+        final int timeoutMsec = 2 * nPaths;
         final String prefix = uniqueName("testOsgiResourceEvents");
 
         // Create N nodes with a unique name under /
@@ -476,6 +484,8 @@ public abstract class CommonTests {
             reg.unregister();
             s.logout();
         }
+        
+        log.info("Successfuly detected OSGi observation events for " + nPaths + " paths");
     }
 
     @Test
@@ -546,14 +556,29 @@ public abstract class CommonTests {
         }
         
         // Make sure the JcrResourceProvider is initialized, as it
-        // setups conversion of JCR to OSGi events, and some tests use this 
-// TODO doesn't work yet        
-//        final ResourceResolver rr = resourceResolverFactory.getAdministrativeResourceResolver(null);
-//        try {
-//            rr.getResource("/");
-//        } finally {
-//            rr.close();
-//        }
+        // setups conversion of JCR to OSGi events, and some tests use this
+        // @Injecting the ResourceResolverFactory fails, haven't found why.
+        final int timeout = 10;
+        final long timeoutAt = System.currentTimeMillis() + (timeout * 1000L);
+        ServiceReference ref = null;
+        while(System.currentTimeMillis() < timeoutAt) {
+            ref = bundleContext.getServiceReference(ResourceResolverFactory.class.getName());
+            if(ref != null) {
+                return;
+            }
+        }
+        
+        assertNotNull("Expecting ResourceResolverFactory within " + timeout + " seconds");
+        ResourceResolver rr = null;
+        try {
+            final ResourceResolverFactory f = (ResourceResolverFactory)bundleContext.getService(ref);
+            rr = f.getAdministrativeResourceResolver(null);
+            rr.getResource("/");
+        } finally {
+            if(rr != null) {
+                rr.close();
+            }
+            bundleContext.ungetService(ref);
+        }
     }
-
 }
