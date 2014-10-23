@@ -308,7 +308,7 @@ public class ChaosTest extends AbstractJobHandlingTest {
         }
     }
 
-    @Test(timeout=DURATION * 2000)
+    @Test(timeout=DURATION * 4000)
     public void testDoChaos() throws Exception {
         final JobManager jobManager = this.getJobManager();
 
