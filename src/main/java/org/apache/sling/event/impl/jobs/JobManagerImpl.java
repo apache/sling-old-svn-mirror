@@ -125,9 +125,6 @@ public class JobManagerImpl
 
     private CleanUpTask maintenanceTask;
 
-    /** We count the scheduler runs. */
-    private volatile long schedulerRuns;
-
     /** Job Scheduler. */
     private JobSchedulerImpl jobScheduler;
 
@@ -149,7 +146,7 @@ public class JobManagerImpl
      */
     @Deactivate
     protected void deactivate() {
-        logger.info("Apache Sling Job Manager stopping on instance {}", Environment.APPLICATION_ID);
+        logger.debug("Apache Sling Job Manager stopping on instance {}", Environment.APPLICATION_ID);
         this.configuration.removeListener(this);
 
         this.jobScheduler.deactivate();
@@ -160,39 +157,15 @@ public class JobManagerImpl
 
     /**
      * This method is invoked periodically by the scheduler.
-     * It searches for idle queues and stops them after a timeout. If a queue
-     * is idle for two consecutive clean up calls, it is removed.
-     * @see java.lang.Runnable#run()
-     */
-    private void maintain() {
-        this.schedulerRuns++;
-        logger.debug("Job manager maintenance: Starting #{}", this.schedulerRuns);
-
-        // invoke maintenance task
-        final CleanUpTask task = this.maintenanceTask;
-        if ( task != null ) {
-            task.run(this.topologyCapabilities, this.schedulerRuns - 1);
-        }
-        logger.debug("Job manager maintenance: Finished #{}", this.schedulerRuns);
-    }
-
-    /**
-     * This method is invoked periodically by the scheduler.
      * In the default configuration every minute
      * @see java.lang.Runnable#run()
      */
     @Override
     public void run() {
-        this.maintain();
-    }
-
-    /**
-     * Helper method which just logs the exception in debug mode.
-     * @param e
-     */
-    private void ignoreException(final Exception e) {
-        if ( this.logger.isDebugEnabled() ) {
-            this.logger.debug("Ignored exception " + e.getMessage(), e);
+        // invoke maintenance task
+        final CleanUpTask task = this.maintenanceTask;
+        if ( task != null ) {
+            task.run();
         }
     }
 
@@ -378,7 +351,7 @@ public class JobManagerImpl
                         }
                         NotificationUtility.sendNotification(this.eventAdmin, NotificationConstants.TOPIC_JOB_REMOVED, job, null);
                     } catch ( final PersistenceException pe) {
-                        this.ignoreException(pe);
+                        logger.warn("Unable to remove job at " + job.getResourcePath(), pe);
                         result = false;
                     } finally {
                         resolver.close();
@@ -423,9 +396,10 @@ public class JobManagerImpl
      */
     @Override
     public Job getJobByName(final String name) {
+        final StringBuilder buf = new StringBuilder(64);
+
         final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
-            final StringBuilder buf = new StringBuilder(64);
 
             buf.append("//element(*,");
             buf.append(ResourceHelper.RESOURCE_TYPE_JOB);
@@ -447,7 +421,7 @@ public class JobManagerImpl
                 }
             }
         } catch (final QuerySyntaxException qse) {
-            this.ignoreException(qse);
+            logger.warn("Query syntax wrong " + buf.toString(), qse);
         } finally {
             resolver.close();
         }
@@ -461,8 +435,8 @@ public class JobManagerImpl
     public Job getJobById(final String id) {
         logger.debug("Getting job by id: {}", id);
         final ResourceResolver resolver = this.configuration.createResourceResolver();
+        final StringBuilder buf = new StringBuilder(64);
         try {
-            final StringBuilder buf = new StringBuilder(64);
 
             buf.append("//element(*,");
             buf.append(ResourceHelper.RESOURCE_TYPE_JOB);
@@ -490,7 +464,7 @@ public class JobManagerImpl
                 }
             }
         } catch (final QuerySyntaxException qse) {
-            this.ignoreException(qse);
+            logger.warn("Query syntax wrong " + buf.toString(), qse);
         } finally {
             resolver.close();
         }
@@ -550,8 +524,8 @@ public class JobManagerImpl
                                        || type == QueryType.STOPPED;
         final List<Job> result = new ArrayList<Job>();
         final ResourceResolver resolver = this.configuration.createResourceResolver();
+        final StringBuilder buf = new StringBuilder(64);
         try {
-            final StringBuilder buf = new StringBuilder(64);
 
             buf.append("//element(*,");
             buf.append(ResourceHelper.RESOURCE_TYPE_JOB);
@@ -698,7 +672,7 @@ public class JobManagerImpl
                 }
              }
         } catch (final QuerySyntaxException qse) {
-            this.ignoreException(qse);
+            logger.warn("Query syntax wrong " + buf.toString(), qse);
         } finally {
             resolver.close();
         }
@@ -756,7 +730,6 @@ public class JobManagerImpl
                     }
                 } catch (final PersistenceException ignore) {
                     // ignore
-                    this.ignoreException(ignore);
                 }
             }
         } finally {
