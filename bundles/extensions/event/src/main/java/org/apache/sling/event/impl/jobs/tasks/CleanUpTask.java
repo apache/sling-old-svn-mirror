@@ -48,6 +48,9 @@ public class CleanUpTask {
     /** Job manager configuration. */
     private final JobManagerConfiguration configuration;
 
+    /** We count the scheduler runs. */
+    private volatile long schedulerRuns;
+
     /**
      * Constructor
      */
@@ -58,8 +61,11 @@ public class CleanUpTask {
     /**
      * One maintenance run
      */
-    public void run(final TopologyCapabilities topologyCapabilities,
-            final long cleanUpCounter) {
+    public void run() {
+        this.schedulerRuns++;
+        logger.debug("Job manager maintenance: Starting #{}", this.schedulerRuns);
+
+        final TopologyCapabilities topologyCapabilities = configuration.getTopologyCapabilities();
         if ( topologyCapabilities != null ) {
             // Clean up
             final String cleanUpUnassignedPath;;
@@ -69,12 +75,12 @@ public class CleanUpTask {
                 cleanUpUnassignedPath = null;
             }
 
-            if ( cleanUpCounter % 60 == 0 ) { // full clean up is done every hour
+            if ( schedulerRuns % 60 == 0 ) { // full clean up is done every hour
                 this.fullEmptyFolderCleanup(topologyCapabilities, this.configuration.getLocalJobsPath());
                 if ( cleanUpUnassignedPath != null ) {
                     this.fullEmptyFolderCleanup(topologyCapabilities, cleanUpUnassignedPath);
                 }
-            } else if ( cleanUpCounter % 5 == 0 ) { // simple clean up every 5 minutes
+            } else if ( schedulerRuns % 5 == 0 ) { // simple clean up every 5 minutes
                 this.simpleEmptyFolderCleanup(topologyCapabilities, this.configuration.getLocalJobsPath());
                 if ( cleanUpUnassignedPath != null ) {
                     this.simpleEmptyFolderCleanup(topologyCapabilities, cleanUpUnassignedPath);
@@ -84,6 +90,7 @@ public class CleanUpTask {
 
         // lock cleanup is done every minute
         this.lockCleanup(topologyCapabilities);
+        logger.debug("Job manager maintenance: Finished #{}", this.schedulerRuns);
     }
 
     /**
