@@ -144,7 +144,6 @@ public class RemoteEventReplicationTrigger implements ReplicationTrigger {
         public EventBasedReplication(String handleId, ReplicationTriggerRequestHandler requestHandler) {
             this.handleId = handleId;
             this.requestHandler = requestHandler;
-
         }
 
         public void run() {
@@ -152,6 +151,8 @@ public class RemoteEventReplicationTrigger implements ReplicationTrigger {
                 log.debug("getting events from {}", endpoint.getUri().toString());
 
                 log.debug("preparing request");
+
+                // TODO : http client should be cached and reused
 
                 CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 

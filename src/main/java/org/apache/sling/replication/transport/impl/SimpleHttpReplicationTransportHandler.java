@@ -135,6 +135,8 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
             URI replicationURI = RequestUtils.appendReplicationRequest(replicationEndpoint.getUri(), replicationRequest);
             List<ReplicationPackage> result = new ArrayList<ReplicationPackage>();
 
+            // TODO : executor should be cached and reused
+
             Executor executor = Executor.newInstance();
             TransportAuthenticationContext context = new TransportAuthenticationContext();
             context.addAttribute("endpoint", replicationEndpoint);
