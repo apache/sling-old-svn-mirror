@@ -169,7 +169,11 @@ public class EventAdminBridge
                             props.remove(ignoredProp);
                         }
                     }
-                    this.jobManager.addJob(jobTopic, jobName, props);
+                    if ( jobName != null ) {
+                        this.jobManager.addJob(jobTopic, jobName, props);
+                    } else {
+                        this.jobManager.addJob(jobTopic, props);
+                    }
                 }
             }
         }
