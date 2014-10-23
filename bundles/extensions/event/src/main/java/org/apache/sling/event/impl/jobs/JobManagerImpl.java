@@ -876,13 +876,6 @@ public class JobManagerImpl
     }
 
     /**
-     * Get the current capabilities
-     */
-    public TopologyCapabilities getTopologyCapabilities() {
-        return this.topologyCapabilities;
-    }
-
-    /**
      * @see org.apache.sling.event.jobs.JobManager#stopJobById(java.lang.String)
      */
     @Override
