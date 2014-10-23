@@ -86,7 +86,8 @@ public abstract class CommonTests {
 
     private final List<String> toDelete = new LinkedList<String>();
     private final AtomicInteger uniqueNameCounter = new AtomicInteger();
-
+    protected static final Integer TEST_SCALE = Integer.getInteger("test.scale", 1); 
+    
     public static final String I18N_MESSAGE_CND =
         "<sling = 'http://sling.apache.org/jcr/sling/1.0'>\n"
         + "[mix:language]\n"
@@ -443,7 +444,7 @@ public abstract class CommonTests {
         final ResourceEventListener listener = new ResourceEventListener();
         final ServiceRegistration reg = listener.register(bundleContext, SlingConstants.TOPIC_RESOURCE_ADDED);
         final Session s = repository.loginAdministrative(null);
-        final int nPaths = 2500;
+        final int nPaths = 2500 * TEST_SCALE;
         final int timeoutMsec = 2 * nPaths;
         final String prefix = uniqueName("testOsgiResourceEvents");
 

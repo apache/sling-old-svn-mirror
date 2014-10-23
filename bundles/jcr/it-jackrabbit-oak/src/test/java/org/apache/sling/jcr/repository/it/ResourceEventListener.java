@@ -46,9 +46,10 @@ public class ResourceEventListener implements EventHandler {
     public void handleEvent(Event event) {
         final String path = (String) event.getProperty("path");
         if(path != null) {
+            final int n = paths.size();
             synchronized (paths) {
-                if(paths.isEmpty()) {
-                    log.info("Got first event, path={}", path);
+                if(n % 1000 == 0) {
+                    log.info("Got events for {} paths so far, last path={}", n, path);
                 }
                 paths.add(path);
             }

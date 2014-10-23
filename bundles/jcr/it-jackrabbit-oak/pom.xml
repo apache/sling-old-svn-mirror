@@ -29,6 +29,7 @@
         <org.ops4j.pax.url.mvn.settings></org.ops4j.pax.url.mvn.settings>
         
         <!-- Set this to enable debugging of the VM used to run pax exam -->
+        <!-- Include -Dtest.scale=N to use larger data sets in some tests -->
         <pax.vm.options></pax.vm.options>
 
         <!-- 
