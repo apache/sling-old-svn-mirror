@@ -105,9 +105,8 @@ public class EventAdminBridge
             this.writeQueue.put(new Event("deactivate", (Dictionary<String, Object>)null));
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
-            this.ignoreException(e);
         }
-        logger.info("Apache Sling Job Event Bridge stopped on instance {}", Environment.APPLICATION_ID);
+        logger.debug("Apache Sling Job Event Bridge stopped on instance {}", Environment.APPLICATION_ID);
     }
 
 
@@ -115,7 +114,7 @@ public class EventAdminBridge
      * Background thread adding jobs received as events
      */
     private void addJobs() {
-        logger.info("Apache Sling Job Event Bridge started on instance {}", Environment.APPLICATION_ID);
+        logger.debug("Apache Sling Job Event Bridge started on instance {}", Environment.APPLICATION_ID);
         try {
             this.processWriteQueue();
          } catch (final Throwable t) { //NOSONAR
@@ -143,7 +142,6 @@ public class EventAdminBridge
             try {
                 event = this.writeQueue.take();
             } catch (final InterruptedException e) {
-                this.ignoreException(e);
                 Thread.currentThread().interrupt();
                 this.running = false;
             }
@@ -154,7 +152,6 @@ public class EventAdminBridge
                         this.writeQueue.put(event);
                         Thread.sleep(500);
                     } catch (final InterruptedException ie) {
-                        this.ignoreException(ie);
                         Thread.currentThread().interrupt();
                         this.running = false;
                     }
@@ -188,31 +185,18 @@ public class EventAdminBridge
         }
         // we ignore remote job events
         if ( EventUtil.isLocal(event) ) {
-            if ( logger.isDebugEnabled() ) {
-                logger.debug("Handling local job {}", EventUtil.toString(event));
-            }
+            logger.info("Received job via deprecated OSGi event {}", EventUtil.toString(event));
             // check job topic
             final String errorMessage = Utility.checkJobTopic(event.getProperty(ResourceHelper.PROPERTY_JOB_TOPIC));
             if ( errorMessage == null ) {
                 try {
                     this.writeQueue.put(event);
                 } catch (final InterruptedException e) {
-                    this.ignoreException(e);
                     Thread.currentThread().interrupt();
                 }
             } else {
                 this.logger.warn(errorMessage + " : {}", EventUtil.toString(event));
             }
-        }
-    }
-
-    /**
-     * Helper method which just logs the exception in debug mode.
-     * @param e
-     */
-    private void ignoreException(final Exception e) {
-        if ( this.logger.isDebugEnabled() ) {
-            this.logger.debug("Ignored exception " + e.getMessage(), e);
         }
     }
 
