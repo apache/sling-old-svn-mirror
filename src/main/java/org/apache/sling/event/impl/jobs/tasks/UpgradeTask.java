@@ -50,15 +50,29 @@ public class UpgradeTask {
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    /** Job manager configuration. */
+    private final JobManagerConfiguration configuration;
+
+    /** The capabilities. */
+    private final TopologyCapabilities caps;
+
+    /**
+     * Constructor
+     * @param The configuration
+     */
+    public UpgradeTask(final JobManagerConfiguration config) {
+        this.configuration = config;
+        this.caps = this.configuration.getTopologyCapabilities();
+    }
+
     /**
      * Upgrade
      */
-    public void run(final JobManagerConfiguration configuration,
-            final TopologyCapabilities topologyCapabilities) {
-        if ( topologyCapabilities.isLeader() ) {
-            this.processJobsFromPreviousVersions(configuration, topologyCapabilities);
+    public void run() {
+        if ( caps.isLeader() ) {
+            this.processJobsFromPreviousVersions();
         }
-        this.upgradeBridgedJobs(configuration, topologyCapabilities);
+        this.upgradeBridgedJobs();
     }
 
     /**
@@ -66,19 +80,18 @@ public class UpgradeTask {
      * In previous versions, bridged jobs were stored under a special topic.
      * This has changed, the jobs are now stored with their real topic.
      */
-    private void upgradeBridgedJobs(final JobManagerConfiguration configuration,
-            final TopologyCapabilities caps) {
+    private void upgradeBridgedJobs() {
         final String path = configuration.getLocalJobsPath() + '/' + JobImpl.PROPERTY_BRIDGED_EVENT;
         final ResourceResolver resolver = configuration.createResourceResolver();
         try {
             final Resource rootResource = resolver.getResource(path);
             if ( rootResource != null ) {
-                upgradeBridgedJobs(configuration, rootResource, caps);
+                upgradeBridgedJobs(rootResource);
             }
             if ( caps.isLeader() ) {
                 final Resource unassignedRoot = resolver.getResource(configuration.getUnassignedJobsPath() + '/' + JobImpl.PROPERTY_BRIDGED_EVENT);
                 if ( unassignedRoot != null ) {
-                    upgradeBridgedJobs(configuration, unassignedRoot, caps);
+                    upgradeBridgedJobs(unassignedRoot);
                 }
             }
         } finally {
@@ -87,14 +100,10 @@ public class UpgradeTask {
     }
 
     /**
-     * Upgrade bridge jobs
+     * Upgrade bridged jobs
      * @param rootResource  The root resource (topic resource)
-     * @param topologyCapabilities The capabilities
-     * @param queueManager The queue manager
      */
-    private void upgradeBridgedJobs(final JobManagerConfiguration configuration,
-            final Resource topicResource,
-            final TopologyCapabilities caps) {
+    private void upgradeBridgedJobs(final Resource topicResource) {
         final String topicName = topicResource.getName().replace('.', '/');
         final QueueInfo info = configuration.getQueueConfigurationManager().getQueueInfo(topicName);
         JobTopicTraverser.traverse(logger, topicResource, new JobTopicTraverser.ResourceCallback() {
@@ -139,12 +148,11 @@ public class UpgradeTask {
     /**
      * Handle jobs from previous versions (<= 3.1.4) by moving them to the unassigned area
      */
-    private void processJobsFromPreviousVersions(final JobManagerConfiguration configuration,
-            final TopologyCapabilities caps) {
+    private void processJobsFromPreviousVersions() {
         final ResourceResolver resolver = configuration.createResourceResolver();
         try {
-            this.processJobsFromPreviousVersions(configuration, caps, resolver.getResource(configuration.getPreviousVersionAnonPath()));
-            this.processJobsFromPreviousVersions(configuration, caps, resolver.getResource(configuration.getPreviousVersionIdentifiedPath()));
+            this.processJobsFromPreviousVersions(resolver.getResource(configuration.getPreviousVersionAnonPath()));
+            this.processJobsFromPreviousVersions(resolver.getResource(configuration.getPreviousVersionIdentifiedPath()));
         } catch ( final PersistenceException pe ) {
             this.logger.warn("Problems moving jobs from previous version.", pe);
         } finally {
@@ -155,15 +163,13 @@ public class UpgradeTask {
     /**
      * Recursively find jobs and move them
      */
-    private void processJobsFromPreviousVersions(final JobManagerConfiguration configuration,
-            final TopologyCapabilities caps,
-            final Resource rsrc) throws PersistenceException {
+    private void processJobsFromPreviousVersions(final Resource rsrc) throws PersistenceException {
         if ( rsrc != null && caps.isActive() ) {
             if ( rsrc.isResourceType(ResourceHelper.RESOURCE_TYPE_JOB) ) {
-                this.moveJobFromPreviousVersion(configuration, caps, rsrc);
+                this.moveJobFromPreviousVersion(rsrc);
             } else {
                 for(final Resource child : rsrc.getChildren()) {
-                    this.processJobsFromPreviousVersions(configuration, caps, child);
+                    this.processJobsFromPreviousVersions(child);
                 }
                 if ( caps.isActive() ) {
                     rsrc.getResourceResolver().delete(rsrc);
@@ -177,9 +183,7 @@ public class UpgradeTask {
     /**
      * Move a single job
      */
-    private void moveJobFromPreviousVersion(final JobManagerConfiguration configuration,
-            final TopologyCapabilities caps,
-            final Resource jobResource)
+    private void moveJobFromPreviousVersion(final Resource jobResource)
     throws PersistenceException {
         final ResourceResolver resolver = jobResource.getResourceResolver();
 

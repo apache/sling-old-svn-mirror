@@ -18,6 +18,7 @@
  */
 package org.apache.sling.event.impl.jobs.config;
 
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -38,6 +39,7 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
@@ -156,6 +158,9 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
 
     @Reference
     private QueueConfigurationManager queueConfigManager;
+
+    @Reference
+    private Scheduler scheduler;
 
     /** The topology capabilities. */
     private volatile TopologyCapabilities topologyCapabilities;
@@ -437,7 +442,12 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
         }
     }
 
+    /**
+     * Stop processing
+     * @param deactivate Whether to deactivate the capabilities
+     */
     private void stopProcessing(final boolean deactivate) {
+        logger.debug("Stopping job processing...");
         boolean notify = this.topologyCapabilities != null;
         // deactivate old capabilities - this stops all background processes
         if ( deactivate && this.topologyCapabilities != null ) {
@@ -449,26 +459,47 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
             // stop all listeners
             this.notifiyListeners();
         }
+        logger.debug("Job processing stopped");
     }
 
+    /**
+     * Start processing
+     * @param eventType The event type
+     * @param newCaps The new capabilities
+     * @param isConfigChange If a configuration change occured.
+     */
     private void startProcessing(final Type eventType, final TopologyCapabilities newCaps, final boolean isConfigChange) {
+        logger.debug("Starting job processing...");
         // create new capabilities and update view
         this.topologyCapabilities = newCaps;
 
         // before we propagate the new topology we do some maintenance
         if ( eventType == Type.TOPOLOGY_INIT ) {
-            final UpgradeTask task = new UpgradeTask();
-            task.run(this, this.topologyCapabilities);
+            final UpgradeTask task = new UpgradeTask(this);
+            task.run();
 
-            final FindUnfinishedJobsTask rt = new FindUnfinishedJobsTask();
-            rt.run(this);
+            final FindUnfinishedJobsTask rt = new FindUnfinishedJobsTask(this);
+            rt.run();
         }
 
+        // we run the checker task twice, now and shortly after the topology has changed.
         final CheckTopologyTask mt = new CheckTopologyTask(this);
-        mt.run(topologyCapabilities, !isConfigChange, isConfigChange);
+        mt.fullRun(!isConfigChange, isConfigChange);
 
         // start listeners
         this.notifiyListeners();
+
+        // and run checker again in 15 seconds (if leader)
+        if ( this.topologyCapabilities.isLeader() ) {
+            scheduler.schedule(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        mt.assignUnassignedJobs();
+                    }
+                }, scheduler.AT(new Date(System.currentTimeMillis() + 15000)));
+        }
+        logger.debug("Job processing started");
     }
 
     private void notifiyListeners() {

@@ -55,19 +55,23 @@ public class CheckTopologyTask {
     /** Job manager configuration. */
     private final JobManagerConfiguration configuration;
 
+    /** The capabilities. */
+    private final TopologyCapabilities caps;
+
     /**
      * Constructor
+     * @param The configuration
      */
     public CheckTopologyTask(final JobManagerConfiguration config) {
         this.configuration = config;
+        this.caps = this.configuration.getTopologyCapabilities();
     }
 
     /**
      * Reassign jobs from stopped instance.
-     * @param caps Current topology capabilities.
      */
-    private void reassignJobsFromStoppedInstances(final TopologyCapabilities caps) {
-        if ( caps != null && caps.isLeader() && caps.isActive() ) {
+    private void reassignJobsFromStoppedInstances() {
+        if ( caps.isLeader() && caps.isActive() ) {
             this.logger.debug("Checking for stopped instances...");
             final ResourceResolver resolver = this.configuration.createResourceResolver();
             try {
@@ -83,7 +87,7 @@ public class CheckTopologyTask {
                         final String instanceId = instanceResource.getName();
                         if ( !caps.isActive(instanceId) ) {
                             logger.debug("Found stopped instance {}", instanceId);
-                            assignJobs(caps, instanceResource, true);
+                            assignJobs(instanceResource, true);
                         }
                     }
                 }
@@ -95,10 +99,9 @@ public class CheckTopologyTask {
 
     /**
      * Reassign stale jobs from this instance
-     * @param caps Current topology capabilities.
      */
-    private void reassignStableJobs(final TopologyCapabilities caps) {
-        if ( caps != null && caps.isActive() ) {
+    private void reassignStaleJobs() {
+        if ( caps.isActive() ) {
             this.logger.debug("Checking for stale jobs...");
             final ResourceResolver resolver = this.configuration.createResourceResolver();
             try {
@@ -160,14 +163,14 @@ public class CheckTopologyTask {
                                                 resolver.delete(rsrc);
                                                 resolver.commit();
                                             } catch ( final PersistenceException pe ) {
-                                                ignoreException(pe);
+                                                logger.warn("Unable to move stale job from " + rsrc.getPath() + " to " + newPath, pe);
                                                 resolver.refresh();
                                                 resolver.revert();
                                             }
                                         }
                                     } catch (final InstantiationException ie) {
                                         // something happened with the resource in the meantime
-                                        ignoreException(ie);
+                                        logger.warn("Unable to move stale job from " + rsrc.getPath(), ie);
                                         resolver.refresh();
                                         resolver.revert();
                                     }
@@ -190,8 +193,8 @@ public class CheckTopologyTask {
      * - topology
      * - capabilities
      */
-    private void assignUnassignedJobs(final TopologyCapabilities caps) {
-        if ( caps != null && caps.isLeader() ) {
+    public void assignUnassignedJobs() {
+        if ( caps.isLeader() && caps.isActive() ) {
             logger.debug("Checking unassigned jobs...");
             final ResourceResolver resolver = this.configuration.createResourceResolver();
             try {
@@ -200,7 +203,7 @@ public class CheckTopologyTask {
 
                 // this resource should exist, but we check anyway
                 if ( unassignedRoot != null ) {
-                    assignJobs(caps, unassignedRoot, false);
+                    assignJobs(unassignedRoot, false);
                 }
             } finally {
                 resolver.close();
@@ -214,12 +217,10 @@ public class CheckTopologyTask {
     /**
      * Try to assign all jobs from the jobs root.
      * The jobs are stored by topic
-     * @param caps The topology capabilities
      * @param jobsRoot The root of the jobs
      * @param unassign Whether to unassign the job if no instance is found.
      */
-    private void assignJobs(final TopologyCapabilities caps,
-            final Resource jobsRoot,
+    private void assignJobs(final Resource jobsRoot,
             final boolean unassign) {
         final ResourceResolver resolver = jobsRoot.getResourceResolver();
 
@@ -255,14 +256,14 @@ public class CheckTopologyTask {
                                     resolver.delete(rsrc);
                                     resolver.commit();
                                 } catch ( final PersistenceException pe ) {
-                                    ignoreException(pe);
+                                    logger.warn("Unable to move unassigned job from " + rsrc.getPath() + " to " + newPath, pe);
                                     resolver.refresh();
                                     resolver.revert();
                                 }
                             }
                         } catch (final InstantiationException ie) {
                             // something happened with the resource in the meantime
-                            ignoreException(ie);
+                            logger.warn("Unable to move unassigned job from " + rsrc.getPath(), ie);
                             resolver.refresh();
                             resolver.revert();
                         }
@@ -290,13 +291,13 @@ public class CheckTopologyTask {
                                 resolver.delete(rsrc);
                                 resolver.commit();
                             } catch ( final PersistenceException pe ) {
-                                ignoreException(pe);
+                                logger.warn("Unable to unassigned job from " + rsrc.getPath() + " to " + newPath, pe);
                                 resolver.refresh();
                                 resolver.revert();
                             }
                         } catch (final InstantiationException ie) {
                             // something happened with the resource in the meantime
-                            ignoreException(ie);
+                            logger.warn("Unable to unassigned job from " + rsrc.getPath(), ie);
                             resolver.refresh();
                             resolver.revert();
                         }
@@ -310,30 +311,16 @@ public class CheckTopologyTask {
     /**
      * One maintenance run
      */
-    public void run(final TopologyCapabilities topologyCapabilities,
-            final boolean topologyChanged,
-            final boolean configChanged) {
+    public void fullRun(final boolean topologyChanged,
+                        final boolean configChanged) {
         // if topology changed, reschedule assigned jobs for stopped instances
         if ( topologyChanged ) {
-            this.reassignJobsFromStoppedInstances(topologyCapabilities);
+            this.reassignJobsFromStoppedInstances();
         }
         // check for all topics
-        if ( topologyChanged || configChanged ) {
-            this.reassignStableJobs(topologyCapabilities);
-        }
-        // try to assign unassigned jobs
-        if ( topologyChanged || configChanged ) {
-            this.assignUnassignedJobs(topologyCapabilities);
-        }
-    }
+        this.reassignStaleJobs();
 
-    /**
-     * Helper method which just logs the exception in debug mode.
-     * @param e
-     */
-    private void ignoreException(final Exception e) {
-        if ( this.logger.isDebugEnabled() ) {
-            this.logger.debug("Ignored exception " + e.getMessage(), e);
-        }
+        // try to assign unassigned jobs
+        this.assignUnassignedJobs();
     }
 }
