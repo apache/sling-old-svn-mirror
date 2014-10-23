@@ -229,7 +229,7 @@ public class InternalQueueConfiguration
             }
         }
         if ( type == Type.IGNORE || type == Type.DROP ) {
-            logger.warn("Queue is using deprecated queue type. Ignoring queue {} with type {}", name, type);
+            logger.warn("DEPRECATION-WARNING: Queue is using deprecated queue type. Ignoring queue {} with type {}", name, type);
             return false;
         }
         return true;

@@ -165,7 +165,7 @@ public class EventAdminBridge
                     // check for deprecated/unsupported properties
                     for(final String ignoredProp : IGNORED_CONFIG_PROPERTIES) {
                         if ( props.containsKey(ignoredProp)) {
-                            logger.info("Job {} is using deprecated and ignored property {}", EventUtil.toString(event), ignoredProp);
+                            logger.info("DEPRECATION-WARNING: Job {} is using deprecated and ignored property {}", EventUtil.toString(event), ignoredProp);
                             props.remove(ignoredProp);
                         }
                     }
@@ -185,7 +185,7 @@ public class EventAdminBridge
         }
         // we ignore remote job events
         if ( EventUtil.isLocal(event) ) {
-            logger.info("Received job via deprecated OSGi event {}", EventUtil.toString(event));
+            logger.info("DEPRECATION-WARNING: Received job via deprecated OSGi event {}", EventUtil.toString(event));
             // check job topic
             final String errorMessage = Utility.checkJobTopic(event.getProperty(ResourceHelper.PROPERTY_JOB_TOPIC));
             if ( errorMessage == null ) {
