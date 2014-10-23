@@ -74,15 +74,6 @@ public interface JobManager {
     }
 
     /**
-     * Restart the job manager.
-     * This method restarts the job manager and all queues - currently processed jobs will be finished.
-     * The job manager should only be restarted if really necessary!
-     * @deprecated This method does nothing
-     */
-    @Deprecated
-    void restart();
-
-    /**
      * Add a new job
      *
      * If the topic is <code>null</code> or illegal, no job is created and <code>null</code> is returned.
@@ -216,6 +207,15 @@ public interface JobManager {
      * @since 1.4
      */
     Collection<ScheduledJobInfo> getScheduledJobs(String topic, long limit, Map<String, Object>... templates);
+
+    /**
+     * Restart the job manager.
+     * This method restarts the job manager and all queues - currently processed jobs will be finished.
+     * The job manager should only be restarted if really necessary!
+     * @deprecated This method does nothing
+     */
+    @Deprecated
+    void restart();
 
     /**
      * Add a new job
