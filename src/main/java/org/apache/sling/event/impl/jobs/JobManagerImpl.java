@@ -385,7 +385,7 @@ public class JobManagerImpl
      */
     @Override
     public Job addJob(String topic, Map<String, Object> properties) {
-        return this.addJob(topic, null, properties);
+        return this.addJob(topic, null, properties, null);
     }
 
     /**
