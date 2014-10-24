@@ -49,6 +49,8 @@
         <url.version>2.1.0</url.version>
         <bundle.build.name>${basedir}/target</bundle.build.name>
         <bundle.file.name>${bundle.build.name}/${project.build.finalName}.jar</bundle.file.name>
+        <min.port>35000</min.port>
+        <max.port>35999</max.port>
     </properties>
 
 
@@ -104,8 +106,8 @@
                             <portNames>
                                 <portName>http.port</portName>
                             </portNames>
-                            <minPortNumber>35000</minPortNumber>
-                            <maxPortNumber>45000</maxPortNumber>
+                            <minPortNumber>${min.port}</minPortNumber>
+                            <maxPortNumber>${max.port}</maxPortNumber>
                         </configuration>
                     </execution>
                 </executions>
@@ -158,6 +160,41 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>port-java6</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <jdk>1.6</jdk>
+            </activation>
+            <properties>
+                <min.port>36000</min.port>
+                <max.port>36999</max.port>
+            </properties>
+        </profile>
+        <profile>
+            <id>port-java7</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <jdk>1.7</jdk>
+            </activation>
+            <properties>
+                <min.port>37000</min.port>
+                <max.port>37999</max.port>
+            </properties>
+        </profile>
+        <profile>
+            <id>port-java8</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <jdk>1.8</jdk>
+            </activation>
+            <properties>
+                <min.port>38000</min.port>
+                <max.port>38999</max.port>
+            </properties>
+        </profile>
+    </profiles>
     <reporting>
         <plugins>
             <plugin>
