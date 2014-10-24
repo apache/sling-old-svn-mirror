@@ -34,8 +34,8 @@ public final class OrderedJobQueue extends AbstractJobQueue {
     /** Object to sync operations within this queue. */
     private final Object syncLock = new Object();
 
-    /** Sleep delay if job needs rescheduling. */
-    private long sleepDelay = -1;
+    /** Sleeping until. */
+    private volatile long sleepingUntil;
 
     public OrderedJobQueue(final String name,
                            final InternalQueueConfiguration config,
@@ -58,19 +58,20 @@ public final class OrderedJobQueue extends AbstractJobQueue {
                         Thread.currentThread().interrupt();
                     }
                 }
-                if ( this.sleepDelay > 0 ) {
-                    final long waitingTime = this.sleepDelay;
-                    final long startTime = System.currentTimeMillis();
-                    this.logger.debug("Job queue {} is sleeping {}ms for retry.", this.queueName, waitingTime);
-                    while ( this.sleepDelay > 0 ) {
-                        try {
-                            this.syncLock.wait(waitingTime);
-                            if ( System.currentTimeMillis() >= startTime + waitingTime ) {
-                                this.sleepDelay = -1;
+                if ( this.sleepingUntil != -1 ) {
+                    final long waitingTime = this.sleepingUntil - System.currentTimeMillis();
+                    if ( waitingTime > 0 ) {
+                        this.logger.debug("Job queue {} is sleeping {}ms for retry.", this.queueName, waitingTime);
+                        while ( this.sleepingUntil != -1 ) {
+                            try {
+                                this.syncLock.wait(waitingTime);
+                                if ( System.currentTimeMillis() >= this.sleepingUntil ) {
+                                    this.sleepingUntil = -1;
+                                }
+                            } catch (final InterruptedException e) {
+                                this.ignoreException(e);
+                                Thread.currentThread().interrupt();
                             }
-                        } catch (final InterruptedException e) {
-                            this.ignoreException(e);
-                            Thread.currentThread().interrupt();
                         }
                     }
                 }
@@ -82,7 +83,12 @@ public final class OrderedJobQueue extends AbstractJobQueue {
     @Override
     protected void reschedule(final JobHandler handler) {
         super.reschedule(handler);
-        this.sleepDelay = this.getRetryDelay(handler);
+        final long retryDelay = this.getRetryDelay(handler);
+        if ( retryDelay > 0 ) {
+            this.sleepingUntil = System.currentTimeMillis() + retryDelay;
+        } else {
+            this.sleepingUntil = -1;
+        }
     }
 
     @Override
@@ -91,10 +97,23 @@ public final class OrderedJobQueue extends AbstractJobQueue {
         synchronized ( this.syncLock ) {
             this.isWaiting = false;
             if ( !reschedule ) {
-                this.sleepDelay = -1;
+                this.sleepingUntil = -1;
             }
             this.syncLock.notify();
         }
+    }
+
+    @Override
+    public String getStateInfo() {
+        return super.getStateInfo() + ", isSleepingUntil=" + this.sleepingUntil;
+    }
+
+    @Override
+    public Object getState(final String key) {
+        if ( "isSleepingUntil".equals(key) ) {
+            return this.sleepingUntil;
+        }
+        return super.getState(key);
     }
 }
 
