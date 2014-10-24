@@ -601,12 +601,15 @@ public class JobSchedulerImpl
             this.stopScheduling();
         } else {
             final boolean previouslyActive = this.active;
-            this.active = this.configuration.getTopologyCapabilities().isLeader();
-            if ( this.active && !previouslyActive ) {
-                this.startScheduling();
-            }
-            if ( !this.active && previouslyActive ) {
-                this.stopScheduling();
+            final JobManagerConfiguration config = this.configuration;
+            if ( config != null ) {
+                this.active = config.getTopologyCapabilities().isLeader();
+                if ( this.active && !previouslyActive ) {
+                    this.startScheduling();
+                }
+                if ( !this.active && previouslyActive ) {
+                    this.stopScheduling();
+                }
             }
         }
     }
