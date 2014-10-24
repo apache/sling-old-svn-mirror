@@ -931,12 +931,19 @@ public abstract class AbstractJobQueue
     @Override
     public String getStateInfo() {
         synchronized ( this.suspendLock ) {
-            return "isWaiting=" + this.isWaiting +
+            return "outdated=" + this.isOutdated.get() +
+                    ", isWaiting=" + this.isWaiting +
+                    ", isWaitingForNextJob=" + this.isWaitingForNextJob +
                     ", suspendedSince=" + this.suspendedSince +
                     ", asyncJobs=" + this.asyncCounter.get();
         }
     }
 
+    /**
+     * Get the retry delay for a job.
+     * @param handler The job handler.
+     * @return The retry delay
+     */
     protected long getRetryDelay(final JobHandler handler) {
         long delay = this.configuration.getRetryDelayInMs();
         if ( handler.getJob().getProperty(JobImpl.PROPERTY_DELAY_OVERRIDE) != null ) {
