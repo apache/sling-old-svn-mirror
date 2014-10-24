@@ -43,7 +43,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.commons.threads.ThreadPoolManager;
-import org.apache.sling.event.impl.jobs.config.ConfigurationChangeListener;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
 import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
@@ -91,7 +90,7 @@ import org.slf4j.LoggerFactory;
                      ResourceHelper.BUNDLE_EVENT_UPDATED})
 })
 public class JobManagerImpl
-    implements JobManager, EventHandler, Runnable, ConfigurationChangeListener {
+    implements JobManager, EventHandler, Runnable {
 
     /** Default logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -121,8 +120,6 @@ public class JobManagerImpl
     @Reference
     private QueueManager qManager;
 
-    private volatile TopologyCapabilities topologyCapabilities;
-
     private CleanUpTask maintenanceTask;
 
     /** Job Scheduler. */
@@ -137,7 +134,6 @@ public class JobManagerImpl
         this.jobScheduler = new JobSchedulerImpl(this.configuration, this.scheduler, this);
         this.maintenanceTask = new CleanUpTask(this.configuration);
 
-        this.configuration.addListener(this);
         logger.info("Apache Sling Job Manager started on instance {}", Environment.APPLICATION_ID);
     }
 
@@ -147,7 +143,6 @@ public class JobManagerImpl
     @Deactivate
     protected void deactivate() {
         logger.debug("Apache Sling Job Manager stopping on instance {}", Environment.APPLICATION_ID);
-        this.configuration.removeListener(this);
 
         this.jobScheduler.deactivate();
 
@@ -193,15 +188,6 @@ public class JobManagerImpl
     @Override
     public void handleEvent(final Event event) {
         this.jobScheduler.handleEvent(event);
-    }
-
-    @Override
-    public void configurationChanged(final boolean active) {
-        if ( !active ) {
-            this.topologyCapabilities = null;
-        } else {
-            this.topologyCapabilities = this.configuration.getTopologyCapabilities();
-        }
     }
 
     /**
@@ -765,7 +751,7 @@ public class JobManagerImpl
             logger.debug("Discarding duplicate job {}", Utility.toString(jobTopic, jobName, jobProperties));
             return null;
         } else {
-            final TopologyCapabilities caps = this.topologyCapabilities;
+            final TopologyCapabilities caps = this.configuration.getTopologyCapabilities();
             info.targetId = (caps == null ? null : caps.detectTarget(jobTopic, jobProperties, info));
 
             if ( logger.isDebugEnabled() ) {
