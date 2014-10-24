@@ -37,6 +37,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
@@ -441,9 +442,13 @@ public class JcrNode implements IAdaptable {
 		    SAXParser saxParser = factory.newSAXParser();
 
 		    JcrRootHandler h = new JcrRootHandler();
-			saxParser.parse(new InputSource(file.getContents()), h);
-
-			return h.isVaultFile();
+			InputStream contents = file.getContents();
+            try {
+                saxParser.parse(new InputSource(contents), h);
+                return h.isVaultFile();
+            } finally {
+                IOUtils.closeQuietly(contents);
+            }
 		}
 		return false;
 	}
@@ -1436,8 +1441,9 @@ public class JcrNode implements IAdaptable {
         
         IFolder contentSyncRoot = ProjectUtil.getSyncDirectory(getProject());
         IFile file = (IFile) u.file;
+        InputStream contents = null;
         try{
-            InputStream contents = file.getContents();
+            contents = file.getContents();
             String resourceLocation = file.getFullPath().makeRelativeTo(contentSyncRoot.getFullPath())
                     .toPortableString();
             ResourceProxy resourceProxy = Activator.getDefault()
@@ -1449,6 +1455,8 @@ public class JcrNode implements IAdaptable {
             return PropertyTypeSupport.propertyTypeOfString(rawValue);
         } catch(Exception e) {
             Activator.getDefault().getPluginLogger().warn("Exception occurred during analyzing propertyType ("+propertyName+") for "+this, e);
+        } finally {
+            IOUtils.closeQuietly(contents);
         }
         return -1;
     }

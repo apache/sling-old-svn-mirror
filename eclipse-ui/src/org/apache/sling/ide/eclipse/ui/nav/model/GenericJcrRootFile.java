@@ -24,6 +24,7 @@ import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.eclipse.core.internal.Activator;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
@@ -54,8 +55,12 @@ public class GenericJcrRootFile extends JcrNode {
 		this.domElement = null;
 		
         InputStream in = file.getContents();
-        this.document = TolerantXMLParser.parse(in, file.getFullPath().toOSString());
-		handleJcrRoot(this.document.getRootElement());
+        try {
+            this.document = TolerantXMLParser.parse(in, file.getFullPath().toOSString());
+            handleJcrRoot(this.document.getRootElement());
+        } finally {
+            IOUtils.closeQuietly(in);
+        }
 	}
 	
 	@Override
