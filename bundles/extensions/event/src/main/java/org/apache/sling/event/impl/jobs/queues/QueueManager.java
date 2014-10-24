@@ -152,6 +152,7 @@ public class QueueManager
             ((QueuesMBeanImpl)queuesMBean).sendEvent(new QueueStatusEvent(null, jbq));
         }
         this.queues.clear();
+        this.queueServices = null;
         logger.info("Apache Sling Queue Manager stopped on instance {}", Environment.APPLICATION_ID);
     }
 
@@ -286,10 +287,14 @@ public class QueueManager
                 this.outdateQueue(queue);
             }
         }
-        final List<Job> rescheduleList = this.configuration.clearJobRetryList();
-        for(final Job j : rescheduleList) {
-            final JobHandler jh = new JobHandler((JobImpl)j, this.configuration);
-            jh.reschedule();
+        // check if we're still active
+        final JobManagerConfiguration config = this.configuration;
+        if ( config != null ) {
+            final List<Job> rescheduleList = this.configuration.clearJobRetryList();
+            for(final Job j : rescheduleList) {
+                final JobHandler jh = new JobHandler((JobImpl)j, this.configuration);
+                jh.reschedule();
+            }
         }
     }
 
@@ -336,17 +341,20 @@ public class QueueManager
      */
     @Override
     public void configurationChanged(final boolean active) {
-        logger.debug("Topology changed {}", active);
-        this.isActive.set(active);
-        if ( active ) {
-            final Set<String> topics = this.initialScan();
-            final Map<QueueInfo, Set<String>> mapping = this.updateTopicMapping(topics);
-            // start queues
-            for(final Map.Entry<QueueInfo, Set<String>> entry : mapping.entrySet() ) {
-                this.start(entry.getKey(), entry.getValue());
+        // are we still active?
+        if ( this.configuration != null ) {
+            logger.debug("Topology changed {}", active);
+            this.isActive.set(active);
+            if ( active ) {
+                final Set<String> topics = this.initialScan();
+                final Map<QueueInfo, Set<String>> mapping = this.updateTopicMapping(topics);
+                // start queues
+                for(final Map.Entry<QueueInfo, Set<String>> entry : mapping.entrySet() ) {
+                    this.start(entry.getKey(), entry.getValue());
+                }
+            } else {
+                this.restart();
             }
-        } else {
-            this.restart();
         }
     }
 
