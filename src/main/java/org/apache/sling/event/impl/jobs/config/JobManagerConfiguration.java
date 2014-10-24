@@ -84,7 +84,7 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
     public static final String DEFAULT_REPOSITORY_PATH = "/var/eventing/jobs";
 
     /** Default background load delay. */
-    public static final long DEFAULT_BACKGROUND_LOAD_DELAY = 30;
+    public static final long DEFAULT_BACKGROUND_LOAD_DELAY = 10;
 
     /** Default for disabling the distribution. */
     public static final boolean DEFAULT_DISABLE_DISTRIBUTION = false;
@@ -296,10 +296,6 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
         return this.locksPath;
     }
 
-    public long getBackgroundLoadDelay() {
-        return backgroundLoadDelay;
-    }
-
     /** Counter for jobs without an id. */
     private final AtomicLong jobCounter = new AtomicLong(0);
 
@@ -486,19 +482,23 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
         final CheckTopologyTask mt = new CheckTopologyTask(this);
         mt.fullRun(!isConfigChange, isConfigChange);
 
-        // start listeners
-        this.notifiyListeners();
+        // and run checker again in some seconds (if leader)
+        // notify listeners afterwards
+        scheduler.schedule(new Runnable() {
 
-        // and run checker again in 15 seconds (if leader)
-        if ( this.topologyCapabilities.isLeader() ) {
-            scheduler.schedule(new Runnable() {
-
-                    @Override
-                    public void run() {
+                @Override
+                public void run() {
+                    if ( newCaps.isLeader() && newCaps.isActive() ) {
                         mt.assignUnassignedJobs();
                     }
-                }, scheduler.AT(new Date(System.currentTimeMillis() + 15000)));
-        }
+                    // start listeners
+                    synchronized ( listeners ) {
+                        if ( topologyCapabilities != null && newCaps.isActive() ) {
+                            notifiyListeners();
+                        }
+                    }
+                }
+            }, scheduler.AT(new Date(System.currentTimeMillis() + this.backgroundLoadDelay * 1000)));
         logger.debug("Job processing started");
     }
 
