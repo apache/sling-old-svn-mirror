@@ -268,6 +268,52 @@ public class ContentDeploymentTest {
         }, hasFileContent("hello, world"));
     }
 
+    @Test
+    public void filedDeployedWithFullCoverageSiblingDoesNotCauseSpuriousDeletion() throws Exception {
+
+        wstServer.waitForServerToStart();
+
+        // create faceted project
+        IProject contentProject = projectRule.getProject();
+
+        ProjectAdapter project = new ProjectAdapter(contentProject);
+        project.addNatures(JavaCore.NATURE_ID, "org.eclipse.wst.common.project.facet.core.nature");
+
+        // install bundle facet
+        project.installFacet("sling.content", "1.0");
+
+        ServerAdapter server = new ServerAdapter(wstServer.getServer());
+        server.installModule(contentProject);
+
+        // create sling:Folder at /test/folder
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/folder/.content.xml"), getClass()
+                .getResourceAsStream("sling-folder-nodetype.xml"));
+
+        // create nt:file at /test/folder/hello.esp
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/folder/hello.esp"), new ByteArrayInputStream(
+                "// not really javascript".getBytes()));
+
+        // create sling:OsgiConfig at /test/folder/config.xml
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/folder/config.xml"), getClass()
+                .getResourceAsStream("com.example.some.Component.xml"));
+
+        // verify that config node is created
+        final RepositoryAccessor repo = new RepositoryAccessor(config);
+        Poller poller = new Poller();
+
+        assertThatNode(repo, poller, "/test/folder/config", hasPrimaryType("sling:OsgiConfig"));
+
+        // update file at /test/folder/hello.esp
+        project.createOrUpdateFile(Path.fromPortableString("jcr_root/test/folder/hello.esp"), new ByteArrayInputStream(
+                "// maybe javascript".getBytes()));
+
+        // wait until the file is updated
+        assertThatNode(repo, poller, "/test/folder/hello.esp", hasFileContent("// maybe javascript"));
+
+        // verify that the sling:OsgiConfig node is still present
+        assertThatNode(repo, poller, "/test/folder/config", hasPrimaryType("sling:OsgiConfig"));
+    }
+
     private void assertThatNode(final RepositoryAccessor repo, Poller poller, final String nodePath, Matcher<Node> matcher)
             throws InterruptedException {
 
