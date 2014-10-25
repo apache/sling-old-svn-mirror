@@ -27,7 +27,6 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
-import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.NotificationConstants;
 import org.osgi.framework.BundleContext;
@@ -93,26 +92,29 @@ public class NewJobSender implements EventHandler {
     public void handleEvent(final Event event) {
         logger.debug("Received event {}", event);
         final String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
-        final String rt = (String) event.getProperty(SlingConstants.PROPERTY_RESOURCE_TYPE);
-        if ( ResourceHelper.RESOURCE_TYPE_JOB.equals(rt) && this.configuration.isLocalJob(path) ) {
+        if ( this.configuration.isLocalJob(path) ) {
             // get topic and id from path
             final int topicStart = this.configuration.getLocalJobsPath().length() + 1;
             final int topicEnd = path.indexOf('/', topicStart);
-            final String topic = path.substring(topicStart, topicEnd).replace('.', '/');
-            final String jobId = path.substring(topicEnd + 1);
+            if ( topicEnd != -1 ) {
+                final String topic = path.substring(topicStart, topicEnd).replace('.', '/');
+                final String jobId = path.substring(topicEnd + 1);
 
-            // only job id and topic are guaranteed
-            final Dictionary<String, Object> properties = new Hashtable<String, Object>();
-            properties.put(NotificationConstants.NOTIFICATION_PROPERTY_JOB_ID, jobId);
-            properties.put(NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC, topic);
+                if ( path.indexOf("_", topicEnd + 1) != -1 ) {
+                    // only job id and topic are guaranteed
+                    final Dictionary<String, Object> properties = new Hashtable<String, Object>();
+                    properties.put(NotificationConstants.NOTIFICATION_PROPERTY_JOB_ID, jobId);
+                    properties.put(NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC, topic);
 
-            // we also set internally the queue name
-            final String queueName = this.configuration.getQueueConfigurationManager().getQueueInfo(topic).queueName;
-            properties.put(Job.PROPERTY_JOB_QUEUE_NAME, queueName);
+                    // we also set internally the queue name
+                    final String queueName = this.configuration.getQueueConfigurationManager().getQueueInfo(topic).queueName;
+                    properties.put(Job.PROPERTY_JOB_QUEUE_NAME, queueName);
 
-            final Event jobEvent = new Event(NotificationConstants.TOPIC_JOB_ADDED, properties);
-            // as this is send within handling an event, we do sync call
-            this.eventAdmin.sendEvent(jobEvent);
+                    final Event jobEvent = new Event(NotificationConstants.TOPIC_JOB_ADDED, properties);
+                    // as this is send within handling an event, we do sync call
+                    this.eventAdmin.sendEvent(jobEvent);
+                }
+            }
         }
     }
 
