@@ -138,7 +138,7 @@ public abstract class AbstractJobHandlingTest {
                 mavenBundle("org.apache.sling", "org.apache.sling.settings", "1.3.4"),
                 mavenBundle("org.apache.sling", "org.apache.sling.resourceresolver", "1.1.6"),
                 mavenBundle("org.apache.sling", "org.apache.sling.adapter", "2.1.2"),
-                mavenBundle("org.apache.sling", "org.apache.sling.jcr.resource", "2.3.10"),
+                mavenBundle("org.apache.sling", "org.apache.sling.jcr.resource", "2.3.12"),
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.classloader", "3.2.2"),
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.contentloader", "2.1.8"),
                 mavenBundle("org.apache.sling", "org.apache.sling.engine", "2.3.6"),

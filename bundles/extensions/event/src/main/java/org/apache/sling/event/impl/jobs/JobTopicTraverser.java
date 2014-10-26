@@ -143,30 +143,19 @@ public class JobTopicTraverser {
                             final List<JobImpl> jobs = new ArrayList<JobImpl>();
                             // we use an iterator to skip removed entries
                             // see SLING-4073
-                            Iterator<Resource> jobIter = null;
-                            do {
-                                try {
-                                    jobIter = minuteResource.listChildren();
-                                } catch ( final IllegalStateException ise) {
-                                    // ignore
-                                }
-                            } while ( jobIter == null );
+                            final Iterator<Resource> jobIter = minuteResource.listChildren();
                             while ( jobIter.hasNext() ) {
-                                try {
-                                    final Resource jobResource = jobIter.next();
-                                    if ( resourceHandler != null ) {
-                                        if ( !resourceHandler.handle(jobResource) ) {
-                                            return;
-                                        }
-                                    } else {
-                                        final JobImpl job = Utility.readJob(logger, jobResource);
-                                        if ( job != null ) {
-                                            logger.debug("Found job {}", jobResource.getName());
-                                            jobs.add(job);
-                                        }
+                                final Resource jobResource = jobIter.next();
+                                if ( resourceHandler != null ) {
+                                    if ( !resourceHandler.handle(jobResource) ) {
+                                        return;
                                     }
-                                } catch ( final IllegalStateException ise) {
-                                    // ignore
+                                } else {
+                                    final JobImpl job = Utility.readJob(logger, jobResource);
+                                    if ( job != null ) {
+                                        logger.debug("Found job {}", jobResource.getName());
+                                        jobs.add(job);
+                                    }
                                 }
                             }
 
