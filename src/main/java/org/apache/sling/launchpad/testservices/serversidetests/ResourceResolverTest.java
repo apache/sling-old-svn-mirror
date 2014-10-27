@@ -70,7 +70,8 @@ public class ResourceResolverTest {
     private String [] vanity;
     private static List<String> toDelete = new ArrayList<String>();
     private static ResourceResolverFactory cleanupResolverFactory;
-    private static String eventTimeoutTopic;
+    private MappingsFacade mappingsFacade;
+    private static String saveMappingsError;
     
     @TestReference
     private EventsCounter eventsCounter;
@@ -78,49 +79,25 @@ public class ResourceResolverTest {
     @TestReference
     private ResourceResolverFactory resourceResolverFactory;  
     
-    // How long to wait for mapping updates
-    public static final String MAPPING_UPDATE_TIMEOUT_MSEC = "ResourceResolverTest.mapping.update.timeout.msec";
-    private static final long updateTimeout = Long.valueOf(System.getProperty(MAPPING_UPDATE_TIMEOUT_MSEC, "10000"));
-
-    public ResourceResolverTest() throws Exception {
-        logger.info("updateTimeout = {}, use {} system property to change", updateTimeout, MAPPING_UPDATE_TIMEOUT_MSEC);
-    }
-    
-    /** Save a Session that has mapping changes, and wait for the OSGi event
-     *  that signals that mappings have been updated.
-     */
-    private void saveMappings(Session session) throws Exception {
-        if(eventTimeoutTopic != null) {
-            // Avoid wasting a lot of time if events are not detected in timely fashion
-            fail("Event timeout (" + eventTimeoutTopic + ") detected in previous tests, failing saveMappings()");
-        }
-        
-        final int oldEventsCount = eventsCounter.getEventsCount(MAPPING_EVENT_TOPIC);
-        logger.debug("Saving Session and waiting for event counter {} to change from current value {}", MAPPING_EVENT_TOPIC, oldEventsCount);
-        session.save();
-        final long timeout = System.currentTimeMillis() + updateTimeout;
-        while(System.currentTimeMillis() < timeout) {
-            if(eventsCounter.getEventsCount(MAPPING_EVENT_TOPIC) != oldEventsCount) {
-                // Sleeping here shouldn't be needed but it looks
-                // like mappings are not immediately updated once the event arrives
-                Thread.sleep(updateTimeout / 50);
-                return;
-            }
-            try {
-                Thread.sleep(10);
-            } catch(InterruptedException ignore) {
-            }
-        }
-        eventTimeoutTopic = MAPPING_EVENT_TOPIC;
-        logger.error("Timeout waiting for event counter {} to change from current value {}", MAPPING_EVENT_TOPIC, oldEventsCount);
-        fail("Timeout waiting for " + MAPPING_EVENT_TOPIC + " event, after " + updateTimeout + " msec");
-    }
-    
     private Node maybeCreateNode(Node parent, String name, String type) throws RepositoryException {
         if(parent.hasNode(name)) {
             return parent.getNode(name);
         } else {
             return parent.addNode(name, type);
+        }
+    }
+    
+    private void saveMappings(Session s) throws Exception {
+        if(mappingsFacade == null) {
+            mappingsFacade = new MappingsFacade(eventsCounter);
+        }
+        if(saveMappingsError != null) {
+            fail(saveMappingsError);
+        } else {
+            saveMappingsError = mappingsFacade.saveMappings(s);
+            if(saveMappingsError != null) {
+                fail(saveMappingsError);
+            }
         }
     }
 
@@ -173,7 +150,7 @@ public class ResourceResolverTest {
     @AfterClass
     @BeforeClass
     public static void clearTimeouts() {
-        eventTimeoutTopic = null;
+        saveMappingsError = null;
     }
     
     @AfterClass
@@ -195,7 +172,7 @@ public class ResourceResolverTest {
             resolver.close();
         }
     }
-
+    
     @Test public void test_clone_based_on_anonymous() throws Exception {
         final ResourceResolver anon0 = this.resourceResolverFactory.getResourceResolver((Map<String, Object>) null);
         final Session anon0Session = anon0.adaptTo(Session.class);
