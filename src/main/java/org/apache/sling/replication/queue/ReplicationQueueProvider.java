@@ -20,10 +20,12 @@ package org.apache.sling.replication.queue;
 
 import java.util.Collection;
 
+import org.apache.sling.replication.component.ReplicationComponent;
+
 /**
  * A provider for {@link ReplicationQueue}s
  */
-public interface ReplicationQueueProvider {
+public interface ReplicationQueueProvider extends ReplicationComponent {
 
     /**
      * provide a named queue for the given agent or creates it if the queue doesn't exist

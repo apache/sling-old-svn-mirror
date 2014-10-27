@@ -35,6 +35,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgent;
+import org.apache.sling.replication.component.ManagedReplicationComponent;
 import org.apache.sling.replication.component.ReplicationComponent;
 import org.apache.sling.replication.component.ReplicationComponentFactory;
 import org.apache.sling.replication.component.ReplicationComponentProvider;
@@ -166,9 +167,8 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
 
                     // register agent service
                     componentReg = context.registerService(ReplicationAgent.class.getName(), agent, props);
-
-                    if (agent instanceof ReplicationComponent) {
-                        ((ReplicationComponent) agent).enable();
+                    if (agent instanceof ManagedReplicationComponent) {
+                        ((ManagedReplicationComponent) agent).enable();
                     }
                 }
             }
@@ -181,8 +181,8 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
         if (componentReg != null) {
             ServiceReference reference = componentReg.getReference();
             Object service = context.getService(reference);
-            if (service instanceof ReplicationComponent) {
-                ((ReplicationComponent) service).disable();
+            if (service instanceof ManagedReplicationComponent) {
+                ((ManagedReplicationComponent) service).disable();
             }
 
             componentReg.unregister();
@@ -191,7 +191,7 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
 
     }
 
-    public <ComponentType> ComponentType getComponent(Class<ComponentType> type, String componentName) {
+    public <ComponentType extends ReplicationComponent> ComponentType getComponent(Class<ComponentType> type, String componentName) {
         if (type.isAssignableFrom(ReplicationQueueProvider.class)) {
             return (ComponentType) queueProvider;
         } else if (type.isAssignableFrom(ReplicationQueueDistributionStrategy.class)) {

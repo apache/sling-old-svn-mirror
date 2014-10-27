@@ -19,19 +19,10 @@
 package org.apache.sling.replication.component;
 
 /**
- * A {@link ReplicationComponent} is a component requiring explicit enabling and disabling.
- * Examples of such components are {@link org.apache.sling.replication.agent.ReplicationAgent}s and some {@link org.apache.sling.replication.trigger.ReplicationTrigger}s,
- * but this extends to basically all the replication infrastructure items that can be configured and built.
+ * Marker interface for Sling Replication components like: {@link org.apache.sling.replication.agent.ReplicationAgent}s,
+ * {@link org.apache.sling.replication.trigger.ReplicationTrigger}s, {@link org.apache.sling.replication.packaging.ReplicationPackageExporter}s
+ * and {@link org.apache.sling.replication.packaging.ReplicationPackageImporter}s.
  */
 public interface ReplicationComponent {
 
-    /**
-     * Enable the component
-     */
-    void enable();
-
-    /**
-     * Disable the component
-     */
-    void disable();
 }

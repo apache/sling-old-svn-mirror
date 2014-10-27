@@ -35,6 +35,6 @@ public interface ReplicationComponentProvider {
      * with the specified name, or <code>null</code> if such a {@link ReplicationComponent}
      * doesn't exist
      */
-    <ComponentType> ComponentType getComponent(java.lang.Class<ComponentType> type,
+    <ComponentType extends ReplicationComponent> ComponentType getComponent(java.lang.Class<ComponentType> type,
                                                                             String componentName);
 }

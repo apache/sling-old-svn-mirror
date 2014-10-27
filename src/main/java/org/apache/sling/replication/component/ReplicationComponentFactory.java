@@ -283,7 +283,7 @@ public interface ReplicationComponentFactory {
      *                          to be created
      * @return a {@link ReplicationComponent} of the specified type initialized with given properties
      */
-    <ComponentType> ComponentType createComponent(java.lang.Class<ComponentType> type,
+    <ComponentType extends ReplicationComponent> ComponentType createComponent(java.lang.Class<ComponentType> type,
                                                   Map<String, Object> properties,
                                                   ReplicationComponentProvider componentProvider);
 }

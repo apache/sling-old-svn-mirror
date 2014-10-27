@@ -21,13 +21,14 @@ package org.apache.sling.replication.packaging;
 import java.io.InputStream;
 
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.replication.component.ReplicationComponent;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 
 /**
  * A {@link org.apache.sling.replication.packaging.ReplicationPackageImporter} is responsible for importing
  * {@link org.apache.sling.replication.packaging.ReplicationPackage}s into the resource tree.
  */
-public interface ReplicationPackageImporter {
+public interface ReplicationPackageImporter extends ReplicationComponent {
     /**
      * Imports the given replication package
      *
