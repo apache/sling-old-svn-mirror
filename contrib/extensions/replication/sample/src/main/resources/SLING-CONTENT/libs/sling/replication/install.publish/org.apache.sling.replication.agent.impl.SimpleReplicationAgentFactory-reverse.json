@@ -18,13 +18,12 @@
 
     "packageImporter": [
         "type=local",
-        "packageBuilder/type=vlt",
+        "packageBuilder/type=vlt"
     ],
-
 
     "queueProvider.target" : "(name=sjh)",
 
-    "queueDistributionStrategy": "(name=error)",
+    "queueDistributionStrategy": "(name=single)",
 
     "trigger0": [
         "type=jcrEvent",

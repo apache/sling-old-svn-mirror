@@ -33,7 +33,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.apache.sling.replication.agent.AgentReplicationException;
+import org.apache.sling.replication.agent.ReplicationAgentException;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.communication.ReplicationResponse;
@@ -83,7 +83,7 @@ public class ReplicationAgentServlet extends SlingAllMethodsServlet {
                     response.setStatus(400);
                 }
                 response.getWriter().append(replicationResponse.toString());
-            } catch (AgentReplicationException e) {
+            } catch (ReplicationAgentException e) {
                 response.setStatus(503);
                 response.getWriter().append("{\"error\" : \"").append(e.toString()).append("\"}");
             }

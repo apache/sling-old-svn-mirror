@@ -43,7 +43,7 @@ public abstract class AbstractJcrEventTrigger implements ReplicationTrigger, Eve
     private final String serviceUser;
 
     private ReplicationTriggerRequestHandler requestHandler;
-    private Session session;
+    protected Session session;
 
     protected final SlingRepository repository;
 
@@ -52,7 +52,6 @@ public abstract class AbstractJcrEventTrigger implements ReplicationTrigger, Eve
         this.path = path;
         this.serviceUser = serviceUser;
     }
-
 
     public void register(String handlerId, ReplicationTriggerRequestHandler requestHandler) {
         try {

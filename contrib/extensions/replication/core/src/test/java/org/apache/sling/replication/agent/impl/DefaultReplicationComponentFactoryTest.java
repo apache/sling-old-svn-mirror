@@ -22,7 +22,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.agent.ReplicationComponentProvider;
+import org.apache.sling.replication.component.ReplicationComponentProvider;
+import org.apache.sling.replication.component.impl.DefaultReplicationComponentFactory;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
@@ -35,7 +36,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Testcase for {@link org.apache.sling.replication.agent.impl.DefaultReplicationComponentFactory}
+ * Testcase for {@link org.apache.sling.replication.component.impl.DefaultReplicationComponentFactory}
  */
 public class DefaultReplicationComponentFactoryTest {
 

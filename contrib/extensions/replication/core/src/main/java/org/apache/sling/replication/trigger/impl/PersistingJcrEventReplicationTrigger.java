@@ -56,10 +56,9 @@ public class PersistingJcrEventReplicationTrigger extends AbstractJcrEventTrigge
 
         ReplicationRequest replicationRequest = null;
 
-        Session session1 = getSession();
-        if (session1 != null && session1.hasPermission(nuggetsPath, Privilege.JCR_ADD_CHILD_NODES)) {
+        if (session != null && session.hasPermission(nuggetsPath, Privilege.JCR_ADD_CHILD_NODES)) {
             log.debug("persisting event under {}", nuggetsPath);
-            Node nuggetsNode = session1.getNode(nuggetsPath);
+            Node nuggetsNode = session.getNode(nuggetsPath);
             if (nuggetsNode != null) {
                 String nodeName = event.getIdentifier() != null ? event.getIdentifier() : String.valueOf(System.nanoTime());
                 Node createdNode = nuggetsNode.addNode(nodeName);
@@ -75,7 +74,7 @@ public class PersistingJcrEventReplicationTrigger extends AbstractJcrEventTrigge
                     for (Map.Entry entry : set) {
                         nuggetsNode.setProperty("info." + entry.getKey(), String.valueOf(entry.getValue()));
                     }
-                    session1.save();
+                    session.save();
                     log.debug("event persisted at {}", path);
                     replicationRequest = new ReplicationRequest(System.currentTimeMillis(), ReplicationActionType.ADD, path);
                 } else {

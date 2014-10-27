@@ -30,7 +30,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.apache.sling.replication.agent.AgentReplicationException;
+import org.apache.sling.replication.agent.ReplicationAgentException;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
@@ -78,8 +78,8 @@ public class ReplicationAgentRootServlet extends SlingAllMethodsServlet {
         for (ReplicationAgent agent : agents) {
             try {
                 agent.execute(resourceResolver, replicationRequest);
-            } catch (AgentReplicationException e) {
-                log.warn("agent {} failed", agent.getName(), e);
+            } catch (ReplicationAgentException e) {
+                log.warn("agent {} execution failed", agent, e);
 
                 response.getWriter().append("error :'").append(e.toString()).append("'");
                 if (!failed) {

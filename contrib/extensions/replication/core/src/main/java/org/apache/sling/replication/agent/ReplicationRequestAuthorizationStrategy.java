@@ -30,8 +30,9 @@ public interface ReplicationRequestAuthorizationStrategy {
      * @param resourceResolver   a {@link org.apache.sling.api.resource.ResourceResolver} representing the calling 'user'
      * @param replicationRequest a request bringing metadata for getting {@link org.apache.sling.replication.packaging.ReplicationPackage}s
      *                           to be exported
-     * @throws AgentReplicationException
+     * @throws ReplicationRequestAuthorizationException if the {@link org.apache.sling.api.resource.ResourceResolver} is
+     *                                                  not authorized to execute the given {@link org.apache.sling.replication.communication.ReplicationRequest}
      */
-    void checkPermission(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws AgentReplicationException;
+    void checkPermission(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationRequestAuthorizationException;
 
 }

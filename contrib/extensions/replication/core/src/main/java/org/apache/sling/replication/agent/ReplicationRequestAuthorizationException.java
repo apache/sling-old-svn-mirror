@@ -19,17 +19,10 @@
 package org.apache.sling.replication.agent;
 
 /**
- * Marker interface for replication components requiring explicit enabling and disabling
+ * An {@link Exception} representing failed authorization in execution of a certain {@link org.apache.sling.replication.communication.ReplicationRequest}
  */
-public interface ReplicationComponent {
-
-    /**
-     * Enables the component
-     */
-    void enable();
-
-    /**
-     * Disables the component
-     */
-    void disable();
+public class ReplicationRequestAuthorizationException extends Exception {
+    public ReplicationRequestAuthorizationException(String message) {
+        super(message);
+    }
 }

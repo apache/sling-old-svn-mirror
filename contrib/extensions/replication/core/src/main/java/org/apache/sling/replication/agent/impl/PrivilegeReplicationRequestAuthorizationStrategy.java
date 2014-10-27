@@ -24,7 +24,8 @@ import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.Privilege;
 
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.replication.agent.AgentReplicationException;
+import org.apache.sling.replication.agent.ReplicationAgentException;
+import org.apache.sling.replication.agent.ReplicationRequestAuthorizationException;
 import org.apache.sling.replication.agent.ReplicationRequestAuthorizationStrategy;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
@@ -41,7 +42,7 @@ public class PrivilegeReplicationRequestAuthorizationStrategy implements Replica
         this.jcrPrivilege = jcrPrivilege;
     }
 
-    public void checkPermission(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws AgentReplicationException {
+    public void checkPermission(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationRequestAuthorizationException {
         Session session = resourceResolver.adaptTo(Session.class);
 
         try {
@@ -54,33 +55,32 @@ public class PrivilegeReplicationRequestAuthorizationStrategy implements Replica
 
         }
         catch (RepositoryException e) {
-            throw new AgentReplicationException("Not enough privileges");
+            throw new ReplicationRequestAuthorizationException("Not enough privileges");
         }
-
 
     }
 
     private void checkPermissionForAdd(Session session, String[] paths)
-            throws RepositoryException, AgentReplicationException {
+            throws RepositoryException, ReplicationRequestAuthorizationException {
         AccessControlManager acMgr = session.getAccessControlManager();
 
         Privilege[] privileges = new Privilege[] { acMgr.privilegeFromName(jcrPrivilege), acMgr.privilegeFromName(Privilege.JCR_READ) };
         for (String path : paths) {
             if(!acMgr.hasPrivileges(path, privileges)) {
-                throw new AgentReplicationException("Not enough privileges");
+                throw new ReplicationRequestAuthorizationException("Not enough privileges");
             }
         }
 
     }
 
     private void checkPermissionForDelete(Session session, String[] paths)
-            throws RepositoryException, AgentReplicationException {
+            throws RepositoryException, ReplicationRequestAuthorizationException {
         AccessControlManager acMgr = session.getAccessControlManager();
 
         Privilege[] privileges = new Privilege[] { acMgr.privilegeFromName(jcrPrivilege), acMgr.privilegeFromName(Privilege.JCR_REMOVE_NODE)  };
         for (String path : paths) {
             if(session.nodeExists(path) && !acMgr.hasPrivileges(path, privileges)) {
-                throw new AgentReplicationException("Not enough privileges");
+                throw new ReplicationRequestAuthorizationException("Not enough privileges");
             }
         }
 

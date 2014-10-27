@@ -18,8 +18,6 @@
  */
 package org.apache.sling.replication.queue;
 
-import javax.jcr.RepositoryException;
-
 /**
  * Represents errors happening during queue operations
  */
@@ -32,9 +30,5 @@ public class ReplicationQueueException extends Exception {
 
     public ReplicationQueueException(String string) {
         super(string);
-    }
-
-    public ReplicationQueueException(RepositoryException e) {
-        super(e);
     }
 }

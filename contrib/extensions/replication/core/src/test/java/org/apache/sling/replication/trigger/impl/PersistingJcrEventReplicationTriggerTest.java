@@ -20,11 +20,14 @@ package org.apache.sling.replication.trigger.impl;
 
 import javax.jcr.Node;
 import javax.jcr.Session;
+import javax.jcr.Workspace;
 import javax.jcr.observation.Event;
+import javax.jcr.observation.ObservationManager;
 import javax.jcr.security.Privilege;
 
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
@@ -58,6 +61,10 @@ public class PersistingJcrEventReplicationTriggerTest {
         String nuggetsPath = "/var/nuggets";
         String serviceName = "serviceId";
         Session session = mock(Session.class);
+        Workspace workspace = mock(Workspace.class);
+        ObservationManager observationManager = mock(ObservationManager.class);
+        when(workspace.getObservationManager()).thenReturn(observationManager);
+        when(session.getWorkspace()).thenReturn(workspace);
         when(session.hasPermission(nuggetsPath, Privilege.JCR_ADD_CHILD_NODES)).thenReturn(true);
 
         SlingRepository repository = mock(SlingRepository.class);
@@ -66,6 +73,9 @@ public class PersistingJcrEventReplicationTriggerTest {
         String path = "/some/path";
         PersistingJcrEventReplicationTrigger persistingJcrEventReplicationTrigger = new PersistingJcrEventReplicationTrigger(
                 repository, path, serviceName, nuggetsPath);
+        ReplicationTriggerRequestHandler handler = mock(ReplicationTriggerRequestHandler.class);
+        persistingJcrEventReplicationTrigger.register("handler-id", handler);
+
         Node nuggetsNode = mock(Node.class);
         Node eventNode = mock(Node.class);
         when(nuggetsNode.addNode(any(String.class))).thenReturn(eventNode);

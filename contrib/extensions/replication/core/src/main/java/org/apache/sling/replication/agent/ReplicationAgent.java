@@ -21,41 +21,35 @@ package org.apache.sling.replication.agent;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.communication.ReplicationResponse;
+import org.apache.sling.replication.component.ReplicationComponent;
 import org.apache.sling.replication.queue.ReplicationQueue;
-import org.apache.sling.replication.queue.ReplicationQueueException;
 
 /**
  * A replication agent is responsible for handling {@link org.apache.sling.replication.communication.ReplicationRequest}s.
  * <p/>
- * This means executing actions of a specific {@link org.apache.sling.replication.communication.ReplicationActionType}s on
- * specific path(s) which will resume in e.g. polling resources from a certain Sling instance and / or sending resources to
+ * This means executing actions of e.g.: a specific {@link org.apache.sling.replication.communication.ReplicationActionType}s on
+ * specific path(s) which will resume pulling resources from a certain Sling instance and / or pushing resources to
  * other instances.
  */
-public interface ReplicationAgent {
-
-    /**
-     * get agent name
-     *
-     * @return the agent name as a <code>String</code>
-     */
-    String getName();
+public interface ReplicationAgent extends ReplicationComponent {
 
     /**
      * get the agent queue with the given name
      *
-     * @param name a queue name as a <code>String</code>
+     * @param name a queue name
      * @return a {@link ReplicationQueue} with the given name bound to this agent, if it exists, <code>null</code> otherwise
-     * @throws ReplicationQueueException
+     * @throws ReplicationAgentException
      */
-    ReplicationQueue getQueue(String name) throws ReplicationQueueException;
+    ReplicationQueue getQueue(String name) throws ReplicationAgentException;
 
     /**
-     * sends a {@link ReplicationRequest} to this {@link org.apache.sling.replication.agent.ReplicationAgent}
+     * executes a {@link ReplicationRequest}
      *
      * @param replicationRequest the replication request
+     * @param resourceResolver   the resource resolver used for authenticating the request,
      * @return a {@link ReplicationResponse}
-     * @throws AgentReplicationException
+     * @throws ReplicationAgentException if any error happens during the execution of the request or if the authentication fails
      */
-    ReplicationResponse execute(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws AgentReplicationException;
+    ReplicationResponse execute(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationAgentException;
 
 }
