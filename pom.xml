@@ -72,6 +72,7 @@
                             SLING-CONTENT/libs/sling/replication;path:=/libs/sling/replication;overwrite:=true
                         </Sling-Initial-Content>
                         <Export-Package>
+                            org.apache.sling.replication.component,
                             org.apache.sling.replication.agent,
                             org.apache.sling.replication.communication,
                             org.apache.sling.replication.event,
