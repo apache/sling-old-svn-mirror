@@ -38,6 +38,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
+import org.apache.sling.event.impl.support.BatchResourceRemover;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.apache.sling.event.jobs.consumer.JobExecutor;
@@ -213,7 +214,7 @@ public abstract class AbstractJobHandlingTest {
             resolver = factory.getAdministrativeResourceResolver(null);
             final Resource rsrc = resolver.getResource(JobManagerConfiguration.DEFAULT_REPOSITORY_PATH);
             if ( rsrc != null ) {
-                resolver.delete(rsrc);
+                new BatchResourceRemover().delete(rsrc);
                 resolver.commit();
             }
         } catch ( final LoginException le ) {
@@ -225,6 +226,7 @@ public abstract class AbstractJobHandlingTest {
                 resolver.close();
             }
         }
+        this.sleep(1000);
     }
 
     /**
