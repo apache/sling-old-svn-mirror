@@ -38,7 +38,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
-import org.apache.sling.event.impl.support.BatchResourceRemover;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.apache.sling.event.jobs.consumer.JobExecutor;
@@ -206,6 +205,22 @@ public abstract class AbstractJobHandlingTest {
         this.bc.registerService(StartupHandler.class.getName(), handler, null);
     }
 
+    private int deleteCount;
+
+    private void delete(final Resource rsrc )
+    throws PersistenceException {
+        final ResourceResolver resolver = rsrc.getResourceResolver();
+        for(final Resource child : rsrc.getChildren()) {
+            delete(child);
+        }
+        resolver.delete(rsrc);
+        deleteCount++;
+        if ( deleteCount >= 20 ) {
+            resolver.commit();
+            deleteCount = 0;
+        }
+    }
+
     public void cleanup() {
         final ServiceReference ref = this.bc.getServiceReference(ResourceResolverFactory.class.getName());
         final ResourceResolverFactory factory = (ResourceResolverFactory) this.bc.getService(ref);
@@ -214,7 +229,7 @@ public abstract class AbstractJobHandlingTest {
             resolver = factory.getAdministrativeResourceResolver(null);
             final Resource rsrc = resolver.getResource(JobManagerConfiguration.DEFAULT_REPOSITORY_PATH);
             if ( rsrc != null ) {
-                new BatchResourceRemover().delete(rsrc);
+                delete(rsrc);
                 resolver.commit();
             }
         } catch ( final LoginException le ) {
