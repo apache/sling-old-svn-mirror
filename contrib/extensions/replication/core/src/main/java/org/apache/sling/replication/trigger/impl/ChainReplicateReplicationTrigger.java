@@ -23,9 +23,9 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.sling.replication.component.ReplicationComponent;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.component.ManagedReplicationComponent;
 import org.apache.sling.replication.event.ReplicationEvent;
 import org.apache.sling.replication.event.ReplicationEventType;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 /**
  * {@link org.apache.sling.replication.trigger.ReplicationTrigger} for chain replication upon a certain {@link org.apache.sling.replication.event.ReplicationEventType}
  */
-public class ChainReplicateReplicationTrigger implements ReplicationTrigger, ReplicationComponent {
+public class ChainReplicateReplicationTrigger implements ReplicationTrigger, ManagedReplicationComponent {
 
     public static final String PATH = "path";
 

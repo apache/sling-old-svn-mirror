@@ -29,6 +29,7 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.replication.agent.ReplicationAgent;
+import org.apache.sling.replication.component.ReplicationComponent;
 import org.apache.sling.replication.component.ReplicationComponentProvider;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
@@ -68,7 +69,7 @@ public class DefaultReplicationComponentProvider implements ReplicationComponent
     Map<String, ReplicationPackageExporter> replicationPackageExporterMap = new ConcurrentHashMap<String, ReplicationPackageExporter>();
     private BundleContext bundleContext;
 
-    public <ComponentType> ComponentType getComponent(Class<ComponentType> type, String componentName) {
+    public <ComponentType extends ReplicationComponent> ComponentType getComponent(Class<ComponentType> type, String componentName) {
         if (type.isAssignableFrom(ReplicationPackageExporter.class)) {
             return (ComponentType) replicationPackageExporterMap.get(componentName);
         } else if (type.isAssignableFrom(ReplicationPackageImporter.class)) {

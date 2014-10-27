@@ -34,6 +34,7 @@ import org.apache.sling.replication.agent.ReplicationAgentException;
 import org.apache.sling.replication.agent.ReplicationRequestAuthorizationStrategy;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.communication.ReplicationResponse;
+import org.apache.sling.replication.component.ManagedReplicationComponent;
 import org.apache.sling.replication.component.ReplicationComponent;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.event.ReplicationEventType;
@@ -57,7 +58,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Basic implementation of a {@link ReplicationAgent}
  */
-public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComponent {
+public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicationComponent {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 

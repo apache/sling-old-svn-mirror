@@ -36,6 +36,7 @@ import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.agent.impl.PrivilegeReplicationRequestAuthorizationStrategy;
 import org.apache.sling.replication.agent.impl.SimpleReplicationAgent;
+import org.apache.sling.replication.component.ReplicationComponent;
 import org.apache.sling.replication.component.ReplicationComponentFactory;
 import org.apache.sling.replication.component.ReplicationComponentProvider;
 import org.apache.sling.replication.agent.ReplicationRequestAuthorizationStrategy;
@@ -106,7 +107,7 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
         this.bundleContext = bundleContext;
     }
 
-    public <ComponentType> ComponentType createComponent(Class<ComponentType> type, Map<String, Object> properties,
+    public <ComponentType extends ReplicationComponent> ComponentType createComponent(Class<ComponentType> type, Map<String, Object> properties,
                                                          ReplicationComponentProvider componentProvider) {
 
         if (componentProvider == null) {
@@ -371,7 +372,7 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
         return result;
     }
 
-    public <ComponentType> ComponentType getComponent(Class<ComponentType> type, String componentName) {
+    public <ComponentType extends ReplicationComponent> ComponentType getComponent(Class<ComponentType> type, String componentName) {
         return null;
     }
 }

@@ -18,10 +18,12 @@
  */
 package org.apache.sling.replication.trigger;
 
+import org.apache.sling.replication.component.ReplicationComponent;
+
 /**
  * a replication trigger
  */
-public interface ReplicationTrigger {
+public interface ReplicationTrigger extends ReplicationComponent {
 
     /**
      * register a replication trigger

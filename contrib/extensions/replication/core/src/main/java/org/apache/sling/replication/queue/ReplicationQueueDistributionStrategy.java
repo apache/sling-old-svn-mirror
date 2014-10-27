@@ -19,12 +19,13 @@
 package org.apache.sling.replication.queue;
 
 import org.apache.sling.replication.agent.ReplicationAgent;
+import org.apache.sling.replication.component.ReplicationComponent;
 
 /**
  * a {@link ReplicationQueueDistributionStrategy} implements an algorithm for the distribution of
  * {@link org.apache.sling.replication.queue.ReplicationQueueItem}s among the available queues for a certain agent
  */
-public interface ReplicationQueueDistributionStrategy {
+public interface ReplicationQueueDistributionStrategy extends ReplicationComponent {
 
     /**
      * synchronously distribute a {@link org.apache.sling.replication.queue.ReplicationQueueItem} to a {@link ReplicationAgent}

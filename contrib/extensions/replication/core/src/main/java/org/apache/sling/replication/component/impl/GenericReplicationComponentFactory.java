@@ -33,6 +33,7 @@ import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgent;
+import org.apache.sling.replication.component.ManagedReplicationComponent;
 import org.apache.sling.replication.component.ReplicationComponent;
 import org.apache.sling.replication.component.ReplicationComponentFactory;
 import org.apache.sling.replication.component.ReplicationComponentProvider;
@@ -130,8 +131,8 @@ public class GenericReplicationComponentFactory implements ReplicationComponentP
                 }
 
                 if (componentObject != null && componentClass != null) {
-                    if (componentObject instanceof ReplicationComponent) {
-                        ((ReplicationComponent) componentObject).enable();
+                    if (componentObject instanceof ManagedReplicationComponent) {
+                        ((ManagedReplicationComponent) componentObject).enable();
                     }
 
                     componentReg = context.registerService(componentClass, componentObject, props);
@@ -149,8 +150,8 @@ public class GenericReplicationComponentFactory implements ReplicationComponentP
         if (componentReg != null) {
             ServiceReference reference = componentReg.getReference();
             Object service = context.getService(reference);
-            if (service instanceof ReplicationComponent) {
-                ((ReplicationComponent) service).disable();
+            if (service instanceof ManagedReplicationComponent) {
+                ((ManagedReplicationComponent) service).disable();
             }
 
             componentReg.unregister();
@@ -164,7 +165,7 @@ public class GenericReplicationComponentFactory implements ReplicationComponentP
             if (componentReg == null) {
                 activate(savedContext, savedConfig);
             }
-            else if (componentReg != null) {
+            else {
                 deactivate(savedContext);
                 activate(savedContext, savedConfig);
             }
@@ -181,7 +182,7 @@ public class GenericReplicationComponentFactory implements ReplicationComponentP
         refresh();
     }
 
-    public <ComponentType> ComponentType getComponent(Class<ComponentType> type, String componentName) {
+    public <ComponentType extends ReplicationComponent> ComponentType getComponent(Class<ComponentType> type, String componentName) {
         if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
             return (ComponentType) transportAuthenticationProvider;
         }

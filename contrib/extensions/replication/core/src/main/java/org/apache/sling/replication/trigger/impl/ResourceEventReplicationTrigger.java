@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.sling.api.SlingConstants;
+import org.apache.sling.replication.component.ManagedReplicationComponent;
 import org.apache.sling.replication.component.ReplicationComponent;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
@@ -41,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * {@link org.apache.sling.replication.trigger.ReplicationTrigger} for triggering a specific handler (e.g. agent) upon
  * node / properties being changed under a certain path
  */
-public class ResourceEventReplicationTrigger implements ReplicationTrigger, ReplicationComponent {
+public class ResourceEventReplicationTrigger implements ReplicationTrigger, ManagedReplicationComponent {
 
 
     private final Logger log = LoggerFactory.getLogger(getClass());

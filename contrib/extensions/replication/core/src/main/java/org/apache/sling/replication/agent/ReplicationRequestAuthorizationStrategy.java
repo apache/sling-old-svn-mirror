@@ -20,11 +20,12 @@ package org.apache.sling.replication.agent;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.component.ReplicationComponent;
 
 /**
  * Strategy for authorizing requests
  */
-public interface ReplicationRequestAuthorizationStrategy {
+public interface ReplicationRequestAuthorizationStrategy extends ReplicationComponent {
 
     /**
      * @param resourceResolver   a {@link org.apache.sling.api.resource.ResourceResolver} representing the calling 'user'

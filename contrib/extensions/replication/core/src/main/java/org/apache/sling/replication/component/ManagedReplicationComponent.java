@@ -16,22 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.communication;
-
-import java.util.SortedMap;
-
-import org.apache.sling.replication.agent.ReplicationAgent;
+package org.apache.sling.replication.component;
 
 /**
- * The communication history for a certain agent
+ * A managed {@link org.apache.sling.replication.component.ReplicationComponent} is a component which requires explicit
+ * initialization and releasing of its underlying (and implementation specific) resources.
  */
-public interface ReplicationAgentHistory {
+public interface ManagedReplicationComponent {
 
     /**
-     * get the communication history of a certain agent
-     *
-     * @return
+     * Enable the component
      */
-    SortedMap<ReplicationRequest, ReplicationResponse> getCommunication(ReplicationAgent agent);
+    void enable();
+
+    /**
+     * Disable the component
+     */
+    void disable();
 
 }

@@ -30,6 +30,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.replication.component.ReplicationComponent;
 import org.apache.sling.replication.component.ReplicationComponentFactory;
 import org.apache.sling.replication.component.ReplicationComponentProvider;
 import org.apache.sling.replication.packaging.ReplicationPackage;
@@ -99,7 +100,7 @@ public class RemoteReplicationPackageImporterFactory implements ReplicationPacka
         return importer.readPackage(resourceResolver, stream);
     }
 
-    public <ComponentType> ComponentType getComponent(Class<ComponentType> type, String componentName) {
+    public <ComponentType extends ReplicationComponent> ComponentType getComponent(Class<ComponentType> type, String componentName) {
         if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
             return (ComponentType) transportAuthenticationProvider;
         }
