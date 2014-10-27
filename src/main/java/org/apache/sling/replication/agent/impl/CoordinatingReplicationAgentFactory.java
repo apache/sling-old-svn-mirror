@@ -35,9 +35,9 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.agent.ReplicationComponent;
-import org.apache.sling.replication.agent.ReplicationComponentFactory;
-import org.apache.sling.replication.agent.ReplicationComponentProvider;
+import org.apache.sling.replication.component.ReplicationComponent;
+import org.apache.sling.replication.component.ReplicationComponentFactory;
+import org.apache.sling.replication.component.ReplicationComponentProvider;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
@@ -160,10 +160,9 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
 
                 ReplicationAgent agent = componentFactory.createComponent(ReplicationAgent.class, properties, this);
 
-                log.debug("activated agent {}", agent != null ? agent.getName() : null);
+                log.debug("activated agent {}", name);
 
                 if (agent != null) {
-                    props.put(NAME, agent.getName());
 
                     // register agent service
                     componentReg = context.registerService(ReplicationAgent.class.getName(), agent, props);

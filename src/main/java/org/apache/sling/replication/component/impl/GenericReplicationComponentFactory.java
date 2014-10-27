@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.agent.impl;
+package org.apache.sling.replication.component.impl;
 
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -33,9 +33,9 @@ import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.agent.ReplicationComponent;
-import org.apache.sling.replication.agent.ReplicationComponentFactory;
-import org.apache.sling.replication.agent.ReplicationComponentProvider;
+import org.apache.sling.replication.component.ReplicationComponent;
+import org.apache.sling.replication.component.ReplicationComponentFactory;
+import org.apache.sling.replication.component.ReplicationComponentProvider;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
 import org.apache.sling.settings.SlingSettingsService;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.agent.impl;
+package org.apache.sling.replication.component.impl;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,7 +29,7 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.agent.ReplicationComponentProvider;
+import org.apache.sling.replication.component.ReplicationComponentProvider;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * default implementation of {@link org.apache.sling.replication.agent.ReplicationComponentProvider} (as an OSGi service).
+ * default implementation of {@link org.apache.sling.replication.component.ReplicationComponentProvider} (as an OSGi service).
  */
 @Component
 @Service(ReplicationComponentProvider.class)

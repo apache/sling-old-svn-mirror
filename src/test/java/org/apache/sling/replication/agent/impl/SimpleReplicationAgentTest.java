@@ -75,8 +75,8 @@ public class SimpleReplicationAgentTest {
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/"});
         when(packageExporter.exportPackage(any(ResourceResolver.class), any(ReplicationRequest.class)))
                 .thenReturn(Arrays.asList(replicationPackage));
-        when(queueProvider.getDefaultQueue(agent.getName())).thenReturn(
-                new SimpleReplicationQueue(agent.getName(), "name"));
+        when(queueProvider.getDefaultQueue(name)).thenReturn(
+                new SimpleReplicationQueue(name, "name"));
         ReplicationResponse response = agent.execute(resourceResolver, request);
         assertNotNull(response);
         assertEquals("ERROR", response.getStatus());
@@ -108,8 +108,8 @@ public class SimpleReplicationAgentTest {
         when(distributionHandler.add(any(String.class), any(ReplicationQueueItem.class), eq(queueProvider))).thenReturn(state);
         when(packageExporter.exportPackage(any(ResourceResolver.class), any(ReplicationRequest.class)))
                 .thenReturn(Arrays.asList(replicationPackage));
-        when(queueProvider.getDefaultQueue(agent.getName())).thenReturn(
-                new SimpleReplicationQueue(agent.getName(), "name"));
+        when(queueProvider.getDefaultQueue(name)).thenReturn(
+                new SimpleReplicationQueue(name, "name"));
         ReplicationResponse response = agent.execute(resourceResolver, request);
         assertNotNull(response);
         assertEquals("SUCCEEDED", response.getStatus());
@@ -138,8 +138,8 @@ public class SimpleReplicationAgentTest {
 
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/"});
         when(packageExporter.exportPackage(resourceResolver, request)).thenReturn(Arrays.asList(replicationPackage));
-        when(queueProvider.getDefaultQueue(agent.getName())).thenReturn(
-                new SimpleReplicationQueue(agent.getName(), "name"));
+        when(queueProvider.getDefaultQueue(name)).thenReturn(
+                new SimpleReplicationQueue(name, "name"));
         agent.execute(resourceResolver, request);
     }
 
@@ -161,7 +161,7 @@ public class SimpleReplicationAgentTest {
                 queueProvider, distributionHandler,
                 replicationEventFactory, resolverFactory, null);
         ReplicationQueue queue = mock(ReplicationQueue.class);
-        when(queueProvider.getDefaultQueue(agent.getName())).thenReturn(queue);
+        when(queueProvider.getDefaultQueue(name)).thenReturn(queue);
         assertNotNull(agent.getQueue(null));
     }
 
@@ -183,7 +183,7 @@ public class SimpleReplicationAgentTest {
                 queueProvider, distributionHandler,
                 replicationEventFactory, resolverFactory, null);
         ReplicationQueue queue = mock(ReplicationQueue.class);
-        when(queueProvider.getQueue(agent.getName(), "priority")).thenReturn(queue);
+        when(queueProvider.getQueue(name, "priority")).thenReturn(queue);
         assertNotNull(agent.getQueue("priority"));
     }
 
@@ -205,7 +205,7 @@ public class SimpleReplicationAgentTest {
                 queueProvider, distributionHandler,
                 replicationEventFactory, resolverFactory, null);
         ReplicationQueue queue = mock(ReplicationQueue.class);
-        when(queueProvider.getQueue(agent.getName(), "priority")).thenReturn(queue);
+        when(queueProvider.getQueue(name, "priority")).thenReturn(queue);
         assertNull(agent.getQueue("weird"));
     }
 }

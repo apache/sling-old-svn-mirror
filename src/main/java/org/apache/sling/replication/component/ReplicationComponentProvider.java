@@ -16,10 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.agent;
+package org.apache.sling.replication.component;
 
 /**
- * provider for already existing {@link org.apache.sling.replication.agent.ReplicationComponent}s
+ * provider for already existing {@link ReplicationComponent}s
  */
 public interface ReplicationComponentProvider {
 
@@ -27,11 +27,14 @@ public interface ReplicationComponentProvider {
      * Retrieves an already existing component by name.
      * If null is passed as componentName then a default component is returned.
      *
-     * @param type            the <code>Class</code> of the component to be retrieved
+     * @param type            the {@link java.lang.Class} of the component to be retrieved
      * @param componentName   the component name as a <code>String</code>
-     * @param <ComponentType> the actual type of the {@link org.apache.sling.replication.agent.ReplicationComponent}
+     * @param <ComponentType> the actual type of the {@link ReplicationComponent}
      *                        to be retrieved
-     * @return
+     * @return the {@link ReplicationComponent} of the specified type,
+     * with the specified name, or <code>null</code> if such a {@link ReplicationComponent}
+     * doesn't exist
      */
-    <ComponentType> ComponentType getComponent(java.lang.Class<ComponentType> type, String componentName);
+    <ComponentType> ComponentType getComponent(java.lang.Class<ComponentType> type,
+                                                                            String componentName);
 }

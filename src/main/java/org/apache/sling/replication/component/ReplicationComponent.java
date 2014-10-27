@@ -16,19 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.agent;
+package org.apache.sling.replication.component;
 
 /**
- * Represents errors happened while {@link ReplicationAgent}s do replications.
+ * A {@link ReplicationComponent} is a component requiring explicit enabling and disabling.
+ * Examples of such components are {@link org.apache.sling.replication.agent.ReplicationAgent}s and some {@link org.apache.sling.replication.trigger.ReplicationTrigger}s,
+ * but this extends to basically all the replication infrastructure items that can be configured and built.
  */
-@SuppressWarnings("serial")
-public class AgentReplicationException extends Exception {
+public interface ReplicationComponent {
 
-    public AgentReplicationException(Exception e) {
-        super(e);
-    }
+    /**
+     * Enable the component
+     */
+    void enable();
 
-    public AgentReplicationException(String string) {
-        super(string);
-    }
+    /**
+     * Disable the component
+     */
+    void disable();
 }

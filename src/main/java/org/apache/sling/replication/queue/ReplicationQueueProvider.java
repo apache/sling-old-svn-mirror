@@ -29,11 +29,11 @@ public interface ReplicationQueueProvider {
      * provide a named queue for the given agent or creates it if the queue doesn't exist
      *
      * @param agentName the replication agent needing the queue
-     * @param name      the name of the queue to retrieve
+     * @param queueName      the name of the queue to retrieve
      * @return a replication queue to be used for the given parameters
      * @throws ReplicationQueueException
      */
-    ReplicationQueue getQueue(String agentName, String name)
+    ReplicationQueue getQueue(String agentName, String queueName)
             throws ReplicationQueueException;
 
 

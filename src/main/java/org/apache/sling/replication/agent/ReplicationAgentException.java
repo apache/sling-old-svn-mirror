@@ -16,9 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.sling.replication.agent;
 
-@Version("0.1.0")
-package org.apache.sling.replication.transport;
+/**
+ * Represents errors happened while {@link ReplicationAgent}s do replications.
+ */
+@SuppressWarnings("serial")
+public class ReplicationAgentException extends Exception {
 
-import aQute.bnd.annotation.Version;
+    public ReplicationAgentException(Exception e) {
+        super(e);
+    }
 
+    public ReplicationAgentException(String string) {
+        super(string);
+    }
+}

@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.agent.ReplicationComponentFactory;
+import org.apache.sling.replication.component.ReplicationComponentFactory;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 

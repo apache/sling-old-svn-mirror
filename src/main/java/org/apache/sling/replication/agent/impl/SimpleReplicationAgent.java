@@ -29,12 +29,12 @@ import java.util.Properties;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.replication.agent.AgentReplicationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.agent.ReplicationComponent;
+import org.apache.sling.replication.agent.ReplicationAgentException;
 import org.apache.sling.replication.agent.ReplicationRequestAuthorizationStrategy;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.communication.ReplicationResponse;
+import org.apache.sling.replication.component.ReplicationComponent;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.event.ReplicationEventType;
 import org.apache.sling.replication.packaging.ReplicationPackage;
@@ -129,14 +129,14 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
     }
 
     public ReplicationResponse execute(ResourceResolver resourceResolver, ReplicationRequest replicationRequest)
-            throws AgentReplicationException {
+            throws ReplicationAgentException {
         try {
             replicationRequestAuthorizationStrategy.checkPermission(resourceResolver, replicationRequest);
             List<ReplicationPackage> replicationPackages = buildPackages(replicationRequest);
             return schedule(replicationPackages);
         } catch (Exception e) {
             log.error("Error executing replication request {}", replicationRequest, e);
-            throw new AgentReplicationException(e);
+            throw new ReplicationAgentException(e);
         }
 
     }
@@ -149,9 +149,7 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
 
         ResourceResolver agentResourceResolver = getAgentResourceResolver();
 
-        List<ReplicationPackage> replicationPackages = replicationPackageExporter.exportPackage(agentResourceResolver, replicationRequest);
-
-        return replicationPackages;
+        return replicationPackageExporter.exportPackage(agentResourceResolver, replicationRequest);
     }
 
     private ReplicationResponse schedule(List<ReplicationPackage> replicationPackages) {
@@ -178,9 +176,9 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
                 replicationPackage.getType(),
                 replicationPackage.getInfo());
 
-        // send the replication package to the queue distribution handler
+        // dispatch the replication package to the queue distribution handler
         try {
-            ReplicationQueueItemState state = queueDistributionStrategy.add(getName(), replicationQueueItem,
+            ReplicationQueueItemState state = queueDistributionStrategy.add(name, replicationQueueItem,
                     queueProvider);
 
             Dictionary<Object, Object> properties = new Properties();
@@ -204,16 +202,16 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
         return replicationResponse;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public ReplicationQueue getQueue(String name) throws ReplicationQueueException {
+    public ReplicationQueue getQueue(String queueName) throws ReplicationAgentException {
         ReplicationQueue queue;
-        if (name != null && name.length() > 0) {
-            queue = queueProvider.getQueue(getName(), name);
-        } else {
-            queue = queueProvider.getDefaultQueue(getName());
+        try {
+            if (queueName != null && queueName.length() > 0) {
+                queue = queueProvider.getQueue(this.name, queueName);
+            } else {
+                queue = queueProvider.getDefaultQueue(this.name);
+            }
+        } catch (ReplicationQueueException e) {
+            throw new ReplicationAgentException(e);
         }
         return queue;
     }
@@ -225,12 +223,12 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
 
         for (int i = 0; i < triggers.size(); i++) {
             ReplicationTrigger trigger = triggers.get(i);
-            String handlerId = getName() + "-" + i;
+            String handlerId = name + "-" + i;
             trigger.register(handlerId, new AgentBasedTriggerRequestHandler(this));
         }
 
         if (!isPassive()) {
-            queueProvider.enableQueueProcessing(getName(), new PackageQueueProcessor());
+            queueProvider.enableQueueProcessing(name, new PackageQueueProcessor());
         }
     }
 
@@ -238,12 +236,12 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
         log.info("disabling agent");
         for (int i = 0; i < triggers.size(); i++) {
             ReplicationTrigger trigger = triggers.get(i);
-            String handlerId = getName() + "-" + i;
+            String handlerId = name + "-" + i;
             trigger.unregister(handlerId);
         }
 
         if (!isPassive()) {
-            queueProvider.disableQueueProcessing(getName());
+            queueProvider.disableQueueProcessing(name);
         }
     }
 
@@ -268,8 +266,7 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
 
                 replicationPackage.delete();
                 success = true;
-            }
-            else {
+            } else {
                 log.warn("replication package with id {} does not exist", queueItem.getId());
             }
 
@@ -287,7 +284,7 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
         try {
             resourceResolver = resourceResolverFactory.getServiceResourceResolver(authenticationInfo);
         } catch (LoginException e) {
-            log.error("cannot obtain a resource resolver", e);
+            log.error("cannot obtain a resource resolver for service {}", subServiceName, e);
         }
 
         return resourceResolver;
@@ -311,7 +308,7 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationComp
             try {
                 ResourceResolver resourceResolver = getAgentResourceResolver();
                 agent.execute(resourceResolver, request);
-            } catch (AgentReplicationException e) {
+            } catch (ReplicationAgentException e) {
                 log.error("Error executing handler", e);
             }
         }
