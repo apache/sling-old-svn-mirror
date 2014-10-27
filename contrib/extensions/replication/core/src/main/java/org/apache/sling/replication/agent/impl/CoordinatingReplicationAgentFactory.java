@@ -194,7 +194,6 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
     public <ComponentType> ComponentType getComponent(Class<ComponentType> type, String componentName) {
         if (type.isAssignableFrom(ReplicationQueueProvider.class)) {
             return (ComponentType) queueProvider;
-
         } else if (type.isAssignableFrom(ReplicationQueueDistributionStrategy.class)) {
             return (ComponentType) queueDistributionStrategy;
         } else if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {

@@ -39,8 +39,6 @@ public class UserCredentialsTransportAuthenticationProvider implements
 
     private final String password;
 
-
-
     public UserCredentialsTransportAuthenticationProvider(String username, String password) {
         if (username.length() == 0 || password.length() == 0) {
             throw new IllegalArgumentException("Username and password are required");
