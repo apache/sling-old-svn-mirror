@@ -103,7 +103,7 @@ public class MappingEventsTest {
         final Node base = mapRoot.getNode("map/https/localhost.443");
         final MappingsFacade f = new MappingsFacade(eventsCounter);
         try {
-            int count = 20;
+            int count = 50;
             while(count-- > 0) {
                 base.setProperty(PROP_REDIRECT_EXTERNAL,"http://somehost." + count);
                 final String result = f.saveMappings(session);
