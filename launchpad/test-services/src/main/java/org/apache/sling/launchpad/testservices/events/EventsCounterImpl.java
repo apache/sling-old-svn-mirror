@@ -27,6 +27,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
@@ -51,8 +52,8 @@ import org.slf4j.LoggerFactory;
     @Property(
             name=org.osgi.service.event.EventConstants.EVENT_TOPIC,
             value= {
-                    org.apache.sling.api.SlingConstants.TOPIC_RESOURCE_ADDED,
-                    "org/apache/sling/api/resource/ResourceResolverMapping/CHANGED"
+                    SlingConstants.TOPIC_RESOURCE_ADDED,
+                    SlingConstants.TOPIC_RESOURCE_RESOLVER_MAPPING_CHANGED
             })
 })
 public class EventsCounterImpl extends SlingSafeMethodsServlet implements EventHandler,EventsCounter {

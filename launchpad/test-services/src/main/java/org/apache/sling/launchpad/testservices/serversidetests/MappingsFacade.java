@@ -28,13 +28,17 @@ public class MappingsFacade {
     public static final String MAPPING_EVENT_TOPIC = "org/apache/sling/api/resource/ResourceResolverMapping/CHANGED";
     private static final Logger logger = LoggerFactory.getLogger(MappingsFacade.class);
     private final EventsCounter eventsCounter;
+    private static boolean firstInstance = true;
     
     // How long to wait for mapping updates
     public static final String MAPPING_UPDATE_TIMEOUT_MSEC = "ResourceResolverTest.mapping.update.timeout.msec";
     private static final long updateTimeout = Long.valueOf(System.getProperty(MAPPING_UPDATE_TIMEOUT_MSEC, "10000"));
 
     public MappingsFacade(EventsCounter c) {
-        logger.info("updateTimeout = {}, use {} system property to change", updateTimeout, MAPPING_UPDATE_TIMEOUT_MSEC);
+        if(firstInstance) {
+            logger.info("updateTimeout = {}, use {} system property to change", updateTimeout, MAPPING_UPDATE_TIMEOUT_MSEC);
+            firstInstance = false;
+        }
         eventsCounter = c;
     }
     
@@ -48,9 +52,11 @@ public class MappingsFacade {
         session.save();
         final long timeout = System.currentTimeMillis() + updateTimeout;
         while(System.currentTimeMillis() < timeout) {
-            if(eventsCounter.getEventsCount(MAPPING_EVENT_TOPIC) != oldEventsCount) {
+            final int newCount = eventsCounter.getEventsCount(MAPPING_EVENT_TOPIC); 
+            if(newCount != oldEventsCount) {
                 // Sleeping here shouldn't be needed but it looks
                 // like mappings are not immediately updated once the event arrives
+                logger.debug("Event counter {} is now {}", MAPPING_EVENT_TOPIC, newCount);
                 Thread.sleep(updateTimeout / 50);
                 return null;
             }
