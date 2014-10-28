@@ -131,13 +131,13 @@ public class ContentImportTest {
         ServerAdapter server = new ServerAdapter(wstServer.getServer());
         server.installModule(contentProject);
 
-        deh.clearUnexpectedEventsAfterSettling();
-
         // create server-side content
         RepositoryAccessor repo = new RepositoryAccessor(config);
         repo.createNode("/content/test-root/de", "nt:folder");
         repo.createNode("/content/test-root/de/files", "nt:folder");
         repo.createFile("/content/test-root/de/files/first.txt", "first file".getBytes());
+
+        deh.clearUnexpectedEventsAfterSettling();
 
         runImport(contentProject);
 
