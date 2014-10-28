@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
 
-import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -31,6 +30,7 @@ import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.trigger.ReplicationRequestHandler;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
+import org.apache.sling.replication.trigger.ReplicationTriggerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,16 +79,21 @@ public class ReplicationTriggerServlet extends SlingAllMethodsServlet {
                 writeEvent(writer, request);
             }
         };
-        replicationTrigger.register(replicationRequestHandler);
-
         try {
-            Thread.sleep(seconds * 1000);
-        } catch (InterruptedException e) {
-            log.error("thread interrupted", e);
+            replicationTrigger.register(replicationRequestHandler);
+
+            try {
+                Thread.sleep(seconds * 1000);
+            } catch (InterruptedException e) {
+                log.error("thread interrupted", e);
+            }
+
+            replicationTrigger.unregister(replicationRequestHandler);
+
+        } catch (ReplicationTriggerException e) {
+            response.setStatus(400);
+            response.getWriter().write("error while (un)registering trigger " + e.toString());
         }
-
-        replicationTrigger.unregister(replicationRequestHandler);
-
     }
 
     /* Write a single server-sent event to the response stream for the given event and message */

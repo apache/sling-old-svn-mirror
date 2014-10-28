@@ -18,11 +18,16 @@
  */
 package org.apache.sling.replication.trigger.impl;
 
+import java.util.Dictionary;
+
 import org.apache.sling.replication.trigger.ReplicationRequestHandler;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Testcase for {@link org.apache.sling.replication.trigger.impl.ResourceEventReplicationTrigger}
@@ -33,6 +38,8 @@ public class ResourceEventReplicationTriggerTest {
     public void testRegister() throws Exception {
         String path = "/some/path";
         BundleContext bundleContext = mock(BundleContext.class);
+        ServiceRegistration registration = mock(ServiceRegistration.class);
+        when(bundleContext.registerService(any(String.class), any(Object.class), any(Dictionary.class))).thenReturn(registration);
         ResourceEventReplicationTrigger resourceEventReplicationTrigger = new ResourceEventReplicationTrigger(path, bundleContext);
         ReplicationRequestHandler handler = mock(ReplicationRequestHandler.class);
         resourceEventReplicationTrigger.register(handler);
