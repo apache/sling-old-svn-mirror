@@ -33,13 +33,15 @@ public interface ReplicationTrigger extends ReplicationComponent {
      * register a request handler to be triggered and returns a corresponding registration id
      *
      * @param requestHandler handler
+     * @throws org.apache.sling.replication.trigger.ReplicationTriggerException if registration fails
      */
-    void register(ReplicationRequestHandler requestHandler);
+    void register(ReplicationRequestHandler requestHandler) throws ReplicationTriggerException;
 
     /**
      * unregister the given handler, if existing
      *
      * @param requestHandler handler to unregister
+     * @throws org.apache.sling.replication.trigger.ReplicationTriggerException if unregistration fails
      */
-    void unregister(ReplicationRequestHandler requestHandler);
+    void unregister(ReplicationRequestHandler requestHandler) throws ReplicationTriggerException;
 }

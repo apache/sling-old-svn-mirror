@@ -33,6 +33,7 @@ import org.apache.sling.replication.event.ReplicationEvent;
 import org.apache.sling.replication.event.ReplicationEventType;
 import org.apache.sling.replication.trigger.ReplicationRequestHandler;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
+import org.apache.sling.replication.trigger.ReplicationTriggerException;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
@@ -60,7 +61,7 @@ public class ChainReplicateReplicationTrigger implements ReplicationTrigger, Man
         this.pathPrefix = pathPrefix;
     }
 
-    public void register(ReplicationRequestHandler requestHandler) {
+    public void register(ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
         // register an event handler on replication package install (on a certain path) which triggers the chain replication of that same package
         Dictionary<String, Object> properties = new Hashtable<String, Object>();
 
@@ -76,12 +77,12 @@ public class ChainReplicateReplicationTrigger implements ReplicationTrigger, Man
                 registrations.put(requestHandler.toString(), triggerPathEventRegistration);
             }
         } else {
-            log.error("cannot register trigger since bundle context is null");
+            throw new ReplicationTriggerException("cannot register trigger since bundle context is null");
 
         }
     }
 
-    public void unregister(ReplicationRequestHandler requestHandler) {
+    public void unregister(ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
         ServiceRegistration serviceRegistration = registrations.get(requestHandler.toString());
         if (serviceRegistration != null) {
             serviceRegistration.unregister();

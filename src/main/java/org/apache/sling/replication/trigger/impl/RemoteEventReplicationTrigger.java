@@ -46,6 +46,7 @@ import org.apache.sling.replication.transport.authentication.TransportAuthentica
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.replication.trigger.ReplicationRequestHandler;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
+import org.apache.sling.replication.trigger.ReplicationTriggerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,20 +83,19 @@ public class RemoteEventReplicationTrigger implements ReplicationTrigger {
         this.scheduler = scheduler;
     }
 
-    public void register(ReplicationRequestHandler requestHandler) {
+    public void register(ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
         try {
             log.info("applying remote event replication trigger");
 
             ScheduleOptions options = scheduler.NOW();
             options.name(requestHandler.toString());
             scheduler.schedule(new EventBasedReplication(requestHandler), options);
-
         } catch (Exception e) {
-            log.error("handler {} cannot be registered", requestHandler, e);
+            throw new ReplicationTriggerException("unable to register handler " + requestHandler, e);
         }
     }
 
-    public void unregister(ReplicationRequestHandler requestHandler) {
+    public void unregister(ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
         Future<HttpResponse> httpResponseFuture = requests.remove(requestHandler.toString());
         if (httpResponseFuture != null) {
             httpResponseFuture.cancel(true);
