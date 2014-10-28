@@ -153,7 +153,7 @@ public class ReplicationUtils {
         assertTrue("path " + path + " doesn't exist", slingClient.exists(path));
     }
 
-    public static void assertNotExits(SlingClient slingClient, String path) throws Exception {
+    public static void assertNotExists(SlingClient slingClient, String path) throws Exception {
         int retries = 100;
         while (slingClient.exists(path) && retries-- > 0) {
             Thread.sleep(1000);

@@ -22,7 +22,7 @@ import org.apache.sling.replication.communication.ReplicationActionType;
 import org.junit.Test;
 
 import static org.apache.sling.replication.it.ReplicationUtils.assertExists;
-import static org.apache.sling.replication.it.ReplicationUtils.assertNotExits;
+import static org.apache.sling.replication.it.ReplicationUtils.assertNotExists;
 import static org.apache.sling.replication.it.ReplicationUtils.createRandomNode;
 import static org.apache.sling.replication.it.ReplicationUtils.replicate;
 
@@ -44,7 +44,7 @@ public class ForwardReplicationTest extends ReplicationIntegrationTestBase {
         String nodePath = createRandomNode(publishClient, "/content/forward_del_" + System.nanoTime());
         assertExists(publishClient, nodePath);
         replicate(author, "publish", ReplicationActionType.DELETE, nodePath);
-        assertNotExits(publishClient, nodePath);
+        assertNotExists(publishClient, nodePath);
     }
 
 }

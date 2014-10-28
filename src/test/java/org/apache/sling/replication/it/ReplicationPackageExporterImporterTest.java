@@ -23,7 +23,7 @@ import org.apache.sling.replication.communication.ReplicationActionType;
 import org.junit.Test;
 
 import static org.apache.sling.replication.it.ReplicationUtils.assertExists;
-import static org.apache.sling.replication.it.ReplicationUtils.assertNotExits;
+import static org.apache.sling.replication.it.ReplicationUtils.assertNotExists;
 import static org.apache.sling.replication.it.ReplicationUtils.createRandomNode;
 import static org.apache.sling.replication.it.ReplicationUtils.doExport;
 import static org.apache.sling.replication.it.ReplicationUtils.doImport;
@@ -38,7 +38,7 @@ public class ReplicationPackageExporterImporterTest extends ReplicationIntegrati
         String content = doExport(publish, "default", ReplicationActionType.ADD, nodePath);
 
         publishClient.delete(nodePath);
-        assertNotExits(publishClient, nodePath);
+        assertNotExists(publishClient, nodePath);
 
         doImport(publish, "default", content.getBytes(HTTP.DEFAULT_CONTENT_CHARSET));
         assertExists(publishClient, nodePath);
@@ -53,6 +53,6 @@ public class ReplicationPackageExporterImporterTest extends ReplicationIntegrati
         String content = doExport(publish, "default", ReplicationActionType.DELETE, nodePath);
 
         doImport(publish, "default", content.getBytes(HTTP.DEFAULT_CONTENT_CHARSET));
-        assertNotExits(publishClient, nodePath);
+        assertNotExists(publishClient, nodePath);
     }
 }
