@@ -53,6 +53,7 @@ import org.apache.sling.replication.serialization.ReplicationPackageBuildingExce
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.apache.sling.replication.trigger.ReplicationRequestHandler;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
+import org.apache.sling.replication.trigger.ReplicationTriggerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -241,7 +242,11 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
         agentBasedRequestHandler = new AgentBasedRequestHandler(this);
 
         for (ReplicationTrigger trigger : triggers) {
-            trigger.register(agentBasedRequestHandler);
+            try {
+                trigger.register(agentBasedRequestHandler);
+            } catch (ReplicationTriggerException e) {
+                log.error("could not register handler {} from trigger {}", agentBasedRequestHandler, trigger);
+            }
         }
 
         if (!isPassive()) {
@@ -253,7 +258,11 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
         log.info("disabling agent");
 
         for (ReplicationTrigger trigger : triggers) {
-            trigger.unregister(agentBasedRequestHandler);
+            try {
+                trigger.unregister(agentBasedRequestHandler);
+            } catch (ReplicationTriggerException e) {
+                log.error("could not unregister handler {} from trigger {}", agentBasedRequestHandler, trigger);
+            }
         }
 
         agentBasedRequestHandler = null;
