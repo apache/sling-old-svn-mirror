@@ -53,8 +53,7 @@ class MockJcrResourceResolverFactory implements ResourceResolverFactory {
         this.slingRepository = repository;
     }
 
-    @Override
-    public ResourceResolver getResourceResolver(final Map<String, Object> authenticationInfo) throws LoginException {
+    private ResourceResolver getResourceResolverInternal(Map<String, Object> authenticationInfo, boolean isAdmin) throws LoginException {
         // setup mock OSGi environment
         Dictionary<String, Object> resourceProviderFactoryProps = new Hashtable<String, Object>();
         resourceProviderFactoryProps.put(Constants.SERVICE_VENDOR, "sling-mock");
@@ -72,8 +71,15 @@ class MockJcrResourceResolverFactory implements ResourceResolverFactory {
         MockOsgi.injectServices(jcrResourceProviderFactory, componentContext.getBundleContext());
         MockOsgi.activate(jcrResourceProviderFactory, componentContext.getBundleContext(),
                 ImmutableMap.<String, Object> of());
-        ResourceProvider resourceProvider = jcrResourceProviderFactory
-                .getAdministrativeResourceProvider(new HashMap<String, Object>());
+        
+        ResourceProvider resourceProvider;
+        if (isAdmin) {
+            resourceProvider = jcrResourceProviderFactory.getAdministrativeResourceProvider(authenticationInfo);
+        }
+        else {
+            resourceProvider = jcrResourceProviderFactory.getResourceProvider(authenticationInfo);
+        }
+        
         Dictionary<Object, Object> resourceProviderProps = new Hashtable<Object, Object>();
         resourceProviderProps.put(ResourceProvider.ROOTS, new String[] { "/" });
         componentContext.getBundleContext().registerService(ResourceProvider.class.getName(), resourceProvider,
@@ -88,7 +94,7 @@ class MockJcrResourceResolverFactory implements ResourceResolverFactory {
                 getServiceReferenceProperties(resourceProviderServiceReference));
         activator.activate(componentContext);
         CommonResourceResolverFactoryImpl commonFactoryImpl = new CommonResourceResolverFactoryImpl(activator);
-        ResourceResolverContext context = new ResourceResolverContext(true, null, new ResourceAccessSecurityTracker());
+        ResourceResolverContext context = new ResourceResolverContext(true, authenticationInfo, new ResourceAccessSecurityTracker());
         ResourceResolverImpl resourceResolver = new ResourceResolverImpl(commonFactoryImpl, context);
         return resourceResolver;
     }
@@ -103,15 +109,20 @@ class MockJcrResourceResolverFactory implements ResourceResolverFactory {
     }
 
     @Override
+    public ResourceResolver getResourceResolver(final Map<String, Object> authenticationInfo) throws LoginException {
+        return getResourceResolverInternal(authenticationInfo, false);
+    }
+    
+    @Override
     public ResourceResolver getAdministrativeResourceResolver(final Map<String, Object> authenticationInfo)
             throws LoginException {
-        return getResourceResolver(authenticationInfo);
+        return getResourceResolverInternal(authenticationInfo, true);
     }
 
     // part of Sling API 2.7
     public ResourceResolver getServiceResourceResolver(final Map<String, Object> authenticationInfo)
             throws LoginException {
-        return getResourceResolver(authenticationInfo);
+        return getResourceResolverInternal(authenticationInfo, true);
     }
 
 }

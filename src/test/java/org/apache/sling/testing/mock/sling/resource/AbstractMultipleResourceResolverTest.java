@@ -44,8 +44,17 @@ public abstract class AbstractMultipleResourceResolverTest {
     @Test
     public void testMultipleResourceResolver() throws Exception {
         ResourceResolverFactory factory = newResourceResolerFactory();
-        ResourceResolver resolver1 = factory.getResourceResolver(null);
-        ResourceResolver resolver2 = factory.getResourceResolver(null);
+        ResourceResolver resolver1 = factory.getResourceResolver(ImmutableMap.<String, Object>of(
+                ResourceResolverFactory.USER, "user1"));
+        ResourceResolver resolver2 = factory.getResourceResolver(ImmutableMap.<String, Object>of(
+                ResourceResolverFactory.USER, "user2"));
+        
+        // validate user names
+        // TODO: enable this tests when updated to latest jcr-mock/resourceresolver-mock versions
+        /*
+        assertEquals("user1", resolver1.getAttribute(ResourceResolverFactory.USER));
+        assertEquals("user2", resolver2.getAttribute(ResourceResolverFactory.USER));
+        */
         
         // add a resource in resolver 1
         Resource root = resolver1.getResource("/");
