@@ -138,5 +138,50 @@ User/client makes an `HTTP POST`request to `http://localhost:8080/libs/sling/rep
 
 ### HTTP API
 
-See the [wiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=38572805).
+#### API Requirements
+We need to expose APIs for configuring, commanding and monitoring replication agents.
 
+- Configuration API should allow:
+ - CRUD operations for agent configs
+- Command API (eventually issued to multiple agents at once) should allow:
+ - to trigger a replication request on a specific agent
+ - to explicitly create and export a package
+ - to explicitly import a formerly created package
+- Monitoring API should allow:
+ - inspection to internal queues of replication agents
+ - inspection of commands history
+ 
+#### API endpoints 
+##### Configuration API
+- Create config:  - POST _/libs/sling/replication/settings/_
+- Read config - GET _/libs/sling/replication/settings/{config identifier}_
+- Update config - PUT _/libs/sling/replication/settings/{config identifier}_
+- Delete config - DELETE _/libs/sling/replication/settings/{config identifier}_ or POST with :operation=delete
+##### Command API
+- Replicate - POST _/libs/sling/replication/services/agents/{agentName}_
+- Import package - POST _/libs/sling/replication/services/importers/{importerName}_
+- Export package - POST _/libs/sling/replication/services/exporters/{exporterName}_
+##### Monitoring API
+- Replication history - GET _/libs/sling/replication/services/agents/{agentName}/history_
+- Import package history - GET _/libs/sling/replication/services/importers/{importerName}/history_
+- Export package history - GET _/libs/sling/replication/services/exporters/{exporterName}/history
+- Agent queue inspection  - GET _/libs/sling/replication/services/agents/{agentName}/queue_ or _{agentName}.queue_
+
+#### API Implementation 
+Configuration API should be implemented using SlingPostServlet and a full sync should be implemented between config location and ConfigurationAdmin. 
+Command API can be implemented using SlingPostServlet if we can live with the asyncronous status check. 
+It is important to have in mind that the replication commands are asynchronous by default as there might be some queues that are used the different parts of a replication request. 
+Hence finding out if a replication request was completely finished will require inspecting the history most of the times.
+Monitoring API should be implemented with custom servlets at least for internal queues as they display live info which would be tedious to sync in the repo
+
+##### Flatten vs granular 
+The commands and monitoring APIs can be implemented using either a flat or a granular approach (or both)
+###### Flatten design
+It permits sending requests to multiple agents which might be desirable at least for replicate requests
+It is easier to implement as it requires no hierarchy of resources
+###### Granular design
+It is resource oriented
+One needs to implement either a ResourceProvider or a JCR syncronization for agents and queues in order to represent the hierarchy. There is no consensus on which is best.
+ 
+##### Sample payloads
+TODO
