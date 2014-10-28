@@ -32,8 +32,7 @@ public interface ReplicationPackageBuilder {
     /**
      * creates a {@link org.apache.sling.replication.packaging.ReplicationPackage} for a specific {@link ReplicationRequest}
      *
-     *
-     * @param resourceResolver
+     * @param resourceResolver the resource resolver used to access the resources to be packaged
      * @param request the {@link org.apache.sling.replication.communication.ReplicationRequest} to create the package for
      * @return a {@link org.apache.sling.replication.packaging.ReplicationPackage}
      * @throws ReplicationPackageBuildingException
@@ -43,6 +42,7 @@ public interface ReplicationPackageBuilder {
     /**
      * reads a stream and tries to convert it to a {@link ReplicationPackage} this provider can read and install
      *
+     * @param resourceResolver resource resolver used to store the eventually created package
      * @param stream the {@link InputStream} of the package to read
      * @return a {@link ReplicationPackage} if it can read it from the stream
      * @throws ReplicationPackageReadingException when the stream cannot be read as a {@link ReplicationPackage}
@@ -52,7 +52,8 @@ public interface ReplicationPackageBuilder {
     /**
      * get an already created (and saved into the repository) {@link ReplicationPackage} by its id
      *
-     * @param id a <code>String</code> representing the unique identifier of an already created {@link ReplicationPackage}
+     * @param resourceResolver resource resolver used to access the package with the given id
+     * @param id the unique identifier of an already created {@link ReplicationPackage}
      * @return a {@link ReplicationPackage} if one with such an id exists, <code>null</code> otherwise
      */
     ReplicationPackage getPackage(ResourceResolver resourceResolver, String id);
@@ -60,6 +61,7 @@ public interface ReplicationPackageBuilder {
     /**
      * Installs the given replicationPackage into the repository
      *
+     * @param resourceResolver the resource resolver used to install the packaged resources
      * @param replicationPackage the replication package to install
      * @return <code>true</code> if the package was installed successfully
      * @throws ReplicationPackageReadingException
