@@ -18,7 +18,7 @@
  */
 package org.apache.sling.replication.trigger.impl;
 
-import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
+import org.apache.sling.replication.trigger.ReplicationRequestHandler;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 
@@ -34,8 +34,8 @@ public class ChainReplicateReplicationTriggerTest {
         String pathPrefix = "/prefix";
         BundleContext bundleContext = mock(BundleContext.class);
         ChainReplicateReplicationTrigger chainReplicateReplicationTrigger = new ChainReplicateReplicationTrigger(pathPrefix, bundleContext);
-        ReplicationTriggerRequestHandler handler = mock(ReplicationTriggerRequestHandler.class);
-        chainReplicateReplicationTrigger.register("handler-id-1", handler);
+        ReplicationRequestHandler handler = mock(ReplicationRequestHandler.class);
+        chainReplicateReplicationTrigger.register(handler);
     }
 
     @Test
@@ -43,7 +43,8 @@ public class ChainReplicateReplicationTriggerTest {
         String pathPrefix = "/prefix";
         BundleContext bundleContext = mock(BundleContext.class);
         ChainReplicateReplicationTrigger chainReplicateReplicationTrigger = new ChainReplicateReplicationTrigger(pathPrefix, bundleContext);
-        chainReplicateReplicationTrigger.unregister("handler-id-1");
+        ReplicationRequestHandler handler = mock(ReplicationRequestHandler.class);
+        chainReplicateReplicationTrigger.unregister(handler);
     }
 
     @Test

@@ -122,8 +122,7 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
             }
 
         } catch (Exception e) {
-            log.error("could not read / install the package", e);
-            throw new ReplicationPackageReadingException(e);
+            throw new ReplicationPackageReadingException("could not read / install the package", e);
         }
         return pkg;
     }

@@ -18,7 +18,6 @@
  */
 package org.apache.sling.replication.servlet;
 
-import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,9 +25,7 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.http.entity.ContentType;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -45,12 +42,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Servlet to handle fetching of replication content.
  */
-@SuppressWarnings("serial")
-@Component(metatype = false)
-@Service(value = Servlet.class)
-@Properties({
-        @Property(name = "sling.servlet.resourceTypes", value = ReplicationConstants.EXPORTER_RESOURCE_TYPE),
-        @Property(name = "sling.servlet.methods", value = "POST")})
+@SlingServlet(resourceTypes = ReplicationConstants.EXPORTER_RESOURCE_TYPE, methods = "POST")
 public class ReplicationPackageExporterServlet extends SlingAllMethodsServlet {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -63,7 +55,6 @@ public class ReplicationPackageExporterServlet extends SlingAllMethodsServlet {
                 .getResource()
                 .adaptTo(ReplicationPackageExporter.class);
 
-        boolean success = false;
         final long start = System.currentTimeMillis();
 
         response.setContentType(ContentType.APPLICATION_OCTET_STREAM.toString());
@@ -71,33 +62,36 @@ public class ReplicationPackageExporterServlet extends SlingAllMethodsServlet {
         ReplicationRequest replicationRequest = RequestUtils.fromServletRequest(request);
         ResourceResolver resourceResolver = request.getResourceResolver();
 
+        int consumed = 0;
+        int fetched = 0;
         try {
-            // get first item
+            // get all items
             List<ReplicationPackage> replicationPackages = replicationPackageExporter.exportPackages(resourceResolver, replicationRequest);
+            fetched = replicationPackages.size();
 
             if (replicationPackages.size() > 0) {
-                log.info("{} package(s) available for fetching, the first will be delivered", replicationPackages.size());
+                log.info("{} package(s) available for fetching", replicationPackages.size());
 
-                ReplicationPackage replicationPackage = replicationPackages.get(0);
-                if (replicationPackage != null) {
-                    InputStream inputStream = null;
-                    int bytesCopied = -1;
-                    try {
-                        inputStream = replicationPackage.createInputStream();
-                        bytesCopied = IOUtils.copy(inputStream, response.getOutputStream());
-                    } finally {
-                        IOUtils.closeQuietly(inputStream);
+                for (ReplicationPackage replicationPackage : replicationPackages) {
+                    if (replicationPackage != null) {
+                        InputStream inputStream = null;
+                        int bytesCopied = -1;
+                        try {
+                            inputStream = replicationPackage.createInputStream();
+                            bytesCopied = IOUtils.copy(inputStream, response.getOutputStream());
+                        } finally {
+                            IOUtils.closeQuietly(inputStream);
+                        }
+
+                        // delete the package permanently
+                        replicationPackage.delete();
+
+                        // everything ok
+                        response.setStatus(200);
+                        log.info("{} bytes written into the response", bytesCopied);
+                    } else {
+                        log.warn("fetched a null package");
                     }
-
-                    // delete the package permanently
-                    replicationPackage.delete();
-
-                    // everything ok
-                    response.setStatus(200);
-                    log.info("{} bytes written into the response", bytesCopied);
-                    success = true;
-                } else {
-                    log.warn("fetched a null package");
                 }
             } else {
                 response.setStatus(204);
@@ -106,10 +100,10 @@ public class ReplicationPackageExporterServlet extends SlingAllMethodsServlet {
 
         } catch (Exception e) {
             response.setStatus(503);
-            log.error("error while reverse replicating from agent", e);
+            log.error("error while exporting from {}", request.getRequestURL(), e);
         } finally {
-            final long end = System.currentTimeMillis();
-            log.info("Processed replication export request in {}ms: : {}", new Object[]{end - start, success});
+            long end = System.currentTimeMillis();
+            log.info("Processed replication export request in {} ms: : consumed {} of {}", new Object[]{end - start, consumed, fetched});
         }
     }
 

@@ -20,16 +20,19 @@ package org.apache.sling.replication.trigger.impl;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.component.ManagedReplicationComponent;
 import org.apache.sling.replication.event.ReplicationEvent;
 import org.apache.sling.replication.event.ReplicationEventType;
+import org.apache.sling.replication.trigger.ReplicationRequestHandler;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
-import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
@@ -57,20 +60,20 @@ public class ChainReplicateReplicationTrigger implements ReplicationTrigger, Man
         this.pathPrefix = pathPrefix;
     }
 
-    public void register(String handlerId, ReplicationTriggerRequestHandler requestHandler) {
+    public void register(ReplicationRequestHandler requestHandler) {
         // register an event handler on replication package install (on a certain path) which triggers the chain replication of that same package
         Dictionary<String, Object> properties = new Hashtable<String, Object>();
 
         // TODO : make it possible to configure the type of event handled here, currently 'package-installed' is hardcoded
         properties.put(EventConstants.EVENT_TOPIC, ReplicationEvent.getTopic(ReplicationEventType.PACKAGE_INSTALLED));
-        log.info("handler {} will chain replicate on path '{}'", handlerId, pathPrefix);
+        log.info("handler {} will chain replicate on path '{}'", requestHandler, pathPrefix);
 
 //            properties.put(EventConstants.EVENT_FILTER, "(path=" + path + "/*)");
         if (bundleContext != null) {
             ServiceRegistration triggerPathEventRegistration = bundleContext.registerService(EventHandler.class.getName(),
                     new TriggerAgentEventListener(requestHandler, pathPrefix), properties);
             if (triggerPathEventRegistration != null) {
-                registrations.put(handlerId, triggerPathEventRegistration);
+                registrations.put(requestHandler.toString(), triggerPathEventRegistration);
             }
         } else {
             log.error("cannot register trigger since bundle context is null");
@@ -78,8 +81,8 @@ public class ChainReplicateReplicationTrigger implements ReplicationTrigger, Man
         }
     }
 
-    public void unregister(String handlerId) {
-        ServiceRegistration serviceRegistration = registrations.get(handlerId);
+    public void unregister(ReplicationRequestHandler requestHandler) {
+        ServiceRegistration serviceRegistration = registrations.get(requestHandler.toString());
         if (serviceRegistration != null) {
             serviceRegistration.unregister();
         }
@@ -100,10 +103,10 @@ public class ChainReplicateReplicationTrigger implements ReplicationTrigger, Man
 
     private class TriggerAgentEventListener implements EventHandler {
 
-        private final ReplicationTriggerRequestHandler requestHandler;
+        private final ReplicationRequestHandler requestHandler;
         private final String path;
 
-        public TriggerAgentEventListener(ReplicationTriggerRequestHandler requestHandler, String path) {
+        public TriggerAgentEventListener(ReplicationRequestHandler requestHandler, String path) {
             this.requestHandler = requestHandler;
             this.path = path;
         }

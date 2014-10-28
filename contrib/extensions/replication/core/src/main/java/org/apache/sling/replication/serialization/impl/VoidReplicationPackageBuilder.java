@@ -60,6 +60,7 @@ public class VoidReplicationPackageBuilder implements ReplicationPackageBuilder 
     }
 
     public boolean installPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) {
-        return false;
+        // installation is always successful as no installation is needed for void packages
+        return true;
     }
 }

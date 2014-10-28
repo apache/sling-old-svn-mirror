@@ -24,12 +24,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.sling.api.SlingConstants;
-import org.apache.sling.replication.component.ManagedReplicationComponent;
-import org.apache.sling.replication.component.ReplicationComponent;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.component.ManagedReplicationComponent;
+import org.apache.sling.replication.trigger.ReplicationRequestHandler;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
-import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
@@ -78,25 +77,25 @@ public class ResourceEventReplicationTrigger implements ReplicationTrigger, Mana
         registrations.clear();
     }
 
-    public void register(String handlerId, ReplicationTriggerRequestHandler requestHandler) {
+    public void register(ReplicationRequestHandler requestHandler) {
         // register an event handler on path which triggers the agent on node / property changes / addition / removals
         Dictionary<String, Object> properties = new Hashtable<String, Object>();
         properties.put(EventConstants.EVENT_TOPIC, new String[]{SlingConstants.TOPIC_RESOURCE_ADDED,
                 SlingConstants.TOPIC_RESOURCE_CHANGED, SlingConstants.TOPIC_RESOURCE_REMOVED});
-        log.info("trigger agent {} on path '{}'", handlerId, path);
+        log.info("trigger agent {} on path '{}'", requestHandler, path);
 
         properties.put(EventConstants.EVENT_FILTER, "(path=" + path + "/*)");
         ServiceRegistration triggerPathEventRegistration = bundleContext.registerService(EventHandler.class.getName(),
                 new TriggerAgentEventListener(requestHandler), properties);
         if (triggerPathEventRegistration != null) {
-            registrations.put(handlerId, triggerPathEventRegistration);
+            registrations.put(requestHandler.toString(), triggerPathEventRegistration);
         } else {
             log.error("cannot register event handler service for triggering agent");
         }
     }
 
-    public void unregister(String handlerId) {
-        ServiceRegistration serviceRegistration = registrations.get(handlerId);
+    public void unregister(ReplicationRequestHandler requestHandler) {
+        ServiceRegistration serviceRegistration = registrations.get(requestHandler.toString());
         if (serviceRegistration != null) {
             serviceRegistration.unregister();
         }
@@ -104,9 +103,9 @@ public class ResourceEventReplicationTrigger implements ReplicationTrigger, Mana
 
     private class TriggerAgentEventListener implements EventHandler {
 
-        private final ReplicationTriggerRequestHandler requestHandler;
+        private final ReplicationRequestHandler requestHandler;
 
-        public TriggerAgentEventListener(ReplicationTriggerRequestHandler requestHandler) {
+        public TriggerAgentEventListener(ReplicationRequestHandler requestHandler) {
             this.requestHandler = requestHandler;
         }
 

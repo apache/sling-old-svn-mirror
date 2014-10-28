@@ -21,22 +21,25 @@ package org.apache.sling.replication.trigger;
 import org.apache.sling.replication.component.ReplicationComponent;
 
 /**
- * a replication trigger
+ * A {@link org.apache.sling.replication.trigger.ReplicationTrigger} is responsible to trigger
+ * {@link org.apache.sling.replication.communication.ReplicationRequest}s upon certain 'events' (e.g. Sling / Jcr events,
+ * periodic polling, etc.).
+ * A {@link org.apache.sling.replication.trigger.ReplicationTrigger} is meant to be stateless so that more than one
+ * {@link org.apache.sling.replication.trigger.ReplicationRequestHandler} can be registered into the same trigger.
  */
 public interface ReplicationTrigger extends ReplicationComponent {
 
     /**
-     * register a replication trigger
+     * register a request handler to be triggered and returns a corresponding registration id
      *
-     * @param handlerId      id of the given handler
      * @param requestHandler handler
      */
-    void register(String handlerId, ReplicationTriggerRequestHandler requestHandler);
+    void register(ReplicationRequestHandler requestHandler);
 
     /**
-     * unregister the handler with the given id, if existing
+     * unregister the given handler, if existing
      *
-     * @param handlerId id of the handler to unregister
+     * @param requestHandler handler to unregister
      */
-    void unregister(String handlerId);
+    void unregister(ReplicationRequestHandler requestHandler);
 }

@@ -22,7 +22,7 @@ import org.apache.http.client.CredentialsProvider;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
-import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
+import org.apache.sling.replication.trigger.ReplicationRequestHandler;
 import org.junit.Test;
 
 import static org.mockito.Mockito.mock;
@@ -35,18 +35,17 @@ public class RemoteEventReplicationTriggerTest {
 
     @Test
     public void testRegister() throws Exception {
+        ReplicationRequestHandler handler = mock(ReplicationRequestHandler.class);
         String endpoint = "";
-        String handlerId = "handler-id-1";
         TransportAuthenticationProvider<CredentialsProvider, CredentialsProvider> authProvider = mock(TransportAuthenticationProvider.class);
         when(authProvider.canAuthenticate(CredentialsProvider.class)).thenReturn(true);
         Scheduler scheduler = mock(Scheduler.class);
         ScheduleOptions options = mock(ScheduleOptions.class);
-        when(options.name(handlerId)).thenReturn(options);
+        when(options.name(handler.toString())).thenReturn(options);
         when(scheduler.NOW()).thenReturn(options);
         RemoteEventReplicationTrigger remoteEventReplicationTrigger = new RemoteEventReplicationTrigger(
                 endpoint, authProvider, scheduler);
-        ReplicationTriggerRequestHandler handler = mock(ReplicationTriggerRequestHandler.class);
-        remoteEventReplicationTrigger.register(handlerId, handler);
+        remoteEventReplicationTrigger.register(handler);
     }
 
     @Test
@@ -58,6 +57,7 @@ public class RemoteEventReplicationTriggerTest {
         Scheduler scheduler = mock(Scheduler.class);
         RemoteEventReplicationTrigger remoteEventReplicationTrigger = new RemoteEventReplicationTrigger(
                 endpoint, authProvider, scheduler);
-        remoteEventReplicationTrigger.unregister(handlerId);
+        ReplicationRequestHandler handler = mock(ReplicationRequestHandler.class);
+        remoteEventReplicationTrigger.unregister(handler);
     }
 }

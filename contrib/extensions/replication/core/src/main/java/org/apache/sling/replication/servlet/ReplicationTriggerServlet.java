@@ -18,42 +18,32 @@
  */
 package org.apache.sling.replication.servlet;
 
-import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
-import java.util.UUID;
 
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.trigger.ReplicationRequestHandler;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
-import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Triggers Server Sent Events servlet
  */
-@SuppressWarnings("serial")
-@Component(metatype = false)
-@Service(value = Servlet.class)
-@Properties({
-        @Property(name = "sling.servlet.resourceTypes", value = "sling/replication/service/trigger"),
-        @Property(name = "sling.servlet.extensions", value = "event"),
-        @Property(name = "sling.servlet.methods", value = "GET")
-})
+@SlingServlet(resourceTypes = "sling/replication/service/trigger", extensions = "event", methods = "GET")
 public class ReplicationTriggerServlet extends SlingAllMethodsServlet {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final static int DEFAULT_NUMBER_OF_SECONDS = 60;
+    private final static int MAX_NUMBER_OF_SECONDS = 3600;
 
     @Override
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response)
@@ -64,7 +54,6 @@ public class ReplicationTriggerServlet extends SlingAllMethodsServlet {
         int seconds = secondsParameter != null && secondsParameter.length() > 0 ? Integer.parseInt(secondsParameter) :
                 DEFAULT_NUMBER_OF_SECONDS;
 
-        int MAX_NUMBER_OF_SECONDS = 3600;
         if (seconds > MAX_NUMBER_OF_SECONDS) {
             seconds = MAX_NUMBER_OF_SECONDS;
         } else if (seconds < 0) {
@@ -85,13 +74,12 @@ public class ReplicationTriggerServlet extends SlingAllMethodsServlet {
 
         final PrintWriter writer = response.getWriter();
 
-        String handlerId = "ReplicationTriggerServlet" + UUID.randomUUID().toString();
-
-        replicationTrigger.register(handlerId, new ReplicationTriggerRequestHandler() {
+        ReplicationRequestHandler replicationRequestHandler = new ReplicationRequestHandler() {
             public void handle(ReplicationRequest request) {
                 writeEvent(writer, request);
             }
-        });
+        };
+        replicationTrigger.register(replicationRequestHandler);
 
         try {
             Thread.sleep(seconds * 1000);
@@ -99,7 +87,7 @@ public class ReplicationTriggerServlet extends SlingAllMethodsServlet {
             log.error("thread interrupted", e);
         }
 
-        replicationTrigger.unregister(handlerId);
+        replicationTrigger.unregister(replicationRequestHandler);
 
     }
 

@@ -26,16 +26,18 @@ import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 
 /**
- * A <code>TransportHandler</code> is responsible for implementing the transport of a
- * {@link ReplicationPackage}s to / from another instance described by a {@link ReplicationEndpoint}
+ * A {@link org.apache.sling.replication.transport.ReplicationTransportHandler} is responsible for implementing the transport of a
+ * {@link ReplicationPackage}s to / from another instance described by a {@link ReplicationEndpoint}.
+ * {@link org.apache.sling.replication.transport.ReplicationTransportHandler} implementations are meant to be stateful,
+ * so all the information regarding the target endpoint of the transport algorithm is part of its state and thus not exposed
+ * in the API.
  */
 public interface ReplicationTransportHandler {
 
     /**
      * Delivers a given {@link ReplicationPackage}
      *
-     *
-     * @param resourceResolver
+     * @param resourceResolver   used to eventually access local resources needed by the transport algorithm
      * @param replicationPackage a {@link org.apache.sling.replication.packaging.ReplicationPackage} to transport
      * @throws ReplicationTransportException if any error occurs during the transport
      */
@@ -44,8 +46,7 @@ public interface ReplicationTransportHandler {
     /**
      * Retrieves a list of {@link ReplicationPackage}
      *
-     *
-     * @param resourceResolver
+     * @param resourceResolver   used to eventually access local resources needed by the transport algorithm
      * @param replicationRequest the replication request
      * @throws ReplicationTransportException if any error occurs during the transport
      */

@@ -89,7 +89,7 @@ public class OsgiPropertiesResourceProviderFactory implements ResourceProviderFa
      * Child resource properties are static an can be configured as follows:
      * childResourceName/childResourcePropertyName=childResourcePropertyValue
      */
-    @Property(cardinality = 100)
+    @Property(cardinality = Integer.MAX_VALUE)
     public final static String RESOURCE_PROPERTIES = "resourceProperties";
 
     public final static String DEFAULT_PROVIDER_TYPE = "osgiService";

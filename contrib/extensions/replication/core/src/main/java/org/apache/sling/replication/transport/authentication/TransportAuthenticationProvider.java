@@ -21,24 +21,33 @@ package org.apache.sling.replication.transport.authentication;
 import org.apache.sling.replication.component.ReplicationComponent;
 
 /**
- * A <code>TransportAuthenticationProvider</code> is responsible for authentication of instances sending and
- * receiving replication items via {@link org.apache.sling.replication.transport.ReplicationTransportHandler}s
+ * A {@link org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider} is responsible for
+ * authentication of instances sending and receiving replication items via {@link org.apache.sling.replication.transport.ReplicationTransportHandler}s
+ * A {@link org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider} will authenticate
+ * 'authenticables' objects of type {@link A}, producing 'authenticated' objects of type {@link T}.
+ *
  */
 public interface TransportAuthenticationProvider<A, T> extends ReplicationComponent {
 
     /**
-     * check if this provider is able to authenticate objects belonging to given 'authenticable' class.
+     * Check if this provider is able to authenticate objects belonging to given 'authenticable' class.
      *
      * @param authenticable class of objects to be authenticated
      * @return <code>true</code> if this provider can check authentication on instances of this class, <code>false</code>
      * otherwise
      */
-    boolean canAuthenticate(Class authenticable);
+    boolean canAuthenticate(Class<A> authenticable);
 
     /**
-     * @param authenticable
-     * @param context
-     * @return
+     * Authenticate an 'authenticable' object by performing some implementation specific operation on it, and producing
+     * an 'authenticated' object to be passed back to the {@link org.apache.sling.replication.transport.ReplicationTransportHandler}.
+     * The returned 'authenticated' object may be of the same class of the 'authenticable' object (e.g. passing an 'authenticable'
+     * http client and returning an 'authenticated' http client) or of a different class (e.g. passing an 'authenticable'
+     * jcr repository and returning an 'authenticated' jcr session).
+     *
+     * @param authenticable class of objects to be authenticated
+     * @param context       authentication context holding authentication information
+     * @return an 'authenticated' object to be used by the transport
      * @throws TransportAuthenticationException
      */
     T authenticate(A authenticable, TransportAuthenticationContext context)

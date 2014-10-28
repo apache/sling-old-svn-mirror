@@ -44,8 +44,8 @@ import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.replication.trigger.ReplicationRequestHandler;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
-import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,21 +82,21 @@ public class RemoteEventReplicationTrigger implements ReplicationTrigger {
         this.scheduler = scheduler;
     }
 
-    public void register(String handlerId, ReplicationTriggerRequestHandler requestHandler) {
+    public void register(ReplicationRequestHandler requestHandler) {
         try {
             log.info("applying remote event replication trigger");
 
             ScheduleOptions options = scheduler.NOW();
-            options.name(handlerId);
-            scheduler.schedule(new EventBasedReplication(handlerId, requestHandler), options);
+            options.name(requestHandler.toString());
+            scheduler.schedule(new EventBasedReplication(requestHandler), options);
 
         } catch (Exception e) {
-            log.error("handler {} cannot be registered", handlerId, e);
+            log.error("handler {} cannot be registered", requestHandler, e);
         }
     }
 
-    public void unregister(String handlerId) {
-        Future<HttpResponse> httpResponseFuture = requests.remove(handlerId);
+    public void unregister(ReplicationRequestHandler requestHandler) {
+        Future<HttpResponse> httpResponseFuture = requests.remove(requestHandler.toString());
         if (httpResponseFuture != null) {
             httpResponseFuture.cancel(true);
         }
@@ -104,12 +104,10 @@ public class RemoteEventReplicationTrigger implements ReplicationTrigger {
 
     private class SSEResponseConsumer extends BasicAsyncResponseConsumer {
 
-        private final String handleId;
-        private final ReplicationTriggerRequestHandler agent;
+        private final ReplicationRequestHandler handler;
 
-        private SSEResponseConsumer(String handleId, ReplicationTriggerRequestHandler agent) {
-            this.handleId = handleId;
-            this.agent = agent;
+        private SSEResponseConsumer(ReplicationRequestHandler handler) {
+            this.handler = handler;
         }
 
         @Override
@@ -121,9 +119,9 @@ public class RemoteEventReplicationTrigger implements ReplicationTrigger {
 
             // TODO : currently it always triggers poll request on /, should this be configurable?
             ReplicationRequest replicationRequest = new ReplicationRequest(System.currentTimeMillis(), ReplicationActionType.POLL, "/");
-            agent.handle(replicationRequest);
+            handler.handle(replicationRequest);
             log.info("replication request to agent {} sent ({} {})", new Object[]{
-                    handleId,
+                    handler,
                     replicationRequest.getAction(),
                     replicationRequest.getPaths()});
 
@@ -138,11 +136,9 @@ public class RemoteEventReplicationTrigger implements ReplicationTrigger {
     }
 
     private class EventBasedReplication implements Runnable {
-        private final String handleId;
-        private final ReplicationTriggerRequestHandler requestHandler;
+        private final ReplicationRequestHandler requestHandler;
 
-        public EventBasedReplication(String handleId, ReplicationTriggerRequestHandler requestHandler) {
-            this.handleId = handleId;
+        public EventBasedReplication(ReplicationRequestHandler requestHandler) {
             this.requestHandler = requestHandler;
         }
 
@@ -172,7 +168,7 @@ public class RemoteEventReplicationTrigger implements ReplicationTrigger {
                     log.debug("sending request");
                     Future<HttpResponse> futureResponse = httpClient.execute(
                             basicAsyncRequestProducer,
-                            new SSEResponseConsumer(handleId, requestHandler), new FutureCallback<HttpResponse>() {
+                            new SSEResponseConsumer(requestHandler), new FutureCallback<HttpResponse>() {
                                 public void completed(HttpResponse httpResponse) {
                                     log.debug("response received {}", httpResponse);
                                 }
@@ -185,7 +181,7 @@ public class RemoteEventReplicationTrigger implements ReplicationTrigger {
                                     log.warn("request cancelled");
                                 }
                             });
-                    requests.put(handleId, futureResponse);
+                    requests.put(requestHandler.toString(), futureResponse);
                     futureResponse.get();
 
                 } catch (Exception e) {

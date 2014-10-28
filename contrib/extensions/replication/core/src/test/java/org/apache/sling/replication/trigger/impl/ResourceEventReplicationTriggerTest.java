@@ -18,7 +18,7 @@
  */
 package org.apache.sling.replication.trigger.impl;
 
-import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
+import org.apache.sling.replication.trigger.ReplicationRequestHandler;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 
@@ -34,9 +34,8 @@ public class ResourceEventReplicationTriggerTest {
         String path = "/some/path";
         BundleContext bundleContext = mock(BundleContext.class);
         ResourceEventReplicationTrigger resourceEventReplicationTrigger = new ResourceEventReplicationTrigger(path, bundleContext);
-        String handlerId = "handlder-id-123";
-        ReplicationTriggerRequestHandler handler = mock(ReplicationTriggerRequestHandler.class);
-        resourceEventReplicationTrigger.register(handlerId, handler);
+        ReplicationRequestHandler handler = mock(ReplicationRequestHandler.class);
+        resourceEventReplicationTrigger.register(handler);
     }
 
     @Test
@@ -44,8 +43,8 @@ public class ResourceEventReplicationTriggerTest {
         String path = "/some/path";
         BundleContext bundleContext = mock(BundleContext.class);
         ResourceEventReplicationTrigger resourceEventReplicationTrigger = new ResourceEventReplicationTrigger(path, bundleContext);
-        String handlerId = "handlder-id-123";
-        resourceEventReplicationTrigger.unregister(handlerId);
+        ReplicationRequestHandler handler = mock(ReplicationRequestHandler.class);
+        resourceEventReplicationTrigger.unregister(handler);
     }
 
     @Test

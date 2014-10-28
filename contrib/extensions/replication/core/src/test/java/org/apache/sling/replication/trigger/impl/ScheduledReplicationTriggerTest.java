@@ -21,7 +21,7 @@ package org.apache.sling.replication.trigger.impl;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.replication.communication.ReplicationActionType;
-import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
+import org.apache.sling.replication.trigger.ReplicationRequestHandler;
 import org.junit.Test;
 
 import static org.mockito.Mockito.mock;
@@ -35,16 +35,15 @@ public class ScheduledReplicationTriggerTest {
     @Test
     public void testRegister() throws Exception {
         for (ReplicationActionType action : ReplicationActionType.values()) {
-            String handlerId = "handler-id-123";
             String path = "/path/to/somewhere";
             int interval = 10;
+            ReplicationRequestHandler handler = mock(ReplicationRequestHandler.class);
             Scheduler scheduler = mock(Scheduler.class);
             ScheduleOptions options = mock(ScheduleOptions.class);
             when(scheduler.NOW(-1, interval)).thenReturn(options);
-            when(options.name(handlerId)).thenReturn(options);
+            when(options.name(handler.toString())).thenReturn(options);
             ScheduledReplicationTrigger scheduledReplicationTrigger = new ScheduledReplicationTrigger(action.name(), path, interval, scheduler);
-            ReplicationTriggerRequestHandler handler = mock(ReplicationTriggerRequestHandler.class);
-            scheduledReplicationTrigger.register(handlerId, handler);
+            scheduledReplicationTrigger.register(handler);
         }
     }
 
@@ -55,7 +54,7 @@ public class ScheduledReplicationTriggerTest {
             int interval = 10;
             Scheduler scheduler = mock(Scheduler.class);
             ScheduledReplicationTrigger scheduledReplicationTrigger = new ScheduledReplicationTrigger(action.name(), path, interval, scheduler);
-            String handlerId = "handler-id-123";
+            ReplicationRequestHandler handlerId = mock(ReplicationRequestHandler.class);
             scheduledReplicationTrigger.unregister(handlerId);
         }
     }
