@@ -159,18 +159,18 @@ public class GenericJcrRootFile extends JcrNode {
 		}
 	}
 
-	public void pickResources(List<Object> membersList) {
-		for (Iterator<Object> it = membersList.iterator(); it.hasNext();) {
-			final IResource resource = (IResource) it.next();
+    public void pickResources(List<IResource> membersList) {
+        for (Iterator<IResource> it = membersList.iterator(); it.hasNext();) {
+            final IResource resource = it.next();
 			final String resName = resource.getName();
-            Iterator<?> it2;
+            Iterator<JcrNode> it2;
 			if (isRootContentXml()) {
 				it2 = parent.children.iterator();
 			} else {
 				it2 = children.iterator();
 			}
 			while(it2.hasNext()) {
-				JcrNode aChild = (JcrNode) it2.next();
+                JcrNode aChild = it2.next();
 				if (resName.equals(aChild.getName())) {
 					// then pick this one
 					it.remove();

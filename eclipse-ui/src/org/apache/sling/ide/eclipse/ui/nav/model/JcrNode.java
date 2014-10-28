@@ -313,8 +313,8 @@ public class JcrNode implements IAdaptable {
 				}
 			}
 		}
-		for (Iterator it = values.iterator(); it.hasNext();) {
-            JcrNode jcrNode = (JcrNode) it.next();
+        for (Iterator<JcrNode> it = values.iterator(); it.hasNext();) {
+            JcrNode jcrNode = it.next();
             if (jcrNode instanceof DirNode) {
                 DirNode dirNode = (DirNode)jcrNode;
                 // DirNodes are candidates for hiding
@@ -361,18 +361,18 @@ public class JcrNode implements IAdaptable {
 				throw new IllegalStateException("Children already loaded");
 			}
 			Set<String> childrenNames = new HashSet<String>();
-			for (Iterator it = children.iterator(); it.hasNext();) {
-				JcrNode node = (JcrNode) it.next();
+            for (Iterator<JcrNode> it = children.iterator(); it.hasNext();) {
+                JcrNode node = it.next();
 				childrenNames.add(node.getName());
 			}
 			
 			if (resource!=null && resource instanceof IFolder) {
 				IFolder folder = (IFolder)resource;
 				IResource[] members = folder.members();
-				List<Object> membersList = new LinkedList<Object>(Arrays.asList(members));
+                List<IResource> membersList = new LinkedList<IResource>(Arrays.asList(members));
 				outerLoop: while(membersList.size()>0) {
-					for (Iterator it = membersList.iterator(); it.hasNext();) {
-						IResource iResource = (IResource) it.next();
+                    for (Iterator<IResource> it = membersList.iterator(); it.hasNext();) {
+                        IResource iResource = it.next();
 						if (isVaultFile(iResource)) {
 							GenericJcrRootFile gjrf = new GenericJcrRootFile(this, (IFile)iResource);
 							it.remove();
@@ -381,7 +381,7 @@ public class JcrNode implements IAdaptable {
 							
 							// as this might have added some new children, go through the children again and
 							// add them if they're not already added
-							for (Iterator it3 = children.iterator(); it3
+                            for (Iterator<JcrNode> it3 = children.iterator(); it3
 									.hasNext();) {
 								JcrNode node = (JcrNode) it3.next();
 								if (!childrenNames.contains(node.getName())) {
@@ -393,7 +393,7 @@ public class JcrNode implements IAdaptable {
 						}
 					}
 					List<JcrNode> newNodes = new LinkedList<JcrNode>();
-					for (Iterator it = membersList.iterator(); it.hasNext();) {
+                    for (Iterator<IResource> it = membersList.iterator(); it.hasNext();) {
 						IResource iResource = (IResource) it.next();
 						JcrNode node;
 						if (DirNode.isDirNode(iResource)) {
@@ -975,8 +975,8 @@ public class JcrNode implements IAdaptable {
                 Document document = TolerantXMLParser.parse(xml, file.getFullPath().toOSString());
                 // add the attributes of content
                 List<Attribute> attributes = content.getAttributes();
-                for (Iterator it = attributes.iterator(); it.hasNext();) {
-                    Attribute anAttribute = (Attribute) it.next();
+                for (Iterator<Attribute> it = attributes.iterator(); it.hasNext();) {
+                    Attribute anAttribute = it.next();
                     if (anAttribute.getName().equals("jcr:primaryType")) {
                         // skip this
                         continue;
@@ -1339,9 +1339,8 @@ public class JcrNode implements IAdaptable {
                 Element propDomElement = properties.getDomElement();
                 if (propDomElement!=null) {
                     List<Attribute> attributes = propDomElement.getAttributes();
-                    for (Iterator it = attributes.iterator(); it
-                            .hasNext();) {
-                        Attribute anAttribute = (Attribute) it.next();
+                    for (Iterator<Attribute> it = attributes.iterator(); it.hasNext();) {
+                        Attribute anAttribute = it.next();
                         if (anAttribute.getName().startsWith("xmlns:")) {
                             continue;
                         }
@@ -1471,9 +1470,9 @@ public class JcrNode implements IAdaptable {
             }
         } else {
             List<ResourceProxy> resourceProxyChildren = resourceProxy.getChildren();
-            for (Iterator it = resourceProxyChildren.iterator(); it
+            for (Iterator<ResourceProxy> it = resourceProxyChildren.iterator(); it
                     .hasNext();) {
-                final ResourceProxy aChild = (ResourceProxy) it.next();
+                final ResourceProxy aChild = it.next();
                 final Object p1 = doGetProperty(aChild, propertyName);
                 if (p1!=null) {
                     return p1;
@@ -1492,8 +1491,8 @@ public class JcrNode implements IAdaptable {
         nodeTypes.add(nt0);
         // add all supertypes
         nodeTypes.addAll(Arrays.asList(nt0.getSupertypes()));
-        for (Iterator it = nodeTypes.iterator(); it.hasNext();) {
-            NodeType nt = (NodeType) it.next();
+        for (Iterator<NodeType> it = nodeTypes.iterator(); it.hasNext();) {
+            NodeType nt = it.next();
             PropertyDefinition[] pds = nt.getPropertyDefinitions();
             for (int i = 0; i < pds.length; i++) {
                 PropertyDefinition propertyDefinition = pds[i];
@@ -1594,9 +1593,9 @@ public class JcrNode implements IAdaptable {
         }
         IFolder folder = (IFolder) node.resource;
         parentNames.add(childNodeName);
-        for (Iterator it = parentNames.iterator(); it
+        for (Iterator<String> it = parentNames.iterator(); it
                 .hasNext();) {
-            String aParentName = (String) it.next();
+            String aParentName = it.next();
             String encodedParentName = DirNode.encode(aParentName);
             IResource member = folder.findMember(encodedParentName);
             if (member!=null && !(member instanceof IFolder)) {
