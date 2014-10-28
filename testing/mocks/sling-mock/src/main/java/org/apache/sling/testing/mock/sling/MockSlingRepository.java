@@ -41,14 +41,14 @@ class MockSlingRepository implements SlingRepository {
     }
 
     @Override
-    public Session loginAdministrative(final String workspace) throws RepositoryException {
-        return login();
+    public Session loginAdministrative(final String workspaceName) throws RepositoryException {
+        return login(workspaceName);
     }
 
     @Override
-    public Session loginService(final String subServiceName, final String workspace) throws LoginException,
-            RepositoryException {
-        return login();
+    public Session loginService(final String subServiceName, final String workspaceName)
+            throws LoginException, RepositoryException {
+        return login(workspaceName);
     }
 
     @Override

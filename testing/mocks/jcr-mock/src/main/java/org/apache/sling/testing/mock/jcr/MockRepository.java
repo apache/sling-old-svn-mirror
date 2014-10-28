@@ -24,9 +24,11 @@ import java.util.Map;
 import javax.jcr.Credentials;
 import javax.jcr.Repository;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 import javax.jcr.Value;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Mock {@link Repository} implementation. The data is stored inside the mocked
@@ -44,22 +46,28 @@ class MockRepository implements Repository {
     
     @Override
     public Session login() {
-        return new MockSession(this, items);
+        return login(null, null);
     }
 
     @Override
     public Session login(final String workspaceName) {
-        return login();
+        return login(null, workspaceName);
     }
 
     @Override
     public Session login(final Credentials credentials) {
-        return login();
+        return login(credentials, null);
     }
 
     @Override
     public Session login(final Credentials credentials, final String workspaceName) {
-        return login();
+        String userId = null;
+        if (credentials instanceof SimpleCredentials) {
+            userId = ((SimpleCredentials)credentials).getUserID();
+        }
+        return new MockSession(this, items,
+                StringUtils.defaultString(userId, MockJcr.DEFAULT_USER_ID),
+                StringUtils.defaultString(workspaceName, MockJcr.DEFAULT_WORKSPACE));
     }
 
     @Override

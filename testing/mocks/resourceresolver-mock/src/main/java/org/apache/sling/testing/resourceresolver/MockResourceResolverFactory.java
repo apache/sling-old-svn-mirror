@@ -64,7 +64,14 @@ public class MockResourceResolverFactory implements ResourceResolverFactory {
     @Override
     public ResourceResolver getResourceResolver(
             final Map<String, Object> authenticationInfo) throws LoginException {
-        final ResourceResolver result = new MockResourceResolver(options, this, resources);
+        
+        // put user name in resolver attributes
+        Map<String,Object> attributes = new HashMap<String, Object>();
+        if (authenticationInfo!=null) {
+            attributes.put(ResourceResolverFactory.USER, authenticationInfo.get(ResourceResolverFactory.USER));
+        }
+        
+        final ResourceResolver result = new MockResourceResolver(options, this, resources, attributes);
         Stack<ResourceResolver> resolverStack = resolverStackHolder.get();
         if ( resolverStack == null ) {
             resolverStack = new Stack<ResourceResolver>();

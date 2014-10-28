@@ -53,13 +53,23 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
     private final MockResourceResolverFactoryOptions options;
 
     private final MockResourceResolverFactory factory;
+    
+    private final Map<String,Object> attributes;
 
     public MockResourceResolver(final MockResourceResolverFactoryOptions options,
             final MockResourceResolverFactory factory,
             final Map<String, Map<String, Object>> resources) {
+        this(options, factory, resources, Collections.<String,Object>emptyMap());
+    }
+
+    public MockResourceResolver(final MockResourceResolverFactoryOptions options,
+            final MockResourceResolverFactory factory,
+            final Map<String, Map<String, Object>> resources,
+            final Map<String,Object> attributes) {
         this.factory = factory;
         this.options = options;
         this.resources = resources;
+        this.attributes = attributes;
     }
 
     @Override
@@ -268,13 +278,12 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
 
     @Override
     public Iterator<String> getAttributeNames() {
-        final List<String> emptyList = Collections.emptyList();
-        return emptyList.iterator();
+        return attributes.keySet().iterator();
     }
 
     @Override
     public Object getAttribute(final String name) {
-        return null;
+        return attributes.get(name);
     }
 
     @Override

@@ -38,6 +38,7 @@ import org.xml.sax.ContentHandler;
 class MockWorkspace implements Workspace {
 
     private final Session session;
+    private final String workspaceName;
     private final NamespaceRegistry namespaceRegistry = new MockNamespaceRegistry();
     private final ObservationManager observationManager = new MockObservationManager();
     private final NodeTypeManager nodeTypeManager = new MockNodeTypeManager();
@@ -45,8 +46,9 @@ class MockWorkspace implements Workspace {
     /**
      * @param session JCR session
      */
-    public MockWorkspace(final Session session) {
+    public MockWorkspace(Session session, String workspaceName) {
         this.session = session;
+        this.workspaceName = workspaceName;
     }
 
     @Override
@@ -56,7 +58,7 @@ class MockWorkspace implements Workspace {
 
     @Override
     public String getName() {
-        return MockJcr.DEFAULT_WORKSPACE;
+        return this.workspaceName;
     }
 
     @Override

@@ -54,11 +54,14 @@ class MockSession implements Session {
     private final Repository repository;
     private final Workspace workspace;
     private final Map<String, ItemData> items;
+    private final String userId;
 
-    public MockSession(Repository repository, Map<String,ItemData> items) {
+    public MockSession(Repository repository, Map<String,ItemData> items,
+            String userId, String workspaceName) {
         this.repository = repository;
-        this.workspace = new MockWorkspace(this);
+        this.workspace = new MockWorkspace(this, workspaceName);
         this.items = items;
+        this.userId = userId;
     }
 
     @Override
@@ -208,7 +211,7 @@ class MockSession implements Session {
 
     @Override
     public String getUserID() {
-        return "mockedUserId";
+        return this.userId;
     }
 
     @Override

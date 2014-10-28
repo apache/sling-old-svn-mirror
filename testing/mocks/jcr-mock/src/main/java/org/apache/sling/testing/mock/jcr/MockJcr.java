@@ -21,6 +21,9 @@ package org.apache.sling.testing.mock.jcr;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
+
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Factory for mock JCR objects.
@@ -31,6 +34,11 @@ public final class MockJcr {
      * Default workspace name
      */
     public static final String DEFAULT_WORKSPACE = "mockedWorkspace";
+
+    /**
+     * Default user id
+     */
+    public static final String DEFAULT_USER_ID = "admin";
 
     private MockJcr() {
         // static methods only
@@ -52,8 +60,23 @@ public final class MockJcr {
      * @return JCR session
      */
     public static Session newSession() {
+        return newSession(null, null);
+    }
+
+    /**
+     * Create a new mocked in-memory JCR session. It contains only the root
+     * node. All data of the session is thrown away if it gets garbage
+     * collected.
+     * @param userId User id for the mock environment.
+     * @param workspaceName Workspace name for the mock environment.
+     * @return JCR session
+     */
+    public static Session newSession(String userId, String workspaceName) {
         try {
-            return newRepository().login();
+            return newRepository().login(
+                    new SimpleCredentials(StringUtils.defaultString(userId, DEFAULT_USER_ID), new char[0]),
+                    StringUtils.defaultString(workspaceName, DEFAULT_WORKSPACE)
+            );
         } catch (RepositoryException ex) {
             throw new RuntimeException("Creating mocked JCR session failed.", ex);
         }
