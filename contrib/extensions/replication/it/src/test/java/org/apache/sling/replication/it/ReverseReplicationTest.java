@@ -23,7 +23,7 @@ import org.apache.sling.replication.communication.ReplicationActionType;
 import org.junit.Test;
 
 import static org.apache.sling.replication.it.ReplicationUtils.assertExists;
-import static org.apache.sling.replication.it.ReplicationUtils.assertNotExits;
+import static org.apache.sling.replication.it.ReplicationUtils.assertNotExists;
 import static org.apache.sling.replication.it.ReplicationUtils.createRandomNode;
 import static org.apache.sling.replication.it.ReplicationUtils.replicate;
 
@@ -45,6 +45,6 @@ public class ReverseReplicationTest extends ReplicationIntegrationTestBase {
         String nodePath = createRandomNode(authorClient, "/content/reverse_del_" + System.nanoTime());
         assertExists(authorClient, nodePath);
         replicate(publish, "reverse", ReplicationActionType.DELETE, nodePath);
-        assertNotExits(authorClient, nodePath);
+        assertNotExists(authorClient, nodePath);
     }
 }

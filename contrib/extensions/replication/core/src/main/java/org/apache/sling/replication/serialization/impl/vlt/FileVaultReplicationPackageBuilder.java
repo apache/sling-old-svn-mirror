@@ -98,7 +98,9 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
         } catch (Exception e) {
             throw new ReplicationPackageBuildingException(e);
         } finally {
-           ungetSession(session);
+           if (session != null) {
+               session.logout();
+           }
         }
     }
 
@@ -164,7 +166,9 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
             log.error("could not read / install the package", e);
             throw new ReplicationPackageReadingException(e);
         } finally {
-           ungetSession(session);
+           if (session != null) {
+               session.logout();
+           }
         }
         return false;
     }

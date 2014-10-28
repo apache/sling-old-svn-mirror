@@ -141,7 +141,9 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
         } catch (Exception e) {
             throw new ReplicationPackageReadingException(e);
         } finally {
-            ungetSession(session);
+            if (session != null) {
+                session.logout();
+            }
         }
 
         return false;
@@ -170,11 +172,6 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
         }
         return session;
     }
-
-    protected void ungetSession(Session session) {
-
-    }
-
 
     protected abstract ReplicationPackage createPackageForAdd(ResourceResolver resourceResolver, ReplicationRequest request)
             throws ReplicationPackageBuildingException;

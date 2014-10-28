@@ -26,7 +26,7 @@ import static org.apache.sling.replication.it.ReplicationUtils.agentConfigUrl;
 import static org.apache.sling.replication.it.ReplicationUtils.agentRootUrl;
 import static org.apache.sling.replication.it.ReplicationUtils.agentUrl;
 import static org.apache.sling.replication.it.ReplicationUtils.assertExists;
-import static org.apache.sling.replication.it.ReplicationUtils.assertNotExits;
+import static org.apache.sling.replication.it.ReplicationUtils.assertNotExists;
 import static org.apache.sling.replication.it.ReplicationUtils.assertResponseContains;
 import static org.apache.sling.replication.it.ReplicationUtils.deleteNode;
 import static org.apache.sling.replication.it.ReplicationUtils.queueUrl;
@@ -69,7 +69,7 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
                 "cache-flush"
         };
         for (String agentName : defaultPublishAgentNames) {
-            assertNotExits(authorClient, agentUrl(agentName));
+            assertNotExists(authorClient, agentUrl(agentName));
         }
     }
 
@@ -93,7 +93,7 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
                 "cache-flush"
         };
         for (String agentName : defaultPublishAgentNames) {
-            assertNotExits(authorClient, queueUrl(agentName));
+            assertNotExists(authorClient, queueUrl(agentName));
         }
     }
 
@@ -137,8 +137,7 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
         assertExists(authorClient, newConfigResource);
 
         deleteNode(author, newConfigResource);
-        // authorClient.delete does not work for some reason
-        assertNotExits(authorClient, newConfigResource);
+        assertNotExists(authorClient, newConfigResource);
     }
 
 
