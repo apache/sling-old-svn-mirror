@@ -70,7 +70,6 @@ public class ResourceResolverTest {
     private static List<String> toDelete = new ArrayList<String>();
     private static ResourceResolverFactory cleanupResolverFactory;
     private MappingsFacade mappingsFacade;
-    private static String saveMappingsError;
     
     @TestReference
     private EventsCounter eventsCounter;
@@ -87,13 +86,9 @@ public class ResourceResolverTest {
     }
     
     private void saveMappings(Session s) throws Exception {
+        final String saveMappingsError = mappingsFacade.saveMappings(s);
         if(saveMappingsError != null) {
             fail(saveMappingsError);
-        } else {
-            saveMappingsError = mappingsFacade.saveMappings(s);
-            if(saveMappingsError != null) {
-                fail(saveMappingsError);
-            }
         }
     }
 
