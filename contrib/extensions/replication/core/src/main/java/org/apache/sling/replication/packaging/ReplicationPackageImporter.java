@@ -44,7 +44,7 @@ public interface ReplicationPackageImporter extends ReplicationComponent {
      * @param resourceResolver - the resource resolver used to read the package
      * @param stream the {@link InputStream} of the package to read
      * @return a {@link ReplicationPackage} if it can read it from the stream
-     * @throws ReplicationPackageReadingException when the stream cannot be read as a {@link ReplicationPackage}
+     * @throws ReplicationPackageUploadException when the stream cannot be read as a {@link ReplicationPackage}
      */
     ReplicationPackage uploadPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageUploadException;
 

@@ -53,6 +53,8 @@ import org.slf4j.LoggerFactory;
 public class FileVaultReplicationPackageBuilder extends AbstractReplicationPackageBuilder implements
         ReplicationPackageBuilder {
 
+    private static final String VERSION = "0.0.1";
+
     public static String PACKAGING_TYPE = "vlt";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -87,8 +89,10 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
             props.setProperty(VaultPackage.NAME_GROUP, packageGroup);
             String packageName = String.valueOf(request.getTime());
             props.setProperty(VaultPackage.NAME_NAME, packageName);
-            log.debug("assembling package {}", packageGroup + '/' + packageName);
+            props.setProperty(VaultPackage.NAME_VERSION, VERSION);
             inf.setProperties(props);
+
+            log.debug("assembling package {}", packageGroup + '/' + packageName + "-" + VERSION);
 
             opts.setMetaInf(inf);
             opts.setRootPath("/");
@@ -98,9 +102,9 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
         } catch (Exception e) {
             throw new ReplicationPackageBuildingException(e);
         } finally {
-           if (session != null) {
-               session.logout();
-           }
+            if (session != null) {
+                session.logout();
+            }
         }
     }
 
@@ -166,9 +170,9 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
             log.error("could not read / install the package", e);
             throw new ReplicationPackageReadingException(e);
         } finally {
-           if (session != null) {
-               session.logout();
-           }
+            if (session != null) {
+                session.logout();
+            }
         }
         return false;
     }
