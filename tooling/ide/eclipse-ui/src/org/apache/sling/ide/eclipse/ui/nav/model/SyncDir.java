@@ -18,11 +18,9 @@ package org.apache.sling.ide.eclipse.ui.nav.model;
 
 import java.util.StringTokenizer;
 
-import org.apache.sling.ide.eclipse.ui.internal.SharedImages;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.swt.graphics.Image;
 
 /** WIP: model object for the syncDir [root] shown in the content package view in project explorer **/
 public class SyncDir extends JcrNode {
