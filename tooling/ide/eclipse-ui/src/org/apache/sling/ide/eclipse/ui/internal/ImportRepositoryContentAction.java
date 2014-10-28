@@ -428,6 +428,15 @@ public class ImportRepositoryContentAction {
         return destinationFolder;
     }
 
+    private void createParents(IContainer container) throws CoreException {
+        if (container.exists() || container.getType() != IResource.FOLDER) {
+            return;
+        }
+
+        createParents(container.getParent());
+        createFolder(container.getProject(), container.getProjectRelativePath());
+    }
+
     private void removeTouchedResource(IResource resource) {
 
         IResource current = resource;
@@ -461,17 +470,4 @@ public class ImportRepositoryContentAction {
         destinationFile.setSessionProperty(ResourceUtil.QN_IMPORT_MODIFICATION_TIMESTAMP,
                 destinationFile.getModificationStamp());
     }
-    
-    private void createParents(IContainer container) throws CoreException {
-    	if (container.exists()) {
-    		return;
-    	}
-    	if (!(container instanceof IFolder)) {
-    		return;
-    	}
-    	createParents(container.getParent());
-    	IFolder parentFolder = (IFolder)container;
-        parentFolder.create(true, true, null);
-    }
-
 }
