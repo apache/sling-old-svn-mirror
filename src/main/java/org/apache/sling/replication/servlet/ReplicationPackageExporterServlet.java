@@ -73,7 +73,7 @@ public class ReplicationPackageExporterServlet extends SlingAllMethodsServlet {
 
         try {
             // get first item
-            List<ReplicationPackage> replicationPackages = replicationPackageExporter.exportPackage(resourceResolver, replicationRequest);
+            List<ReplicationPackage> replicationPackages = replicationPackageExporter.exportPackages(resourceResolver, replicationRequest);
 
             if (replicationPackages.size() > 0) {
                 log.info("{} package(s) available for fetching, the first will be delivered", replicationPackages.size());

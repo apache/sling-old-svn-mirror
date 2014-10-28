@@ -37,14 +37,18 @@ public interface ReplicationPackageExporter extends ReplicationComponent {
      * Exports the {@link org.apache.sling.replication.packaging.ReplicationPackage}s built from the
      * passed {@link org.apache.sling.replication.communication.ReplicationRequest}.
      *
+     * @param resourceResolver - the resource resolver used to export the packages
+     * @param replicationRequest - the request containing the information about which content is to be exported
      * @return a <code>List</code> of {@link org.apache.sling.replication.packaging.ReplicationPackage}s
      */
-    List<ReplicationPackage> exportPackage(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException;
+    List<ReplicationPackage> exportPackages(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException;
 
     /**
-     * Exports a {@link org.apache.sling.replication.packaging.ReplicationPackage} given its 'id', if it already exists.
+     * Retrieves a {@link org.apache.sling.replication.packaging.ReplicationPackage} given its 'id', if it already exists.
      *
+     * @param resourceResolver - the resource resolver use to obtain the package.
+     * @param replicationPackageId - the id of the package to be retrieved
      * @return a {@link org.apache.sling.replication.packaging.ReplicationPackage} if available, <code>null</code> otherwise
      */
-    ReplicationPackage exportPackageById(ResourceResolver resourceResolver, String replicationPackageId);
+    ReplicationPackage getPackage(ResourceResolver resourceResolver, String replicationPackageId);
 }

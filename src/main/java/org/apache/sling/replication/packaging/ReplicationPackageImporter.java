@@ -32,18 +32,20 @@ public interface ReplicationPackageImporter extends ReplicationComponent {
     /**
      * Imports the given replication package
      *
+     * @param resourceResolver - the resource resolver used to import the resources
      * @param replicationPackage - the package to be imported
      * @return <code>true</code> if the import succeeded, <code>false</code> otherwise
      */
-    boolean importPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationPackageReadingException;
+    boolean importPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationPackageImportException;
 
     /**
-     * reads a stream and tries to convert it to a {@link ReplicationPackage} this provider can read and install
+     * Uploads a stream and tries to convert it to a {@link ReplicationPackage} this importer can import
      *
+     * @param resourceResolver - the resource resolver used to read the package
      * @param stream the {@link InputStream} of the package to read
      * @return a {@link ReplicationPackage} if it can read it from the stream
      * @throws ReplicationPackageReadingException when the stream cannot be read as a {@link ReplicationPackage}
      */
-    ReplicationPackage readPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageReadingException;
+    ReplicationPackage uploadPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageUploadException;
 
 }

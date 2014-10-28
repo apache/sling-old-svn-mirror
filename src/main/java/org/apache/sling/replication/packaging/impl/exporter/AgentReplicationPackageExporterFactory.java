@@ -71,13 +71,13 @@ public class AgentReplicationPackageExporterFactory implements ReplicationPackag
         packageExporter = replicationComponentFactory.createComponent(ReplicationPackageExporter.class, config, this);
     }
 
-    public List<ReplicationPackage> exportPackage(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
+    public List<ReplicationPackage> exportPackages(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
 
-       return packageExporter.exportPackage(resourceResolver, replicationRequest);
+       return packageExporter.exportPackages(resourceResolver, replicationRequest);
     }
 
-    public ReplicationPackage exportPackageById(ResourceResolver resourceResolver, String replicationPackageId) {
-        return packageExporter.exportPackageById(resourceResolver, replicationPackageId);
+    public ReplicationPackage getPackage(ResourceResolver resourceResolver, String replicationPackageId) {
+        return packageExporter.getPackage(resourceResolver, replicationPackageId);
     }
 
     public <ComponentType extends ReplicationComponent> ComponentType getComponent(Class<ComponentType> type, String componentName) {

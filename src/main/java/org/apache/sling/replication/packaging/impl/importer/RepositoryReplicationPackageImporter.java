@@ -38,7 +38,9 @@ import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.event.ReplicationEventType;
 import org.apache.sling.replication.packaging.ReplicationPackage;
+import org.apache.sling.replication.packaging.ReplicationPackageImportException;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
+import org.apache.sling.replication.packaging.ReplicationPackageUploadException;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
@@ -49,9 +51,6 @@ import org.slf4j.LoggerFactory;
  * {@link ReplicationPackageImporter} importing
  * {@link ReplicationPackage} stream + type into an underlying JCR repository.
  */
-@Component(label = "Repository Replication Package Importer")
-@Service(value = ReplicationPackageImporter.class)
-@Property(name = "name", value = RepositoryReplicationPackageImporter.NAME)
 public class RepositoryReplicationPackageImporter implements ReplicationPackageImporter {
 
     static final String NAME = "repository";
@@ -60,13 +59,10 @@ public class RepositoryReplicationPackageImporter implements ReplicationPackageI
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Reference
     private SlingRepository repository;
 
-    @Reference
     private ReplicationEventFactory replicationEventFactory;
 
-    @Reference
     private TransportAuthenticationProvider<SlingRepository, Session> transportAuthenticationProvider;
 
     public void deliverPackageToEndpoint(ReplicationPackage replicationPackage, ReplicationEndpoint replicationEndpoint)
@@ -113,11 +109,11 @@ public class RepositoryReplicationPackageImporter implements ReplicationPackageI
         }
     }
 
-    public boolean importPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {
+    public boolean importPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationPackageImportException {
         return false;
     }
 
-    public ReplicationPackage readPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageReadingException {
+    public ReplicationPackage uploadPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageUploadException {
         return null;
     }
 }

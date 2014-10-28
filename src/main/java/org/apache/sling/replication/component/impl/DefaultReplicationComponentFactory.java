@@ -52,6 +52,7 @@ import org.apache.sling.replication.packaging.impl.importer.RemoteReplicationPac
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
+import org.apache.sling.replication.serialization.impl.ResourceSharedReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilder;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.replication.transport.authentication.impl.UserCredentialsTransportAuthenticationProvider;
@@ -297,7 +298,7 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
         if (PACKAGE_BUILDER_FILEVLT.equals(factory)) {
-            return new FileVaultReplicationPackageBuilder(packaging, replicationEventFactory);
+            return new ResourceSharedReplicationPackageBuilder(new FileVaultReplicationPackageBuilder(packaging, replicationEventFactory));
         }
 
         return null;

@@ -71,7 +71,7 @@ public class RemoteReplicationPackageExporter implements ReplicationPackageExpor
                 transportEndpointStrategyType);
     }
 
-    public List<ReplicationPackage> exportPackage(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
+    public List<ReplicationPackage> exportPackages(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
         try {
             List<ReplicationPackage> replicationPackages = transportHandler.retrievePackages(resourceResolver, replicationRequest);
 //            for (ReplicationPackage replicationPackage : replicationPackages) {
@@ -83,7 +83,7 @@ public class RemoteReplicationPackageExporter implements ReplicationPackageExpor
         }
     }
 
-    public ReplicationPackage exportPackageById(ResourceResolver resourceResolver, String replicationPackageId) {
+    public ReplicationPackage getPackage(ResourceResolver resourceResolver, String replicationPackageId) {
         return packageBuilder.getPackage(resourceResolver, replicationPackageId);
     }
 }

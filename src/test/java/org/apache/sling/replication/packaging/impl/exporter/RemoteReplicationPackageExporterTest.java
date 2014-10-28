@@ -47,7 +47,7 @@ public class RemoteReplicationPackageExporterTest {
                     packageBuilder, authProvider, endpoints, strategy.name(), 1);
             ResourceResolver resourceResolver = mock(ResourceResolver.class);
             ReplicationRequest replicationRequest = mock(ReplicationRequest.class);
-            List<ReplicationPackage> replicationPackages = remoteReplicationPackageExporter.exportPackage(resourceResolver, replicationRequest);
+            List<ReplicationPackage> replicationPackages = remoteReplicationPackageExporter.exportPackages(resourceResolver, replicationRequest);
             assertNotNull(replicationPackages);
             assertTrue(replicationPackages.isEmpty());
         }
