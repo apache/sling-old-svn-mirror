@@ -202,7 +202,14 @@ public class MockSessionTest {
 
     @Test
     public void testUserId() {
-        assertEquals("mockedUserId", this.session.getUserID());
+        assertEquals(MockJcr.DEFAULT_USER_ID, this.session.getUserID());
+    }
+
+    @Test
+    public void testWithCustomUserWorkspace() {
+        Session mySession = MockJcr.newSession("myUser", "myWorkspace");
+        assertEquals("myUser", mySession.getUserID());
+        assertEquals("myWorkspace", mySession.getWorkspace().getName());
     }
 
     @Test
