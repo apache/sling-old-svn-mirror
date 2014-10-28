@@ -18,15 +18,12 @@
  */
 package org.apache.sling.replication.servlet;
 
-import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -40,12 +37,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Servlet to handle reception of replication content.
  */
-@SuppressWarnings("serial")
-@Component(metatype = false)
-@Service(value = Servlet.class)
-@Properties({
-        @Property(name = "sling.servlet.resourceTypes", value = ReplicationConstants.IMPORTER_RESOURCE_TYPE),
-        @Property(name = "sling.servlet.methods", value = "POST")})
+@SlingServlet(resourceTypes = ReplicationConstants.IMPORTER_RESOURCE_TYPE, methods = "POST")
 public class ReplicationPackageImporterServlet extends SlingAllMethodsServlet {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -79,11 +71,11 @@ public class ReplicationPackageImporterServlet extends SlingAllMethodsServlet {
             }
         } catch (final Exception e) {
             response.setStatus(400);
-            log.error("Error during replication import: {}", e.getMessage(), e);
             response.getWriter().print("error: " + e.toString());
+            log.error("Error during replication import: {}", e.getMessage(), e);
         } finally {
-            final long end = System.currentTimeMillis();
-            log.info("Processed replication request in {}ms: : {}", new Object[]{end - start, success});
+            long end = System.currentTimeMillis();
+            log.info("Processed package import request in {} ms: : {}", new Object[]{end - start, success});
         }
     }
 

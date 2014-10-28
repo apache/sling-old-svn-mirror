@@ -18,7 +18,6 @@
  */
 package org.apache.sling.replication.servlet;
 
-import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,15 +25,13 @@ import java.util.Enumeration;
 import java.util.List;
 
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.apache.sling.replication.agent.ReplicationAgentException;
 import org.apache.sling.replication.agent.ReplicationAgent;
+import org.apache.sling.replication.agent.ReplicationAgentException;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.communication.ReplicationResponse;
 import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
@@ -46,12 +43,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Servlet to ask {@link ReplicationAgent}s to replicate (via HTTP POST).
  */
-@SuppressWarnings("serial")
-@Component(metatype = false)
-@Service(value = Servlet.class)
-@Properties({
-        @Property(name = "sling.servlet.resourceTypes", value = ReplicationConstants.AGENT_RESOURCE_TYPE),
-        @Property(name = "sling.servlet.methods", value = "POST")})
+@SlingServlet(resourceTypes = ReplicationConstants.AGENT_RESOURCE_TYPE, methods = "POST")
 public class ReplicationAgentServlet extends SlingAllMethodsServlet {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -71,14 +63,15 @@ public class ReplicationAgentServlet extends SlingAllMethodsServlet {
         if (agent != null) {
             try {
                 ReplicationResponse replicationResponse = agent.execute(resourceResolver, replicationRequest);
-                if (replicationResponse.isSuccessful()
-                        || ItemState.DROPPED.toString().equals(
-                        replicationResponse.getStatus())) {
+                if (replicationResponse.isSuccessful()) {
                     response.setStatus(200);
                 } else if (ItemState.QUEUED.toString().equals(replicationResponse.getStatus())
                         || ItemState.ACTIVE.toString().equals(
                         replicationResponse.getStatus())) {
                     response.setStatus(202);
+                } else if (ItemState.DROPPED.toString().equals(
+                        replicationResponse.getStatus())) {
+                    response.setStatus(404);
                 } else {
                     response.setStatus(400);
                 }

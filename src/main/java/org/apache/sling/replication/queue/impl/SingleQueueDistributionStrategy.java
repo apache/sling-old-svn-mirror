@@ -47,11 +47,11 @@ public class SingleQueueDistributionStrategy implements ReplicationQueueDistribu
     public ReplicationQueueItemState add(String agentName, ReplicationQueueItem item,
                                          ReplicationQueueProvider queueProvider)
             throws ReplicationQueueException {
-        log.info("using single queue distribution");
+        log.debug("using single queue distribution");
 
         ReplicationQueueItemState state = new ReplicationQueueItemState();
         ReplicationQueue queue = queueProvider.getDefaultQueue(agentName);
-        log.info("obtained queue {}", queue);
+        log.debug("obtained queue {}", queue);
 
         if (queue != null) {
             if (queue.add(item)) {

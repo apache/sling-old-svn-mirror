@@ -165,6 +165,8 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
         Session session = resourceResolver.adaptTo(Session.class);
         if (session != null) {
             ReplicationJcrUtils.setDoNotReplicate(session);
+        } else {
+            throw new RepositoryException("could not obtain a session from calling user " + resourceResolver.getUserID());
         }
         return session;
     }

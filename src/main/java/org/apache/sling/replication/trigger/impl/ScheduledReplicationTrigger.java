@@ -22,8 +22,8 @@ import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.trigger.ReplicationRequestHandler;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
-import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,21 +49,20 @@ public class ScheduledReplicationTrigger implements ReplicationTrigger {
         this.scheduler = scheduler;
     }
 
-    public void register(String handlerId, ReplicationTriggerRequestHandler requestHandler) {
+    public void register(ReplicationRequestHandler requestHandler) {
         ScheduleOptions options = scheduler.NOW(-1, secondsInterval);
-        options.name(handlerId);
+        options.name(requestHandler.toString());
         scheduler.schedule(new ScheduledReplication(requestHandler), options);
     }
 
-    public void unregister(String handlerId) {
-        scheduler.unschedule(handlerId);
+    public void unregister(ReplicationRequestHandler requestHandler) {
+        scheduler.unschedule(requestHandler.toString());
     }
 
     private class ScheduledReplication implements Runnable {
-        private final ReplicationTriggerRequestHandler requestHandler;
+        private final ReplicationRequestHandler requestHandler;
 
-
-        public ScheduledReplication(ReplicationTriggerRequestHandler requestHandler) {
+        public ScheduledReplication(ReplicationRequestHandler requestHandler) {
             this.requestHandler = requestHandler;
         }
 

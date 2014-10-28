@@ -87,7 +87,7 @@ public class OsgiServicePropertiesResourceProvider extends AbstractReadableResou
     }
 
     public Iterator<Resource> listChildren(Resource parent) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return null;
     }
 
     public Object addingService(ServiceReference serviceReference) {

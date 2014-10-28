@@ -18,20 +18,17 @@
  */
 package org.apache.sling.replication.servlet;
 
-import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import java.io.IOException;
 
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.apache.sling.replication.agent.ReplicationAgentException;
 import org.apache.sling.replication.agent.ReplicationAgent;
+import org.apache.sling.replication.agent.ReplicationAgentException;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.resources.ReplicationConstants;
@@ -41,13 +38,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Servlet for aggregate replication on all agents
  */
-@SuppressWarnings("serial")
-@Component(metatype = false)
-@Service(value = Servlet.class)
-@Properties({
-        @Property(name = "sling.servlet.resourceTypes", value = ReplicationConstants.AGENT_ROOT_RESOURCE_TYPE),
-        @Property(name = "sling.servlet.methods", value = {"POST"})
-})
+@SlingServlet(resourceTypes = ReplicationConstants.AGENT_ROOT_RESOURCE_TYPE, methods = "POST")
 public class ReplicationAgentRootServlet extends SlingAllMethodsServlet {
 
     private final Logger log = LoggerFactory.getLogger(getClass());

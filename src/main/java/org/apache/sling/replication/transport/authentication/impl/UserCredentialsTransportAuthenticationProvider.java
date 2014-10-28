@@ -67,7 +67,7 @@ public class UserCredentialsTransportAuthenticationProvider implements
 
         } else if (authenticable instanceof CredentialsProvider) {
             CredentialsProvider credentialsProvider = (CredentialsProvider) authenticable;
-            credentialsProvider.setCredentials(new AuthScope(new HttpHost(endpoint.getUri().getHost())),
+            credentialsProvider.setCredentials(new AuthScope(new HttpHost(endpoint.getUri().getHost(), endpoint.getUri().getPort())),
                     new UsernamePasswordCredentials(username, password));
 
             log.debug("authenticated CredentialsProvider HTTP client with user and password");

@@ -32,4 +32,8 @@ public class ReplicationPackageReadingException extends Exception {
     public ReplicationPackageReadingException(Throwable t) {
         super(t);
     }
+
+    public ReplicationPackageReadingException(String message, Exception e) {
+        super(message, e);
+    }
 }

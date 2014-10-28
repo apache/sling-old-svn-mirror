@@ -36,7 +36,6 @@ import org.apache.sling.replication.agent.ReplicationRequestAuthorizationStrateg
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.communication.ReplicationResponse;
 import org.apache.sling.replication.component.ManagedReplicationComponent;
-import org.apache.sling.replication.component.ReplicationComponent;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.event.ReplicationEventType;
 import org.apache.sling.replication.packaging.ReplicationPackage;
@@ -52,8 +51,8 @@ import org.apache.sling.replication.queue.ReplicationQueueProcessor;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
+import org.apache.sling.replication.trigger.ReplicationRequestHandler;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
-import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,6 +80,7 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
     private final ReplicationRequestAuthorizationStrategy replicationRequestAuthorizationStrategy;
     private final ResourceResolverFactory resourceResolverFactory;
     private final String subServiceName;
+    private AgentBasedRequestHandler agentBasedRequestHandler;
 
     public SimpleReplicationAgent(String name,
                                   boolean passive,
@@ -236,12 +236,12 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
 
     public void enable() {
         log.info("enabling agent");
-        // register triggers if any
 
-        for (int i = 0; i < triggers.size(); i++) {
-            ReplicationTrigger trigger = triggers.get(i);
-            String handlerId = name + "-" + i;
-            trigger.register(handlerId, new AgentBasedTriggerRequestHandler(this));
+        // register triggers if any
+        agentBasedRequestHandler = new AgentBasedRequestHandler(this);
+
+        for (ReplicationTrigger trigger : triggers) {
+            trigger.register(agentBasedRequestHandler);
         }
 
         if (!isPassive()) {
@@ -251,11 +251,12 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
 
     public void disable() {
         log.info("disabling agent");
-        for (int i = 0; i < triggers.size(); i++) {
-            ReplicationTrigger trigger = triggers.get(i);
-            String handlerId = name + "-" + i;
-            trigger.unregister(handlerId);
+
+        for (ReplicationTrigger trigger : triggers) {
+            trigger.unregister(agentBasedRequestHandler);
         }
+
+        agentBasedRequestHandler = null;
 
         if (!isPassive()) {
             queueProvider.disableQueueProcessing(name);
@@ -330,10 +331,10 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
         }
     }
 
-    public class AgentBasedTriggerRequestHandler implements ReplicationTriggerRequestHandler {
+    public class AgentBasedRequestHandler implements ReplicationRequestHandler {
         private final ReplicationAgent agent;
 
-        public AgentBasedTriggerRequestHandler(ReplicationAgent agent) {
+        public AgentBasedRequestHandler(ReplicationAgent agent) {
             this.agent = agent;
         }
 

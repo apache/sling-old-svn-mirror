@@ -28,9 +28,9 @@ import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.junit.Test;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -112,6 +112,6 @@ public class VoidReplicationPackageBuilderTest {
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         boolean success = voidReplicationPackageBuilder.installPackage(resourceResolver, replicationPackage);
-        assertFalse(success);
+        assertTrue(success);
     }
 }

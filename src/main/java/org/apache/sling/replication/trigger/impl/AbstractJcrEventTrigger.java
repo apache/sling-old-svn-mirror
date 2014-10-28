@@ -23,11 +23,13 @@ import javax.jcr.Session;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.trigger.ReplicationRequestHandler;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
-import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
 import org.apache.sling.replication.util.ReplicationJcrUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,14 +38,14 @@ import org.slf4j.LoggerFactory;
  * Abstract implementation of a {@link org.apache.sling.replication.trigger.ReplicationTrigger} that listens for 'safe'
  * events and triggers a {@link org.apache.sling.replication.communication.ReplicationRequest} from that.
  */
-public abstract class AbstractJcrEventTrigger implements ReplicationTrigger, EventListener {
+public abstract class AbstractJcrEventTrigger implements ReplicationTrigger {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
+
+    private final Map<String, JcrEventReplicationTriggerListener> registeredListeners = new ConcurrentHashMap<String, JcrEventReplicationTriggerListener>();
+
     private final String path;
     private final String serviceUser;
-
-    private ReplicationTriggerRequestHandler requestHandler;
-    protected Session session;
 
     protected final SlingRepository repository;
 
@@ -53,35 +55,60 @@ public abstract class AbstractJcrEventTrigger implements ReplicationTrigger, Eve
         this.serviceUser = serviceUser;
     }
 
-    public void register(String handlerId, ReplicationTriggerRequestHandler requestHandler) {
+    public void register(ReplicationRequestHandler requestHandler) {
+        Session session = null;
         try {
             session = getSession();
+            JcrEventReplicationTriggerListener listener = new JcrEventReplicationTriggerListener(requestHandler);
+            registeredListeners.put(requestHandler.toString(), listener);
             session.getWorkspace().getObservationManager().addEventListener(
-                    this, getEventTypes(), path, true, null, null, false);
-            this.requestHandler = requestHandler;
+                    listener, getEventTypes(), path, true, null, null, false);
         } catch (RepositoryException e) {
-            log.error("unable to register session", e);
+            log.error("unable to register request handler {}", requestHandler, e);
+        } finally {
+            if (session != null) {
+                session.logout();
+            }
         }
     }
 
-    public void unregister(String handlerId) {
-        if (session != null) {
-            session.logout();
-        }
-    }
-
-    public void onEvent(EventIterator eventIterator) {
-        while (eventIterator.hasNext()) {
-            Event event = eventIterator.nextEvent();
+    public void unregister(ReplicationRequestHandler requestHandler) {
+        JcrEventReplicationTriggerListener listener = registeredListeners.get(requestHandler.toString());
+        if (listener != null) {
+            Session session = null;
             try {
-                if (ReplicationJcrUtils.isSafe(event)) {
-                    ReplicationRequest request = processEvent(event);
-                    if (request != null) {
-                        requestHandler.handle(request);
-                    }
-                }
+                session = getSession();
+                session.getWorkspace().getObservationManager().removeEventListener(listener);
             } catch (RepositoryException e) {
-                log.error("Error while handling event {}", event, e);
+                log.error("unable to register session", e);
+            } finally {
+                if (session != null) {
+                    session.logout();
+                }
+            }
+        }
+    }
+
+    private class JcrEventReplicationTriggerListener implements EventListener {
+        private final ReplicationRequestHandler requestHandler;
+
+        public JcrEventReplicationTriggerListener(ReplicationRequestHandler requestHandler) {
+            this.requestHandler = requestHandler;
+        }
+
+        public void onEvent(EventIterator eventIterator) {
+            while (eventIterator.hasNext()) {
+                Event event = eventIterator.nextEvent();
+                try {
+                    if (ReplicationJcrUtils.isSafe(event)) {
+                        ReplicationRequest request = processEvent(event);
+                        if (request != null) {
+                            requestHandler.handle(request);
+                        }
+                    }
+                } catch (RepositoryException e) {
+                    log.error("Error while handling event {}", event, e);
+                }
             }
         }
     }
@@ -115,5 +142,6 @@ public abstract class AbstractJcrEventTrigger implements ReplicationTrigger, Eve
     protected Session getSession() throws RepositoryException {
         return repository.loginService(serviceUser, null);
     }
+
 
 }

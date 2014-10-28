@@ -56,6 +56,8 @@ public class PersistingJcrEventReplicationTrigger extends AbstractJcrEventTrigge
 
         ReplicationRequest replicationRequest = null;
 
+        Session session = getSession();
+
         if (session != null && session.hasPermission(nuggetsPath, Privilege.JCR_ADD_CHILD_NODES)) {
             log.debug("persisting event under {}", nuggetsPath);
             Node nuggetsNode = session.getNode(nuggetsPath);

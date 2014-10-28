@@ -18,14 +18,11 @@
  */
 package org.apache.sling.replication.servlet;
 
-import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import java.io.IOException;
 
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
@@ -39,12 +36,7 @@ import org.apache.sling.replication.resources.ReplicationConstants;
 /**
  * Servlet to retrieve a {@link org.apache.sling.replication.queue.ReplicationQueue} status.
  */
-@SuppressWarnings("serial")
-@Component(metatype = false)
-@Service(value = Servlet.class)
-@Properties({
-        @Property(name = "sling.servlet.resourceTypes", value = ReplicationConstants.AGENT_QUEUE_RESOURCE_TYPE),
-        @Property(name = "sling.servlet.methods", value = {"GET", "POST", "DELETE"})})
+@SlingServlet(resourceTypes = ReplicationConstants.AGENT_QUEUE_RESOURCE_TYPE, methods = {"GET", "POST", "DELETE"})
 public class ReplicationAgentQueueServlet extends SlingAllMethodsServlet {
 
     @Override
@@ -59,8 +51,10 @@ public class ReplicationAgentQueueServlet extends SlingAllMethodsServlet {
         if (agent != null) {
             try {
                 ReplicationQueue queue = agent.getQueue(queueName);
-                response.getWriter().write(toJSoN(queue));
+                response.getWriter().write(toJSoN(queue)); // TODO : use json writer
+                response.setStatus(200);
             } catch (Exception e) {
+                response.setStatus(400);
                 response.getWriter().write("{\"status\" : \"error\",\"message\":\"error reading from the queue\",\"reason\":\""
                         + e.getLocalizedMessage() + "\"}");
             }

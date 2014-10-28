@@ -27,7 +27,7 @@ import javax.jcr.security.Privilege;
 
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.communication.ReplicationRequest;
-import org.apache.sling.replication.trigger.ReplicationTriggerRequestHandler;
+import org.apache.sling.replication.trigger.ReplicationRequestHandler;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
@@ -73,8 +73,8 @@ public class PersistingJcrEventReplicationTriggerTest {
         String path = "/some/path";
         PersistingJcrEventReplicationTrigger persistingJcrEventReplicationTrigger = new PersistingJcrEventReplicationTrigger(
                 repository, path, serviceName, nuggetsPath);
-        ReplicationTriggerRequestHandler handler = mock(ReplicationTriggerRequestHandler.class);
-        persistingJcrEventReplicationTrigger.register("handler-id", handler);
+        ReplicationRequestHandler handler = mock(ReplicationRequestHandler.class);
+        persistingJcrEventReplicationTrigger.register(handler);
 
         Node nuggetsNode = mock(Node.class);
         Node eventNode = mock(Node.class);

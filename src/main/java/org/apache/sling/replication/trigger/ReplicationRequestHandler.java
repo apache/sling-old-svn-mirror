@@ -24,7 +24,7 @@ import org.apache.sling.replication.communication.ReplicationRequest;
  * An handler for {@link org.apache.sling.replication.communication.ReplicationRequest}s passed to a
  * {@link org.apache.sling.replication.trigger.ReplicationTrigger}
  */
-public interface ReplicationTriggerRequestHandler {
+public interface ReplicationRequestHandler {
 
     /**
      * handle the request according to the trigger implementation.

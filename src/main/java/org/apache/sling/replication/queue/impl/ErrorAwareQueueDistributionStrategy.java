@@ -82,10 +82,10 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
                                          ReplicationQueueProvider queueProvider)
             throws ReplicationQueueException {
         try {
-            log.info("using error aware queue distribution");
+            log.debug("using error aware queue distribution");
             ReplicationQueueItemState state = new ReplicationQueueItemState();
             ReplicationQueue queue = queueProvider.getDefaultQueue(agentName);
-            log.info("obtained queue {}", queue);
+            log.debug("obtained queue {}", queue);
             if (queue != null) {
                 if (queue.add(item)) {
                     log.info("replication status: {}", state);

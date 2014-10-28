@@ -19,6 +19,8 @@
 package org.apache.sling.replication.serialization.impl.vlt;
 
 import javax.jcr.Session;
+import javax.jcr.Workspace;
+import javax.jcr.observation.ObservationManager;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
@@ -61,11 +63,18 @@ public class FileVaultReplicationPackageBuilderTest {
         when(packageManager.assemble(any(Session.class), any(ExportOptions.class), any(File.class))).thenReturn(vaultPackage);
         when(packaging.getPackageManager()).thenReturn(packageManager);
 
+        ResourceResolver resourceResolver = mock(ResourceResolver.class);
+        Session session = mock(Session.class);
+        Workspace workspace = mock(Workspace.class);
+        ObservationManager observationManager = mock(ObservationManager.class);
+        when(workspace.getObservationManager()).thenReturn(observationManager);
+        when(session.getWorkspace()).thenReturn(workspace);
+        when(resourceResolver.adaptTo(Session.class)).thenReturn(session);
+
         ReplicationEventFactory eventFactory = mock(ReplicationEventFactory.class);
 
         FileVaultReplicationPackageBuilder fileVaultReplicationPackageBuilder = new FileVaultReplicationPackageBuilder(
                 packaging, eventFactory);
-        ResourceResolver resourceResolver = mock(ResourceResolver.class);
         ReplicationRequest request = new ReplicationRequest(ReplicationActionType.ADD, new String[]{"/"});
         ReplicationPackage replicationPackage = fileVaultReplicationPackageBuilder.createPackageForAdd(resourceResolver, request);
         assertNotNull(replicationPackage);
@@ -115,6 +124,12 @@ public class FileVaultReplicationPackageBuilderTest {
                 packaging, eventFactory);
 
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
+        Session session = mock(Session.class);
+        Workspace workspace = mock(Workspace.class);
+        ObservationManager observationManager = mock(ObservationManager.class);
+        when(workspace.getObservationManager()).thenReturn(observationManager);
+        when(session.getWorkspace()).thenReturn(workspace);
+        when(resourceResolver.adaptTo(Session.class)).thenReturn(session);
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         when(replicationPackage.getId()).thenReturn("/path/to/file");
         boolean success = fileVaultReplicationPackageBuilder.installPackage(resourceResolver, replicationPackage);

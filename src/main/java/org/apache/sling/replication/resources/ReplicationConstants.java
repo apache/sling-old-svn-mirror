@@ -16,9 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.replication.resources;
 
+/**
+ * constants replication resource types and paths
+ */
 public class ReplicationConstants {
 
     public static final String SUFFIX_RESOURCE_LIST = "/list";
