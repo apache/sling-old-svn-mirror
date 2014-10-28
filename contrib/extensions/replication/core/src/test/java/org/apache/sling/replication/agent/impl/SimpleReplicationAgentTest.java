@@ -73,7 +73,7 @@ public class SimpleReplicationAgentTest {
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
 
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/"});
-        when(packageExporter.exportPackage(any(ResourceResolver.class), any(ReplicationRequest.class)))
+        when(packageExporter.exportPackages(any(ResourceResolver.class), any(ReplicationRequest.class)))
                 .thenReturn(Arrays.asList(replicationPackage));
         when(queueProvider.getDefaultQueue(name)).thenReturn(
                 new SimpleReplicationQueue(name, "name"));
@@ -106,7 +106,7 @@ public class SimpleReplicationAgentTest {
         ReplicationQueueItemState state = new ReplicationQueueItemState();
         state.setItemState(ReplicationQueueItemState.ItemState.SUCCEEDED);
         when(distributionHandler.add(any(String.class), any(ReplicationQueueItem.class), eq(queueProvider))).thenReturn(state);
-        when(packageExporter.exportPackage(any(ResourceResolver.class), any(ReplicationRequest.class)))
+        when(packageExporter.exportPackages(any(ResourceResolver.class), any(ReplicationRequest.class)))
                 .thenReturn(Arrays.asList(replicationPackage));
         when(queueProvider.getDefaultQueue(name)).thenReturn(
                 new SimpleReplicationQueue(name, "name"));
@@ -137,9 +137,10 @@ public class SimpleReplicationAgentTest {
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
 
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/"});
-        when(packageExporter.exportPackage(resourceResolver, request)).thenReturn(Arrays.asList(replicationPackage));
+        when(packageExporter.exportPackages(resourceResolver, request)).thenReturn(Arrays.asList(replicationPackage));
         when(queueProvider.getDefaultQueue(name)).thenReturn(
                 new SimpleReplicationQueue(name, "name"));
+
         agent.execute(resourceResolver, request);
     }
 

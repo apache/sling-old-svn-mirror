@@ -28,30 +28,31 @@ import java.io.Serializable;
 public interface ReplicationPackage extends Serializable {
 
     /**
-     * get package id
+     * get package id. the id is a unique string that can be used to retrieve
+     * the package from an {@link ReplicationPackageExporter}
      *
-     * @return the package id as a <code>String</code>
+     * @return the package id
      */
     String getId();
 
     /**
      * get the paths covered by this package
      *
-     * @return an array of <code>String</code> paths
+     * @return an array of paths
      */
     String[] getPaths();
 
     /**
      * get the action this package is used for
      *
-     * @return the action as a <code>String</code>
+     * @return the action
      */
     String getAction();
 
     /**
      * get the type of package
      *
-     * @return the package type as a <code>String</code>
+     * @return the package type
      */
     String getType();
 
@@ -67,12 +68,12 @@ public interface ReplicationPackage extends Serializable {
     /**
      * get package stream length
      *
-     * @return the package length as a <code>long</code>
+     * @return the package length
      */
     long getLength();
 
     /**
-     * releases all resources associated with the package id
+     * releases all resources associated with this package
      */
     void delete();
 

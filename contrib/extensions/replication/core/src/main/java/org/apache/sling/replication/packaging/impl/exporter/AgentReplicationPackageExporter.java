@@ -57,7 +57,7 @@ public class AgentReplicationPackageExporter implements ReplicationPackageExport
         this.packageBuilder = packageBuilder;
     }
 
-    public List<ReplicationPackage> exportPackage(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) {
+    public List<ReplicationPackage> exportPackages(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) {
 
         List<ReplicationPackage> result = new ArrayList<ReplicationPackage>();
         try {
@@ -81,7 +81,7 @@ public class AgentReplicationPackageExporter implements ReplicationPackageExport
         return result;
     }
 
-    public ReplicationPackage exportPackageById(ResourceResolver resourceResolver, String replicationPackageId) {
+    public ReplicationPackage getPackage(ResourceResolver resourceResolver, String replicationPackageId) {
         return null;
     }
 }

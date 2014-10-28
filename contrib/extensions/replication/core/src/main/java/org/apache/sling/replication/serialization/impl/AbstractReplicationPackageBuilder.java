@@ -141,9 +141,7 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
         } catch (Exception e) {
             throw new ReplicationPackageReadingException(e);
         } finally {
-            if (session != null) {
-                session.logout();
-            }
+            ungetSession(session);
         }
 
         return false;
@@ -169,6 +167,10 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
             ReplicationJcrUtils.setDoNotReplicate(session);
         }
         return session;
+    }
+
+    protected void ungetSession(Session session) {
+
     }
 
 

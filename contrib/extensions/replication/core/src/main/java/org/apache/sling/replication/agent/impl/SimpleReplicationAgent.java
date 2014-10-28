@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.replication.agent.ReplicationAgent;
@@ -40,6 +41,7 @@ import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.event.ReplicationEventType;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
+import org.apache.sling.replication.packaging.ReplicationPackageImportException;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
@@ -131,13 +133,27 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
 
     public ReplicationResponse execute(ResourceResolver resourceResolver, ReplicationRequest replicationRequest)
             throws ReplicationAgentException {
+
+
+
+        ResourceResolver agentResourceResolver = null;
+
         try {
+            agentResourceResolver = getAgentResourceResolver();
+
             replicationRequestAuthorizationStrategy.checkPermission(resourceResolver, replicationRequest);
-            List<ReplicationPackage> replicationPackages = buildPackages(replicationRequest);
-            return schedule(replicationPackages);
+
+
+            List<ReplicationPackage> replicationPackages = buildPackages(agentResourceResolver, replicationRequest);
+
+            return schedule(agentResourceResolver, replicationPackages);
         } catch (Exception e) {
             log.error("Error executing replication request {}", replicationRequest, e);
             throw new ReplicationAgentException(e);
+        }
+        finally {
+            ungetAgentResourceResolver(agentResourceResolver);
+
         }
 
     }
@@ -146,14 +162,14 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
         return passive;
     }
 
-    private List<ReplicationPackage> buildPackages(ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
 
-        ResourceResolver agentResourceResolver = getAgentResourceResolver();
+    private List<ReplicationPackage> buildPackages(ResourceResolver agentResourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
+        List<ReplicationPackage> replicationPackages = replicationPackageExporter.exportPackages(agentResourceResolver, replicationRequest);
 
-        return replicationPackageExporter.exportPackage(agentResourceResolver, replicationRequest);
+        return replicationPackages;
     }
 
-    private ReplicationResponse schedule(List<ReplicationPackage> replicationPackages) {
+    private ReplicationResponse schedule(ResourceResolver agentResourceResolver, List<ReplicationPackage> replicationPackages) {
         // TODO : create a composite replication response otherwise only the last response will be returned
         ReplicationResponse replicationResponse = new ReplicationResponse();
 
@@ -249,16 +265,18 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
     private boolean processQueue(ReplicationQueueItem queueItem) {
         boolean success = false;
         log.debug("reading package with id {}", queueItem.getId());
-        ResourceResolver resourceResolver = getAgentResourceResolver();
+        ResourceResolver agentResourceResolver = null;
         try {
 
-            ReplicationPackage replicationPackage = replicationPackageExporter.exportPackageById(resourceResolver, queueItem.getId());
+            agentResourceResolver = getAgentResourceResolver();
+
+            ReplicationPackage replicationPackage = replicationPackageExporter.getPackage(agentResourceResolver, queueItem.getId());
 
 
             if (replicationPackage != null) {
                 replicationPackage.getInfo().fillInfo(queueItem.getPackageInfo());
 
-                replicationPackageImporter.importPackage(resourceResolver, replicationPackage);
+                replicationPackageImporter.importPackage(agentResourceResolver, replicationPackage);
 
                 Dictionary<Object, Object> properties = new Properties();
                 properties.put("replication.package.paths", replicationPackage.getPaths());
@@ -271,24 +289,38 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
                 log.warn("replication package with id {} does not exist", queueItem.getId());
             }
 
-        } catch (ReplicationPackageReadingException e) {
+        } catch (ReplicationPackageImportException e) {
             log.error("could not process transport queue", e);
+        } catch (LoginException e) {
+            log.error("cannot obtain resource resolver", e);
+        } finally {
+            ungetAgentResourceResolver(agentResourceResolver);
         }
         return success;
     }
 
-    private ResourceResolver getAgentResourceResolver() {
+    private ResourceResolver getAgentResourceResolver() throws LoginException {
         ResourceResolver resourceResolver = null;
 
         Map<String, Object> authenticationInfo = new HashMap<String, Object>();
         authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, subServiceName);
-        try {
-            resourceResolver = resourceResolverFactory.getServiceResourceResolver(authenticationInfo);
-        } catch (LoginException e) {
-            log.error("cannot obtain a resource resolver for service {}", subServiceName, e);
-        }
+        resourceResolver = resourceResolverFactory.getServiceResourceResolver(authenticationInfo);
+
 
         return resourceResolver;
+    }
+
+    private void ungetAgentResourceResolver(ResourceResolver resourceResolver) {
+
+        if (resourceResolver != null) {
+            try {
+                resourceResolver.commit();
+            } catch (PersistenceException e) {
+                log.error("cannot commit changes to resource resolver", e);
+            }
+            resourceResolver.close();
+        }
+
     }
 
     class PackageQueueProcessor implements ReplicationQueueProcessor {
@@ -306,11 +338,17 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
         }
 
         public void handle(ReplicationRequest request) {
+            ResourceResolver agentResourceResolver = null;
             try {
-                ResourceResolver resourceResolver = getAgentResourceResolver();
-                agent.execute(resourceResolver, request);
+                agentResourceResolver = getAgentResourceResolver();
+                agent.execute(agentResourceResolver, request);
             } catch (ReplicationAgentException e) {
                 log.error("Error executing handler", e);
+            } catch (LoginException e) {
+                log.error("Cannot obtain resource resolver");
+            }
+            finally {
+                ungetAgentResourceResolver(agentResourceResolver);
             }
         }
     }

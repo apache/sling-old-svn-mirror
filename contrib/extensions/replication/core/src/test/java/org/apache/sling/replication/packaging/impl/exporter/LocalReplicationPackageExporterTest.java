@@ -41,7 +41,7 @@ public class LocalReplicationPackageExporterTest {
         LocalReplicationPackageExporter localReplicationPackageExporter = new LocalReplicationPackageExporter(packageBuilder);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         ReplicationRequest replicationRequest = mock(ReplicationRequest.class);
-        List<ReplicationPackage> replicationPackages = localReplicationPackageExporter.exportPackage(resourceResolver, replicationRequest);
+        List<ReplicationPackage> replicationPackages = localReplicationPackageExporter.exportPackages(resourceResolver, replicationRequest);
         assertNotNull(replicationPackages);
         assertTrue(replicationPackages.isEmpty());
     }

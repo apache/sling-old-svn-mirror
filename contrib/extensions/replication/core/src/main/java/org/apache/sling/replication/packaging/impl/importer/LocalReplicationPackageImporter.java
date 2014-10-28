@@ -27,7 +27,9 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.event.ReplicationEventType;
 import org.apache.sling.replication.packaging.ReplicationPackage;
+import org.apache.sling.replication.packaging.ReplicationPackageImportException;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
+import org.apache.sling.replication.packaging.ReplicationPackageUploadException;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.slf4j.Logger;
@@ -63,7 +65,7 @@ public class LocalReplicationPackageImporter implements ReplicationPackageImport
     }
 
 
-    public boolean importPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) {
+    public boolean importPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationPackageImportException {
         boolean success = false;
         try {
             success = packageBuilder.installPackage(resourceResolver, replicationPackage);
@@ -76,23 +78,24 @@ public class LocalReplicationPackageImporter implements ReplicationPackageImport
                 dictionary.put("replication.path", replicationPackage.getPaths());
                 replicationEventFactory.generateEvent(ReplicationEventType.PACKAGE_INSTALLED, dictionary);
 
-                replicationPackage.delete();
             } else {
                 log.warn("could not read a replication package");
             }
         } catch (Exception e) {
             log.error("cannot import a package from the given stream of type {}", replicationPackage.getType());
+            throw new ReplicationPackageImportException(e);
         }
         return success;
     }
 
-    public ReplicationPackage readPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageReadingException {
+    public ReplicationPackage uploadPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageUploadException {
         try {
             return packageBuilder.readPackage(resourceResolver, stream);
         } catch (Exception e) {
-            log.error("cannot read a package from the given stream");
+            log.error("cannot read a package from the given stream", e);
+            throw new ReplicationPackageUploadException(e);
+
         }
-        return null;
     }
 
 }

@@ -40,7 +40,7 @@ public class LocalReplicationPackageExporter implements ReplicationPackageExport
         this.packageBuilder = packageBuilder;
     }
 
-    public List<ReplicationPackage> exportPackage(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
+    public List<ReplicationPackage> exportPackages(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
         List<ReplicationPackage> result = new ArrayList<ReplicationPackage>();
 
         ReplicationPackage createdPackage = packageBuilder.createPackage(resourceResolver, replicationRequest);
@@ -50,7 +50,7 @@ public class LocalReplicationPackageExporter implements ReplicationPackageExport
         return result;
     }
 
-    public ReplicationPackage exportPackageById(ResourceResolver resourceResolver, String replicationPackageId) {
+    public ReplicationPackage getPackage(ResourceResolver resourceResolver, String replicationPackageId) {
         return packageBuilder.getPackage(resourceResolver, replicationPackageId);
     }
 }

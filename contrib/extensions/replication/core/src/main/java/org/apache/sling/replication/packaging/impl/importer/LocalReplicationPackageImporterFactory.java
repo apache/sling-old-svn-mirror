@@ -30,7 +30,9 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.component.ReplicationComponentFactory;
 import org.apache.sling.replication.packaging.ReplicationPackage;
+import org.apache.sling.replication.packaging.ReplicationPackageImportException;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
+import org.apache.sling.replication.packaging.ReplicationPackageUploadException;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,12 +67,12 @@ public class LocalReplicationPackageImporterFactory implements ReplicationPackag
     }
 
 
-    public boolean importPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {
+    public boolean importPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationPackageImportException {
         return importer.importPackage(resourceResolver, replicationPackage);
     }
 
-    public ReplicationPackage readPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageReadingException {
-        return importer.readPackage(resourceResolver, stream);
+    public ReplicationPackage uploadPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageUploadException {
+        return importer.uploadPackage(resourceResolver, stream);
     }
 
 }

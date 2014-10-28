@@ -101,12 +101,12 @@ public class RemoteReplicationPackageExporterFactory implements ReplicationPacka
         exporter = null;
     }
 
-    public List<ReplicationPackage> exportPackage(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
-        return exporter.exportPackage(resourceResolver, replicationRequest);
+    public List<ReplicationPackage> exportPackages(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
+        return exporter.exportPackages(resourceResolver, replicationRequest);
     }
 
-    public ReplicationPackage exportPackageById(ResourceResolver resourceResolver, String replicationPackageId) {
-        return exporter.exportPackageById(resourceResolver, replicationPackageId);
+    public ReplicationPackage getPackage(ResourceResolver resourceResolver, String replicationPackageId) {
+        return exporter.getPackage(resourceResolver, replicationPackageId);
     }
 
     public <ComponentType extends ReplicationComponent> ComponentType getComponent(Class<ComponentType> type, String componentName) {

@@ -66,9 +66,10 @@ public class ReplicationPackageImporterServlet extends SlingAllMethodsServlet {
         InputStream stream = request.getInputStream();
         ResourceResolver resourceResolver = request.getResourceResolver();
         try {
-            ReplicationPackage replicationPackage = replicationPackageImporter.readPackage(resourceResolver, stream);
+            ReplicationPackage replicationPackage = replicationPackageImporter.uploadPackage(resourceResolver, stream);
             if (replicationPackage != null) {
                 success = replicationPackageImporter.importPackage(resourceResolver, replicationPackage);
+                replicationPackage.delete();
             }
             if (!success) {
                 log.warn("cannot import replication package from request {}", request);
