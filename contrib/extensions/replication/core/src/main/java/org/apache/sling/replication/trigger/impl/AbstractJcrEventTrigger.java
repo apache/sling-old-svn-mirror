@@ -30,6 +30,7 @@ import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.trigger.ReplicationRequestHandler;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
+import org.apache.sling.replication.trigger.ReplicationTriggerException;
 import org.apache.sling.replication.util.ReplicationJcrUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +56,7 @@ public abstract class AbstractJcrEventTrigger implements ReplicationTrigger {
         this.serviceUser = serviceUser;
     }
 
-    public void register(ReplicationRequestHandler requestHandler) {
+    public void register(ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
         Session session = null;
         try {
             session = getSession();
@@ -64,7 +65,7 @@ public abstract class AbstractJcrEventTrigger implements ReplicationTrigger {
             session.getWorkspace().getObservationManager().addEventListener(
                     listener, getEventTypes(), path, true, null, null, false);
         } catch (RepositoryException e) {
-            log.error("unable to register request handler {}", requestHandler, e);
+            throw new ReplicationTriggerException("unable to register handler " + requestHandler, e);
         } finally {
             if (session != null) {
                 session.logout();
@@ -72,7 +73,7 @@ public abstract class AbstractJcrEventTrigger implements ReplicationTrigger {
         }
     }
 
-    public void unregister(ReplicationRequestHandler requestHandler) {
+    public void unregister(ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
         JcrEventReplicationTriggerListener listener = registeredListeners.get(requestHandler.toString());
         if (listener != null) {
             Session session = null;
@@ -80,7 +81,7 @@ public abstract class AbstractJcrEventTrigger implements ReplicationTrigger {
                 session = getSession();
                 session.getWorkspace().getObservationManager().removeEventListener(listener);
             } catch (RepositoryException e) {
-                log.error("unable to register session", e);
+                throw new ReplicationTriggerException("unable to unregister handler " + requestHandler, e);
             } finally {
                 if (session != null) {
                     session.logout();

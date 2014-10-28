@@ -24,6 +24,7 @@ import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.trigger.ReplicationRequestHandler;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
+import org.apache.sling.replication.trigger.ReplicationTriggerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,13 +50,17 @@ public class ScheduledReplicationTrigger implements ReplicationTrigger {
         this.scheduler = scheduler;
     }
 
-    public void register(ReplicationRequestHandler requestHandler) {
-        ScheduleOptions options = scheduler.NOW(-1, secondsInterval);
-        options.name(requestHandler.toString());
-        scheduler.schedule(new ScheduledReplication(requestHandler), options);
+    public void register(ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
+        try {
+            ScheduleOptions options = scheduler.NOW(-1, secondsInterval);
+            options.name(requestHandler.toString());
+            scheduler.schedule(new ScheduledReplication(requestHandler), options);
+        } catch (Exception e) {
+            throw new ReplicationTriggerException("unable to register handler " + requestHandler, e);
+        }
     }
 
-    public void unregister(ReplicationRequestHandler requestHandler) {
+    public void unregister(ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
         scheduler.unschedule(requestHandler.toString());
     }
 

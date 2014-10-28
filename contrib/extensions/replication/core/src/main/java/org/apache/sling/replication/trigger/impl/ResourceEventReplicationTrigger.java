@@ -29,6 +29,7 @@ import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.component.ManagedReplicationComponent;
 import org.apache.sling.replication.trigger.ReplicationRequestHandler;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
+import org.apache.sling.replication.trigger.ReplicationTriggerException;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
@@ -77,7 +78,7 @@ public class ResourceEventReplicationTrigger implements ReplicationTrigger, Mana
         registrations.clear();
     }
 
-    public void register(ReplicationRequestHandler requestHandler) {
+    public void register(ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
         // register an event handler on path which triggers the agent on node / property changes / addition / removals
         Dictionary<String, Object> properties = new Hashtable<String, Object>();
         properties.put(EventConstants.EVENT_TOPIC, new String[]{SlingConstants.TOPIC_RESOURCE_ADDED,
@@ -90,11 +91,11 @@ public class ResourceEventReplicationTrigger implements ReplicationTrigger, Mana
         if (triggerPathEventRegistration != null) {
             registrations.put(requestHandler.toString(), triggerPathEventRegistration);
         } else {
-            log.error("cannot register event handler service for triggering agent");
+            throw new ReplicationTriggerException("cannot register event handler service for triggering agent");
         }
     }
 
-    public void unregister(ReplicationRequestHandler requestHandler) {
+    public void unregister(ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
         ServiceRegistration serviceRegistration = registrations.get(requestHandler.toString());
         if (serviceRegistration != null) {
             serviceRegistration.unregister();
