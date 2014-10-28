@@ -373,6 +373,10 @@ public class JcrNode implements IAdaptable {
 				outerLoop: while(membersList.size()>0) {
                     for (Iterator<IResource> it = membersList.iterator(); it.hasNext();) {
                         IResource iResource = it.next();
+                        if (isDotVltFile(iResource)) {
+                            it.remove();
+                            continue;
+                        }
 						if (isVaultFile(iResource)) {
 							GenericJcrRootFile gjrf = new GenericJcrRootFile(this, (IFile)iResource);
 							it.remove();
@@ -429,7 +433,11 @@ public class JcrNode implements IAdaptable {
 		}
 	}
 
-	private boolean isVaultFile(IResource iResource)
+    private boolean isDotVltFile(IResource res) {
+        return res.getType() == IResource.FILE && res.getName().equals(".vlt");
+    }
+
+    private boolean isVaultFile(IResource iResource)
 			throws ParserConfigurationException, SAXException, IOException,
 			CoreException {
 		if (iResource.getName().endsWith(".xml")) {
