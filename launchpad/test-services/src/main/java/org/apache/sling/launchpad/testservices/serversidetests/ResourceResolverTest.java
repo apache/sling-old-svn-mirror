@@ -45,7 +45,7 @@ import org.apache.sling.junit.annotations.SlingAnnotationsTestRunner;
 import org.apache.sling.junit.annotations.TestReference;
 import org.apache.sling.launchpad.testservices.events.EventsCounter;
 import org.apache.sling.launchpad.testservices.exported.FakeSlingHttpServletRequest;
-import org.junit.AfterClass;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -144,8 +144,8 @@ public class ResourceResolverTest {
         
     }
 
-    @AfterClass
-    public static void deleteTestNodes() throws Exception {
+    @After
+    public void deleteTestNodes() throws Exception {
         logger.debug("{} test done, deleting test nodes", ResourceResolverTest.class.getSimpleName());
         final ResourceResolver resolver = cleanupResolverFactory.getAdministrativeResourceResolver(null);
         final Session session = resolver.adaptTo(Session.class);
