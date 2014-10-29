@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.packaging;
 
+import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
+
 /**
  * This represents an error happening while importing a {@link org.apache.sling.replication.packaging.ReplicationPackage}
  */
@@ -30,5 +32,9 @@ public class ReplicationPackageImportException extends Exception {
 
     public ReplicationPackageImportException(Throwable t) {
         super(t);
+    }
+
+    public ReplicationPackageImportException(String message, ReplicationPackageReadingException e) {
+        super(message, e);
     }
 }

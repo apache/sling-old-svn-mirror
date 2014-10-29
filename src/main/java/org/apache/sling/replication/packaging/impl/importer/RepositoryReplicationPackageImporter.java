@@ -37,7 +37,6 @@ import org.apache.sling.replication.event.ReplicationEventType;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageImportException;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
-import org.apache.sling.replication.packaging.ReplicationPackageUploadException;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.slf4j.Logger;
@@ -109,7 +108,7 @@ public class RepositoryReplicationPackageImporter implements ReplicationPackageI
         return false;
     }
 
-    public ReplicationPackage uploadPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws ReplicationPackageUploadException {
-        return null;
+    public ReplicationPackage importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws ReplicationPackageImportException {
+        throw new ReplicationPackageImportException("not supported");
     }
 }

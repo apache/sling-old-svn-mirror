@@ -34,18 +34,17 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.replication.component.ReplicationComponentFactory;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
+import org.apache.sling.replication.component.ReplicationComponentFactory;
 import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackage;
+import org.apache.sling.replication.packaging.ReplicationPackageImportException;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
-import org.apache.sling.replication.packaging.ReplicationPackageUploadException;
 import org.apache.sling.replication.transport.ReplicationTransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.replication.transport.impl.AdvancedHttpReplicationTransportHandler;
 import org.apache.sling.replication.transport.impl.MultipleEndpointReplicationTransportHandler;
 import org.apache.sling.replication.transport.impl.TransportEndpointStrategyType;
-import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,7 +99,7 @@ public class AdvancedRemoteReplicationPackageImporter implements ReplicationPack
     ReplicationTransportHandler transportHandler;
 
     @Activate
-    protected void activate(BundleContext context, Map<String, ?> config) throws Exception {
+    protected void activate(Map<String, ?> config) throws Exception {
 
         String[] endpoints = PropertiesUtil.toStringArray(config.get(ENDPOINTS), new String[0]);
         String endpointStrategyName = PropertiesUtil.toString(config.get(ENDPOINT_STRATEGY),
@@ -141,8 +140,8 @@ public class AdvancedRemoteReplicationPackageImporter implements ReplicationPack
         return result;
     }
 
-    public ReplicationPackage uploadPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws ReplicationPackageUploadException {
-        return null;
+    public ReplicationPackage importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws ReplicationPackageImportException {
+        throw new ReplicationPackageImportException("not supported");
     }
 
 }

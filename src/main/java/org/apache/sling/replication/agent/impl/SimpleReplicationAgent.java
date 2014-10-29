@@ -160,9 +160,7 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
         return passive;
     }
 
-
     private List<ReplicationPackage> exportPackages(ResourceResolver agentResourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
-
         return replicationPackageExporter.exportPackages(agentResourceResolver, replicationRequest);
     }
 

@@ -30,24 +30,26 @@ import org.apache.sling.replication.component.ReplicationComponent;
  * {@link org.apache.sling.replication.packaging.ReplicationPackage}s into the resource tree.
  */
 public interface ReplicationPackageImporter extends ReplicationComponent {
+
     /**
-     * Imports the given replication package
+     * Imports the given replication package into the underlying system
      *
-     * @param resourceResolver - the resource resolver used to import the resources
+     * @param resourceResolver   - the resource resolver used to import the resources
      * @param replicationPackage - the package to be imported
      * @return <code>true</code> if the import succeeded, <code>false</code> otherwise
+     * @throws ReplicationPackageImportException if any error occurs during import
      */
     boolean importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationPackage replicationPackage) throws ReplicationPackageImportException;
 
     /**
-     * Uploads a stream and tries to convert it to a {@link ReplicationPackage} this importer can import
+     * Tries to convert an {@link java.io.InputStream} to a {@link ReplicationPackage} and then imports it into the underlying system
      *
      * @param resourceResolver - the resource resolver used to read the package
-     * @param stream the {@link InputStream} of the package to read
-     * @return a {@link ReplicationPackage} if it can read it from the stream
-     * @throws ReplicationPackageUploadException when the stream cannot be read as a {@link ReplicationPackage}
+     * @param stream           the {@link InputStream} of the package to be converted and installed
+     * @return a {@link ReplicationPackage} if the stream can converted into it and installed
+     * @throws ReplicationPackageImportException when the stream cannot be read as a {@link ReplicationPackage} and installed
      */
     @CheckForNull
-    ReplicationPackage uploadPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws ReplicationPackageUploadException;
+    ReplicationPackage importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws ReplicationPackageImportException;
 
 }

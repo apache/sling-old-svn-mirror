@@ -38,7 +38,6 @@ import org.apache.sling.replication.component.ReplicationComponentProvider;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageImportException;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
-import org.apache.sling.replication.packaging.ReplicationPackageUploadException;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -99,8 +98,8 @@ public class RemoteReplicationPackageImporterFactory implements ReplicationPacka
         return importer.importPackage(resourceResolver, replicationPackage);
     }
 
-    public ReplicationPackage uploadPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws ReplicationPackageUploadException {
-        return importer.uploadPackage(resourceResolver, stream);
+    public ReplicationPackage importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws ReplicationPackageImportException {
+        return importer.importStream(resourceResolver, stream);
     }
 
     public <ComponentType extends ReplicationComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type,

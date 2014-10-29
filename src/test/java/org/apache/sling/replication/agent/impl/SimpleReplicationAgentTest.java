@@ -59,6 +59,9 @@ public class SimpleReplicationAgentTest {
         ReplicationRequestAuthorizationStrategy packageExporterStrategy = mock(ReplicationRequestAuthorizationStrategy.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueueDistributionStrategy distributionHandler = mock(ReplicationQueueDistributionStrategy.class);
+        ReplicationQueueItemState state = mock(ReplicationQueueItemState.class);
+        when(state.getItemState()).thenReturn(ReplicationQueueItemState.ItemState.ERROR);
+        when(distributionHandler.add(any(String.class), any(ReplicationQueueItem.class), any(ReplicationQueueProvider.class))).thenReturn(state);
         ReplicationEventFactory replicationEventFactory = mock(ReplicationEventFactory.class);
         ResourceResolverFactory resolverFactory = mock(ResourceResolverFactory.class);
 
