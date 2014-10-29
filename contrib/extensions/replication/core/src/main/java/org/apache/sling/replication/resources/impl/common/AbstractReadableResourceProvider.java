@@ -137,7 +137,7 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
      * Property: osgiPropertyName = osgiPropertyValue
      * Result: resourcePropertyName = osgiPropertyValue
      *
-     * @param properties
+     * @param properties the properties to bind
      * @return
      */
     protected Map<String, Object> bindMainResourceProperties(Map<String, Object> properties) {
@@ -170,7 +170,7 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
      * Property: resourcePropertyName = osgiPropertyValue
      * Result: osgiPropertyName = osgiPropertyValue
      *
-     * @param properties
+     * @param properties the properties to unbind
      * @return
      */
     protected Map<String, Object> unbindMainResourceProperties(Map<String, Object> properties) {

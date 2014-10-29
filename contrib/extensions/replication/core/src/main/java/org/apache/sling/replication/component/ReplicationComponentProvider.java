@@ -20,6 +20,7 @@ package org.apache.sling.replication.component;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * provider for already existing {@link ReplicationComponent}s
@@ -28,10 +29,10 @@ public interface ReplicationComponentProvider {
 
     /**
      * Retrieves an already existing component by name.
-     * If null is passed as componentName then a default component is returned.
+     * If <code>null</code> is passed as componentName then a default component is returned.
      *
      * @param type            the {@link java.lang.Class} of the component to be retrieved
-     * @param componentName   the component name as a <code>String</code>
+     * @param componentName   the component name
      * @param <ComponentType> the actual type of the {@link ReplicationComponent}
      *                        to be retrieved
      * @return the {@link ReplicationComponent} of the specified type,
@@ -40,5 +41,5 @@ public interface ReplicationComponentProvider {
      */
     @CheckForNull
     <ComponentType extends ReplicationComponent> ComponentType getComponent(@Nonnull java.lang.Class<ComponentType> type,
-                                                                            @Nonnull String componentName);
+                                                                            @Nullable String componentName);
 }

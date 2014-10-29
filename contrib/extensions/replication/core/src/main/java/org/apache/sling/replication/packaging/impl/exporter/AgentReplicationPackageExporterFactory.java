@@ -19,6 +19,7 @@
 package org.apache.sling.replication.packaging.impl.exporter;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 
@@ -82,7 +83,8 @@ public class AgentReplicationPackageExporterFactory implements ReplicationPackag
         return packageExporter.getPackage(resourceResolver, replicationPackageId);
     }
 
-    public <ComponentType extends ReplicationComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type, @Nonnull String componentName) {
+    public <ComponentType extends ReplicationComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type,
+                                                                                   @Nullable String componentName) {
         if (type.isAssignableFrom(ReplicationAgent.class)) {
             return (ComponentType) agent;
         }

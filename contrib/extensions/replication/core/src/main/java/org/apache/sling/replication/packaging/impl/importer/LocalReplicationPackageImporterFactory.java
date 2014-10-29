@@ -34,7 +34,6 @@ import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageImportException;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
 import org.apache.sling.replication.packaging.ReplicationPackageUploadException;
-import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

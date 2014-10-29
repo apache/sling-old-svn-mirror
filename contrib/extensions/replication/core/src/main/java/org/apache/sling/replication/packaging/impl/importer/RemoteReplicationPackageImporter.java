@@ -28,7 +28,6 @@ import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
 import org.apache.sling.replication.packaging.ReplicationPackageUploadException;
-import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.apache.sling.replication.transport.ReplicationTransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.replication.transport.impl.MultipleEndpointReplicationTransportHandler;

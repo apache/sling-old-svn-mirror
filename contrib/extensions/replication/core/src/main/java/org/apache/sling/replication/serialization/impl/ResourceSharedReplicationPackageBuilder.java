@@ -24,7 +24,6 @@ import javax.annotation.Nonnull;
 import org.apache.sling.api.resource.*;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
-import org.apache.sling.replication.packaging.SharedReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;

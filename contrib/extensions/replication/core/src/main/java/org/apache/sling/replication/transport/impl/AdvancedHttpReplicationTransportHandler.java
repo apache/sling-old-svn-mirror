@@ -165,9 +165,7 @@ public class AdvancedHttpReplicationTransportHandler extends SimpleHttpReplicati
                 inputStream = replicationPackage.createInputStream();
             }
 
-            if (inputStream != null) {
-                req = req.bodyStream(inputStream, ContentType.APPLICATION_OCTET_STREAM);
-            }
+            req = req.bodyStream(inputStream, ContentType.APPLICATION_OCTET_STREAM);
 
             response = executor.execute(req);
         } finally {

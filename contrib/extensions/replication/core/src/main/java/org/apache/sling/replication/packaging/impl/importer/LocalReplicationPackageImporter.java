@@ -32,7 +32,6 @@ import org.apache.sling.replication.packaging.ReplicationPackageImportException;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
 import org.apache.sling.replication.packaging.ReplicationPackageUploadException;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
-import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,7 +66,7 @@ public class LocalReplicationPackageImporter implements ReplicationPackageImport
 
 
     public boolean importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationPackage replicationPackage) throws ReplicationPackageImportException {
-        boolean success = false;
+        boolean success;
         try {
             success = packageBuilder.installPackage(resourceResolver, replicationPackage);
 

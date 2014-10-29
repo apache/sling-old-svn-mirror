@@ -375,7 +375,8 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
         return result;
     }
 
-    public <ComponentType extends ReplicationComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type, @Nonnull String componentName) {
+    public <ComponentType extends ReplicationComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type,
+                                                                                   @Nullable String componentName) {
         return null;
     }
 }
