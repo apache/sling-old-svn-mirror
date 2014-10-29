@@ -145,11 +145,6 @@ public class ResourceResolverTest {
     }
 
     @AfterClass
-    public static void clearTimeouts() {
-        saveMappingsError = null;
-    }
-    
-    @AfterClass
     public static void deleteTestNodes() throws Exception {
         logger.debug("{} test done, deleting test nodes", ResourceResolverTest.class.getSimpleName());
         final ResourceResolver resolver = cleanupResolverFactory.getAdministrativeResourceResolver(null);
