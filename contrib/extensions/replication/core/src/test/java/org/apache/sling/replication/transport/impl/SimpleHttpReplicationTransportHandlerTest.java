@@ -69,6 +69,8 @@ public class SimpleHttpReplicationTransportHandlerTest {
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         when(replicationPackage.getInfo()).thenReturn(mock(ReplicationPackageInfo.class));
+        InputStream stream = mock(InputStream.class);
+        when(replicationPackage.createInputStream()).thenReturn(stream);
         simpleHttpReplicationTransportHandler.deliverPackage(resourceResolver, replicationPackage);
     }
 

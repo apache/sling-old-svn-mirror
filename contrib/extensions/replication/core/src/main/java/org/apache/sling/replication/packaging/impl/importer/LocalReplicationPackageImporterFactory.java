@@ -33,7 +33,6 @@ import org.apache.sling.replication.component.ReplicationComponentFactory;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageImportException;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
-import org.apache.sling.replication.packaging.ReplicationPackageUploadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,8 +70,8 @@ public class LocalReplicationPackageImporterFactory implements ReplicationPackag
         return importer.importPackage(resourceResolver, replicationPackage);
     }
 
-    public ReplicationPackage uploadPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws ReplicationPackageUploadException {
-        return importer.uploadPackage(resourceResolver, stream);
+    public ReplicationPackage importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws ReplicationPackageImportException {
+        return importer.importStream(resourceResolver, stream);
     }
 
 }

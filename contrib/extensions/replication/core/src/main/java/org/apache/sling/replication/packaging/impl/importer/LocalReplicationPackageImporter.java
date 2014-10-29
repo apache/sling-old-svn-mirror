@@ -30,8 +30,8 @@ import org.apache.sling.replication.event.ReplicationEventType;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageImportException;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
-import org.apache.sling.replication.packaging.ReplicationPackageUploadException;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
+import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +47,6 @@ public class LocalReplicationPackageImporter implements ReplicationPackageImport
     private final ReplicationPackageBuilder packageBuilder;
 
     private final ReplicationEventFactory replicationEventFactory;
-
 
 
     public LocalReplicationPackageImporter(ReplicationPackageBuilder packageBuilder,
@@ -88,13 +87,16 @@ public class LocalReplicationPackageImporter implements ReplicationPackageImport
         return success;
     }
 
-    public ReplicationPackage uploadPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws ReplicationPackageUploadException {
+    public ReplicationPackage importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws ReplicationPackageImportException {
         try {
-            return packageBuilder.readPackage(resourceResolver, stream);
-        } catch (Exception e) {
-            log.error("cannot read a package from the given stream", e);
-            throw new ReplicationPackageUploadException(e);
-
+            ReplicationPackage replicationPackage = packageBuilder.readPackage(resourceResolver, stream);
+            if (importPackage(resourceResolver, replicationPackage)) {
+                return replicationPackage;
+            } else {
+                throw new ReplicationPackageImportException("could not import the package " + replicationPackage);
+            }
+        } catch (ReplicationPackageReadingException e) {
+            throw new ReplicationPackageImportException("cannot read a package from the given stream", e);
         }
     }
 
