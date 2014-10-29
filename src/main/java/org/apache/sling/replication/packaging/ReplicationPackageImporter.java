@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.packaging;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import java.io.InputStream;
 
 import org.apache.sling.api.resource.ResourceResolver;
@@ -36,7 +38,7 @@ public interface ReplicationPackageImporter extends ReplicationComponent {
      * @param replicationPackage - the package to be imported
      * @return <code>true</code> if the import succeeded, <code>false</code> otherwise
      */
-    boolean importPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationPackageImportException;
+    boolean importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationPackage replicationPackage) throws ReplicationPackageImportException;
 
     /**
      * Uploads a stream and tries to convert it to a {@link ReplicationPackage} this importer can import
@@ -46,6 +48,7 @@ public interface ReplicationPackageImporter extends ReplicationComponent {
      * @return a {@link ReplicationPackage} if it can read it from the stream
      * @throws ReplicationPackageUploadException when the stream cannot be read as a {@link ReplicationPackage}
      */
-    ReplicationPackage uploadPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageUploadException;
+    @CheckForNull
+    ReplicationPackage uploadPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws ReplicationPackageUploadException;
 
 }

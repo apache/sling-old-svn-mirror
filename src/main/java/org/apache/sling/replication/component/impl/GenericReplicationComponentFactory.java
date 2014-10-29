@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.component.impl;
 
+import javax.annotation.Nonnull;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -182,7 +183,7 @@ public class GenericReplicationComponentFactory implements ReplicationComponentP
         refresh();
     }
 
-    public <ComponentType extends ReplicationComponent> ComponentType getComponent(Class<ComponentType> type, String componentName) {
+    public <ComponentType extends ReplicationComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type, @Nonnull String componentName) {
         if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
             return (ComponentType) transportAuthenticationProvider;
         }

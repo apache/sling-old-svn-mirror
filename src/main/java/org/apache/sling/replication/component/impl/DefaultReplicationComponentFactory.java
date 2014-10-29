@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.component.impl;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -108,8 +110,9 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
         this.bundleContext = bundleContext;
     }
 
-    public <ComponentType extends ReplicationComponent> ComponentType createComponent(Class<ComponentType> type, Map<String, Object> properties,
-                                                         ReplicationComponentProvider componentProvider) {
+    public <ComponentType extends ReplicationComponent> ComponentType createComponent(@Nonnull Class<ComponentType> type,
+                                                                                      @Nonnull Map<String, Object> properties,
+                                                         @Nullable ReplicationComponentProvider componentProvider) {
 
         if (componentProvider == null) {
             componentProvider = this;
@@ -128,9 +131,8 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
             }
         }
         catch (IllegalArgumentException e) {
-            log.debug("Cannot create component", e);
+            log.warn("Cannot create component of type {} with properties {}", new Object[]{type, properties}, e);
         }
-
 
         return null;
     }
@@ -373,7 +375,7 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
         return result;
     }
 
-    public <ComponentType extends ReplicationComponent> ComponentType getComponent(Class<ComponentType> type, String componentName) {
+    public <ComponentType extends ReplicationComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type, @Nonnull String componentName) {
         return null;
     }
 }

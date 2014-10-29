@@ -22,28 +22,27 @@ package org.apache.sling.replication.communication;
  * A replication response
  */
 public class ReplicationResponse {
+
+    private final String status;
     private boolean successful;
 
-    private String status;
+    public ReplicationResponse(String status, boolean successful) {
+        this.status = status;
+        this.successful = successful;
+    }
 
     public boolean isSuccessful() {
         return successful;
     }
 
-    public void setSuccessful(boolean successful) {
-        this.successful = successful;
-    }
-
     @Override
     public String toString() {
-        return "{\"success\":" + successful + ", \"status\":\"" + status + "\"}";
+        return "{\"success\":" + isSuccessful() + ", \"status\":\"" + getStatus() + "\"}";
     }
 
     public String getStatus() {
         return status != null ? status : "done nothing";
     }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
+
 }

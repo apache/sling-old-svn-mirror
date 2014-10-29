@@ -18,6 +18,9 @@
  */
 package org.apache.sling.replication.serialization.impl;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
 import org.apache.sling.api.resource.*;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.packaging.ReplicationPackage;
@@ -44,7 +47,8 @@ public class ResourceSharedReplicationPackageBuilder implements ReplicationPacka
         this.replicationPackageBuilder = replicationPackageExporter;
     }
 
-    public ReplicationPackage createPackage(ResourceResolver resourceResolver, ReplicationRequest request) throws ReplicationPackageBuildingException {
+    @CheckForNull
+    public ReplicationPackage createPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationRequest request) throws ReplicationPackageBuildingException {
         ReplicationPackage replicationPackage = replicationPackageBuilder.createPackage(resourceResolver, request);
 
         if (replicationPackage == null) {
@@ -61,7 +65,8 @@ public class ResourceSharedReplicationPackageBuilder implements ReplicationPacka
         }
     }
 
-    public ReplicationPackage readPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageReadingException {
+    @CheckForNull
+    public ReplicationPackage readPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws ReplicationPackageReadingException {
         ReplicationPackage replicationPackage = replicationPackageBuilder.readPackage(resourceResolver, stream);
 
         if (replicationPackage == null) {
@@ -78,7 +83,7 @@ public class ResourceSharedReplicationPackageBuilder implements ReplicationPacka
         }
     }
 
-    public ReplicationPackage getPackage(ResourceResolver resourceResolver, String replicationPackageId) {
+    public ReplicationPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String replicationPackageId) {
         String originalPackageId = retrieveIdFromPath(resourceResolver, replicationPackageId);
         ReplicationPackage replicationPackage = replicationPackageBuilder.getPackage(resourceResolver, originalPackageId);
 
@@ -89,7 +94,7 @@ public class ResourceSharedReplicationPackageBuilder implements ReplicationPacka
         return new ResourceSharedReplicationPackage(resourceResolver, replicationPackageId, replicationPackage);
     }
 
-    public boolean installPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {
+    public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {
         if (! (replicationPackage instanceof ResourceSharedReplicationPackage)) {
             return false;
         }

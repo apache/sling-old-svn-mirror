@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.serialization.impl;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import java.io.BufferedInputStream;
@@ -56,7 +58,8 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
         this.replicationEventFactory = replicationEventFactory;
     }
 
-    public ReplicationPackage createPackage(ResourceResolver resourceResolver, ReplicationRequest request)
+    @CheckForNull
+    public ReplicationPackage createPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationRequest request)
             throws ReplicationPackageBuildingException {
         ReplicationPackage replicationPackage;
         if (ReplicationActionType.ADD.equals(request.getAction())) {
@@ -79,7 +82,8 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
     }
 
 
-    public ReplicationPackage readPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageReadingException {
+    @CheckForNull
+    public ReplicationPackage readPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws ReplicationPackageReadingException {
         ReplicationPackage replicationPackage = null;
         if (!stream.markSupported()) {
             stream = new BufferedInputStream(stream);
@@ -106,7 +110,7 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
     }
 
 
-    public boolean installPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {
+    public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {
         ReplicationActionType actionType = ReplicationActionType.fromName(replicationPackage.getAction());
         boolean installed;
         if (ReplicationActionType.DELETE.equals(actionType)) {
@@ -149,7 +153,7 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
         return false;
     }
 
-    public ReplicationPackage getPackage(ResourceResolver resourceResolver, String id) {
+    public ReplicationPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) {
         ReplicationPackage replicationPackage = null;
         try {
             replicationPackage = VoidReplicationPackage.fromStream(new ByteArrayInputStream(id.getBytes("UTF-8")));

@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.serialization.impl;
 
+import javax.annotation.Nonnull;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -90,10 +91,12 @@ public class VoidReplicationPackage extends AbstractReplicationPackage implement
 
     private static final long serialVersionUID = 1L;
 
+    @Nonnull
     public String getType() {
         return type;
     }
 
+    @Nonnull
     public String[] getPaths() {
         return paths;
     }
@@ -106,14 +109,17 @@ public class VoidReplicationPackage extends AbstractReplicationPackage implement
         }
     }
 
+    @Nonnull
     public InputStream createInputStream() throws IOException {
         return new ByteArrayInputStream(id.getBytes("UTF-8"));
     }
 
+    @Nonnull
     public String getId() {
         return id;
     }
 
+    @Nonnull
     public String getAction() {
         return action;
     }

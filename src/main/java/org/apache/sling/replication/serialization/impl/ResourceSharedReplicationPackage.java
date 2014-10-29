@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.serialization.impl;
 
+import javax.annotation.Nonnull;
+
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -88,22 +90,27 @@ public class ResourceSharedReplicationPackage implements SharedReplicationPackag
 
 
 
+    @Nonnull
     public String getId() {
         return packagePath;
     }
 
+    @Nonnull
     public String[] getPaths() {
         return replicationPackage.getPaths();
     }
 
+    @Nonnull
     public String getAction() {
         return replicationPackage.getAction();
     }
 
+    @Nonnull
     public String getType() {
         return replicationPackage.getType();
     }
 
+    @Nonnull
     public InputStream createInputStream() throws IOException {
         return replicationPackage.createInputStream();
     }
@@ -123,6 +130,7 @@ public class ResourceSharedReplicationPackage implements SharedReplicationPackag
         replicationPackage.delete();
     }
 
+    @Nonnull
     public ReplicationPackageInfo getInfo() {
         return replicationPackage.getInfo();
     }

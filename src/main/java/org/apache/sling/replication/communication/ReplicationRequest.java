@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.communication;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 
 /**
@@ -31,11 +32,11 @@ public class ReplicationRequest {
 
     private final String[] paths;
 
-    public ReplicationRequest(ReplicationActionType action, String[] paths) {
+    public ReplicationRequest(@Nonnull ReplicationActionType action, @Nonnull String[] paths) {
         this(System.currentTimeMillis(), action, paths);
     }
 
-    public ReplicationRequest(long time, ReplicationActionType action, String... paths) {
+    public ReplicationRequest(long time, @Nonnull ReplicationActionType action, @Nonnull String... paths) {
         this.time = time;
         this.action = action;
         this.paths = paths;

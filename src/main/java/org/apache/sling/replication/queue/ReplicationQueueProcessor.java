@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.queue;
 
+import javax.annotation.Nonnull;
+
 /**
  * Processor of {@link org.apache.sling.replication.queue.ReplicationQueueItem}s
  */
@@ -30,5 +32,5 @@ public interface ReplicationQueueProcessor {
      * @param replicationQueueItem the <code>ReplicationQueueItem</code> to be processed
      * @return <code>true</code> if the item was successfully processed, <code>false</code> otherwise
      */
-    public boolean process(String queueName, ReplicationQueueItem replicationQueueItem);
+    public boolean process(@Nonnull String queueName, @Nonnull ReplicationQueueItem replicationQueueItem);
 }

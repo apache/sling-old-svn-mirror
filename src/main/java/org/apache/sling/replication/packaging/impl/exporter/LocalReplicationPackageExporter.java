@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.packaging.impl.exporter;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +41,8 @@ public class LocalReplicationPackageExporter implements ReplicationPackageExport
         this.packageBuilder = packageBuilder;
     }
 
-    public List<ReplicationPackage> exportPackages(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
+    @Nonnull
+    public List<ReplicationPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
         List<ReplicationPackage> result = new ArrayList<ReplicationPackage>();
 
         ReplicationPackage createdPackage = packageBuilder.createPackage(resourceResolver, replicationRequest);
@@ -50,7 +52,7 @@ public class LocalReplicationPackageExporter implements ReplicationPackageExport
         return result;
     }
 
-    public ReplicationPackage getPackage(ResourceResolver resourceResolver, String replicationPackageId) {
+    public ReplicationPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String replicationPackageId) {
         return packageBuilder.getPackage(resourceResolver, replicationPackageId);
     }
 }

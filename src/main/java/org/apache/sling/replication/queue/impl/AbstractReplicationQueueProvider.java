@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.queue.impl;
 
+import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,7 +38,8 @@ public abstract class AbstractReplicationQueueProvider implements ReplicationQue
 
     private final Map<String, ReplicationQueue> queueMap = new ConcurrentHashMap<String, ReplicationQueue>();
 
-    public ReplicationQueue getQueue(String agentName, String queueName)
+    @Nonnull
+    public ReplicationQueue getQueue(@Nonnull String agentName, @Nonnull String queueName)
             throws ReplicationQueueException {
         String key = agentName + queueName;
 
@@ -51,16 +53,18 @@ public abstract class AbstractReplicationQueueProvider implements ReplicationQue
         return queue;
     }
 
-    public ReplicationQueue getDefaultQueue(String agentName)
+    @Nonnull
+    public ReplicationQueue getDefaultQueue(@Nonnull String agentName)
             throws ReplicationQueueException {
         return getQueue(agentName, "");
     }
 
+    @Nonnull
     public Collection<ReplicationQueue> getAllQueues() {
         return queueMap.values();
     }
 
-    public void removeQueue(ReplicationQueue queue) throws ReplicationQueueException {
+    public void removeQueue(@Nonnull ReplicationQueue queue) throws ReplicationQueueException {
         deleteQueue(queue);
         // flush cache
         if (queueMap.containsValue(queue)) {

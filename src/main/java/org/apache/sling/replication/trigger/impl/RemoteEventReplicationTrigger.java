@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.trigger.impl;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Map;
@@ -83,7 +84,7 @@ public class RemoteEventReplicationTrigger implements ReplicationTrigger {
         this.scheduler = scheduler;
     }
 
-    public void register(ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
+    public void register(@Nonnull ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
         try {
             log.info("applying remote event replication trigger");
 
@@ -95,7 +96,7 @@ public class RemoteEventReplicationTrigger implements ReplicationTrigger {
         }
     }
 
-    public void unregister(ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
+    public void unregister(@Nonnull ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
         Future<HttpResponse> httpResponseFuture = requests.remove(requestHandler.toString());
         if (httpResponseFuture != null) {
             httpResponseFuture.cancel(true);

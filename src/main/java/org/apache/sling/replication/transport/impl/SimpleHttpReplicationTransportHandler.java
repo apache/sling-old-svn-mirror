@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.transport.impl;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -74,7 +75,7 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
         this.maxNumberOfPackages = maxNumberOfPackages;
     }
 
-    public void deliverPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationTransportException {
+    public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationPackage replicationPackage) throws ReplicationTransportException {
         String hostAndPort = getHostAndPort(replicationEndpoint.getUri());
 
         if (hostAndPort.equals(replicationPackage.getInfo().getOrigin())) {
@@ -128,7 +129,8 @@ public class SimpleHttpReplicationTransportHandler implements ReplicationTranspo
 
     }
 
-    public List<ReplicationPackage> retrievePackages(final ResourceResolver resourceResolver, final ReplicationRequest replicationRequest) throws ReplicationTransportException {
+    @Nonnull
+    public List<ReplicationPackage> retrievePackages(@Nonnull final ResourceResolver resourceResolver, @Nonnull final ReplicationRequest replicationRequest) throws ReplicationTransportException {
         log.debug("polling from {}", replicationEndpoint.getUri());
 
         try {

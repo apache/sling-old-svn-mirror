@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.queue.impl.simple;
 
+import javax.annotation.Nonnull;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Map;
@@ -56,11 +57,12 @@ public class SimpleReplicationQueue implements ReplicationQueue {
         this.statusMap = new WeakHashMap<ReplicationQueueItem, ReplicationQueueItemState>(10);
     }
 
+    @Nonnull
     public String getName() {
         return name;
     }
 
-    public boolean add(ReplicationQueueItem item) {
+    public boolean add(@Nonnull ReplicationQueueItem item) {
         ReplicationQueueItemState status = new ReplicationQueueItemState();
         boolean result = false;
         try {
@@ -75,7 +77,8 @@ public class SimpleReplicationQueue implements ReplicationQueue {
         return result;
     }
 
-    public ReplicationQueueItemState getStatus(ReplicationQueueItem replicationPackage) {
+    @Nonnull
+    public ReplicationQueueItemState getStatus(@Nonnull ReplicationQueueItem replicationPackage) {
         ReplicationQueueItemState status = statusMap.get(replicationPackage);
         if (queue.contains(replicationPackage)) {
             status.setItemState(ItemState.QUEUED);
@@ -103,11 +106,12 @@ public class SimpleReplicationQueue implements ReplicationQueue {
         return queue.isEmpty();
     }
 
+    @Nonnull
     public Collection<ReplicationQueueItem> getItems() {
         return queue;
     }
 
-    public void remove(String id) {
+    public void remove(@Nonnull String id) {
         ReplicationQueueItem toRemove = null;
         for (ReplicationQueueItem item : queue) {
             if (id.equals(item.getId())) {

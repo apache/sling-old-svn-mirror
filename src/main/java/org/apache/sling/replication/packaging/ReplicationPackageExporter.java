@@ -19,6 +19,8 @@
 package org.apache.sling.replication.packaging;
 
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import java.util.List;
 
 import org.apache.sling.api.resource.ResourceResolver;
@@ -37,18 +39,20 @@ public interface ReplicationPackageExporter extends ReplicationComponent {
      * Exports the {@link org.apache.sling.replication.packaging.ReplicationPackage}s built from the
      * passed {@link org.apache.sling.replication.communication.ReplicationRequest}.
      *
-     * @param resourceResolver - the resource resolver used to export the packages
+     * @param resourceResolver   - the resource resolver used to export the packages
      * @param replicationRequest - the request containing the information about which content is to be exported
      * @return a <code>List</code> of {@link org.apache.sling.replication.packaging.ReplicationPackage}s
      */
-    List<ReplicationPackage> exportPackages(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException;
+    @Nonnull
+    List<ReplicationPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException;
 
     /**
      * Retrieves a {@link org.apache.sling.replication.packaging.ReplicationPackage} given its 'id', if it already exists.
      *
-     * @param resourceResolver - the resource resolver use to obtain the package.
+     * @param resourceResolver     - the resource resolver use to obtain the package.
      * @param replicationPackageId - the id of the package to be retrieved
      * @return a {@link org.apache.sling.replication.packaging.ReplicationPackage} if available, <code>null</code> otherwise
      */
-    ReplicationPackage getPackage(ResourceResolver resourceResolver, String replicationPackageId);
+    @CheckForNull
+    ReplicationPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String replicationPackageId);
 }

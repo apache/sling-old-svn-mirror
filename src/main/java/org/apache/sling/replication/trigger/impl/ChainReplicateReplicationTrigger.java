@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.trigger.impl;
 
+import javax.annotation.Nonnull;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
@@ -61,7 +62,7 @@ public class ChainReplicateReplicationTrigger implements ReplicationTrigger, Man
         this.pathPrefix = pathPrefix;
     }
 
-    public void register(ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
+    public void register(@Nonnull ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
         // register an event handler on replication package install (on a certain path) which triggers the chain replication of that same package
         Dictionary<String, Object> properties = new Hashtable<String, Object>();
 
@@ -82,7 +83,7 @@ public class ChainReplicateReplicationTrigger implements ReplicationTrigger, Man
         }
     }
 
-    public void unregister(ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
+    public void unregister(@Nonnull ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
         ServiceRegistration serviceRegistration = registrations.get(requestHandler.toString());
         if (serviceRegistration != null) {
             serviceRegistration.unregister();

@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.queue.impl.jobhandling;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -116,7 +117,7 @@ public class JobHandlingReplicationQueueProvider extends AbstractReplicationQueu
         }
     }
 
-    public void enableQueueProcessing(String agentName, ReplicationQueueProcessor queueProcessor) {
+    public void enableQueueProcessing(@Nonnull String agentName, @Nonnull ReplicationQueueProcessor queueProcessor) {
         // eventually register job consumer for sling job handling based queues
         Dictionary<String, Object> jobProps = new Hashtable<String, Object>();
         String topic = JobHandlingReplicationQueue.REPLICATION_QUEUE_TOPIC + '/' + agentName;
@@ -133,7 +134,7 @@ public class JobHandlingReplicationQueueProvider extends AbstractReplicationQueu
         }
     }
 
-    public void disableQueueProcessing(String agentName) {
+    public void disableQueueProcessing(@Nonnull String agentName) {
         synchronized (jobs) {
             log.info("unregistering job consumer for agent {}", agentName);
             ServiceRegistration jobReg = jobs.remove(agentName);

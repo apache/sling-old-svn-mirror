@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.queue;
 
+import javax.annotation.Nonnull;
 import java.util.Collection;
 
 import org.apache.sling.replication.component.ReplicationComponent;
@@ -35,7 +36,8 @@ public interface ReplicationQueueProvider extends ReplicationComponent {
      * @return a replication queue to be used for the given parameters
      * @throws ReplicationQueueException
      */
-    ReplicationQueue getQueue(String agentName, String queueName)
+    @Nonnull
+    ReplicationQueue getQueue(@Nonnull String agentName, @Nonnull String queueName)
             throws ReplicationQueueException;
 
 
@@ -46,7 +48,8 @@ public interface ReplicationQueueProvider extends ReplicationComponent {
      * @return the default replication queue for the given agent
      * @throws ReplicationQueueException
      */
-    ReplicationQueue getDefaultQueue(String agentName)
+    @Nonnull
+    ReplicationQueue getDefaultQueue(@Nonnull String agentName)
             throws ReplicationQueueException;
 
     /**
@@ -54,6 +57,7 @@ public interface ReplicationQueueProvider extends ReplicationComponent {
      *
      * @return a collection of replication queues
      */
+    @Nonnull
     Collection<ReplicationQueue> getAllQueues();
 
     /**
@@ -62,7 +66,7 @@ public interface ReplicationQueueProvider extends ReplicationComponent {
      * @param queue a replication queue to be removed
      * @throws ReplicationQueueException
      */
-    void removeQueue(ReplicationQueue queue) throws ReplicationQueueException;
+    void removeQueue(@Nonnull ReplicationQueue queue) throws ReplicationQueueException;
 
     /**
      * enables queue driven processing for an agent
@@ -70,7 +74,7 @@ public interface ReplicationQueueProvider extends ReplicationComponent {
      * @param agentName      a replication agent
      * @param queueProcessor the queue processor to be used
      */
-    void enableQueueProcessing(String agentName, ReplicationQueueProcessor queueProcessor);
+    void enableQueueProcessing(@Nonnull String agentName, @Nonnull ReplicationQueueProcessor queueProcessor);
 
 
     /**
@@ -78,5 +82,5 @@ public interface ReplicationQueueProvider extends ReplicationComponent {
      *
      * @param agentName a replication agent
      */
-    void disableQueueProcessing(String agentName);
+    void disableQueueProcessing(@Nonnull String agentName);
 }

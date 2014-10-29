@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.serialization.impl;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,11 +41,13 @@ public class VoidReplicationPackageBuilder implements ReplicationPackageBuilder 
 
     static final String NAME = "void";
 
-    public ReplicationPackage createPackage(ResourceResolver resourceResolver, ReplicationRequest request) throws ReplicationPackageBuildingException {
+    @CheckForNull
+    public ReplicationPackage createPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationRequest request) throws ReplicationPackageBuildingException {
         return new VoidReplicationPackage(request);
     }
 
-    public ReplicationPackage readPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageReadingException {
+    @CheckForNull
+    public ReplicationPackage readPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws ReplicationPackageReadingException {
         try {
             return VoidReplicationPackage.fromStream(stream);
         } catch (Exception e) {
@@ -51,7 +55,7 @@ public class VoidReplicationPackageBuilder implements ReplicationPackageBuilder 
         }
     }
 
-    public ReplicationPackage getPackage(ResourceResolver resourceResolver, String id) {
+    public ReplicationPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) {
         try {
             return VoidReplicationPackage.fromStream(new ByteArrayInputStream(id.getBytes("UTF-8")));
         } catch (IOException ex) {
@@ -59,7 +63,7 @@ public class VoidReplicationPackageBuilder implements ReplicationPackageBuilder 
         }
     }
 
-    public boolean installPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) {
+    public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationPackage replicationPackage) {
         // installation is always successful as no installation is needed for void packages
         return true;
     }

@@ -39,7 +39,6 @@ public class ReplicationQueueItem {
 
     private final ReplicationPackageInfo packageInfo;
 
-
     public ReplicationQueueItem(String id, String[] paths, String action, String type, ReplicationPackageInfo packageInfo) {
         this.id = id;
         this.paths = paths;

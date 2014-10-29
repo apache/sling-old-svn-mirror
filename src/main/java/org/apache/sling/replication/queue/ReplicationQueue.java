@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.queue;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import java.util.Collection;
 
 /**
@@ -30,6 +32,7 @@ public interface ReplicationQueue {
      *
      * @return queue name as a <code>String</code>
      */
+    @Nonnull
     String getName();
 
     /**
@@ -39,23 +42,25 @@ public interface ReplicationQueue {
      * @return <code>true</code> if the replication item was added correctly to the queue,
      * <code>false</code otherwise
      */
-    boolean add(ReplicationQueueItem item);
+    boolean add(@Nonnull ReplicationQueueItem item);
 
     /**
      * get the status of a certain item in the queue
      *
      * @param item the replication item to get the status for
      * @return the item status in the queue
-     * @throws ReplicationQueueException
+     * @throws ReplicationQueueException if any error occurs while getting the status
      */
-    ReplicationQueueItemState getStatus(ReplicationQueueItem item)
+    @Nonnull
+    ReplicationQueueItemState getStatus(@Nonnull ReplicationQueueItem item)
             throws ReplicationQueueException;
 
     /**
      * get the first item (FIFO wise, the next to be processed) into the queue
      *
-     * @return the first item into the queue
+     * @return the first item into the queue or <code>null</code> if the queue is empty
      */
+    @CheckForNull
     ReplicationQueueItem getHead();
 
     /**
@@ -70,6 +75,7 @@ public interface ReplicationQueue {
      *
      * @return a <code>Collection</code> of {@link org.apache.sling.replication.queue.ReplicationQueueItem}s
      */
+    @Nonnull
     Collection<ReplicationQueueItem> getItems();
 
     /**
@@ -77,5 +83,5 @@ public interface ReplicationQueue {
      *
      * @param id <code>String</code> representing an item's identifier
      */
-    void remove(String id);
+    void remove(@Nonnull String id);
 }

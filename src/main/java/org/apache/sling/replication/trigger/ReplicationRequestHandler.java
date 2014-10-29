@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.trigger;
 
+import javax.annotation.Nonnull;
+
 import org.apache.sling.replication.communication.ReplicationRequest;
 
 /**
@@ -31,6 +33,6 @@ public interface ReplicationRequestHandler {
      *
      * @param request a replication request
      */
-    void handle(ReplicationRequest request);
+    void handle(@Nonnull ReplicationRequest request);
 
 }

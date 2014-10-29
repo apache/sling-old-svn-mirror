@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.trigger.impl;
 
+import javax.annotation.Nonnull;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.Event;
@@ -56,7 +57,7 @@ public abstract class AbstractJcrEventTrigger implements ReplicationTrigger {
         this.serviceUser = serviceUser;
     }
 
-    public void register(ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
+    public void register(@Nonnull ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
         Session session = null;
         try {
             session = getSession();
@@ -73,7 +74,7 @@ public abstract class AbstractJcrEventTrigger implements ReplicationTrigger {
         }
     }
 
-    public void unregister(ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
+    public void unregister(@Nonnull ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
         JcrEventReplicationTriggerListener listener = registeredListeners.get(requestHandler.toString());
         if (listener != null) {
             Session session = null;

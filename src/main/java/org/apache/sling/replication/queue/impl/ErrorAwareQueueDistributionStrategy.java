@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.queue.impl;
 
+import javax.annotation.Nonnull;
 import java.util.Calendar;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -78,8 +79,9 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
         timeThreshold = PropertiesUtil.toInteger(ctx.getProperties().get(TIME_THRESHOLD), 600000);
     }
 
-    public ReplicationQueueItemState add(String agentName, ReplicationQueueItem item,
-                                         ReplicationQueueProvider queueProvider)
+    @Nonnull
+    public ReplicationQueueItemState add(@Nonnull String agentName, @Nonnull ReplicationQueueItem item,
+                                         @Nonnull ReplicationQueueProvider queueProvider)
             throws ReplicationQueueException {
         try {
             log.debug("using error aware queue distribution");

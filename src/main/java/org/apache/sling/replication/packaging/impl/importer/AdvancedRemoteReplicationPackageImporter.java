@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.packaging.impl.importer;
 
+import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -130,7 +131,7 @@ public class AdvancedRemoteReplicationPackageImporter implements ReplicationPack
     }
 
 
-    public boolean importPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) {
+    public boolean importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationPackage replicationPackage) {
         boolean result = false;
         try {
             transportHandler.deliverPackage(resourceResolver, replicationPackage);
@@ -141,7 +142,7 @@ public class AdvancedRemoteReplicationPackageImporter implements ReplicationPack
         return result;
     }
 
-    public ReplicationPackage uploadPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageUploadException {
+    public ReplicationPackage uploadPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws ReplicationPackageUploadException {
         return null;
     }
 
