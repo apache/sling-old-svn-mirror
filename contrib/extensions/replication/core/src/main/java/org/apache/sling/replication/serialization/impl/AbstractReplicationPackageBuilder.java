@@ -143,9 +143,7 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
         } catch (Exception e) {
             throw new ReplicationPackageReadingException(e);
         } finally {
-            if (session != null) {
-                session.logout();
-            }
+            ungetSession(session);
         }
 
         return false;
@@ -173,6 +171,16 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
             throw new RepositoryException("could not obtain a session from calling user " + resourceResolver.getUserID());
         }
         return session;
+    }
+
+    protected void ungetSession(Session session) {
+       if (session != null) {
+           try {
+               session.save();
+           } catch (RepositoryException e) {
+               log.debug("Cannot save session", e);
+           }
+       }
     }
 
     protected abstract ReplicationPackage createPackageForAdd(ResourceResolver resourceResolver, ReplicationRequest request)
