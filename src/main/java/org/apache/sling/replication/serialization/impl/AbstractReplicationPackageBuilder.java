@@ -81,7 +81,6 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
         return replicationPackage;
     }
 
-
     @CheckForNull
     public ReplicationPackage readPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws ReplicationPackageReadingException {
         ReplicationPackage replicationPackage = null;
@@ -108,7 +107,6 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
         }
         return replicationPackage;
     }
-
 
     public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationPackage replicationPackage) throws ReplicationPackageReadingException {
         ReplicationActionType actionType = ReplicationActionType.fromName(replicationPackage.getAction());

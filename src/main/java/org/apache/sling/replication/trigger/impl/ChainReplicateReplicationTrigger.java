@@ -21,11 +21,8 @@ package org.apache.sling.replication.trigger.impl;
 import javax.annotation.Nonnull;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;

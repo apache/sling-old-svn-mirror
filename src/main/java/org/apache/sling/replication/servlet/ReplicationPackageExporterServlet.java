@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.http.entity.ContentType;
 import org.apache.sling.api.SlingHttpServletRequest;

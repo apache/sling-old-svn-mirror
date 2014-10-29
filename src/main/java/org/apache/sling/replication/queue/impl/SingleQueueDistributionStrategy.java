@@ -56,30 +56,22 @@ public class SingleQueueDistributionStrategy implements ReplicationQueueDistribu
         ReplicationQueue queue = queueProvider.getDefaultQueue(agentName);
         log.debug("obtained queue {}", queue);
 
-        if (queue != null) {
-            if (queue.add(item)) {
-                state = queue.getStatus(item);
-                log.info("replication status: {}", state);
-            } else {
-                log.error("could not add the item to the queue {}", queue);
-                state.setItemState(ItemState.ERROR);
-                state.setSuccessful(false);
-            }
-            return state;
+        if (queue.add(item)) {
+            state = queue.getStatus(item);
+            log.info("replication status: {}", state);
         } else {
-            throw new ReplicationQueueException("could not get a queue for agent " + agentName);
+            log.error("could not add the item to the queue {}", queue);
+            state.setItemState(ItemState.ERROR);
+            state.setSuccessful(false);
         }
+        return state;
 
     }
 
     public boolean offer(String agentName, ReplicationQueueItem replicationPackage,
                          ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
         ReplicationQueue queue = queueProvider.getDefaultQueue(agentName);
-        if (queue != null) {
-            return queue.add(replicationPackage);
-        } else {
-            throw new ReplicationQueueException("could not get a queue for agent " + agentName);
-        }
+        return queue.add(replicationPackage);
 
     }
 

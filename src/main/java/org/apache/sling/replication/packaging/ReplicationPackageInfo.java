@@ -20,8 +20,6 @@
 package org.apache.sling.replication.packaging;
 
 
-import java.util.Map;
-
 /**
  * Additional information about a package.
  * Additional information is optional and components should expect every piece of it to be null.

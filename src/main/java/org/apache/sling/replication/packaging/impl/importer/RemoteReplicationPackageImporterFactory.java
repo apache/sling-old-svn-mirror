@@ -19,6 +19,7 @@
 package org.apache.sling.replication.packaging.impl.importer;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.InputStream;
 import java.util.Map;
 
@@ -38,7 +39,6 @@ import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageImportException;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
 import org.apache.sling.replication.packaging.ReplicationPackageUploadException;
-import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -103,7 +103,8 @@ public class RemoteReplicationPackageImporterFactory implements ReplicationPacka
         return importer.uploadPackage(resourceResolver, stream);
     }
 
-    public <ComponentType extends ReplicationComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type, @Nonnull String componentName) {
+    public <ComponentType extends ReplicationComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type,
+                                                                                   @Nullable String componentName) {
         if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
             return (ComponentType) transportAuthenticationProvider;
         }

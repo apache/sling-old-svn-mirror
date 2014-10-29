@@ -88,19 +88,15 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
             ReplicationQueueItemState state = new ReplicationQueueItemState();
             ReplicationQueue queue = queueProvider.getDefaultQueue(agentName);
             log.debug("obtained queue {}", queue);
-            if (queue != null) {
-                if (queue.add(item)) {
-                    log.info("replication status: {}", state);
-                    state = queue.getStatus(item);
-                } else {
-                    log.error("could not add the item to the queue {}", queue);
-                    state.setItemState(ItemState.ERROR);
-                    state.setSuccessful(false);
-                }
-                return state;
+            if (queue.add(item)) {
+                log.info("replication status: {}", state);
+                state = queue.getStatus(item);
             } else {
-                throw new ReplicationQueueException("could not get a queue for agent " + agentName);
+                log.error("could not add the item to the queue {}", queue);
+                state.setItemState(ItemState.ERROR);
+                state.setSuccessful(false);
             }
+            return state;
         } finally {
             checkAndRemoveStuckItems(agentName, queueProvider);
         }
@@ -110,11 +106,7 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
                          ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
         boolean added;
         ReplicationQueue queue = queueProvider.getDefaultQueue(agentName);
-        if (queue != null) {
-            added = queue.add(replicationPackage);
-        } else {
-            throw new ReplicationQueueException("could not get a queue for agent " + agentName);
-        }
+        added = queue.add(replicationPackage);
         checkAndRemoveStuckItems(agentName, queueProvider);
         return added;
     }

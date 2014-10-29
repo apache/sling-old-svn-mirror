@@ -19,6 +19,7 @@
 package org.apache.sling.replication.agent.impl;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Dictionary;
@@ -192,7 +193,8 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
 
     }
 
-    public <ComponentType extends ReplicationComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type, @Nonnull String componentName) {
+    public <ComponentType extends ReplicationComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type,
+                                                                                   @Nullable String componentName) {
         if (type.isAssignableFrom(ReplicationQueueProvider.class)) {
             return (ComponentType) queueProvider;
         } else if (type.isAssignableFrom(ReplicationQueueDistributionStrategy.class)) {

@@ -195,11 +195,7 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
             properties.put("replication.agent.name", name);
             replicationEventFactory.generateEvent(ReplicationEventType.PACKAGE_QUEUED, properties);
 
-            if (state != null) {
-                replicationResponse = new ReplicationResponse(state.getItemState().toString(), state.isSuccessful());
-            } else {
-                replicationResponse = new ReplicationResponse(ReplicationQueueItemState.ItemState.ERROR.toString(), false);
-            }
+            replicationResponse = new ReplicationResponse(state.getItemState().toString(), state.isSuccessful());
         } catch (Exception e) {
             log.error("an error happened during queue processing", e);
             replicationResponse = new ReplicationResponse(e.toString(), false);
@@ -298,7 +294,7 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
     }
 
     private ResourceResolver getAgentResourceResolver() throws LoginException {
-        ResourceResolver resourceResolver = null;
+        ResourceResolver resourceResolver;
 
         Map<String, Object> authenticationInfo = new HashMap<String, Object>();
         authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, subServiceName);

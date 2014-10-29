@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.resources.impl.common;
 
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -59,7 +60,7 @@ public class SimpleModifiableValueMap extends ModifiableValueMapDecorator
     }
 
     @Override
-    public void putAll(Map<? extends String, ?> t) {
+    public void putAll(@Nonnull Map<? extends String, ?> t) {
         super.putAll(t);
         changed();
     }
