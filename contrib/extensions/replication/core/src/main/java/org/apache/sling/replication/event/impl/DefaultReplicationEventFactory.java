@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.event.impl;
 
+import javax.annotation.Nonnull;
 import java.util.Dictionary;
 
 import org.apache.felix.scr.annotations.Component;
@@ -42,7 +43,7 @@ public class DefaultReplicationEventFactory implements ReplicationEventFactory {
     @Reference
     private EventAdmin eventAdmin;
 
-    public void generateEvent(ReplicationEventType replicationEventType, Dictionary<?, ?> properties) {
+    public void generateEvent(@Nonnull ReplicationEventType replicationEventType, @Nonnull Dictionary<?, ?> properties) {
         ReplicationEvent replicationEvent = new ReplicationEvent(replicationEventType, properties);
         eventAdmin.postEvent(replicationEvent);
         log.debug("replication event posted {}", replicationEvent);

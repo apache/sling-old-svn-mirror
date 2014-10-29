@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.packaging.impl.exporter;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Map;
 
@@ -101,15 +102,16 @@ public class RemoteReplicationPackageExporterFactory implements ReplicationPacka
         exporter = null;
     }
 
-    public List<ReplicationPackage> exportPackages(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
+    @Nonnull
+    public List<ReplicationPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
         return exporter.exportPackages(resourceResolver, replicationRequest);
     }
 
-    public ReplicationPackage getPackage(ResourceResolver resourceResolver, String replicationPackageId) {
+    public ReplicationPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String replicationPackageId) {
         return exporter.getPackage(resourceResolver, replicationPackageId);
     }
 
-    public <ComponentType extends ReplicationComponent> ComponentType getComponent(Class<ComponentType> type, String componentName) {
+    public <ComponentType extends ReplicationComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type, @Nonnull String componentName) {
         if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
             return (ComponentType) transportAuthenticationProvider;
         }

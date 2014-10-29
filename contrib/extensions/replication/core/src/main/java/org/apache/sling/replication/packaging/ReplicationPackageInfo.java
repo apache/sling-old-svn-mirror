@@ -30,19 +30,19 @@ public interface ReplicationPackageInfo {
 
     /**
      * retrieves the origin of the package.
-     * @return
+     * @return the package origin
      */
     String getOrigin();
 
     /**
      * sets the origin of the package.
-     * @param origin
+     * @param origin the originating instance of this package
      */
     void setOrigin(String origin);
 
     /**
      * fills the current info object from the provided one.
-     * @param packageInfo
+     * @param packageInfo package metadata
      */
     void fillInfo(ReplicationPackageInfo packageInfo);
 }

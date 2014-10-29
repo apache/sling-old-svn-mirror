@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.packaging.impl.importer;
 
+import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Dictionary;
@@ -65,7 +66,7 @@ public class LocalReplicationPackageImporter implements ReplicationPackageImport
     }
 
 
-    public boolean importPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationPackageImportException {
+    public boolean importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationPackage replicationPackage) throws ReplicationPackageImportException {
         boolean success = false;
         try {
             success = packageBuilder.installPackage(resourceResolver, replicationPackage);
@@ -88,7 +89,7 @@ public class LocalReplicationPackageImporter implements ReplicationPackageImport
         return success;
     }
 
-    public ReplicationPackage uploadPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageUploadException {
+    public ReplicationPackage uploadPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws ReplicationPackageUploadException {
         try {
             return packageBuilder.readPackage(resourceResolver, stream);
         } catch (Exception e) {

@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.queue.impl;
 
+import javax.annotation.Nonnull;
+
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
@@ -44,8 +46,9 @@ public class SingleQueueDistributionStrategy implements ReplicationQueueDistribu
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public ReplicationQueueItemState add(String agentName, ReplicationQueueItem item,
-                                         ReplicationQueueProvider queueProvider)
+    @Nonnull
+    public ReplicationQueueItemState add(@Nonnull String agentName, @Nonnull ReplicationQueueItem item,
+                                         @Nonnull ReplicationQueueProvider queueProvider)
             throws ReplicationQueueException {
         log.debug("using single queue distribution");
 

@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.component.impl;
 
+import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -69,7 +70,7 @@ public class DefaultReplicationComponentProvider implements ReplicationComponent
     Map<String, ReplicationPackageExporter> replicationPackageExporterMap = new ConcurrentHashMap<String, ReplicationPackageExporter>();
     private BundleContext bundleContext;
 
-    public <ComponentType extends ReplicationComponent> ComponentType getComponent(Class<ComponentType> type, String componentName) {
+    public <ComponentType extends ReplicationComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type, @Nonnull String componentName) {
         if (type.isAssignableFrom(ReplicationPackageExporter.class)) {
             return (ComponentType) replicationPackageExporterMap.get(componentName);
         } else if (type.isAssignableFrom(ReplicationPackageImporter.class)) {

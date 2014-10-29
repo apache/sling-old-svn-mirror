@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.agent;
 
+import javax.annotation.Nonnull;
+
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.component.ReplicationComponent;
@@ -34,6 +36,6 @@ public interface ReplicationRequestAuthorizationStrategy extends ReplicationComp
      * @throws ReplicationRequestAuthorizationException if the {@link org.apache.sling.api.resource.ResourceResolver} is
      *                                                  not authorized to execute the given {@link org.apache.sling.replication.communication.ReplicationRequest}
      */
-    void checkPermission(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationRequestAuthorizationException;
+    void checkPermission(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationRequest replicationRequest) throws ReplicationRequestAuthorizationException;
 
 }

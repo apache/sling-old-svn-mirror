@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.packaging;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -33,6 +34,7 @@ public interface ReplicationPackage extends Serializable {
      *
      * @return the package id
      */
+    @Nonnull
     String getId();
 
     /**
@@ -40,6 +42,7 @@ public interface ReplicationPackage extends Serializable {
      *
      * @return an array of paths
      */
+    @Nonnull
     String[] getPaths();
 
     /**
@@ -47,6 +50,7 @@ public interface ReplicationPackage extends Serializable {
      *
      * @return the action
      */
+    @Nonnull
     String getAction();
 
     /**
@@ -54,6 +58,7 @@ public interface ReplicationPackage extends Serializable {
      *
      * @return the package type
      */
+    @Nonnull
     String getType();
 
     /**
@@ -63,6 +68,7 @@ public interface ReplicationPackage extends Serializable {
      * @return an {@link InputStream}
      * @throws IOException
      */
+    @Nonnull
     InputStream createInputStream() throws IOException;
 
     /**
@@ -84,8 +90,9 @@ public interface ReplicationPackage extends Serializable {
      * For example info.origin can be used to skip replicating back to the originating endpoint.
      * It should not be be serialized between instances as its main purpose is to allow
      * inter component communication on the same instance.
-     * @return
+     * @return the associated metadata to this package
      */
+    @Nonnull
     ReplicationPackageInfo getInfo();
 
 }

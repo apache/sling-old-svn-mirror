@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.event;
 
+import javax.annotation.Nonnull;
 import java.util.Dictionary;
 
 /**
@@ -31,5 +32,5 @@ public interface ReplicationEventFactory {
      * @param replicationEventType the type of event to be generated
      * @param properties           a dictionary of properties to be attached to the event
      */
-    void generateEvent(ReplicationEventType replicationEventType, Dictionary<?, ?> properties);
+    void generateEvent(@Nonnull ReplicationEventType replicationEventType, @Nonnull Dictionary<?, ?> properties);
 }

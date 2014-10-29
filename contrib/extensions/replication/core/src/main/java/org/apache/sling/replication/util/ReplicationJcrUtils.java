@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.util;
 
+import javax.annotation.Nonnull;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.Event;
@@ -39,7 +40,7 @@ public class ReplicationJcrUtils {
      * {@link javax.jcr.observation.ObservationManager#setUserData(String)} set to {@link #DO_NOT_REPLICATE}
      * @throws javax.jcr.RepositoryException if retrieving 'userData' fails
      */
-    public static boolean isSafe(Event jcrEvent) throws RepositoryException {
+    public static boolean isSafe(@Nonnull Event jcrEvent) throws RepositoryException {
         boolean safe = false;
         if (jcrEvent instanceof JackrabbitEvent && !((JackrabbitEvent) jcrEvent).isExternal()) {
             String userData = jcrEvent.getUserData();
@@ -57,7 +58,7 @@ public class ReplicationJcrUtils {
      * @param session a {@link javax.jcr.Session}
      * @throws RepositoryException if retrieving the {@link javax.jcr.observation.ObservationManager} fails
      */
-    public static void setDoNotReplicate(Session session) throws RepositoryException {
+    public static void setDoNotReplicate(@Nonnull Session session) throws RepositoryException {
         session.getWorkspace().getObservationManager().setUserData(ReplicationJcrUtils.DO_NOT_REPLICATE);
     }
 }

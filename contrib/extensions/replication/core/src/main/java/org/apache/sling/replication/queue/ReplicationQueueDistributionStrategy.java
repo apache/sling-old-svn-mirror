@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.queue;
 
+import javax.annotation.Nonnull;
+
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.component.ReplicationComponent;
 
@@ -35,10 +37,11 @@ public interface ReplicationQueueDistributionStrategy extends ReplicationCompone
      * @param item          a {@link org.apache.sling.replication.queue.ReplicationQueueItem} to distribute
      * @param queueProvider the {@link ReplicationQueueProvider} used to provide the queue to be used for the given package
      * @return a {@link ReplicationQueueItemState} representing the state of the package in the queue after its distribution
-     * @throws ReplicationQueueException
+     * @throws ReplicationQueueException if distribution fails
      */
-    ReplicationQueueItemState add(String agentName, ReplicationQueueItem item,
-                                  ReplicationQueueProvider queueProvider) throws ReplicationQueueException;
+    @Nonnull
+    ReplicationQueueItemState add(@Nonnull String agentName, @Nonnull ReplicationQueueItem item,
+                                  @Nonnull ReplicationQueueProvider queueProvider) throws ReplicationQueueException;
 
     /**
      * asynchronously distribute a {@link org.apache.sling.replication.queue.ReplicationQueueItem} to a {@link ReplicationAgent}

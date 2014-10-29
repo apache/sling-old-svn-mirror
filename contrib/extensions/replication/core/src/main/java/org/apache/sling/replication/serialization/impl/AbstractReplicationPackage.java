@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.serialization.impl;
 
+import javax.annotation.Nonnull;
+
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageInfo;
 
@@ -27,6 +29,7 @@ import org.apache.sling.replication.packaging.ReplicationPackageInfo;
 public abstract class AbstractReplicationPackage implements ReplicationPackage {
     private final ReplicationPackageInfo info = new SimpleReplicationPackageInfo();
 
+    @Nonnull
     public ReplicationPackageInfo getInfo() {
         return info;
     }

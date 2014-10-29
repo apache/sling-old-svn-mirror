@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.packaging.impl.importer;
 
+import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.util.Map;
 
@@ -94,15 +95,15 @@ public class RemoteReplicationPackageImporterFactory implements ReplicationPacka
 
     }
 
-    public boolean importPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationPackageImportException {
+    public boolean importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationPackage replicationPackage) throws ReplicationPackageImportException {
         return importer.importPackage(resourceResolver, replicationPackage);
     }
 
-    public ReplicationPackage uploadPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageUploadException {
+    public ReplicationPackage uploadPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws ReplicationPackageUploadException {
         return importer.uploadPackage(resourceResolver, stream);
     }
 
-    public <ComponentType extends ReplicationComponent> ComponentType getComponent(Class<ComponentType> type, String componentName) {
+    public <ComponentType extends ReplicationComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type, @Nonnull String componentName) {
         if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
             return (ComponentType) transportAuthenticationProvider;
         }

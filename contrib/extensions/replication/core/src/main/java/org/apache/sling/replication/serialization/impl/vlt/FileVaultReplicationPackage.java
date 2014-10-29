@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.serialization.impl.vlt;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -69,14 +70,17 @@ public class FileVaultReplicationPackage extends AbstractReplicationPackage impl
         this.action = ReplicationActionType.ADD.toString();
     }
 
+    @Nonnull
     public String getId() {
         return id;
     }
 
+    @Nonnull
     public String[] getPaths() {
         return paths;
     }
 
+    @Nonnull
     public InputStream createInputStream() throws IOException {
         return new FileInputStream(pkg.getFile());
     }
@@ -85,10 +89,12 @@ public class FileVaultReplicationPackage extends AbstractReplicationPackage impl
         return pkg.getFile().length();
     }
 
+    @Nonnull
     public String getType() {
         return FileVaultReplicationPackageBuilder.PACKAGING_TYPE;
     }
 
+    @Nonnull
     public String getAction() {
         return action;
     }

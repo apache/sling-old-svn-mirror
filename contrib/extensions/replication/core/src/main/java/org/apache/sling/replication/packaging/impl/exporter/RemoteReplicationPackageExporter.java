@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.packaging.impl.exporter;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,19 +72,16 @@ public class RemoteReplicationPackageExporter implements ReplicationPackageExpor
                 transportEndpointStrategyType);
     }
 
-    public List<ReplicationPackage> exportPackages(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
+    @Nonnull
+    public List<ReplicationPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
         try {
-            List<ReplicationPackage> replicationPackages = transportHandler.retrievePackages(resourceResolver, replicationRequest);
-//            for (ReplicationPackage replicationPackage : replicationPackages) {
-//                replicationPackage.
-//            }
-            return replicationPackages;
+            return transportHandler.retrievePackages(resourceResolver, replicationRequest);
         } catch (Exception e) {
             throw new ReplicationPackageBuildingException(e);
         }
     }
 
-    public ReplicationPackage getPackage(ResourceResolver resourceResolver, String replicationPackageId) {
+    public ReplicationPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String replicationPackageId) {
         return packageBuilder.getPackage(resourceResolver, replicationPackageId);
     }
 }

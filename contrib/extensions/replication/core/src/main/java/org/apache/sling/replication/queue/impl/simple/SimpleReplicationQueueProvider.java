@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.queue.impl.simple;
 
+import javax.annotation.Nonnull;
+
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
@@ -61,14 +63,14 @@ public class SimpleReplicationQueueProvider extends AbstractReplicationQueueProv
         // do nothing as queues just exist in the cache
     }
 
-    public void enableQueueProcessing(String agentName, ReplicationQueueProcessor queueProcessor) {
+    public void enableQueueProcessing(@Nonnull String agentName, @Nonnull ReplicationQueueProcessor queueProcessor) {
         ScheduleOptions options = scheduler.NOW(-1, 10)
                 .canRunConcurrently(false)
                 .name(getJobName(agentName));
         scheduler.schedule(new ScheduledReplicationQueueProcessorTask(this, queueProcessor), options);
     }
 
-    public void disableQueueProcessing(String agentName) {
+    public void disableQueueProcessing(@Nonnull String agentName) {
         scheduler.unschedule(getJobName(agentName));
     }
 

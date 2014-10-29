@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.agent.impl;
 
+import javax.annotation.Nonnull;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
@@ -171,7 +172,7 @@ public class SimpleReplicationAgentFactory implements ReplicationComponentProvid
 
     }
 
-    public <ComponentType extends ReplicationComponent> ComponentType getComponent(Class<ComponentType> type, String componentName) {
+    public <ComponentType extends ReplicationComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type, @Nonnull String componentName) {
         if (type.isAssignableFrom(ReplicationQueueProvider.class)) {
             return (ComponentType) queueProvider;
         }

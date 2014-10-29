@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.queue.impl.jobhandling;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -55,11 +56,12 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
         this.jobManager = jobManager;
     }
 
+    @Nonnull
     public String getName() {
         return name;
     }
 
-    public boolean add(ReplicationQueueItem item) {
+    public boolean add(@Nonnull ReplicationQueueItem item) {
         boolean result = true;
         try {
             Map<String, Object> properties = JobHandlingUtils.createFullProperties(item);
@@ -73,7 +75,8 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
         return result;
     }
 
-    public ReplicationQueueItemState getStatus(ReplicationQueueItem replicationPackage)
+    @Nonnull
+    public ReplicationQueueItemState getStatus(@Nonnull ReplicationQueueItem replicationPackage)
             throws ReplicationQueueException {
         ReplicationQueueItemState itemStatus = new ReplicationQueueItemState();
         try {
@@ -133,6 +136,7 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
         return getItems().isEmpty();
     }
 
+    @Nonnull
     public List<ReplicationQueueItem> getItems() {
         List<ReplicationQueueItem> items = new ArrayList<ReplicationQueueItem>();
         Collection<Job> jobs = getJobs(-1);
@@ -143,7 +147,7 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
         return items;
     }
 
-    public void remove(String id) {
+    public void remove(@Nonnull String id) {
         Job job = getJob(id);
 
         if (job != null) {

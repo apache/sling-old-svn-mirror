@@ -18,10 +18,12 @@
  */
 package org.apache.sling.replication.agent.impl;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -50,7 +52,6 @@ import org.apache.sling.replication.queue.ReplicationQueueItemState;
 import org.apache.sling.replication.queue.ReplicationQueueProcessor;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
-import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.apache.sling.replication.trigger.ReplicationRequestHandler;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
 import org.apache.sling.replication.trigger.ReplicationTriggerException;
@@ -132,9 +133,9 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
         this.triggers = triggers == null ? new ArrayList<ReplicationTrigger>() : triggers;
     }
 
-    public ReplicationResponse execute(ResourceResolver resourceResolver, ReplicationRequest replicationRequest)
+    @Nonnull
+    public ReplicationResponse execute(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationRequest replicationRequest)
             throws ReplicationAgentException {
-
 
 
         ResourceResolver agentResourceResolver = null;
@@ -144,15 +145,11 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
 
             replicationRequestAuthorizationStrategy.checkPermission(resourceResolver, replicationRequest);
 
-
-            List<ReplicationPackage> replicationPackages = buildPackages(agentResourceResolver, replicationRequest);
-
-            return schedule(agentResourceResolver, replicationPackages);
+            return scheduleImport(exportPackages(agentResourceResolver, replicationRequest));
         } catch (Exception e) {
             log.error("Error executing replication request {}", replicationRequest, e);
             throw new ReplicationAgentException(e);
-        }
-        finally {
+        } finally {
             ungetAgentResourceResolver(agentResourceResolver);
 
         }
@@ -164,28 +161,22 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
     }
 
 
-    private List<ReplicationPackage> buildPackages(ResourceResolver agentResourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
-        List<ReplicationPackage> replicationPackages = replicationPackageExporter.exportPackages(agentResourceResolver, replicationRequest);
+    private List<ReplicationPackage> exportPackages(ResourceResolver agentResourceResolver, ReplicationRequest replicationRequest) throws ReplicationPackageBuildingException {
 
-        return replicationPackages;
+        return replicationPackageExporter.exportPackages(agentResourceResolver, replicationRequest);
     }
 
-    private ReplicationResponse schedule(ResourceResolver agentResourceResolver, List<ReplicationPackage> replicationPackages) {
-        // TODO : create a composite replication response otherwise only the last response will be returned
-        ReplicationResponse replicationResponse = new ReplicationResponse();
+    private ReplicationResponse scheduleImport(List<ReplicationPackage> replicationPackages) {
+        List<ReplicationResponse> replicationResponses = new LinkedList<ReplicationResponse>();
 
         for (ReplicationPackage replicationPackage : replicationPackages) {
-            ReplicationResponse currentReplicationResponse = schedule(replicationPackage);
-
-            replicationResponse.setSuccessful(currentReplicationResponse.isSuccessful());
-            replicationResponse.setStatus(currentReplicationResponse.getStatus());
+            replicationResponses.add(schedule(replicationPackage));
         }
-
-        return replicationResponse;
+        return replicationResponses.size() == 1 ? replicationResponses.get(0) : new CompositeReplicationResponse(replicationResponses);
     }
 
     private ReplicationResponse schedule(ReplicationPackage replicationPackage) {
-        ReplicationResponse replicationResponse = new ReplicationResponse();
+        ReplicationResponse replicationResponse;
         log.info("scheduling replication of package {}", replicationPackage);
 
         ReplicationQueueItem replicationQueueItem = new ReplicationQueueItem(replicationPackage.getId(),
@@ -205,16 +196,13 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
             replicationEventFactory.generateEvent(ReplicationEventType.PACKAGE_QUEUED, properties);
 
             if (state != null) {
-                replicationResponse.setStatus(state.getItemState().toString());
-                replicationResponse.setSuccessful(state.isSuccessful());
+                replicationResponse = new ReplicationResponse(state.getItemState().toString(), state.isSuccessful());
             } else {
-                replicationResponse.setStatus(ReplicationQueueItemState.ItemState.ERROR.toString());
-                replicationResponse.setSuccessful(false);
+                replicationResponse = new ReplicationResponse(ReplicationQueueItemState.ItemState.ERROR.toString(), false);
             }
         } catch (Exception e) {
             log.error("an error happened during queue processing", e);
-
-            replicationResponse.setSuccessful(false);
+            replicationResponse = new ReplicationResponse(e.toString(), false);
         }
 
         return replicationResponse;
@@ -334,7 +322,7 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
     }
 
     class PackageQueueProcessor implements ReplicationQueueProcessor {
-        public boolean process(String queueName, ReplicationQueueItem packageInfo) {
+        public boolean process(@Nonnull String queueName, @Nonnull ReplicationQueueItem packageInfo) {
             log.info("running package queue processor for queue {}", queueName);
             return processQueue(packageInfo);
         }
@@ -347,7 +335,7 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
             this.agent = agent;
         }
 
-        public void handle(ReplicationRequest request) {
+        public void handle(@Nonnull ReplicationRequest request) {
             ResourceResolver agentResourceResolver = null;
             try {
                 agentResourceResolver = getAgentResourceResolver();
@@ -356,10 +344,44 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
                 log.error("Error executing handler", e);
             } catch (LoginException e) {
                 log.error("Cannot obtain resource resolver");
-            }
-            finally {
+            } finally {
                 ungetAgentResourceResolver(agentResourceResolver);
             }
+        }
+    }
+
+    private class CompositeReplicationResponse extends ReplicationResponse {
+
+        private boolean successful;
+
+        private String status;
+
+        public CompositeReplicationResponse(List<ReplicationResponse> replicationResponses) {
+            super("", false);
+            if (replicationResponses.isEmpty()) {
+                successful = false;
+                status = "empty response";
+            } else {
+                successful = true;
+                StringBuilder statusBuilder = new StringBuilder("[");
+                for (ReplicationResponse response : replicationResponses) {
+                    successful &= response.isSuccessful();
+                    statusBuilder.append(response.getStatus()).append(", ");
+                }
+                int lof = statusBuilder.lastIndexOf(", ");
+                statusBuilder.replace(lof, lof + 2, "]");
+                status = statusBuilder.toString();
+            }
+        }
+
+        @Override
+        public boolean isSuccessful() {
+            return successful;
+        }
+
+        @Override
+        public String getStatus() {
+            return status;
         }
     }
 }

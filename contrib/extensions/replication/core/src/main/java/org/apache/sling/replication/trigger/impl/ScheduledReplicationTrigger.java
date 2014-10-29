@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.trigger.impl;
 
+import javax.annotation.Nonnull;
+
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.replication.communication.ReplicationActionType;
@@ -50,7 +52,7 @@ public class ScheduledReplicationTrigger implements ReplicationTrigger {
         this.scheduler = scheduler;
     }
 
-    public void register(ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
+    public void register(@Nonnull ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
         try {
             ScheduleOptions options = scheduler.NOW(-1, secondsInterval);
             options.name(requestHandler.toString());
@@ -60,7 +62,7 @@ public class ScheduledReplicationTrigger implements ReplicationTrigger {
         }
     }
 
-    public void unregister(ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
+    public void unregister(@Nonnull ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
         scheduler.unschedule(requestHandler.toString());
     }
 

@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.packaging.impl.importer;
 
+import javax.annotation.Nonnull;
 import javax.jcr.Node;
 import javax.jcr.Session;
 import javax.jcr.nodetype.NodeType;
@@ -109,11 +110,11 @@ public class RepositoryReplicationPackageImporter implements ReplicationPackageI
         }
     }
 
-    public boolean importPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationPackageImportException {
+    public boolean importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationPackage replicationPackage) throws ReplicationPackageImportException {
         return false;
     }
 
-    public ReplicationPackage uploadPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageUploadException {
+    public ReplicationPackage uploadPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws ReplicationPackageUploadException {
         return null;
     }
 }

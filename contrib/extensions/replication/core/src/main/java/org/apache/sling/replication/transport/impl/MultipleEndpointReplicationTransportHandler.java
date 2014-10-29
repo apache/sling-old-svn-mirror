@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.transport.impl;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,11 +72,12 @@ public class MultipleEndpointReplicationTransportHandler implements ReplicationT
         return result;
     }
 
-    public void deliverPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationTransportException {
+    public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationPackage replicationPackage) throws ReplicationTransportException {
         doTransport(resourceResolver, null, replicationPackage);
     }
 
-    public List<ReplicationPackage> retrievePackages(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationTransportException {
+    @Nonnull
+    public List<ReplicationPackage> retrievePackages(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationRequest replicationRequest) throws ReplicationTransportException {
         return doTransport(resourceResolver, replicationRequest, null);
     }
 

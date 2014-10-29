@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.transport.impl;
 
+import javax.annotation.Nonnull;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -83,7 +84,7 @@ public class AdvancedHttpReplicationTransportHandler extends SimpleHttpReplicati
     }
 
     @Override
-    public void deliverPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationTransportException {
+    public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationPackage replicationPackage) throws ReplicationTransportException {
         log.info("delivering package {} to {} using auth {}",
                 new Object[]{replicationPackage.getId(),
                         replicationEndpoint.getUri(), transportAuthenticationProvider});

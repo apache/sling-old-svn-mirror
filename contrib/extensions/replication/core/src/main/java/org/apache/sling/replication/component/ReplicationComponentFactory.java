@@ -18,6 +18,9 @@
  */
 package org.apache.sling.replication.component;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Map;
 
 /**
@@ -281,9 +284,11 @@ public interface ReplicationComponentFactory {
      *                          wire additional required {@link ReplicationComponent}s
      * @param <ComponentType>   the actual type of the {@link ReplicationComponent}
      *                          to be created
-     * @return a {@link ReplicationComponent} of the specified type initialized with given properties
+     * @return a {@link ReplicationComponent} of the specified type initialized with given properties or <code>null</code>
+     * if that could not be created
      */
-    <ComponentType extends ReplicationComponent> ComponentType createComponent(java.lang.Class<ComponentType> type,
-                                                  Map<String, Object> properties,
-                                                  ReplicationComponentProvider componentProvider);
+    @CheckForNull
+    <ComponentType extends ReplicationComponent> ComponentType createComponent(@Nonnull java.lang.Class<ComponentType> type,
+                                                                               @Nonnull Map<String, Object> properties,
+                                                                               @Nullable ReplicationComponentProvider componentProvider);
 }

@@ -18,6 +18,10 @@
  */
 package org.apache.sling.replication.agent;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.communication.ReplicationResponse;
@@ -38,9 +42,10 @@ public interface ReplicationAgent extends ReplicationComponent {
      *
      * @param name a queue name
      * @return a {@link ReplicationQueue} with the given name bound to this agent, if it exists, <code>null</code> otherwise
-     * @throws ReplicationAgentException
+     * @throws ReplicationAgentException if an error occurs in retrieving the queue
      */
-    ReplicationQueue getQueue(String name) throws ReplicationAgentException;
+    @CheckForNull
+    ReplicationQueue getQueue(@Nullable String name) throws ReplicationAgentException;
 
     /**
      * executes a {@link ReplicationRequest}
@@ -50,6 +55,7 @@ public interface ReplicationAgent extends ReplicationComponent {
      * @return a {@link ReplicationResponse}
      * @throws ReplicationAgentException if any error happens during the execution of the request or if the authentication fails
      */
-    ReplicationResponse execute(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationAgentException;
+    @Nonnull
+    ReplicationResponse execute(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationRequest replicationRequest) throws ReplicationAgentException;
 
 }

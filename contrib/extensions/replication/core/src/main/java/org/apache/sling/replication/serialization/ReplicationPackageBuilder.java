@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.serialization;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import java.io.InputStream;
 
 import org.apache.sling.api.resource.ResourceResolver;
@@ -33,39 +35,42 @@ public interface ReplicationPackageBuilder {
      * creates a {@link org.apache.sling.replication.packaging.ReplicationPackage} for a specific {@link ReplicationRequest}
      *
      * @param resourceResolver the resource resolver used to access the resources to be packaged
-     * @param request the {@link org.apache.sling.replication.communication.ReplicationRequest} to create the package for
-     * @return a {@link org.apache.sling.replication.packaging.ReplicationPackage}
-     * @throws ReplicationPackageBuildingException
+     * @param request          the {@link org.apache.sling.replication.communication.ReplicationRequest} to create the package for
+     * @return a {@link org.apache.sling.replication.packaging.ReplicationPackage} or <code>null</code> if it could not be created
+     * @throws ReplicationPackageBuildingException if any error occurs while creating the package, or if the resource resolver is not authorized to do that
      */
-    ReplicationPackage createPackage(ResourceResolver resourceResolver, ReplicationRequest request) throws ReplicationPackageBuildingException;
+    @CheckForNull
+    ReplicationPackage createPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationRequest request) throws ReplicationPackageBuildingException;
 
     /**
      * reads a stream and tries to convert it to a {@link ReplicationPackage} this provider can read and install
      *
      * @param resourceResolver resource resolver used to store the eventually created package
-     * @param stream the {@link InputStream} of the package to read
+     * @param stream           the {@link InputStream} of the package to read
      * @return a {@link ReplicationPackage} if it can read it from the stream
      * @throws ReplicationPackageReadingException when the stream cannot be read as a {@link ReplicationPackage}
      */
-    ReplicationPackage readPackage(ResourceResolver resourceResolver, InputStream stream) throws ReplicationPackageReadingException;
+    @CheckForNull
+    ReplicationPackage readPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws ReplicationPackageReadingException;
 
     /**
      * get an already created (and saved into the repository) {@link ReplicationPackage} by its id
      *
      * @param resourceResolver resource resolver used to access the package with the given id
-     * @param id the unique identifier of an already created {@link ReplicationPackage}
+     * @param id               the unique identifier of an already created {@link ReplicationPackage}
      * @return a {@link ReplicationPackage} if one with such an id exists, <code>null</code> otherwise
      */
-    ReplicationPackage getPackage(ResourceResolver resourceResolver, String id);
+    @CheckForNull
+    ReplicationPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String id);
 
     /**
      * Installs the given replicationPackage into the repository
      *
-     * @param resourceResolver the resource resolver used to install the packaged resources
+     * @param resourceResolver   the resource resolver used to install the packaged resources
      * @param replicationPackage the replication package to install
      * @return <code>true</code> if the package was installed successfully
      * @throws ReplicationPackageReadingException
      */
-    boolean installPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationPackageReadingException;
+    boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationPackage replicationPackage) throws ReplicationPackageReadingException;
 
 }

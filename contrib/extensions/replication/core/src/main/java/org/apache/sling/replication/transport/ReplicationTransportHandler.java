@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.transport;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 
 import org.apache.sling.api.resource.ResourceResolver;
@@ -41,7 +42,7 @@ public interface ReplicationTransportHandler {
      * @param replicationPackage a {@link org.apache.sling.replication.packaging.ReplicationPackage} to transport
      * @throws ReplicationTransportException if any error occurs during the transport
      */
-    void deliverPackage(ResourceResolver resourceResolver, ReplicationPackage replicationPackage) throws ReplicationTransportException;
+    void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationPackage replicationPackage) throws ReplicationTransportException;
 
     /**
      * Retrieves a list of {@link ReplicationPackage}
@@ -50,6 +51,7 @@ public interface ReplicationTransportHandler {
      * @param replicationRequest the replication request
      * @throws ReplicationTransportException if any error occurs during the transport
      */
-    List<ReplicationPackage> retrievePackages(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationTransportException;
+    @Nonnull
+    List<ReplicationPackage> retrievePackages(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationRequest replicationRequest) throws ReplicationTransportException;
 
 }

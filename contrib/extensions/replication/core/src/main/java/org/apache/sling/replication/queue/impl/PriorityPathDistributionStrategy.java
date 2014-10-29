@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.queue.impl;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -59,8 +60,9 @@ public class PriorityPathDistributionStrategy implements ReplicationQueueDistrib
         priorityPaths = PropertiesUtil.toStringArray(context.getProperties().get(PRIORITYPATHS));
     }
 
-    public ReplicationQueueItemState add(String agentName, ReplicationQueueItem item,
-                                         ReplicationQueueProvider queueProvider)
+    @Nonnull
+    public ReplicationQueueItemState add(@Nonnull String agentName, @Nonnull ReplicationQueueItem item,
+                                         @Nonnull ReplicationQueueProvider queueProvider)
             throws ReplicationQueueException {
         log.debug("using path priority based queue distribution");
         ReplicationQueueItemState state = new ReplicationQueueItemState();

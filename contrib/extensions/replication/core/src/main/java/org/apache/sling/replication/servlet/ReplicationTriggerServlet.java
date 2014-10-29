@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.servlet;
 
+import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -75,7 +76,7 @@ public class ReplicationTriggerServlet extends SlingAllMethodsServlet {
         final PrintWriter writer = response.getWriter();
 
         ReplicationRequestHandler replicationRequestHandler = new ReplicationRequestHandler() {
-            public void handle(ReplicationRequest request) {
+            public void handle(@Nonnull ReplicationRequest request) {
                 writeEvent(writer, request);
             }
         };

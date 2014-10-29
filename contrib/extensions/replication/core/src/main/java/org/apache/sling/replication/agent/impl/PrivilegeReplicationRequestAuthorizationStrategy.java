@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.agent.impl;
 
+import javax.annotation.Nonnull;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.security.AccessControlManager;
@@ -41,7 +42,7 @@ public class PrivilegeReplicationRequestAuthorizationStrategy implements Replica
         this.jcrPrivilege = jcrPrivilege;
     }
 
-    public void checkPermission(ResourceResolver resourceResolver, ReplicationRequest replicationRequest) throws ReplicationRequestAuthorizationException {
+    public void checkPermission(@Nonnull ResourceResolver resourceResolver, @Nonnull ReplicationRequest replicationRequest) throws ReplicationRequestAuthorizationException {
         Session session = resourceResolver.adaptTo(Session.class);
 
         try {

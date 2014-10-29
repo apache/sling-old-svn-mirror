@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.trigger.impl;
 
+import javax.annotation.Nonnull;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
@@ -78,7 +79,7 @@ public class ResourceEventReplicationTrigger implements ReplicationTrigger, Mana
         registrations.clear();
     }
 
-    public void register(ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
+    public void register(@Nonnull ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
         // register an event handler on path which triggers the agent on node / property changes / addition / removals
         Dictionary<String, Object> properties = new Hashtable<String, Object>();
         properties.put(EventConstants.EVENT_TOPIC, new String[]{SlingConstants.TOPIC_RESOURCE_ADDED,
@@ -95,7 +96,7 @@ public class ResourceEventReplicationTrigger implements ReplicationTrigger, Mana
         }
     }
 
-    public void unregister(ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
+    public void unregister(@Nonnull ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
         ServiceRegistration serviceRegistration = registrations.get(requestHandler.toString());
         if (serviceRegistration != null) {
             serviceRegistration.unregister();

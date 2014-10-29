@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.trigger;
 
+import javax.annotation.Nonnull;
+
 import org.apache.sling.replication.component.ReplicationComponent;
 
 /**
@@ -35,7 +37,7 @@ public interface ReplicationTrigger extends ReplicationComponent {
      * @param requestHandler handler
      * @throws org.apache.sling.replication.trigger.ReplicationTriggerException if registration fails
      */
-    void register(ReplicationRequestHandler requestHandler) throws ReplicationTriggerException;
+    void register(@Nonnull ReplicationRequestHandler requestHandler) throws ReplicationTriggerException;
 
     /**
      * unregister the given handler, if existing
@@ -43,5 +45,5 @@ public interface ReplicationTrigger extends ReplicationComponent {
      * @param requestHandler handler to unregister
      * @throws org.apache.sling.replication.trigger.ReplicationTriggerException if unregistration fails
      */
-    void unregister(ReplicationRequestHandler requestHandler) throws ReplicationTriggerException;
+    void unregister(@Nonnull ReplicationRequestHandler requestHandler) throws ReplicationTriggerException;
 }
