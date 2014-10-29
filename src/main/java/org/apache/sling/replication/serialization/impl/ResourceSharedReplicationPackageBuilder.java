@@ -114,7 +114,11 @@ public class ResourceSharedReplicationPackageBuilder implements ReplicationPacka
         properties.put(PN_ORIGINAL_ACTION, replicationPackage.getAction());
         properties.put(PN_ORIGINAL_PATHS, replicationPackage.getPaths());
 
-        ResourceUtil.getOrCreateResource(resourceResolver, packagePath, properties, "nt:unstructured", true);
+        Resource resource = ResourceUtil.getOrCreateResource(resourceResolver, packagePath, "sling:Folder", "nt:unstructured", false);
+        ModifiableValueMap valueMap = resource.adaptTo(ModifiableValueMap.class);
+        valueMap.putAll(properties);
+
+        resourceResolver.commit();
         return packagePath;
 
     }
