@@ -16,6 +16,7 @@
  */
 package org.apache.sling.launchpad.testservices.serversidetests;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
@@ -29,7 +30,7 @@ import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.junit.annotations.SlingAnnotationsTestRunner;
 import org.apache.sling.junit.annotations.TestReference;
 import org.apache.sling.launchpad.testservices.events.EventsCounter;
-import org.junit.AfterClass;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,6 +46,8 @@ public class MappingEventsTest {
     private static Session session;
     private Node mapRoot;
     private static List<String> toDelete = new ArrayList<String>();
+    
+    private static final int N_STEPS = 20;
     
     @TestReference
     private EventsCounter eventsCounter;
@@ -67,22 +70,21 @@ public class MappingEventsTest {
         session = repository.loginAdministrative(null);
         final Node rootNode = maybeCreateNode(session.getRootNode(), "content", "nt:unstructured");
         session.save();
-        if(toDelete.isEmpty()) {
-            final Node mapRoot = maybeCreateNode(session.getRootNode(), "etc", "nt:folder");
-            final Node map = maybeCreateNode(mapRoot, "map", "sling:Mapping");
-            final Node http = maybeCreateNode(map, "http", "sling:Mapping");
-            maybeCreateNode(http, "localhost.80", "sling:Mapping");
-            final Node https = maybeCreateNode(map, "https", "sling:Mapping");
-            maybeCreateNode(https, "localhost.443", "sling:Mapping");
-            toDelete.add(map.getPath());
-            toDelete.add(rootNode.getPath());
-        }
         
-        mapRoot = session.getNode("/etc");
+        assertTrue("toDelete should be empty before test", toDelete.isEmpty());
+        
+        mapRoot = maybeCreateNode(session.getRootNode(), "etc", "nt:folder");
+        final Node map = maybeCreateNode(mapRoot, "map", "sling:Mapping");
+        final Node http = maybeCreateNode(map, "http", "sling:Mapping");
+        maybeCreateNode(http, "localhost.80", "sling:Mapping");
+        final Node https = maybeCreateNode(map, "https", "sling:Mapping");
+        maybeCreateNode(https, "localhost.443", "sling:Mapping");
+        toDelete.add(map.getPath());
+        toDelete.add(rootNode.getPath());
     }
     
-    @AfterClass
-    public static void deleteTestNodes() throws Exception {
+    @After
+    public void deleteTestNodes() throws Exception {
         logger.debug("{} test done, deleting test nodes", MappingEventsTest.class.getSimpleName());
         
         try {
@@ -103,7 +105,7 @@ public class MappingEventsTest {
         final Node base = mapRoot.getNode("map/https/localhost.443");
         final MappingsFacade f = new MappingsFacade(eventsCounter);
         try {
-            int count = 50;
+            int count = N_STEPS;
             while(count-- > 0) {
                 base.setProperty(PROP_REDIRECT_EXTERNAL,"http://somehost." + count);
                 final String result = f.saveMappings(session);
@@ -114,6 +116,21 @@ public class MappingEventsTest {
         } finally {
             base.setProperty(PROP_REDIRECT_EXTERNAL,"");
             session.save();
+        }
+    }
+    
+    @Test public void testVanityPaths() throws Exception {
+        final MappingsFacade f = new MappingsFacade(eventsCounter);
+        final Node vanityTest = maybeCreateNode(session.getRootNode(), "vanityTest", "sling:Folder");
+        toDelete.add(vanityTest.getPath());
+        int count = N_STEPS;
+        while(count-- > 0) {
+            final String [] paths = { "one", "two", "three_" + count };
+            vanityTest.setProperty("sling:vanityPath", paths);
+            final String result = f.saveMappings(session);
+            if(result != null) {
+                fail(result);
+            }
         }
     }
 }
