@@ -152,15 +152,18 @@ We need to expose APIs for configuring, commanding and monitoring replication ag
  - inspection of commands history
  
 #### API endpoints 
+
 ##### Configuration API
-- Create config:  - POST _/libs/sling/replication/settings/_
-- Read config - GET _/libs/sling/replication/settings/{config identifier}_
-- Update config - PUT _/libs/sling/replication/settings/{config identifier}_
-- Delete config - DELETE _/libs/sling/replication/settings/{config identifier}_ or POST with :operation=delete
+- Create config:  - POST _/libs/sling/replication/settings/agents_
+- Read config - GET _/libs/sling/replication/settings/agents/{config identifier}_
+- Update config - PUT _/libs/sling/replication/settings/agents/{config identifier}_
+- Delete config - DELETE _/libs/sling/replication/settings/agents/{config identifier}_ or POST with :operation=delete
+
 ##### Command API
 - Replicate - POST _/libs/sling/replication/services/agents/{agentName}_
 - Import package - POST _/libs/sling/replication/services/importers/{importerName}_
 - Export package - POST _/libs/sling/replication/services/exporters/{exporterName}_
+
 ##### Monitoring API
 - Replication history - GET _/libs/sling/replication/services/agents/{agentName}/history_
 - Import package history - GET _/libs/sling/replication/services/importers/{importerName}/history_
