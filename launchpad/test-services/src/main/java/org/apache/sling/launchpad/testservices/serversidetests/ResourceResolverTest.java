@@ -123,10 +123,6 @@ public class ResourceResolverTest {
         vanity = new String[] {"testVanity","testV", "testVanityToUpdate"};
         rootNode.setProperty("sling:vanityPath", vanity);
         rootNode.addMixin("sling:VanityPath");
-        
-        // TODO no mappings change event with Oak without this??
-        session.getNode("/etc/map/https").addNode("someHost" + System.currentTimeMillis() + ".443", "sling:Mapping");
-        
         saveMappings(session);
     }
     
