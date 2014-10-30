@@ -51,10 +51,6 @@ class JcrNodeResourceMetadata extends ResourceMetadata {
     private Node contentNode;
     private boolean nodePromotionChecked = false;
     private long creationTime = -1;
-    private String contentType;
-    private long modificationTime = -1;
-    private long contentLength = -1;
-    private String characterEncoding;
     private boolean populated = false;
 
     public JcrNodeResourceMetadata(final Node inNode) {
@@ -105,66 +101,64 @@ class JcrNodeResourceMetadata extends ResourceMetadata {
             internalPut(CREATION_TIME, creationTime);
             return creationTime;
         } else if (CONTENT_TYPE.equals(key)) {
-            if (contentType == null) {
-                final Node targetNode = promoteNode();
-                try {
-                    if (targetNode.hasProperty(JCR_MIMETYPE)) {
-                        contentType = targetNode.getProperty(JCR_MIMETYPE).getString();
-                    }
-                } catch (final RepositoryException re) {
-                    report(re);
+            String contentType = null;
+            final Node targetNode = promoteNode();
+            try {
+                if (targetNode.hasProperty(JCR_MIMETYPE)) {
+                    contentType = targetNode.getProperty(JCR_MIMETYPE).getString();
                 }
-
-                internalPut(CONTENT_TYPE, contentType);
+            } catch (final RepositoryException re) {
+                report(re);
             }
+
+            internalPut(CONTENT_TYPE, contentType);
             return contentType;
         } else if (CHARACTER_ENCODING.equals(key)) {
-            if (characterEncoding == null) {
-                final Node targetNode = promoteNode();
-                try {
-                    if (targetNode.hasProperty(JCR_ENCODING)) {
-                        characterEncoding = targetNode.getProperty(JCR_ENCODING).getString();
-                    }
-                } catch (final RepositoryException re) {
-                    report(re);
+            String characterEncoding = null;
+            final Node targetNode = promoteNode();
+            try {
+                if (targetNode.hasProperty(JCR_ENCODING)) {
+                    characterEncoding = targetNode.getProperty(JCR_ENCODING).getString();
                 }
-                internalPut(CHARACTER_ENCODING, characterEncoding);
+            } catch (final RepositoryException re) {
+                report(re);
             }
+            internalPut(CHARACTER_ENCODING, characterEncoding);
             return characterEncoding;
         } else if (MODIFICATION_TIME.equals(key)) {
-            if (modificationTime == -1) {
-                final Node targetNode = promoteNode();
-                try {
-                    if (targetNode.hasProperty(JCR_LASTMODIFIED)) {
-                        // We don't check node type, so JCR_LASTMODIFIED might not be a long
-                        final Property prop = targetNode.getProperty(JCR_LASTMODIFIED);
-                        try {
-                            modificationTime = prop.getLong();
-                        } catch (final ValueFormatException vfe) {
-                            LOGGER.debug("Property {} cannot be converted to a long, ignored ({})",
-                                prop.getPath(), vfe);
-                        }
+            long modificationTime = -1;
+            final Node targetNode = promoteNode();
+            try {
+                if (targetNode.hasProperty(JCR_LASTMODIFIED)) {
+                    // We don't check node type, so JCR_LASTMODIFIED might not be a long
+                    final Property prop = targetNode.getProperty(JCR_LASTMODIFIED);
+                    try {
+                        modificationTime = prop.getLong();
+                    } catch (final ValueFormatException vfe) {
+                        LOGGER.debug("Property {} cannot be converted to a long, ignored ({})",
+                            prop.getPath(), vfe);
                     }
-                } catch (final RepositoryException re) {
-                    report(re);
                 }
-                internalPut(MODIFICATION_TIME, modificationTime);
+            } catch (final RepositoryException re) {
+                report(re);
             }
+            internalPut(MODIFICATION_TIME, modificationTime);
             return modificationTime;
         } else if (CONTENT_LENGTH.equals(key)) {
-            if (contentLength == -1) {
-                final Node targetNode = promoteNode();
-                try {
-                    // if the node has a jcr:data property, use that property
-                    if (targetNode.hasProperty(JCR_DATA)) {
-                        final Property prop = targetNode.getProperty(JCR_DATA);
-                        contentLength = JcrItemResource.getContentLength(prop);
-                    } else {
-                        // otherwise try to follow default item trail
-                        Item item = targetNode.getPrimaryItem();
-                        while (item.isNode()) {
-                            item = ((Node) item).getPrimaryItem();
-                        }
+            long contentLength = -1;
+            final Node targetNode = promoteNode();
+            try {
+                // if the node has a jcr:data property, use that property
+                if (targetNode.hasProperty(JCR_DATA)) {
+                    final Property prop = targetNode.getProperty(JCR_DATA);
+                    contentLength = JcrItemResource.getContentLength(prop);
+                } else {
+                    // otherwise try to follow default item trail
+                    Item item = getPrimaryItem(targetNode);
+                    while (item != null && item.isNode()) {
+                        item = getPrimaryItem((Node) item);
+                    }
+                    if ( item != null ) {
                         final Property data = (Property) item;
 
                         // set the content length property as a side effect
@@ -173,16 +167,30 @@ class JcrNodeResourceMetadata extends ResourceMetadata {
                         // set the correct content length
                         contentLength = JcrItemResource.getContentLength(data);
                     }
-                } catch (final RepositoryException re) {
-                    report(re);
                 }
-                internalPut(CONTENT_LENGTH, contentLength);
+            } catch (final RepositoryException re) {
+                report(re);
             }
+            internalPut(CONTENT_LENGTH, contentLength);
             return contentLength;
         }
         return null;
     }
 
+    private Item getPrimaryItem(final Node node)
+    throws RepositoryException {
+        String name = node.getPrimaryNodeType().getPrimaryItemName();
+        if (name == null) {
+            return null;
+        }
+        if (node.hasProperty(name)) {
+            return node.getProperty(name);
+        } else if (node.hasNode(name)) {
+            return node.getNode(name);
+        } else {
+            return null;
+        }
+    }
 
     private void populate() {
         if (populated) {
