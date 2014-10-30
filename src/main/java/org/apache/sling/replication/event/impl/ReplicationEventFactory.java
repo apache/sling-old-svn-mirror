@@ -16,10 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.event;
+package org.apache.sling.replication.event.impl;
 
 import javax.annotation.Nonnull;
 import java.util.Dictionary;
+
+import org.apache.sling.replication.event.ReplicationEventType;
 
 /**
  * generate replication related events
