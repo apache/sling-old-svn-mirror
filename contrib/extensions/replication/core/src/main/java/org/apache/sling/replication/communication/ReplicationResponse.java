@@ -44,5 +44,4 @@ public class ReplicationResponse {
         return status != null ? status : "done nothing";
     }
 
-
 }

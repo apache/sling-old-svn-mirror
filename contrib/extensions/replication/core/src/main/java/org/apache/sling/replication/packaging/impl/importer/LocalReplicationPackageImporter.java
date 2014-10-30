@@ -25,7 +25,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.replication.event.ReplicationEventFactory;
+import org.apache.sling.replication.event.impl.ReplicationEventFactory;
 import org.apache.sling.replication.event.ReplicationEventType;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageImportException;

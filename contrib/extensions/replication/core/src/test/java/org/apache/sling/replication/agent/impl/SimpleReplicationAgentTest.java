@@ -26,7 +26,7 @@ import org.apache.sling.replication.agent.ReplicationRequestAuthorizationStrateg
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.communication.ReplicationResponse;
-import org.apache.sling.replication.event.ReplicationEventFactory;
+import org.apache.sling.replication.event.impl.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;

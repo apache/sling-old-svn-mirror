@@ -36,7 +36,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.component.ReplicationComponentFactory;
-import org.apache.sling.replication.event.ReplicationEventFactory;
+import org.apache.sling.replication.event.impl.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageImportException;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;

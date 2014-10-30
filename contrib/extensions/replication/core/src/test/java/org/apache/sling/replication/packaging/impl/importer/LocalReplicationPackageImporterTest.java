@@ -19,7 +19,7 @@
 package org.apache.sling.replication.packaging.impl.importer;
 
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.replication.event.ReplicationEventFactory;
+import org.apache.sling.replication.event.impl.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.junit.Test;
