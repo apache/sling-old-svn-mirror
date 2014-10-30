@@ -165,26 +165,13 @@ We need to expose APIs for configuring, commanding and monitoring replication ag
 - Export package - POST _/libs/sling/replication/services/exporters/{exporterName}_
 
 ##### Monitoring API
-- Replication history - GET _/libs/sling/replication/services/agents/{agentName}/history_
-- Import package history - GET _/libs/sling/replication/services/importers/{importerName}/history_
-- Export package history - GET _/libs/sling/replication/services/exporters/{exporterName}/history
+- Replication history - GET _/libs/sling/replication/services/agents/{agentName}/history_ (not implemented yet)
+- Import package history - GET _/libs/sling/replication/services/importers/{importerName}/history_ (not implemented yet)
+- Export package history - GET _/libs/sling/replication/services/exporters/{exporterName}/history_ (not implemented yet)
 - Agent queue inspection  - GET _/libs/sling/replication/services/agents/{agentName}/queue_ or _{agentName}.queue_
 
 #### API Implementation 
-Configuration API should be implemented using SlingPostServlet and a full sync should be implemented between config location and ConfigurationAdmin. 
-Command API can be implemented using SlingPostServlet if we can live with the asyncronous status check. 
-It is important to have in mind that the replication commands are asynchronous by default as there might be some queues that are used the different parts of a replication request. 
-Hence finding out if a replication request was completely finished will require inspecting the history most of the times.
-Monitoring API should be implemented with custom servlets at least for internal queues as they display live info which would be tedious to sync in the repo
+TODO
 
-##### Flatten vs granular 
-The commands and monitoring APIs can be implemented using either a flat or a granular approach (or both)
-###### Flatten design
-It permits sending requests to multiple agents which might be desirable at least for replicate requests
-It is easier to implement as it requires no hierarchy of resources
-###### Granular design
-It is resource oriented
-One needs to implement either a ResourceProvider or a JCR syncronization for agents and queues in order to represent the hierarchy. There is no consensus on which is best.
- 
 ##### Sample payloads
 TODO
