@@ -46,7 +46,7 @@ public interface ReplicationPackageImporter extends ReplicationComponent {
      *
      * @param resourceResolver - the resource resolver used to read the package
      * @param stream           the {@link InputStream} of the package to be converted and installed
-     * @return a {@link ReplicationPackage} if the stream can converted into it and installed
+     * @return a {@link ReplicationPackage} if the stream has been successfully converted and installed
      * @throws ReplicationPackageImportException when the stream cannot be read as a {@link ReplicationPackage} and installed
      */
     @CheckForNull

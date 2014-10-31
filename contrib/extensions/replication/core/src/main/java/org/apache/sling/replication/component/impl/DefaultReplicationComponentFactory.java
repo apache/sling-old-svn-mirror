@@ -112,7 +112,7 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
 
     public <ComponentType extends ReplicationComponent> ComponentType createComponent(@Nonnull Class<ComponentType> type,
                                                                                       @Nonnull Map<String, Object> properties,
-                                                         @Nullable ReplicationComponentProvider componentProvider) {
+                                                                                      @Nullable ReplicationComponentProvider componentProvider) {
 
         if (componentProvider == null) {
             componentProvider = this;
@@ -129,8 +129,7 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
             } else if (type.isAssignableFrom(ReplicationPackageExporter.class)) {
                 return (ComponentType) createExporter(properties, componentProvider);
             }
-        }
-        catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             log.warn("Cannot create component of type {} with properties {}", new Object[]{type, properties}, e);
         }
 
@@ -186,8 +185,7 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
             String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
             return componentProvider.getComponent(ReplicationRequestAuthorizationStrategy.class, name);
 
-        }
-        else if (REQUEST_AUTHORIZATION_STRATEGY_PRIVILEGE.equals(factory)) {
+        } else if (REQUEST_AUTHORIZATION_STRATEGY_PRIVILEGE.equals(factory)) {
             String jcrPrivilege = PropertiesUtil.toString(properties.get(REQUEST_AUTHORIZATION_STRATEGY_PRIVILEGE_PROPERTY_JCR_PRIVILEGE), null);
             return new PrivilegeReplicationRequestAuthorizationStrategy(jcrPrivilege);
         }
@@ -220,7 +218,7 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
             String endpointStrategyName = PropertiesUtil.toString(properties.get(PACKAGE_EXPORTER_REMOTE_PROPERTY_ENDPOINTS_STRATEGY), "One");
             int pollItems = PropertiesUtil.toInteger(properties.get(PACKAGE_EXPORTER_REMOTE_PROPERTY_POLL_ITEMS), Integer.MAX_VALUE);
 
-            return new  RemoteReplicationPackageExporter(packageBuilder, authenticationProvider, endpoints, endpointStrategyName, pollItems);
+            return new RemoteReplicationPackageExporter(packageBuilder, authenticationProvider, endpoints, endpointStrategyName, pollItems);
         } else if (PACKAGE_EXPORTER_AGENT.equals(factory)) {
             Map<String, Object> builderProperties = extractMap(COMPONENT_PACKAGE_BUILDER, properties);
             ReplicationPackageBuilder packageBuilder = createBuilder(builderProperties);
@@ -300,7 +298,13 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
         if (PACKAGE_BUILDER_FILEVLT.equals(factory)) {
-            return new ResourceSharedReplicationPackageBuilder(new FileVaultReplicationPackageBuilder(packaging, replicationEventFactory));
+            String importMode = PropertiesUtil.toString(properties.get(PACKAGE_BUILDER_FILEVLT_IMPORT_MODE), null);
+            String aclHandling = PropertiesUtil.toString(properties.get(PACKAGE_BUILDER_FILEVLT_ACLHANDLING), null);
+            if (importMode != null && aclHandling != null) {
+                return new ResourceSharedReplicationPackageBuilder(new FileVaultReplicationPackageBuilder(packaging, replicationEventFactory, importMode, aclHandling));
+            } else {
+                return new ResourceSharedReplicationPackageBuilder(new FileVaultReplicationPackageBuilder(packaging, replicationEventFactory));
+            }
         }
 
         return null;
