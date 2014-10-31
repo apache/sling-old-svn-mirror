@@ -37,7 +37,7 @@ public class SimpleReplicationQueueProviderTest {
     @Test
     public void testGetOrCreateQueue() throws Exception {
         SimpleReplicationQueueProvider simpleReplicationQueueProvider = new SimpleReplicationQueueProvider();
-        ReplicationQueue queue = simpleReplicationQueueProvider.getOrCreateQueue("dummy-agent", "default");
+        ReplicationQueue queue = simpleReplicationQueueProvider.getInternalQueue("dummy-agent", "default");
         assertNotNull(queue);
     }
 

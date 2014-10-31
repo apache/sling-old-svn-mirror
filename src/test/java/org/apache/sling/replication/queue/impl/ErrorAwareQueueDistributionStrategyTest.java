@@ -20,6 +20,7 @@ package org.apache.sling.replication.queue.impl;
 
 import java.util.Dictionary;
 
+import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.queue.ReplicationQueueItemState;
@@ -43,33 +44,32 @@ public class ErrorAwareQueueDistributionStrategyTest {
     @Test
     public void testPackageAdditionWithSucceedingItemDelivery() throws Exception {
         ErrorAwareQueueDistributionStrategy errorAwareDistributionStrategy = new ErrorAwareQueueDistributionStrategy();
-        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
+        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
         when(queueProvider.getDefaultQueue("agentName")).thenReturn(queue);
-        when(queue.add(replicationPackage)).thenReturn(true);
-        ReplicationQueueItemState state = mock(ReplicationQueueItemState.class);
-        when(state.isSuccessful()).thenReturn(true);
-        when(queue.getStatus(replicationPackage)).thenReturn(state);
-        ReplicationQueueItemState returnedState = errorAwareDistributionStrategy.add("agentName", replicationPackage, queueProvider);
-        assertNotNull(returnedState);
-        assertTrue(returnedState.isSuccessful());
+        when(queue.add(any(ReplicationQueueItem.class))).thenReturn(true);
+
+        boolean returnedState = errorAwareDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+
+        assertTrue(returnedState);
     }
 
     @Test
     public void testPackageAdditionWithFailingItemDelivery() throws Exception {
         ErrorAwareQueueDistributionStrategy errorAwareDistributionStrategy = new ErrorAwareQueueDistributionStrategy();
-        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
+        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
+        ReplicationQueueItem queueItem = mock(ReplicationQueueItem.class);
+
         when(queueProvider.getDefaultQueue("agentName")).thenReturn(queue);
-        when(queue.add(replicationPackage)).thenReturn(true);
+        when(queue.add(queueItem)).thenReturn(true);
         ReplicationQueueItemState state = mock(ReplicationQueueItemState.class);
         when(state.isSuccessful()).thenReturn(false);
-        when(queue.getStatus(replicationPackage)).thenReturn(state);
-        ReplicationQueueItemState returnedState = errorAwareDistributionStrategy.add("agentName", replicationPackage, queueProvider);
-        assertNotNull(returnedState);
-        assertFalse(returnedState.isSuccessful());
+        when(queue.getStatus(queueItem)).thenReturn(state);
+        boolean returnedState = errorAwareDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        assertFalse(returnedState);
     }
 
     @Test
@@ -81,22 +81,23 @@ public class ErrorAwareQueueDistributionStrategyTest {
         when(properties.get("stuck.handling")).thenReturn(new String[]{"ERROR"});
         when(context.getProperties()).thenReturn(properties);
         errorAwareDistributionStrategy.activate(context);
-        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
+        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
+        ReplicationQueueItem queueItem = mock(ReplicationQueueItem.class);
+
         when(queueProvider.getDefaultQueue("agentName")).thenReturn(queue);
-        when(queue.add(replicationPackage)).thenReturn(true);
-        when(queue.getHead()).thenReturn(replicationPackage);
+        when(queue.add(queueItem)).thenReturn(true);
+        when(queue.getHead()).thenReturn(queueItem);
         ReplicationQueue errorQueue = mock(ReplicationQueue.class);
-        when(errorQueue.add(replicationPackage)).thenReturn(true);
-        when(queueProvider.getQueue("agentName", "-error")).thenReturn(errorQueue);
+        when(errorQueue.add(queueItem)).thenReturn(true);
+        when(queueProvider.getQueue("agentName", ErrorAwareQueueDistributionStrategy.ERROR_QUEUE_NAME)).thenReturn(errorQueue);
         ReplicationQueueItemState state = mock(ReplicationQueueItemState.class);
         when(state.isSuccessful()).thenReturn(false);
         when(state.getAttempts()).thenReturn(2);
         when(queue.getStatus(any(ReplicationQueueItem.class))).thenReturn(state);
-        ReplicationQueueItemState returnedState = errorAwareDistributionStrategy.add("agentName", replicationPackage, queueProvider);
-        assertNotNull(returnedState);
-        assertFalse(returnedState.isSuccessful());
+        boolean returnedState = errorAwareDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        assertFalse(returnedState);
     }
 
     @Test
@@ -108,44 +109,44 @@ public class ErrorAwareQueueDistributionStrategyTest {
         when(properties.get("stuck.handling")).thenReturn(new String[]{"DROP"});
         when(context.getProperties()).thenReturn(properties);
         errorAwareDistributionStrategy.activate(context);
-        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
+        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
+
         when(queueProvider.getDefaultQueue("agentName")).thenReturn(queue);
-        when(queue.add(replicationPackage)).thenReturn(true);
-        when(queue.getHead()).thenReturn(replicationPackage);
+        when(queue.add(any(ReplicationQueueItem.class))).thenReturn(true);
+        when(queue.getHead()).thenReturn(mock(ReplicationQueueItem.class));
         ReplicationQueueItemState state = mock(ReplicationQueueItemState.class);
         when(state.isSuccessful()).thenReturn(false);
         when(state.getAttempts()).thenReturn(2);
         when(queue.getStatus(any(ReplicationQueueItem.class))).thenReturn(state);
-        ReplicationQueueItemState returnedState = errorAwareDistributionStrategy.add("agentName", replicationPackage, queueProvider);
-        assertNotNull(returnedState);
-        assertFalse(returnedState.isSuccessful());
+        boolean returnedState = errorAwareDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        assertTrue(returnedState);
     }
 
     @Test
     public void testPackageAdditionWithNullItemStateFromTheQueue() throws Exception {
         ErrorAwareQueueDistributionStrategy errorAwareDistributionStrategy = new ErrorAwareQueueDistributionStrategy();
-        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
+        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
+
         when(queueProvider.getDefaultQueue("agentName")).thenReturn(queue);
-        when(queue.add(replicationPackage)).thenReturn(true);
-        ReplicationQueueItemState returnedState = errorAwareDistributionStrategy.add("agentName", replicationPackage, queueProvider);
-        assertNull(returnedState);
+        when(queue.add(any(ReplicationQueueItem.class))).thenReturn(true);
+        boolean returnedState = errorAwareDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        assertTrue(returnedState);
     }
 
     @Test
     public void testPackageAdditionWithNotNullItemStateFromTheQueue() throws Exception {
         ErrorAwareQueueDistributionStrategy errorAwareDistributionStrategy = new ErrorAwareQueueDistributionStrategy();
-        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
+        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
         when(queueProvider.getDefaultQueue("agentName")).thenReturn(queue);
-        when(queue.add(replicationPackage)).thenReturn(true);
-        ReplicationQueueItemState state = mock(ReplicationQueueItemState.class);
-        when(queue.getStatus(replicationPackage)).thenReturn(state);
-        ReplicationQueueItemState returnedState = errorAwareDistributionStrategy.add("agentName", replicationPackage, queueProvider);
-        assertNotNull(returnedState);
+        when(queue.add(any(ReplicationQueueItem.class))).thenReturn(true);
+
+        boolean returnedState = errorAwareDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        assertTrue(returnedState);
     }
 }

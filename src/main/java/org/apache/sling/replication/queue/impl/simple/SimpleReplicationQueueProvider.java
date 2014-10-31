@@ -54,7 +54,7 @@ public class SimpleReplicationQueueProvider extends AbstractReplicationQueueProv
     public SimpleReplicationQueueProvider() {
     }
 
-    protected ReplicationQueue getOrCreateQueue(String agentName, String selector)
+    protected ReplicationQueue getInternalQueue(String agentName, String selector)
             throws ReplicationQueueException {
         return new SimpleReplicationQueue(agentName, selector);
     }

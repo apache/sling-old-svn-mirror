@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.queue.impl;
 
+import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.queue.ReplicationQueueItemState;
@@ -28,6 +29,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -39,58 +41,54 @@ public class SingleQueueDistributionStrategyTest {
     @Test
     public void testPackageAdditionWithSucceedingItemDelivery() throws Exception {
         SingleQueueDistributionStrategy singleQueueDistributionStrategy = new SingleQueueDistributionStrategy();
-        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
+        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
         when(queueProvider.getDefaultQueue("agentName")).thenReturn(queue);
-        when(queue.add(replicationPackage)).thenReturn(true);
-        ReplicationQueueItemState state = mock(ReplicationQueueItemState.class);
-        when(state.isSuccessful()).thenReturn(true);
-        when(queue.getStatus(replicationPackage)).thenReturn(state);
-        ReplicationQueueItemState returnedState = singleQueueDistributionStrategy.add("agentName", replicationPackage, queueProvider);
-        assertNotNull(returnedState);
-        assertTrue(returnedState.isSuccessful());
+        when(queue.add(any(ReplicationQueueItem.class))).thenReturn(true);
+
+        boolean returnedState = singleQueueDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        assertTrue(returnedState);
     }
 
     @Test
     public void testPackageAdditionWithFailingItemDelivery() throws Exception {
         SingleQueueDistributionStrategy singleQueueDistributionStrategy = new SingleQueueDistributionStrategy();
-        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
+        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
+        ReplicationQueueItem queueItem = mock(ReplicationQueueItem.class);
         when(queueProvider.getDefaultQueue("agentName")).thenReturn(queue);
-        when(queue.add(replicationPackage)).thenReturn(true);
+        when(queue.add(queueItem)).thenReturn(true);
         ReplicationQueueItemState state = mock(ReplicationQueueItemState.class);
         when(state.isSuccessful()).thenReturn(false);
-        when(queue.getStatus(replicationPackage)).thenReturn(state);
-        ReplicationQueueItemState returnedState = singleQueueDistributionStrategy.add("agentName", replicationPackage, queueProvider);
-        assertNotNull(returnedState);
-        assertFalse(returnedState.isSuccessful());
+        when(queue.getStatus(queueItem)).thenReturn(state);
+        boolean returnedState = singleQueueDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        assertFalse(returnedState);
     }
 
     @Test
     public void testPackageAdditionWithNullItemStateFromTheQueue() throws Exception {
         SingleQueueDistributionStrategy singleQueueDistributionStrategy = new SingleQueueDistributionStrategy();
-        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
+        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
         when(queueProvider.getDefaultQueue("agentName")).thenReturn(queue);
-        when(queue.add(replicationPackage)).thenReturn(true);
-        ReplicationQueueItemState returnedState = singleQueueDistributionStrategy.add("agentName", replicationPackage, queueProvider);
-        assertNull(returnedState);
+        when(queue.add(any(ReplicationQueueItem.class))).thenReturn(true);
+        boolean returnedState = singleQueueDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        assertTrue(returnedState);
     }
 
     @Test
     public void testPackageAdditionWithNotNullItemStateFromTheQueue() throws Exception {
         SingleQueueDistributionStrategy singleQueueDistributionStrategy = new SingleQueueDistributionStrategy();
-        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
+        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
         when(queueProvider.getDefaultQueue("agentName")).thenReturn(queue);
-        when(queue.add(replicationPackage)).thenReturn(true);
-        ReplicationQueueItemState state = mock(ReplicationQueueItemState.class);
-        when(queue.getStatus(replicationPackage)).thenReturn(state);
-        ReplicationQueueItemState returnedState = singleQueueDistributionStrategy.add("agentName", replicationPackage, queueProvider);
-        assertNotNull(returnedState);
+        when(queue.add(any(ReplicationQueueItem.class))).thenReturn(true);
+
+        boolean returnedState = singleQueueDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        assertTrue(returnedState);
     }
 }

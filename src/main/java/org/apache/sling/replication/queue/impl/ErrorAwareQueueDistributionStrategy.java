@@ -19,7 +19,9 @@
 package org.apache.sling.replication.queue.impl;
 
 import javax.annotation.Nonnull;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.List;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -27,6 +29,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueException;
@@ -47,6 +50,8 @@ import org.slf4j.LoggerFactory;
 @Service(value = ReplicationQueueDistributionStrategy.class)
 @Property(name = "name", value = ErrorAwareQueueDistributionStrategy.NAME, propertyPrivate = true)
 public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDistributionStrategy {
+
+    protected static final String ERROR_QUEUE_NAME = "error";
 
     private static final String ERROR = "ERROR";
 
@@ -79,36 +84,18 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
         timeThreshold = PropertiesUtil.toInteger(ctx.getProperties().get(TIME_THRESHOLD), 600000);
     }
 
-    @Nonnull
-    public ReplicationQueueItemState add(@Nonnull String agentName, @Nonnull ReplicationQueueItem item,
-                                         @Nonnull ReplicationQueueProvider queueProvider)
-            throws ReplicationQueueException {
-        try {
-            log.debug("using error aware queue distribution");
-            ReplicationQueueItemState state = new ReplicationQueueItemState();
-            ReplicationQueue queue = queueProvider.getDefaultQueue(agentName);
-            log.debug("obtained queue {}", queue);
-            if (queue.add(item)) {
-                log.info("replication status: {}", state);
-                state = queue.getStatus(item);
-            } else {
-                log.error("could not add the item to the queue {}", queue);
-                state.setItemState(ItemState.ERROR);
-                state.setSuccessful(false);
-            }
-            return state;
-        } finally {
-            checkAndRemoveStuckItems(agentName, queueProvider);
-        }
-    }
-
-    public boolean offer(String agentName, ReplicationQueueItem replicationPackage,
+    public boolean add(String agentName, ReplicationPackage replicationPackage,
                          ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
         boolean added;
+        ReplicationQueueItem queueItem = getItem(replicationPackage);
         ReplicationQueue queue = queueProvider.getDefaultQueue(agentName);
-        added = queue.add(replicationPackage);
+        added = queue.add(queueItem);
         checkAndRemoveStuckItems(agentName, queueProvider);
         return added;
+    }
+
+    public List<String> getQueueNames() {
+        return Arrays.asList(new String[] { ERROR_QUEUE_NAME, DEFAULT_QUEUE_NAME });
     }
 
     private void checkAndRemoveStuckItems(String agent,
@@ -126,7 +113,7 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
                 if (ERROR.equals(stuckQueueHandling)) {
                     log.warn("item {} moved to the error queue", firstItem);
 
-                    ReplicationQueue errorQueue = queueProvider.getQueue(agent, "-error");
+                    ReplicationQueue errorQueue = queueProvider.getQueue(agent, ERROR_QUEUE_NAME);
                     if (!errorQueue.add(firstItem)) {
                         log.error("failed to move item {} the queue {}", firstItem, errorQueue);
                         throw new ReplicationQueueException("could not move an item to the error queue");
@@ -136,6 +123,16 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
                 defaultQueue.remove(firstItem.getId());
             }
         }
+    }
+
+    private ReplicationQueueItem getItem(ReplicationPackage replicationPackage) {
+        ReplicationQueueItem replicationQueueItem = new ReplicationQueueItem(replicationPackage.getId(),
+                replicationPackage.getPaths(),
+                replicationPackage.getAction(),
+                replicationPackage.getType(),
+                replicationPackage.getInfo());
+
+        return replicationQueueItem;
     }
 
 }

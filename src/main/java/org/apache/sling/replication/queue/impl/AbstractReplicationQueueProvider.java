@@ -46,7 +46,7 @@ public abstract class AbstractReplicationQueueProvider implements ReplicationQue
         ReplicationQueue queue = queueMap.get(key);
         if (queue == null) {
             log.info("creating a queue with key {}", key);
-            queue = getOrCreateQueue(agentName, queueName);
+            queue = getInternalQueue(agentName, queueName);
             queueMap.put(key, queue);
             log.info("queue created {}", queue);
         }
@@ -64,18 +64,7 @@ public abstract class AbstractReplicationQueueProvider implements ReplicationQue
         return queueMap.values();
     }
 
-    public void removeQueue(@Nonnull ReplicationQueue queue) throws ReplicationQueueException {
-        deleteQueue(queue);
-        // flush cache
-        if (queueMap.containsValue(queue)) {
-            if (!queueMap.values().remove(queue)) {
-                throw new ReplicationQueueException("could not remove the queue " + queue);
-            }
-        }
-    }
 
-    protected abstract ReplicationQueue getOrCreateQueue(String agentName, String queueName) throws ReplicationQueueException;
-
-    protected abstract void deleteQueue(ReplicationQueue queue);
+    protected abstract ReplicationQueue getInternalQueue(String agentName, String queueName) throws ReplicationQueueException;
 
 }

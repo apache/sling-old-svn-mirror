@@ -63,17 +63,24 @@ public class ReplicationAgentServlet extends SlingAllMethodsServlet {
             try {
                 ReplicationResponse replicationResponse = agent.execute(resourceResolver, replicationRequest);
                 if (replicationResponse.isSuccessful()) {
-                    response.setStatus(200);
-                } else if (ItemState.QUEUED.toString().equals(replicationResponse.getStatus())
-                        || ItemState.ACTIVE.toString().equals(
-                        replicationResponse.getStatus())) {
-                    response.setStatus(202);
-                } else if (ItemState.DROPPED.toString().equals(
-                        replicationResponse.getStatus())) {
-                    response.setStatus(404);
-                } else {
-                    response.setStatus(400);
+                    if (ItemState.SUCCEEDED.toString().equals(replicationResponse.getStatus())) {
+                        response.setStatus(200);
+                    }
+                    if (ItemState.QUEUED.toString().equals(replicationResponse.getStatus())
+                            || ItemState.ACTIVE.toString().equals(
+                            replicationResponse.getStatus())) {
+                        response.setStatus(202);
+                    }
+
                 }
+                else {
+                    if (ItemState.DROPPED.toString().equals(replicationResponse.getStatus())) {
+                        response.setStatus(404);
+                    } else {
+                        response.setStatus(400);
+                    }
+                }
+
                 response.getWriter().append(replicationResponse.toString());
             } catch (ReplicationAgentException e) {
                 response.setStatus(503);
