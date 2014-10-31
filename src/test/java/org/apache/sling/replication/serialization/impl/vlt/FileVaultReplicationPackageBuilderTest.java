@@ -25,7 +25,9 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
 
+import org.apache.jackrabbit.vault.fs.api.ImportMode;
 import org.apache.jackrabbit.vault.fs.config.MetaInf;
+import org.apache.jackrabbit.vault.fs.io.AccessControlHandling;
 import org.apache.jackrabbit.vault.packaging.ExportOptions;
 import org.apache.jackrabbit.vault.packaging.PackageManager;
 import org.apache.jackrabbit.vault.packaging.Packaging;
@@ -37,9 +39,9 @@ import org.apache.sling.replication.event.impl.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.junit.Test;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -115,8 +117,11 @@ public class FileVaultReplicationPackageBuilderTest {
 
     @Test
     public void testInstallPackageInternal() throws Exception {
+        File tempFile = File.createTempFile("testInstallPackageInternal", "txt");
         Packaging packaging = mock(Packaging.class);
         PackageManager packageManager = mock(PackageManager.class);
+        VaultPackage vaultPackage = mock(VaultPackage.class);
+        when(packageManager.open(tempFile)).thenReturn(vaultPackage);
         when(packaging.getPackageManager()).thenReturn(packageManager);
         ReplicationEventFactory eventFactory = mock(ReplicationEventFactory.class);
 
@@ -131,8 +136,40 @@ public class FileVaultReplicationPackageBuilderTest {
         when(session.getWorkspace()).thenReturn(workspace);
         when(resourceResolver.adaptTo(Session.class)).thenReturn(session);
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
-        when(replicationPackage.getId()).thenReturn("/path/to/file");
+        when(replicationPackage.getId()).thenReturn(tempFile.getAbsolutePath());
+        when(replicationPackage.getAction()).thenReturn(ReplicationActionType.ADD.name());
+        when(replicationPackage.getPaths()).thenReturn(new String[]{"/something"});
+
         boolean success = fileVaultReplicationPackageBuilder.installPackage(resourceResolver, replicationPackage);
-        assertFalse(success);
+        assertTrue(success);
+    }
+
+    @Test
+    public void testInstallWithCustomImportModeAndACLHandling() throws Exception {
+        File tempFile = File.createTempFile("testInstallPackageInternal", "txt");
+        Packaging packaging = mock(Packaging.class);
+        PackageManager packageManager = mock(PackageManager.class);
+        VaultPackage vaultPackage = mock(VaultPackage.class);
+        when(packageManager.open(tempFile)).thenReturn(vaultPackage);
+        when(packaging.getPackageManager()).thenReturn(packageManager);
+        ReplicationEventFactory eventFactory = mock(ReplicationEventFactory.class);
+
+        FileVaultReplicationPackageBuilder fileVaultReplicationPackageBuilder = new FileVaultReplicationPackageBuilder(
+                packaging, eventFactory, ImportMode.MERGE.name(), AccessControlHandling.MERGE.name());
+
+        ResourceResolver resourceResolver = mock(ResourceResolver.class);
+        Session session = mock(Session.class);
+        Workspace workspace = mock(Workspace.class);
+        ObservationManager observationManager = mock(ObservationManager.class);
+        when(workspace.getObservationManager()).thenReturn(observationManager);
+        when(session.getWorkspace()).thenReturn(workspace);
+        when(resourceResolver.adaptTo(Session.class)).thenReturn(session);
+        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
+        when(replicationPackage.getId()).thenReturn(tempFile.getAbsolutePath());
+        when(replicationPackage.getAction()).thenReturn(ReplicationActionType.ADD.name());
+        when(replicationPackage.getPaths()).thenReturn(new String[]{"/something"});
+
+        boolean success = fileVaultReplicationPackageBuilder.installPackage(resourceResolver, replicationPackage);
+        assertTrue(success);
     }
 }

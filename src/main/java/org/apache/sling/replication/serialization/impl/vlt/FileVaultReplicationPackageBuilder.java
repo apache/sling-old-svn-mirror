@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.util.Properties;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.vault.fs.api.ImportMode;
 import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.config.DefaultMetaInf;
 import org.apache.jackrabbit.vault.fs.config.DefaultWorkspaceFilter;
@@ -61,10 +62,20 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
 
     private final Packaging packaging;
 
+    private ImportMode importMode;
+
+    private AccessControlHandling aclHandling;
+
     public FileVaultReplicationPackageBuilder(Packaging packaging, ReplicationEventFactory replicationEventFactory) {
         super(PACKAGING_TYPE, replicationEventFactory);
-
         this.packaging = packaging;
+    }
+
+    public FileVaultReplicationPackageBuilder(Packaging packaging, ReplicationEventFactory replicationEventFactory, String importMode, String aclHandling) {
+        super(PACKAGING_TYPE, replicationEventFactory);
+        this.packaging = packaging;
+        this.importMode = ImportMode.valueOf(importMode);
+        this.aclHandling = AccessControlHandling.valueOf(aclHandling);
     }
 
     @Override
@@ -159,8 +170,20 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
             if (file.exists()) {
                 VaultPackage pkg = packaging.getPackageManager().open(file);
                 ImportOptions opts = new ImportOptions();
-                // TODO : make it possible to expose the VLT ImportMode / ACLHandling in a generic way (from the ReplicationRequest?)
-                opts.setAccessControlHandling(AccessControlHandling.OVERWRITE);
+                if (aclHandling != null) {
+                    opts.setAccessControlHandling(aclHandling);
+                }
+                else {
+                    // default to overwrite
+                    opts.setAccessControlHandling(AccessControlHandling.OVERWRITE);
+                }
+                if (importMode != null) {
+                    opts.setImportMode(importMode);
+                }
+                else {
+                    // default to replace
+                    opts.setImportMode(ImportMode.REPLACE);
+                }
                 pkg.extract(session, opts);
                 return true;
             }

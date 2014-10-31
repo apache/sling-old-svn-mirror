@@ -274,6 +274,16 @@ public interface ReplicationComponentFactory {
      */
     String PACKAGE_BUILDER_FILEVLT = "vlt";
 
+    /**
+     * import mode property for file vault package builder
+     */
+    String PACKAGE_BUILDER_FILEVLT_IMPORT_MODE = "importOptions";
+
+    /**
+     * ACL handling property for file vault package builder
+     */
+    String PACKAGE_BUILDER_FILEVLT_ACLHANDLING = "aclHandling";
+
 
     /**
      * create a {@link ReplicationComponent}
