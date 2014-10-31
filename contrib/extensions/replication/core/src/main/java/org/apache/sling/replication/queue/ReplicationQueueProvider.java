@@ -29,7 +29,7 @@ import org.apache.sling.replication.component.ReplicationComponent;
 public interface ReplicationQueueProvider extends ReplicationComponent {
 
     /**
-     * provide a named queue for the given agent or creates it if the queue doesn't exist
+     * provide a named queue for the given agent
      *
      * @param agentName the replication agent needing the queue
      * @param queueName      the name of the queue to retrieve
@@ -59,14 +59,6 @@ public interface ReplicationQueueProvider extends ReplicationComponent {
      */
     @Nonnull
     Collection<ReplicationQueue> getAllQueues();
-
-    /**
-     * removes an existing queue owned by this provider
-     *
-     * @param queue a replication queue to be removed
-     * @throws ReplicationQueueException
-     */
-    void removeQueue(@Nonnull ReplicationQueue queue) throws ReplicationQueueException;
 
     /**
      * enables queue driven processing for an agent

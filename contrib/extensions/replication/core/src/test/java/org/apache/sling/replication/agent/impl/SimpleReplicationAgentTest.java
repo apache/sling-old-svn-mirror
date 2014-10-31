@@ -59,9 +59,7 @@ public class SimpleReplicationAgentTest {
         ReplicationRequestAuthorizationStrategy packageExporterStrategy = mock(ReplicationRequestAuthorizationStrategy.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueueDistributionStrategy distributionHandler = mock(ReplicationQueueDistributionStrategy.class);
-        ReplicationQueueItemState state = mock(ReplicationQueueItemState.class);
-        when(state.getItemState()).thenReturn(ReplicationQueueItemState.ItemState.ERROR);
-        when(distributionHandler.add(any(String.class), any(ReplicationQueueItem.class), any(ReplicationQueueProvider.class))).thenReturn(state);
+        when(distributionHandler.add(any(String.class), any(ReplicationPackage.class), any(ReplicationQueueProvider.class))).thenReturn(false);
         ReplicationEventFactory replicationEventFactory = mock(ReplicationEventFactory.class);
         ResourceResolverFactory resolverFactory = mock(ResourceResolverFactory.class);
 
@@ -106,16 +104,14 @@ public class SimpleReplicationAgentTest {
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
 
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/"});
-        ReplicationQueueItemState state = new ReplicationQueueItemState();
-        state.setItemState(ReplicationQueueItemState.ItemState.SUCCEEDED);
-        when(distributionHandler.add(any(String.class), any(ReplicationQueueItem.class), eq(queueProvider))).thenReturn(state);
+        when(distributionHandler.add(any(String.class), any(ReplicationPackage.class), eq(queueProvider))).thenReturn(true);
         when(packageExporter.exportPackages(any(ResourceResolver.class), any(ReplicationRequest.class)))
                 .thenReturn(Arrays.asList(replicationPackage));
         when(queueProvider.getDefaultQueue(name)).thenReturn(
                 new SimpleReplicationQueue(name, "name"));
         ReplicationResponse response = agent.execute(resourceResolver, request);
         assertNotNull(response);
-        assertEquals("SUCCEEDED", response.getStatus());
+        assertEquals("QUEUED", response.getStatus());
     }
 
     @Test

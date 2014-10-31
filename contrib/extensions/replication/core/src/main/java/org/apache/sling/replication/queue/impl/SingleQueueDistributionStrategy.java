@@ -23,6 +23,7 @@ import javax.annotation.Nonnull;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueException;
@@ -32,6 +33,10 @@ import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * The default strategy for delivering packages to queues. Each agent just manages a single queue,
@@ -46,33 +51,26 @@ public class SingleQueueDistributionStrategy implements ReplicationQueueDistribu
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Nonnull
-    public ReplicationQueueItemState add(@Nonnull String agentName, @Nonnull ReplicationQueueItem item,
-                                         @Nonnull ReplicationQueueProvider queueProvider)
-            throws ReplicationQueueException {
-        log.debug("using single queue distribution");
-
-        ReplicationQueueItemState state = new ReplicationQueueItemState();
+    public boolean add(String agentName, ReplicationPackage replicationPackage,
+                         ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
+        ReplicationQueueItem queueItem = getItem(replicationPackage);
         ReplicationQueue queue = queueProvider.getDefaultQueue(agentName);
-        log.debug("obtained queue {}", queue);
-
-        if (queue.add(item)) {
-            state = queue.getStatus(item);
-            log.info("replication status: {}", state);
-        } else {
-            log.error("could not add the item to the queue {}", queue);
-            state.setItemState(ItemState.ERROR);
-            state.setSuccessful(false);
-        }
-        return state;
-
+        return queue.add(queueItem);
     }
 
-    public boolean offer(String agentName, ReplicationQueueItem replicationPackage,
-                         ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
-        ReplicationQueue queue = queueProvider.getDefaultQueue(agentName);
-        return queue.add(replicationPackage);
+    public List<String> getQueueNames() {
+        return Arrays.asList(new String[] { DEFAULT_QUEUE_NAME });
+    }
 
+
+    private ReplicationQueueItem getItem(ReplicationPackage replicationPackage) {
+        ReplicationQueueItem replicationQueueItem = new ReplicationQueueItem(replicationPackage.getId(),
+                replicationPackage.getPaths(),
+                replicationPackage.getAction(),
+                replicationPackage.getType(),
+                replicationPackage.getInfo());
+
+        return replicationQueueItem;
     }
 
 }

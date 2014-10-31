@@ -38,7 +38,7 @@ public class ResourceSharedReplicationPackageBuilder implements ReplicationPacka
     private String PN_ORIGINAL_PATHS = "original.package.paths";
 
     private String PACKAGE_NAME_PREFIX = "replpackage";
-    private String sharedPackagesRoot = "/var/slingreplication/";
+    private String sharedPackagesRoot = "/var/sling/replication/";
 
     private final ReplicationPackageBuilder replicationPackageBuilder;
 
@@ -114,7 +114,7 @@ public class ResourceSharedReplicationPackageBuilder implements ReplicationPacka
         properties.put(PN_ORIGINAL_ACTION, replicationPackage.getAction());
         properties.put(PN_ORIGINAL_PATHS, replicationPackage.getPaths());
 
-        Resource resource = ResourceUtil.getOrCreateResource(resourceResolver, packagePath, "sling:Folder", "nt:unstructured", false);
+        Resource resource = ResourceUtil.getOrCreateResource(resourceResolver, packagePath, "nt:unstructured", "sling:Folder", false);
         ModifiableValueMap valueMap = resource.adaptTo(ModifiableValueMap.class);
         valueMap.putAll(properties);
 

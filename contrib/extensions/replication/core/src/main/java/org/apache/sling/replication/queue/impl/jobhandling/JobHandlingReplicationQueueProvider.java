@@ -19,7 +19,6 @@
 package org.apache.sling.replication.queue.impl.jobhandling;
 
 import javax.annotation.Nonnull;
-import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
@@ -31,10 +30,7 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.event.impl.jobs.config.ConfigurationConstants;
 import org.apache.sling.event.jobs.JobManager;
-import org.apache.sling.event.jobs.Queue;
-import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueException;
@@ -43,8 +39,6 @@ import org.apache.sling.replication.queue.ReplicationQueueProvider;
 import org.apache.sling.replication.queue.impl.AbstractReplicationQueueProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.cm.Configuration;
-import org.osgi.service.cm.ConfigurationAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,17 +55,14 @@ public class JobHandlingReplicationQueueProvider extends AbstractReplicationQueu
     @Reference
     private JobManager jobManager;
 
-    @Reference
-    private ConfigurationAdmin configAdmin;
 
-    private final Map<String, ServiceRegistration> jobs = new ConcurrentHashMap<String, ServiceRegistration>();
+    private final Map<String, ServiceRegistration> jobConsumers = new ConcurrentHashMap<String, ServiceRegistration>();
 
     private BundleContext context;
 
 
-    protected JobHandlingReplicationQueueProvider(JobManager jobManager, ConfigurationAdmin configAdmin, BundleContext context) {
+    protected JobHandlingReplicationQueueProvider(JobManager jobManager, BundleContext context) {
         this.jobManager = jobManager;
-        this.configAdmin = configAdmin;
         this.context = context;
     }
 
@@ -79,43 +70,16 @@ public class JobHandlingReplicationQueueProvider extends AbstractReplicationQueu
     }
 
     @Override
-    protected ReplicationQueue getOrCreateQueue(String agentName, String queueName)
+    protected ReplicationQueue getInternalQueue(String agentName, String queueName)
             throws ReplicationQueueException {
-        try {
-            String name = agentName;
-            if (queueName.length() > 0) {
-                name += "/" + queueName;
-            }
-            String topic = JobHandlingReplicationQueue.REPLICATION_QUEUE_TOPIC + '/' + name;
-            if (jobManager.getQueue(name) == null) {
-                Configuration config = configAdmin.createFactoryConfiguration(
-                        QueueConfiguration.class.getName(), null);
-                Dictionary<String, Object> props = new Hashtable<String, Object>();
-                props.put(ConfigurationConstants.PROP_NAME, name);
-                props.put(ConfigurationConstants.PROP_TYPE, QueueConfiguration.Type.ORDERED.name());
-                props.put(ConfigurationConstants.PROP_TOPICS, new String[]{topic});
-                props.put(ConfigurationConstants.PROP_RETRIES, -1);
-                props.put(ConfigurationConstants.PROP_RETRY_DELAY, 2000L);
-                props.put(ConfigurationConstants.PROP_KEEP_JOBS, true);
-                props.put(ConfigurationConstants.PROP_PRIORITY, "MAX");
-                config.update(props);
-            }
-            return new JobHandlingReplicationQueue(name, topic, jobManager);
-        } catch (IOException e) {
-            throw new ReplicationQueueException("could not create a queue", e);
+        String name = agentName;
+        if (queueName.length() > 0) {
+            name += "/" + queueName;
         }
+        String topic = JobHandlingReplicationQueue.REPLICATION_QUEUE_TOPIC + '/' + name;
+        return new JobHandlingReplicationQueue(name, topic, jobManager);
     }
 
-    @Override
-    protected void deleteQueue(ReplicationQueue queue) {
-        String queueName = queue.getName();
-        Queue q = jobManager.getQueue(queueName);
-        if (q != null) {
-            q.removeAll();
-        } else {
-            log.warn("cannot delete non existing queue {} ", queueName);
-        }
-    }
 
     public void enableQueueProcessing(@Nonnull String agentName, @Nonnull ReplicationQueueProcessor queueProcessor) {
         // eventually register job consumer for sling job handling based queues
@@ -123,21 +87,21 @@ public class JobHandlingReplicationQueueProvider extends AbstractReplicationQueu
         String topic = JobHandlingReplicationQueue.REPLICATION_QUEUE_TOPIC + '/' + agentName;
         String childTopic = topic + "/*";
         jobProps.put(JobConsumer.PROPERTY_TOPICS, new String[]{topic, childTopic});
-        synchronized (jobs) {
+        synchronized (jobConsumers) {
             log.info("registering job consumer for agent {}", agentName);
             ServiceRegistration jobReg = context.registerService(JobConsumer.class.getName(),
                     new ReplicationAgentJobConsumer(queueProcessor), jobProps);
             if (jobReg != null) {
-                jobs.put(agentName, jobReg);
+                jobConsumers.put(agentName, jobReg);
             }
             log.info("job consumer for agent {} registered", agentName);
         }
     }
 
     public void disableQueueProcessing(@Nonnull String agentName) {
-        synchronized (jobs) {
+        synchronized (jobConsumers) {
             log.info("unregistering job consumer for agent {}", agentName);
-            ServiceRegistration jobReg = jobs.remove(agentName);
+            ServiceRegistration jobReg = jobConsumers.remove(agentName);
             if (jobReg != null) {
                 jobReg.unregister();
                 log.info("job consumer for agent {} unregistered", agentName);
@@ -152,7 +116,7 @@ public class JobHandlingReplicationQueueProvider extends AbstractReplicationQueu
 
     @Deactivate
     private void deactivate() {
-        for (ServiceRegistration jobReg : jobs.values()) {
+        for (ServiceRegistration jobReg : jobConsumers.values()) {
             jobReg.unregister();
         }
         this.context = null;

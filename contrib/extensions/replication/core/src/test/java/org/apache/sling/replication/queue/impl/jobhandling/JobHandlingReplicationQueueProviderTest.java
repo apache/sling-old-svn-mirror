@@ -40,43 +40,15 @@ public class JobHandlingReplicationQueueProviderTest {
     @Test
     public void testGetOrCreateNamedQueue() throws Exception {
         JobManager jobManager = mock(JobManager.class);
-        ConfigurationAdmin configAdmin = mock(ConfigurationAdmin.class);
-        Configuration config = mock(Configuration.class);
-        when(configAdmin.createFactoryConfiguration(QueueConfiguration.class.getName(), null)).thenReturn(config);
+
         BundleContext context = mock(BundleContext.class);
         JobHandlingReplicationQueueProvider jobHandlingReplicationQueueProvider = new JobHandlingReplicationQueueProvider(
-                jobManager, configAdmin, context);
-        ReplicationQueue queue = jobHandlingReplicationQueueProvider.getOrCreateQueue("dummy-agent", "default");
+                jobManager, context);
+        ReplicationQueue queue = jobHandlingReplicationQueueProvider.getInternalQueue("dummy-agent", "default");
         assertNotNull(queue);
     }
 
-    @Test
-    public void testDeleteNonExistingQueue() throws Exception {
-        JobManager jobManager = mock(JobManager.class);
-        ConfigurationAdmin configAdmin = mock(ConfigurationAdmin.class);
-        Configuration config = mock(Configuration.class);
-        when(configAdmin.createFactoryConfiguration(QueueConfiguration.class.getName(), null)).thenReturn(config);
-        BundleContext context = mock(BundleContext.class);
-        JobHandlingReplicationQueueProvider jobHandlingReplicationQueueProvider = new JobHandlingReplicationQueueProvider(
-                jobManager, configAdmin, context);
-        ReplicationQueue queue = mock(ReplicationQueue.class);
-        jobHandlingReplicationQueueProvider.deleteQueue(queue);
-    }
 
-    @Test
-    public void testDeleteExistingQueue() throws Exception {
-        JobManager jobManager = mock(JobManager.class);
-        ConfigurationAdmin configAdmin = mock(ConfigurationAdmin.class);
-        Configuration config = mock(Configuration.class);
-        when(configAdmin.createFactoryConfiguration(QueueConfiguration.class.getName(), null)).thenReturn(config);
-        BundleContext context = mock(BundleContext.class);
-        JobHandlingReplicationQueueProvider jobHandlingReplicationQueueProvider = new JobHandlingReplicationQueueProvider(
-                jobManager, configAdmin, context);
-        ReplicationQueue queue = jobHandlingReplicationQueueProvider.getOrCreateQueue("dummy-agent", "default");
-        Queue underlyingQueue = mock(Queue.class);
-        when(jobManager.getQueue(queue.getName())).thenReturn(underlyingQueue);
-        jobHandlingReplicationQueueProvider.deleteQueue(queue);
-    }
 
     @Test
     public void testEnableQueueProcessing() throws Exception {
@@ -86,7 +58,7 @@ public class JobHandlingReplicationQueueProviderTest {
         when(configAdmin.createFactoryConfiguration(QueueConfiguration.class.getName(), null)).thenReturn(config);
         BundleContext context = mock(BundleContext.class);
         JobHandlingReplicationQueueProvider jobHandlingReplicationQueueProvider = new JobHandlingReplicationQueueProvider(
-                jobManager, configAdmin, context);
+                jobManager, context);
         String agentName = "dummy-agent";
         ReplicationQueueProcessor queueProcessor = mock(ReplicationQueueProcessor.class);
         jobHandlingReplicationQueueProvider.enableQueueProcessing(agentName, queueProcessor);
@@ -100,7 +72,7 @@ public class JobHandlingReplicationQueueProviderTest {
         when(configAdmin.createFactoryConfiguration(QueueConfiguration.class.getName(), null)).thenReturn(config);
         BundleContext context = mock(BundleContext.class);
         JobHandlingReplicationQueueProvider jobHandlingReplicationQueueProvider = new JobHandlingReplicationQueueProvider(
-                jobManager, configAdmin, context);
+                jobManager,  context);
         String agentName = "dummy-agent";
         jobHandlingReplicationQueueProvider.disableQueueProcessing(agentName);
     }

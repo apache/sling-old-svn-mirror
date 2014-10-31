@@ -20,12 +20,14 @@ package org.apache.sling.replication.queue.impl;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueException;
@@ -60,31 +62,7 @@ public class PriorityPathDistributionStrategy implements ReplicationQueueDistrib
         priorityPaths = PropertiesUtil.toStringArray(context.getProperties().get(PRIORITYPATHS));
     }
 
-    @Nonnull
-    public ReplicationQueueItemState add(@Nonnull String agentName, @Nonnull ReplicationQueueItem item,
-                                         @Nonnull ReplicationQueueProvider queueProvider)
-            throws ReplicationQueueException {
-        log.debug("using path priority based queue distribution");
-        ReplicationQueueItemState state = new ReplicationQueueItemState();
 
-        ReplicationQueue queue = getQueue(agentName, item, queueProvider);
-        log.debug("obtained queue {}", queue);
-
-        if (queue != null) {
-            if (queue.add(item)) {
-                log.info("replication status: {}", state);
-                state = queue.getStatus(item);
-            } else {
-                log.error("could not add the item to the queue {}", queue);
-                state.setItemState(ItemState.ERROR);
-                state.setSuccessful(false);
-            }
-            return state;
-        } else {
-            throw new ReplicationQueueException("could not get a queue for agent " + agentName);
-        }
-
-    }
 
     private ReplicationQueue getQueue(String agentName, ReplicationQueueItem replicationPackage,
                                       ReplicationQueueProvider queueProvider)
@@ -116,15 +94,38 @@ public class PriorityPathDistributionStrategy implements ReplicationQueueDistrib
         return queue;
     }
 
-    public boolean offer(String agentName, ReplicationQueueItem replicationPackage,
+    public boolean add(String agentName, ReplicationPackage replicationPackage,
                          ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
-        ReplicationQueue queue = getQueue(agentName, replicationPackage, queueProvider);
+
+        ReplicationQueueItem queueItem = getItem(replicationPackage);
+        ReplicationQueue queue = getQueue(agentName, queueItem, queueProvider);
         if (queue != null) {
-            return queue.add(replicationPackage);
+            return queue.add(queueItem);
         } else {
             throw new ReplicationQueueException("could not get a queue for agent " + agentName);
         }
-
     }
+
+
+
+    public List<String> getQueueNames() {
+        List<String> paths = Arrays.asList(priorityPaths);
+        paths.add(DEFAULT_QUEUE_NAME);
+
+        return paths;
+    }
+
+    private ReplicationQueueItem getItem(ReplicationPackage replicationPackage) {
+        ReplicationQueueItem replicationQueueItem = new ReplicationQueueItem(replicationPackage.getId(),
+                replicationPackage.getPaths(),
+                replicationPackage.getAction(),
+                replicationPackage.getType(),
+                replicationPackage.getInfo());
+
+        return replicationQueueItem;
+    }
+
+
+
 
 }

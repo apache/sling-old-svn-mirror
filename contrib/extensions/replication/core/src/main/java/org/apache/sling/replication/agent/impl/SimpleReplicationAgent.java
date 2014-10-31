@@ -44,13 +44,7 @@ import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.packaging.ReplicationPackageImportException;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
-import org.apache.sling.replication.queue.ReplicationQueue;
-import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
-import org.apache.sling.replication.queue.ReplicationQueueException;
-import org.apache.sling.replication.queue.ReplicationQueueItem;
-import org.apache.sling.replication.queue.ReplicationQueueItemState;
-import org.apache.sling.replication.queue.ReplicationQueueProcessor;
-import org.apache.sling.replication.queue.ReplicationQueueProvider;
+import org.apache.sling.replication.queue.*;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 import org.apache.sling.replication.trigger.ReplicationRequestHandler;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
@@ -177,23 +171,19 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
         ReplicationResponse replicationResponse;
         log.info("scheduling replication of package {}", replicationPackage);
 
-        ReplicationQueueItem replicationQueueItem = new ReplicationQueueItem(replicationPackage.getId(),
-                replicationPackage.getPaths(),
-                replicationPackage.getAction(),
-                replicationPackage.getType(),
-                replicationPackage.getInfo());
+
 
         // dispatch the replication package to the queue distribution handler
         try {
-            ReplicationQueueItemState state = queueDistributionStrategy.add(name, replicationQueueItem,
-                    queueProvider);
+            boolean success = queueDistributionStrategy.add(name, replicationPackage, queueProvider);
 
             Dictionary<Object, Object> properties = new Properties();
-            properties.put("replication.package.paths", replicationQueueItem.getPaths());
+            properties.put("replication.package.paths", replicationPackage.getPaths());
             properties.put("replication.agent.name", name);
             replicationEventFactory.generateEvent(ReplicationEventType.PACKAGE_QUEUED, properties);
 
-            replicationResponse = new ReplicationResponse(state.getItemState().toString(), state.isSuccessful());
+            replicationResponse = new ReplicationResponse(success? ReplicationQueueItemState.ItemState.QUEUED.toString() :
+                    ReplicationQueueItemState.ItemState.ERROR.toString(), success);
         } catch (Exception e) {
             log.error("an error happened during queue processing", e);
             replicationResponse = new ReplicationResponse(e.toString(), false);
