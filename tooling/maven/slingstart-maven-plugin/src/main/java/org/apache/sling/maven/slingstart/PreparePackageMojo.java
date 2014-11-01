@@ -157,7 +157,7 @@ public class PreparePackageMojo extends AbstractSlingStartMojo {
                 }
             }
             this.buildSettings(model, ModelConstants.RUN_MODE_WEBAPP, webappDir);
-            this.buildBootstrapFile(model, ModelConstants.RUN_MODE_WEBAPP, outputDir);
+            this.buildBootstrapFile(model, ModelConstants.RUN_MODE_WEBAPP, webappDir);
 
             this.buildContentsMap(model, ModelConstants.RUN_MODE_WEBAPP, contentsMap);
         }
