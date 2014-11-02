@@ -64,7 +64,7 @@ public class AttachSlingStartModel extends AbstractSlingStartMojo {
             project.getArtifact().setFile(outputFile);
         } else {
             // otherwise attach it as an additional artifact
-            projectHelper.attachArtifact(project, BuildConstants.TYPE_TXT, BuildConstants.CLASSIFIER_PARTIAL_SYSTEM, outputFile);
+            projectHelper.attachArtifact(project, BuildConstants.PACKAGING_PARTIAL_SYSTEM, BuildConstants.CLASSIFIER_PARTIAL_SYSTEM, outputFile);
         }
     }
 }
