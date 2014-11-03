@@ -25,6 +25,10 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.apache.sling.launchpad.api.StartupHandler;
+import org.apache.sling.launchpad.api.StartupMode;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -34,6 +38,7 @@ import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 
 /** Verify that we get a working Sling launchpad with what SlingPaxOptions provide */
 @RunWith(PaxExam.class)
@@ -46,9 +51,41 @@ public class SlingSetupTest {
     @Inject
     private BundleContext bundleContext;
     
+    private ServiceRegistration<?> startupHandlerRegistration;
+    
     @org.ops4j.pax.exam.Configuration
     public Option[] config() {
         return SlingPaxOptions.defaultLaunchpadOptions(SLING_LAUNCHPAD_VERSION).getOptions();
+    }
+    
+    @Before
+    public void setup() {
+        // In Sling launchpad 7 the SlingSettings service
+        // requires a StartupHandler, and that's usually provided
+        // by the launchpad bootstrap code. Supply our own so that
+        // everything starts properly.
+        // TODO should be provided by a utility/bootstrap bundle
+        final StartupHandler h = new StartupHandler() {
+            public void waitWithStartup(boolean b) {
+            }
+            
+            public boolean isFinished() {
+                return true;
+            }
+            
+            public StartupMode getMode() {
+                return StartupMode.INSTALL;
+            }
+        };
+        startupHandlerRegistration = bundleContext.registerService(StartupHandler.class.getName(), h, null);
+    }
+    
+    @After
+    public void cleanup() {
+        if(startupHandlerRegistration != null) {
+            startupHandlerRegistration.unregister();
+            startupHandlerRegistration = null;
+        }
     }
 
     private void assertBundleActive(String symbolicName) {
@@ -220,7 +257,8 @@ public class SlingSetupTest {
         final String [] services = {
                 "org.apache.sling.engine.SlingRequestProcessor",
                 "org.apache.sling.commons.mime.MimeTypeService",
-                "org.apache.sling.jcr.api.SlingRepository"
+                "org.apache.sling.jcr.api.SlingRepository",
+                "org.apache.sling.settings.SlingSettingsService"
         };
         
         final List<String> missing = new ArrayList<String>();
