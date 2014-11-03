@@ -18,11 +18,14 @@
  */
 package org.apache.sling.replication.component;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * Marker interface for Sling Replication components like: {@link org.apache.sling.replication.agent.ReplicationAgent}s,
  * {@link org.apache.sling.replication.trigger.ReplicationTrigger}s, {@link org.apache.sling.replication.packaging.ReplicationPackageExporter}s
  * and {@link org.apache.sling.replication.packaging.ReplicationPackageImporter}s.
  */
+@ConsumerType
 public interface ReplicationComponent {
 
 }

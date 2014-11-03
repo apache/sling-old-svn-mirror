@@ -18,9 +18,12 @@
  */
 package org.apache.sling.replication.packaging;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * A {@link ReplicationPackage} that offers basic reference counting
  */
+@ConsumerType
 public interface SharedReplicationPackage extends ReplicationPackage {
 
 

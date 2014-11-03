@@ -24,7 +24,6 @@ import java.util.Map;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.replication.packaging.ReplicationPackageInfo;
 import org.apache.sling.replication.queue.ReplicationQueueItem;
-import org.apache.sling.replication.serialization.impl.SimpleReplicationPackageInfo;
 
 public class JobHandlingUtils {
 
@@ -39,7 +38,7 @@ public class JobHandlingUtils {
     protected static final String ORIGIN = "replication.package.origin";
 
     public static ReplicationQueueItem getPackage(final Job job) {
-        ReplicationPackageInfo packageInfo = new SimpleReplicationPackageInfo();
+        ReplicationPackageInfo packageInfo = new ReplicationPackageInfo();
         packageInfo.setOrigin((String) job.getProperty(ORIGIN));
 
         return new ReplicationQueueItem((String) job.getProperty(ID),

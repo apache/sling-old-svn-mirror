@@ -21,11 +21,13 @@ package org.apache.sling.replication.queue;
 import javax.annotation.Nonnull;
 import java.util.Collection;
 
+import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.replication.component.ReplicationComponent;
 
 /**
  * A provider for {@link ReplicationQueue}s
  */
+@ConsumerType
 public interface ReplicationQueueProvider extends ReplicationComponent {
 
     /**

@@ -20,6 +20,7 @@ package org.apache.sling.replication.agent;
 
 import javax.annotation.Nonnull;
 
+import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.component.ReplicationComponent;
@@ -27,6 +28,7 @@ import org.apache.sling.replication.component.ReplicationComponent;
 /**
  * Strategy for authorizing requests
  */
+@ConsumerType
 public interface ReplicationRequestAuthorizationStrategy extends ReplicationComponent {
 
     /**

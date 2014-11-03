@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.transport.authentication;
 
+import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.replication.component.ReplicationComponent;
 
 /**
@@ -27,6 +28,7 @@ import org.apache.sling.replication.component.ReplicationComponent;
  * 'authenticables' objects of type {@link A}, producing 'authenticated' objects of type {@link T}.
  *
  */
+@ConsumerType
 public interface TransportAuthenticationProvider<A, T> extends ReplicationComponent {
 
     /**

@@ -23,6 +23,7 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.util.List;
 
+import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.component.ReplicationComponent;
@@ -33,6 +34,7 @@ import org.apache.sling.replication.serialization.ReplicationPackageBuildingExce
  * {@link org.apache.sling.replication.packaging.ReplicationPackage}s to be then imported by a {@link org.apache.sling.replication.agent.ReplicationAgent}
  * (via a {@link org.apache.sling.replication.packaging.ReplicationPackageImporter}).
  */
+@ConsumerType
 public interface ReplicationPackageExporter extends ReplicationComponent {
 
     /**

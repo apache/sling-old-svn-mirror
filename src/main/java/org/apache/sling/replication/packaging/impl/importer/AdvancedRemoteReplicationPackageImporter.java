@@ -34,7 +34,7 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.replication.communication.ReplicationEndpoint;
+import org.apache.sling.replication.transport.impl.ReplicationEndpoint;
 import org.apache.sling.replication.component.ReplicationComponentFactory;
 import org.apache.sling.replication.event.impl.ReplicationEventFactory;
 import org.apache.sling.replication.packaging.ReplicationPackage;

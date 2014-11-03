@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.communication;
+package org.apache.sling.replication.transport.impl;
 
 import java.net.URI;
 

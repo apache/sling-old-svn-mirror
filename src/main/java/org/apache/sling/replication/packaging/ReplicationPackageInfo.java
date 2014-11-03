@@ -24,23 +24,33 @@ package org.apache.sling.replication.packaging;
  * Additional information about a package.
  * Additional information is optional and components should expect every piece of it to be null.
  */
-public interface ReplicationPackageInfo {
+public class ReplicationPackageInfo {
+
+    private String origin;
 
     /**
      * retrieves the origin of the package.
      * @return the package origin
      */
-    String getOrigin();
+    public String getOrigin() {
+        return origin;
+    }
 
     /**
      * sets the origin of the package.
      * @param origin the originating instance of this package
      */
-    void setOrigin(String origin);
+    public void setOrigin(String origin) {
+        this.origin = origin;
+    }
 
     /**
      * fills the current info object from the provided one.
      * @param packageInfo package metadata
      */
-    void fillInfo(ReplicationPackageInfo packageInfo);
+    public void fillInfo(ReplicationPackageInfo packageInfo) {
+        if (packageInfo != null) {
+            this.setOrigin(packageInfo.getOrigin());
+        }
+    }
 }

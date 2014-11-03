@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.queue;
 
+import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.replication.packaging.ReplicationPackageInfo;
 
 /**
