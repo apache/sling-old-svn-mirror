@@ -29,6 +29,7 @@ import java.util.Set;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.component.ManagedReplicationComponent;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +38,7 @@ import org.slf4j.LoggerFactory;
  * {@link org.apache.sling.replication.trigger.ReplicationTrigger} that listens for certain events and persists them
  * under a specific path in the repo
  */
-public class PersistingJcrEventReplicationTrigger extends AbstractJcrEventTrigger implements ReplicationTrigger {
+public class PersistingJcrEventReplicationTrigger extends AbstractJcrEventTrigger implements ReplicationTrigger, ManagedReplicationComponent {
 
     private static final String DEFAULT_NUGGETS_PATH = "/var/nuggets";
 
@@ -58,7 +59,11 @@ public class PersistingJcrEventReplicationTrigger extends AbstractJcrEventTrigge
 
         Session session = getSession();
 
-        if (session != null && session.hasPermission(nuggetsPath, Privilege.JCR_ADD_CHILD_NODES)) {
+        if (!session.nodeExists(nuggetsPath)) {
+            initializeNuggetsPath(session);
+        }
+
+        if (session.hasPermission(nuggetsPath, Privilege.JCR_ADD_CHILD_NODES)) {
             log.debug("persisting event under {}", nuggetsPath);
             Node nuggetsNode = session.getNode(nuggetsPath);
             if (nuggetsNode != null) {
@@ -92,4 +97,38 @@ public class PersistingJcrEventReplicationTrigger extends AbstractJcrEventTrigge
         return replicationRequest;
     }
 
+    private void initializeNuggetsPath(Session session) throws RepositoryException {
+        if (session != null) {
+            Node parent = session.getRootNode();
+            if (session.hasPermission(parent.getPath(), Privilege.JCR_ADD_CHILD_NODES)) {
+                for (String nodeName : nuggetsPath.split("/")) {
+                    if (!parent.hasNode(nodeName)) {
+                        parent = parent.addNode(nodeName, "sling:Folder");
+                    } else {
+                        parent = parent.getNode(nodeName);
+                    }
+                }
+            }
+        }
+    }
+
+    public void enable() {
+        Session session = null;
+        try {
+            session = getSession();
+            if (!session.nodeExists(nuggetsPath)) {
+                initializeNuggetsPath(session);
+            }
+        } catch (RepositoryException e) {
+            log.warn("could not create nuggets path " + nuggetsPath, e);
+        } finally {
+            if (session != null) {
+                session.logout();
+            }
+        }
+    }
+
+    public void disable() {
+
+    }
 }

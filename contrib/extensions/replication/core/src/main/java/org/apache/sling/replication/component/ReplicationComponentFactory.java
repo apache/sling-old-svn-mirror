@@ -257,7 +257,7 @@ public interface ReplicationComponentFactory {
     /**
      * jcr persisting event trigger nuggets path property
      */
-    String TRIGGER_PERSISTED_JCR_EVENT_PROPERTY_NUGGETS_PATH = "nuggets.path";
+    String TRIGGER_PERSISTED_JCR_EVENT_PROPERTY_NUGGETS_PATH = "nuggetsPath";
 
     /**
      * privilege request authorization strategy type
