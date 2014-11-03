@@ -34,7 +34,8 @@ public class ReplicationTriggerResourcesTest extends ReplicationIntegrationTestB
                 "test-content-event",
                 "test-remote-event",
                 "test-replicate-event",
-                "test-scheduled-event"
+                "test-scheduled-event",
+                "test-persisting-event"
         };
         for (String name : names) {
             assertExists(authorClient, triggerUrl(name));
