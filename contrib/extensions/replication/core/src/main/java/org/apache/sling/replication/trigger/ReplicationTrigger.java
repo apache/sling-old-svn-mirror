@@ -20,6 +20,7 @@ package org.apache.sling.replication.trigger;
 
 import javax.annotation.Nonnull;
 
+import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.replication.component.ReplicationComponent;
 
 /**
@@ -29,6 +30,7 @@ import org.apache.sling.replication.component.ReplicationComponent;
  * A {@link org.apache.sling.replication.trigger.ReplicationTrigger} is meant to be stateless so that more than one
  * {@link org.apache.sling.replication.trigger.ReplicationRequestHandler} can be registered into the same trigger.
  */
+@ConsumerType
 public interface ReplicationTrigger extends ReplicationComponent {
 
     /**

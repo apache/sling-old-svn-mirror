@@ -19,7 +19,7 @@
 package org.apache.sling.replication.transport.authentication.impl;
 
 import org.apache.http.client.fluent.Executor;
-import org.apache.sling.replication.communication.ReplicationEndpoint;
+import org.apache.sling.replication.transport.impl.ReplicationEndpoint;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
 import org.junit.Test;
 

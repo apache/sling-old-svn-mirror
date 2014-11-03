@@ -18,11 +18,14 @@
  */
 package org.apache.sling.replication.queue;
 
+import aQute.bnd.annotation.ConsumerType;
+
 import javax.annotation.Nonnull;
 
 /**
  * Processor of {@link org.apache.sling.replication.queue.ReplicationQueueItem}s
  */
+@ConsumerType
 public interface ReplicationQueueProcessor {
 
     /**

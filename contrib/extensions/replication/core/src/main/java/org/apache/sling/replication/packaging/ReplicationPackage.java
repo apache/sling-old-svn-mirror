@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.packaging;
 
+import aQute.bnd.annotation.ConsumerType;
+
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +28,7 @@ import java.io.Serializable;
 /**
  * A replication package
  */
+@ConsumerType
 public interface ReplicationPackage extends Serializable {
 
     /**

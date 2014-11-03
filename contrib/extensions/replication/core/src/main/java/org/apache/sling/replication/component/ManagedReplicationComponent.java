@@ -18,10 +18,13 @@
  */
 package org.apache.sling.replication.component;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * A managed {@link org.apache.sling.replication.component.ReplicationComponent} is a component which requires explicit
  * initialization and releasing of its underlying (and implementation specific) resources.
  */
+@ConsumerType
 public interface ManagedReplicationComponent {
 
     /**

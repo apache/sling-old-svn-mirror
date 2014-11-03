@@ -27,7 +27,7 @@ import org.apache.sling.replication.packaging.ReplicationPackageInfo;
  * abstract implementation of a {@link org.apache.sling.replication.packaging.ReplicationPackage}
  */
 public abstract class AbstractReplicationPackage implements ReplicationPackage {
-    private final ReplicationPackageInfo info = new SimpleReplicationPackageInfo();
+    private final ReplicationPackageInfo info = new ReplicationPackageInfo();
 
     @Nonnull
     public ReplicationPackageInfo getInfo() {

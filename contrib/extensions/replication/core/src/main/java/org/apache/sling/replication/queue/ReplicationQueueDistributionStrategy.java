@@ -20,6 +20,7 @@ package org.apache.sling.replication.queue;
 
 import javax.annotation.Nonnull;
 
+import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.component.ReplicationComponent;
 import org.apache.sling.replication.packaging.ReplicationPackage;
@@ -30,6 +31,7 @@ import java.util.List;
  * a {@link ReplicationQueueDistributionStrategy} implements an algorithm for the distribution of
  * {@link org.apache.sling.replication.packaging.ReplicationPackage}s among the available queues
  */
+@ConsumerType
 public interface ReplicationQueueDistributionStrategy extends ReplicationComponent {
     String DEFAULT_QUEUE_NAME = "";
 

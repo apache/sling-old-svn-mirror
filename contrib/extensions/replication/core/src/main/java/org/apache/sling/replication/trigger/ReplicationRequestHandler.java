@@ -20,12 +20,14 @@ package org.apache.sling.replication.trigger;
 
 import javax.annotation.Nonnull;
 
+import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.replication.communication.ReplicationRequest;
 
 /**
  * An handler for {@link org.apache.sling.replication.communication.ReplicationRequest}s passed to a
  * {@link org.apache.sling.replication.trigger.ReplicationTrigger}
  */
+@ConsumerType
 public interface ReplicationRequestHandler {
 
     /**

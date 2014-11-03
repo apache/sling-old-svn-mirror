@@ -23,7 +23,7 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.fluent.Executor;
-import org.apache.sling.replication.communication.ReplicationEndpoint;
+import org.apache.sling.replication.transport.impl.ReplicationEndpoint;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationException;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;

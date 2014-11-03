@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.component;
 
+import aQute.bnd.annotation.ProviderType;
+
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -26,6 +28,7 @@ import java.util.Map;
 /**
  * factory for {@link ReplicationComponent}s
  */
+@ProviderType
 public interface ReplicationComponentFactory {
 
     /**

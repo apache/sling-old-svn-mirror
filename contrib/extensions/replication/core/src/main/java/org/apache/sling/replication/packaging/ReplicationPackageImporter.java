@@ -22,6 +22,7 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.io.InputStream;
 
+import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.component.ReplicationComponent;
 
@@ -29,6 +30,7 @@ import org.apache.sling.replication.component.ReplicationComponent;
  * A {@link org.apache.sling.replication.packaging.ReplicationPackageImporter} is responsible for importing
  * {@link org.apache.sling.replication.packaging.ReplicationPackage}s into the resource tree.
  */
+@ConsumerType
 public interface ReplicationPackageImporter extends ReplicationComponent {
 
     /**

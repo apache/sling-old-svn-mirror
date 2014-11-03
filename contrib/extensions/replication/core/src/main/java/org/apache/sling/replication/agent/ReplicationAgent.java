@@ -22,6 +22,7 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import aQute.bnd.annotation.ProviderType;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.communication.ReplicationResponse;
@@ -35,6 +36,7 @@ import org.apache.sling.replication.queue.ReplicationQueue;
  * specific path(s) which will resume pulling resources from a certain Sling instance and / or pushing resources to
  * other instances.
  */
+@ProviderType
 public interface ReplicationAgent extends ReplicationComponent {
 
     /**

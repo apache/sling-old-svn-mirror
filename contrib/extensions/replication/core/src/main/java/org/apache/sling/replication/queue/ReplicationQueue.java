@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.queue;
 
+import aQute.bnd.annotation.ConsumerType;
+
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.util.Collection;
@@ -25,6 +27,7 @@ import java.util.Collection;
 /**
  * a queue for handling {@link org.apache.sling.replication.agent.ReplicationAgent}s' requests
  */
+@ConsumerType
 public interface ReplicationQueue {
 
     /**
