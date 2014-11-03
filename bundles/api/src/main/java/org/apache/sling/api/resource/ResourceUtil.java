@@ -527,6 +527,9 @@ public class ResourceUtil {
 
     /**
      * Creates or gets the resource at the given path.
+     * If an exception occurs, it retries the operation up to five times if autoCommit is enabled.
+     * In this case, {@link ResourceResolver#revert()} is called on the resolver before the
+     * creation is retried.
      *
      * @param resolver The resource resolver to use for creation
      * @param path     The full path to be created
@@ -536,6 +539,44 @@ public class ResourceUtil {
      * @since 2.3.0
      */
     public static Resource getOrCreateResource(
+            final ResourceResolver resolver,
+            final String path,
+            final Map<String, Object> resourceProperties,
+            final String intermediateResourceType,
+            final boolean autoCommit)
+    throws PersistenceException {
+        PersistenceException mostRecentPE = null;
+        for(int i=0;i<5;i++) {
+            try {
+                return ResourceUtil.getOrCreateResourceInternal(resolver,
+                        path,
+                        resourceProperties,
+                        intermediateResourceType,
+                        autoCommit);
+            } catch ( final PersistenceException pe ) {
+                if ( autoCommit ) {
+                    // in case of exception, revert to last clean state and retry
+                    resolver.revert();
+                    resolver.refresh();
+                    mostRecentPE = pe;
+                } else {
+                    throw pe;
+                }
+            }
+        }
+        throw mostRecentPE;
+    }
+
+    /**
+     * Creates or gets the resource at the given path.
+     *
+     * @param resolver The resource resolver to use for creation
+     * @param path     The full path to be created
+     * @param resourceProperties The optional resource properties of the final resource to create
+     * @param intermediateResourceType THe optional resource type of all intermediate resources
+     * @param autoCommit If set to true, a commit is performed after each resource creation.
+     */
+    private static Resource getOrCreateResourceInternal(
             final ResourceResolver resolver,
             final String path,
             final Map<String, Object> resourceProperties,
@@ -562,7 +603,20 @@ public class ResourceUtil {
                 resolver.refresh();
             }
             try {
-                rsrc = resolver.create(parentResource, name, resourceProperties);
+                int retry = 5;
+                while ( retry > 0 && rsrc == null ) {
+                    rsrc = resolver.create(parentResource, name, resourceProperties);
+                    // check for SNS
+                    if ( !name.equals(rsrc.getName()) ) {
+                        resolver.refresh();
+                        resolver.delete(rsrc);
+                        rsrc = resolver.getResource(parentResource, name);
+                    }
+                    retry--;
+                }
+                if ( rsrc == null ) {
+                    throw new PersistenceException("Unable to create resource.");
+                }
             } catch ( final PersistenceException pe ) {
                 // this could be thrown because someone else tried to create this
                 // node concurrently
