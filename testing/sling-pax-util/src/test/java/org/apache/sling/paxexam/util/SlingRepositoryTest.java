@@ -46,7 +46,7 @@ public class SlingRepositoryTest {
     private SlingRepository repository;
     
     /** Use a released launchpad for this example */
-    public static final String SLING_LAUNCHPAD_VERSION = "6";
+    public static final String SLING_LAUNCHPAD_VERSION = "7";
     
     @org.ops4j.pax.exam.Configuration
     public Option[] config() {
