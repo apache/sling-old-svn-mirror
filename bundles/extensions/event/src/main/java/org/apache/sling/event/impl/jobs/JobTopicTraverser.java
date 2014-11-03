@@ -116,28 +116,23 @@ public class JobTopicTraverser {
         logger.debug("Processing topic {}", topicResource.getName().replace('.', '/'));
         // now years
         for(final Resource yearResource: Utility.getSortedChildren(logger, "year", topicResource)) {
-            final int year = Integer.valueOf(yearResource.getName());
-            logger.debug("Processing year {}", year);
+            logger.debug("Processing year {}", yearResource.getName());
 
             // now months
             for(final Resource monthResource: Utility.getSortedChildren(logger, "month", yearResource)) {
-                final int month = Integer.valueOf(monthResource.getName());
-                logger.debug("Processing month {}", month);
+                logger.debug("Processing month {}", monthResource.getName());
 
                 // now days
                 for(final Resource dayResource: Utility.getSortedChildren(logger, "day", monthResource)) {
-                    final int day = Integer.valueOf(dayResource.getName());
-                    logger.debug("Processing day {}", day);
+                    logger.debug("Processing day {}", dayResource.getName());
 
                     // now hours
                     for(final Resource hourResource: Utility.getSortedChildren(logger, "hour", dayResource)) {
-                        final int hour = Integer.valueOf(hourResource.getName());
-                        logger.debug("Processing hour {}", hour);
+                        logger.debug("Processing hour {}", hourResource.getName());
 
                         // now minutes
                         for(final Resource minuteResource: Utility.getSortedChildren(logger, "minute", hourResource)) {
-                            final int minute = Integer.valueOf(minuteResource.getName());
-                            logger.debug("Processing minute {}", minute);
+                            logger.debug("Processing minute {}", minuteResource.getName());
 
                             // now jobs
                             final List<JobImpl> jobs = new ArrayList<JobImpl>();
