@@ -130,7 +130,7 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
                 return (ComponentType) createExporter(properties, componentProvider);
             }
         } catch (IllegalArgumentException e) {
-            log.warn("Cannot create component of type {} with properties {}", new Object[]{type, properties}, e);
+            log.warn("Cannot create component {}", new Object[]{type, properties}, e);
         }
 
         return null;
