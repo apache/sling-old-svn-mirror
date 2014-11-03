@@ -252,14 +252,22 @@ public abstract class Utility {
 
         @Override
         public int compare(final Resource o1, final Resource o2) {
-            final int value1 = Integer.valueOf(o1.getName());
-            final int value2 = Integer.valueOf(o2.getName());
-            if ( value1 < value2 ) {
-                return -1;
-            } else if ( value1 > value2 ) {
-                return 1;
+            Integer value1 = null;
+            try {
+                value1 = Integer.valueOf(o1.getName());
+            } catch ( final NumberFormatException nfe) {
+                // ignore
             }
-            return 0;
+            Integer value2 = null;
+            try {
+                value2 = Integer.valueOf(o2.getName());
+            } catch ( final NumberFormatException nfe) {
+                // ignore
+            }
+            if ( value1 != null && value2 != null ) {
+                return value1.compareTo(value2);
+            }
+            return o1.getName().compareTo(o2.getName());
         }
     };
 
