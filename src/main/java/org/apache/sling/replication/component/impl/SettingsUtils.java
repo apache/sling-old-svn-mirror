@@ -37,7 +37,8 @@ public class SettingsUtils {
 
         if (value instanceof String[]) {
             return compactMap(SettingsUtils.toMap((String[]) value));
-
+        } else if (value instanceof String) {
+            return compactMap(SettingsUtils.toMap(((String) value).split(",")));
         }
         return null;
     }

@@ -62,8 +62,8 @@ public class PersistingJcrEventReplicationTriggerTest {
     public void testProcessEventWithoutPrivilegesAndNuggetsPath() throws Exception {
         String serviceName = "serviceId";
         Session session = mock(Session.class);
-        when(session.hasPermission(eq("var"), eq(Privilege.JCR_ADD_CHILD_NODES))).thenReturn(true);
-        when(session.hasPermission(eq("nuggets"), eq(Privilege.JCR_ADD_CHILD_NODES))).thenReturn(true);
+        when(session.hasPermission(eq("var"), eq(Session.ACTION_ADD_NODE))).thenReturn(true);
+        when(session.hasPermission(eq("nuggets"), eq(Session.ACTION_ADD_NODE))).thenReturn(true);
         when(session.nodeExists("/var/nuggets")).thenReturn(false); // first time it doesn't exist and should be created
         when(session.nodeExists("/var/nuggets")).thenReturn(true); // second time it should exist
         Node rootNode = mock(Node.class);
@@ -93,7 +93,7 @@ public class PersistingJcrEventReplicationTriggerTest {
         ObservationManager observationManager = mock(ObservationManager.class);
         when(workspace.getObservationManager()).thenReturn(observationManager);
         when(session.getWorkspace()).thenReturn(workspace);
-        when(session.hasPermission(nuggetsPath, Privilege.JCR_ADD_CHILD_NODES)).thenReturn(true);
+        when(session.hasPermission(nuggetsPath, Session.ACTION_ADD_NODE)).thenReturn(true);
 
         SlingRepository repository = mock(SlingRepository.class);
         when(repository.loginService(serviceName, null)).thenReturn(session);
@@ -131,7 +131,7 @@ public class PersistingJcrEventReplicationTriggerTest {
         ObservationManager observationManager = mock(ObservationManager.class);
         when(workspace.getObservationManager()).thenReturn(observationManager);
         when(session.getWorkspace()).thenReturn(workspace);
-        when(session.hasPermission(any(String.class), eq(Privilege.JCR_ADD_CHILD_NODES))).thenReturn(true);
+        when(session.hasPermission(any(String.class), eq(Session.ACTION_ADD_NODE))).thenReturn(true);
 
         SlingRepository repository = mock(SlingRepository.class);
         when(repository.loginService(serviceName, null)).thenReturn(session);
