@@ -27,10 +27,7 @@ import java.util.Map;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.JobManager.QueryType;
-import org.apache.sling.replication.queue.ReplicationQueue;
-import org.apache.sling.replication.queue.ReplicationQueueException;
-import org.apache.sling.replication.queue.ReplicationQueueItem;
-import org.apache.sling.replication.queue.ReplicationQueueItemState;
+import org.apache.sling.replication.queue.*;
 import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,22 +75,25 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
     @Nonnull
     public ReplicationQueueItemState getStatus(@Nonnull ReplicationQueueItem replicationPackage)
             throws ReplicationQueueException {
-        ReplicationQueueItemState itemStatus = new ReplicationQueueItemState();
         try {
             Map<String, Object> properties = JobHandlingUtils.createIdProperties(replicationPackage.getId());
             Job job = jobManager.getJob(topic, properties);
             if (job != null) {
-                itemStatus.setAttempts(job.getRetryCount());
-                itemStatus.setItemState(ItemState.valueOf(job.getJobState().toString()));
-                itemStatus.setEntered(job.getCreated());
+
+                ReplicationQueueItemState itemState = new ReplicationQueueItemState(job.getCreated(),
+                        ItemState.valueOf(job.getJobState().toString()),
+                        job.getRetryCount());
+
                 log.info("status of job {} is {}", job.getId(), job.getJobState());
+
+                return itemState;
             } else {
-                itemStatus.setItemState(ItemState.DROPPED);
+                ReplicationQueueItemState itemState = new ReplicationQueueItemState(ItemState.DROPPED);
+                return itemState;
             }
         } catch (Exception e) {
             throw new ReplicationQueueException("unable to retrieve the queue status", e);
         }
-        return itemStatus;
     }
 
     public ReplicationQueueItem getHead() {
@@ -108,7 +108,7 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
     private Job getFirstJob() {
         log.info("getting first item in the queue");
 
-        Collection<Job> jobs = getJobs(1);
+        List<Job> jobs = getJobs(0, 1);
         if (jobs.size() > 0) {
             Job firstItem = jobs.toArray(new Job[jobs.size()])[0];
             log.info("first item in the queue is {}, retried {} times", firstItem.getId(), firstItem.getRetryCount());
@@ -128,18 +128,37 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
         return job;
     }
 
-    private Collection<Job> getJobs(int limit) {
-        return jobManager.findJobs(QueryType.ALL, topic, limit);
+    private List<Job> getJobs(int skip, int limit) {
+        int actualSkip = skip < 0 ? 0 : skip;
+        int actualLimit = limit < 0 ? -1 : actualSkip + limit;
+
+
+        Collection<Job> jobs = jobManager.findJobs(QueryType.ALL, topic, actualLimit);
+        List<Job> result = new ArrayList<Job>();
+
+        int i =0;
+        for (Job job : jobs) {
+            if (i >= actualSkip) {
+                result.add(job);
+            }
+            i++;
+        }
+
+        return result;
     }
 
     public boolean isEmpty() {
-        return getItems().isEmpty();
+        return getJobs(0, -1).isEmpty();
     }
 
     @Nonnull
-    public List<ReplicationQueueItem> getItems() {
+    public List<ReplicationQueueItem> getItems(ReplicationQueueItemSelector selector) {
+        if (selector == null) {
+            selector = new ReplicationQueueItemSelector(0, -1);
+        }
+
         List<ReplicationQueueItem> items = new ArrayList<ReplicationQueueItem>();
-        Collection<Job> jobs = getJobs(-1);
+        Collection<Job> jobs = getJobs(selector.getSkip(), selector.getLimit());
         for (Job job : jobs) {
             items.add(JobHandlingUtils.getPackage(job));
         }

@@ -89,7 +89,7 @@ public class PriorityPathDistributionStrategy implements ReplicationQueueDistrib
             queue = queueProvider.getQueue(agentName, pp);
         } else {
             log.info("using default queue");
-            queue = queueProvider.getDefaultQueue(agentName);
+            queue = queueProvider.getQueue(agentName, DEFAULT_QUEUE_NAME);
         }
         return queue;
     }

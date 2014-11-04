@@ -18,10 +18,8 @@
  */
 package org.apache.sling.replication.monitor;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -38,6 +36,7 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.util.FormattingResultLog;
+import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.queue.ReplicationQueueItemState;
@@ -58,12 +57,10 @@ import org.slf4j.LoggerFactory;
         @Property(name = HealthCheck.MBEAN_NAME, value = "slingReplicationQueue", description = "Health Check MBean name", label = "MBean name")
 })
 @References({
-        @Reference(name = "replicationQueueProvider",
-                referenceInterface = ReplicationQueueProvider.class,
+        @Reference(name = "replicationAgent",
+                referenceInterface = ReplicationAgent.class,
                 cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
-                policy = ReferencePolicy.DYNAMIC,
-                bind = "bindReplicationQueueProvider",
-                unbind = "unbindReplicationQueueProvider")
+                policy = ReferencePolicy.DYNAMIC)
 })
 
 @Service(value = HealthCheck.class)
@@ -78,7 +75,7 @@ public class ReplicationQueueHealthCheck implements HealthCheck {
     @Property(intValue = DEFAULT_NUMBER_OF_RETRIES_ALLOWED, description = "Number of allowed retries", label = "Allowed retries")
     private static final String NUMBER_OF_RETRIES_ALLOWED = "numberOfRetriesAllowed";
 
-    private final Collection<ReplicationQueueProvider> replicationQueueProviders = new LinkedList<ReplicationQueueProvider>();
+    private final List<ReplicationAgent> replicationAgents = new CopyOnWriteArrayList<ReplicationAgent>();
 
     @Activate
     public void activate(final Map<String, Object> properties) {
@@ -88,31 +85,30 @@ public class ReplicationQueueHealthCheck implements HealthCheck {
 
     @Deactivate
     protected void deactivate() {
-        replicationQueueProviders.clear();
+        replicationAgents.clear();
     }
 
-    protected void bindReplicationQueueProvider(final ReplicationQueueProvider replicationQueueProvider) {
-        synchronized (replicationQueueProviders) {
-            replicationQueueProviders.add(replicationQueueProvider);
-        }
-        log.debug("Registering replication queue provider {} ", replicationQueueProvider);
+    protected void bindReplicationAgent(final ReplicationAgent replicationAgent) {
+        replicationAgents.add(replicationAgent);
+
+        log.debug("Registering replication agent {} ", replicationAgent);
     }
 
-    protected void unbindReplicationQueueProvider(final ReplicationQueueProvider replicationQueueProvider) {
-        synchronized (replicationQueueProviders) {
-            replicationQueueProviders.remove(replicationQueueProvider);
-        }
-        log.debug("Unregistering replication queue provider {} ", replicationQueueProvider);
+    protected void unbindReplicationAgent(final ReplicationAgent replicationAgent) {
+        replicationAgents.remove(replicationAgent);
+        log.debug("Unregistering replication agent {} ", replicationAgent);
     }
 
     public Result execute() {
         final FormattingResultLog resultLog = new FormattingResultLog();
         Map<String, Integer> failures = new HashMap<String, Integer>();
-        if (replicationQueueProviders.size() > 0) {
+        if (replicationAgents.size() > 0) {
 
-            for (ReplicationQueueProvider replicationQueueProvider : replicationQueueProviders) {
-                for (ReplicationQueue q : replicationQueueProvider.getAllQueues())
+            for (ReplicationAgent replicationAgent : replicationAgents) {
+                for (String queueName : replicationAgent.getQueueNames()) {
                     try {
+                        ReplicationQueue q = replicationAgent.getQueue(queueName);
+
                         ReplicationQueueItem item = q.getHead();
                         if (item != null) {
                             ReplicationQueueItemState status = q.getStatus(item);
@@ -129,8 +125,9 @@ public class ReplicationQueueHealthCheck implements HealthCheck {
                         }
 
                     } catch (Exception e) {
-                        resultLog.warn("Exception while inspecting replication queue [{}]: {}", q.getName(), e);
+                        resultLog.warn("Exception while inspecting replication queue [{}]: {}", queueName, e);
                     }
+                }
             }
         } else {
             resultLog.debug("No replication queue providers found");

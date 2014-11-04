@@ -76,7 +76,7 @@ public class SimpleReplicationAgentTest {
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/"});
         when(packageExporter.exportPackages(any(ResourceResolver.class), any(ReplicationRequest.class)))
                 .thenReturn(Arrays.asList(replicationPackage));
-        when(queueProvider.getDefaultQueue(name)).thenReturn(
+        when(queueProvider.getQueue(name, ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(
                 new SimpleReplicationQueue(name, "name"));
         ReplicationResponse response = agent.execute(resourceResolver, request);
         assertNotNull(response);
@@ -107,7 +107,7 @@ public class SimpleReplicationAgentTest {
         when(distributionHandler.add(any(String.class), any(ReplicationPackage.class), eq(queueProvider))).thenReturn(true);
         when(packageExporter.exportPackages(any(ResourceResolver.class), any(ReplicationRequest.class)))
                 .thenReturn(Arrays.asList(replicationPackage));
-        when(queueProvider.getDefaultQueue(name)).thenReturn(
+        when(queueProvider.getQueue(name, ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(
                 new SimpleReplicationQueue(name, "name"));
         ReplicationResponse response = agent.execute(resourceResolver, request);
         assertNotNull(response);
@@ -137,7 +137,7 @@ public class SimpleReplicationAgentTest {
 
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/"});
         when(packageExporter.exportPackages(resourceResolver, request)).thenReturn(Arrays.asList(replicationPackage));
-        when(queueProvider.getDefaultQueue(name)).thenReturn(
+        when(queueProvider.getQueue(name, ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(
                 new SimpleReplicationQueue(name, "name"));
 
         agent.execute(resourceResolver, request);
@@ -161,7 +161,8 @@ public class SimpleReplicationAgentTest {
                 queueProvider, distributionHandler,
                 replicationEventFactory, resolverFactory, null);
         ReplicationQueue queue = mock(ReplicationQueue.class);
-        when(queueProvider.getDefaultQueue(name)).thenReturn(queue);
+        when(queueProvider.getQueue(name, ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME))
+                .thenReturn(queue);
         assertNotNull(agent.getQueue(null));
     }
 

@@ -18,11 +18,10 @@
  */
 package org.apache.sling.replication.monitor;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
+import java.util.*;
 
 import org.apache.sling.hc.api.Result;
+import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.queue.ReplicationQueueItemState;
@@ -32,7 +31,9 @@ import org.junit.Test;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.when;
 
 /**
@@ -56,11 +57,12 @@ public class ReplicationQueueHealthCheckTest {
         replicationQueueHealthCheck.activate(Collections.<String, Object>emptyMap());
         ReplicationQueue queue = mock(ReplicationQueue.class);
         when(queue.getHead()).thenReturn(null);
-        ReplicationQueueProvider replicationQueueProvider = mock(ReplicationQueueProvider.class);
-        Collection<ReplicationQueue> providers = new LinkedList<ReplicationQueue>();
-        providers.add(queue);
-        when(replicationQueueProvider.getAllQueues()).thenReturn(providers);
-        replicationQueueHealthCheck.bindReplicationQueueProvider(replicationQueueProvider);
+        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
+
+        List<String> queues = new ArrayList<String>();
+        queues.add("queueName");
+        when(replicationAgent.getQueueNames()).thenReturn(queues);        when(replicationAgent.getQueue(anyString())).thenReturn(queue);
+        replicationQueueHealthCheck.bindReplicationAgent(replicationAgent);
 
         Result result = replicationQueueHealthCheck.execute();
         assertNotNull(result);
@@ -78,11 +80,14 @@ public class ReplicationQueueHealthCheckTest {
         when(status.getAttempts()).thenReturn(1);
         when(queue.getStatus(item)).thenReturn(status);
         when(queue.getHead()).thenReturn(item);
-        ReplicationQueueProvider replicationQueueProvider = mock(ReplicationQueueProvider.class);
-        Collection<ReplicationQueue> providers = new LinkedList<ReplicationQueue>();
-        providers.add(queue);
-        when(replicationQueueProvider.getAllQueues()).thenReturn(providers);
-        replicationQueueHealthCheck.bindReplicationQueueProvider(replicationQueueProvider);
+        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
+
+        List<String> queues = new ArrayList<String>();
+        queues.add("queueName");
+        when(replicationAgent.getQueueNames()).thenReturn(queues);
+        when(replicationAgent.getQueue(anyString())).thenReturn(queue);
+        replicationQueueHealthCheck.bindReplicationAgent(replicationAgent);
+
 
         Result result = replicationQueueHealthCheck.execute();
         assertNotNull(result);
@@ -100,11 +105,13 @@ public class ReplicationQueueHealthCheckTest {
         when(status.getAttempts()).thenReturn(10);
         when(queue.getStatus(item)).thenReturn(status);
         when(queue.getHead()).thenReturn(item);
-        ReplicationQueueProvider replicationQueueProvider = mock(ReplicationQueueProvider.class);
-        Collection<ReplicationQueue> providers = new LinkedList<ReplicationQueue>();
-        providers.add(queue);
-        when(replicationQueueProvider.getAllQueues()).thenReturn(providers);
-        replicationQueueHealthCheck.bindReplicationQueueProvider(replicationQueueProvider);
+        ReplicationAgent replicationAgent = mock(ReplicationAgent.class);
+
+        List<String> queues = new ArrayList<String>();
+        queues.add("queueName");
+        when(replicationAgent.getQueueNames()).thenReturn(queues);
+        when(replicationAgent.getQueue(anyString())).thenReturn(queue);
+        replicationQueueHealthCheck.bindReplicationAgent(replicationAgent);
 
         Result result = replicationQueueHealthCheck.execute();
         assertNotNull(result);

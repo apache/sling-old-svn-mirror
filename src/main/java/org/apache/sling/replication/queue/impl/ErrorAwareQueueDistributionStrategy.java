@@ -88,7 +88,7 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
                          ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
         boolean added;
         ReplicationQueueItem queueItem = getItem(replicationPackage);
-        ReplicationQueue queue = queueProvider.getDefaultQueue(agentName);
+        ReplicationQueue queue = queueProvider.getQueue(agentName, DEFAULT_QUEUE_NAME);
         added = queue.add(queueItem);
         checkAndRemoveStuckItems(agentName, queueProvider);
         return added;
@@ -100,7 +100,7 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
 
     private void checkAndRemoveStuckItems(String agent,
                                           ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
-        ReplicationQueue defaultQueue = queueProvider.getDefaultQueue(agent);
+        ReplicationQueue defaultQueue = queueProvider.getQueue(agent, DEFAULT_QUEUE_NAME);
         // get first item in the queue with its status
         ReplicationQueueItem firstItem = defaultQueue.getHead();
         if (firstItem != null) {

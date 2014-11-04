@@ -84,6 +84,11 @@ public class ResourceSharedReplicationPackageBuilder implements ReplicationPacka
 
     public ReplicationPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String replicationPackageId) {
         String originalPackageId = retrieveIdFromPath(resourceResolver, replicationPackageId);
+
+        if (originalPackageId == null) {
+            return null;
+        }
+
         ReplicationPackage replicationPackage = replicationPackageBuilder.getPackage(resourceResolver, originalPackageId);
 
         if (replicationPackage == null) {
@@ -115,8 +120,12 @@ public class ResourceSharedReplicationPackageBuilder implements ReplicationPacka
         properties.put(PN_ORIGINAL_PATHS, replicationPackage.getPaths());
 
         Resource resource = ResourceUtil.getOrCreateResource(resourceResolver, packagePath, "nt:unstructured", "sling:Folder", false);
+
         ModifiableValueMap valueMap = resource.adaptTo(ModifiableValueMap.class);
         valueMap.putAll(properties);
+
+        resourceResolver.create(resource, ResourceSharedReplicationPackage.REFERENCE_ROOT_NODE,
+                Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object)"nt:unstructured"));
 
         resourceResolver.commit();
         return packagePath;
@@ -124,11 +133,21 @@ public class ResourceSharedReplicationPackageBuilder implements ReplicationPacka
     }
 
     private String retrieveIdFromPath(ResourceResolver resourceResolver, String packagePath) {
-        if (!packagePath.startsWith(sharedPackagesRoot)) return null;
+        if (!packagePath.startsWith(sharedPackagesRoot)) {
+            return null;
+        }
 
         Resource resource = resourceResolver.getResource(packagePath);
 
+        if (resource == null) {
+            return null;
+        }
+
         ValueMap properties = resource.adaptTo(ValueMap.class);
+
+        if (properties == null) {
+            return null;
+        }
 
 
         return properties.get(PN_ORIGINAL_ID, null);

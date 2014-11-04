@@ -33,7 +33,7 @@ import java.util.List;
  */
 @ConsumerType
 public interface ReplicationQueueDistributionStrategy extends ReplicationComponent {
-    String DEFAULT_QUEUE_NAME = "";
+    String DEFAULT_QUEUE_NAME = "default";
 
     /**
      * synchronously distribute a {@link org.apache.sling.replication.packaging.ReplicationPackage}

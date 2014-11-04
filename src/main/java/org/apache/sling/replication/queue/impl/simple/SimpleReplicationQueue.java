@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueItem;
+import org.apache.sling.replication.queue.ReplicationQueueItemSelector;
 import org.apache.sling.replication.queue.ReplicationQueueItemState;
 import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
 import org.slf4j.Logger;
@@ -63,43 +64,39 @@ public class SimpleReplicationQueue implements ReplicationQueue {
     }
 
     public boolean add(@Nonnull ReplicationQueueItem item) {
-        ReplicationQueueItemState status = new ReplicationQueueItemState();
+        ItemState itemState = ItemState.ERROR;
         boolean result = false;
         try {
             result = queue.offer(item, 10, TimeUnit.SECONDS);
-            status.setEntered(Calendar.getInstance());
+            itemState = ItemState.QUEUED;
         } catch (InterruptedException e) {
             log.error("cannot add an item to the queue", e);
-            status.setSuccessful(false);
         } finally {
-            statusMap.put(item, status);
+            statusMap.put(item, new ReplicationQueueItemState(Calendar.getInstance(), itemState, 0));
         }
         return result;
     }
 
     @Nonnull
-    public ReplicationQueueItemState getStatus(@Nonnull ReplicationQueueItem replicationPackage) {
-        ReplicationQueueItemState status = statusMap.get(replicationPackage);
-        if (queue.contains(replicationPackage)) {
-            status.setItemState(ItemState.QUEUED);
+    public ReplicationQueueItemState getStatus(@Nonnull ReplicationQueueItem queueItem) {
+        ReplicationQueueItemState itemStatus = statusMap.get(queueItem);
+
+        if (queue.contains(queueItem)) {
+            return itemStatus;
         } else {
-            status.setItemState(ItemState.SUCCEEDED);
+            return new ReplicationQueueItemState(itemStatus.getEntered(), ItemState.SUCCEEDED, itemStatus.getAttempts());
         }
-        return status;
     }
 
     public ReplicationQueueItem getHead() {
         ReplicationQueueItem element = queue.peek();
         if (element != null) {
-            ReplicationQueueItemState replicationQueueItemStatus = statusMap.get(element);
-            replicationQueueItemStatus.setAttempts(replicationQueueItemStatus.getAttempts() + 1);
+            ReplicationQueueItemState itemState = statusMap.get(element);
+            statusMap.put(element, new ReplicationQueueItemState(itemState.getEntered(),
+                    itemState.getItemState(),
+                    itemState.getAttempts()+1));
         }
         return element;
-    }
-
-    public void removeHead() {
-        ReplicationQueueItem element = queue.remove();
-        statusMap.get(element).setSuccessful(true);
     }
 
     public boolean isEmpty() {
@@ -107,9 +104,11 @@ public class SimpleReplicationQueue implements ReplicationQueue {
     }
 
     @Nonnull
-    public Collection<ReplicationQueueItem> getItems() {
+    public Iterable<ReplicationQueueItem> getItems(ReplicationQueueItemSelector queueItemSelector) {
         return queue;
     }
+
+
 
     public void remove(@Nonnull String id) {
         ReplicationQueueItem toRemove = null;

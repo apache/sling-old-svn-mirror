@@ -39,6 +39,13 @@ import org.apache.sling.replication.queue.ReplicationQueue;
 @ProviderType
 public interface ReplicationAgent extends ReplicationComponent {
 
+
+    /**
+     * retrieves the names of the queues for this agent.
+     * @return the list of queue names
+     */
+    Iterable<String> getQueueNames();
+
     /**
      * get the agent queue with the given name
      *
