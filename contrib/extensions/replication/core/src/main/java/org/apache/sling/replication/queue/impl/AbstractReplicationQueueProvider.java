@@ -54,12 +54,6 @@ public abstract class AbstractReplicationQueueProvider implements ReplicationQue
     }
 
     @Nonnull
-    public ReplicationQueue getDefaultQueue(@Nonnull String agentName)
-            throws ReplicationQueueException {
-        return getQueue(agentName, "");
-    }
-
-    @Nonnull
     public Collection<ReplicationQueue> getAllQueues() {
         return queueMap.values();
     }

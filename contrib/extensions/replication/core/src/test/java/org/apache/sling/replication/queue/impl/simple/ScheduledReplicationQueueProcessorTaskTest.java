@@ -37,7 +37,7 @@ public class ScheduledReplicationQueueProcessorTaskTest {
 
     @Test
     public void testRunWithNoQueue() throws Exception {
-        ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
+        SimpleReplicationQueueProvider queueProvider = mock(SimpleReplicationQueueProvider.class);
         ReplicationQueueProcessor queueProcessor = mock(ReplicationQueueProcessor.class);
         ScheduledReplicationQueueProcessorTask scheduledReplicationQueueProcessorTask = new ScheduledReplicationQueueProcessorTask(
                 queueProvider, queueProcessor);
@@ -46,7 +46,7 @@ public class ScheduledReplicationQueueProcessorTaskTest {
 
     @Test
     public void testRunWithOneEmptyQueue() throws Exception {
-        ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
+        SimpleReplicationQueueProvider queueProvider = mock(SimpleReplicationQueueProvider.class);
         Collection<ReplicationQueue> queues = new LinkedList<ReplicationQueue>();
         ReplicationQueue queue = mock(ReplicationQueue.class);
         when(queue.isEmpty()).thenReturn(true);
@@ -60,7 +60,7 @@ public class ScheduledReplicationQueueProcessorTaskTest {
 
     @Test
     public void testRunWithOneNonEmptyQueue() throws Exception {
-        ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
+        SimpleReplicationQueueProvider queueProvider = mock(SimpleReplicationQueueProvider.class);
         Collection<ReplicationQueue> queues = new LinkedList<ReplicationQueue>();
         ReplicationQueue queue = mock(ReplicationQueue.class);
         when(queue.isEmpty()).thenReturn(false).thenReturn(true);

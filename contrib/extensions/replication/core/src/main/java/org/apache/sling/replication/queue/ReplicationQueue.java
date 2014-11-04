@@ -22,6 +22,7 @@ import aQute.bnd.annotation.ConsumerType;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -76,10 +77,12 @@ public interface ReplicationQueue {
     /**
      * get the items in the queue
      *
-     * @return a <code>Collection</code> of {@link org.apache.sling.replication.queue.ReplicationQueueItem}s
+     * @param queueItemSelector represents the criteria to filter queue items.
+     *                          if null is passed then all items are returned.
+     * @return a <code>Iterable</code> of {@link org.apache.sling.replication.queue.ReplicationQueueItem}s
      */
     @Nonnull
-    Collection<ReplicationQueueItem> getItems();
+    Iterable<ReplicationQueueItem> getItems(@Nullable ReplicationQueueItemSelector queueItemSelector);
 
     /**
      * remove an item from the queue by specifying its id

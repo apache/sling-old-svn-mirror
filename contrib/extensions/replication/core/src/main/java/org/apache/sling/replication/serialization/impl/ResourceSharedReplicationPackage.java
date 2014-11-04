@@ -20,10 +20,7 @@ package org.apache.sling.replication.serialization.impl;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.api.resource.ModifiableValueMap;
-import org.apache.sling.api.resource.PersistenceException;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.*;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageInfo;
 import org.apache.sling.replication.packaging.SharedReplicationPackage;
@@ -32,13 +29,14 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 
 public class ResourceSharedReplicationPackage implements SharedReplicationPackage {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private static final Object syncObject = new Object();
 
-
+    protected static final String  REFERENCE_ROOT_NODE = "refs";
     private static final String  PN_REFERENCE_COUNT = "ref.count";
+
 
     private final ResourceResolver resourceResolver;
     private final String packagePath;
@@ -50,41 +48,33 @@ public class ResourceSharedReplicationPackage implements SharedReplicationPackag
         this.replicationPackage = replicationPackage;
     }
 
-    public void acquire() {
-        synchronized (syncObject) {
-            Resource resource = getProxyResource();
-            ModifiableValueMap valueMap = resource.adaptTo(ModifiableValueMap.class);
-            int refCount = valueMap.get(PN_REFERENCE_COUNT, 0);
-            refCount ++;
-            valueMap.put(PN_REFERENCE_COUNT, refCount);
-
-            try {
-                resourceResolver.commit();
-            } catch (PersistenceException e) {
-                log.error("cannot release package", e);
-            }
+    public void acquire(String holderName) {
+        if (holderName == null || holderName.length() == 0) {
+            throw new IllegalArgumentException("holder name cannot be null or empty");
+        }
+        
+        try {
+            createHolderResource(holderName);
+        } catch (PersistenceException e) {
+            log.error("cannot acquire package", e);
         }
     }
 
-    public void release() {
-        synchronized (syncObject) {
-            Resource resource = getProxyResource();
-            ModifiableValueMap valueMap = resource.adaptTo(ModifiableValueMap.class);
-            int refCount = valueMap.get(PN_REFERENCE_COUNT, 0);
-            refCount --;
+    public void release(String holderName) {
 
-            if (refCount > 0) {
-                valueMap.put(PN_REFERENCE_COUNT, refCount);
-            }
-            else {
+        if (holderName == null || holderName.length() == 0) {
+            throw new IllegalArgumentException("holder name cannot be null or empty");
+        }
+
+        try {
+            deleteHolderResource(holderName);
+
+            Resource holderRoot = getHolderRootResource();
+            if (!holderRoot.hasChildren()) {
                 delete();
             }
-
-            try {
-                resourceResolver.commit();
-            } catch (PersistenceException e) {
-                log.error("cannot release package", e);
-            }
+        } catch (PersistenceException e) {
+            log.error("cannot release package", e);
         }
     }
 
@@ -141,8 +131,60 @@ public class ResourceSharedReplicationPackage implements SharedReplicationPackag
 
 
     private Resource getProxyResource() {
-        Resource resource = resourceResolver.getResource(packagePath);
+        String holderPath = packagePath;
+
+        resourceResolver.refresh();
+        Resource resource = resourceResolver.getResource(holderPath);
         return resource;
+    }
+
+
+
+
+    private Resource getHolderRootResource()  {
+        Resource resource = getProxyResource();
+
+        Resource holderRoot = resource.getChild(REFERENCE_ROOT_NODE);
+        if (holderRoot != null) {
+            return holderRoot;
+        }
+
+        return null;
+    }
+
+    private void createHolderResource(String holderName) throws PersistenceException {
+        Resource holderRoot = getHolderRootResource();
+
+        if (holderRoot == null) {
+            return;
+        }
+
+        Resource holder = holderRoot.getChild(holderName);
+
+        if (holder != null) {
+            return;
+        }
+
+        resourceResolver.create(holderRoot, holderName, Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object) "nt:unstructured"));
+        resourceResolver.commit();
+
+    }
+
+    private void deleteHolderResource(String holderName) throws PersistenceException {
+        Resource holderRoot = getHolderRootResource();
+
+        if (holderRoot == null) {
+            return;
+        }
+
+        Resource holder = holderRoot.getChild(holderName);
+
+        if (holder == null) {
+            return;
+        }
+
+        resourceResolver.delete(holder);
+        resourceResolver.commit();
     }
 
 }

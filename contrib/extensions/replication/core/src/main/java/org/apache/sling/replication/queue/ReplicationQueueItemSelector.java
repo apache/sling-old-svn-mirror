@@ -16,26 +16,38 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.packaging;
 
-import aQute.bnd.annotation.ConsumerType;
+package org.apache.sling.replication.queue;
 
 /**
- * A {@link ReplicationPackage} that offers basic reference counting
+ * Class representing criteria for queue items selection.
  */
-@ConsumerType
-public interface SharedReplicationPackage extends ReplicationPackage {
-
-
-    /**
-     * acquire a reference to this package and increase the reference count.
-     */
-    void acquire(String holderName);
+public class ReplicationQueueItemSelector {
+    private final int skip;
+    private final int limit;
 
     /**
-     * release a reference to this package and decrease the reference count.
-     * when no more references are hold the package <code>delete</code> method is called.
+     *
+     * @param skip the number of items to skip
+     * @param limit the maximum number of items to return. use -1 to return all items.
      */
-    void release(String holderName);
+    public ReplicationQueueItemSelector(int skip, int limit) {
+        this.skip = skip;
+        this.limit = limit;
+    }
 
+    /**
+     * @return the number of items to skip from the queue.
+     */
+    public int getSkip() {
+        return skip;
+    }
+
+    /**
+     *
+     * @return return the maximum number of items to be selected.
+     */
+    public int getLimit() {
+        return limit;
+    }
 }

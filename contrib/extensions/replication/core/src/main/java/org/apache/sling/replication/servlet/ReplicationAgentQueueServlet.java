@@ -90,16 +90,14 @@ public class ReplicationAgentQueueServlet extends SlingAllMethodsServlet {
         StringBuilder builder = new StringBuilder("{\"name\":\"" + queue.getName() + "\",\"empty\":" + queue.isEmpty());
         if (!queue.isEmpty()) {
             builder.append(",\"items\":[");
-            for (ReplicationQueueItem item : queue.getItems()) {
+            for (ReplicationQueueItem item : queue.getItems(null)) {
                 builder.append('{');
                 builder.append(toJSoN(item));
                 builder.append(',');
                 builder.append(toJSoN(queue.getStatus(item)));
                 builder.append("},");
             }
-            if (queue.getItems().size() > 0) {
-                builder.deleteCharAt(builder.length() - 1);
-            }
+            builder.deleteCharAt(builder.length() - 1);
             builder.append(']');
         }
         builder.append('}');

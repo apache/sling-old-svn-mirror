@@ -43,24 +43,6 @@ public interface ReplicationQueueProvider extends ReplicationComponent {
             throws ReplicationQueueException;
 
 
-    /**
-     * get the default queue to be used for a certain agent
-     *
-     * @param agentName a replication agent
-     * @return the default replication queue for the given agent
-     * @throws ReplicationQueueException
-     */
-    @Nonnull
-    ReplicationQueue getDefaultQueue(@Nonnull String agentName)
-            throws ReplicationQueueException;
-
-    /**
-     * get all the available queues from this provider
-     *
-     * @return a collection of replication queues
-     */
-    @Nonnull
-    Collection<ReplicationQueue> getAllQueues();
 
     /**
      * enables queue driven processing for an agent

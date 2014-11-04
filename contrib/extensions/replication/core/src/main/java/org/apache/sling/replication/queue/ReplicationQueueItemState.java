@@ -26,34 +26,33 @@ import java.util.Calendar;
 
 public class ReplicationQueueItemState {
 
-    private int attempts;
+    private final int attempts;
 
-    private ItemState state;
+    private final ItemState state;
 
-    private Calendar entered;
+    private final Calendar entered;
+
+    public ReplicationQueueItemState(Calendar entered, ItemState state, int attempts) {
+
+        this.entered = entered;
+        this.state = state;
+        this.attempts = attempts;
+    }
+
+    public ReplicationQueueItemState(ItemState state) {
+        this(Calendar.getInstance(), state, 0);
+    }
 
     public boolean isSuccessful() {
         return ItemState.SUCCEEDED.equals(state);
-    }
-
-    public void setSuccessful(boolean successful) {
-        state = successful ? ItemState.SUCCEEDED : ItemState.ERROR;
     }
 
     public int getAttempts() {
         return attempts;
     }
 
-    public void setAttempts(int attempts) {
-        this.attempts = attempts;
-    }
-
     public ItemState getItemState() {
         return state;
-    }
-
-    public void setItemState(ItemState status) {
-        this.state = status;
     }
 
     @Override
@@ -63,10 +62,6 @@ public class ReplicationQueueItemState {
 
     public Calendar getEntered() {
         return entered;
-    }
-
-    public void setEntered(Calendar entered) {
-        this.entered = entered;
     }
 
     public enum ItemState {

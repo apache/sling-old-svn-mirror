@@ -40,10 +40,7 @@ import org.apache.sling.replication.communication.ReplicationResponse;
 import org.apache.sling.replication.component.ManagedReplicationComponent;
 import org.apache.sling.replication.event.impl.ReplicationEventFactory;
 import org.apache.sling.replication.event.ReplicationEventType;
-import org.apache.sling.replication.packaging.ReplicationPackage;
-import org.apache.sling.replication.packaging.ReplicationPackageExporter;
-import org.apache.sling.replication.packaging.ReplicationPackageImportException;
-import org.apache.sling.replication.packaging.ReplicationPackageImporter;
+import org.apache.sling.replication.packaging.*;
 import org.apache.sling.replication.queue.*;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 import org.apache.sling.replication.trigger.ReplicationRequestHandler;
@@ -192,13 +189,17 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
         return replicationResponse;
     }
 
+    public Iterable<String> getQueueNames() {
+        return queueDistributionStrategy.getQueueNames();
+    }
+
     public ReplicationQueue getQueue(String queueName) throws ReplicationAgentException {
         ReplicationQueue queue;
         try {
             if (queueName != null && queueName.length() > 0) {
                 queue = queueProvider.getQueue(this.name, queueName);
             } else {
-                queue = queueProvider.getDefaultQueue(this.name);
+                queue = queueProvider.getQueue(this.name, ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME);
             }
         } catch (ReplicationQueueException e) {
             throw new ReplicationAgentException(e);
@@ -244,7 +245,7 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
         }
     }
 
-    private boolean processQueue(ReplicationQueueItem queueItem) {
+    private boolean processQueue(String queueName, ReplicationQueueItem queueItem) {
         boolean success = false;
         log.debug("reading package with id {}", queueItem.getId());
         ResourceResolver agentResourceResolver = null;
@@ -265,7 +266,12 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
                 properties.put("replication.agent.name", name);
                 replicationEventFactory.generateEvent(ReplicationEventType.PACKAGE_REPLICATED, properties);
 
-                replicationPackage.delete();
+                if (replicationPackage instanceof SharedReplicationPackage) {
+                    ((SharedReplicationPackage) replicationPackage).release(queueName);
+                }
+                else {
+                    replicationPackage.delete();
+                }
                 success = true;
             } else {
                 log.warn("replication package with id {} does not exist", queueItem.getId());
@@ -308,7 +314,7 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
     class PackageQueueProcessor implements ReplicationQueueProcessor {
         public boolean process(@Nonnull String queueName, @Nonnull ReplicationQueueItem packageInfo) {
             log.info("running package queue processor for queue {}", queueName);
-            return processQueue(packageInfo);
+            return processQueue(queueName, packageInfo);
         }
     }
 

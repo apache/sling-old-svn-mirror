@@ -54,7 +54,7 @@ public class SingleQueueDistributionStrategy implements ReplicationQueueDistribu
     public boolean add(String agentName, ReplicationPackage replicationPackage,
                          ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
         ReplicationQueueItem queueItem = getItem(replicationPackage);
-        ReplicationQueue queue = queueProvider.getDefaultQueue(agentName);
+        ReplicationQueue queue = queueProvider.getQueue(agentName, DEFAULT_QUEUE_NAME);
         return queue.add(queueItem);
     }
 
