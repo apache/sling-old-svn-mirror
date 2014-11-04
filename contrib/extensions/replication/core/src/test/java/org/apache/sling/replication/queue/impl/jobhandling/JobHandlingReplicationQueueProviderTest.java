@@ -42,9 +42,9 @@ public class JobHandlingReplicationQueueProviderTest {
         JobManager jobManager = mock(JobManager.class);
 
         BundleContext context = mock(BundleContext.class);
-        JobHandlingReplicationQueueProvider jobHandlingReplicationQueueProvider = new JobHandlingReplicationQueueProvider(
+        JobHandlingReplicationQueueProvider jobHandlingReplicationQueueProvider = new JobHandlingReplicationQueueProvider("dummy-agent",
                 jobManager, context);
-        ReplicationQueue queue = jobHandlingReplicationQueueProvider.getInternalQueue("dummy-agent", "default");
+        ReplicationQueue queue = jobHandlingReplicationQueueProvider.getQueue("default");
         assertNotNull(queue);
     }
 
@@ -57,11 +57,11 @@ public class JobHandlingReplicationQueueProviderTest {
         Configuration config = mock(Configuration.class);
         when(configAdmin.createFactoryConfiguration(QueueConfiguration.class.getName(), null)).thenReturn(config);
         BundleContext context = mock(BundleContext.class);
-        JobHandlingReplicationQueueProvider jobHandlingReplicationQueueProvider = new JobHandlingReplicationQueueProvider(
+        JobHandlingReplicationQueueProvider jobHandlingReplicationQueueProvider = new JobHandlingReplicationQueueProvider("dummy-agent",
                 jobManager, context);
         String agentName = "dummy-agent";
         ReplicationQueueProcessor queueProcessor = mock(ReplicationQueueProcessor.class);
-        jobHandlingReplicationQueueProvider.enableQueueProcessing(agentName, queueProcessor);
+        jobHandlingReplicationQueueProvider.enableQueueProcessing(queueProcessor);
     }
 
     @Test
@@ -71,9 +71,9 @@ public class JobHandlingReplicationQueueProviderTest {
         Configuration config = mock(Configuration.class);
         when(configAdmin.createFactoryConfiguration(QueueConfiguration.class.getName(), null)).thenReturn(config);
         BundleContext context = mock(BundleContext.class);
-        JobHandlingReplicationQueueProvider jobHandlingReplicationQueueProvider = new JobHandlingReplicationQueueProvider(
-                jobManager,  context);
+        JobHandlingReplicationQueueProvider jobHandlingReplicationQueueProvider = new JobHandlingReplicationQueueProvider("dummy-agent",
+                jobManager, context);
         String agentName = "dummy-agent";
-        jobHandlingReplicationQueueProvider.disableQueueProcessing(agentName);
+        jobHandlingReplicationQueueProvider.disableQueueProcessing();
     }
 }

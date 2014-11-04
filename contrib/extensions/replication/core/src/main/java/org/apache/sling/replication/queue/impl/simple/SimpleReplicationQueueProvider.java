@@ -20,61 +20,77 @@ package org.apache.sling.replication.queue.impl.simple;
 
 import javax.annotation.Nonnull;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueException;
 import org.apache.sling.replication.queue.ReplicationQueueProcessor;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
-import org.apache.sling.replication.queue.impl.AbstractReplicationQueueProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * an OSGi service implementing {@link ReplicationQueueProvider} for simple in memory
+ * a queue provider {@link ReplicationQueueProvider} for simple in memory
  * {@link ReplicationQueue}s
  */
-@Component(metatype = false, label = "In memory Replication Queue Provider")
-@Service(value = ReplicationQueueProvider.class)
-@Property(name = "name", value = SimpleReplicationQueueProvider.NAME)
-public class SimpleReplicationQueueProvider extends AbstractReplicationQueueProvider implements
-        ReplicationQueueProvider {
+public class SimpleReplicationQueueProvider  implements ReplicationQueueProvider {
 
-    @Reference
-    Scheduler scheduler;
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public static final String NAME = "simple";
 
-    protected SimpleReplicationQueueProvider(Scheduler scheduler) {
+    private final String name;
+    private final Scheduler scheduler;
+
+    private final Map<String, ReplicationQueue> queueMap = new ConcurrentHashMap<String, ReplicationQueue>();
+
+
+    public SimpleReplicationQueueProvider(Scheduler scheduler, String name) {
+        if (name == null || scheduler == null) {
+            throw new IllegalArgumentException("all arguments are required");
+        }
+
         this.scheduler = scheduler;
+        this.name = name;
+
     }
 
-    public SimpleReplicationQueueProvider() {
-    }
-
-    protected ReplicationQueue getInternalQueue(String agentName, String selector)
+    @Nonnull
+    public ReplicationQueue getQueue(@Nonnull String queueName)
             throws ReplicationQueueException {
-        return new SimpleReplicationQueue(agentName, selector);
+        String key = name + queueName;
+
+        ReplicationQueue queue = queueMap.get(key);
+        if (queue == null) {
+            log.info("creating a queue with key {}", key);
+            queue = new SimpleReplicationQueue(name, queueName);
+            queueMap.put(key, queue);
+            log.info("queue created {}", queue);
+        }
+        return queue;
     }
 
-    protected void deleteQueue(ReplicationQueue queue) {
-        // do nothing as queues just exist in the cache
+
+    protected Collection<ReplicationQueue> getQueues() {
+        return queueMap.values();
     }
 
-    public void enableQueueProcessing(@Nonnull String agentName, @Nonnull ReplicationQueueProcessor queueProcessor) {
+    public void enableQueueProcessing(@Nonnull ReplicationQueueProcessor queueProcessor) {
         ScheduleOptions options = scheduler.NOW(-1, 10)
                 .canRunConcurrently(false)
-                .name(getJobName(agentName));
+                .name(getJobName());
         scheduler.schedule(new ScheduledReplicationQueueProcessorTask(this, queueProcessor), options);
     }
 
-    public void disableQueueProcessing(@Nonnull String agentName) {
-        scheduler.unschedule(getJobName(agentName));
+    public void disableQueueProcessing() {
+        scheduler.unschedule(getJobName());
     }
 
-    private String getJobName(String agentName) {
-        return SimpleReplicationQueueProvider.NAME + "-queueProcessor-" + agentName;
+    private String getJobName() {
+        return "simple-queueProcessor-" + name;
     }
 }

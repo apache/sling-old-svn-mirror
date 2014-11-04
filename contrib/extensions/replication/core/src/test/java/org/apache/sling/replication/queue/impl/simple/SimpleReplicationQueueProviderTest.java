@@ -36,17 +36,12 @@ public class SimpleReplicationQueueProviderTest {
 
     @Test
     public void testGetOrCreateQueue() throws Exception {
-        SimpleReplicationQueueProvider simpleReplicationQueueProvider = new SimpleReplicationQueueProvider();
-        ReplicationQueue queue = simpleReplicationQueueProvider.getInternalQueue("dummy-agent", "default");
+        SimpleReplicationQueueProvider simpleReplicationQueueProvider = new SimpleReplicationQueueProvider(mock(Scheduler.class), "agentName");
+        ReplicationQueue queue = simpleReplicationQueueProvider.getQueue("default");
         assertNotNull(queue);
     }
 
-    @Test
-    public void testDeleteQueue() throws Exception {
-        SimpleReplicationQueueProvider simpleReplicationQueueProvider = new SimpleReplicationQueueProvider();
-        ReplicationQueue queue = mock(ReplicationQueue.class);
-        simpleReplicationQueueProvider.deleteQueue(queue);
-    }
+
 
     @Test
     public void testEnableQueueProcessing() throws Exception {
@@ -55,9 +50,9 @@ public class SimpleReplicationQueueProviderTest {
         when(scheduler.NOW(-1, 10)).thenReturn(options);
         when(options.canRunConcurrently(false)).thenReturn(options);
         when(options.name(any(String.class))).thenReturn(options);
-        SimpleReplicationQueueProvider simpleReplicationQueueProvider = new SimpleReplicationQueueProvider(scheduler);
+        SimpleReplicationQueueProvider simpleReplicationQueueProvider = new SimpleReplicationQueueProvider(scheduler, "dummy-agent");
         ReplicationQueueProcessor processor = mock(ReplicationQueueProcessor.class);
-        simpleReplicationQueueProvider.enableQueueProcessing("dummy-agent", processor);
+        simpleReplicationQueueProvider.enableQueueProcessing(processor);
     }
 
     @Test
@@ -67,7 +62,7 @@ public class SimpleReplicationQueueProviderTest {
         when(scheduler.NOW(-1, 10)).thenReturn(options);
         when(options.canRunConcurrently(false)).thenReturn(options);
         when(options.name(any(String.class))).thenReturn(options);
-        SimpleReplicationQueueProvider simpleReplicationQueueProvider = new SimpleReplicationQueueProvider(scheduler);
-        simpleReplicationQueueProvider.disableQueueProcessing("dummy-agent");
+        SimpleReplicationQueueProvider simpleReplicationQueueProvider = new SimpleReplicationQueueProvider(scheduler, "dummy-agent");
+        simpleReplicationQueueProvider.disableQueueProcessing();
     }
 }

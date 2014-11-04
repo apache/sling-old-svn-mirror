@@ -40,154 +40,122 @@ public class PriorityPathQueueDistributionStrategyTest {
 
     @Test
     public void testPackageAdditionWithSucceedingItemDelivery() throws Exception {
-        PriorityPathDistributionStrategy priorityPathDistributionStrategy = new PriorityPathDistributionStrategy();
-        ComponentContext context = mock(ComponentContext.class);
-        Dictionary properties = mock(Dictionary.class);
-        when(properties.get("priority.paths")).thenReturn(new String[]{"/content", "/apps"});
-        when(context.getProperties()).thenReturn(properties);
-        priorityPathDistributionStrategy.activate(context);
+        PriorityPathDistributionStrategy priorityPathDistributionStrategy = new PriorityPathDistributionStrategy(new String[]{"/content", "/apps"});
+
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/etc"});
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
-        when(queueProvider.getQueue("agentName", ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
+        when(queueProvider.getQueue(ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(ReplicationQueueItem.class))).thenReturn(true);
 
-        boolean returnedState = priorityPathDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        boolean returnedState = priorityPathDistributionStrategy.add(replicationPackage, queueProvider);
         assertTrue(returnedState);
     }
 
     @Test
     public void testPackageAdditionWithSucceedingItemDeliveryOnPriorityPath() throws Exception {
-        PriorityPathDistributionStrategy priorityPathDistributionStrategy = new PriorityPathDistributionStrategy();
-        ComponentContext context = mock(ComponentContext.class);
-        Dictionary properties = mock(Dictionary.class);
-        when(properties.get("priority.paths")).thenReturn(new String[]{"/content", "/apps"});
-        when(context.getProperties()).thenReturn(properties);
-        priorityPathDistributionStrategy.activate(context);
+        PriorityPathDistributionStrategy priorityPathDistributionStrategy = new PriorityPathDistributionStrategy(new String[]{"/content", "/apps"});
+
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/content/sample1"});
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
-        when(queueProvider.getQueue("agentName", "/content")).thenReturn(queue);
+        when(queueProvider.getQueue("/content")).thenReturn(queue);
         when(queue.add(any(ReplicationQueueItem.class))).thenReturn(true);
 
-        boolean returnedState = priorityPathDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        boolean returnedState = priorityPathDistributionStrategy.add(replicationPackage, queueProvider);
         assertTrue(returnedState);
     }
 
     @Test
     public void testPackageAdditionWithFailingItemDelivery() throws Exception {
-        PriorityPathDistributionStrategy priorityPathDistributionStrategy = new PriorityPathDistributionStrategy();
-        ComponentContext context = mock(ComponentContext.class);
-        Dictionary properties = mock(Dictionary.class);
-        when(properties.get("priority.paths")).thenReturn(new String[]{"/content", "/apps"});
-        when(context.getProperties()).thenReturn(properties);
-        priorityPathDistributionStrategy.activate(context);
+        PriorityPathDistributionStrategy priorityPathDistributionStrategy = new PriorityPathDistributionStrategy(new String[]{"/content", "/apps"});
+
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/etc"});
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
-        when(queueProvider.getQueue("agentName", ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
+        when(queueProvider.getQueue(ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(ReplicationQueueItem.class))).thenReturn(true);
 
-        boolean returnedState = priorityPathDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        boolean returnedState = priorityPathDistributionStrategy.add(replicationPackage, queueProvider);
         assertTrue(returnedState);
     }
 
     @Test
     public void testPackageAdditionWithFailingItemDeliveryOnPriorityPath() throws Exception {
-        PriorityPathDistributionStrategy priorityPathDistributionStrategy = new PriorityPathDistributionStrategy();
-        ComponentContext context = mock(ComponentContext.class);
-        Dictionary properties = mock(Dictionary.class);
-        when(properties.get("priority.paths")).thenReturn(new String[]{"/content", "/apps"});
-        when(context.getProperties()).thenReturn(properties);
-        priorityPathDistributionStrategy.activate(context);
+        PriorityPathDistributionStrategy priorityPathDistributionStrategy = new PriorityPathDistributionStrategy(new String[]{"/content", "/apps"});
+
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/content/sample2"});
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
 
-        when(queueProvider.getQueue("agentName", "/content")).thenReturn(queue);
+        when(queueProvider.getQueue("/content")).thenReturn(queue);
         when(queue.add(any(ReplicationQueueItem.class))).thenReturn(true);
 
-        boolean returnedState = priorityPathDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        boolean returnedState = priorityPathDistributionStrategy.add(replicationPackage, queueProvider);
         assertTrue(returnedState);
     }
 
     @Test
     public void testPackageAdditionWithNullItemStateFromTheQueue() throws Exception {
-        PriorityPathDistributionStrategy priorityPathDistributionStrategy = new PriorityPathDistributionStrategy();
-        ComponentContext context = mock(ComponentContext.class);
-        Dictionary properties = mock(Dictionary.class);
-        when(properties.get("priority.paths")).thenReturn(new String[]{"/content", "/apps"});
-        when(context.getProperties()).thenReturn(properties);
-        priorityPathDistributionStrategy.activate(context);
+        PriorityPathDistributionStrategy priorityPathDistributionStrategy = new PriorityPathDistributionStrategy(new String[]{"/content", "/apps"});
+
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/etc"});
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
 
-        when(queueProvider.getQueue("agentName", ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
+        when(queueProvider.getQueue(ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(ReplicationQueueItem.class))).thenReturn(true);
-        boolean returnedState = priorityPathDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        boolean returnedState = priorityPathDistributionStrategy.add(replicationPackage, queueProvider);
         assertTrue(returnedState);
     }
 
     @Test
     public void testPackageAdditionWithNullItemStateFromTheQueueOnPriorityPath() throws Exception {
-        PriorityPathDistributionStrategy priorityPathDistributionStrategy = new PriorityPathDistributionStrategy();
-        ComponentContext context = mock(ComponentContext.class);
-        Dictionary properties = mock(Dictionary.class);
-        when(properties.get("priority.paths")).thenReturn(new String[]{"/content", "/apps"});
-        when(context.getProperties()).thenReturn(properties);
-        priorityPathDistributionStrategy.activate(context);
+        PriorityPathDistributionStrategy priorityPathDistributionStrategy = new PriorityPathDistributionStrategy(new String[]{"/content", "/apps"});
+
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/apps/some/stuff"});
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
 
-        when(queueProvider.getQueue("agentName", "/apps")).thenReturn(queue);
+        when(queueProvider.getQueue("/apps")).thenReturn(queue);
         when(queue.add(any(ReplicationQueueItem.class))).thenReturn(true);
-        boolean returnedState = priorityPathDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        boolean returnedState = priorityPathDistributionStrategy.add(replicationPackage, queueProvider);
         assertTrue(returnedState);
     }
 
     @Test
     public void testPackageAdditionWithNotNullItemStateFromTheQueue() throws Exception {
-        PriorityPathDistributionStrategy priorityPathDistributionStrategy = new PriorityPathDistributionStrategy();
-        ComponentContext context = mock(ComponentContext.class);
-        Dictionary properties = mock(Dictionary.class);
-        when(properties.get("priority.paths")).thenReturn(new String[]{"/content", "/apps"});
-        when(context.getProperties()).thenReturn(properties);
-        priorityPathDistributionStrategy.activate(context);
+        PriorityPathDistributionStrategy priorityPathDistributionStrategy = new PriorityPathDistributionStrategy(new String[]{"/content", "/apps"});
+
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/etc"});
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
-        when(queueProvider.getQueue("agentName", ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
+        when(queueProvider.getQueue(ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(ReplicationQueueItem.class))).thenReturn(true);
-        boolean returnedState = priorityPathDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        boolean returnedState = priorityPathDistributionStrategy.add(replicationPackage, queueProvider);
         assertTrue(returnedState);
     }
 
     @Test
     public void testPackageAdditionWithNotNullItemStateFromTheQueueOnPriorityPath() throws Exception {
-        PriorityPathDistributionStrategy priorityPathDistributionStrategy = new PriorityPathDistributionStrategy();
-        ComponentContext context = mock(ComponentContext.class);
-        Dictionary properties = mock(Dictionary.class);
-        when(properties.get("priority.paths")).thenReturn(new String[]{"/content", "/apps"});
-        when(context.getProperties()).thenReturn(properties);
-        priorityPathDistributionStrategy.activate(context);
+        PriorityPathDistributionStrategy priorityPathDistributionStrategy = new PriorityPathDistributionStrategy(new String[]{"/content", "/apps"});
+
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/apps"});
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
 
-        when(queueProvider.getQueue("agentName", "/apps")).thenReturn(queue);
+        when(queueProvider.getQueue("/apps")).thenReturn(queue);
         when(queue.add(any(ReplicationQueueItem.class))).thenReturn(true);
 
-        boolean returnedState = priorityPathDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        boolean returnedState = priorityPathDistributionStrategy.add(replicationPackage, queueProvider);
         assertTrue(returnedState);
     }
 }

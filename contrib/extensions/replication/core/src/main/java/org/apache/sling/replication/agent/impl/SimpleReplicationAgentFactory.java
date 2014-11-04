@@ -34,6 +34,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.component.ManagedReplicationComponent;
 import org.apache.sling.replication.component.ReplicationComponent;
@@ -63,12 +64,8 @@ import org.slf4j.LoggerFactory;
         policy = ConfigurationPolicy.REQUIRE
 )
 public class SimpleReplicationAgentFactory implements ReplicationComponentProvider {
-    private static final String QUEUE_PROVIDER_TARGET = ReplicationComponentFactory.COMPONENT_QUEUE_PROVIDER + ".target";
-    private static final String QUEUE_DISTRIBUTION_TARGET = ReplicationComponentFactory.COMPONENT_QUEUE_DISTRIBUTION_STRATEGY + ".target";
-    private static final String TRANSPORT_AUTHENTICATION_PROVIDER_TARGET = ReplicationComponentFactory.COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER + ".target";
 
-    private static final String DEFAULT_QUEUEPROVIDER = "(name=" + JobHandlingReplicationQueueProvider.NAME + ")";
-    private static final String DEFAULT_DISTRIBUTION = "(name=" + SingleQueueDistributionStrategy.NAME + ")";
+    private static final String TRANSPORT_AUTHENTICATION_PROVIDER_TARGET = ReplicationComponentFactory.COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER + ".target";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -96,14 +93,6 @@ public class SimpleReplicationAgentFactory implements ReplicationComponentProvid
     @Property(label = "Service Name")
     public static final String SERVICE_NAME = ReplicationComponentFactory.AGENT_SIMPLE_PROPERTY_SERVICE_NAME;
 
-    @Property(label = "Target ReplicationQueueProvider", name = QUEUE_PROVIDER_TARGET, value = DEFAULT_QUEUEPROVIDER)
-    @Reference(name = ReplicationComponentFactory.COMPONENT_QUEUE_PROVIDER, target = DEFAULT_QUEUEPROVIDER)
-    private volatile ReplicationQueueProvider queueProvider;
-
-    @Property(label = "Target QueueDistributionStrategy", name = QUEUE_DISTRIBUTION_TARGET, value = DEFAULT_DISTRIBUTION)
-    @Reference(name = ReplicationComponentFactory.COMPONENT_QUEUE_DISTRIBUTION_STRATEGY, target = DEFAULT_DISTRIBUTION)
-    private volatile ReplicationQueueDistributionStrategy queueDistributionStrategy;
-
     @Property(label = "Target TransportAuthenticationProvider", name = TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
     @Reference(name = "transportAuthenticationProvider", policy = ReferencePolicy.DYNAMIC,
             cardinality = ReferenceCardinality.OPTIONAL_UNARY)
@@ -116,11 +105,15 @@ public class SimpleReplicationAgentFactory implements ReplicationComponentProvid
     private SlingSettingsService settingsService;
 
     @Reference
+    private JobManager jobManager;
+
+    @Reference
     private ReplicationComponentFactory componentFactory;
 
     private ServiceRegistration componentReg;
     private BundleContext savedContext;
     private Map<String, Object> savedConfig;
+    private String agentName;
 
     @Activate
     protected void activate(BundleContext context, Map<String, Object> config) {
@@ -136,14 +129,13 @@ public class SimpleReplicationAgentFactory implements ReplicationComponentProvid
         if (enabled) {
             props.put(ENABLED, true);
 
-            String name = PropertiesUtil
-                    .toString(config.get(NAME), String.valueOf(new Random().nextInt(1000)));
-            props.put(NAME, name);
+            agentName = PropertiesUtil.toString(config.get(NAME), null);
+            props.put(NAME, agentName);
 
             if (componentReg == null && componentFactory != null) {
                 ReplicationAgent agent = componentFactory.createComponent(ReplicationAgent.class, config, this);
 
-                log.debug("activated agent {}", name);
+                log.debug("activated agent {}", agentName);
 
                 if (agent != null) {
 
@@ -176,10 +168,10 @@ public class SimpleReplicationAgentFactory implements ReplicationComponentProvid
     public <ComponentType extends ReplicationComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type,
                                                                                    @Nullable String componentName) {
         if (type.isAssignableFrom(ReplicationQueueProvider.class)) {
-            return (ComponentType) queueProvider;
+            return (ComponentType) new JobHandlingReplicationQueueProvider(agentName, jobManager, savedContext);
         }
         else if (type.isAssignableFrom(ReplicationQueueDistributionStrategy.class)) {
-            return (ComponentType) queueDistributionStrategy;
+            return (ComponentType) new SingleQueueDistributionStrategy();
         }
         else if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
             return (ComponentType) transportAuthenticationProvider;

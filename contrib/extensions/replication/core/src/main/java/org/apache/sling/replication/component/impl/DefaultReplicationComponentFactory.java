@@ -34,6 +34,7 @@ import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.Scheduler;
+import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.agent.ReplicationRequestAuthorizationStrategy;
@@ -53,6 +54,11 @@ import org.apache.sling.replication.packaging.impl.importer.LocalReplicationPack
 import org.apache.sling.replication.packaging.impl.importer.RemoteReplicationPackageImporter;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
+import org.apache.sling.replication.queue.impl.ErrorAwareQueueDistributionStrategy;
+import org.apache.sling.replication.queue.impl.PriorityPathDistributionStrategy;
+import org.apache.sling.replication.queue.impl.SingleQueueDistributionStrategy;
+import org.apache.sling.replication.queue.impl.jobhandling.JobHandlingReplicationQueueProvider;
+import org.apache.sling.replication.queue.impl.simple.SimpleReplicationQueueProvider;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.impl.ResourceSharedReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilder;
@@ -102,6 +108,9 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
 
     @Reference
     private Scheduler scheduler;
+
+    @Reference
+    private JobManager jobManager;
 
     private BundleContext bundleContext;
 
@@ -262,6 +271,15 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
             String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
             return componentProvider.getComponent(ReplicationQueueProvider.class, name);
         }
+        else if (QUEUE_PROVIDER_JOB.equals(factory)) {
+            String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
+            return new JobHandlingReplicationQueueProvider(name, jobManager, bundleContext);
+        }
+        else if (QUEUE_PROVIDER_SIMPLE.equals(factory)) {
+            String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
+
+            return new SimpleReplicationQueueProvider(scheduler, name);
+        }
 
         return null;
     }
@@ -272,7 +290,14 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
         if (COMPONENT_TYPE_SERVICE.equals(factory)) {
             String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
             return componentProvider.getComponent(ReplicationQueueDistributionStrategy.class, name);
+        }
+        else if (QUEUE_DISTRIBUTION_STRATEGY_SINGLE.equals(factory)) {
+            return new SingleQueueDistributionStrategy();
+        }
+        else if (QUEUE_DISTRIBUTION_STRATEGY_PRIORITY.equals(factory)) {
+            String[] priorityPaths = PropertiesUtil.toStringArray(properties.get(QUEUE_DISTRIBUTION_STRATEGY_PRIORITY_PROPERTY_PATHS), null);
 
+            return new PriorityPathDistributionStrategy(priorityPaths);
         }
 
         return null;

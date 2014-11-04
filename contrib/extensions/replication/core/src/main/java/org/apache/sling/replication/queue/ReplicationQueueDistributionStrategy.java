@@ -39,15 +39,13 @@ public interface ReplicationQueueDistributionStrategy extends ReplicationCompone
      * synchronously distribute a {@link org.apache.sling.replication.packaging.ReplicationPackage}
      * to one or more {@link ReplicationQueue}s provided by the given {@link ReplicationQueueProvider}
      *
-     * @param agentName     the name of a {@link ReplicationAgent}
      * @param replicationPackage          a {@link org.apache.sling.replication.packaging.ReplicationPackage} to distribute
      * @param queueProvider the {@link ReplicationQueueProvider} used to provide the queues to be used for the given package
      * @return a {@link ReplicationQueueItemState} representing the state of the package in the queue after its distribution
      * @throws ReplicationQueueException if distribution fails
      */
     @Nonnull
-    boolean add(@Nonnull String agentName, @Nonnull ReplicationPackage replicationPackage,
-                                  @Nonnull ReplicationQueueProvider queueProvider) throws ReplicationQueueException;
+    boolean add(@Nonnull ReplicationPackage replicationPackage, @Nonnull ReplicationQueueProvider queueProvider) throws ReplicationQueueException;
 
 
     /**

@@ -289,6 +289,35 @@ public interface ReplicationComponentFactory {
 
 
     /**
+     * queue provider job type
+     */
+    String QUEUE_PROVIDER_JOB = "job";
+
+    /**
+     * queue provider simple type
+     */
+    String QUEUE_PROVIDER_SIMPLE = "simple";
+
+    /**
+     * queue distribution strategy single type
+     */
+    String QUEUE_DISTRIBUTION_STRATEGY_SINGLE = "single";
+
+    /**
+     * queue distribution strategy priority type
+     */
+    String QUEUE_DISTRIBUTION_STRATEGY_PRIORITY = "priority";
+
+    /**
+     * queue distribution strategy priority paths property
+     */
+    String QUEUE_DISTRIBUTION_STRATEGY_PRIORITY_PROPERTY_PATHS = "priority.paths";
+
+
+
+
+
+    /**
      * create a {@link ReplicationComponent}
      *
      * @param type              the {@link java.lang.Class} of the component to be created

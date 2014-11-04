@@ -44,10 +44,10 @@ public class ErrorAwareQueueDistributionStrategyTest {
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
-        when(queueProvider.getQueue("agentName", ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
+        when(queueProvider.getQueue(ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(ReplicationQueueItem.class))).thenReturn(true);
 
-        boolean returnedState = errorAwareDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        boolean returnedState = errorAwareDistributionStrategy.add(replicationPackage, queueProvider);
 
         assertTrue(returnedState);
     }
@@ -60,12 +60,12 @@ public class ErrorAwareQueueDistributionStrategyTest {
         ReplicationQueue queue = mock(ReplicationQueue.class);
         ReplicationQueueItem queueItem = mock(ReplicationQueueItem.class);
 
-        when(queueProvider.getQueue("agentName", ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
+        when(queueProvider.getQueue(ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(queueItem)).thenReturn(true);
         ReplicationQueueItemState state = mock(ReplicationQueueItemState.class);
         when(state.isSuccessful()).thenReturn(false);
         when(queue.getStatus(queueItem)).thenReturn(state);
-        boolean returnedState = errorAwareDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        boolean returnedState = errorAwareDistributionStrategy.add(replicationPackage, queueProvider);
         assertFalse(returnedState);
     }
 
@@ -83,17 +83,17 @@ public class ErrorAwareQueueDistributionStrategyTest {
         ReplicationQueue queue = mock(ReplicationQueue.class);
         ReplicationQueueItem queueItem = mock(ReplicationQueueItem.class);
 
-        when(queueProvider.getQueue("agentName", ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
+        when(queueProvider.getQueue(ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(queueItem)).thenReturn(true);
         when(queue.getHead()).thenReturn(queueItem);
         ReplicationQueue errorQueue = mock(ReplicationQueue.class);
         when(errorQueue.add(queueItem)).thenReturn(true);
-        when(queueProvider.getQueue("agentName", ErrorAwareQueueDistributionStrategy.ERROR_QUEUE_NAME)).thenReturn(errorQueue);
+        when(queueProvider.getQueue(ErrorAwareQueueDistributionStrategy.ERROR_QUEUE_NAME)).thenReturn(errorQueue);
         ReplicationQueueItemState state = mock(ReplicationQueueItemState.class);
         when(state.isSuccessful()).thenReturn(false);
         when(state.getAttempts()).thenReturn(2);
         when(queue.getStatus(any(ReplicationQueueItem.class))).thenReturn(state);
-        boolean returnedState = errorAwareDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        boolean returnedState = errorAwareDistributionStrategy.add(replicationPackage, queueProvider);
         assertFalse(returnedState);
     }
 
@@ -110,14 +110,14 @@ public class ErrorAwareQueueDistributionStrategyTest {
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
 
-        when(queueProvider.getQueue("agentName", ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
+        when(queueProvider.getQueue(ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(ReplicationQueueItem.class))).thenReturn(true);
         when(queue.getHead()).thenReturn(mock(ReplicationQueueItem.class));
         ReplicationQueueItemState state = mock(ReplicationQueueItemState.class);
         when(state.isSuccessful()).thenReturn(false);
         when(state.getAttempts()).thenReturn(2);
         when(queue.getStatus(any(ReplicationQueueItem.class))).thenReturn(state);
-        boolean returnedState = errorAwareDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        boolean returnedState = errorAwareDistributionStrategy.add(replicationPackage, queueProvider);
         assertTrue(returnedState);
     }
 
@@ -128,9 +128,9 @@ public class ErrorAwareQueueDistributionStrategyTest {
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
 
-        when(queueProvider.getQueue("agentName", ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
+        when(queueProvider.getQueue(ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(ReplicationQueueItem.class))).thenReturn(true);
-        boolean returnedState = errorAwareDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        boolean returnedState = errorAwareDistributionStrategy.add(replicationPackage, queueProvider);
         assertTrue(returnedState);
     }
 
@@ -140,10 +140,10 @@ public class ErrorAwareQueueDistributionStrategyTest {
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
-        when(queueProvider.getQueue("agentName", ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
+        when(queueProvider.getQueue(ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(ReplicationQueueItem.class))).thenReturn(true);
 
-        boolean returnedState = errorAwareDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        boolean returnedState = errorAwareDistributionStrategy.add(replicationPackage, queueProvider);
         assertTrue(returnedState);
     }
 }

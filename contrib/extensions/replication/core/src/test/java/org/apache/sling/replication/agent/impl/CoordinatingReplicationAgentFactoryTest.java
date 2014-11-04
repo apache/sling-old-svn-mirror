@@ -42,6 +42,7 @@ public class CoordinatingReplicationAgentFactoryTest {
         BundleContext context = mock(BundleContext.class);
         Map<String, Object> config = new HashMap<String, Object>();
         try {
+            config.put(CoordinatingReplicationAgentFactory.NAME, "agentName");
             coordinatingReplicationAgentFactory.activate(context, config);
             fail("cannot activate a coordinate agents without exporters/importers");
         } catch (IllegalArgumentException e) {
@@ -54,6 +55,7 @@ public class CoordinatingReplicationAgentFactoryTest {
         CoordinatingReplicationAgentFactory coordinatingReplicationAgentFactory = new CoordinatingReplicationAgentFactory();
         BundleContext context = mock(BundleContext.class);
         Map<String, Object> config = new HashMap<String, Object>();
+        config.put(CoordinatingReplicationAgentFactory.NAME, "agentName");
         config.put(CoordinatingReplicationAgentFactory.PACKAGE_IMPORTER, new String[]{});
         config.put(CoordinatingReplicationAgentFactory.PACKAGE_EXPORTER, new String[]{});
         try {
@@ -70,6 +72,8 @@ public class CoordinatingReplicationAgentFactoryTest {
 
         BundleContext context = mock(BundleContext.class);
         Map<String, Object> config = new HashMap<String, Object>();
+
+        config.put(CoordinatingReplicationAgentFactory.NAME, "agentName");
         config.put(CoordinatingReplicationAgentFactory.PACKAGE_IMPORTER, new String[]{"packageBuilder/type=vlt",
                 "endpoints[0]=http://host:101/libs/sling/replication/services/exporters/reverse-101",
                 "endpoints[1]=http://host:102/libs/sling/replication/services/exporters/reverse-102",
