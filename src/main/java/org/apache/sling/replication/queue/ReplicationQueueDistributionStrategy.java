@@ -41,10 +41,9 @@ public interface ReplicationQueueDistributionStrategy extends ReplicationCompone
      *
      * @param replicationPackage          a {@link org.apache.sling.replication.packaging.ReplicationPackage} to distribute
      * @param queueProvider the {@link ReplicationQueueProvider} used to provide the queues to be used for the given package
-     * @return a {@link ReplicationQueueItemState} representing the state of the package in the queue after its distribution
-     * @throws ReplicationQueueException if distribution fails
+     * @return <code>true</code> if addition was successful, <code>false</code> otherwise
+     * @throws ReplicationQueueException if any internal error happens during distribution
      */
-    @Nonnull
     boolean add(@Nonnull ReplicationPackage replicationPackage, @Nonnull ReplicationQueueProvider queueProvider) throws ReplicationQueueException;
 
 
@@ -52,6 +51,7 @@ public interface ReplicationQueueDistributionStrategy extends ReplicationCompone
      * Returns the queue names available for this strategy.
      * @return a list of queue names
      */
+    @Nonnull
     List<String> getQueueNames();
 
 }

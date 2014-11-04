@@ -51,6 +51,8 @@ public abstract class AbstractJcrEventTrigger implements ReplicationTrigger {
 
     protected final SlingRepository repository;
 
+    private Session cachedSession;
+
     public AbstractJcrEventTrigger(SlingRepository repository, String path, String serviceUser) {
         this.repository = repository;
         this.path = path;
@@ -58,7 +60,7 @@ public abstract class AbstractJcrEventTrigger implements ReplicationTrigger {
     }
 
     public void register(@Nonnull ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
-        Session session = null;
+        Session session;
         try {
             session = getSession();
             JcrEventReplicationTriggerListener listener = new JcrEventReplicationTriggerListener(requestHandler);
@@ -67,26 +69,18 @@ public abstract class AbstractJcrEventTrigger implements ReplicationTrigger {
                     listener, getEventTypes(), path, true, null, null, false);
         } catch (RepositoryException e) {
             throw new ReplicationTriggerException("unable to register handler " + requestHandler, e);
-        } finally {
-            if (session != null) {
-                session.logout();
-            }
         }
     }
 
     public void unregister(@Nonnull ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
         JcrEventReplicationTriggerListener listener = registeredListeners.get(requestHandler.toString());
         if (listener != null) {
-            Session session = null;
+            Session session;
             try {
                 session = getSession();
                 session.getWorkspace().getObservationManager().removeEventListener(listener);
             } catch (RepositoryException e) {
                 throw new ReplicationTriggerException("unable to unregister handler " + requestHandler, e);
-            } finally {
-                if (session != null) {
-                    session.logout();
-                }
             }
         }
     }
@@ -143,7 +137,7 @@ public abstract class AbstractJcrEventTrigger implements ReplicationTrigger {
      * @throws RepositoryException
      */
     protected Session getSession() throws RepositoryException {
-        return repository.loginService(serviceUser, null);
+        return cachedSession != null ? cachedSession : (cachedSession = repository.loginService(serviceUser, null));
     }
 
 

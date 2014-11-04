@@ -175,7 +175,6 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
 
             boolean isPassive = PropertiesUtil.toBoolean(properties.get(ReplicationComponentFactory.AGENT_SIMPLE_PROPERTY_IS_PASSIVE), false);
 
-
             return new SimpleReplicationAgent(name, isPassive, serviceName,
                     packageImporter, packageExporter, packageExporterStrategy,
                     queueProvider, queueDistributionStrategy, replicationEventFactory, resourceResolverFactory, triggers);
@@ -336,7 +335,7 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
     }
 
 
-    private ReplicationTrigger createTrigger(Map<String, Object> properties, ReplicationComponentProvider componentProvider) {
+    protected ReplicationTrigger createTrigger(Map<String, Object> properties, ReplicationComponentProvider componentProvider) {
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
         if (COMPONENT_TYPE_SERVICE.equals(factory)) {

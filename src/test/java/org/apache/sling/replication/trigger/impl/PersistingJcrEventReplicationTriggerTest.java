@@ -23,7 +23,6 @@ import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.ObservationManager;
-import javax.jcr.security.Privilege;
 
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.communication.ReplicationRequest;
@@ -106,7 +105,7 @@ public class PersistingJcrEventReplicationTriggerTest {
 
         Node nuggetsNode = mock(Node.class);
         Node eventNode = mock(Node.class);
-        when(nuggetsNode.addNode(any(String.class))).thenReturn(eventNode);
+        when(nuggetsNode.addNode(any(String.class), any(String.class))).thenReturn(eventNode);
         when(session.getNode(nuggetsPath)).thenReturn(nuggetsNode);
         Event event = mock(Event.class);
         when(event.getPath()).thenReturn("/some/path/generating/event");
@@ -143,7 +142,7 @@ public class PersistingJcrEventReplicationTriggerTest {
         persistingJcrEventReplicationTrigger.register(handler);
 
         Node eventNode = mock(Node.class);
-        when(nuggetsNode.addNode(any(String.class))).thenReturn(eventNode);
+        when(nuggetsNode.addNode(any(String.class), any(String.class))).thenReturn(eventNode);
         when(session.getNode(nuggetsPath)).thenReturn(nuggetsNode);
         Event event = mock(Event.class);
         when(event.getPath()).thenReturn("/some/path/generating/event");
