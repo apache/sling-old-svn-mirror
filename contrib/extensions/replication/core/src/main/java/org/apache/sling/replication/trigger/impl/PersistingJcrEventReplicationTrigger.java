@@ -22,7 +22,6 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.Event;
-import javax.jcr.security.Privilege;
 import java.util.Map;
 import java.util.Set;
 
@@ -48,12 +47,12 @@ public class PersistingJcrEventReplicationTrigger extends AbstractJcrEventTrigge
 
     public PersistingJcrEventReplicationTrigger(SlingRepository repository, String path, String servicename, String nuggetsPath) {
         super(repository, path, servicename);
-        this.nuggetsPath = nuggetsPath == null ? DEFAULT_NUGGETS_PATH : nuggetsPath;
+        this.nuggetsPath = nuggetsPath == null || nuggetsPath.length() == 0 ? DEFAULT_NUGGETS_PATH : nuggetsPath;
     }
 
     @Override
     protected ReplicationRequest processEvent(Event event) throws RepositoryException {
-        log.debug("processing event {}", event);
+        log.info("processing event {}", event);
 
         ReplicationRequest replicationRequest = null;
 
@@ -63,8 +62,8 @@ public class PersistingJcrEventReplicationTrigger extends AbstractJcrEventTrigge
             initializeNuggetsPath(session);
         }
 
-        if (session.hasPermission(nuggetsPath, Privilege.JCR_ADD_CHILD_NODES)) {
-            log.debug("persisting event under {}", nuggetsPath);
+        if (session.hasPermission(nuggetsPath, Session.ACTION_ADD_NODE)) {
+            log.info("persisting event under {}", nuggetsPath);
             Node nuggetsNode = session.getNode(nuggetsPath);
             if (nuggetsNode != null) {
                 String nodeName = event.getIdentifier() != null ? event.getIdentifier() : String.valueOf(System.nanoTime());
@@ -82,7 +81,7 @@ public class PersistingJcrEventReplicationTrigger extends AbstractJcrEventTrigge
                         nuggetsNode.setProperty("info." + entry.getKey(), String.valueOf(entry.getValue()));
                     }
                     session.save();
-                    log.debug("event persisted at {}", path);
+                    log.info("event persisted at {}", path);
                     replicationRequest = new ReplicationRequest(System.currentTimeMillis(), ReplicationActionType.ADD, path);
                 } else {
                     log.warn("could not create node {}", nuggetsPath + "/" + nodeName);
@@ -98,21 +97,28 @@ public class PersistingJcrEventReplicationTrigger extends AbstractJcrEventTrigge
     }
 
     private void initializeNuggetsPath(Session session) throws RepositoryException {
+        log.info("initializing nuggets path");
         if (session != null) {
             Node parent = session.getRootNode();
-            if (session.hasPermission(parent.getPath(), Privilege.JCR_ADD_CHILD_NODES)) {
+            if (session.hasPermission(parent.getPath(), Session.ACTION_ADD_NODE)) {
                 for (String nodeName : nuggetsPath.split("/")) {
-                    if (!parent.hasNode(nodeName)) {
-                        parent = parent.addNode(nodeName, "sling:Folder");
-                    } else {
-                        parent = parent.getNode(nodeName);
+                    if (nodeName.length() > 0) {
+                        if (!parent.hasNode(nodeName)) {
+                            log.info("adding {}", nodeName);
+                            parent = parent.addNode(nodeName, "sling:Folder");
+                        } else {
+                            log.info("{} exists", nodeName);
+                            parent = parent.getNode(nodeName);
+                        }
                     }
                 }
+                session.save();
             }
         }
     }
 
     public void enable() {
+        log.info("enabling persisting jcr event listener");
         Session session = null;
         try {
             session = getSession();
@@ -129,6 +135,6 @@ public class PersistingJcrEventReplicationTrigger extends AbstractJcrEventTrigge
     }
 
     public void disable() {
-
+        log.info("disabling persisting jcr event listener");
     }
 }

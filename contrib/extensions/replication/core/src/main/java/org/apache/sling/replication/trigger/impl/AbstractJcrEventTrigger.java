@@ -99,6 +99,7 @@ public abstract class AbstractJcrEventTrigger implements ReplicationTrigger {
         }
 
         public void onEvent(EventIterator eventIterator) {
+            log.info("handling event {}");
             while (eventIterator.hasNext()) {
                 Event event = eventIterator.nextEvent();
                 try {
