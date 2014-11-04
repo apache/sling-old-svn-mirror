@@ -41,10 +41,10 @@ public class SingleQueueDistributionStrategyTest {
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
-        when(queueProvider.getQueue("agentName", ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
+        when(queueProvider.getQueue(ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(ReplicationQueueItem.class))).thenReturn(true);
 
-        boolean returnedState = singleQueueDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        boolean returnedState = singleQueueDistributionStrategy.add(replicationPackage, queueProvider);
         assertTrue(returnedState);
     }
 
@@ -55,12 +55,12 @@ public class SingleQueueDistributionStrategyTest {
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
         ReplicationQueueItem queueItem = mock(ReplicationQueueItem.class);
-        when(queueProvider.getQueue("agentName", ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
+        when(queueProvider.getQueue(ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(queueItem)).thenReturn(true);
         ReplicationQueueItemState state = mock(ReplicationQueueItemState.class);
         when(state.isSuccessful()).thenReturn(false);
         when(queue.getStatus(queueItem)).thenReturn(state);
-        boolean returnedState = singleQueueDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        boolean returnedState = singleQueueDistributionStrategy.add(replicationPackage, queueProvider);
         assertFalse(returnedState);
     }
 
@@ -70,9 +70,9 @@ public class SingleQueueDistributionStrategyTest {
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
-        when(queueProvider.getQueue("agentName", ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
+        when(queueProvider.getQueue(ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(ReplicationQueueItem.class))).thenReturn(true);
-        boolean returnedState = singleQueueDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        boolean returnedState = singleQueueDistributionStrategy.add(replicationPackage, queueProvider);
         assertTrue(returnedState);
     }
 
@@ -82,10 +82,10 @@ public class SingleQueueDistributionStrategyTest {
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
-        when(queueProvider.getQueue("agentName", ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
+        when(queueProvider.getQueue(ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(ReplicationQueueItem.class))).thenReturn(true);
 
-        boolean returnedState = singleQueueDistributionStrategy.add("agentName", replicationPackage, queueProvider);
+        boolean returnedState = singleQueueDistributionStrategy.add(replicationPackage, queueProvider);
         assertTrue(returnedState);
     }
 }

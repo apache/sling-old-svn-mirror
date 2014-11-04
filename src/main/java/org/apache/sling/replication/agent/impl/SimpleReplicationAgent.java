@@ -172,7 +172,7 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
 
         // dispatch the replication package to the queue distribution handler
         try {
-            boolean success = queueDistributionStrategy.add(name, replicationPackage, queueProvider);
+            boolean success = queueDistributionStrategy.add(replicationPackage, queueProvider);
 
             Dictionary<Object, Object> properties = new Properties();
             properties.put("replication.package.paths", replicationPackage.getPaths());
@@ -197,9 +197,9 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
         ReplicationQueue queue;
         try {
             if (queueName != null && queueName.length() > 0) {
-                queue = queueProvider.getQueue(this.name, queueName);
+                queue = queueProvider.getQueue(queueName);
             } else {
-                queue = queueProvider.getQueue(this.name, ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME);
+                queue = queueProvider.getQueue(ReplicationQueueDistributionStrategy.DEFAULT_QUEUE_NAME);
             }
         } catch (ReplicationQueueException e) {
             throw new ReplicationAgentException(e);
@@ -223,7 +223,11 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
         }
 
         if (!isPassive()) {
-            queueProvider.enableQueueProcessing(name, new PackageQueueProcessor());
+            try {
+                queueProvider.enableQueueProcessing(new PackageQueueProcessor());
+            } catch (ReplicationQueueException e) {
+                log.error("cannot enable queue processing", e);
+            }
         }
     }
 
@@ -241,7 +245,12 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
         agentBasedRequestHandler = null;
 
         if (!isPassive()) {
-            queueProvider.disableQueueProcessing(name);
+
+            try {
+                queueProvider.disableQueueProcessing();
+            } catch (ReplicationQueueException e) {
+                log.error("cannot disable queue processing", e);
+            }
         }
     }
 

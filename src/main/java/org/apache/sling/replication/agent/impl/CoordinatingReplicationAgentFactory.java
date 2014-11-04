@@ -36,6 +36,7 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.component.ManagedReplicationComponent;
 import org.apache.sling.replication.component.ReplicationComponent;
@@ -66,12 +67,7 @@ import org.slf4j.LoggerFactory;
 )
 public class CoordinatingReplicationAgentFactory implements ReplicationComponentProvider {
 
-    private static final String QUEUE_PROVIDER_TARGET = ReplicationComponentFactory.COMPONENT_QUEUE_PROVIDER + ".target";
-    private static final String QUEUE_DISTRIBUTION_TARGET = ReplicationComponentFactory.COMPONENT_QUEUE_DISTRIBUTION_STRATEGY + ".target";
     private static final String TRANSPORT_AUTHENTICATION_PROVIDER_TARGET = ReplicationComponentFactory.COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER + ".target";
-
-    private static final String DEFAULT_QUEUEPROVIDER = "(name=" + JobHandlingReplicationQueueProvider.NAME + ")";
-    private static final String DEFAULT_DISTRIBUTION = "(name=" + SingleQueueDistributionStrategy.NAME + ")";
 
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -97,14 +93,6 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
     @Property(label = "Package Importer", cardinality = 100)
     public static final String PACKAGE_IMPORTER = ReplicationComponentFactory.COMPONENT_PACKAGE_IMPORTER;
 
-    @Property(label = "Target ReplicationQueueProvider", name = QUEUE_PROVIDER_TARGET, value = DEFAULT_QUEUEPROVIDER)
-    @Reference(name = ReplicationComponentFactory.COMPONENT_QUEUE_PROVIDER, target = DEFAULT_QUEUEPROVIDER)
-    private volatile ReplicationQueueProvider queueProvider;
-
-    @Property(label = "Target QueueDistributionStrategy", name = QUEUE_DISTRIBUTION_TARGET, value = DEFAULT_DISTRIBUTION)
-    @Reference(name = ReplicationComponentFactory.COMPONENT_QUEUE_DISTRIBUTION_STRATEGY, target = DEFAULT_DISTRIBUTION)
-    private volatile ReplicationQueueDistributionStrategy queueDistributionStrategy;
-
     @Property(label = "Target TransportAuthenticationProvider", name = TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
     @Reference(name = "transportAuthenticationProvider")
     private volatile TransportAuthenticationProvider transportAuthenticationProvider;
@@ -116,13 +104,21 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
     private SlingSettingsService settingsService;
 
     @Reference
+    private JobManager jobManager;
+
+    @Reference
     private ReplicationComponentFactory componentFactory;
 
+    private BundleContext savedContext;
+
     private ServiceRegistration componentReg;
+
+    private String agentName;
 
     @Activate
     protected void activate(BundleContext context, Map<String, Object> config) {
 
+        savedContext = context;
         // inject configuration
         Dictionary<String, Object> props = new Hashtable<String, Object>();
 
@@ -131,9 +127,8 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
         if (enabled) {
             props.put(ENABLED, true);
 
-            String name = PropertiesUtil
-                    .toString(config.get(NAME), String.valueOf(new Random().nextInt(1000)));
-            props.put(NAME, name);
+            agentName = PropertiesUtil.toString(config.get(NAME), null);
+            props.put(NAME, agentName);
 
             if (componentReg == null) {
                 Map<String, Object> properties = new HashMap<String, Object>();
@@ -159,14 +154,11 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
                 packageExporterProperties = packageExporterPropertiesList.toArray(new String[packageExporterPropertiesList.size()]);
                 properties.put(PACKAGE_EXPORTER, packageExporterProperties);
 
-                properties.put("trigger0", new String[]{"type=scheduledEvent"});
-
                 ReplicationAgent agent = componentFactory.createComponent(ReplicationAgent.class, properties, this);
 
-                log.debug("activated agent {}", name);
+                log.debug("activated agent {}", agentName);
 
                 if (agent != null) {
-
                     // register agent service
                     componentReg = context.registerService(ReplicationAgent.class.getName(), agent, props);
                     if (agent instanceof ManagedReplicationComponent) {
@@ -196,9 +188,9 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
     public <ComponentType extends ReplicationComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type,
                                                                                    @Nullable String componentName) {
         if (type.isAssignableFrom(ReplicationQueueProvider.class)) {
-            return (ComponentType) queueProvider;
+            return (ComponentType) new JobHandlingReplicationQueueProvider(agentName, jobManager, savedContext);
         } else if (type.isAssignableFrom(ReplicationQueueDistributionStrategy.class)) {
-            return (ComponentType) queueDistributionStrategy;
+            return (ComponentType) new SingleQueueDistributionStrategy();
         } else if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
             return (ComponentType) transportAuthenticationProvider;
         }

@@ -51,7 +51,7 @@ public class ScheduledReplicationQueueProcessorTaskTest {
         ReplicationQueue queue = mock(ReplicationQueue.class);
         when(queue.isEmpty()).thenReturn(true);
         queues.add(queue);
-        when(queueProvider.getAllQueues()).thenReturn(queues);
+        when(queueProvider.getQueues()).thenReturn(queues);
         ReplicationQueueProcessor queueProcessor = mock(ReplicationQueueProcessor.class);
         ScheduledReplicationQueueProcessorTask scheduledReplicationQueueProcessorTask = new ScheduledReplicationQueueProcessorTask(
                 queueProvider, queueProcessor);
@@ -68,7 +68,7 @@ public class ScheduledReplicationQueueProcessorTaskTest {
         when(queue.getHead()).thenReturn(item);
 
         queues.add(queue);
-        when(queueProvider.getAllQueues()).thenReturn(queues);
+        when(queueProvider.getQueues()).thenReturn(queues);
         ReplicationQueueProcessor queueProcessor = mock(ReplicationQueueProcessor.class);
         ScheduledReplicationQueueProcessorTask scheduledReplicationQueueProcessorTask = new ScheduledReplicationQueueProcessorTask(
                 queueProvider, queueProcessor);

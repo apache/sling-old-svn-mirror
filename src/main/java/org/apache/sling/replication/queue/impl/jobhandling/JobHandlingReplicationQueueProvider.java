@@ -36,89 +36,66 @@ import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueException;
 import org.apache.sling.replication.queue.ReplicationQueueProcessor;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
-import org.apache.sling.replication.queue.impl.AbstractReplicationQueueProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(metatype = false, label = "Sling Job handling based Replication Queue Provider")
-@Service(value = ReplicationQueueProvider.class)
-@Property(name = "name", value = JobHandlingReplicationQueueProvider.NAME)
-public class JobHandlingReplicationQueueProvider extends AbstractReplicationQueueProvider
-        implements ReplicationQueueProvider {
-
-    public static final String NAME = "sjh";
-
+/**
+ * a queue provider {@link ReplicationQueueProvider} for sling jobs based
+ * {@link ReplicationQueue}s
+ */
+public class JobHandlingReplicationQueueProvider implements ReplicationQueueProvider {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Reference
-    private JobManager jobManager;
+    private final String name;
+    private final JobManager jobManager;
 
 
-    private final Map<String, ServiceRegistration> jobConsumers = new ConcurrentHashMap<String, ServiceRegistration>();
+
+    private ServiceRegistration jobConsumer = null;
 
     private BundleContext context;
 
 
-    protected JobHandlingReplicationQueueProvider(JobManager jobManager, BundleContext context) {
+    public JobHandlingReplicationQueueProvider(String name, JobManager jobManager, BundleContext context) {
+        if (name == null || jobManager == null || context == null) {
+            throw new IllegalArgumentException("all arguments are required");
+        }
+        this.name = name;
         this.jobManager = jobManager;
         this.context = context;
     }
 
-    public JobHandlingReplicationQueueProvider() {
-    }
-
-    @Override
-    protected ReplicationQueue getInternalQueue(String agentName, String queueName)
-            throws ReplicationQueueException {
-        String name = agentName;
-        if (queueName.length() > 0) {
-            name += "/" + queueName;
-        }
-        String topic = JobHandlingReplicationQueue.REPLICATION_QUEUE_TOPIC + '/' + name;
+    public ReplicationQueue getQueue(String queueName) throws ReplicationQueueException {
+        String topic = JobHandlingReplicationQueue.REPLICATION_QUEUE_TOPIC + '/' + name + "/" + queueName;
         return new JobHandlingReplicationQueue(name, topic, jobManager);
     }
 
 
-    public void enableQueueProcessing(@Nonnull String agentName, @Nonnull ReplicationQueueProcessor queueProcessor) {
+    public void enableQueueProcessing(@Nonnull ReplicationQueueProcessor queueProcessor) throws ReplicationQueueException {
+        if (jobConsumer != null) {
+            throw new ReplicationQueueException("job already registered");
+        }
         // eventually register job consumer for sling job handling based queues
         Dictionary<String, Object> jobProps = new Hashtable<String, Object>();
-        String topic = JobHandlingReplicationQueue.REPLICATION_QUEUE_TOPIC + '/' + agentName;
+        String topic = JobHandlingReplicationQueue.REPLICATION_QUEUE_TOPIC + '/' + name;
         String childTopic = topic + "/*";
         jobProps.put(JobConsumer.PROPERTY_TOPICS, new String[]{topic, childTopic});
-        synchronized (jobConsumers) {
-            log.info("registering job consumer for agent {}", agentName);
-            ServiceRegistration jobReg = context.registerService(JobConsumer.class.getName(),
-                    new ReplicationAgentJobConsumer(queueProcessor), jobProps);
-            if (jobReg != null) {
-                jobConsumers.put(agentName, jobReg);
-            }
-            log.info("job consumer for agent {} registered", agentName);
-        }
+        log.info("registering job consumer for agent {}", name);
+        jobConsumer = context.registerService(JobConsumer.class.getName(), new ReplicationAgentJobConsumer(queueProcessor), jobProps);
+        log.info("job consumer for agent {} registered", name);
     }
 
-    public void disableQueueProcessing(@Nonnull String agentName) {
-        synchronized (jobConsumers) {
-            log.info("unregistering job consumer for agent {}", agentName);
-            ServiceRegistration jobReg = jobConsumers.remove(agentName);
-            if (jobReg != null) {
-                jobReg.unregister();
-                log.info("job consumer for agent {} unregistered", agentName);
-            }
+    public void disableQueueProcessing() {
+        if (jobConsumer != null) {
+            jobConsumer.unregister();
+            log.info("job consumer for agent {} unregistered", name);
+            jobConsumer = null;
         }
+        log.info("unregistering job consumer for agent {}", name);
+
     }
 
-    @Activate
-    private void activate(BundleContext context) {
-        this.context = context;
-    }
 
-    @Deactivate
-    private void deactivate() {
-        for (ServiceRegistration jobReg : jobConsumers.values()) {
-            jobReg.unregister();
-        }
-        this.context = null;
-    }
 }

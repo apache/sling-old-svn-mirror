@@ -46,9 +46,6 @@ import org.slf4j.LoggerFactory;
  * delivering packages with an error queue which can be used when an item is stuck in the default
  * queue for too much time, then the stuck item is moved to the error queue or dropped.
  */
-@Component(immediate = true, metatype = true, label = "Error Aware Queue Distribution Strategy")
-@Service(value = ReplicationQueueDistributionStrategy.class)
-@Property(name = "name", value = ErrorAwareQueueDistributionStrategy.NAME, propertyPrivate = true)
 public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDistributionStrategy {
 
     protected static final String ERROR_QUEUE_NAME = "error";
@@ -76,6 +73,7 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
 
     private Integer timeThreshold;
 
+
     @Activate
     protected void activate(final ComponentContext ctx) {
         stuckQueueHandling = PropertiesUtil
@@ -84,13 +82,12 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
         timeThreshold = PropertiesUtil.toInteger(ctx.getProperties().get(TIME_THRESHOLD), 600000);
     }
 
-    public boolean add(String agentName, ReplicationPackage replicationPackage,
-                         ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
+    public boolean add(ReplicationPackage replicationPackage, ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
         boolean added;
         ReplicationQueueItem queueItem = getItem(replicationPackage);
-        ReplicationQueue queue = queueProvider.getQueue(agentName, DEFAULT_QUEUE_NAME);
+        ReplicationQueue queue = queueProvider.getQueue(DEFAULT_QUEUE_NAME);
         added = queue.add(queueItem);
-        checkAndRemoveStuckItems(agentName, queueProvider);
+        checkAndRemoveStuckItems(queueProvider);
         return added;
     }
 
@@ -98,9 +95,8 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
         return Arrays.asList(new String[] { ERROR_QUEUE_NAME, DEFAULT_QUEUE_NAME });
     }
 
-    private void checkAndRemoveStuckItems(String agent,
-                                          ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
-        ReplicationQueue defaultQueue = queueProvider.getQueue(agent, DEFAULT_QUEUE_NAME);
+    private void checkAndRemoveStuckItems(ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
+        ReplicationQueue defaultQueue = queueProvider.getQueue(DEFAULT_QUEUE_NAME);
         // get first item in the queue with its status
         ReplicationQueueItem firstItem = defaultQueue.getHead();
         if (firstItem != null) {
@@ -113,7 +109,7 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
                 if (ERROR.equals(stuckQueueHandling)) {
                     log.warn("item {} moved to the error queue", firstItem);
 
-                    ReplicationQueue errorQueue = queueProvider.getQueue(agent, ERROR_QUEUE_NAME);
+                    ReplicationQueue errorQueue = queueProvider.getQueue(ERROR_QUEUE_NAME);
                     if (!errorQueue.add(firstItem)) {
                         log.error("failed to move item {} the queue {}", firstItem, errorQueue);
                         throw new ReplicationQueueException("could not move an item to the error queue");

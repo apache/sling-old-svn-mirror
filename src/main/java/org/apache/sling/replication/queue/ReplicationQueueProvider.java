@@ -33,30 +33,26 @@ public interface ReplicationQueueProvider extends ReplicationComponent {
     /**
      * provide a named queue for the given agent
      *
-     * @param agentName the replication agent needing the queue
      * @param queueName      the name of the queue to retrieve
      * @return a replication queue to be used for the given parameters
      * @throws ReplicationQueueException
      */
     @Nonnull
-    ReplicationQueue getQueue(@Nonnull String agentName, @Nonnull String queueName)
-            throws ReplicationQueueException;
+    ReplicationQueue getQueue(@Nonnull String queueName) throws ReplicationQueueException;
 
 
 
     /**
      * enables queue driven processing for an agent
      *
-     * @param agentName      a replication agent
      * @param queueProcessor the queue processor to be used
      */
-    void enableQueueProcessing(@Nonnull String agentName, @Nonnull ReplicationQueueProcessor queueProcessor);
+    void enableQueueProcessing(@Nonnull ReplicationQueueProcessor queueProcessor) throws ReplicationQueueException;
 
 
     /**
      * disables queue driven processing for an agent
      *
-     * @param agentName a replication agent
      */
-    void disableQueueProcessing(@Nonnull String agentName);
+    void disableQueueProcessing() throws ReplicationQueueException;
 }

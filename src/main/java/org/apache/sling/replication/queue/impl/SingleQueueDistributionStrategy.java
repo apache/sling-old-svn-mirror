@@ -42,19 +42,13 @@ import java.util.List;
  * The default strategy for delivering packages to queues. Each agent just manages a single queue,
  * no failure / stuck handling where each package is put regardless of anything.
  */
-@Component(immediate = true, label = "Single Queue Distribution Strategy")
-@Service(value = ReplicationQueueDistributionStrategy.class)
-@Property(name = "name", value = SingleQueueDistributionStrategy.NAME)
 public class SingleQueueDistributionStrategy implements ReplicationQueueDistributionStrategy {
-
-    public static final String NAME = "single";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public boolean add(String agentName, ReplicationPackage replicationPackage,
-                         ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
+    public boolean add(ReplicationPackage replicationPackage, ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
         ReplicationQueueItem queueItem = getItem(replicationPackage);
-        ReplicationQueue queue = queueProvider.getQueue(agentName, DEFAULT_QUEUE_NAME);
+        ReplicationQueue queue = queueProvider.getQueue(DEFAULT_QUEUE_NAME);
         return queue.add(queueItem);
     }
 

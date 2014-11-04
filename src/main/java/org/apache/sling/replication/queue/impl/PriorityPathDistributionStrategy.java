@@ -43,29 +43,21 @@ import org.slf4j.LoggerFactory;
  * Distribution algorithm which keeps one specific queue to handle specific paths and another queue
  * for handling all the other paths
  */
-@Component(immediate = true, metatype = true, label = "Priority Path Queue Distribution Strategy")
-@Service(value = ReplicationQueueDistributionStrategy.class)
-@Property(name = "name", value = PriorityPathDistributionStrategy.NAME, propertyPrivate = true)
 public class PriorityPathDistributionStrategy implements ReplicationQueueDistributionStrategy {
-
-    public static final String NAME = "priority";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(value = {"/content"})
-    private static final String PRIORITYPATHS = "priority.paths";
+    private final String[] priorityPaths;
 
-    private String[] priorityPaths;
+    public PriorityPathDistributionStrategy(String[] priorityPaths) {
+        this.priorityPaths = priorityPaths;
 
-    @Activate
-    protected void activate(ComponentContext context) {
-        priorityPaths = PropertiesUtil.toStringArray(context.getProperties().get(PRIORITYPATHS));
     }
 
 
 
-    private ReplicationQueue getQueue(String agentName, ReplicationQueueItem replicationPackage,
-                                      ReplicationQueueProvider queueProvider)
+
+    private ReplicationQueue getQueue(ReplicationQueueItem replicationPackage, ReplicationQueueProvider queueProvider)
             throws ReplicationQueueException {
         String[] paths = replicationPackage.getPaths();
 
@@ -86,23 +78,22 @@ public class PriorityPathDistributionStrategy implements ReplicationQueueDistrib
         ReplicationQueue queue;
         if (usePriorityQueue) {
             log.info("using priority queue for path {}", pp);
-            queue = queueProvider.getQueue(agentName, pp);
+            queue = queueProvider.getQueue(pp);
         } else {
             log.info("using default queue");
-            queue = queueProvider.getQueue(agentName, DEFAULT_QUEUE_NAME);
+            queue = queueProvider.getQueue(DEFAULT_QUEUE_NAME);
         }
         return queue;
     }
 
-    public boolean add(String agentName, ReplicationPackage replicationPackage,
-                         ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
+    public boolean add(ReplicationPackage replicationPackage, ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
 
         ReplicationQueueItem queueItem = getItem(replicationPackage);
-        ReplicationQueue queue = getQueue(agentName, queueItem, queueProvider);
+        ReplicationQueue queue = getQueue(queueItem, queueProvider);
         if (queue != null) {
             return queue.add(queueItem);
         } else {
-            throw new ReplicationQueueException("could not get a queue for agent " + agentName);
+            throw new ReplicationQueueException("could not get a queue");
         }
     }
 

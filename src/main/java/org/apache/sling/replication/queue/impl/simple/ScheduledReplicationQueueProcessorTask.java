@@ -44,7 +44,7 @@ public class ScheduledReplicationQueueProcessorTask implements Runnable {
 
     public void run() {
         try {
-            for (ReplicationQueue queue : queueProvider.getAllQueues()) {
+            for (ReplicationQueue queue : queueProvider.getQueues()) {
                 while (!queue.isEmpty()) {
                     // synchronized (queue) {
                     ReplicationQueueItem item = queue.getHead();
