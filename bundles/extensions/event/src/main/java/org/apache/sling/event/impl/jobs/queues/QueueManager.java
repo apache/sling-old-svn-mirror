@@ -126,7 +126,6 @@ public class QueueManager
     @Activate
     protected void activate(final Map<String, Object> props) {
         logger.info("Apache Sling Queue Manager started on instance {}", Environment.APPLICATION_ID);
-        this.configuration.addListener(this);
         this.queueServices = new QueueServices();
         queueServices.configuration = this.configuration;
         queueServices.eventAdmin = this.eventAdmin;
@@ -134,6 +133,7 @@ public class QueueManager
         queueServices.scheduler = this.scheduler;
         queueServices.threadPoolManager = this.threadPoolManager;
         queueServices.statisticsManager = statisticsManager;
+        this.configuration.addListener(this);
     }
 
     /**
