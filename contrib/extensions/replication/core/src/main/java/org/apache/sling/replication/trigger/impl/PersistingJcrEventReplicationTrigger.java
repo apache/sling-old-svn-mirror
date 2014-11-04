@@ -22,6 +22,8 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.Event;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -66,20 +68,23 @@ public class PersistingJcrEventReplicationTrigger extends AbstractJcrEventTrigge
             log.info("persisting event under {}", nuggetsPath);
             Node nuggetsNode = session.getNode(nuggetsPath);
             if (nuggetsNode != null) {
-                String nodeName = event.getIdentifier() != null ? event.getIdentifier() : String.valueOf(System.nanoTime());
-                Node createdNode = nuggetsNode.addNode(nodeName);
+                String nodeName = String.valueOf(System.nanoTime());
+                Node createdNode = nuggetsNode.addNode(nodeName, "nt:unstructured");
                 if (createdNode != null) {
                     String path = createdNode.getPath();
-                    nuggetsNode.setProperty("path", event.getPath());
-                    nuggetsNode.setProperty("date", event.getDate());
-                    nuggetsNode.setProperty("type", event.getType());
-                    nuggetsNode.setProperty("userData", event.getUserData());
-                    nuggetsNode.setProperty("userID", event.getUserID());
+                    createdNode.setProperty("identifier", event.getIdentifier());
+                    createdNode.setProperty("path", event.getPath());
+                    createdNode.setProperty("date", event.getDate());
+                    createdNode.setProperty("type", event.getType());
+                    createdNode.setProperty("userData", event.getUserData());
+                    createdNode.setProperty("userID", event.getUserID());
 
                     Set<Map.Entry> set = event.getInfo().entrySet();
+                    Collection<String> values = new ArrayList<String>();
                     for (Map.Entry entry : set) {
-                        nuggetsNode.setProperty("info." + entry.getKey(), String.valueOf(entry.getValue()));
+                        values.add(String.valueOf(entry.getKey()) + ":" + String.valueOf(entry.getValue()));
                     }
+                    createdNode.setProperty("info", values.toArray(new String[values.size()]));
                     session.save();
                     log.info("event persisted at {}", path);
                     replicationRequest = new ReplicationRequest(System.currentTimeMillis(), ReplicationActionType.ADD, path);
@@ -127,10 +132,6 @@ public class PersistingJcrEventReplicationTrigger extends AbstractJcrEventTrigge
             }
         } catch (RepositoryException e) {
             log.warn("could not create nuggets path " + nuggetsPath, e);
-        } finally {
-            if (session != null) {
-                session.logout();
-            }
         }
     }
 

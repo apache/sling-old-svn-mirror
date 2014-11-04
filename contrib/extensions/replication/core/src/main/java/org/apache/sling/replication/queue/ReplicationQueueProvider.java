@@ -19,7 +19,6 @@
 package org.apache.sling.replication.queue;
 
 import javax.annotation.Nonnull;
-import java.util.Collection;
 
 import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.replication.component.ReplicationComponent;
@@ -33,14 +32,12 @@ public interface ReplicationQueueProvider extends ReplicationComponent {
     /**
      * provide a named queue for the given agent
      *
-     * @param queueName      the name of the queue to retrieve
-     * @return a replication queue to be used for the given parameters
-     * @throws ReplicationQueueException
+     * @param queueName the name of the queue to retrieve
+     * @return a {@link org.apache.sling.replication.queue.ReplicationQueue}
+     * @throws ReplicationQueueException if any error happens
      */
     @Nonnull
     ReplicationQueue getQueue(@Nonnull String queueName) throws ReplicationQueueException;
-
-
 
     /**
      * enables queue driven processing for an agent

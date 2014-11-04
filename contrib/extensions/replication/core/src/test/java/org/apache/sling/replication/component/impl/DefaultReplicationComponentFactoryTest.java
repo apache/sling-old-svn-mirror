@@ -16,20 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.agent.impl;
+package org.apache.sling.replication.component.impl;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.component.ReplicationComponentProvider;
-import org.apache.sling.replication.component.impl.DefaultReplicationComponentFactory;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
+import org.apache.sling.replication.trigger.impl.PersistingJcrEventReplicationTrigger;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
@@ -106,53 +107,15 @@ public class DefaultReplicationComponentFactoryTest {
     }
 
     @Test
-    public void testCreateAgent() throws Exception {
-
-
-    }
-
-    @Test
-    public void testCreateExporter() throws Exception {
-
-    }
-
-    @Test
-    public void testCreateImporter() throws Exception {
-
-    }
-
-    @Test
-    public void testCreateQueueProvider() throws Exception {
-
-    }
-
-    @Test
-    public void testCreateDistributionStrategy() throws Exception {
-
-    }
-
-    @Test
-    public void testCreateTransportAuthenticationProvider() throws Exception {
-
-    }
-
-    @Test
-    public void testCreateBuilder() throws Exception {
-
-    }
-
-    @Test
-    public void testExtractMap() throws Exception {
-
-    }
-
-    @Test
-    public void testExtractMapList() throws Exception {
-
-    }
-
-    @Test
-    public void testGetComponent() throws Exception {
-
+    public void testPersistingJcrEventTriggerCreation() throws Exception {
+        DefaultReplicationComponentFactory defaultReplicationComponentFactory = new DefaultReplicationComponentFactory();
+        Map<String, Object> properties = new HashMap<String, Object>();
+        properties.put("type", "persistedJcrEvent");
+        properties.put("path", "/content/persistedEvents");
+        properties.put("servicename", "replicationService");
+        ReplicationComponentProvider componentProvider = mock(ReplicationComponentProvider.class);
+        ReplicationTrigger trigger = defaultReplicationComponentFactory.createTrigger(properties, componentProvider);
+        assertNotNull(trigger);
+        assertEquals(PersistingJcrEventReplicationTrigger.class, trigger.getClass());
     }
 }
