@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.packaging;
 
+import javax.annotation.Nonnull;
+
 import aQute.bnd.annotation.ConsumerType;
 
 /**
@@ -30,12 +32,12 @@ public interface SharedReplicationPackage extends ReplicationPackage {
     /**
      * acquire a reference to this package and increase the reference count.
      */
-    void acquire(String holderName);
+    void acquire(@Nonnull String holderName);
 
     /**
      * release a reference to this package and decrease the reference count.
      * when no more references are hold the package <code>delete</code> method is called.
      */
-    void release(String holderName);
+    void release(@Nonnull String holderName);
 
 }

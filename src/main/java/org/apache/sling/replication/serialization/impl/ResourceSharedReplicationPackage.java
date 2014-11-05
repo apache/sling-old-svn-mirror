@@ -48,7 +48,7 @@ public class ResourceSharedReplicationPackage implements SharedReplicationPackag
         this.replicationPackage = replicationPackage;
     }
 
-    public void acquire(String holderName) {
+    public void acquire(@Nonnull String holderName) {
         if (holderName == null || holderName.length() == 0) {
             throw new IllegalArgumentException("holder name cannot be null or empty");
         }
@@ -60,7 +60,7 @@ public class ResourceSharedReplicationPackage implements SharedReplicationPackag
         }
     }
 
-    public void release(String holderName) {
+    public void release(@Nonnull String holderName) {
 
         if (holderName == null || holderName.length() == 0) {
             throw new IllegalArgumentException("holder name cannot be null or empty");
