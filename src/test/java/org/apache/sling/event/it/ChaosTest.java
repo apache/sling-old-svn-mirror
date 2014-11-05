@@ -196,7 +196,6 @@ public class ChaosTest extends AbstractJobHandlingTest {
             this.jobManager = jobManager;
             this.created = created;
             this.finishedThreads = finishedThreads;
-            this.setDaemon(true);
         }
 
         @Override
@@ -281,7 +280,6 @@ public class ChaosTest extends AbstractJobHandlingTest {
 
                 @Override
                 public void run() {
-                    this.setDaemon(true);
                     final long startTime = System.currentTimeMillis();
                     // this thread runs 30 seconds longer than the job creation thread
                     final long endTime = startTime + (DURATION +30) * 1000;
@@ -369,6 +367,7 @@ public class ChaosTest extends AbstractJobHandlingTest {
             System.out.println("Starting threads...");
             // start threads
             for(final Thread t : threads) {
+                t.setDaemon(true);
                 t.start();
             }
 
