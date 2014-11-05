@@ -280,13 +280,12 @@ public interface ReplicationComponentFactory {
     /**
      * import mode property for file vault package builder
      */
-    String PACKAGE_BUILDER_FILEVLT_IMPORT_MODE = "importOptions";
+    String PACKAGE_BUILDER_FILEVLT_IMPORT_MODE = "importMode";
 
     /**
      * ACL handling property for file vault package builder
      */
     String PACKAGE_BUILDER_FILEVLT_ACLHANDLING = "aclHandling";
-
 
     /**
      * queue provider job type
@@ -312,10 +311,6 @@ public interface ReplicationComponentFactory {
      * queue distribution strategy priority paths property
      */
     String QUEUE_DISTRIBUTION_STRATEGY_PRIORITY_PROPERTY_PATHS = "priority.paths";
-
-
-
-
 
     /**
      * create a {@link ReplicationComponent}

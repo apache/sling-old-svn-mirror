@@ -172,6 +172,7 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
                 ImportOptions opts = new ImportOptions();
                 if (aclHandling != null) {
                     opts.setAccessControlHandling(aclHandling);
+                    log.debug("using acl handling {}", aclHandling);
                 }
                 else {
                     // default to overwrite
@@ -179,6 +180,7 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
                 }
                 if (importMode != null) {
                     opts.setImportMode(importMode);
+                    log.debug("using import mode {}", importMode);
                 }
                 else {
                     // default to replace
