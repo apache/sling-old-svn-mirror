@@ -45,6 +45,8 @@ public abstract class Utility {
     public static final String PROPERTY_LOCK_CREATED_APP = "lock.created.app";
     public static final String RESOURCE_TYPE_LOCK = "slingevent:Lock";
 
+    public static volatile boolean LOG_DEPRECATION_WARNINGS = true;
+
     /**
      * Check the job topic.
      * @return <code>null</code> if the topic is correct, otherwise an error description is returned
@@ -295,7 +297,7 @@ public abstract class Utility {
      * @param message The message.
      */
     public static void logDeprecated(final Logger logger, final String message) {
-        if ( logger.isInfoEnabled() ) {
+        if ( LOG_DEPRECATION_WARNINGS && logger.isInfoEnabled() ) {
             logger.info("DEPRECATION-WARNING: " + message, new Exception(message));
         }
     }
