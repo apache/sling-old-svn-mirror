@@ -182,7 +182,7 @@ public class TimedEventSender
     }
 
     /**
-     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#runInBackground()
+     * The background thread for the timed events.
      */
     protected void runInBackground() {
         Event event = null;
@@ -273,7 +273,7 @@ public class TimedEventSender
      * Process the event.
      * If a scheduler is available, a job is scheduled or stopped.
      * @param event The incoming event.
-     * @return
+     * @return {@code true} if the event could be processed.
      */
     protected boolean processEvent(final Event event, final ScheduleInfo scheduleInfo) {
         final Scheduler localScheduler = this.scheduler;

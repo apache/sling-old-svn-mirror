@@ -367,7 +367,7 @@ public class JobImpl implements Job, Comparable<JobImpl> {
     }
 
     /**
-     * @see org.apache.sling.event.jobs.Job#getCurrentProgressStep()
+     * @see org.apache.sling.event.jobs.Job#getFinishedProgressStep()
      */
     @Override
     public int getFinishedProgressStep() {

@@ -60,7 +60,7 @@ public class CheckTopologyTask {
 
     /**
      * Constructor
-     * @param The configuration
+     * @param config The configuration
      */
     public CheckTopologyTask(final JobManagerConfiguration config) {
         this.configuration = config;

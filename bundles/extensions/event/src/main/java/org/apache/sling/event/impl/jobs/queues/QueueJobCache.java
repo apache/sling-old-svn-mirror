@@ -69,7 +69,7 @@ public class QueueJobCache {
     /**
      * Create a new queue job cache
      * @param configuration Current job manager configuration
-     * @param info The queue info
+     * @param queueType The queue type
      * @param topics The topics handled by this queue.
      */
     public QueueJobCache(final JobManagerConfiguration configuration,
@@ -109,7 +109,7 @@ public class QueueJobCache {
     /**
      * Get the next job.
      * This method is not called concurrently, however
-     * {@link #reschedule(JobImpl)} and {@link #handleNewTopics(String)}
+     * {@link #reschedule(JobHandler)} and {@link #handleNewTopics(Set)}
      * can be called concurrently.
      */
     public JobImpl getNextJob(final boolean doFull) {

@@ -58,7 +58,7 @@ public class UpgradeTask {
 
     /**
      * Constructor
-     * @param The configuration
+     * @param config the configuration
      */
     public UpgradeTask(final JobManagerConfiguration config) {
         this.configuration = config;

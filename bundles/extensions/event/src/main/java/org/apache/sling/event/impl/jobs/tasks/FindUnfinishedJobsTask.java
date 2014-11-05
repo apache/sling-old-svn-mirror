@@ -45,7 +45,7 @@ public class FindUnfinishedJobsTask {
 
     /**
      * Constructor
-     * @param The configuration
+     * @param config the configuration
      */
     public FindUnfinishedJobsTask(final JobManagerConfiguration config) {
         this.configuration = config;

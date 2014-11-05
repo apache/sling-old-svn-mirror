@@ -231,7 +231,7 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
      * Create a new resource resolver for reading and writing the resource tree.
      * The resolver needs to be closed by the client.
      * @return A resource resolver
-     * @throw RuntimeException if the resolver can't be created.
+     * @throws RuntimeException if the resolver can't be created.
      */
     public ResourceResolver createResourceResolver() {
         ResourceResolver resolver = null;

@@ -380,8 +380,8 @@ public abstract class AbstractJobQueue
     }
 
     /**
-     * Inform the queue about a job for the topic
-     * @param topic A new topic.
+     * Inform the queue about new job for the given topics.
+     * @param topics the new topics
      */
     public void wakeUpQueue(final Set<String> topics) {
         this.cache.handleNewTopics(topics);

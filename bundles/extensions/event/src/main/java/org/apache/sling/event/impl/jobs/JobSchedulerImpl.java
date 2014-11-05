@@ -165,7 +165,7 @@ public class JobSchedulerImpl
     }
 
     /**
-     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#runInBackground()
+     * This is the background thread processing new scheduled jobs.
      */
     protected void runInBackground() {
         Event event = null;

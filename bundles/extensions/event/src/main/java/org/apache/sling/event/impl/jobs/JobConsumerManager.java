@@ -198,13 +198,23 @@ public class JobConsumerManager {
             if ( consumers != null ) {
                 return consumers.get(0).getExecutor(this.bundleContext);
             }
-            final int pos = topic.lastIndexOf('/');
+            int pos = topic.lastIndexOf('/');
             if ( pos > 0 ) {
                 final String category = topic.substring(0, pos + 1).concat("*");
                 final List<ConsumerInfo> categoryConsumers = this.topicToConsumerMap.get(category);
                 if ( categoryConsumers != null ) {
                     return categoryConsumers.get(0).getExecutor(this.bundleContext);
                 }
+
+                // search deep consumers (since 1.2 of the consumer package)
+                do {
+                    final String subCategory = topic.substring(0, pos + 1).concat("**");
+                    final List<ConsumerInfo> subCategoryConsumers = this.topicToConsumerMap.get(subCategory);
+                    if ( subCategoryConsumers != null ) {
+                        return subCategoryConsumers.get(0).getExecutor(this.bundleContext);
+                    }
+                    pos = topic.lastIndexOf('/', pos - 1);
+                } while ( pos > 0 );
             }
         }
         return null;
