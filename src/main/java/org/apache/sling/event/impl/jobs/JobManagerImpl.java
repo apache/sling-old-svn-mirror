@@ -501,7 +501,7 @@ public class JobManagerImpl
     }
 
     /**
-     * @see org.apache.sling.event.jobs.JobManager#findJobs(org.apache.sling.event.jobs.JobManager.QueryType, java.lang.String, long, java.util.Map<java.lang.String,java.lang.Object>[])
+     * @see org.apache.sling.event.jobs.JobManager#findJobs(org.apache.sling.event.jobs.JobManager.QueryType, java.lang.String, long, java.util.Map[])
      */
     @Override
     public Collection<Job> findJobs(final QueryType type,

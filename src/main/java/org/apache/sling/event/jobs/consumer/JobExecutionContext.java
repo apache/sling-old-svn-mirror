@@ -71,7 +71,7 @@ public interface JobExecutionContext {
      * job progress is assumed to be 100%.
      * This method has only effect if {@link #initProgress(int, long)}
      * has been called first with a positive number for steps
-     * @param step The number of finished steps since the last call.
+     * @param steps The number of finished steps since the last call.
      */
     void incrementProgressCount(final int steps);
 

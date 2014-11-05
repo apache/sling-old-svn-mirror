@@ -97,9 +97,10 @@ public class JobHandler {
     }
 
     /**
-     * Finish a job
-     * @param info  The job handler
+     * Finish a job.
      * @param state The state of the processing
+     * @param keepJobInHistory whether to keep the job in the job history.
+     * @param duration the duration of the processing.
      */
     public void finished(final Job.JobState state,
                           final boolean keepJobInHistory,

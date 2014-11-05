@@ -337,7 +337,7 @@ public class QueueManager
 
     /**
      * This method is called whenever the topology or queue configurations change.
-     * @param caps The new topology capabilities or {@code null} if currently unknown.
+     * @param active Whether the job handling is active atm.
      */
     @Override
     public void configurationChanged(final boolean active) {
