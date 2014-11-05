@@ -82,7 +82,7 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
         timeThreshold = PropertiesUtil.toInteger(ctx.getProperties().get(TIME_THRESHOLD), 600000);
     }
 
-    public boolean add(ReplicationPackage replicationPackage, ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
+    public boolean add(@Nonnull ReplicationPackage replicationPackage, @Nonnull ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
         boolean added;
         ReplicationQueueItem queueItem = getItem(replicationPackage);
         ReplicationQueue queue = queueProvider.getQueue(DEFAULT_QUEUE_NAME);
@@ -91,6 +91,7 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
         return added;
     }
 
+    @Nonnull
     public List<String> getQueueNames() {
         return Arrays.asList(new String[] { ERROR_QUEUE_NAME, DEFAULT_QUEUE_NAME });
     }

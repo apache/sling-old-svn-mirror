@@ -23,13 +23,44 @@ package org.apache.sling.replication.event;
  */
 public enum ReplicationEventType {
 
+    /**
+     * event for package created
+     */
     PACKAGE_CREATED,
+
+    /**
+     * event for package queued
+     */
     PACKAGE_QUEUED,
+
+    /**
+     * event for package replicated
+     */
     PACKAGE_REPLICATED,
+
+    /**
+     * event for package installed
+     */
     PACKAGE_INSTALLED,
+
+    /**
+     * event for package imported
+     */
     PACKAGE_IMPORTED,
+
+    /**
+     * event for agent created
+     */
     AGENT_CREATED,
+
+    /**
+     * event for agent modified
+     */
     AGENT_MODIFIED,
+
+    /**
+     * event for agent deleted
+     */
     AGENT_DELETED
 
 }

@@ -46,12 +46,13 @@ public class SingleQueueDistributionStrategy implements ReplicationQueueDistribu
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public boolean add(ReplicationPackage replicationPackage, ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
+    public boolean add(@Nonnull ReplicationPackage replicationPackage, @Nonnull ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
         ReplicationQueueItem queueItem = getItem(replicationPackage);
         ReplicationQueue queue = queueProvider.getQueue(DEFAULT_QUEUE_NAME);
         return queue.add(queueItem);
     }
 
+    @Nonnull
     public List<String> getQueueNames() {
         return Arrays.asList(new String[] { DEFAULT_QUEUE_NAME });
     }

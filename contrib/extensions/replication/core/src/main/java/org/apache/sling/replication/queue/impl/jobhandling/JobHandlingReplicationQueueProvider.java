@@ -67,7 +67,8 @@ public class JobHandlingReplicationQueueProvider implements ReplicationQueueProv
         this.context = context;
     }
 
-    public ReplicationQueue getQueue(String queueName) throws ReplicationQueueException {
+    @Nonnull
+    public ReplicationQueue getQueue(@Nonnull String queueName) throws ReplicationQueueException {
         String topic = JobHandlingReplicationQueue.REPLICATION_QUEUE_TOPIC + '/' + name + "/" + queueName;
         return new JobHandlingReplicationQueue(name, topic, jobManager);
     }

@@ -86,7 +86,7 @@ public class PriorityPathDistributionStrategy implements ReplicationQueueDistrib
         return queue;
     }
 
-    public boolean add(ReplicationPackage replicationPackage, ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
+    public boolean add(@Nonnull ReplicationPackage replicationPackage, @Nonnull ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
 
         ReplicationQueueItem queueItem = getItem(replicationPackage);
         ReplicationQueue queue = getQueue(queueItem, queueProvider);
@@ -99,6 +99,7 @@ public class PriorityPathDistributionStrategy implements ReplicationQueueDistrib
 
 
 
+    @Nonnull
     public List<String> getQueueNames() {
         List<String> paths = Arrays.asList(priorityPaths);
         paths.add(DEFAULT_QUEUE_NAME);
