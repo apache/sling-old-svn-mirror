@@ -44,6 +44,7 @@ import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.event.impl.EnvironmentComponent;
+import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.jobs.tasks.CheckTopologyTask;
 import org.apache.sling.event.impl.jobs.tasks.FindUnfinishedJobsTask;
 import org.apache.sling.event.impl.jobs.tasks.UpgradeTask;
@@ -68,6 +69,10 @@ import org.slf4j.LoggerFactory;
               label="Disable Distribution",
               description="If the distribution is disabled, all jobs will be processed on the leader only! "
                         + "Please use this switch with care."),
+    @Property(name=JobManagerConfiguration.PROPERTY_LOG_DEPRECATION_WARNINGS,
+              boolValue=JobManagerConfiguration.DEFAULT_LOG_DEPRECATION_WARNINGS,
+              label="Deprecation Warnings",
+              description="If this switch is enabled, deprecation warnings will be logged with the INFO level."),
     @Property(name=JobManagerConfiguration.PROPERTY_REPOSITORY_PATH,
               value=JobManagerConfiguration.DEFAULT_REPOSITORY_PATH, propertyPrivate=true),
     @Property(name=JobManagerConfiguration.PROPERTY_SCHEDULED_JOBS_PATH,
@@ -106,6 +111,12 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
 
     /** Default value for background loading. */
     public static final boolean DEFAULT_BACKGROUND_LOAD_SEARCH = true;
+
+    /** Configuration property for deprecation warnings. */
+    public static final String PROPERTY_LOG_DEPRECATION_WARNINGS = "job.log.deprecation";
+
+    /** Default value for deprecation warnings. */
+    public static final boolean DEFAULT_LOG_DEPRECATION_WARNINGS = true;
 
     /** The jobs base path with a slash. */
     private String jobsBasePathWithSlash;
@@ -217,6 +228,7 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
     protected void update(final Map<String, Object> props) {
         this.disabledDistribution = PropertiesUtil.toBoolean(props.get(PROPERTY_DISABLE_DISTRIBUTION), DEFAULT_DISABLE_DISTRIBUTION);
         this.backgroundLoadDelay = PropertiesUtil.toLong(props.get(PROPERTY_BACKGROUND_LOAD_DELAY), DEFAULT_BACKGROUND_LOAD_DELAY);
+        Utility.LOG_DEPRECATION_WARNINGS = PropertiesUtil.toBoolean(props.get(PROPERTY_LOG_DEPRECATION_WARNINGS), DEFAULT_LOG_DEPRECATION_WARNINGS);
     }
 
     /**
