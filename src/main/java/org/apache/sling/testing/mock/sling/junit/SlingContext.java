@@ -37,34 +37,15 @@ public final class SlingContext extends SlingContextImpl implements TestRule {
     private final TestRule delegate;
 
     /**
-     * Initialize Sling context.
-     * <p>
-     * If context is initialized with:
-     * </p>
-     * <ul>
-     * <li>No resource resolver type - default is used
-     * {@link MockSling#DEFAULT_RESOURCERESOLVER_TYPE}.</li>
-     * <li>One resource resolver type - exactly this is used.</li>
-     * <li>More than one: all unit test methods are executed for all resource
-     * resolver types using {@link ListGenerator}.</li>
-     * </ul>
+     * Initialize Sling context with default resource resolver type:
+     * {@link org.apache.sling.testing.mock.sling.MockSling#DEFAULT_RESOURCERESOLVER_TYPE}.
      */
     public SlingContext() {
         this(null, null, null);
     }
 
     /**
-     * Initialize Sling context.
-     * <p>
-     * If context is initialized with:
-     * </p>
-     * <ul>
-     * <li>No resource resolver type - default is used
-     * {@link MockSling#DEFAULT_RESOURCERESOLVER_TYPE}.</li>
-     * <li>One resource resolver type - exactly this is used.</li>
-     * <li>More than one: all unit test methods are executed for all resource
-     * resolver types using {@link ListGenerator}.</li>
-     * </ul>
+     * Initialize Sling context with resource resolver type.
      * @param resourceResolverType Resource resolver type.
      */
     public SlingContext(final ResourceResolverType resourceResolverType) {
@@ -72,17 +53,8 @@ public final class SlingContext extends SlingContextImpl implements TestRule {
     }
 
     /**
-     * Initialize Sling context.
-     * <p>
-     * If context is initialized with:
-     * </p>
-     * <ul>
-     * <li>No resource resolver type - default is used
-     * {@link MockSling#DEFAULT_RESOURCERESOLVER_TYPE}.</li>
-     * <li>One resource resolver type - exactly this is used.</li>
-     * <li>More than one: all unit test methods are executed for all resource
-     * resolver types using {@link ListGenerator}.</li>
-     * </ul>
+     * Initialize Sling context with default resource resolver type:
+     * {@link org.apache.sling.testing.mock.sling.MockSling#DEFAULT_RESOURCERESOLVER_TYPE}.
      * @param setUpCallback Allows the application to register an own callback
      *            function that is called after the built-in setup rules are
      *            executed.
@@ -92,17 +64,7 @@ public final class SlingContext extends SlingContextImpl implements TestRule {
     }
 
     /**
-     * Initialize Sling context.
-     * <p>
-     * If context is initialized with:
-     * </p>
-     * <ul>
-     * <li>No resource resolver type - default is used
-     * {@link MockSling#DEFAULT_RESOURCERESOLVER_TYPE}.</li>
-     * <li>One resource resolver type - exactly this is used.</li>
-     * <li>More than one: all unit test methods are executed for all resource
-     * resolver types using {@link ListGenerator}.</li>
-     * </ul>
+     * Initialize Sling context with resource resolver type.
      * @param setUpCallback Allows the application to register an own callback
      *            function that is called after the built-in setup rules are
      *            executed.
@@ -113,17 +75,8 @@ public final class SlingContext extends SlingContextImpl implements TestRule {
     }
 
     /**
-     * Initialize Sling context.
-     * <p>
-     * If context is initialized with:
-     * </p>
-     * <ul>
-     * <li>No resource resolver type - default is used
-     * {@link MockSling#DEFAULT_RESOURCERESOLVER_TYPE}.</li>
-     * <li>One resource resolver type - exactly this is used.</li>
-     * <li>More than one: all unit test methods are executed for all resource
-     * resolver types using {@link ListGenerator}.</li>
-     * </ul>
+     * Initialize Sling context with default resource resolver type:
+     * {@link org.apache.sling.testing.mock.sling.MockSling#DEFAULT_RESOURCERESOLVER_TYPE}.
      * @param setUpCallback Allows the application to register an own callback
      *            function that is called after the built-in setup rules are
      *            executed.
@@ -136,17 +89,7 @@ public final class SlingContext extends SlingContextImpl implements TestRule {
     }
     
     /**
-     * Initialize Sling context.
-     * <p>
-     * If context is initialized with:
-     * </p>
-     * <ul>
-     * <li>No resource resolver type - default is used
-     * {@link MockSling#DEFAULT_RESOURCERESOLVER_TYPE}.</li>
-     * <li>One resource resolver type - exactly this is used.</li>
-     * <li>More than one: all unit test methods are executed for all resource
-     * resolver types using {@link ListGenerator}.</li>
-     * </ul>
+     * Initialize Sling context with resource resolver type.
      * @param setUpCallback Allows the application to register an own callback
      *            function that is called after the built-in setup rules are
      *            executed.

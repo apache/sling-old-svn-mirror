@@ -24,13 +24,15 @@ import org.apache.sling.api.resource.PersistenceException;
 
 /**
  * Callback-interface for application-specific setup and teardown operations to
- * customize the {@link AemContext} JUnit rule.
+ * customize the {@link SlingContext} JUnit rule.
  */
 public interface SlingContextCallback {
 
     /**
      * Execute callback action
      * @param context Sling context
+     * @throws IOException
+     * @throws PersistenceException
      */
     void execute(SlingContext context) throws IOException, PersistenceException;
 
