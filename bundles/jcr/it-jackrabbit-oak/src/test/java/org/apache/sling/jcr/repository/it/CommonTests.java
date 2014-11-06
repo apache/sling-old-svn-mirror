@@ -206,7 +206,7 @@ public abstract class CommonTests {
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.settings", "1.3.0"));
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.resourceresolver", "1.1.6"));
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.adapter", "2.1.0"));
-        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.resource", "2.3.11-SNAPSHOT"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.resource", "2.3.12"));
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.classloader", "3.2.0"));
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.contentloader", "2.1.8"));
         opt.add(mavenBundle("org.apache.sling", "org.apache.sling.engine", "2.3.8"));
