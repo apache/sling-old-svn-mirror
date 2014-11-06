@@ -20,12 +20,9 @@ package org.apache.sling.replication.agent.impl;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -41,6 +38,7 @@ import org.apache.sling.replication.component.ManagedReplicationComponent;
 import org.apache.sling.replication.component.ReplicationComponent;
 import org.apache.sling.replication.component.ReplicationComponentFactory;
 import org.apache.sling.replication.component.ReplicationComponentProvider;
+import org.apache.sling.replication.component.impl.SettingsUtils;
 import org.apache.sling.replication.event.impl.ReplicationEventFactory;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
@@ -86,11 +84,17 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
     @Property(label = "Service Name")
     public static final String SERVICE_NAME = ReplicationComponentFactory.AGENT_SIMPLE_PROPERTY_SERVICE_NAME;
 
-    @Property(label = "Package Exporter", cardinality = 100)
+    @Property(label = "Request Authorization Strategy Properties", cardinality = 100)
+    public static final String REQUEST_AUTHORIZATION_STRATEGY = ReplicationComponentFactory.COMPONENT_REQUEST_AUTHORIZATION_STRATEGY;
+
+    @Property(label = "Package Exporter Properties", cardinality = 100)
     public static final String PACKAGE_EXPORTER = ReplicationComponentFactory.COMPONENT_PACKAGE_EXPORTER;
 
-    @Property(label = "Package Importer", cardinality = 100)
+    @Property(label = "Package Importer Properties", cardinality = 100)
     public static final String PACKAGE_IMPORTER = ReplicationComponentFactory.COMPONENT_PACKAGE_IMPORTER;
+
+    @Property(label = "Trigger Properties", cardinality = 100)
+    public static final String TRIGGER = ReplicationComponentFactory.COMPONENT_TRIGGER;
 
     @Property(label = "Target TransportAuthenticationProvider", name = TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
     @Reference(name = "transportAuthenticationProvider")
@@ -130,28 +134,29 @@ public class CoordinatingReplicationAgentFactory implements ReplicationComponent
             props.put(NAME, agentName);
 
             if (componentReg == null) {
-                Map<String, Object> properties = new HashMap<String, Object>();
-                properties.putAll(config);
-
-                String[] packageImporterProperties = PropertiesUtil.toStringArray(properties.get(PACKAGE_IMPORTER));
-                String[] packageExporterProperties = PropertiesUtil.toStringArray(properties.get(PACKAGE_EXPORTER));
+                String[] requestAuthProperties = PropertiesUtil.toStringArray(config.get(REQUEST_AUTHORIZATION_STRATEGY), new String[0]);
+                String[] packageImporterProperties = PropertiesUtil.toStringArray(config.get(PACKAGE_IMPORTER), new String[0]);
+                String[] packageExporterProperties = PropertiesUtil.toStringArray(config.get(PACKAGE_EXPORTER), new String[0]);
+                String[] triggerProperties = PropertiesUtil.toStringArray(config.get(TRIGGER), new String[0]);
 
                 if (packageImporterProperties == null || packageExporterProperties == null ||
                         packageImporterProperties.length == 0 || packageExporterProperties.length == 0) {
                     throw new IllegalArgumentException("package exporters and importers cannot be null/empty");
                 }
 
-                List<String> packageImporterPropertiesList = new ArrayList<String>();
-                packageImporterPropertiesList.addAll(Arrays.asList(packageImporterProperties));
-                packageImporterPropertiesList.add("type=remote");
-                packageImporterProperties = packageImporterPropertiesList.toArray(new String[packageImporterPropertiesList.size()]);
-                properties.put(PACKAGE_IMPORTER, packageImporterProperties);
 
-                List<String> packageExporterPropertiesList = new ArrayList<String>();
-                packageExporterPropertiesList.addAll(Arrays.asList(packageExporterProperties));
-                packageExporterPropertiesList.add("type=remote");
-                packageExporterProperties = packageExporterPropertiesList.toArray(new String[packageExporterPropertiesList.size()]);
-                properties.put(PACKAGE_EXPORTER, packageExporterProperties);
+                Map<String, Object> properties = new HashMap<String, Object>();
+                properties.putAll(config);
+
+                properties.put(REQUEST_AUTHORIZATION_STRATEGY, SettingsUtils.parseLines(requestAuthProperties));
+                properties.put(PACKAGE_IMPORTER, SettingsUtils.parseLines(packageImporterProperties));
+                properties.put(PACKAGE_EXPORTER, SettingsUtils.parseLines(packageExporterProperties));
+                properties.put(TRIGGER, SettingsUtils.parseLines(triggerProperties));
+
+                // ensure exporter and importer are remote
+                ((Map) properties.get(PACKAGE_EXPORTER)).put("type", "remote");
+                ((Map) properties.get(PACKAGE_IMPORTER)).put("type", "remote");
+
 
                 ReplicationAgent agent = componentFactory.createComponent(ReplicationAgent.class, properties, this);
 

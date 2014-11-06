@@ -33,6 +33,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -50,8 +51,15 @@ public class DefaultReplicationComponentFactoryTest {
         ReplicationComponentProvider provider = mock(ReplicationComponentProvider.class);
         ReplicationAgent agent = mock(ReplicationAgent.class);
         when(provider.getComponent(ReplicationAgent.class, name)).thenReturn(agent);
-        ReplicationAgent component = defaultReplicationComponentFactory.createComponent(ReplicationAgent.class, properties, provider);
-        assertNull(component); // agents cannot be referenced by service name using the factory
+        try {
+            ReplicationAgent component = defaultReplicationComponentFactory.createComponent(ReplicationAgent.class, properties, provider);
+
+            fail("agents cannot be referenced by service name using the factory");
+
+        }
+        catch (IllegalArgumentException e) {
+            // expect to fail
+        }
     }
 
     @Test

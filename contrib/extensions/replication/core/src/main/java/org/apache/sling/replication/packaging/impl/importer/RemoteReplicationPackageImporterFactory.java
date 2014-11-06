@@ -21,6 +21,7 @@ package org.apache.sling.replication.packaging.impl.importer;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -32,9 +33,11 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.component.ReplicationComponent;
 import org.apache.sling.replication.component.ReplicationComponentFactory;
 import org.apache.sling.replication.component.ReplicationComponentProvider;
+import org.apache.sling.replication.component.impl.SettingsUtils;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageImportException;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
@@ -90,7 +93,10 @@ public class RemoteReplicationPackageImporterFactory implements ReplicationPacka
     @Activate
     protected void activate(BundleContext context, Map<String, Object> config) throws Exception {
 
-        importer = replicationComponentFactory.createComponent(ReplicationPackageImporter.class, config, this);
+        Map<String, Object> properties = new HashMap<String, Object>();
+        properties.putAll(config);
+
+        importer = replicationComponentFactory.createComponent(ReplicationPackageImporter.class, properties, this);
 
     }
 

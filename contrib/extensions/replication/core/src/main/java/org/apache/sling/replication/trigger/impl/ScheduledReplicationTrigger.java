@@ -35,6 +35,8 @@ import org.slf4j.LoggerFactory;
  * {@link org.apache.sling.replication.agent.ReplicationAgent}
  */
 public class ScheduledReplicationTrigger implements ReplicationTrigger {
+    private final static String SCHEDULE_NAME = "scheduledEventTrigger";
+
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -55,7 +57,7 @@ public class ScheduledReplicationTrigger implements ReplicationTrigger {
     public void register(@Nonnull ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
         try {
             ScheduleOptions options = scheduler.NOW(-1, secondsInterval);
-            options.name(requestHandler.toString());
+            options.name(getJobName(requestHandler));
             scheduler.schedule(new ScheduledReplication(requestHandler), options);
         } catch (Exception e) {
             throw new ReplicationTriggerException("unable to register handler " + requestHandler, e);
@@ -63,7 +65,7 @@ public class ScheduledReplicationTrigger implements ReplicationTrigger {
     }
 
     public void unregister(@Nonnull ReplicationRequestHandler requestHandler) throws ReplicationTriggerException {
-        scheduler.unschedule(requestHandler.toString());
+        scheduler.unschedule(getJobName(requestHandler));
     }
 
     private class ScheduledReplication implements Runnable {
@@ -78,5 +80,9 @@ public class ScheduledReplicationTrigger implements ReplicationTrigger {
 
             requestHandler.handle(new ReplicationRequest(System.currentTimeMillis(), replicationAction, path));
         }
+    }
+
+    String getJobName(ReplicationRequestHandler requestHandler) {
+        return SCHEDULE_NAME + requestHandler.toString();
     }
 }

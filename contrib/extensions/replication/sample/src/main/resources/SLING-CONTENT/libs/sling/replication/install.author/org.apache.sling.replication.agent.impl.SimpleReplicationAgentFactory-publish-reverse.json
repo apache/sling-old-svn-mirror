@@ -24,21 +24,15 @@
         "packageBuilder/type=vlt"
     ],
 
-    "trigger0": [
-        "type=scheduledEvent",
-        "action=poll",
-        "seconds=30"
+    "trigger": [
+        "scheduledTrigger/type=scheduledEvent",
+        "scheduledTrigger/action=poll",
+        "scheduledTrigger/seconds=30",
+
+        "remoteTrigger/type=remoteEvent",
+        "remoteTrigger/endpoint=http://localhost:4503/libs/sling/replication/services/triggers/content-changed.event"
     ],
 
-    "trigger1": [
-        "type=remoteEvent",
-        "endpoint=http://localhost:4503/libs/sling/replication/services/triggers/content-changed.event"
-    ],
-
-
-    "queueProvider.target" : "(name=sjh)",
-
-    "queueDistributionStrategy.target": "(name=error)",
 
     "transportAuthenticationProvider.target" : "(name=publishAdmin)"
 

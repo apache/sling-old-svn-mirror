@@ -110,7 +110,8 @@ public class GenericReplicationComponentFactory implements ReplicationComponentP
 
 
             if (componentReg == null) {
-                Map<String, Object> configProperties = SettingsUtils.extractMap(PROPERTIES, config);
+                String[] propertyLines = PropertiesUtil.toStringArray(config.get(PROPERTIES));
+                Map<String, Object> configProperties = SettingsUtils.parseLines(propertyLines);
 
                 Map<String, Object> properties = new HashMap<String, Object>();
                 properties.putAll(config);
@@ -119,17 +120,22 @@ public class GenericReplicationComponentFactory implements ReplicationComponentP
                 String componentClass = null;
                 Object componentObject = null;
 
-                if (ReplicationComponentFactory.COMPONENT_AGENT.equals(componentType)) {
-                    ReplicationAgent agent = componentFactory.createComponent(ReplicationAgent.class, properties, this);
-                    componentClass = ReplicationAgent.class.getName();
-                    componentObject = agent;
+                try {
+                    if (ReplicationComponentFactory.COMPONENT_AGENT.equals(componentType)) {
+                        ReplicationAgent agent = componentFactory.createComponent(ReplicationAgent.class, properties, this);
+                        componentClass = ReplicationAgent.class.getName();
+                        componentObject = agent;
 
-                } else if (ReplicationComponentFactory.COMPONENT_TRIGGER.equals(componentType)) {
+                    } else if (ReplicationComponentFactory.COMPONENT_TRIGGER.equals(componentType)) {
 
-                    ReplicationTrigger trigger = componentFactory.createComponent(ReplicationTrigger.class, properties, this);
+                        ReplicationTrigger trigger = componentFactory.createComponent(ReplicationTrigger.class, properties, this);
 
-                    componentClass = ReplicationTrigger.class.getName();
-                    componentObject = trigger;
+                        componentClass = ReplicationTrigger.class.getName();
+                        componentObject = trigger;
+                    }
+                }
+                catch (IllegalArgumentException e) {
+                    log.warn("cannot create component", e);
                 }
 
                 if (componentObject != null && componentClass != null) {

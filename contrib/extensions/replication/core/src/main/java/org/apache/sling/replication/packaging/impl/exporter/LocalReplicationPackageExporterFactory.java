@@ -19,6 +19,7 @@
 package org.apache.sling.replication.packaging.impl.exporter;
 
 import javax.annotation.Nonnull;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,8 +30,10 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.component.ReplicationComponentFactory;
 import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.component.impl.SettingsUtils;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageExporter;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
@@ -57,6 +60,9 @@ public class LocalReplicationPackageExporterFactory implements ReplicationPackag
     @Property
     private static final String NAME = ReplicationComponentFactory.COMPONENT_NAME;
 
+    @Property(label = "Package Builder Properties", cardinality = 100)
+    public static final String PACKAGE_BUILDER = ReplicationComponentFactory.COMPONENT_PACKAGE_BUILDER;
+
     @Reference
     ReplicationComponentFactory replicationComponentFactory;
 
@@ -64,7 +70,12 @@ public class LocalReplicationPackageExporterFactory implements ReplicationPackag
 
     @Activate
     public void activate(Map<String, Object> config) {
-        exporter = replicationComponentFactory.createComponent(ReplicationPackageExporter.class, config, null);
+        Map<String, Object> properties = new HashMap<String, Object>();
+        properties.putAll(config);
+        String[] packageBuilderProperties = PropertiesUtil.toStringArray(config.get(PACKAGE_BUILDER));
+        properties.put(PACKAGE_BUILDER, SettingsUtils.parseLines(packageBuilderProperties));
+
+        exporter = replicationComponentFactory.createComponent(ReplicationPackageExporter.class, properties, null);
     }
 
 
