@@ -41,6 +41,8 @@ import org.apache.sling.replication.resources.impl.common.AbstractModifyingResou
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link ResourceProvider} for Osgi configurations for a specific configuration factory.
@@ -48,6 +50,8 @@ import org.osgi.service.cm.ConfigurationAdmin;
  * The accepted path is resourceRoot/{friendlyNameProperty}/childResourceName.
  */
 public class OsgiConfigurationResourceProvider extends AbstractModifyingResourceProvider implements ResourceProvider, ModifyingResourceProvider {
+
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final ConfigurationAdmin configurationAdmin;
     private final String configFactory;
@@ -83,6 +87,9 @@ public class OsgiConfigurationResourceProvider extends AbstractModifyingResource
                 }
 
                 properties = filterBeforeSave(properties);
+
+                log.info("updating with config {}", OsgiUtils.osgiPropertyMapToString(properties));
+
                 configuration.update(toDictionary(properties));
             }
 
@@ -148,6 +155,9 @@ public class OsgiConfigurationResourceProvider extends AbstractModifyingResource
         Configuration[] configurations = getConfigurations(configName);
 
         if (configurations == null || configurations.length != 1) {
+            if (configurations != null && configurations.length > 1) {
+                log.warn("found more than 1 ({}) configuration with name {}", configurations.length, configName);
+            }
             return null;
         }
 
@@ -225,7 +235,6 @@ public class OsgiConfigurationResourceProvider extends AbstractModifyingResource
         }
 
         return result;
-
     }
 
     private Map<String, Object> filterBeforeRead(Map<String, Object> properties) {

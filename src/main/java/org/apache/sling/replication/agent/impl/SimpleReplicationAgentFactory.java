@@ -43,6 +43,7 @@ import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
 import org.apache.sling.replication.queue.impl.SingleQueueDistributionStrategy;
 import org.apache.sling.replication.queue.impl.jobhandling.JobHandlingReplicationQueueProvider;
+import org.apache.sling.replication.resources.impl.OsgiUtils;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
@@ -119,6 +120,8 @@ public class SimpleReplicationAgentFactory implements ReplicationComponentProvid
 
     @Activate
     protected void activate(BundleContext context, Map<String, Object> config) {
+        log.info("activating with config {}", OsgiUtils.osgiPropertyMapToString(config));
+
 
         savedContext = context;
         savedConfig = config;

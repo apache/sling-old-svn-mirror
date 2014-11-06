@@ -283,7 +283,8 @@ public class SimpleReplicationAgent implements ReplicationAgent, ManagedReplicat
                 }
                 success = true;
             } else {
-                log.warn("replication package with id {} does not exist", queueItem.getId());
+                success = true; // return success if package does not exist in order to clear the queue.
+                log.error("replication package with id {} does not exist", queueItem.getId());
             }
 
         } catch (ReplicationPackageImportException e) {
