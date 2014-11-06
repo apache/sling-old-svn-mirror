@@ -20,6 +20,7 @@ package org.apache.sling.replication.packaging.impl.importer;
 
 import javax.annotation.Nonnull;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -29,7 +30,9 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.component.ReplicationComponentFactory;
+import org.apache.sling.replication.component.impl.SettingsUtils;
 import org.apache.sling.replication.packaging.ReplicationPackage;
 import org.apache.sling.replication.packaging.ReplicationPackageImportException;
 import org.apache.sling.replication.packaging.ReplicationPackageImporter;
@@ -55,6 +58,10 @@ public class LocalReplicationPackageImporterFactory implements ReplicationPackag
     @Property
     private static final String NAME = ReplicationComponentFactory.COMPONENT_NAME;
 
+
+    @Property(label = "Package Builder Properties", cardinality = 100)
+    public static final String PACKAGE_BUILDER = ReplicationComponentFactory.COMPONENT_PACKAGE_BUILDER;
+
     @Reference
     private ReplicationComponentFactory componentFactory;
 
@@ -62,7 +69,12 @@ public class LocalReplicationPackageImporterFactory implements ReplicationPackag
 
     @Activate
     public void activate(Map<String, Object> config) {
-        importer = componentFactory.createComponent(ReplicationPackageImporter.class, config, null);
+        Map<String, Object> properties = new HashMap<String, Object>();
+        properties.putAll(config);
+        String[] packageBuilderProperties = PropertiesUtil.toStringArray(config.get(PACKAGE_BUILDER));
+        properties.put(PACKAGE_BUILDER, SettingsUtils.parseLines(packageBuilderProperties));
+
+        importer = componentFactory.createComponent(ReplicationPackageImporter.class, properties, null);
     }
 
 

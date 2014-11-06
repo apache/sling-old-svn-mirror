@@ -56,6 +56,7 @@ import org.slf4j.LoggerFactory;
  * on a certain URL
  */
 public class RemoteEventReplicationTrigger implements ReplicationTrigger {
+    private final static String SCHEDULE_NAME = "remoteEventTrigger";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -89,7 +90,7 @@ public class RemoteEventReplicationTrigger implements ReplicationTrigger {
             log.info("applying remote event replication trigger");
 
             ScheduleOptions options = scheduler.NOW();
-            options.name(requestHandler.toString());
+            options.name(getJobName(requestHandler));
             scheduler.schedule(new EventBasedReplication(requestHandler), options);
         } catch (Exception e) {
             throw new ReplicationTriggerException("unable to register handler " + requestHandler, e);
@@ -101,6 +102,11 @@ public class RemoteEventReplicationTrigger implements ReplicationTrigger {
         if (httpResponseFuture != null) {
             httpResponseFuture.cancel(true);
         }
+        scheduler.unschedule(getJobName(requestHandler));
+    }
+
+    String getJobName(ReplicationRequestHandler requestHandler) {
+        return SCHEDULE_NAME + requestHandler.toString();
     }
 
     private class SSEResponseConsumer extends BasicAsyncResponseConsumer {

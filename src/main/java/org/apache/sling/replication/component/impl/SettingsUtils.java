@@ -19,7 +19,6 @@
 package org.apache.sling.replication.component.impl;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,23 +27,82 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 
 public class SettingsUtils {
 
+    private static final String COMPONENT_ROOT = "";
     private static final char COMPONENT_DELIM = '/';
     private static final char COMPONENT_MAP_BEGIN = '[';
     private static final char COMPONENT_MAP_END = ']';
+    private static final char COMPONENT_MAP_DELIM = '=';
 
-    public static Map<String, Object> extractMap(String key, Map<String, Object> objectMap) {
-        Object value = objectMap.get(key);
 
-        if (value instanceof String[]) {
-            return compactMap(SettingsUtils.toMap((String[]) value));
-        } else if (value instanceof String) {
-            return compactMap(SettingsUtils.toMap(((String) value).split(",")));
+    /**
+     * packageExporter/propertyKey=propertyValue
+     * packageExporter/endpoint[flag]=propertyValue
+     *
+     * packageExporter/packageBuilder/propertyKey=propertyValue
+     *
+     * propertyKey=propertyValue
+     * trigger[0]/propertyKey=propertyValue
+     * trigger[0]/propertyKey=propertyValue
+     *
+     * @param lines
+     * @return
+     */
+    public static Map<String, Object> parseLines(String[] lines) {
+        Map<String, Object> result = new HashMap<String, Object>();
+
+        Map<String, List<String>> linesMap = toLinesMap(lines);
+
+        for (Map.Entry<String, List<String>> entry : linesMap.entrySet()) {
+            String componentName = entry.getKey();
+            String[] componentLines = entry.getValue().toArray(new String[0]);
+
+            if (COMPONENT_ROOT.equals(componentName)) {
+                Map<String, String> map = PropertiesUtil.toMap(componentLines, new String [0]);
+                result.putAll(map);
+            }
+            else {
+                Map<String, Object> componentMap = parseLines(componentLines);
+                result.put(componentName, componentMap);
+            }
         }
-        return null;
+
+        result = collapseMap(result);
+        return result;
     }
 
+    public static Map<String, List<String>> toLinesMap(String[] lines) {
+        Map<String, List<String>> result = new HashMap<String, List<String>>();
 
-    public static Map<String, Object> compactMap(Map<String, Object> valueMap) {
+
+        for (String line : lines) {
+            int firstMapDelim = line.indexOf(COMPONENT_MAP_DELIM);
+            if (firstMapDelim < 0) {
+                continue;
+            }
+
+            int firstDelim = line.substring(0, firstMapDelim).indexOf(COMPONENT_DELIM);
+            String key = COMPONENT_ROOT;
+            String value = line;
+
+            if (firstDelim >= 0) {
+                key = line.substring(0, firstDelim);
+                value = line.substring(firstDelim + 1);
+            }
+
+
+            if (!result.containsKey(key)) {
+                result.put(key, new ArrayList<String>());
+            }
+
+            List<String> exitingLines = result.get(key);
+            exitingLines.add(value);
+
+        }
+
+        return result;
+    }
+
+    public static Map<String, Object> collapseMap(Map<String, Object> valueMap) {
 
         Map<String, Object> result = new HashMap<String, Object>();
 
@@ -54,21 +112,27 @@ public class SettingsUtils {
             int beginDelim = key.indexOf(COMPONENT_MAP_BEGIN);
             int endDelim = key.indexOf(COMPONENT_MAP_END);
 
-            if (beginDelim >= 0 && endDelim > beginDelim && value instanceof String) {
+            if (beginDelim >= 0 && endDelim > beginDelim) {
                 String newKey = key.substring(0, beginDelim);
                 String partialKey = key.substring(beginDelim + 1, endDelim);
 
-                String newValue = (String) value;
 
-                try {
-                    Integer.parseInt(partialKey);
-                    // newKey[0] = newValue
-                } catch (NumberFormatException e) {
-                    // newKey[partialKey] = newValue
-                    newValue = partialKey + "=" + newValue;
+                boolean isNumber = isNumber(partialKey);
+
+                if (!result.containsKey(newKey)) {
+                    result.put(newKey, isNumber? new ArrayList<Object>() : new HashMap<String, Object>());
                 }
 
-                addValueInArray(result, newKey, newValue);
+                Object existingObject = result.get(newKey);
+                if (existingObject instanceof Map) {
+                    ((Map) existingObject).put(partialKey, value);
+                }
+                else if (existingObject instanceof List) {
+                    ((List) existingObject).add(value);
+                }
+                else {
+                    // skip if there is already something else in there
+                }
             } else {
                 result.put(key, value);
             }
@@ -78,47 +142,13 @@ public class SettingsUtils {
 
     }
 
-    public static Map<String, Object> toMap(String[] lines) {
-        Map<String, Object> result = new HashMap<String, Object>();
-
-        Map<String, String> valueMap = PropertiesUtil.toMap(lines, new String[0]);
-
-        for (Map.Entry<String, String> entry : valueMap.entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
-            int firstDelim = key.indexOf(COMPONENT_DELIM);
-            if (firstDelim >= 0) {
-                String newKey = key.substring(0, firstDelim);
-                String newValue = key.substring(firstDelim + 1) + "=" + value;
-
-                addValueInArray(result, newKey, newValue);
-            } else {
-                result.put(key, value);
-            }
-
+    private static boolean isNumber(String value) {
+        try {
+            Integer.parseInt(value);
+            return true;
         }
-
-        return result;
-
-    }
-
-    public static void addValueInArray(Map<String, Object> map, String key, String value) {
-        String[] arayValue;
-
-        if (map.containsKey(key) && map.get(key) instanceof String[]) {
-            String[] existingArray = (String[]) map.get(key);
-
-
-            List<String> newList = new ArrayList<String>();
-            Collections.addAll(newList, existingArray);
-            newList.add(value);
-            arayValue = newList.toArray(new String[newList.size()]);
-        } else {
-            arayValue = new String[]{value};
+        catch (NumberFormatException e) {
+            return false;
         }
-
-        map.put(key, arayValue);
-
     }
-
 }

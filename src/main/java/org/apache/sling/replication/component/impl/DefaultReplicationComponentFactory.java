@@ -126,20 +126,17 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
         if (componentProvider == null) {
             componentProvider = this;
         }
-        try {
-            if (type.isAssignableFrom(ReplicationAgent.class)) {
-                return (ComponentType) createAgent(properties, componentProvider);
-            } else if (type.isAssignableFrom(ReplicationTrigger.class)) {
-                return (ComponentType) createTrigger(properties, componentProvider);
-            } else if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
-                return (ComponentType) createTransportAuthenticationProvider(properties, componentProvider);
-            } else if (type.isAssignableFrom(ReplicationPackageImporter.class)) {
-                return (ComponentType) createImporter(properties, componentProvider);
-            } else if (type.isAssignableFrom(ReplicationPackageExporter.class)) {
-                return (ComponentType) createExporter(properties, componentProvider);
-            }
-        } catch (IllegalArgumentException e) {
-            log.warn("Cannot create component {}", new Object[]{type, properties}, e);
+
+        if (type.isAssignableFrom(ReplicationAgent.class)) {
+            return (ComponentType) createAgent(properties, componentProvider);
+        } else if (type.isAssignableFrom(ReplicationTrigger.class)) {
+            return (ComponentType) createTrigger(properties, componentProvider);
+        } else if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
+            return (ComponentType) createTransportAuthenticationProvider(properties, componentProvider);
+        } else if (type.isAssignableFrom(ReplicationPackageImporter.class)) {
+            return (ComponentType) createImporter(properties, componentProvider);
+        } else if (type.isAssignableFrom(ReplicationPackageExporter.class)) {
+            return (ComponentType) createExporter(properties, componentProvider);
         }
 
         return null;
@@ -388,19 +385,38 @@ public class DefaultReplicationComponentFactory implements ReplicationComponentF
         return triggers;
     }
 
-    Map<String, Object> extractMap(String key, Map<String, Object> objectMap) {
-        Map<String, Object> map = SettingsUtils.extractMap(key, objectMap);
-        return map == null ? new HashMap<String, Object>() : map;
+    Map<String, Object> extractMap(String key, Map<String, Object> sourceMap) {
+        sourceMap = sourceMap == null ? new HashMap<String, Object>() : sourceMap;
+
+        Object resultMapObject = sourceMap.get(key);
+
+        Map<String, Object> resultMap = null;
+        if (resultMapObject instanceof Map) {
+            resultMap = (Map) resultMapObject;
+        }
+
+        return resultMap == null ? new HashMap<String, Object>() : resultMap;
     }
 
-    List<Map<String, Object>> extractMapList(String key, Map<String, Object> objectMap) {
+    List<Map<String, Object>> extractMapList(String key, Map<String, Object> sourceMap) {
+
         List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
-        for (String mapKey : objectMap.keySet()) {
-            if (mapKey.startsWith(key)) {
-                result.add(SettingsUtils.extractMap(mapKey, objectMap));
+
+        sourceMap = sourceMap == null ? new HashMap<String, Object>() : sourceMap;
+
+        Object resultMapObject = sourceMap.get(key);
+
+        if (resultMapObject instanceof Map) {
+            Map<String, Object> resultMap = (Map) resultMapObject;
+            for (Map.Entry<String, Object> entry : resultMap.entrySet()) {
+                if (entry.getValue() instanceof Map) {
+                    result.add((Map<String,Object>) entry.getValue());
+                }
             }
         }
+
         return result;
+
     }
 
     public <ComponentType extends ReplicationComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type,

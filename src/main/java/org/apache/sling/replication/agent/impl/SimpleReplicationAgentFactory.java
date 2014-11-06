@@ -20,10 +20,7 @@ package org.apache.sling.replication.agent.impl;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -40,6 +37,7 @@ import org.apache.sling.replication.component.ManagedReplicationComponent;
 import org.apache.sling.replication.component.ReplicationComponent;
 import org.apache.sling.replication.component.ReplicationComponentFactory;
 import org.apache.sling.replication.component.ReplicationComponentProvider;
+import org.apache.sling.replication.component.impl.SettingsUtils;
 import org.apache.sling.replication.event.impl.ReplicationEventFactory;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
@@ -90,6 +88,10 @@ public class SimpleReplicationAgentFactory implements ReplicationComponentProvid
     @Property(label = "Package Importer Properties", cardinality = 100)
     public static final String PACKAGE_IMPORTER = ReplicationComponentFactory.COMPONENT_PACKAGE_IMPORTER;
 
+    @Property(label = "Trigger Properties", cardinality = 100)
+    public static final String TRIGGER = ReplicationComponentFactory.COMPONENT_TRIGGER;
+
+
     @Property(label = "Service Name")
     public static final String SERVICE_NAME = ReplicationComponentFactory.AGENT_SIMPLE_PROPERTY_SERVICE_NAME;
 
@@ -133,7 +135,27 @@ public class SimpleReplicationAgentFactory implements ReplicationComponentProvid
             props.put(NAME, agentName);
 
             if (componentReg == null && componentFactory != null) {
-                ReplicationAgent agent = componentFactory.createComponent(ReplicationAgent.class, config, this);
+
+                String[] requestAuthProperties = PropertiesUtil.toStringArray(config.get(REQUEST_AUTHORIZATION_STRATEGY), new String[0]);
+                String[] packageImporterProperties = PropertiesUtil.toStringArray(config.get(PACKAGE_IMPORTER), new String[0]);
+                String[] packageExporterProperties = PropertiesUtil.toStringArray(config.get(PACKAGE_EXPORTER), new String[0]);
+                String[] triggerProperties = PropertiesUtil.toStringArray(config.get(TRIGGER), new String[0]);
+
+                Map<String, Object> properties = new HashMap<String, Object>();
+                properties.putAll(config);
+
+                properties.put(REQUEST_AUTHORIZATION_STRATEGY, SettingsUtils.parseLines(requestAuthProperties));
+                properties.put(PACKAGE_IMPORTER, SettingsUtils.parseLines(packageImporterProperties));
+                properties.put(PACKAGE_EXPORTER, SettingsUtils.parseLines(packageExporterProperties));
+                properties.put(TRIGGER, SettingsUtils.parseLines(triggerProperties));
+
+                ReplicationAgent agent = null;
+                try {
+                    agent = componentFactory.createComponent(ReplicationAgent.class, properties, this);
+                }
+                catch (IllegalArgumentException e) {
+                    log.warn("cannot create agent", e);
+                }
 
                 log.debug("activated agent {}", agentName);
 
