@@ -188,6 +188,26 @@ public class TopologyCapabilities {
     }
 
     /**
+     * Add instances to the list if not already included
+     */
+    private void addAll(final List<InstanceDescription> potentialTargets, final List<InstanceDescription> newTargets) {
+        if ( newTargets != null ) {
+            for(final InstanceDescription desc : newTargets) {
+                boolean found = false;
+                for(final InstanceDescription existingDesc : potentialTargets) {
+                    if ( desc.getSlingId().equals(existingDesc.getSlingId()) ) {
+                        found = true;
+                        break;
+                    }
+                }
+                if ( !found ) {
+                    potentialTargets.add(desc);
+                }
+            }
+        }
+    }
+
+    /**
      * Return the potential targets (Sling IDs) sorted by ID
      * @return A list of instance descriptions. The list might be empty.
      */
@@ -196,18 +216,21 @@ public class TopologyCapabilities {
         final List<InstanceDescription> potentialTargets = new ArrayList<InstanceDescription>();
 
         // first: topic targets - directly handling the topic
-        final List<InstanceDescription> topicTargets = this.instanceCapabilities.get(jobTopic);
-        if ( topicTargets != null ) {
-            potentialTargets.addAll(topicTargets);
-        }
+        addAll(potentialTargets, this.instanceCapabilities.get(jobTopic));
+
         // second: category targets - handling the topic category
-        final int pos = jobTopic.lastIndexOf('/');
+        int pos = jobTopic.lastIndexOf('/');
         if ( pos > 0 ) {
             final String category = jobTopic.substring(0, pos + 1).concat("*");
-            final List<InstanceDescription> categoryTargets = this.instanceCapabilities.get(category);
-            if ( categoryTargets != null ) {
-                potentialTargets.addAll(categoryTargets);
-            }
+            addAll(potentialTargets, this.instanceCapabilities.get(category));
+
+            // search deep consumers (since 1.2 of the consumer package)
+            do {
+                final String subCategory = jobTopic.substring(0, pos + 1).concat("**");
+                addAll(potentialTargets, this.instanceCapabilities.get(subCategory));
+
+                pos = jobTopic.lastIndexOf('/', pos - 1);
+            } while ( pos > 0 );
         }
         // third: bridged consumers
         final List<InstanceDescription> bridgedTargets = (jobProperties != null && jobProperties.containsKey(JobImpl.PROPERTY_BRIDGED_EVENT) ? this.instanceCapabilities.get("/") : null);
