@@ -25,9 +25,9 @@
 
     "queueDistributionStrategy": "(name=single)",
 
-    "trigger0": [
-        "type=jcrEvent",
-        "path=/content/usergenerated",
-        "servicename=replicationService"
+    "trigger": [
+        "userGeneratedTrigger/type=jcrEvent",
+        "userGeneratedTrigger/path=/content/usergenerated",
+        "userGeneratedTrigger/servicename=replicationService"
     ]
 }

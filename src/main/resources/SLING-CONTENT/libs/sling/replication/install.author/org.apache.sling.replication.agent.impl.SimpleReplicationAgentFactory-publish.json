@@ -23,9 +23,5 @@
         "packageBuilder/type=vlt"
     ],
 
-    "queueProvider.target" : "(name=sjh)",
-
-    "queueDistributionStrategy.target": "(name=error)",
-
     "transportAuthenticationProvider.target" : "(name=publishAdmin)"
 }
