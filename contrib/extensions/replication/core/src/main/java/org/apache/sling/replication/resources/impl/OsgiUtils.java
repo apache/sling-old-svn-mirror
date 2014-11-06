@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.resources.impl;
 
+import java.util.Map;
+
 public class OsgiUtils {
     /**
      * Encode the value for the ldap filter: \, *, (, and ) should be escaped.
@@ -27,5 +29,37 @@ public class OsgiUtils {
                 .replace("*", "\\*")
                 .replace("(", "\\(")
                 .replace(")", "\\)");
+    }
+
+    public static String osgiPropertyMapToString(Map<String, Object> map) {
+        String result = "";
+        if (map == null) {
+            return result;
+        }
+
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            result += entry.getKey() + "=";
+
+            if (entry.getValue() == null) {
+                result += safeString(entry.getValue());
+            }
+            else if (entry.getValue().getClass().isArray()) {
+                Object[] array = (Object[]) entry.getValue();
+                for (Object obj : array) {
+                    result += safeString(obj) + ",";
+                }
+            }
+            else {
+                result += safeString(entry.getValue());
+            }
+
+            result += "\n";
+        }
+
+        return result;
+    }
+
+    private static String safeString(Object obj) {
+        return obj == null? "null" : obj.toString();
     }
 }

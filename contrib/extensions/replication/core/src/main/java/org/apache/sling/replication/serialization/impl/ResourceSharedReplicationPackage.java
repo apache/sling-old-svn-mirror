@@ -165,7 +165,7 @@ public class ResourceSharedReplicationPackage implements SharedReplicationPackag
             return;
         }
 
-        resourceResolver.create(holderRoot, holderName, Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object) "nt:unstructured"));
+        resourceResolver.create(holderRoot, holderName, Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object) "sling:Folder"));
         resourceResolver.commit();
 
     }

@@ -39,6 +39,7 @@ import org.apache.sling.replication.component.ManagedReplicationComponent;
 import org.apache.sling.replication.component.ReplicationComponent;
 import org.apache.sling.replication.component.ReplicationComponentFactory;
 import org.apache.sling.replication.component.ReplicationComponentProvider;
+import org.apache.sling.replication.resources.impl.OsgiUtils;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.replication.trigger.ReplicationTrigger;
 import org.apache.sling.settings.SlingSettingsService;
@@ -91,7 +92,7 @@ public class GenericReplicationComponentFactory implements ReplicationComponentP
 
     @Activate
     protected void activate(BundleContext context, Map<String, Object> config) {
-        log.debug("activating component with config {}", config);
+        log.debug("activating with config {}", OsgiUtils.osgiPropertyMapToString(config));
 
         savedContext = context;
         savedConfig = config;
