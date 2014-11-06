@@ -98,9 +98,6 @@ public class MockResourceResolverFactory implements ResourceResolverFactory {
      */
     private ThreadLocal<Stack<ResourceResolver>> resolverStackHolder = new ThreadLocal<Stack<ResourceResolver>>();
 
-    /**
-     * @see org.apache.sling.api.resource.ResourceResolverFactory#getThreadResourceResolver()
-     */
     // part of Resource API 2.8.0
     public ResourceResolver getThreadResourceResolver() {
         ResourceResolver result = null;

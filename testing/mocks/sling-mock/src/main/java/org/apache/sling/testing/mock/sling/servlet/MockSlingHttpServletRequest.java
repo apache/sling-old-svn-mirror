@@ -110,6 +110,7 @@ public class MockSlingHttpServletRequest extends SlingAdaptable implements Sling
 
     /**
      * @param resourceResolver Resource resolver
+     * @param bundleContext Bundle context
      */
     public MockSlingHttpServletRequest(ResourceResolver resourceResolver, BundleContext bundleContext) {
         this.resourceResolver = resourceResolver;

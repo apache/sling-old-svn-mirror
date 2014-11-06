@@ -104,6 +104,7 @@ public class SlingContextImpl {
     
     /**
      * Initialize mocked resource resolver factory.
+     * @return Resource resolver factory
      */
     protected ResourceResolverFactory newResourceResolverFactory() {
         return ContextResourceResolverFactory.get(this.resourceResolverType);
@@ -277,6 +278,7 @@ public class SlingContextImpl {
 
     /**
      * Registers a service in the mocked OSGi environment.
+     * @param <T> Service type
      * @param service Service instance
      * @return Registered service instance
      */
@@ -286,6 +288,7 @@ public class SlingContextImpl {
 
     /**
      * Registers a service in the mocked OSGi environment.
+     * @param <T> Service type
      * @param serviceClass Service class
      * @param service Service instance
      * @return Registered service instance
@@ -296,6 +299,7 @@ public class SlingContextImpl {
 
     /**
      * Registers a service in the mocked OSGi environment.
+     * @param <T> Service type
      * @param serviceClass Service class
      * @param service Service instance
      * @param properties Service properties (optional)
@@ -314,6 +318,7 @@ public class SlingContextImpl {
     /**
      * Injects dependencies, activates and registers a service in the mocked
      * OSGi environment.
+     * @param <T> Service type
      * @param service Service instance
      * @return Registered service instance
      */
@@ -324,6 +329,7 @@ public class SlingContextImpl {
     /**
      * Injects dependencies, activates and registers a service in the mocked
      * OSGi environment.
+     * @param <T> Service type
      * @param service Service instance
      * @param properties Service properties (optional)
      * @return Registered service instance
@@ -337,6 +343,7 @@ public class SlingContextImpl {
 
     /**
      * Lookup a single service
+     * @param <ServiceType> Service type
      * @param serviceType The type (interface) of the service.
      * @return The service instance, or null if the service is not available.
      */
@@ -346,10 +353,11 @@ public class SlingContextImpl {
 
     /**
      * Lookup one or several services
+     * @param <ServiceType> Service type
      * @param serviceType The type (interface) of the service.
      * @param filter An optional filter (LDAP-like, see OSGi spec)
      * @return The services object or null.
-     * @throws InvalidServiceFilterSyntaxException If the <code>filter</code>
+     * @throws org.apache.sling.api.scripting.InvalidServiceFilterSyntaxException If the <code>filter</code>
      *             string is not a valid OSGi service filter string.
      */
     public final <ServiceType> ServiceType[] getServices(final Class<ServiceType> serviceType, final String filter) {
