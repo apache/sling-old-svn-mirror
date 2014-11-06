@@ -541,8 +541,9 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
                     for(int i=0; i<array.length(); i++) {
                         final JSONObject obj = array.getJSONObject(i);
                         final String pid = obj.getString("pid");
-                        final String path = obj.getJSONObject("provider.file").getString("value");
-                        final String roots = obj.getJSONObject("provider.roots").getString("value");
+                        final JSONObject properties = obj.getJSONObject("properties");
+                        final String path = properties.getJSONObject("provider.file").getString("value");
+                        final String roots = properties.getJSONObject("provider.roots").getString("value");
                         if ( path != null && path.startsWith(this.project.getBasedir().getAbsolutePath()) ) {
                             getLog().debug("Found configuration with pid: " + pid + ", path: " + path + ", roots: " + roots);
                             result.put(pid, new String[] {path, roots});
