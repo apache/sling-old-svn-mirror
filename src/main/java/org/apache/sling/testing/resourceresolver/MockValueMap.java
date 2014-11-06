@@ -36,7 +36,7 @@ import org.apache.sling.api.wrappers.ValueMapDecorator;
  * <ul>
  * <li>Converts all Date values to Calendar objects internally and vice versa.</li>
  * <li>Converts InputStream to byte array and vice versa.</li>
- * <ul>
+ * </ul>
  */
 public class MockValueMap extends ValueMapDecorator {
     
