@@ -273,9 +273,10 @@
                         <sling.additional.bundle.3>org.apache.sling.discovery.impl</sling.additional.bundle.3>
                         <sling.additional.bundle.4>org.apache.sling.hc.core</sling.additional.bundle.4>
                         <sling.additional.bundle.5>org.apache.jackrabbit.vault</sling.additional.bundle.5>
-                        <sling.additional.bundle.6>org.apache.sling.distribution.core</sling.additional.bundle.6>
-                        <sling.additional.bundle.7>org.apache.sling.distribution.sample</sling.additional.bundle.7>
-                        <sling.additional.bundle.8>${project.build.finalName}.jar</sling.additional.bundle.8>
+                        <sling.additional.bundle.6>org.apache.sling.distribution.api</sling.additional.bundle.6>
+                        <sling.additional.bundle.7>org.apache.sling.distribution.core</sling.additional.bundle.7>
+                        <sling.additional.bundle.8>org.apache.sling.distribution.sample</sling.additional.bundle.8>
+                        <sling.additional.bundle.9>${project.build.finalName}.jar</sling.additional.bundle.9>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
@@ -391,13 +392,18 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.distribution.api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.distribution.core</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.distribution.sample</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 </project>
