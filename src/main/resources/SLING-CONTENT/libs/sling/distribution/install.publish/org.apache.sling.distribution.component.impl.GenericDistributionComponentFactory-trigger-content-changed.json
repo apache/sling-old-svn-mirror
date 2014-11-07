@@ -7,7 +7,7 @@
     "properties": [
         "type=jcrEvent",
         "path=/content/usergenerated",
-        "servicename=replicationService"
+        "servicename=distributionService"
     ]
 
 }

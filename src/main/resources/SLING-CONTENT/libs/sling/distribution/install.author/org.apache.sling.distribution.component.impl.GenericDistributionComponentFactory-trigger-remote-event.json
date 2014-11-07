@@ -6,7 +6,7 @@
 
     "properties": [
         "type=remoteEvent",
-        "endpoint=http://localhost:4503/libs/sling/replication/services/triggers/content-changed.event",
+        "endpoint=http://localhost:4503/libs/sling/distribution/services/triggers/content-changed.event",
 
         "authenticationProvider/type=service"
     ],

@@ -4,5 +4,5 @@
 
     "packageBuilder": [ "type=vlt" ],
 
-    "ReplicationAgent.target": "(name=reverse)"
+    "DistributionAgent.target": "(name=reverse)"
 }

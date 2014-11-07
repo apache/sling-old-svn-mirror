@@ -2,7 +2,7 @@
     "jcr:primaryType": "sling:OsgiConfig",
     "name": "publish",
 
-    "serviceName" : "replicationService",
+    "serviceName" : "distributionService",
 
     "requestAuthorizationStrategy" : [
         "type=privilege",
@@ -16,7 +16,7 @@
 
     "packageImporter": [
         "type=remote",
-        "endpoints[0]=http://localhost:4503/libs/sling/replication/services/importers/default",
+        "endpoints[0]=http://localhost:4503/libs/sling/distribution/services/importers/default",
 
         "authenticationProvider/type=service",
 

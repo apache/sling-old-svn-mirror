@@ -1,7 +1,7 @@
 <%
 var valueMap = resource.adaptTo(Packages.org.apache.sling.api.resource.ValueMap);
 var pit = valueMap.keySet().iterator();
-var settingsUrl = request.contextPath + "/libs/sling/replication/settings/";
+var settingsUrl = request.contextPath + "/libs/sling/distribution/settings/";
 %>
 <html>
   <body>

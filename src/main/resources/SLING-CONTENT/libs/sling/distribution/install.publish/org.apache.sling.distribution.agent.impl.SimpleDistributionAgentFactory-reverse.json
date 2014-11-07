@@ -4,7 +4,7 @@
 
     "isPassive": true,
 
-    "serviceName" : "replicationService",
+    "serviceName" : "distributionService",
 
     "packageExporter": [
         "type=local",
@@ -28,6 +28,6 @@
     "trigger": [
         "userGeneratedTrigger/type=jcrEvent",
         "userGeneratedTrigger/path=/content/usergenerated",
-        "userGeneratedTrigger/servicename=replicationService"
+        "userGeneratedTrigger/servicename=distributionService"
     ]
 }

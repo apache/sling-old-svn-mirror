@@ -1,5 +1,5 @@
 <%
-var settingsUrl = request.contextPath + "/libs/sling/replication/settings/";
+var settingsUrl = request.contextPath + "/libs/sling/distribution/settings/";
 var valueMap = resource.adaptTo(Packages.org.apache.sling.api.resource.ValueMap);
 var childrenNames = valueMap.get("items"); %>
 <html>

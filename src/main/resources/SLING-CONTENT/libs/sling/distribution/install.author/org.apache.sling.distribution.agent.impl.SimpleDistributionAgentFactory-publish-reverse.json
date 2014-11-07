@@ -4,12 +4,12 @@
 
     "enabled" : true,
 
-    "serviceName" : "replicationService",
+    "serviceName" : "distributionService",
 
 
     "packageExporter": [
         "type=remote",
-        "endpoints[0]=http://localhost:4503/libs/sling/replication/services/exporters/reverse",
+        "endpoints[0]=http://localhost:4503/libs/sling/distribution/services/exporters/reverse",
 
         "packageBuilder/type=vlt"
     ],
@@ -30,7 +30,7 @@
         "scheduledTrigger/seconds=30",
 
         "remoteTrigger/type=remoteEvent",
-        "remoteTrigger/endpoint=http://localhost:4503/libs/sling/replication/services/triggers/content-changed.event"
+        "remoteTrigger/endpoint=http://localhost:4503/libs/sling/distribution/services/triggers/content-changed.event"
     ],
 
 

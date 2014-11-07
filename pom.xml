@@ -32,19 +32,19 @@
     <!-- ======================================================================= -->
     <!-- P R O J E C T                                                           -->
     <!-- ======================================================================= -->
-    <artifactId>org.apache.sling.replication.sample</artifactId>
+    <artifactId>org.apache.sling.distribution.sample</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling Replication Sample</name>
+    <name>Apache Sling Distribution Sample</name>
     <description>
-        The Apache Sling Replication sample bundle provides a set of sample configurations and custom component implementations.
+        The Apache Sling Distribution sample bundle provides a set of sample configurations and custom component implementations.
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/replication/sample</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/replication/sample</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/replication/sample</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/distribution/sample</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/distribution/sample</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/distribution/sample</url>
     </scm>
 
     <!-- ======================================================================= -->
@@ -66,13 +66,10 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Bundle-SymbolicName>org.apache.sling.replication.sample</Bundle-SymbolicName>
+                        <Bundle-SymbolicName>org.apache.sling.distribution.sample</Bundle-SymbolicName>
                         <Sling-Initial-Content>
-                            SLING-CONTENT/libs/sling/replication;path:=/libs/sling/replication;overwrite:=true
+                            SLING-CONTENT/libs/sling/distribution;path:=/libs/sling/distribution;overwrite:=true
                         </Sling-Initial-Content>
-                        <Export-Package>
-                            </Export-Package>
-                        <Embed-Dependency>httpasyncclient</Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
@@ -96,7 +93,7 @@
         <!-- SLING -->
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.replication.core</artifactId>
+            <artifactId>org.apache.sling.distribution.core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
