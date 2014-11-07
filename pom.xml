@@ -32,20 +32,20 @@
     <!-- ======================================================================= -->
     <!-- P R O J E C T                                                           -->
     <!-- ======================================================================= -->
-    <artifactId>org.apache.sling.replication.core</artifactId>
+    <artifactId>org.apache.sling.distribution.core</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling Replication Core</name>
+    <name>Apache Sling Distribution Core</name>
     <description>
-        The Apache Sling Replication core bundle provides a set of utilities to replicate content from / to other Sling
+        The Apache Sling Distribution core bundle provides a set of utilities to replicate content from / to other Sling
         instances.
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/replication/core</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/replication/core</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/replication/core</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/distribution/core</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/distribution/core</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/distribution/core</url>
     </scm>
 
     <!-- ======================================================================= -->
@@ -67,20 +67,17 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Bundle-SymbolicName>org.apache.sling.replication.core</Bundle-SymbolicName>
-                        <Sling-Initial-Content>
-                            SLING-CONTENT/libs/sling/replication;path:=/libs/sling/replication;overwrite:=true
-                        </Sling-Initial-Content>
+                        <Bundle-SymbolicName>org.apache.sling.distribution.core</Bundle-SymbolicName>
                         <Export-Package>
-                            org.apache.sling.replication.component,
-                            org.apache.sling.replication.agent,
-                            org.apache.sling.replication.communication,
-                            org.apache.sling.replication.event,
-                            org.apache.sling.replication.queue,
-                            org.apache.sling.replication.trigger,
-                            org.apache.sling.replication.packaging,
-                            org.apache.sling.replication.transport.authentication,
-                            org.apache.sling.replication.util
+                            org.apache.sling.distribution.component,
+                            org.apache.sling.distribution.agent,
+                            org.apache.sling.distribution.communication,
+                            org.apache.sling.distribution.event,
+                            org.apache.sling.distribution.queue,
+                            org.apache.sling.distribution.trigger,
+                            org.apache.sling.distribution.packaging,
+                            org.apache.sling.distribution.transport.authentication,
+                            org.apache.sling.distribution.util
                         </Export-Package>
                         <Embed-Dependency>httpasyncclient</Embed-Dependency>
                     </instructions>

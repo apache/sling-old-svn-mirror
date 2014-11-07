@@ -1,84 +1,84 @@
-# Sling Replication
+# Sling Content Distribution
 
-This is the README for the Sling Replication module.
+This is the README for the Sling Content Distribution module.
 
 ## Overview
 
-### Replication agents
+### Distribution agents
 
-Each replication agent is an OSGi service and is resolved using a [Sling Resource Provider](#Resource_Providers) who locate it under `libs/sling/replication/services/agents`.
+Each distribution agent is an OSGi service and is resolved using a [Sling Resource Provider](#Resource_Providers) who locate it under `libs/sling/distribution/services/agents`.
 
-Replication agents can be triggered by sending `HTTP POST` requests to 
+Distribution agents can be triggered by sending `HTTP POST` requests to 
 
-`http://$host:$port/libs/sling/replication/services/agents/$agentname` 
+`http://$host:$port/libs/sling/distribution/services/agents/$agentname` 
 
 with HTTP parameters `action` and `path`.
 
 ### Resource providers
 
-One can configure a resource provider for a replication resource to give access to OSGI replication services.
-Already configured ones are: _ReplicationAgents_, _ReplicationPackageExporters_ and _ReplicationPackageImporters_.
-Here is an example of the configuration for exposing _ReplicationAgent_ services as resources:
+One can configure a resource provider for a distribution resource to give access to OSGI distribution services.
+Already configured ones are: _DistributionAgents_, _DistributionPackageExporters_ and _DistributionPackageImporters_.
+Here is an example of the configuration for exposing _DistributionAgent_ services as resources:
 
     {
          "jcr:primaryType" : "sling:OsgiConfig",
     
-         "name" : "replicationAgents",
+         "name" : "distributionAgents",
     
-         "provider.roots" : [ "/libs/sling/replication/services/agents" ],
+         "provider.roots" : [ "/libs/sling/distribution/services/agents" ],
     
-         "serviceType" : "org.apache.sling.replication.agent.ReplicationAgent",
+         "serviceType" : "org.apache.sling.distribution.agent.DistributionAgent",
     
          "resourceProperties" : [
     
-             "sling:resourceType=sling/replication/service/agent",
+             "sling:resourceType=sling/distribution/service/agent",
     
-             "sling:resourceSuperType=sling/replication/service",
+             "sling:resourceSuperType=sling/distribution/service",
     
              "name={name}",
     
-             "queue/sling:resourceType=replication/agent/queue"
+             "queue/sling:resourceType=distribution/agent/queue"
     
          ]
     
      }
 
-When configuring such a provider you specify the service interface _ReplicationAgent_, the url and some properties one 
-wants that resource to have like resourceType so basically this config governs _/libs/sling/replication/services/agents_.
+When configuring such a provider you specify the service interface _DistributionAgent_, the url and some properties one 
+wants that resource to have like resourceType so basically this config governs _/libs/sling/distribution/services/agents_.
 Sub resources to an agent can also be added, as the _queue_ for example and add properties to it by specifying _queue/propertyName = propertyValue_.
 That's the mechanism to expose services as resources.
 
-### Replication agents configuration
+### Distribution agents configuration
 
-Replication agents configurations are proper OSGi configurations (backed by nodes of type `sling:OsgiConfig` in the repository), see [CompactSimpleReplicationAgentServiceFactory-publish.json](src/main/resources/SLING-CONTENT/libs/sling/replication/install.author/org.apache.sling.replication.agent.impl.CompactSimpleReplicationAgentFactory-publish.json).
+Distribution agents configurations are proper OSGi configurations (backed by nodes of type `sling:OsgiConfig` in the repository), see [CompactSimpleDistributionAgentServiceFactory-publish.json](src/main/resources/SLING-CONTENT/libs/sling/distribution/install.author/org.apache.sling.distribution.agent.impl.CompactSimpleDistributionAgentFactory-publish.json).
 
-Replication agents configuration include:
+Distribution agents configuration include:
 
 - Name: the name of the agent
-- Package exporter: algorithm for retrieving a replication package
-- Package importer: algorithm for installing a replication package
+- Package exporter: algorithm for retrieving a distribution package
+- Package importer: algorithm for installing a distribution package
 - Queue provider: current implementations are:
 -- In memory
 -- Sling Job Handling based
-- Queue distribution: how items to be replicated are distributed to agent's queues
-- Triggers: triggers able to handle replication requests
+- Queue distribution: how items to be distributed are distributed to agent's queues
+- Triggers: triggers able to handle distribution requests
 
-Replication agents' configurations can be retrieved via `HTTP GET`:
+Distribution agents' configurations can be retrieved via `HTTP GET`:
 
-- `http -a admin:admin -v -f GET http://localhost:8080/libs/sling/replication/settings/agents/publish`
+- `http -a admin:admin -v -f GET http://localhost:8080/libs/sling/distribution/settings/agents/publish`
 
-### Replication queues
+### Distribution queues
 
 #### In Memory queue
 
-That's a draft implementation using an in memory blocking queue together with a Sling scheduled processor which periodically fetches the first item of each queue and trigger a replication of such an item.
+That's a draft implementation using an in memory blocking queue together with a Sling scheduled processor which periodically fetches the first item of each queue and trigger a distribution of such an item.
 It's not suitable for production as it's currently not persisted and therefore restarting the bundle / platform would not keep the queue together with its items.
 
 #### Sling Job Handling based queue
 
 That's a queue implementation based on the queues and jobs provided by Sling Event bundle.
 Each item addition to a queue triggers the creation of a Sling job which will handle the processing of that item in the queue.
-By default Sling queues for replication have the following options:
+By default Sling queues for distribution have the following options:
 
 - ordered
 - with max priority
@@ -87,7 +87,7 @@ By default Sling queues for replication have the following options:
 
 ### Distribution of packages among queues
 
-Each replication agent uses a specific queue distribution mechanism, specified via a 'queue distribution strategy', which defines how packages are routed into agent queues.
+Each distribution agent uses a specific queue distribution mechanism, specified via a 'queue distribution strategy', which defines how packages are routed into agent queues.
 The currently available distribution strategies are
 
 - single: the agent has one only queue and all the items are routed there
@@ -97,22 +97,22 @@ The currently available distribution strategies are
  
 ## Usecases
 
-### Forward replication (PUSH)
+### Forward distribution (PUSH)
 
-User/client makes an `HTTP POST`request to `http://localhost:8080/libs/sling/replication/services/agents/publish` with parameters `action=ADD` and `path=/content`
+User/client makes an `HTTP POST`request to `http://localhost:8080/libs/sling/distribution/services/agents/publish` with parameters `action=ADD` and `path=/content`
 
-- `ReplicationAgentServlet` servlet is triggered
-- `ReplicationAgentServlet` servlet adapts the resource to a `ReplicationAgent` via a registered `OsgiPropertiesResourceProviderFactory` 
-- `ReplicationAgent` executes the replication request (add the resource at path /content)
-- `ReplicationAgent` get the status of the request and update the response accordingly
-- `ReplicationAgentServlet` maps the agent response to an HTTP response accordingly
+- `DistributionAgentServlet` servlet is triggered
+- `DistributionAgentServlet` servlet adapts the resource to a `DistributionAgent` via a registered `OsgiPropertiesResourceProviderFactory` 
+- `DistributionAgent` executes the distribution request (add the resource at path /content)
+- `DistributionAgent` get the status of the request and update the response accordingly
+- `DistributionAgentServlet` maps the agent response to an HTTP response accordingly
 
 ## HOWTOs
 
 ### Installation
 
 - install the dependency bundles on all Sling instances
-- install Sling Replication core on all Sling instances
+- install Sling Distribution core on all Sling instances
 
 ### Push resources
 
@@ -121,13 +121,13 @@ User/client makes an `HTTP POST`request to `http://localhost:8080/libs/sling/rep
 - create/update some content on author (e.g. /content/sample1)
 - add 'content/sample1' by sending an HTTP POST on sender instance: 
 
-```http -a admin:admin -v -f POST http://localhost:8080/libs/sling/replication/services/agents/publish action=ADD path=/content/sample1```
+```http -a admin:admin -v -f POST http://localhost:8080/libs/sling/distribution/services/agents/publish action=ADD path=/content/sample1```
 
 #### Push deletions
 
 - delete 'content' by sending an HTTP POST on sender instance:
  
-```http -a admin:admin -v -f POST http://localhost:8080/libs/sling/replication/services/agents/publish action=DELETE path=/content/sample1```
+```http -a admin:admin -v -f POST http://localhost:8080/libs/sling/distribution/services/agents/publish action=DELETE path=/content/sample1```
 
 # Open Tasks
 
@@ -139,36 +139,36 @@ User/client makes an `HTTP POST`request to `http://localhost:8080/libs/sling/rep
 ### HTTP API
 
 #### API Requirements
-We need to expose APIs for configuring, commanding and monitoring replication agents.
+We need to expose APIs for configuring, commanding and monitoring distribution agents.
 
 - Configuration API should allow:
  - CRUD operations for agent configs
 - Command API (eventually issued to multiple agents at once) should allow:
- - to trigger a replication request on a specific agent
+ - to trigger a distribution request on a specific agent
  - to explicitly create and export a package
  - to explicitly import a formerly created package
 - Monitoring API should allow:
- - inspection to internal queues of replication agents
+ - inspection to internal queues of distribution agents
  - inspection of commands history
  
 #### API endpoints 
 
 ##### Configuration API
-- Create config:  - POST _/libs/sling/replication/settings/agents_
-- Read config - GET _/libs/sling/replication/settings/agents/{config identifier}_
-- Update config - PUT _/libs/sling/replication/settings/agents/{config identifier}_
-- Delete config - DELETE _/libs/sling/replication/settings/agents/{config identifier}_ or POST with :operation=delete
+- Create config:  - POST _/libs/sling/distribution/settings/agents_
+- Read config - GET _/libs/sling/distribution/settings/agents/{config identifier}_
+- Update config - PUT _/libs/sling/distribution/settings/agents/{config identifier}_
+- Delete config - DELETE _/libs/sling/distribution/settings/agents/{config identifier}_ or POST with :operation=delete
 
 ##### Command API
-- Replicate - POST _/libs/sling/replication/services/agents/{agentName}_
-- Import package - POST _/libs/sling/replication/services/importers/{importerName}_
-- Export package - POST _/libs/sling/replication/services/exporters/{exporterName}_
+- Replicate - POST _/libs/sling/distribution/services/agents/{agentName}_
+- Import package - POST _/libs/sling/distribution/services/importers/{importerName}_
+- Export package - POST _/libs/sling/distribution/services/exporters/{exporterName}_
 
 ##### Monitoring API
-- Replication history - GET _/libs/sling/replication/services/agents/{agentName}/history_ (not implemented yet)
-- Import package history - GET _/libs/sling/replication/services/importers/{importerName}/history_ (not implemented yet)
-- Export package history - GET _/libs/sling/replication/services/exporters/{exporterName}/history_ (not implemented yet)
-- Agent queue inspection  - GET _/libs/sling/replication/services/agents/{agentName}/queue_ or _{agentName}.queue_
+- Distribution history - GET _/libs/sling/distribution/services/agents/{agentName}/history_ (not implemented yet)
+- Import package history - GET _/libs/sling/distribution/services/importers/{importerName}/history_ (not implemented yet)
+- Export package history - GET _/libs/sling/distribution/services/exporters/{exporterName}/history_ (not implemented yet)
+- Agent queue inspection  - GET _/libs/sling/distribution/services/agents/{agentName}/queue_ or _{agentName}.queue_
 
 #### API Implementation 
 TODO
