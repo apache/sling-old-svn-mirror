@@ -1,0 +1,13 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "test-persisting-event",
+
+    "componentType": "trigger",
+
+    "properties": [
+        "type=persistedJcrEvent",
+        "path=/content/persistedEvents",
+        "servicename=distributionService"
+    ]
+
+}

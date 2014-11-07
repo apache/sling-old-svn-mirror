@@ -1,0 +1,12 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "distributionImporters",
+    "provider.roots": [ "/libs/sling/distribution/services/importers" ],
+    "serviceType": "org.apache.sling.distribution.packaging.DistributionPackageImporter",
+    "resourceProperties": [
+        "sling:resourceType=sling/distribution/service/importer",
+        "sling:resourceSuperType=sling/distribution/service",
+
+        "name={name}"
+    ]
+}

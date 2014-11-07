@@ -1,0 +1,33 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "reverse",
+
+    "isPassive": true,
+
+    "serviceName" : "distributionService",
+
+    "packageExporter": [
+        "type=local",
+        "packageBuilder/type=vlt"
+    ],
+
+    "requestAuthorizationStrategy" : [
+        "type=privilege",
+        "jcrPrivilege=jcr:read"
+    ],
+
+    "packageImporter": [
+        "type=local",
+        "packageBuilder/type=vlt"
+    ],
+
+    "queueProvider.target" : "(name=sjh)",
+
+    "queueDistributionStrategy": "(name=single)",
+
+    "trigger": [
+        "userGeneratedTrigger/type=jcrEvent",
+        "userGeneratedTrigger/path=/content/usergenerated",
+        "userGeneratedTrigger/servicename=distributionService"
+    ]
+}

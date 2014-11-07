@@ -1,0 +1,12 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "distributionTriggers",
+    "provider.roots": [ "/libs/sling/distribution/services/triggers" ],
+    "serviceType": "org.apache.sling.distribution.trigger.DistributionTrigger",
+    "resourceProperties": [
+        "sling:resourceType=sling/distribution/service/trigger",
+        "sling:resourceSuperType=sling/distribution/service",
+
+        "name={name}"
+    ]
+}

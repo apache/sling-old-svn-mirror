@@ -1,0 +1,8 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "reverse",
+
+    "packageBuilder": [ "type=vlt" ],
+
+    "DistributionAgent.target": "(name=reverse)"
+}

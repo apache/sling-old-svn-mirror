@@ -1,0 +1,35 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "pubsync",
+
+    "serviceName" : "distributionService",
+
+    "requestAuthorizationStrategy" : [
+        "type=privilege",
+        "jcrPrivilege=jcr:read"
+    ],
+
+    "packageExporter": [
+        "packageBuilder/type=vlt",
+
+        "endpoints[0]=http://localhost:4503/libs/sling/distribution/services/exporters/reverse-pubsync",
+        "endpoints[1]=http://localhost:4504/libs/sling/distribution/services/exporters/reverse-pubsync",
+        "endpoints[2]=http://localhost:4505/libs/sling/distribution/services/exporters/reverse-pubsync",
+        "endpoints.strategy=All"
+    ],
+
+    "packageImporter": [
+        "packageBuilder/type=vlt",
+
+        "endpoints[0]=http://localhost:4503/libs/sling/distribution/services/importers/default",
+        "endpoints[1]=http://localhost:4504/libs/sling/distribution/services/importers/default",
+        "endpoints[2]=http://localhost:4505/libs/sling/distribution/services/importers/default",
+        "endpoints.strategy=All"
+    ],
+
+    "queueProvider.target" : "(name=sjh)",
+
+    "queueDistributionStrategy.target": "(name=error)",
+
+    "transportAuthenticationProvider.target" : "(name=publishAdmin)"
+}

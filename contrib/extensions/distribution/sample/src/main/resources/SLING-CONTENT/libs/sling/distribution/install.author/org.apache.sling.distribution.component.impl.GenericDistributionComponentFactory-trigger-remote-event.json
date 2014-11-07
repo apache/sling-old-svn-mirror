@@ -1,0 +1,16 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "remote-event",
+
+    "componentType": "trigger",
+
+    "properties": [
+        "type=remoteEvent",
+        "endpoint=http://localhost:4503/libs/sling/distribution/services/triggers/content-changed.event",
+
+        "authenticationProvider/type=service"
+    ],
+
+    "transportAuthenticationProvider.target" : "(name=publishAdmin)"
+
+}

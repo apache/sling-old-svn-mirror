@@ -1,0 +1,26 @@
+<%
+var settingsUrl = request.contextPath + "/libs/sling/distribution/settings/"
+var valueMap = resource.adaptTo(Packages.org.apache.sling.api.resource.ValueMap);
+var childrenNames = valueMap.get("items");
+%>
+<html>
+  <body>
+    <h1><%= valueMap.get("sling:resourceType") %></h1>
+
+    <ul>
+
+        <% for(var i=0; i<childrenNames.length; i++) { %>
+
+            <%
+                var childName = childrenNames[i];
+                var childUrl = settingsUrl + childName + ".html"
+            %>
+            <li>
+                <a href="<%= childUrl %>"><%= childName %></a>
+            </li>
+
+        <% } %>
+
+    </ul>
+  </body>
+</html>

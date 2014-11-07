@@ -1,0 +1,39 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "publish-reverse",
+
+    "enabled" : true,
+
+    "serviceName" : "distributionService",
+
+
+    "packageExporter": [
+        "type=remote",
+        "endpoints[0]=http://localhost:4503/libs/sling/distribution/services/exporters/reverse",
+
+        "packageBuilder/type=vlt"
+    ],
+
+    "requestAuthorizationStrategy" : [
+        "type=privilege",
+        "jcrPrivilege=jcr:read"
+    ],
+
+    "packageImporter": [
+        "type=local",
+        "packageBuilder/type=vlt"
+    ],
+
+    "trigger": [
+        "scheduledTrigger/type=scheduledEvent",
+        "scheduledTrigger/action=poll",
+        "scheduledTrigger/seconds=30",
+
+        "remoteTrigger/type=remoteEvent",
+        "remoteTrigger/endpoint=http://localhost:4503/libs/sling/distribution/services/triggers/content-changed.event"
+    ],
+
+
+    "transportAuthenticationProvider.target" : "(name=publishAdmin)"
+
+}
