@@ -17,23 +17,23 @@
  * under the License.
  */
 
-package org.apache.sling.replication.it.triggers;
+package org.apache.sling.distribution.it.triggers;
 
 
-import org.apache.sling.replication.it.ReplicationIntegrationTestBase;
+import org.apache.sling.distribution.it.DistributionIntegrationTestBase;
 import org.junit.Test;
 
-import static org.apache.sling.replication.it.ReplicationUtils.assertExists;
-import static org.apache.sling.replication.it.ReplicationUtils.triggerUrl;
+import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
+import static org.apache.sling.distribution.it.DistributionUtils.triggerUrl;
 
-public class ReplicationTriggerResourcesTest extends ReplicationIntegrationTestBase {
+public class DistributionTriggerResourcesTest extends DistributionIntegrationTestBase {
 
     @Test
     public void testTestTriggersOnAuthor() throws Exception {
         String[] names = new String[]{
                 "test-content-event",
                 "test-remote-event",
-                "test-replicate-event",
+                "test-distribute-event",
                 "test-scheduled-event",
                 "test-persisting-event"
         };

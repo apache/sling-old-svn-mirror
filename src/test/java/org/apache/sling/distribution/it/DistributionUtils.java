@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.sling.replication.it;
+package org.apache.sling.distribution.it;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,8 +28,8 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.sling.replication.communication.ReplicationActionType;
-import org.apache.sling.replication.communication.ReplicationParameter;
+import org.apache.sling.distribution.communication.DistributionActionType;
+import org.apache.sling.distribution.communication.DistributionParameter;
 import org.apache.sling.testing.tools.http.Request;
 import org.apache.sling.testing.tools.sling.SlingClient;
 import org.apache.sling.testing.tools.sling.SlingInstance;
@@ -39,12 +39,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Utils class for Replication ITs
+ * Utils class for distribution ITs
  */
-public class ReplicationUtils {
+public class DistributionUtils {
 
     private static final String JSON_SELECTOR = ".json";
-    private static final String REPLICATION_ROOT_PATH = "/libs/sling/replication";
+    private static final String DISTRIBUTION_ROOT_PATH = "/libs/sling/distribution";
 
     private static String assertPostResourceWithParameters(SlingInstance slingInstance,
                                                            int status, String path, String... parameters) throws IOException {
@@ -107,21 +107,21 @@ public class ReplicationUtils {
     }
 
 
-    public static void replicate(SlingInstance slingInstance, String agentName, ReplicationActionType action, String... paths) throws IOException {
+    public static void distribute(SlingInstance slingInstance, String agentName, DistributionActionType action, String... paths) throws IOException {
         String agentResource = agentUrl(agentName);
 
-        executeReplicationRequest(slingInstance, 202, agentResource, action, paths);
+        executedistributionRequest(slingInstance, 202, agentResource, action, paths);
     }
 
-    public static String executeReplicationRequest(SlingInstance slingInstance, int status, String resource, ReplicationActionType action, String... paths) throws IOException {
+    public static String executedistributionRequest(SlingInstance slingInstance, int status, String resource, DistributionActionType action, String... paths) throws IOException {
 
         List<String> args = new ArrayList<String>();
-        args.add(ReplicationParameter.ACTION.toString());
+        args.add(DistributionParameter.ACTION.toString());
         args.add(action.toString());
 
         if (paths != null) {
             for (String path : paths) {
-                args.add(ReplicationParameter.PATH.toString());
+                args.add(DistributionParameter.PATH.toString());
                 args.add(path);
             }
         }
@@ -129,10 +129,10 @@ public class ReplicationUtils {
         return assertPostResourceWithParameters(slingInstance, status, resource, args.toArray(new String[args.size()]));
     }
 
-    public static String doExport(SlingInstance slingInstance, String exporterName, ReplicationActionType action, String... paths) throws IOException {
+    public static String doExport(SlingInstance slingInstance, String exporterName, DistributionActionType action, String... paths) throws IOException {
         String agentResource = exporterUrl(exporterName);
 
-        return executeReplicationRequest(slingInstance, 200, agentResource, action, paths);
+        return executedistributionRequest(slingInstance, 200, agentResource, action, paths);
     }
 
     public static String doImport(SlingInstance slingInstance, String importerName, byte[] bytes) throws IOException {
@@ -171,7 +171,7 @@ public class ReplicationUtils {
     }
 
     public static String agentRootUrl() {
-        return REPLICATION_ROOT_PATH + "/services/agents";
+        return DISTRIBUTION_ROOT_PATH + "/services/agents";
     }
 
     public static String agentUrl(String agentName) {
@@ -183,12 +183,12 @@ public class ReplicationUtils {
     }
 
     public static String agentConfigUrl(String agentName) {
-        return REPLICATION_ROOT_PATH + "/settings/agents/" + agentName;
+        return DISTRIBUTION_ROOT_PATH + "/settings/agents/" + agentName;
     }
 
 
     public static String importerRootUrl() {
-        return REPLICATION_ROOT_PATH + "/services/importers";
+        return DISTRIBUTION_ROOT_PATH + "/services/importers";
     }
 
     public static String importerUrl(String importerName) {
@@ -196,7 +196,7 @@ public class ReplicationUtils {
     }
 
     public static String exporterRootUrl() {
-        return REPLICATION_ROOT_PATH + "/services/exporters";
+        return DISTRIBUTION_ROOT_PATH + "/services/exporters";
     }
 
     public static String exporterUrl(String exporterName) {
@@ -204,16 +204,16 @@ public class ReplicationUtils {
     }
 
     public static String importerConfigUrl(String importerName) {
-        return REPLICATION_ROOT_PATH + "/settings/importers/" + importerName;
+        return DISTRIBUTION_ROOT_PATH + "/settings/importers/" + importerName;
     }
 
     public static String exporterConfigUrl(String exporterName) {
-        return REPLICATION_ROOT_PATH + "/settings/exporters/" + exporterName;
+        return DISTRIBUTION_ROOT_PATH + "/settings/exporters/" + exporterName;
     }
 
 
     public static String triggerRootUrl() {
-        return REPLICATION_ROOT_PATH + "/services/triggers";
+        return DISTRIBUTION_ROOT_PATH + "/services/triggers";
     }
 
     public static String triggerUrl(String triggerName) {

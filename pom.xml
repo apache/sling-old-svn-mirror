@@ -27,13 +27,13 @@
         <version>22</version>
     </parent>
 
-    <artifactId>org.apache.sling.replication.it</artifactId>
+    <artifactId>org.apache.sling.distribution.it</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling Replication Integration Tests</name>
+    <name>Apache Sling Distribution Integration Tests</name>
     <description>
-        Project tests functionality for org.apache.sling.replication bundle
+        Project tests functionality for org.apache.sling.distribution bundle
     </description>
 
     <!--
@@ -89,9 +89,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/replication/it</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/replication/it</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/replication/it</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/distribution/it</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/distribution/it</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/distribution/it</url>
     </scm>
 
     <build>
@@ -110,12 +110,12 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Bundle-SymbolicName>org.apache.sling.replication.it</Bundle-SymbolicName>
+                        <Bundle-SymbolicName>org.apache.sling.distribution.it</Bundle-SymbolicName>
                         <Sling-Initial-Content>SLING-CONTENT/content/test;path:=/content/test;overwrite:=true,
                             SLING-CONTENT/libs/test;path:=/libs/test;overwrite:=true
                         </Sling-Initial-Content>
                         <Export-Package>
-                            org.apache.sling.replication.it
+                            org.apache.sling.distribution.it
                         </Export-Package>
                     </instructions>
                 </configuration>
@@ -273,8 +273,8 @@
                         <sling.additional.bundle.3>org.apache.sling.discovery.impl</sling.additional.bundle.3>
                         <sling.additional.bundle.4>org.apache.sling.hc.core</sling.additional.bundle.4>
                         <sling.additional.bundle.5>org.apache.jackrabbit.vault</sling.additional.bundle.5>
-                        <sling.additional.bundle.6>org.apache.sling.replication.core</sling.additional.bundle.6>
-                        <sling.additional.bundle.7>org.apache.sling.replication.sample</sling.additional.bundle.7>
+                        <sling.additional.bundle.6>org.apache.sling.distribution.core</sling.additional.bundle.6>
+                        <sling.additional.bundle.7>org.apache.sling.distribution.sample</sling.additional.bundle.7>
                         <sling.additional.bundle.8>${project.build.finalName}.jar</sling.additional.bundle.8>
                     </systemPropertyVariables>
                 </configuration>
@@ -391,12 +391,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.replication.core</artifactId>
+            <artifactId>org.apache.sling.distribution.core</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.replication.sample</artifactId>
+            <artifactId>org.apache.sling.distribution.sample</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
     </dependencies>

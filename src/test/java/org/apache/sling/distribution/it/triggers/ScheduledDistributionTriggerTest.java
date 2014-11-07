@@ -17,15 +17,15 @@
  * under the License.
  */
 
-package org.apache.sling.replication.it.triggers;
+package org.apache.sling.distribution.it.triggers;
 
-import org.apache.sling.replication.it.ReplicationIntegrationTestBase;
+import org.apache.sling.distribution.it.DistributionIntegrationTestBase;
 import org.junit.Test;
 
-import static org.apache.sling.replication.it.ReplicationUtils.assertResponseContains;
-import static org.apache.sling.replication.it.ReplicationUtils.triggerEventUrl;
+import static org.apache.sling.distribution.it.DistributionUtils.assertResponseContains;
+import static org.apache.sling.distribution.it.DistributionUtils.triggerEventUrl;
 
-public class ScheduledReplicationTriggerTest extends ReplicationIntegrationTestBase {
+public class ScheduledDistributionTriggerTest extends DistributionIntegrationTestBase {
 
     @Test
     public void testTestTriggersOnAuthor() throws Exception {

@@ -16,24 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.it;
+package org.apache.sling.distribution.it;
 
 import org.apache.sling.testing.tools.sling.SlingClient;
 import org.apache.sling.testing.tools.sling.SlingInstance;
 import org.apache.sling.testing.tools.sling.SlingInstanceManager;
 import org.junit.BeforeClass;
 
-import static org.apache.sling.replication.it.ReplicationUtils.agentConfigUrl;
-import static org.apache.sling.replication.it.ReplicationUtils.agentUrl;
-import static org.apache.sling.replication.it.ReplicationUtils.assertExists;
-import static org.apache.sling.replication.it.ReplicationUtils.exporterUrl;
-import static org.apache.sling.replication.it.ReplicationUtils.importerUrl;
-import static org.apache.sling.replication.it.ReplicationUtils.setAgentProperties;
+import static org.apache.sling.distribution.it.DistributionUtils.agentConfigUrl;
+import static org.apache.sling.distribution.it.DistributionUtils.agentUrl;
+import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
+import static org.apache.sling.distribution.it.DistributionUtils.exporterUrl;
+import static org.apache.sling.distribution.it.DistributionUtils.importerUrl;
+import static org.apache.sling.distribution.it.DistributionUtils.setAgentProperties;
 
 /**
- * Integration test base class for replication
+ * Integration test base class for distribution
  */
-public abstract class ReplicationIntegrationTestBase {
+public abstract class DistributionIntegrationTestBase {
 
     protected static SlingInstance author;
     protected static SlingInstance publish;

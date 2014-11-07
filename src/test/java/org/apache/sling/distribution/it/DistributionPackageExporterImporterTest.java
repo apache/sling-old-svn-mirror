@@ -16,26 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.it;
+package org.apache.sling.distribution.it;
 
 import org.apache.http.protocol.HTTP;
-import org.apache.sling.replication.communication.ReplicationActionType;
+import org.apache.sling.distribution.communication.DistributionActionType;
 import org.junit.Test;
 
-import static org.apache.sling.replication.it.ReplicationUtils.assertExists;
-import static org.apache.sling.replication.it.ReplicationUtils.assertNotExists;
-import static org.apache.sling.replication.it.ReplicationUtils.createRandomNode;
-import static org.apache.sling.replication.it.ReplicationUtils.doExport;
-import static org.apache.sling.replication.it.ReplicationUtils.doImport;
+import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
+import static org.apache.sling.distribution.it.DistributionUtils.assertNotExists;
+import static org.apache.sling.distribution.it.DistributionUtils.createRandomNode;
+import static org.apache.sling.distribution.it.DistributionUtils.doExport;
+import static org.apache.sling.distribution.it.DistributionUtils.doImport;
 
-public class ReplicationPackageExporterImporterTest extends ReplicationIntegrationTestBase {
+public class DistributionPackageExporterImporterTest extends DistributionIntegrationTestBase {
 
     @Test
     public void testAddExportImport() throws Exception {
         String nodePath = createRandomNode(publishClient, "/content/export_" + System.nanoTime());
         assertExists(publishClient, nodePath);
 
-        String content = doExport(publish, "default", ReplicationActionType.ADD, nodePath);
+        String content = doExport(publish, "default", DistributionActionType.ADD, nodePath);
 
         publishClient.delete(nodePath);
         assertNotExists(publishClient, nodePath);
@@ -50,7 +50,7 @@ public class ReplicationPackageExporterImporterTest extends ReplicationIntegrati
         String nodePath = createRandomNode(publishClient, "/content/export_" + System.nanoTime());
         assertExists(publishClient, nodePath);
 
-        String content = doExport(publish, "default", ReplicationActionType.DELETE, nodePath);
+        String content = doExport(publish, "default", DistributionActionType.DELETE, nodePath);
 
         doImport(publish, "default", content.getBytes(HTTP.DEFAULT_CONTENT_CHARSET));
         assertNotExists(publishClient, nodePath);

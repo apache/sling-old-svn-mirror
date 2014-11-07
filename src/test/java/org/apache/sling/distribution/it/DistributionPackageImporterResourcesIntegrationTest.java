@@ -16,26 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.it;
+package org.apache.sling.distribution.it;
 
 import org.junit.Test;
 
-import static org.apache.sling.replication.it.ReplicationUtils.assertExists;
-import static org.apache.sling.replication.it.ReplicationUtils.assertResponseContains;
-import static org.apache.sling.replication.it.ReplicationUtils.importerRootUrl;
-import static org.apache.sling.replication.it.ReplicationUtils.importerUrl;
+import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
+import static org.apache.sling.distribution.it.DistributionUtils.assertResponseContains;
+import static org.apache.sling.distribution.it.DistributionUtils.importerRootUrl;
+import static org.apache.sling.distribution.it.DistributionUtils.importerUrl;
 
 /**
- * Integration test for {@link org.apache.sling.replication.packaging.ReplicationPackageImporter} resources
+ * Integration test for {@link org.apache.sling.distribution.packaging.DistributionPackageImporter} resources
  */
-public class ReplicationPackageImporterResourcesIntegrationTest extends ReplicationIntegrationTestBase {
+public class DistributionPackageImporterResourcesIntegrationTest extends DistributionIntegrationTestBase {
 
     @Test
     public void testImporterRootResource() throws Exception {
         String rootResource = importerRootUrl();
         assertExists(publishClient, rootResource);
         assertResponseContains(publish, rootResource,
-                "sling:resourceType", "sling/replication/service/importer/list",
+                "sling:resourceType", "sling/distribution/service/importer/list",
                 "items", "default");
     }
 
@@ -44,7 +44,7 @@ public class ReplicationPackageImporterResourcesIntegrationTest extends Replicat
         String rootResource = importerUrl("default");
         assertExists(publishClient, rootResource);
         assertResponseContains(publish, rootResource,
-                "sling:resourceType", "sling/replication/service/importer",
+                "sling:resourceType", "sling/distribution/service/importer",
                 "name", "default");
     }
 }

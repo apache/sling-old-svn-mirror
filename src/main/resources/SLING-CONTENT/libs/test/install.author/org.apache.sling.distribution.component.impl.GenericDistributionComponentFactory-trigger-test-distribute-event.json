@@ -1,12 +1,11 @@
 {
     "jcr:primaryType": "sling:OsgiConfig",
-    "name": "test-replicate-event",
+    "name": "test-distribute-event",
 
     "componentType": "trigger",
 
     "properties": [
-        "type=replicationEvent"
-
+        "type=distributionEvent"
     ]
 
 }

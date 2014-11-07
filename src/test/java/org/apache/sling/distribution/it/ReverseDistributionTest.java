@@ -16,27 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.it;
+package org.apache.sling.distribution.it;
 
 
-import org.apache.sling.replication.communication.ReplicationActionType;
+import org.apache.sling.distribution.communication.DistributionActionType;
 import org.junit.Test;
 
-import static org.apache.sling.replication.it.ReplicationUtils.assertExists;
-import static org.apache.sling.replication.it.ReplicationUtils.assertNotExists;
-import static org.apache.sling.replication.it.ReplicationUtils.createRandomNode;
-import static org.apache.sling.replication.it.ReplicationUtils.replicate;
+import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
+import static org.apache.sling.distribution.it.DistributionUtils.assertNotExists;
+import static org.apache.sling.distribution.it.DistributionUtils.createRandomNode;
+import static org.apache.sling.distribution.it.DistributionUtils.distribute;
 
 /**
- * Integration test for reverse replication
+ * Integration test for reverse distribution
  */
-public class ReverseReplicationTest extends ReplicationIntegrationTestBase {
+public class ReverseDistributionTest extends DistributionIntegrationTestBase {
 
     @Test
     public void testAddContent() throws Exception {
         String nodePath = createRandomNode(publishClient, "/content/reverse_add_" + System.nanoTime());
         assertExists(publishClient, nodePath);
-        replicate(publish, "reverse", ReplicationActionType.ADD, nodePath);
+        distribute(publish, "reverse", DistributionActionType.ADD, nodePath);
         assertExists(authorClient, nodePath);
     }
 
@@ -44,7 +44,7 @@ public class ReverseReplicationTest extends ReplicationIntegrationTestBase {
     public void testDeleteContent() throws Exception {
         String nodePath = createRandomNode(authorClient, "/content/reverse_del_" + System.nanoTime());
         assertExists(authorClient, nodePath);
-        replicate(publish, "reverse", ReplicationActionType.DELETE, nodePath);
+        distribute(publish, "reverse", DistributionActionType.DELETE, nodePath);
         assertNotExists(authorClient, nodePath);
     }
 }

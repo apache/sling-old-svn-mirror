@@ -16,25 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.it;
+package org.apache.sling.distribution.it;
 
 import java.util.UUID;
 
 import org.junit.Test;
 
-import static org.apache.sling.replication.it.ReplicationUtils.agentConfigUrl;
-import static org.apache.sling.replication.it.ReplicationUtils.agentRootUrl;
-import static org.apache.sling.replication.it.ReplicationUtils.agentUrl;
-import static org.apache.sling.replication.it.ReplicationUtils.assertExists;
-import static org.apache.sling.replication.it.ReplicationUtils.assertNotExists;
-import static org.apache.sling.replication.it.ReplicationUtils.assertResponseContains;
-import static org.apache.sling.replication.it.ReplicationUtils.deleteNode;
-import static org.apache.sling.replication.it.ReplicationUtils.queueUrl;
+import static org.apache.sling.distribution.it.DistributionUtils.agentConfigUrl;
+import static org.apache.sling.distribution.it.DistributionUtils.agentRootUrl;
+import static org.apache.sling.distribution.it.DistributionUtils.agentUrl;
+import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
+import static org.apache.sling.distribution.it.DistributionUtils.assertNotExists;
+import static org.apache.sling.distribution.it.DistributionUtils.assertResponseContains;
+import static org.apache.sling.distribution.it.DistributionUtils.deleteNode;
+import static org.apache.sling.distribution.it.DistributionUtils.queueUrl;
 
 /**
- * Integration test for {@link org.apache.sling.replication.agent.ReplicationAgent} resources
+ * Integration test for {@link org.apache.sling.distribution.agent.DistributionAgent} resources
  */
-public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegrationTestBase {
+public class DistributionAgentResourcesIntegrationTest extends DistributionIntegrationTestBase {
 
     @Test
     public void testDefaultAgentConfigurationResourcesOnAuthor() throws Exception {
@@ -113,7 +113,7 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
     public void testDefaultAgentsRootResource() throws Exception {
         assertExists(authorClient, agentRootUrl());
         assertResponseContains(author, agentRootUrl(),
-                "sling:resourceType", "sling/replication/service/agent/list",
+                "sling:resourceType", "sling/distribution/service/agent/list",
                 "items", "publish-reverse", "publish");
     }
 
@@ -125,7 +125,7 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
         authorClient.createNode(newConfigResource, "name", agentName);
         assertExists(authorClient, newConfigResource);
         assertResponseContains(author, newConfigResource,
-                "sling:resourceType", "sling/replication/setting/agent",
+                "sling:resourceType", "sling/distribution/setting/agent",
                 "name", agentName);
     }
 
@@ -150,7 +150,7 @@ public class ReplicationAgentResourcesIntegrationTest extends ReplicationIntegra
         assertExists(authorClient, newConfigResource);
         authorClient.setProperties(newConfigResource, "packageExporter", "exporters/remote/updated");
         assertResponseContains(author, newConfigResource,
-                "sling:resourceType", "sling/replication/setting/agent",
+                "sling:resourceType", "sling/distribution/setting/agent",
                 "name", agentName,
                 "packageExporter", "updated");
     }

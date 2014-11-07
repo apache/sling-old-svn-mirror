@@ -7,7 +7,7 @@
     "properties": [
         "type=persistedJcrEvent",
         "path=/content/persistedEvents",
-        "servicename=replicationService"
+        "servicename=distributionService"
     ]
 
 }
