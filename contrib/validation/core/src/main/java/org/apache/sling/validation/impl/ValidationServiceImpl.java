@@ -18,7 +18,23 @@
  */
 package org.apache.sling.validation.impl;
 
+<<<<<<< Upstream, based on trunk
 import org.apache.commons.lang.StringUtils;
+=======
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.jcr.query.Query;
+
+>>>>>>> b4fcfa5 SLING-4138, refactor Validator interface
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -49,6 +65,7 @@ import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+<<<<<<< Upstream, based on trunk
 
 import javax.jcr.query.Query;
 
@@ -59,6 +76,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+=======
+>>>>>>> b4fcfa5 SLING-4138, refactor Validator interface
 
 @Component()
 @Service(ValidationService.class)
@@ -135,6 +154,7 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
         ValidationResultImpl result = new ValidationResultImpl();
         for (ResourceProperty resourceProperty : model.getResourceProperties()) {
             String property = resourceProperty.getName();
+            
             Object valuesObject = valueMap.get(property);
             if (valuesObject == null) {
                 result.addFailureMessage(property, "Missing required property.");
@@ -142,9 +162,9 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
             Type propertyType = resourceProperty.getType();
             Map<Validator, Map<String, String>> validators = resourceProperty.getValidators();
             if (resourceProperty.isMultiple()) {
-                if (valuesObject instanceof String[]) {
+                if (valuesObject instanceof Object[]) {
                     for (String fieldValue : (String[]) valuesObject) {
-                        validatePropertyValue(result, property, fieldValue, propertyType, validators);
+                        //validatePropertyValue(result, property, fieldValue, propertyType, validators);
                     }
                 } else {
                     result.addFailureMessage(property, "Expected multiple-valued property.");
@@ -154,12 +174,12 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
                     // treat request attributes which are arrays
                     String[] fieldValues = (String[]) valuesObject;
                     if (fieldValues.length == 1) {
-                        validatePropertyValue(result, property, fieldValues[0], propertyType, validators);
+                        //validatePropertyValue(result, property, fieldValues[0], propertyType, validators);
                     } else {
                         result.addFailureMessage(property, "Expected single-valued property.");
                     }
                 } else if (valuesObject instanceof String) {
-                    validatePropertyValue(result, property, (String) valuesObject, propertyType, validators);
+                    //validatePropertyValue(result, property, (String) valuesObject, propertyType, validators);
                 }
             }
         }
@@ -242,13 +262,13 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
                 result.addFailureMessage(property, "Missing required property.");
             }
             Type propertyType = resourceProperty.getType();
-            Map<Validator, Map<String, String>> validators = resourceProperty.getValidators();
+            Map<Validator<?>, Map<String, String>> validators = resourceProperty.getValidators();
             if (fieldValues instanceof String[]) {
                 for (String fieldValue : (String[]) fieldValues) {
-                    validatePropertyValue(result, property, fieldValue, propertyType, validators);
+                   //validatePropertyValue(result, property, fieldValue, propertyType, validators);
                 }
             } else if (fieldValues instanceof String) {
-                validatePropertyValue(result, property, (String) fieldValues, propertyType, validators);
+                //validatePropertyValue(result, property, (String) fieldValues, propertyType, validators);
             }
         }
     }
@@ -375,17 +395,53 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
         }
         return true;
     }
+    
+    protected static Class<?> getValidatorDataClass(Validator<?> validator) {
+        for (java.lang.reflect.Type type : validator.getClass().getGenericInterfaces()) {
+            if (Validator.class.equals(type)) {
+                if (type instanceof ParameterizedType) {
+                    ParameterizedType pt = (ParameterizedType)type;
+                    java.lang.reflect.Type[] typeArguments = pt.getActualTypeArguments();
+                    if (typeArguments.length != 1) {
+                        throw new IllegalArgumentException("Validator " + validator + " must have exactly one parameterized type but has " + typeArguments.length);
+                    }
+                    
+                    if (typeArguments[0] instanceof Class<?>) {
+                        if (((Class<?>) typeArguments[0]).isArray()) {
+                            throw new IllegalArgumentException("Parameterized type of Validator " + validator +" should not be an array!");
+                        }
+                        // only support non-primitives!
+                        return (Class<?>) typeArguments[0];
+                    } else {
+                        throw new IllegalArgumentException("Validator " + validator + " must have exactly one parameterized type which is a class but it is " + typeArguments[0]);
+                    }
+                } else {
+                    throw new IllegalArgumentException("Validator " + validator + " must have one parameterized type!");
+                }
+            }
+        }
+        throw new IllegalArgumentException("No Validator interface found on validator " + validator);
+    }
 
-    private void validatePropertyValue(ValidationResultImpl result, String property, String value, Type propertyType, Map<Validator,
+    private void validatePropertyValue(ValidationResultImpl result, String property, ValueMap valueMap, Type propertyType, Map<Validator<?>,
             Map<String, String>> validators) {
+        /**
         if (!propertyType.isValid(value)) {
             result.addFailureMessage(property, "Property was expected to be of type " + propertyType.getName());
-        }
-        for (Map.Entry<Validator, Map<String, String>> validatorEntry : validators.entrySet()) {
-            Validator validator = validatorEntry.getKey();
+        }*/
+        
+        
+            
+        for (Map.Entry<Validator<?>, Map<String, String>> validatorEntry : validators.entrySet()) {
+            Validator<?> validator = validatorEntry.getKey();
+            // retrieve the type parameter from the 
+            Class<?> clazz = getValidatorDataClass(validator);
             Map<String, String> arguments = validatorEntry.getValue();
+            Object value = valueMap.get(property, clazz);
             try {
-                String validatorMessage = validator.validate(value, arguments);
+                validator.validate(value, valueMap, arguments);
+                Method method = validator.getClass().getMethod("validate", clazz, Map.class);
+                String validatorMessage = (String)method.invoke(validator, value, arguments);
                 if (validatorMessage != null) {
                     if (validatorMessage.isEmpty()) {
                         validatorMessage = "Property does not contain a valid value for the " + validator
@@ -394,6 +450,26 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
                     result.addFailureMessage(property, validatorMessage);
                 }
             } catch (SlingValidationException e) {
+                // wrap in another SlingValidationException to include information about the property
+                throw new SlingValidationException("Could not call validator " + validator
+                        .getClass().getName() + " for resourceProperty " + property, e);
+            } catch (IllegalAccessException e) {
+                // wrap in another SlingValidationException to include information about the property
+                throw new SlingValidationException("Could not call validator " + validator
+                        .getClass().getName() + " for resourceProperty " + property, e);
+            } catch (IllegalArgumentException e) {
+                // wrap in another SlingValidationException to include information about the property
+                throw new SlingValidationException("Could not call validator " + validator
+                        .getClass().getName() + " for resourceProperty " + property, e);
+            } catch (InvocationTargetException e) {
+                // wrap in another SlingValidationException to include information about the property
+                throw new SlingValidationException("Could not call validator " + validator
+                        .getClass().getName() + " for resourceProperty " + property, e);
+            } catch (NoSuchMethodException e) {
+                // wrap in another SlingValidationException to include information about the property
+                throw new SlingValidationException("Could not call validator " + validator
+                        .getClass().getName() + " for resourceProperty " + property, e);
+            } catch (SecurityException e) {
                 // wrap in another SlingValidationException to include information about the property
                 throw new SlingValidationException("Could not call validator " + validator
                         .getClass().getName() + " for resourceProperty " + property, e);

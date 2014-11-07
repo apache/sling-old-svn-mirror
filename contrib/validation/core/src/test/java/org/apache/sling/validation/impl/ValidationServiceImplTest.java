@@ -42,6 +42,7 @@ import org.apache.sling.validation.api.Type;
 import org.apache.sling.validation.api.ValidationModel;
 import org.apache.sling.validation.api.ValidationResult;
 import org.apache.sling.validation.api.ValidationService;
+import org.apache.sling.validation.api.Validator;
 import org.apache.sling.validation.api.ValidatorLookupService;
 import org.apache.sling.validation.api.exceptions.SlingValidationException;
 import org.apache.sling.validation.impl.setup.MockedResourceResolver;
@@ -108,6 +109,27 @@ public class ValidationServiceImplTest {
         validationService = new ValidationServiceImpl();
         Whitebox.setInternalState(validationService, "rrf", rrf);
         validatorLookupService = mock(ValidatorLookupService.class);
+    }
+    
+    @Test 
+    public void testGetValidatorDataClass() {
+        Class<?> clazz = ValidationServiceImpl.getValidatorDataClass(new RegexValidator());
+        Assert.assertEquals(String.class, clazz);
+    }
+    
+    
+    @Test (expected=IllegalArgumentException.class)
+    public void testGetValidatorDataClassOfArray() {
+        ValidationServiceImpl.getValidatorDataClass(new Validator<String[]>() {
+
+            @Override
+            public String validate(String[] data, ValueMap valueMap, Map<String, String> arguments)
+                    throws SlingValidationException {
+                // TODO Auto-generated method stub
+                return null;
+            }
+            
+        });
     }
 
     @Test
