@@ -18,9 +18,9 @@
  */
 package org.apache.sling.distribution.queue;
 
-import aQute.bnd.annotation.ConsumerType;
-
 import javax.annotation.Nonnull;
+
+import aQute.bnd.annotation.ConsumerType;
 
 /**
  * Processor of {@link DistributionQueueItem}s

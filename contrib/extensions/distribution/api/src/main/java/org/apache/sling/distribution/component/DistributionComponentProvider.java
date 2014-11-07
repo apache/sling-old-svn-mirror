@@ -18,11 +18,11 @@
  */
 package org.apache.sling.distribution.component;
 
-import aQute.bnd.annotation.ConsumerType;
-
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import aQute.bnd.annotation.ConsumerType;
 
 /**
  * provider for already existing {@link DistributionComponent}s

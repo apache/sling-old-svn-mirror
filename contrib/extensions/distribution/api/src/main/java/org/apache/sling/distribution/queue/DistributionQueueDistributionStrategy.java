@@ -19,12 +19,11 @@
 package org.apache.sling.distribution.queue;
 
 import javax.annotation.Nonnull;
+import java.util.List;
 
 import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.distribution.component.DistributionComponent;
 import org.apache.sling.distribution.packaging.DistributionPackage;
-
-import java.util.List;
 
 /**
  * a {@link DistributionQueueDistributionStrategy} implements an algorithm for the distribution of

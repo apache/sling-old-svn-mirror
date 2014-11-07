@@ -18,13 +18,15 @@
  */
 package org.apache.sling.distribution.monitor;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-import org.apache.sling.hc.api.Result;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemState;
+import org.apache.sling.hc.api.Result;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;

@@ -22,12 +22,12 @@ import javax.annotation.Nonnull;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.sling.event.jobs.JobManager;
-import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueProcessor;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
+import org.apache.sling.event.jobs.JobManager;
+import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;

@@ -16,9 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.sling.distribution.packaging;
 
-@Version("0.1.0")
-package org.apache.sling.distribution.util;
+/**
+ * This represents an error happening while importing a {@link DistributionPackage}
+ */
+@SuppressWarnings("serial")
+public class DistributionPackageImportException extends Exception {
 
-import aQute.bnd.annotation.Version;
+    public DistributionPackageImportException(String message) {
+        super(message);
+    }
 
+    public DistributionPackageImportException(Throwable t) {
+        super(t);
+    }
+
+    public DistributionPackageImportException(String message, Exception e) {
+        super(message, e);
+    }
+}

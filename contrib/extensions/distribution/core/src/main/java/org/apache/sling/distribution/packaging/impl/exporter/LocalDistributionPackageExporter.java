@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageExportException;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.serialization.DistributionPackageBuildingException;
@@ -42,10 +43,15 @@ public class LocalDistributionPackageExporter implements DistributionPackageExpo
     }
 
     @Nonnull
-    public List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionPackageBuildingException {
+    public List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionPackageExportException {
         List<DistributionPackage> result = new ArrayList<DistributionPackage>();
 
-        DistributionPackage createdPackage = packageBuilder.createPackage(resourceResolver, distributionRequest);
+        DistributionPackage createdPackage;
+        try {
+            createdPackage = packageBuilder.createPackage(resourceResolver, distributionRequest);
+        } catch (DistributionPackageBuildingException e) {
+            throw new DistributionPackageExportException(e);
+        }
         if (createdPackage != null) {
             result.add(createdPackage);
         }

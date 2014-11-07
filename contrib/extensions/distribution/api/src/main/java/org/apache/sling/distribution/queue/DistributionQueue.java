@@ -18,11 +18,11 @@
  */
 package org.apache.sling.distribution.queue;
 
-import aQute.bnd.annotation.ConsumerType;
-
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import aQute.bnd.annotation.ConsumerType;
 
 /**
  * a queue for handling {@link org.apache.sling.distribution.agent.DistributionAgent}s' requests

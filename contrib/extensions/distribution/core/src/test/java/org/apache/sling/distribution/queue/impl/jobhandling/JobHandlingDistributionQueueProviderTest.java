@@ -18,10 +18,10 @@
  */
 package org.apache.sling.distribution.queue.impl.jobhandling;
 
-import org.apache.sling.event.jobs.JobManager;
-import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueProcessor;
+import org.apache.sling.event.jobs.JobManager;
+import org.apache.sling.event.jobs.QueueConfiguration;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.Configuration;

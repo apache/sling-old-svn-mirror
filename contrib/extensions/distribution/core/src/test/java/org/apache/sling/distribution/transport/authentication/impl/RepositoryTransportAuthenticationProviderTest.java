@@ -21,9 +21,9 @@ package org.apache.sling.distribution.transport.authentication.impl;
 import javax.jcr.Session;
 import javax.jcr.security.Privilege;
 
-import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationContext;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationException;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;

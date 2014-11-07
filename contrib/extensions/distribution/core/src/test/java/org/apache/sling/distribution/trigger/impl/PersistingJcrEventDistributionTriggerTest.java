@@ -24,9 +24,9 @@ import javax.jcr.Workspace;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.ObservationManager;
 
-import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;

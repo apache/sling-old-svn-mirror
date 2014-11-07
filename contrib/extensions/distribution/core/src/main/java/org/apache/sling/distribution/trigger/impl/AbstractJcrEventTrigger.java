@@ -27,12 +27,12 @@ import javax.jcr.observation.EventListener;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.distribution.trigger.DistributionTriggerException;
 import org.apache.sling.distribution.util.DistributionJcrUtils;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

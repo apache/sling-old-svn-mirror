@@ -18,12 +18,12 @@
  */
 package org.apache.sling.distribution.packaging;
 
-import aQute.bnd.annotation.ConsumerType;
-
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+
+import aQute.bnd.annotation.ConsumerType;
 
 /**
  * A distribution package

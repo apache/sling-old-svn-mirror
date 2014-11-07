@@ -27,7 +27,6 @@ import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.component.DistributionComponent;
-import org.apache.sling.distribution.serialization.DistributionPackageBuildingException;
 
 /**
  * A {@link DistributionPackageExporter ) is responsible of exporting
@@ -46,7 +45,7 @@ public interface DistributionPackageExporter extends DistributionComponent {
      * @return a <code>List</code> of {@link DistributionPackage}s
      */
     @Nonnull
-    List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionPackageBuildingException;
+    List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionPackageExportException;
 
     /**
      * Retrieves a {@link DistributionPackage} given its 'id', if it already exists.

@@ -32,19 +32,20 @@
     <!-- ======================================================================= -->
     <!-- P R O J E C T                                                           -->
     <!-- ======================================================================= -->
-    <artifactId>org.apache.sling.distribution.sample</artifactId>
+    <artifactId>org.apache.sling.distribution.api</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling Distribution Sample</name>
+    <name>Apache Sling Distribution API</name>
     <description>
-        The Apache Sling Distribution sample bundle provides a set of sample configurations and custom component implementations.
+        The Apache Sling Distribution API bundle provides the APIs for the Sling Content Distribution module
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/distribution/sample</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/distribution/sample</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/distribution/sample</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/distribution/api</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/distribution/api
+        </developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/distribution/api</url>
     </scm>
 
     <!-- ======================================================================= -->
@@ -66,10 +67,17 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Bundle-SymbolicName>org.apache.sling.distribution.sample</Bundle-SymbolicName>
-                        <Sling-Initial-Content>
-                            SLING-CONTENT/libs/sling/distribution;path:=/libs/sling/distribution;overwrite:=true
-                        </Sling-Initial-Content>
+                        <Bundle-SymbolicName>org.apache.sling.distribution.api</Bundle-SymbolicName>
+                        <Export-Package>
+                            org.apache.sling.distribution.component,
+                            org.apache.sling.distribution.agent,
+                            org.apache.sling.distribution.communication,
+                            org.apache.sling.distribution.event,
+                            org.apache.sling.distribution.queue,
+                            org.apache.sling.distribution.trigger,
+                            org.apache.sling.distribution.packaging,
+                            org.apache.sling.distribution.transport.authentication
+                        </Export-Package>
                     </instructions>
                 </configuration>
             </plugin>
@@ -84,33 +92,38 @@
     <!-- D E P E N D E N C I E S                                                 -->
     <!-- ======================================================================= -->
     <dependencies>
-
+        <!-- SLING -->
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.distribution.core</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
+            <artifactId>org.apache.sling.api</artifactId>
+            <version>2.5.0</version>
         </dependency>
 
+        <!-- SPECs -->
+        <dependency>
+            <groupId>javax.jcr</groupId>
+            <artifactId>jcr</artifactId>
+            <version>2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>2.0.0</version>
             <scope>provided</scope>
         </dependency>
 
     </dependencies>
-    <reporting>
-        <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>findbugs-maven-plugin</artifactId>
-                <version>2.5.3</version>
-            </plugin>
-        </plugins>
-    </reporting>
+
 </project>

@@ -34,8 +34,6 @@ import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.scheduler.Scheduler;
-import org.apache.sling.event.jobs.JobManager;
-import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.agent.DistributionRequestAuthorizationStrategy;
 import org.apache.sling.distribution.agent.impl.PrivilegeDistributionRequestAuthorizationStrategy;
@@ -70,6 +68,8 @@ import org.apache.sling.distribution.trigger.impl.PersistingJcrEventDistribution
 import org.apache.sling.distribution.trigger.impl.RemoteEventDistributionTrigger;
 import org.apache.sling.distribution.trigger.impl.ResourceEventDistributionTrigger;
 import org.apache.sling.distribution.trigger.impl.ScheduledDistributionTrigger;
+import org.apache.sling.event.jobs.JobManager;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

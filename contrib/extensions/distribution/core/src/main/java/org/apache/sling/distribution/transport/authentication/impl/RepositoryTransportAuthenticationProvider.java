@@ -21,10 +21,10 @@ package org.apache.sling.distribution.transport.authentication.impl;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationContext;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationException;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -23,7 +23,7 @@ import org.apache.sling.distribution.component.DistributionComponent;
 
 /**
  * A {@link org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider} is responsible for
- * authentication of instances sending and receiving distribution items via {@link org.apache.sling.distribution.transport.DistributionTransportHandler}s
+ * authentication of instances sending and receiving distribution items via transport algorithms
  * A {@link org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider} will authenticate
  * 'authenticables' objects of type {@link A}, producing 'authenticated' objects of type {@link T}.
  *
@@ -42,7 +42,7 @@ public interface TransportAuthenticationProvider<A, T> extends DistributionCompo
 
     /**
      * Authenticate an 'authenticable' object by performing some implementation specific operation on it, and producing
-     * an 'authenticated' object to be passed back to the {@link org.apache.sling.distribution.transport.DistributionTransportHandler}.
+     * an 'authenticated' object to be passed back to a transport algorithm.
      * The returned 'authenticated' object may be of the same class of the 'authenticable' object (e.g. passing an 'authenticable'
      * http client and returning an 'authenticated' http client) or of a different class (e.g. passing an 'authenticable'
      * jcr repository and returning an 'authenticated' jcr session).

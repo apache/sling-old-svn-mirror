@@ -24,12 +24,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
-import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
-import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.transport.DistributionTransportHandler;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
 import org.apache.sling.distribution.transport.impl.MultipleEndpointDistributionTransportHandler;
 import org.apache.sling.distribution.transport.impl.SimpleHttpDistributionTransportHandler;
 import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
