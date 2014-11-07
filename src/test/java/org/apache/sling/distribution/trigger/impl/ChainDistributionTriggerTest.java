@@ -33,33 +33,33 @@ public class ChainDistributionTriggerTest {
     public void testRegister() throws Exception {
         String pathPrefix = "/prefix";
         BundleContext bundleContext = mock(BundleContext.class);
-        ChainDistributeDistributionTrigger chainReplicatedistributionTrigger = new ChainDistributeDistributionTrigger(pathPrefix, bundleContext);
+        ChainDistributeDistributionTrigger chainDistributeDistributionTrigger = new ChainDistributeDistributionTrigger(pathPrefix, bundleContext);
         DistributionRequestHandler handler = mock(DistributionRequestHandler.class);
-        chainReplicatedistributionTrigger.register(handler);
+        chainDistributeDistributionTrigger.register(handler);
     }
 
     @Test
     public void testUnregister() throws Exception {
         String pathPrefix = "/prefix";
         BundleContext bundleContext = mock(BundleContext.class);
-        ChainDistributeDistributionTrigger chainReplicatedistributionTrigger = new ChainDistributeDistributionTrigger(pathPrefix, bundleContext);
+        ChainDistributeDistributionTrigger chainDistributeDistributionTrigger = new ChainDistributeDistributionTrigger(pathPrefix, bundleContext);
         DistributionRequestHandler handler = mock(DistributionRequestHandler.class);
-        chainReplicatedistributionTrigger.unregister(handler);
+        chainDistributeDistributionTrigger.unregister(handler);
     }
 
     @Test
     public void testEnable() throws Exception {
         String pathPrefix = "/prefix";
         BundleContext bundleContext = mock(BundleContext.class);
-        ChainDistributeDistributionTrigger chainReplicatedistributionTrigger = new ChainDistributeDistributionTrigger(pathPrefix, bundleContext);
-        chainReplicatedistributionTrigger.enable();
+        ChainDistributeDistributionTrigger chainDistributeDistributionTrigger = new ChainDistributeDistributionTrigger(pathPrefix, bundleContext);
+        chainDistributeDistributionTrigger.enable();
     }
 
     @Test
     public void testDisable() throws Exception {
         String pathPrefix = "/prefix";
         BundleContext bundleContext = mock(BundleContext.class);
-        ChainDistributeDistributionTrigger chainReplicatedistributionTrigger = new ChainDistributeDistributionTrigger(pathPrefix, bundleContext);
-        chainReplicatedistributionTrigger.disable();
+        ChainDistributeDistributionTrigger chainDistributeDistributionTrigger = new ChainDistributeDistributionTrigger(pathPrefix, bundleContext);
+        chainDistributeDistributionTrigger.disable();
     }
 }

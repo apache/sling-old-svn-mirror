@@ -273,7 +273,7 @@ public class SimpleDistributionAgent implements DistributionAgent, ManagedDistri
                 Dictionary<Object, Object> properties = new Properties();
                 properties.put("distribution.package.paths", distributionPackage.getPaths());
                 properties.put("distribution.agent.name", name);
-                distributionEventFactory.generateEvent(DistributionEventType.PACKAGE_REPLICATED, properties);
+                distributionEventFactory.generateEvent(DistributionEventType.PACKAGE_DISTRIBUTED, properties);
 
                 if (distributionPackage instanceof SharedDistributionPackage) {
                     ((SharedDistributionPackage) distributionPackage).release(queueName);

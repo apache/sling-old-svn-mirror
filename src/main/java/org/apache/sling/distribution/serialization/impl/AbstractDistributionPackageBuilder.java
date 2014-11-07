@@ -166,7 +166,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
     protected Session getSession(ResourceResolver resourceResolver) throws RepositoryException {
         Session session = resourceResolver.adaptTo(Session.class);
         if (session != null) {
-            DistributionJcrUtils.setDoNotReplicate(session);
+            DistributionJcrUtils.setDoNotDistribute(session);
         } else {
             throw new RepositoryException("could not obtain a session from calling user " + resourceResolver.getUserID());
         }

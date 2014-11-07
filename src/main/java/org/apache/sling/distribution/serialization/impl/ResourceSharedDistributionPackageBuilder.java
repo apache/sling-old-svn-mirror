@@ -37,7 +37,7 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
     private String PN_ORIGINAL_ACTION = "original.package.action";
     private String PN_ORIGINAL_PATHS = "original.package.paths";
 
-    private String PACKAGE_NAME_PREFIX = "replpackage";
+    private String PACKAGE_NAME_PREFIX = "distrpackage";
     private String sharedPackagesRoot = "/var/sling/distribution/";
 
     private final DistributionPackageBuilder distributionPackageBuilder;

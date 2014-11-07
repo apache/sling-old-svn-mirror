@@ -65,7 +65,7 @@ public class ChainDistributeDistributionTrigger implements DistributionTrigger, 
 
         // TODO : make it possible to configure the type of event handled here, currently 'package-installed' is hardcoded
         properties.put(EventConstants.EVENT_TOPIC, DistributionEvent.getTopic(DistributionEventType.PACKAGE_INSTALLED));
-        log.info("handler {} will chain replicate on path '{}'", requestHandler, pathPrefix);
+        log.info("handler {} will chain distribute on path '{}'", requestHandler, pathPrefix);
 
 //            properties.put(EventConstants.EVENT_FILTER, "(path=" + path + "/*)");
         if (bundleContext != null) {
