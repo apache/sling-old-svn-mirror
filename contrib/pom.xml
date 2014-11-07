@@ -105,9 +105,9 @@
           <module>extensions/leak-detector</module>
           <module>extensions/mongodb</module>
           <module>extensions/obr</module>
-          <module>extensions/replication/core</module>
-          <module>extensions/replication/sample</module>
-          <module>extensions/replication/it</module>
+          <module>extensions/distribution/core</module>
+          <module>extensions/distribution/sample</module>
+          <module>extensions/distribution/it</module>
           <module>extensions/reqanalyzer</module>
           <module>extensions/resourcemerger</module>
           <module>extensions/rewriter</module>
