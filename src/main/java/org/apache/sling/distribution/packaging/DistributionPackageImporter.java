@@ -1,0 +1,57 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.apache.sling.distribution.packaging;
+
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+import java.io.InputStream;
+
+import aQute.bnd.annotation.ConsumerType;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.distribution.component.DistributionComponent;
+
+/**
+ * A {@link DistributionPackageImporter} is responsible for importing
+ * {@link DistributionPackage}s into the resource tree.
+ */
+@ConsumerType
+public interface DistributionPackageImporter extends DistributionComponent {
+
+    /**
+     * Imports the given distribution package into the underlying system
+     *
+     * @param resourceResolver   - the resource resolver used to import the resources
+     * @param distributionPackage - the package to be imported
+     * @return <code>true</code> if the import succeeded, <code>false</code> otherwise
+     * @throws DistributionPackageImportException if any error occurs during import
+     */
+    boolean importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageImportException;
+
+    /**
+     * Tries to convert an {@link java.io.InputStream} to a {@link DistributionPackage} and then imports it into the underlying system
+     *
+     * @param resourceResolver - the resource resolver used to read the package
+     * @param stream           the {@link InputStream} of the package to be converted and installed
+     * @return a {@link DistributionPackage} if the stream has been successfully converted and installed
+     * @throws DistributionPackageImportException when the stream cannot be read as a {@link DistributionPackage} and installed
+     */
+    @CheckForNull
+    DistributionPackage importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException;
+
+}
