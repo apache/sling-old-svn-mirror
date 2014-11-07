@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Servlet to ask {@link org.apache.sling.distribution.agent.DistributionAgent}s to replicate (via HTTP POST).
+ * Servlet to ask {@link org.apache.sling.distribution.agent.DistributionAgent}s to distribute (via HTTP POST).
  */
 @SlingServlet(resourceTypes = DistributionConstants.AGENT_RESOURCE_TYPE, methods = "POST")
 public class DistributionAgentServlet extends SlingAllMethodsServlet {

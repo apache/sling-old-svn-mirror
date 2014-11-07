@@ -4,7 +4,7 @@ var pit = valueMap.keySet().iterator();
 %>
 <html>
   <body>
-    <h1>Replicate: <%= valueMap.get("name") %></h1>
+    <h1>Distribute: <%= valueMap.get("name") %></h1>
 
     <form action="<%= request.contextPath + resource.path %>" method="POST">
         Path: <input type="text" name="path"><br>

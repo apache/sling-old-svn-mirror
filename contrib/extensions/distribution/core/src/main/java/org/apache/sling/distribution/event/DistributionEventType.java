@@ -36,7 +36,7 @@ public enum DistributionEventType {
     /**
      * event for package replicated
      */
-    PACKAGE_REPLICATED,
+    PACKAGE_DISTRIBUTED,
 
     /**
      * event for package installed

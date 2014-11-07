@@ -41,7 +41,7 @@ public interface DistributionQueue {
     /**
      * add a distribution item to this queue
      *
-     * @param item a distribution item representing the package to replicate
+     * @param item a distribution item representing the package to distribute
      * @return <code>true</code> if the distribution item was added correctly to the queue,
      * <code>false</code otherwise
      */

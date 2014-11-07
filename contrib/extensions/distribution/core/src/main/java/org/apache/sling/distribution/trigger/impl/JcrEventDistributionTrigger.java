@@ -52,7 +52,7 @@ public class JcrEventDistributionTrigger extends AbstractJcrEventTrigger impleme
             }
             distributionRequest = new DistributionRequest(System.currentTimeMillis(), Event.NODE_REMOVED ==
                     type ? DistributionActionType.DELETE : DistributionActionType.ADD, replicatingPath);
-            log.info("replicating {}", distributionRequest);
+            log.info("distributing {}", distributionRequest);
         }
         return distributionRequest;
     }

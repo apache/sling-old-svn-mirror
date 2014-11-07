@@ -160,7 +160,7 @@ We need to expose APIs for configuring, commanding and monitoring distribution a
 - Delete config - DELETE _/libs/sling/distribution/settings/agents/{config identifier}_ or POST with :operation=delete
 
 ##### Command API
-- Replicate - POST _/libs/sling/distribution/services/agents/{agentName}_
+- Distribute - POST _/libs/sling/distribution/services/agents/{agentName}_
 - Import package - POST _/libs/sling/distribution/services/importers/{importerName}_
 - Export package - POST _/libs/sling/distribution/services/exporters/{exporterName}_
 
