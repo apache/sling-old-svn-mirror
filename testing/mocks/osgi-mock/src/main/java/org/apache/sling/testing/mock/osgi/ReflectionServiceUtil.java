@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.sling.testing.mock.osgi.OsgiMetadataUtil.Reference;
@@ -70,24 +71,78 @@ final class ReflectionServiceUtil {
             return false;
         }
 
-        // if method is defined try to execute it
+        // try to find matchin activate/deactivate method and execute it
+        
+        // 1. componentContext
         Method method = getMethod(targetClass, methodName, new Class<?>[] { ComponentContext.class }, activate);
         if (method != null) {
-            try {
-                method.setAccessible(true);
-                method.invoke(target, componentContext);
+            invokeMethod(target, method, new Object[] { componentContext });
+            return true;
+        }
+        
+        // 2. bundleContext
+        method = getMethod(targetClass, methodName, new Class<?>[] { BundleContext.class }, activate);
+        if (method != null) {
+            invokeMethod(target, method, new Object[] { componentContext.getBundleContext() });
+            return true;
+        }
+        
+        // 3. map
+        method = getMethod(targetClass, methodName, new Class<?>[] { Map.class }, activate);
+        if (method != null) {
+            invokeMethod(target, method, new Object[] { componentContext.getProperties() });
+            return true;
+        }
+        
+        // 4. int (deactivation only)
+        if (!activate) {
+            method = getMethod(targetClass, methodName, new Class<?>[] { int.class }, activate);
+            if (method != null) {
+                invokeMethod(target, method, new Object[] { 0 });
                 return true;
-            } catch (IllegalAccessException ex) {
-                throw new RuntimeException("Unable to invoke activate/deactivate method for class "
-                        + targetClass.getName(), ex);
-            } catch (IllegalArgumentException ex) {
-                throw new RuntimeException("Unable to invoke activate/deactivate method for class "
-                        + targetClass.getName(), ex);
-            } catch (InvocationTargetException ex) {
-                throw new RuntimeException("Unable to invoke activate/deactivate method for class "
-                        + targetClass.getName(), ex.getCause());
             }
         }
+        
+        // 5. Integer (deactivation only)
+        if (!activate) {
+            method = getMethod(targetClass, methodName, new Class<?>[] { Integer.class }, activate);
+            if (method != null) {
+                invokeMethod(target, method, new Object[] { 0 });
+                return true;
+            }
+        }
+        
+        // 6. mixed arguments of componentContext, bundleContext and map
+        Class<?>[] mixedArgsAllowed = activate ? new Class<?>[] { ComponentContext.class, BundleContext.class, Map.class }
+                : new Class<?>[] { ComponentContext.class, BundleContext.class, Map.class, int.class, Integer.class };
+        method = getMethodWithAnyCombinationArgs(targetClass, methodName, mixedArgsAllowed, activate);
+        if (method != null) {
+            Object[] args = new Object[method.getParameterTypes().length];
+            for (int i=0; i<args.length; i++) {
+                if (method.getParameterTypes()[i] == ComponentContext.class) {
+                    args[i] = componentContext;
+                }
+                else if (method.getParameterTypes()[i] == BundleContext.class) {
+                    args[i] = componentContext.getBundleContext();
+                }
+                else if (method.getParameterTypes()[i] == Map.class) {
+                    args[i] = componentContext.getProperties();
+                }
+                else if (method.getParameterTypes()[i] == int.class || method.getParameterTypes()[i] == Integer.class) {
+                    args[i] = 0;
+                }
+            }
+            invokeMethod(target, method, args);
+            return true;
+        }
+
+        // 7. noargs
+        method = getMethod(targetClass, methodName, new Class<?>[0], activate);
+        if (method != null) {
+            invokeMethod(target, method, new Object[0]);
+            return true;
+        }
+        
         log.warn("Method {}(ComponentContext) not found in class {}", methodName, targetClass.getName());
         return false;
     }
@@ -101,6 +156,37 @@ final class ReflectionServiceUtil {
             }
         }
         return null;
+    }
+    
+    private static Method getMethodWithAnyCombinationArgs(Class clazz, String methodName, Class<?>[] types, boolean activate) {
+        Method[] methods = clazz.getDeclaredMethods();
+        for (Method method : methods) {
+            if (StringUtils.equals(method.getName(), methodName) && method.getParameterTypes().length > 1) {
+                for (Class<?> parameterType : method.getParameterTypes()) {
+                    if (!ArrayUtils.contains(types,  parameterType)) {
+                        return null;
+                    }
+                }
+                return method;
+            }
+        }
+        return null;
+    }
+    
+    private static void invokeMethod(Object target, Method method, Object[] args) {
+        try {
+            method.setAccessible(true);
+            method.invoke(target, args);
+        } catch (IllegalAccessException ex) {
+            throw new RuntimeException("Unable to invoke activate/deactivate method for class "
+                    + target.getClass().getName(), ex);
+        } catch (IllegalArgumentException ex) {
+            throw new RuntimeException("Unable to invoke activate/deactivate method for class "
+                    + target.getClass().getName(), ex);
+        } catch (InvocationTargetException ex) {
+            throw new RuntimeException("Unable to invoke activate/deactivate method for class "
+                    + target.getClass().getName(), ex.getCause());
+        }
     }
 
     /**
