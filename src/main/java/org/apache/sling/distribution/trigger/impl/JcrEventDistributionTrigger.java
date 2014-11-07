@@ -21,10 +21,10 @@ package org.apache.sling.distribution.trigger.impl;
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
 
-import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.distribution.communication.DistributionActionType;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

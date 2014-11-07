@@ -19,17 +19,18 @@
 package org.apache.sling.distribution.serialization.impl;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collections;
 
-import org.apache.sling.api.resource.*;
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.packaging.SharedDistributionPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collections;
 
 public class ResourceSharedDistributionPackage implements SharedDistributionPackage {
     private final Logger log = LoggerFactory.getLogger(getClass());

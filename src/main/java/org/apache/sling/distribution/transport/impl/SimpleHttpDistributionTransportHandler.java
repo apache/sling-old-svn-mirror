@@ -131,7 +131,7 @@ public class SimpleHttpDistributionTransportHandler implements DistributionTrans
         log.debug("polling from {}", distributionEndpoint.getUri());
 
         try {
-            URI distributionURI = RequestUtils.appenddistributionRequest(distributionEndpoint.getUri(), distributionRequest);
+            URI distributionURI = RequestUtils.appendDistributionRequest(distributionEndpoint.getUri(), distributionRequest);
             List<DistributionPackage> result = new ArrayList<DistributionPackage>();
 
             // TODO : executor should be cached and reused

@@ -18,7 +18,9 @@
  */
 package org.apache.sling.distribution.monitor;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -33,13 +35,13 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.hc.api.HealthCheck;
-import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.util.FormattingResultLog;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemState;
+import org.apache.sling.hc.api.HealthCheck;
+import org.apache.sling.hc.api.Result;
+import org.apache.sling.hc.util.FormattingResultLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

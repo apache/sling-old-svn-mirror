@@ -41,7 +41,7 @@ public class RequestUtils {
                 paths);
     }
 
-    public static URI appenddistributionRequest(URI uri, DistributionRequest distributionRequest) throws URISyntaxException {
+    public static URI appendDistributionRequest(URI uri, DistributionRequest distributionRequest) throws URISyntaxException {
         URIBuilder uriBuilder = new URIBuilder(uri);
         uriBuilder.addParameter(DistributionParameter.ACTION.toString(), distributionRequest.getAction().getName());
         for (String path : distributionRequest.getPaths()) {

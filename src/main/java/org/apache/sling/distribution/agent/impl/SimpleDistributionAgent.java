@@ -40,9 +40,19 @@ import org.apache.sling.distribution.communication.DistributionResponse;
 import org.apache.sling.distribution.component.ManagedDistributionComponent;
 import org.apache.sling.distribution.event.DistributionEventType;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
-import org.apache.sling.distribution.packaging.*;
-import org.apache.sling.distribution.queue.*;
-import org.apache.sling.distribution.serialization.DistributionPackageBuildingException;
+import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageExportException;
+import org.apache.sling.distribution.packaging.DistributionPackageExporter;
+import org.apache.sling.distribution.packaging.DistributionPackageImportException;
+import org.apache.sling.distribution.packaging.DistributionPackageImporter;
+import org.apache.sling.distribution.packaging.SharedDistributionPackage;
+import org.apache.sling.distribution.queue.DistributionQueue;
+import org.apache.sling.distribution.queue.DistributionQueueDistributionStrategy;
+import org.apache.sling.distribution.queue.DistributionQueueException;
+import org.apache.sling.distribution.queue.DistributionQueueItem;
+import org.apache.sling.distribution.queue.DistributionQueueItemState;
+import org.apache.sling.distribution.queue.DistributionQueueProcessor;
+import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.distribution.trigger.DistributionTriggerException;
@@ -151,7 +161,7 @@ public class SimpleDistributionAgent implements DistributionAgent, ManagedDistri
         return passive;
     }
 
-    private List<DistributionPackage> exportPackages(ResourceResolver agentResourceResolver, DistributionRequest distributionRequest) throws DistributionPackageBuildingException {
+    private List<DistributionPackage> exportPackages(ResourceResolver agentResourceResolver, DistributionRequest distributionRequest) throws DistributionPackageExportException {
         return distributionPackageExporter.exportPackages(agentResourceResolver, distributionRequest);
     }
 

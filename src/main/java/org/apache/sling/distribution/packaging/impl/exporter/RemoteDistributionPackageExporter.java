@@ -23,14 +23,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.serialization.DistributionPackageBuildingException;
-import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageExportException;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
+import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportHandler;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
 import org.apache.sling.distribution.transport.impl.MultipleEndpointDistributionTransportHandler;
 import org.apache.sling.distribution.transport.impl.SimpleHttpDistributionTransportHandler;
 import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
@@ -73,11 +73,11 @@ public class RemoteDistributionPackageExporter implements DistributionPackageExp
     }
 
     @Nonnull
-    public List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionPackageBuildingException {
+    public List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionPackageExportException {
         try {
             return transportHandler.retrievePackages(resourceResolver, distributionRequest);
         } catch (Exception e) {
-            throw new DistributionPackageBuildingException(e);
+            throw new DistributionPackageExportException(e);
         }
     }
 

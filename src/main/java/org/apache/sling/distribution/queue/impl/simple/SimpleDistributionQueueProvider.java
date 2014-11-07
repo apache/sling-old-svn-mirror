@@ -19,6 +19,9 @@
 package org.apache.sling.distribution.queue.impl.simple;
 
 import javax.annotation.Nonnull;
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
@@ -28,10 +31,6 @@ import org.apache.sling.distribution.queue.DistributionQueueProcessor;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * a queue provider {@link org.apache.sling.distribution.queue.DistributionQueueProvider} for simple in memory

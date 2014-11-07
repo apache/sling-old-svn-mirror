@@ -30,15 +30,15 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.distribution.event.DistributionEventType;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
+import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
-import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
-import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationContext;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

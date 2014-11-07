@@ -33,9 +33,9 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.component.DistributionComponentFactory;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
+import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
-import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

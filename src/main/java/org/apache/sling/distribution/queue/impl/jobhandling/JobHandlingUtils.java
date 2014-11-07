@@ -21,9 +21,9 @@ package org.apache.sling.distribution.queue.impl.jobhandling;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.event.jobs.Job;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
+import org.apache.sling.event.jobs.Job;
 
 public class JobHandlingUtils {
 

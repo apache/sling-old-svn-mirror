@@ -21,13 +21,13 @@ package org.apache.sling.distribution.queue.impl.jobhandling;
 import java.util.Collections;
 import java.util.Map;
 
-import org.apache.sling.event.jobs.Job;
-import org.apache.sling.event.jobs.JobBuilder;
-import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemState;
 import org.apache.sling.distribution.queue.DistributionQueueItemState.ItemState;
+import org.apache.sling.event.jobs.Job;
+import org.apache.sling.event.jobs.JobBuilder;
+import org.apache.sling.event.jobs.JobManager;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

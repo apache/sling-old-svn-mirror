@@ -24,11 +24,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.sling.distribution.queue.DistributionQueue;
+import org.apache.sling.distribution.queue.DistributionQueueException;
+import org.apache.sling.distribution.queue.DistributionQueueItem;
+import org.apache.sling.distribution.queue.DistributionQueueItemSelector;
+import org.apache.sling.distribution.queue.DistributionQueueItemState;
+import org.apache.sling.distribution.queue.DistributionQueueItemState.ItemState;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.JobManager.QueryType;
-import org.apache.sling.distribution.queue.*;
-import org.apache.sling.distribution.queue.DistributionQueueItemState.ItemState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

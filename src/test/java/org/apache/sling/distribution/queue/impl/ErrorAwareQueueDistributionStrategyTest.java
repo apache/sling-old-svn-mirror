@@ -21,13 +21,15 @@ package org.apache.sling.distribution.queue.impl;
 import java.util.Dictionary;
 
 import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.queue.*;
+import org.apache.sling.distribution.queue.DistributionQueue;
+import org.apache.sling.distribution.queue.DistributionQueueDistributionStrategy;
+import org.apache.sling.distribution.queue.DistributionQueueItem;
+import org.apache.sling.distribution.queue.DistributionQueueItemState;
+import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.junit.Test;
 import org.osgi.service.component.ComponentContext;
 
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;

@@ -38,8 +38,8 @@
 
     <name>Apache Sling Distribution Core</name>
     <description>
-        The Apache Sling Distribution core bundle provides a set of utilities to distribute content from / to other Sling
-        instances.
+        The Apache Sling Distribution Core bundle provides the basic code infrastructure and API implementations for the
+        Sling Content Distribution module
     </description>
 
     <scm>
@@ -68,17 +68,6 @@
                 <configuration>
                     <instructions>
                         <Bundle-SymbolicName>org.apache.sling.distribution.core</Bundle-SymbolicName>
-                        <Export-Package>
-                            org.apache.sling.distribution.component,
-                            org.apache.sling.distribution.agent,
-                            org.apache.sling.distribution.communication,
-                            org.apache.sling.distribution.event,
-                            org.apache.sling.distribution.queue,
-                            org.apache.sling.distribution.trigger,
-                            org.apache.sling.distribution.packaging,
-                            org.apache.sling.distribution.transport.authentication,
-                            org.apache.sling.distribution.util
-                        </Export-Package>
                         <Embed-Dependency>httpasyncclient</Embed-Dependency>
                     </instructions>
                 </configuration>
@@ -117,6 +106,11 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.api</artifactId>
             <version>2.5.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.distribution.api</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>

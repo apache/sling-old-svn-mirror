@@ -23,10 +23,10 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.fluent.Executor;
-import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationContext;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationException;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -19,8 +19,8 @@
 package org.apache.sling.distribution.transport.authentication.impl;
 
 import org.apache.http.client.fluent.Executor;
-import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationContext;
+import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
 import org.junit.Test;
 
 import static org.junit.Assert.fail;
