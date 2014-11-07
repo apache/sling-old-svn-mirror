@@ -38,7 +38,7 @@
 
     <name>Apache Sling Distribution Core</name>
     <description>
-        The Apache Sling Distribution core bundle provides a set of utilities to replicate content from / to other Sling
+        The Apache Sling Distribution core bundle provides a set of utilities to distribute content from / to other Sling
         instances.
     </description>
 
