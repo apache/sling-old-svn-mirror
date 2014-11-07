@@ -168,6 +168,8 @@
                 <jdk>1.6</jdk>
             </activation>
             <properties>
+                <exam.version>3.5.0</exam.version>
+                <url.version>2.1.0</url.version>
                 <min.port>36000</min.port>
                 <max.port>36999</max.port>
             </properties>
