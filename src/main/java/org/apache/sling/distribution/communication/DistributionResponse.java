@@ -24,7 +24,7 @@ package org.apache.sling.distribution.communication;
 public class DistributionResponse {
 
     private final String status;
-    private boolean successful;
+    private final boolean successful;
 
     public DistributionResponse(String status, boolean successful) {
         this.status = status;
