@@ -65,7 +65,7 @@ public class LocalDistributionPackageImporterFactory implements DistributionPack
     @Reference
     private DistributionComponentFactory componentFactory;
 
-    DistributionPackageImporter importer;
+    private DistributionPackageImporter importer;
 
     @Activate
     public void activate(Map<String, Object> config) {

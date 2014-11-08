@@ -36,7 +36,7 @@ public class MultipleEndpointDistributionTransportHandler implements Distributio
 
     private final List<DistributionTransportHandler> transportHelpers;
     private final TransportEndpointStrategyType endpointStrategyType;
-    private int lastSuccessfulEnpointId = 0;
+    private int lastSuccessfulEndpointId = 0;
 
     public MultipleEndpointDistributionTransportHandler(List<DistributionTransportHandler> transportHelpers,
                                                         TransportEndpointStrategyType endpointStrategyType) {
@@ -48,7 +48,7 @@ public class MultipleEndpointDistributionTransportHandler implements Distributio
 
         int offset = 0;
         if (endpointStrategyType.equals(TransportEndpointStrategyType.One)) {
-            offset = lastSuccessfulEnpointId;
+            offset = lastSuccessfulEndpointId;
         }
 
         int length = transportHelpers.size();
@@ -64,7 +64,7 @@ public class MultipleEndpointDistributionTransportHandler implements Distributio
                 result.addAll(transportHelper.retrievePackages(resourceResolver, distributionRequest));
             }
 
-            lastSuccessfulEnpointId = currentId;
+            lastSuccessfulEndpointId = currentId;
             if (endpointStrategyType.equals(TransportEndpointStrategyType.One))
                 break;
         }

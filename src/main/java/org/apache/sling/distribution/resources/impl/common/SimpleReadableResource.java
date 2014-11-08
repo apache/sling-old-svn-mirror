@@ -32,7 +32,7 @@ import org.apache.sling.api.wrappers.ValueMapDecorator;
 /**
  * Read only resource that can adapt to one of the object provided as parameter.
  */
-public class SimpleReadableResource extends AbstractResource {
+class SimpleReadableResource extends AbstractResource {
 
     private final ResourceResolver resourceResolver;
     private final String resourcePath;

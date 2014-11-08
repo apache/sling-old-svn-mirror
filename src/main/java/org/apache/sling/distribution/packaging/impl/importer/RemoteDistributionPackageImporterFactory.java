@@ -89,7 +89,7 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
     DistributionComponentFactory distributionComponentFactory;
 
     @Activate
-    protected void activate(BundleContext context, Map<String, Object> config) throws Exception {
+    protected void activate(Map<String, Object> config) {
 
         Map<String, Object> properties = new HashMap<String, Object>();
         properties.putAll(config);

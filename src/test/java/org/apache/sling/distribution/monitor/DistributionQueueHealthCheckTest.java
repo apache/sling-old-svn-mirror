@@ -42,7 +42,7 @@ import static org.mockito.Mockito.when;
 public class DistributionQueueHealthCheckTest {
 
     @Test
-    public void testWithNodistributionQueueProvider() throws Exception {
+    public void testWithNoDistributionQueueProvider() throws Exception {
         DistributionQueueHealthCheck distributionQueueHealthCheck = new DistributionQueueHealthCheck();
         distributionQueueHealthCheck.activate(Collections.<String, Object>emptyMap());
         Result result = distributionQueueHealthCheck.execute();

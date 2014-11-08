@@ -51,7 +51,7 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
 
     private final JobManager jobManager;
 
-    protected JobHandlingDistributionQueue(String name, String topic, JobManager jobManager) {
+    JobHandlingDistributionQueue(String name, String topic, JobManager jobManager) {
         this.name = name;
         this.topic = topic;
         this.jobManager = jobManager;

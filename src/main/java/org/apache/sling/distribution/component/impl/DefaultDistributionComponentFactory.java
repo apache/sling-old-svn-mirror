@@ -141,7 +141,7 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
         return null;
     }
 
-    public DistributionAgent createAgent(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
+    DistributionAgent createAgent(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
 
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), DistributionComponentFactory.AGENT_SIMPLE);
 
@@ -198,7 +198,7 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
     }
 
 
-    public DistributionPackageExporter createExporter(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
+    DistributionPackageExporter createExporter(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
 
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
@@ -235,7 +235,7 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
         return null;
     }
 
-    public DistributionPackageImporter createImporter(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
+    DistributionPackageImporter createImporter(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
 
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
@@ -259,7 +259,7 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
         return null;
     }
 
-    public DistributionQueueProvider createQueueProvider(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
+    DistributionQueueProvider createQueueProvider(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
         if (COMPONENT_TYPE_SERVICE.equals(factory)) {
@@ -279,7 +279,7 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
         return null;
     }
 
-    public DistributionQueueDistributionStrategy createDistributionStrategy(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
+    DistributionQueueDistributionStrategy createDistributionStrategy(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
         if (COMPONENT_TYPE_SERVICE.equals(factory)) {
@@ -298,7 +298,7 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
         return null;
     }
 
-    public TransportAuthenticationProvider createTransportAuthenticationProvider(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
+    TransportAuthenticationProvider createTransportAuthenticationProvider(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
         if (COMPONENT_TYPE_SERVICE.equals(factory)) {
@@ -314,7 +314,7 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
         return null;
     }
 
-    public DistributionPackageBuilder createBuilder(Map<String, Object> properties) {
+    DistributionPackageBuilder createBuilder(Map<String, Object> properties) {
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
         if (PACKAGE_BUILDER_FILEVLT.equals(factory)) {
@@ -331,7 +331,7 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
     }
 
 
-    protected DistributionTrigger createTrigger(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
+    DistributionTrigger createTrigger(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
         if (COMPONENT_TYPE_SERVICE.equals(factory)) {

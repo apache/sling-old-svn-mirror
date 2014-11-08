@@ -36,7 +36,7 @@ import org.apache.sling.distribution.serialization.DistributionPackageBuildingEx
  */
 public class LocalDistributionPackageExporter implements DistributionPackageExporter {
 
-    private DistributionPackageBuilder packageBuilder;
+    private final DistributionPackageBuilder packageBuilder;
 
     public LocalDistributionPackageExporter(DistributionPackageBuilder packageBuilder) {
         this.packageBuilder = packageBuilder;

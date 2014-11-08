@@ -47,7 +47,7 @@ public class SingleQueueDistributionStrategy implements DistributionQueueDistrib
 
     @Nonnull
     public List<String> getQueueNames() {
-        return Arrays.asList(new String[] { DEFAULT_QUEUE_NAME });
+        return Arrays.asList(DEFAULT_QUEUE_NAME);
     }
 
 

@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 /**
  * {@link JobConsumer} for {@link org.apache.sling.distribution.agent.DistributionAgent}s using {@link JobHandlingDistributionQueue}
  */
-public class DistributionAgentJobConsumer implements JobConsumer {
+class DistributionAgentJobConsumer implements JobConsumer {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 

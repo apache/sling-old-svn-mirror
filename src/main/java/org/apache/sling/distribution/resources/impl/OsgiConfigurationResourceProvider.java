@@ -101,7 +101,7 @@ public class OsgiConfigurationResourceProvider extends AbstractModifyingResource
                 }
             }
         } catch (IOException e) {
-            throw new PersistenceException("Resources cannot be commited", e);
+            throw new PersistenceException("Resources cannot be committed", e);
         }
     }
 
@@ -193,7 +193,7 @@ public class OsgiConfigurationResourceProvider extends AbstractModifyingResource
     }
 
 
-    public static <K, V> Map<K, V> fromDictionary(Dictionary<K, V> dictionary) {
+    private static <K, V> Map<K, V> fromDictionary(Dictionary<K, V> dictionary) {
         if (dictionary == null) {
             return null;
         }
@@ -206,7 +206,7 @@ public class OsgiConfigurationResourceProvider extends AbstractModifyingResource
         return map;
     }
 
-    public static <K, V> Dictionary<K, V> toDictionary(Map<K, V> map) {
+    private static <K, V> Dictionary<K, V> toDictionary(Map<K, V> map) {
         if (map == null) {
             return null;
         }

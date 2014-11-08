@@ -90,7 +90,7 @@ public class ErrorAwareQueueDistributionStrategy implements DistributionQueueDis
 
     @Nonnull
     public List<String> getQueueNames() {
-        return Arrays.asList(new String[] { ERROR_QUEUE_NAME, DEFAULT_QUEUE_NAME });
+        return Arrays.asList(ERROR_QUEUE_NAME, DEFAULT_QUEUE_NAME);
     }
 
     private void checkAndRemoveStuckItems(DistributionQueueProvider queueProvider) throws DistributionQueueException {

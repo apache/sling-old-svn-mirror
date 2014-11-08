@@ -65,7 +65,7 @@ public class RemoteEventDistributionTrigger implements DistributionTrigger {
 
     private Scheduler scheduler;
 
-    private Map<String, Future<HttpResponse>> requests = new ConcurrentHashMap<String, Future<HttpResponse>>();
+    private final Map<String, Future<HttpResponse>> requests = new ConcurrentHashMap<String, Future<HttpResponse>>();
 
     public RemoteEventDistributionTrigger(String endpoint, TransportAuthenticationProvider<CredentialsProvider, CredentialsProvider> authenticationProvider, Scheduler scheduler) {
         if (endpoint == null) {

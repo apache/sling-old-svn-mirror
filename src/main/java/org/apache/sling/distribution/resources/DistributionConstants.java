@@ -23,9 +23,9 @@ package org.apache.sling.distribution.resources;
  */
 public class DistributionConstants {
 
-    public static final String SUFFIX_RESOURCE_LIST = "/list";
-    public static final String SUFFIX_AGENT_QUEUE = "/queue";
-    public static final String SUFFIX_AGENT_QUEUE_EVENT = "/queue/event";
+    private static final String SUFFIX_RESOURCE_LIST = "/list";
+    private static final String SUFFIX_AGENT_QUEUE = "/queue";
+    private static final String SUFFIX_AGENT_QUEUE_EVENT = "/queue/event";
 
     public static final String AGENT_RESOURCE_TYPE = "sling/distribution/service/agent";
     public static final String AGENT_QUEUE_RESOURCE_TYPE = AGENT_RESOURCE_TYPE + SUFFIX_AGENT_QUEUE;

@@ -6,6 +6,7 @@ import java.util.Map;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class SettingsUtilsTest {
@@ -53,7 +54,7 @@ public class SettingsUtilsTest {
         assertTrue(result.get("trigger") instanceof List);
 
         List<Map> triggersList = (List<Map>) result.get("trigger");
-        assertTrue(triggersList.get(0) instanceof Map);
+        assertNotNull(triggersList.get(0));
         Map trigger0Map = triggersList.get(0);
         assertEquals("propertyValue1", trigger0Map.get("propertyKey1"));
         assertEquals("propertyValue2", trigger0Map.get("propertyKey2"));

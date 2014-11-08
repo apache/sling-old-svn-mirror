@@ -71,7 +71,7 @@ public class AgentDistributionPackageExporterFactory implements DistributionPack
     @Reference
     DistributionComponentFactory distributionComponentFactory;
 
-    DistributionPackageExporter packageExporter;
+    private DistributionPackageExporter packageExporter;
 
 
     @Activate

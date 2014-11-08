@@ -71,7 +71,7 @@ public class DistributionPackageImporterServlet extends SlingAllMethodsServlet {
             log.error("Error during distribution import: {}", e.getMessage(), e);
         } finally {
             long end = System.currentTimeMillis();
-            log.info("Processed package import request in {} ms: : {}", new Object[]{end - start, success});
+            log.info("Processed package import request in {} ms", end - start);
         }
     }
 
