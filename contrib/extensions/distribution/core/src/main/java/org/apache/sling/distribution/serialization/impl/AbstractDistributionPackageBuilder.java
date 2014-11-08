@@ -53,7 +53,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
 
     private final DistributionEventFactory distributionEventFactory;
 
-    public AbstractDistributionPackageBuilder(String type, DistributionEventFactory distributionEventFactory) {
+    protected AbstractDistributionPackageBuilder(String type, DistributionEventFactory distributionEventFactory) {
         this.type = type;
         this.distributionEventFactory = distributionEventFactory;
     }

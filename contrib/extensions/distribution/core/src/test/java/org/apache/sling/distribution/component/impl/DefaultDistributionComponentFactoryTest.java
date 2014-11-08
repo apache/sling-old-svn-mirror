@@ -51,10 +51,8 @@ public class DefaultDistributionComponentFactoryTest {
         DistributionAgent agent = mock(DistributionAgent.class);
         when(provider.getComponent(DistributionAgent.class, name)).thenReturn(agent);
         try {
-            DistributionAgent component = defaultdistributionComponentFactory.createComponent(DistributionAgent.class, properties, provider);
-
+            defaultdistributionComponentFactory.createComponent(DistributionAgent.class, properties, provider);
             fail("agents cannot be referenced by service name using the factory");
-
         }
         catch (IllegalArgumentException e) {
             // expect to fail

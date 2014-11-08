@@ -29,7 +29,7 @@ import org.apache.sling.api.wrappers.ModifiableValueMapDecorator;
 /**
  * ValueMap that signals to the underlying resource provider the its values are changed.
  */
-public class SimpleModifiableValueMap extends ModifiableValueMapDecorator
+class SimpleModifiableValueMap extends ModifiableValueMapDecorator
         implements ModifiableValueMap {
 
     private final ResourceResolver resourceResolver;

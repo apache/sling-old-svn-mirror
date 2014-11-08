@@ -63,12 +63,12 @@ public class DefaultDistributionComponentProvider implements DistributionCompone
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    Map<String, DistributionAgent> distributionAgentMap = new ConcurrentHashMap<String, DistributionAgent>();
-    Map<String, DistributionQueueProvider> distributionQueueProviderMap = new ConcurrentHashMap<String, DistributionQueueProvider>();
-    Map<String, DistributionQueueDistributionStrategy> distributionQueueDistributionStrategyMap = new ConcurrentHashMap<String, DistributionQueueDistributionStrategy>();
-    Map<String, TransportAuthenticationProvider> transportAuthenticationProviderMap = new ConcurrentHashMap<String, TransportAuthenticationProvider>();
-    Map<String, DistributionPackageImporter> distributionPackageImporterMap = new ConcurrentHashMap<String, DistributionPackageImporter>();
-    Map<String, DistributionPackageExporter> distributionPackageExporterMap = new ConcurrentHashMap<String, DistributionPackageExporter>();
+    private Map<String, DistributionAgent> distributionAgentMap = new ConcurrentHashMap<String, DistributionAgent>();
+    private Map<String, DistributionQueueProvider> distributionQueueProviderMap = new ConcurrentHashMap<String, DistributionQueueProvider>();
+    private Map<String, DistributionQueueDistributionStrategy> distributionQueueDistributionStrategyMap = new ConcurrentHashMap<String, DistributionQueueDistributionStrategy>();
+    private Map<String, TransportAuthenticationProvider> transportAuthenticationProviderMap = new ConcurrentHashMap<String, TransportAuthenticationProvider>();
+    private Map<String, DistributionPackageImporter> distributionPackageImporterMap = new ConcurrentHashMap<String, DistributionPackageImporter>();
+    private Map<String, DistributionPackageExporter> distributionPackageExporterMap = new ConcurrentHashMap<String, DistributionPackageExporter>();
     private BundleContext bundleContext;
 
     public <ComponentType extends DistributionComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type,

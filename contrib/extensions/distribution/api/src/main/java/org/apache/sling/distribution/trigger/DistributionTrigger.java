@@ -45,7 +45,7 @@ public interface DistributionTrigger extends DistributionComponent {
      * unregister the given handler, if existing
      *
      * @param requestHandler handler to unregister
-     * @throws DistributionTriggerException if unregistration fails
+     * @throws DistributionTriggerException if any error happen
      */
     void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException;
 }

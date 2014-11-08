@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 /**
  * a {@link org.apache.sling.distribution.serialization.DistributionPackageBuilder} based on Apache Jackrabbit FileVault.
  * <p/>
- * Each {@link org.apache.sling.distribution.packaging.DistributionPackage} created by <code>FileVaultdistributionPackageBuilder</code> is
+ * Each {@link org.apache.sling.distribution.packaging.DistributionPackage} created by {@link FileVaultDistributionPackageBuilder} is
  * backed by a {@link org.apache.jackrabbit.vault.packaging.VaultPackage}. 
  */
 public class FileVaultDistributionPackageBuilder extends AbstractDistributionPackageBuilder implements
@@ -56,7 +56,7 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
 
     private static final String VERSION = "0.0.1";
 
-    public static String PACKAGING_TYPE = "vlt";
+    public static final String PACKAGING_TYPE = "vlt";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 

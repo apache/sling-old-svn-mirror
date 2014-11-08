@@ -40,8 +40,8 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
     private final String resourceRoot;
     private final Map<String, Map<String, String>> additionalResourcePropertiesMap = new HashMap<String, Map<String, String>>();
 
-    public AbstractReadableResourceProvider(String resourceRoot,
-                                            Map<String, String> additionalResourceProperties) {
+    protected AbstractReadableResourceProvider(String resourceRoot,
+                                               Map<String, String> additionalResourceProperties) {
 
         this.resourceRoot = resourceRoot;
 
@@ -127,7 +127,7 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
         return resource;
     }
 
-    protected Map<String, Object> getMainResourceProperties(String resourceName) {
+    Map<String, Object> getMainResourceProperties(String resourceName) {
         return getResourceProperties(resourceName);
     }
 
@@ -140,7 +140,7 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
      * @param properties the properties to bind
      * @return
      */
-    protected Map<String, Object> bindMainResourceProperties(Map<String, Object> properties) {
+    Map<String, Object> bindMainResourceProperties(Map<String, Object> properties) {
         Map<String, Object> result = new HashMap<String, Object>();
 
         Map<String, String> resourcePropertyTemplates = additionalResourcePropertiesMap.get(MAIN_RESOURCE_PREFIX);
@@ -173,7 +173,7 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
      * @param properties the properties to unbind
      * @return
      */
-    protected Map<String, Object> unbindMainResourceProperties(Map<String, Object> properties) {
+    Map<String, Object> unbindMainResourceProperties(Map<String, Object> properties) {
         Map<String, Object> result = new HashMap<String, Object>();
 
         Map<String, String> resourcePropertyTemplates = additionalResourcePropertiesMap.get(MAIN_RESOURCE_PREFIX);
@@ -193,18 +193,18 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
         return fixMap(result);
     }
 
-    protected Resource buildMainResource(ResourceResolver resourceResolver,
-                                         SimplePathInfo pathInfo,
-                                         Map<String, Object> properties,
-                                         Object... adapters) {
+    Resource buildMainResource(ResourceResolver resourceResolver,
+                               SimplePathInfo pathInfo,
+                               Map<String, Object> properties,
+                               Object... adapters) {
         return new SimpleReadableResource(resourceResolver, pathInfo.getResourcePath(), properties, adapters);
     }
 
-    protected SimplePathInfo extractPathInfo(String path) {
+    SimplePathInfo extractPathInfo(String path) {
         return SimplePathInfo.parsePathInfo(resourceRoot, path);
     }
 
-    protected boolean hasPermission(ResourceResolver resourceResolver, String resourcePath, String permission) {
+    boolean hasPermission(ResourceResolver resourceResolver, String resourcePath, String permission) {
 
         boolean hasPermission = false;
         Session session = resourceResolver.adaptTo(Session.class);
@@ -221,7 +221,7 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
     }
 
 
-    static <K, V> Map<String, Object> fixMap(Map<K, V> map) {
+    private static <K, V> Map<String, Object> fixMap(Map<K, V> map) {
         Map<String, Object> result = new HashMap<String, Object>();
         for (Map.Entry<K, V> entry : map.entrySet()) {
             K key = entry.getKey();
@@ -255,7 +255,7 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
         return result;
     }
 
-    static <T> boolean isAcceptedType(Class<T> clazz) {
+    private static <T> boolean isAcceptedType(Class<T> clazz) {
         return clazz.isPrimitive() || clazz == String.class || clazz.isArray();
     }
 

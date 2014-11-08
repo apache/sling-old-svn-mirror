@@ -95,7 +95,7 @@ public class OsgiPropertiesResourceProviderFactory implements ResourceProviderFa
     public final static String DEFAULT_PROVIDER_TYPE = "osgiService";
     /**
      * The providerType can be osgiService or osgiConfig.
-     * A provider of type osgiService will allow read only access to osgi service properties of a particuar interface.
+     * A provider of type osgiService will allow read only access to osgi service properties of a specific interface.
      * The resource can be adapted to the underlying service instance.
      * <p/>
      * A provider of type osgiConfig will allow CRUD access to osgi configurations registered for a particular factory.     *

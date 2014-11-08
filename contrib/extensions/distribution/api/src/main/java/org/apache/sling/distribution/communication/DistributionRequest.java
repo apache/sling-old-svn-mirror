@@ -45,7 +45,7 @@ public class DistributionRequest {
     /**
      * get the time this distribution request was created
      *
-     * @return a <code>long</code> representing the distribution request creation time e.g. as returend by {@code System#currentTimeMillis}
+     * @return a <code>long</code> representing the distribution request creation time e.g. as returned by {@code System#currentTimeMillis}
      */
     public long getTime() {
         return time;

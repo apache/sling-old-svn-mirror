@@ -73,7 +73,7 @@ public class SimpleDistributionQueueProvider implements DistributionQueueProvide
     }
 
 
-    protected Collection<DistributionQueue> getQueues() {
+    Collection<DistributionQueue> getQueues() {
         return queueMap.values();
     }
 

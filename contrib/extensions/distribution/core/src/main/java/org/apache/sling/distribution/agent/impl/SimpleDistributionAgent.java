@@ -157,7 +157,7 @@ public class SimpleDistributionAgent implements DistributionAgent, ManagedDistri
 
     }
 
-    public boolean isPassive() {
+    boolean isPassive() {
         return passive;
     }
 

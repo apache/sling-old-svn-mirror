@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 public class AgentDistributionPackageExporter implements DistributionPackageExporter {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public static final String QUEUE_NAME = "queue";
+    private static final String QUEUE_NAME = "queue";
 
     private DistributionAgent agent;
     private final DistributionPackageBuilder packageBuilder;
@@ -48,7 +48,7 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
         this (PropertiesUtil.toString(config.get(QUEUE_NAME), ""), agent, packageBuilder);
     }
 
-    public AgentDistributionPackageExporter(String queueName, DistributionAgent agent, DistributionPackageBuilder packageBuilder) {
+    private AgentDistributionPackageExporter(String queueName, DistributionAgent agent, DistributionPackageBuilder packageBuilder) {
 
         if (agent == null || packageBuilder == null) {
             throw new IllegalArgumentException("Agent and package builder are required");

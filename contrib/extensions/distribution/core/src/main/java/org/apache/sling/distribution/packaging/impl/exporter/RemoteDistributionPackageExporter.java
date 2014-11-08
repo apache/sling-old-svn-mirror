@@ -40,12 +40,9 @@ import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyTyp
  */
 public class RemoteDistributionPackageExporter implements DistributionPackageExporter {
 
-
     private final DistributionPackageBuilder packageBuilder;
 
-    DistributionTransportHandler transportHandler;
-
-
+    private DistributionTransportHandler transportHandler;
 
     public RemoteDistributionPackageExporter(DistributionPackageBuilder packageBuilder,
                                              TransportAuthenticationProvider transportAuthenticationProvider,

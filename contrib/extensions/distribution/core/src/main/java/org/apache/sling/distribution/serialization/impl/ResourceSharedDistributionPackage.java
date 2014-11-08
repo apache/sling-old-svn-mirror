@@ -50,7 +50,7 @@ public class ResourceSharedDistributionPackage implements SharedDistributionPack
     }
 
     public void acquire(@Nonnull String holderName) {
-        if (holderName == null || holderName.length() == 0) {
+        if (holderName.length() == 0) {
             throw new IllegalArgumentException("holder name cannot be null or empty");
         }
         
@@ -63,7 +63,7 @@ public class ResourceSharedDistributionPackage implements SharedDistributionPack
 
     public void release(@Nonnull String holderName) {
 
-        if (holderName == null || holderName.length() == 0) {
+        if (holderName.length() == 0) {
             throw new IllegalArgumentException("holder name cannot be null or empty");
         }
 

@@ -96,7 +96,7 @@ public class AdvancedRemoteDistributionPackageImporter implements DistributionPa
     @Reference
     private DistributionEventFactory distributionEventFactory;
 
-    DistributionTransportHandler transportHandler;
+    private DistributionTransportHandler transportHandler;
 
     @Activate
     protected void activate(Map<String, ?> config) throws Exception {

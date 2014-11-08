@@ -29,14 +29,14 @@ package org.apache.sling.distribution.resources.impl.common;
  */
 public class SimplePathInfo {
 
-    final String resourcePathInfo;
+    private final String resourcePathInfo;
 
     // resourcePath = resourceRoot + "/" + mainResourceName + "/" + childResourceName
     private final String resourceRoot;
     private final String mainResourceName;
     private final String childResourceName;
 
-    public SimplePathInfo(String resourcePathInfo, String resourceRoot, String resourceName, String childResourceName) {
+    private SimplePathInfo(String resourcePathInfo, String resourceRoot, String resourceName, String childResourceName) {
 
         this.resourcePathInfo = resourcePathInfo;
         this.resourceRoot = resourceRoot;

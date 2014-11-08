@@ -51,7 +51,6 @@ public class RemoteEventDistributionTriggerTest {
     @Test
     public void testUnregister() throws Exception {
         String endpoint = "";
-        String handlerId = "handler-id-1";
         TransportAuthenticationProvider<CredentialsProvider, CredentialsProvider> authProvider = mock(TransportAuthenticationProvider.class);
         when(authProvider.canAuthenticate(CredentialsProvider.class)).thenReturn(true);
         Scheduler scheduler = mock(Scheduler.class);

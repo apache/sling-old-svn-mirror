@@ -44,8 +44,8 @@ public class SettingsUtils {
      * trigger[0]/propertyKey=propertyValue
      * trigger[0]/propertyKey=propertyValue
      *
-     * @param lines
-     * @return
+     * @param lines the property lines
+     * @return a {@link Map} of the property names -> property values
      */
     public static Map<String, Object> parseLines(String[] lines) {
         Map<String, Object> result = new HashMap<String, Object>();
@@ -70,7 +70,7 @@ public class SettingsUtils {
         return result;
     }
 
-    public static Map<String, List<String>> toLinesMap(String[] lines) {
+    private static Map<String, List<String>> toLinesMap(String[] lines) {
         Map<String, List<String>> result = new HashMap<String, List<String>>();
 
 
@@ -102,7 +102,7 @@ public class SettingsUtils {
         return result;
     }
 
-    public static Map<String, Object> collapseMap(Map<String, Object> valueMap) {
+    private static Map<String, Object> collapseMap(Map<String, Object> valueMap) {
 
         Map<String, Object> result = new HashMap<String, Object>();
 

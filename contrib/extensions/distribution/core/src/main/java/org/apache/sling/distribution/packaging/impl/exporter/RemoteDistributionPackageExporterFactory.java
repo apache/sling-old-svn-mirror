@@ -94,9 +94,9 @@ public class RemoteDistributionPackageExporterFactory implements DistributionPac
     public static final String PACKAGE_BUILDER = DistributionComponentFactory.COMPONENT_PACKAGE_BUILDER;
 
     @Reference
-    DistributionComponentFactory distributionComponentFactory;
+    private DistributionComponentFactory distributionComponentFactory;
 
-    DistributionPackageExporter exporter;
+    private DistributionPackageExporter exporter;
 
     @Activate
     protected void activate(Map<String, Object> config) throws Exception {

@@ -50,7 +50,7 @@ import static org.mockito.Mockito.when;
 public class SimpleDistributionAgentTest {
 
     @Test
-    public void testdistributionWithFailingDistributionStrategy() throws Exception {
+    public void testDistributionWithFailingDistributionStrategy() throws Exception {
         String name = "sample-agent";
         DistributionPackageImporter packageImporter = mock(DistributionPackageImporter.class);
         DistributionPackageExporter packageExporter = mock(DistributionPackageExporter.class);
@@ -82,7 +82,7 @@ public class SimpleDistributionAgentTest {
     }
 
     @Test
-    public void testdistributionWithWorkingDistributionStrategy() throws Exception {
+    public void testDistributionWithWorkingDistributionStrategy() throws Exception {
         String name = "sample-agent";
         DistributionPackageImporter packageImporter = mock(DistributionPackageImporter.class);
         DistributionPackageExporter packageExporter = mock(DistributionPackageExporter.class);
@@ -113,7 +113,7 @@ public class SimpleDistributionAgentTest {
     }
 
     @Test
-    public void testdistribution() throws Exception {
+    public void testDistribution() throws Exception {
         String name = "sample-agent";
         DistributionPackageImporter packageImporter = mock(DistributionPackageImporter.class);
         DistributionPackageExporter packageExporter = mock(DistributionPackageExporter.class);

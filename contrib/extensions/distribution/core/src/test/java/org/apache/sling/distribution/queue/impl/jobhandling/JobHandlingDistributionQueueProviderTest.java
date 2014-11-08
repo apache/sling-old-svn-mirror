@@ -58,7 +58,6 @@ public class JobHandlingDistributionQueueProviderTest {
         BundleContext context = mock(BundleContext.class);
         JobHandlingDistributionQueueProvider jobHandlingdistributionQueueProvider = new JobHandlingDistributionQueueProvider("dummy-agent",
                 jobManager, context);
-        String agentName = "dummy-agent";
         DistributionQueueProcessor queueProcessor = mock(DistributionQueueProcessor.class);
         jobHandlingdistributionQueueProvider.enableQueueProcessing(queueProcessor);
     }
@@ -72,7 +71,6 @@ public class JobHandlingDistributionQueueProviderTest {
         BundleContext context = mock(BundleContext.class);
         JobHandlingDistributionQueueProvider jobHandlingdistributionQueueProvider = new JobHandlingDistributionQueueProvider("dummy-agent",
                 jobManager, context);
-        String agentName = "dummy-agent";
         jobHandlingdistributionQueueProvider.disableQueueProcessing();
     }
 }

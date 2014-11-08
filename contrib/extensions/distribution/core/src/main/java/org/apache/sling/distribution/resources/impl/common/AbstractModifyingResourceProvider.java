@@ -36,8 +36,8 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
     private final Map<String, Map<String, Object>> changedResources = new HashMap<String, Map<String, Object>>();
     private final Set<String> deletedResources = new HashSet<String>();
 
-    public AbstractModifyingResourceProvider(String resourceRoot,
-                                             Map<String, String> additionalResourceProperties) {
+    protected AbstractModifyingResourceProvider(String resourceRoot,
+                                                Map<String, String> additionalResourceProperties) {
         super(resourceRoot, additionalResourceProperties);
 
     }
@@ -143,7 +143,7 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
     }
 
     @Override
-    public Map<String, Object> getMainResourceProperties(String resourceName) {
+    protected Map<String, Object> getMainResourceProperties(String resourceName) {
 
         if (deletedResources.contains(resourceName)) {
             return null;

@@ -124,7 +124,7 @@ public class PersistingJcrEventDistributionTrigger extends AbstractJcrEventTrigg
 
     public void enable() {
         log.info("enabling persisting jcr event listener");
-        Session session = null;
+        Session session;
         try {
             session = getSession();
             if (!session.nodeExists(nuggetsPath)) {
