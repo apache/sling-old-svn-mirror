@@ -110,10 +110,10 @@ public class DistributionUtils {
     public static void distribute(SlingInstance slingInstance, String agentName, DistributionActionType action, String... paths) throws IOException {
         String agentResource = agentUrl(agentName);
 
-        executedistributionRequest(slingInstance, 202, agentResource, action, paths);
+        executeDistributionRequest(slingInstance, 202, agentResource, action, paths);
     }
 
-    public static String executedistributionRequest(SlingInstance slingInstance, int status, String resource, DistributionActionType action, String... paths) throws IOException {
+    public static String executeDistributionRequest(SlingInstance slingInstance, int status, String resource, DistributionActionType action, String... paths) throws IOException {
 
         List<String> args = new ArrayList<String>();
         args.add(DistributionParameter.ACTION.toString());
@@ -132,7 +132,7 @@ public class DistributionUtils {
     public static String doExport(SlingInstance slingInstance, String exporterName, DistributionActionType action, String... paths) throws IOException {
         String agentResource = exporterUrl(exporterName);
 
-        return executedistributionRequest(slingInstance, 200, agentResource, action, paths);
+        return executeDistributionRequest(slingInstance, 200, agentResource, action, paths);
     }
 
     public static String doImport(SlingInstance slingInstance, String importerName, byte[] bytes) throws IOException {
