@@ -27,7 +27,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.sling.distribution.communication.DistributionActionType;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.component.ManagedDistributionComponent;
-import org.apache.sling.distribution.event.DistributionEvent;
 import org.apache.sling.distribution.event.DistributionEventType;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
@@ -64,7 +63,7 @@ public class ChainDistributeDistributionTrigger implements DistributionTrigger, 
         Dictionary<String, Object> properties = new Hashtable<String, Object>();
 
         // TODO : make it possible to configure the type of event handled here, currently 'package-installed' is hardcoded
-        properties.put(EventConstants.EVENT_TOPIC, DistributionEvent.getTopic(DistributionEventType.PACKAGE_INSTALLED));
+        properties.put(EventConstants.EVENT_TOPIC, DistributionEventType.PACKAGE_INSTALLED.getTopic());
         log.info("handler {} will chain distribute on path '{}'", requestHandler, pathPrefix);
 
 //            properties.put(EventConstants.EVENT_FILTER, "(path=" + path + "/*)");

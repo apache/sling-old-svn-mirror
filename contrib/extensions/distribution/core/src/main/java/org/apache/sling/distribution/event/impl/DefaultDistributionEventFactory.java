@@ -24,8 +24,8 @@ import java.util.Dictionary;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.distribution.event.DistributionEvent;
 import org.apache.sling.distribution.event.DistributionEventType;
+import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,9 +43,8 @@ public class DefaultDistributionEventFactory implements DistributionEventFactory
     private EventAdmin eventAdmin;
 
     public void generateEvent(@Nonnull DistributionEventType distributionEventType, @Nonnull Dictionary<?, ?> properties) {
-        DistributionEvent distributionEvent = new DistributionEvent(distributionEventType, properties);
-        eventAdmin.postEvent(distributionEvent);
-        log.debug("distribution event posted {}", distributionEvent);
+        eventAdmin.postEvent(new Event(distributionEventType.getTopic(), properties));
+        log.debug("distribution event {} posted", distributionEventType.name());
     }
 
 }

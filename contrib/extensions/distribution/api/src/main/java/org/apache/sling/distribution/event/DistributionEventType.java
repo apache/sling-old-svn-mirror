@@ -61,6 +61,20 @@ public enum DistributionEventType {
     /**
      * event for agent deleted
      */
-    AGENT_DELETED
+    AGENT_DELETED;
+
+    /**
+     * common event topic base for distribution events
+     */
+    public static final String EVENT_TOPIC = "org/apache/sling/distribution/event";
+
+    /**
+     * get the event topic for this event type
+     *
+     * @return the event topic
+     */
+    public String getTopic() {
+        return EVENT_TOPIC + "/" + name();
+    }
 
 }
