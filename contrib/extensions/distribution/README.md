@@ -119,7 +119,7 @@ User/client makes an `HTTP POST`request to `http://localhost:8080/libs/sling/dis
 ### Installation
 
 - install the dependency bundles on all Sling instances
-- install Sling Distribution core on all Sling instances
+- install Sling Distribution api, core, samples on all Sling instances
 
 ### Push resources
 
