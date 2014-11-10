@@ -71,7 +71,8 @@ public class JNDIDataSourceFactory {
     @Property(
             label = "JNDI Properties",
             description = "Set the environment for the JNDI InitialContext i.e. properties passed on to InitialContext " +
-                    "for performing the JNDI instance lookup",
+                    "for performing the JNDI instance lookup. Each row form a map entry where each row format be propertyName=property " +
+                    "e.g. java.naming.factory.initial=exampleFactory",
             value = {},
             cardinality = 1024)
     static final String PROP_JNDI_PROPS = "jndi.properties";
