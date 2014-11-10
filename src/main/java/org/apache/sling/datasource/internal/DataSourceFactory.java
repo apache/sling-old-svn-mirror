@@ -321,11 +321,11 @@ public class DataSourceFactory {
 
     //~----------------------------------------< Config Handling >
 
-    private static String getDataSourceName(Map<String, ?> config) {
+    static String getDataSourceName(Map<String, ?> config) {
         return PropertiesUtil.toString(config.get(PROP_DATASOURCE_NAME), null);
     }
 
-    private static String getSvcPropName(Map<String, ?> config) {
+    static String getSvcPropName(Map<String, ?> config) {
         return PropertiesUtil.toString(config.get(PROP_DS_SVC_PROP_NAME), PROP_DATASOURCE_NAME);
     }
 
@@ -343,7 +343,7 @@ public class DataSourceFactory {
         }
     }
 
-    private static void checkArgument(boolean expression,
+    static void checkArgument(boolean expression,
                                       String errorMessageTemplate,
                                       Object... errorMessageArgs) {
         if (!expression) {

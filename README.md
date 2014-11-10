@@ -1,5 +1,11 @@
-Apache Sling DataSource Provider
-================================
+# Apache Sling DataSource Provider
+
+DataSource provider bundle supports two type of DataSource
+
+1. Pooled Connection DataSource
+2. JNDI DataSource
+
+## Pooled Connection DataSource Provider
 
 This bundle enables creating and configuring JDBC DataSource in OSGi environment based on 
 OSGi configuration. It uses [Tomcat JDBC Pool][1] as the JDBC Connection Pool provider.
@@ -9,8 +15,7 @@ OSGi configuration. It uses [Tomcat JDBC Pool][1] as the JDBC Connection Pool pr
 3. Exposes the DataSource stats as JMX MBean 
 4. Supports updating of DataSource connection pool properties at runtime without restart
 
-Driver Loading
---------------
+### Driver Loading
 
 Loading of JDBC driver is tricky on OSGi env. Mostly one has to attach the Driver bundle as a
 fragment bundle to the code which creates the JDBC Connection. 
@@ -28,8 +33,7 @@ bundle to Driver class supported by it. With this feature there is no need to wr
 bundle as fragment to DataSource provider bundle
 
 
-Configuration
--------------
+### Configuration
 
 1. Install the current bundle
 2. Install the JDBC Driver bundle
@@ -42,26 +46,7 @@ http://localhost:8080/system/console/configMgr/org.apache.sling.datasource.DataS
 
 Using the config ui above one can directly configure most of the properties as explained in [Tomcat Docs][1]
 
-Usage
------
-
-Once the required configuration is done the `DataSource` would be registered as part of the OSGi Service Registry
-The service is registered with service property `datasource.name` whose value is the name of datasource provided in 
-OSGi config. 
-
-Following snippet demonstrates accessing the DataSource named `foo` via DS annotation
-
-    import javax.sql.DataSource;
-    import org.apache.felix.scr.annotations.Reference;
-    
-    public class DSExample {
-        
-        @Reference(target = "(&(objectclass=javax.sql.DataSource)(datasource.name=foo))")
-        private DataSource dataSource;
-    }
-
-Convert Driver jars to Bundle
------------------------------
+### Convert Driver jars to Bundle
 
 Most of the JDBC driver jars have the required OSGi headers and can be directly deployed to OSGi container
 as bundles. However some of the drivers e.g. Postgres are not having such headers and hence need to be 
@@ -85,6 +70,37 @@ In the steps above we
 2. Create a bnd file with required instructions. 
 3. Execute the bnd command
 4. Resulting bundle is present in `org.postgresql-9.3.1101.jar`
- 
+
+## JNDI DataSource
+
+While running in Application Server the DataSource instance might be managed by app server and registered with
+JNDI. To enable lookup of DataSource instance from JNDI you can configure `JNDIDataSourceFactory`
+
+1. Configure the DataSource from OSGi config for PID `org.apache.sling.datasource.JNDIDataSourceFactory`
+2. Provide the JNDI name to lookup from and other details
+
+If Felix WebConsole is used then you can configure it via Configuration UI at
+http://localhost:8080/system/console/configMgr/org.apache.sling.datasource.JNDIDataSourceFactory
+
+Once configured `JNDIDataSourceFactory` would lookup the DataSource instance and register it with OSGi
+ServiceRegistry
+
+## Usage
+
+Once the required configuration is done the `DataSource` would be registered as part of the OSGi Service Registry
+The service is registered with service property `datasource.name` whose value is the name of datasource provided in
+OSGi config.
+
+Following snippet demonstrates accessing the DataSource named `foo` via DS annotation
+
+    import javax.sql.DataSource;
+    import org.apache.felix.scr.annotations.Reference;
+
+    public class DSExample {
+
+        @Reference(target = "(&(objectclass=javax.sql.DataSource)(datasource.name=foo))")
+        private DataSource dataSource;
+    }
+
 [1]: http://tomcat.apache.org/tomcat-7.0-doc/jdbc-pool.html
 [2]: http://www.aqute.biz/Bnd/Wrapping
