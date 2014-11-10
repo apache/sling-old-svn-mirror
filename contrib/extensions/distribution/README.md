@@ -4,6 +4,13 @@ This is the README for the Sling Content Distribution module.
 
 ## Overview
 
+The Sling Content Distribution module consists of the following bundles:
+
+ - org.apache.sling.distribution.api: this is where the APIs are defined
+ - org.apache.sling.distribution.core: this is where the basic infrastructure for distributing content is implemented
+ - org.apache.sling.distribution.sample: this is a set of sample configurations and implementations for demo purpose 
+ - org.apache.sling.distribution.it: this is the integration testing suite
+ 
 ### Distribution agents
 
 Each distribution agent is an OSGi service and is resolved using a [Sling Resource Provider](#Resource_Providers) who locate it under `libs/sling/distribution/services/agents`.
@@ -129,16 +136,9 @@ User/client makes an `HTTP POST`request to `http://localhost:8080/libs/sling/dis
  
 ```http -a admin:admin -v -f POST http://localhost:8080/libs/sling/distribution/services/agents/publish action=DELETE path=/content/sample1```
 
-# Open Tasks
+## HTTP API
 
-- distributed configuration
-- pushing to / pulling from JMS (pros: established pattern for producers/consumers problems, cons: other library / systems involved as a possible PoF)
-- WebSocket support (pros: once established it's bidirectional and therefore also publish can directly push stuff to author)
-- asynchronous import of packages (pros: parallel transport and import, cons: complex management of multiple queues on different publish instances)
-
-### HTTP API
-
-#### API Requirements
+### API Requirements
 We need to expose APIs for configuring, commanding and monitoring distribution agents.
 
 - Configuration API should allow:
@@ -151,27 +151,34 @@ We need to expose APIs for configuring, commanding and monitoring distribution a
  - inspection to internal queues of distribution agents
  - inspection of commands history
  
-#### API endpoints 
+### API endpoints 
 
-##### Configuration API
+#### Configuration API
 - Create config:  - POST _/libs/sling/distribution/settings/agents_
 - Read config - GET _/libs/sling/distribution/settings/agents/{config identifier}_
 - Update config - PUT _/libs/sling/distribution/settings/agents/{config identifier}_
 - Delete config - DELETE _/libs/sling/distribution/settings/agents/{config identifier}_ or POST with :operation=delete
 
-##### Command API
+#### Command API
 - Distribute - POST _/libs/sling/distribution/services/agents/{agentName}_
 - Import package - POST _/libs/sling/distribution/services/importers/{importerName}_
 - Export package - POST _/libs/sling/distribution/services/exporters/{exporterName}_
 
-##### Monitoring API
+#### Monitoring API
 - Distribution history - GET _/libs/sling/distribution/services/agents/{agentName}/history_ (not implemented yet)
 - Import package history - GET _/libs/sling/distribution/services/importers/{importerName}/history_ (not implemented yet)
 - Export package history - GET _/libs/sling/distribution/services/exporters/{exporterName}/history_ (not implemented yet)
 - Agent queue inspection  - GET _/libs/sling/distribution/services/agents/{agentName}/queue_ or _{agentName}.queue_
 
-#### API Implementation 
+### API Implementation 
 TODO
 
-##### Sample payloads
+#### Sample payloads
 TODO
+
+## Ideas for future developments
+
+- distributed configuration
+- pushing to / pulling from JMS (pros: established pattern for producers/consumers problems, cons: other library / systems involved as a possible PoF)
+- WebSocket support (pros: once established it's bidirectional and therefore also publish can directly push stuff to author)
+- asynchronous import of packages (pros: parallel transport and import, cons: complex management of multiple queues on different publish instances)
