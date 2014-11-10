@@ -41,9 +41,8 @@ public class JobHandlingDistributionQueueProvider implements DistributionQueuePr
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final String name;
+
     private final JobManager jobManager;
-
-
 
     private ServiceRegistration jobConsumer = null;
 
