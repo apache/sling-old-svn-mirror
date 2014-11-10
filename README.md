@@ -33,10 +33,10 @@ Configuration
 
 1. Install the current bundle
 2. Install the JDBC Driver bundle
-3. Configure the DataSource from OSGi config for PID `org.apache.sling.extensions.datasource.DataSourceFactory`
+3. Configure the DataSource from OSGi config for PID `org.apache.sling.datasource.DataSourceFactory`
 
 If Felix WebConsole is used then you can configure it via Configuration UI at
-http://localhost:8080/system/console/configMgr/org.apache.sling.extensions.datasource.DataSourceFactory
+http://localhost:8080/system/console/configMgr/org.apache.sling.datasource.DataSourceFactory
 
 ![Web Console Config](http://sling.apache.org/documentation/development/sling-datasource-config.png)
 

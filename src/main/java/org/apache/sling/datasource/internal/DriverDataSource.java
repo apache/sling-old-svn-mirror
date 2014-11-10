@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.extensions.datasource.internal;
+package org.apache.sling.datasource.internal;
 
 
 import java.io.PrintWriter;
