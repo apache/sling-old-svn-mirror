@@ -40,7 +40,7 @@ public interface DistributionQueueProvider extends DistributionComponent {
     DistributionQueue getQueue(@Nonnull String queueName) throws DistributionQueueException;
 
     /**
-     * enables queue driven processing for an agent
+     * enables queue processing
      *
      * @param queueProcessor the queue processor to be used
      */
@@ -48,7 +48,7 @@ public interface DistributionQueueProvider extends DistributionComponent {
 
 
     /**
-     * disables queue driven processing for an agent
+     * disables queue processing
      *
      */
     void disableQueueProcessing() throws DistributionQueueException;
