@@ -47,7 +47,7 @@ public class DataSourceIT extends DataSourceTestBase{
     }
 
 
-    String PID = "org.apache.sling.extensions.datasource.DataSourceFactory";
+    String PID = "org.apache.sling.datasource.DataSourceFactory";
 
     @Inject
     ConfigurationAdmin ca;

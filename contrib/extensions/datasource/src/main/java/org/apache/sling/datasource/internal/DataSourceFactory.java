@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.extensions.datasource.internal;
+package org.apache.sling.datasource.internal;
 
 import java.lang.management.ManagementFactory;
 import java.sql.SQLException;
@@ -61,7 +61,7 @@ import org.slf4j.LoggerFactory;
         policy = ConfigurationPolicy.REQUIRE
 )
 public class DataSourceFactory {
-    public static final String NAME = "org.apache.sling.extensions.datasource.DataSourceFactory";
+    public static final String NAME = "org.apache.sling.datasource.DataSourceFactory";
 
     @Property
     static final String PROP_DATASOURCE_NAME = "datasource.name";
