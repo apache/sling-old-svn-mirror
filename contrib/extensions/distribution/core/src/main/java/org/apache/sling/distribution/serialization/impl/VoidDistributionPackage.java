@@ -54,8 +54,8 @@ public class VoidDistributionPackage extends AbstractDistributionPackage impleme
     public VoidDistributionPackage(DistributionRequest request, String type) {
         this.type = type;
         this.paths = request.getPaths();
-        this.action = request.getAction().toString();
-        this.id = request.getAction().toString()
+        this.action = request.getActionType().toString();
+        this.id = request.getActionType().toString()
                 + ':' + Arrays.toString(request.getPaths()).replaceAll("\\[", "").replaceAll("\\]", "")
                 + ':' + request.getTime()
                 + ':' + type;

@@ -47,7 +47,7 @@ public class VoidDistributionPackageBuilderTest {
         String[] paths = new String[0];
         for (DistributionActionType action : DistributionActionType.values()) {
             DistributionRequest request = mock(DistributionRequest.class);
-            when(request.getAction()).thenReturn(action);
+            when(request.getActionType()).thenReturn(action);
             when(request.getPaths()).thenReturn(paths);
             when(request.getTime()).thenReturn(System.currentTimeMillis());
             DistributionPackage distributionPackage = voiddistributionPackageBuilder.createPackage(resourceResolver, request);

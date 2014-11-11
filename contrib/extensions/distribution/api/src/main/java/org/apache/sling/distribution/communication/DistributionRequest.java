@@ -32,7 +32,7 @@ public class DistributionRequest {
 
     private final String[] paths;
 
-    public DistributionRequest(@Nonnull DistributionActionType action, @Nonnull String[] paths) {
+    public DistributionRequest(@Nonnull DistributionActionType action, @Nonnull String... paths) {
         this(System.currentTimeMillis(), action, paths);
     }
 
@@ -45,7 +45,7 @@ public class DistributionRequest {
     /**
      * get the time this distribution request was created
      *
-     * @return a <code>long</code> representing the distribution request creation time e.g. as returned by {@code System#currentTimeMillis}
+     * @return the distribution request creation time as returned by {@code System#currentTimeMillis}
      */
     public long getTime() {
         return time;
@@ -54,16 +54,16 @@ public class DistributionRequest {
     /**
      * get the {@link DistributionActionType} associated with this request
      *
-     * @return the action as a <code>distributionActionType</code>
+     * @return the action as a {@link org.apache.sling.distribution.communication.DistributionActionType}
      */
-    public DistributionActionType getAction() {
+    public DistributionActionType getActionType() {
         return action;
     }
 
     /**
      * get the paths for this distribution request
      *
-     * @return an array of <code>String</code>s representing the paths
+     * @return an array of paths
      */
     public String[] getPaths() {
         return paths;

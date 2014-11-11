@@ -46,10 +46,10 @@ public class PrivilegeDistributionRequestAuthorizationStrategy implements Distri
         Session session = resourceResolver.adaptTo(Session.class);
 
         try {
-           if (DistributionActionType.ADD.equals(distributionRequest.getAction())) {
+           if (DistributionActionType.ADD.equals(distributionRequest.getActionType())) {
                checkPermissionForAdd(session, distributionRequest.getPaths());
            }
-           else if (DistributionActionType.DELETE.equals(distributionRequest.getAction())) {
+           else if (DistributionActionType.DELETE.equals(distributionRequest.getActionType())) {
                checkPermissionForDelete(session, distributionRequest.getPaths());
            }
 
