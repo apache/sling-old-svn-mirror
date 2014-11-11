@@ -199,14 +199,15 @@ public class SimpleDistributionAgent implements DistributionAgent, ManagedDistri
         return distributionResponse;
     }
 
+    @Nonnull
     public Iterable<String> getQueueNames() {
         return queueDistributionStrategy.getQueueNames();
     }
 
-    public DistributionQueue getQueue(String queueName) throws DistributionAgentException {
+    public DistributionQueue getQueue(@Nonnull String queueName) throws DistributionAgentException {
         DistributionQueue queue;
         try {
-            if (queueName != null && queueName.length() > 0) {
+            if (queueName.length() > 0) {
                 queue = queueProvider.getQueue(queueName);
             } else {
                 queue = queueProvider.getQueue(DistributionQueueDistributionStrategy.DEFAULT_QUEUE_NAME);

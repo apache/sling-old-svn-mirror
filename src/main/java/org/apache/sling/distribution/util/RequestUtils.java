@@ -43,7 +43,7 @@ public class RequestUtils {
 
     public static URI appendDistributionRequest(URI uri, DistributionRequest distributionRequest) throws URISyntaxException {
         URIBuilder uriBuilder = new URIBuilder(uri);
-        uriBuilder.addParameter(DistributionParameter.ACTION.toString(), distributionRequest.getAction().getName());
+        uriBuilder.addParameter(DistributionParameter.ACTION.toString(), distributionRequest.getActionType().getName());
         for (String path : distributionRequest.getPaths()) {
             uriBuilder.addParameter(DistributionParameter.PATH.toString(), path);
         }

@@ -161,7 +161,7 @@ public class SimpleDistributionAgentTest {
         DistributionQueue queue = mock(DistributionQueue.class);
         when(queueProvider.getQueue(DistributionQueueDistributionStrategy.DEFAULT_QUEUE_NAME))
                 .thenReturn(queue);
-        assertNotNull(agent.getQueue(null));
+        assertNotNull(agent.getQueue(""));
     }
 
     @Test

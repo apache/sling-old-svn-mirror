@@ -75,6 +75,7 @@ public class JobHandlingDistributionQueueProvider implements DistributionQueuePr
         String childTopic = topic + "/*";
         jobProps.put(JobConsumer.PROPERTY_TOPICS, new String[]{topic, childTopic});
         log.info("registering job consumer for agent {}", name);
+        log.info("qp: {}, jp: {}", queueProcessor, jobProps);
         jobConsumer = context.registerService(JobConsumer.class.getName(), new DistributionAgentJobConsumer(queueProcessor), jobProps);
         log.info("job consumer for agent {} registered", name);
     }

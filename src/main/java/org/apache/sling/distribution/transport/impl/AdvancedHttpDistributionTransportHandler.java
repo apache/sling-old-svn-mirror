@@ -144,7 +144,6 @@ public class AdvancedHttpDistributionTransportHandler extends SimpleHttpDistribu
                                 DistributionEndpoint distributionEndpoint) throws IOException {
         String type = distributionPackage.getType();
 
-
         Request req = Request.Post(distributionEndpoint.getUri()).useExpectContinue();
 
         if (useCustomHeaders) {

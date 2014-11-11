@@ -129,7 +129,7 @@ public class RemoteEventDistributionTrigger implements DistributionTrigger {
             handler.handle(distributionRequest);
             log.info("distribution request to agent {} sent ({} {})", new Object[]{
                     handler,
-                    distributionRequest.getAction(),
+                    distributionRequest.getActionType(),
                     distributionRequest.getPaths()});
 
             super.onContentReceived(decoder, ioctrl);

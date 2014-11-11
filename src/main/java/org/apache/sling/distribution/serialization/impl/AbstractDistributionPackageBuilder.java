@@ -62,15 +62,15 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
     public DistributionPackage createPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request)
             throws DistributionPackageBuildingException {
         DistributionPackage distributionPackage;
-        if (DistributionActionType.ADD.equals(request.getAction())) {
+        if (DistributionActionType.ADD.equals(request.getActionType())) {
             distributionPackage = createPackageForAdd(resourceResolver, request);
-        } else if (DistributionActionType.DELETE.equals(request.getAction())) {
+        } else if (DistributionActionType.DELETE.equals(request.getActionType())) {
             distributionPackage = new VoidDistributionPackage(request, type);
-        } else if (DistributionActionType.POLL.equals(request.getAction())) {
+        } else if (DistributionActionType.POLL.equals(request.getActionType())) {
             distributionPackage = new VoidDistributionPackage(request, type);
         } else {
             throw new DistributionPackageBuildingException("unknown action type "
-                    + request.getAction());
+                    + request.getActionType());
         }
         if (distributionPackage != null && distributionEventFactory != null) {
             Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
