@@ -34,7 +34,7 @@ public enum DistributionEventType {
     PACKAGE_QUEUED,
 
     /**
-     * event for package replicated
+     * event for package distributed
      */
     PACKAGE_DISTRIBUTED,
 

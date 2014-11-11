@@ -44,6 +44,7 @@ public interface DistributionAgent extends DistributionComponent {
      * retrieves the names of the queues for this agent.
      * @return the list of queue names
      */
+    @Nonnull
     Iterable<String> getQueueNames();
 
     /**
@@ -54,7 +55,7 @@ public interface DistributionAgent extends DistributionComponent {
      * @throws DistributionAgentException if an error occurs in retrieving the queue
      */
     @CheckForNull
-    DistributionQueue getQueue(@Nullable String name) throws DistributionAgentException;
+    DistributionQueue getQueue(@Nonnull String name) throws DistributionAgentException;
 
     /**
      * executes a {@link org.apache.sling.distribution.communication.DistributionRequest}

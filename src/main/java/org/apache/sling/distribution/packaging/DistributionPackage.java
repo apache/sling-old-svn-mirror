@@ -21,7 +21,6 @@ package org.apache.sling.distribution.packaging;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
 
 import aQute.bnd.annotation.ConsumerType;
 
@@ -29,7 +28,7 @@ import aQute.bnd.annotation.ConsumerType;
  * A distribution package
  */
 @ConsumerType
-public interface DistributionPackage extends Serializable {
+public interface DistributionPackage {
 
     /**
      * get package id. the id is a unique string that can be used to retrieve
