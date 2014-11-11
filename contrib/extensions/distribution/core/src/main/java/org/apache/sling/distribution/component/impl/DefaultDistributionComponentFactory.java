@@ -146,6 +146,8 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), DistributionComponentFactory.AGENT_SIMPLE);
 
         if (DistributionComponentFactory.AGENT_SIMPLE.equals(factory)) {
+            String agentName = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
+
 
             Map<String, Object> exporterProperties = extractMap(COMPONENT_PACKAGE_EXPORTER, properties);
             DistributionPackageExporter packageExporter = createExporter(exporterProperties, componentProvider);
@@ -160,18 +162,18 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
             DistributionQueueDistributionStrategy queueDistributionStrategy = createDistributionStrategy(queueDistributionStrategyProperties, componentProvider);
 
             Map<String, Object> queueProviderProperties = extractMap(COMPONENT_QUEUE_PROVIDER, properties);
+            queueProviderProperties.put(QUEUE_PROVIDER_PROPERTY_QUEUE_PREFIX, agentName);
             DistributionQueueProvider queueProvider = createQueueProvider(queueProviderProperties, componentProvider);
 
             List<Map<String, Object>> triggersProperties = extractMapList(COMPONENT_TRIGGER, properties);
             List<DistributionTrigger> triggers = createTriggerList(triggersProperties, componentProvider);
 
-            String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), String.valueOf(new Random().nextInt(1000)));
 
             String serviceName = PropertiesUtil.toString(properties.get(DistributionComponentFactory.AGENT_SIMPLE_PROPERTY_SERVICE_NAME), null);
 
             boolean isPassive = PropertiesUtil.toBoolean(properties.get(DistributionComponentFactory.AGENT_SIMPLE_PROPERTY_IS_PASSIVE), false);
 
-            return new SimpleDistributionAgent(name, isPassive, serviceName,
+            return new SimpleDistributionAgent(agentName, isPassive, serviceName,
                     packageImporter, packageExporter, packageExporterStrategy,
                     queueProvider, queueDistributionStrategy, distributionEventFactory, resourceResolverFactory, triggers);
 
@@ -267,13 +269,13 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
             return componentProvider.getComponent(DistributionQueueProvider.class, name);
         }
         else if (QUEUE_PROVIDER_JOB.equals(factory)) {
-            String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
-            return new JobHandlingDistributionQueueProvider(name, jobManager, bundleContext);
+            String prefix = PropertiesUtil.toString(properties.get(QUEUE_PROVIDER_PROPERTY_QUEUE_PREFIX), null);
+            return new JobHandlingDistributionQueueProvider(prefix, jobManager, bundleContext);
         }
         else if (QUEUE_PROVIDER_SIMPLE.equals(factory)) {
-            String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
+            String prefix = PropertiesUtil.toString(properties.get(QUEUE_PROVIDER_PROPERTY_QUEUE_PREFIX), null);
 
-            return new SimpleDistributionQueueProvider(scheduler, name);
+            return new SimpleDistributionQueueProvider(scheduler, prefix);
         }
 
         return null;

@@ -293,6 +293,12 @@ public interface DistributionComponentFactory {
     String QUEUE_PROVIDER_JOB = "job";
 
     /**
+     * property for default topics
+     */
+    String QUEUE_PROVIDER_PROPERTY_QUEUE_PREFIX = "queue.prefix";
+
+
+    /**
      * queue provider simple type
      */
     String QUEUE_PROVIDER_SIMPLE = "simple";

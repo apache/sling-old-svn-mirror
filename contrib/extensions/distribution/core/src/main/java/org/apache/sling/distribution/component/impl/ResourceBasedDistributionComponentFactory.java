@@ -41,17 +41,17 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * An content based service factory for {@link org.apache.sling.distribution.component.DistributionComponent}s using a compact configuration, already existing OSGi services
+ * An resource based service factory for {@link org.apache.sling.distribution.component.DistributionComponent}s using a compact configuration, already existing OSGi services
  * for the components to be wired can be used as well as directly instantiated components (called by type name).
  */
 @Component(metatype = true,
-        label = "Sling Distribution - Content Based Component Factory",
-        description = "Content configuration Replication Component factory",
+        label = "Sling Distribution - Resource Based Component Factory",
+        description = "Resource configuration for Distribution Components Factory",
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE
 )
-public class ContentBasedDistributionComponentFactory {
+public class ResourceBasedDistributionComponentFactory {
 
     private static final int MAX_LEVEL = 2;
 
@@ -66,8 +66,8 @@ public class ContentBasedDistributionComponentFactory {
     @Property(label = "Path")
     public static final String PATH = "path";
 
-    @Property(label = "Service Name")
-    public static final String SERVICE_NAME = "servicename";
+    @Property(label = "Defaults Path")
+    public static final String DEFAULTS_PATH = "defaults.path";
 
 
     @Reference
@@ -86,7 +86,7 @@ public class ContentBasedDistributionComponentFactory {
     private String name;
     private String kind;
     private String path;
-    private String servicename;
+    private String defaultsPath;
 
     @Activate
     public void activate(BundleContext context, Map<String, Object> config) throws Exception {
@@ -101,7 +101,7 @@ public class ContentBasedDistributionComponentFactory {
         name = PropertiesUtil.toString(config.get(NAME), null);
         kind = PropertiesUtil.toString(config.get(KIND), null);
         path = PropertiesUtil.toString(config.get(PATH), null);
-        servicename = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
+        defaultsPath = PropertiesUtil.toString(config.get(DEFAULTS_PATH), null);
 
         componentListenerProperties.put(NAME, name);
 
@@ -153,8 +153,7 @@ public class ContentBasedDistributionComponentFactory {
             if (resourceRoot != null && !ResourceUtil.isNonExistingResource(resourceRoot)) {
                 for (Resource resource : resourceResolver.getChildren(resourceRoot)) {
                     String name = resource.getName();
-                    Map<String, Object> config = extractMap(0, resource);
-                    register(name, config);
+                    register(name);
                 }
             }
         } catch (LoginException e) {
@@ -166,9 +165,7 @@ public class ContentBasedDistributionComponentFactory {
     }
 
     ResourceResolver getResolver() throws LoginException {
-        Map<String, Object> authenticationInfo = new HashMap<String, Object>();
-        authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, servicename);
-        ResourceResolver resourceResolver = resourceResolverFactory.getServiceResourceResolver(authenticationInfo);
+        ResourceResolver resourceResolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
 
         return resourceResolver;
     }
@@ -178,8 +175,19 @@ public class ContentBasedDistributionComponentFactory {
         try {
             resourceResolver = getResolver();
             Resource resource = resourceResolver.getResource(path + "/" + name);
+            Map<String, Object> config = new HashMap<String, Object>();
 
-            Map<String, Object> config = extractMap(0, resource);
+            if (defaultsPath != null) {
+                Resource defaultsResource = resourceResolver.getResource(defaultsPath);
+                if (defaultsResource != null) {
+                    config = extractMap(0, defaultsResource);
+                }
+            }
+            Map<String, Object> componentConfig = extractMap(0, resource);
+
+            putMap(0, componentConfig, config);
+            config.put(DistributionComponentFactory.COMPONENT_NAME, name);
+
             register(name, config);
         } catch (LoginException e) {
             if (resourceResolver != null) {
@@ -227,6 +235,28 @@ public class ContentBasedDistributionComponentFactory {
         return result;
     }
 
+    private void putMap(int level, Map<String, Object> source, Map<String, Object> target) {
+        if (level > MAX_LEVEL)
+            return;
+
+        for (Map.Entry<String, Object> entry : source.entrySet()) {
+
+            if (target.containsKey(entry.getKey())
+                    && entry.getValue() instanceof Map
+                    && target.get(entry.getKey()) instanceof Map) {
+                putMap(level, (Map) entry.getValue(), (Map) target.get(entry.getKey()));
+
+            }
+            else  {
+                target.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+
+
+
+    }
+
     private void register(String componentName, Map<String, Object> config) {
         String componentClass = null;
         Object componentObject = null;
@@ -261,10 +291,8 @@ public class ContentBasedDistributionComponentFactory {
                 if (slashIndex >= 0) {
                     name = name.substring(0, slashIndex);
                 }
-
                 refresh(name);
             }
-
         }
     }
 
