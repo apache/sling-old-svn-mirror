@@ -1,18 +1,8 @@
 {
-    "name": "jpublish",
-    "jcr:primaryType" : "nt:unstructured",
-
     "serviceName" : "distributionService",
 
-    "requestAuthorizationStrategy" : {
-        "type" : "privilege",
-        "jcrPrivilege" : "jcr:read"
-    },
-
     "packageExporter":  {
-        "type": "local",
-        "packageBuilder" : { "type"  : "vlt" }
-
+        "type": "local"
     },
 
     "packageImporter": {
@@ -26,13 +16,6 @@
 
         "endpoints" : [
             "http://localhost:4503/libs/sling/distribution/services/importers/default"
-        ],
-
-        "packageBuilder" : { "type" : "vlt" }
-
-    },
-
-    "queueDistributionStrategy" :  { "type" : "single" },
-
-    "queueProvider" : { "type" : "job", "name" : "jpublish" }
+        ]
+    }
 }

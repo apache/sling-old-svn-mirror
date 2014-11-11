@@ -1,0 +1,22 @@
+{
+    "jcr:primaryType" : "nt:unstructured",
+
+    "requestAuthorizationStrategy" : {
+        "type" : "privilege",
+        "jcrPrivilege" : "jcr:read"
+    },
+
+    "packageExporter":  {
+        "packageBuilder" : { "type"  : "vlt" }
+
+    },
+
+    "packageImporter": {
+        "packageBuilder" : { "type" : "vlt" }
+
+    },
+
+    "queueDistributionStrategy" :  { "type" : "single" },
+
+    "queueProvider" : { "type" : "job" }
+}
