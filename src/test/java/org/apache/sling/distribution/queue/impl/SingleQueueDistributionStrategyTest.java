@@ -20,7 +20,7 @@ package org.apache.sling.distribution.queue.impl;
 
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.queue.DistributionQueue;
-import org.apache.sling.distribution.queue.DistributionQueueDistributionStrategy;
+import org.apache.sling.distribution.queue.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemState;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
@@ -33,17 +33,17 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Testcase for {@link SingleQueueDistributionStrategy}
+ * Testcase for {@link SingleQueueDispatchingStrategy}
  */
 public class SingleQueueDistributionStrategyTest {
 
     @Test
     public void testPackageAdditionWithSucceedingItemDelivery() throws Exception {
-        SingleQueueDistributionStrategy singleQueueDistributionStrategy = new SingleQueueDistributionStrategy();
+        SingleQueueDispatchingStrategy singleQueueDistributionStrategy = new SingleQueueDispatchingStrategy();
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
         DistributionQueue queue = mock(DistributionQueue.class);
-        when(queueProvider.getQueue(DistributionQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
+        when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(DistributionQueueItem.class))).thenReturn(true);
 
         boolean returnedState = singleQueueDistributionStrategy.add(distributionPackage, queueProvider);
@@ -52,12 +52,12 @@ public class SingleQueueDistributionStrategyTest {
 
     @Test
     public void testPackageAdditionWithFailingItemDelivery() throws Exception {
-        SingleQueueDistributionStrategy singleQueueDistributionStrategy = new SingleQueueDistributionStrategy();
+        SingleQueueDispatchingStrategy singleQueueDistributionStrategy = new SingleQueueDispatchingStrategy();
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
         DistributionQueue queue = mock(DistributionQueue.class);
         DistributionQueueItem queueItem = mock(DistributionQueueItem.class);
-        when(queueProvider.getQueue(DistributionQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
+        when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(queueItem)).thenReturn(true);
         DistributionQueueItemState state = mock(DistributionQueueItemState.class);
         when(state.isSuccessful()).thenReturn(false);
@@ -68,11 +68,11 @@ public class SingleQueueDistributionStrategyTest {
 
     @Test
     public void testPackageAdditionWithNullItemStateFromTheQueue() throws Exception {
-        SingleQueueDistributionStrategy singleQueueDistributionStrategy = new SingleQueueDistributionStrategy();
+        SingleQueueDispatchingStrategy singleQueueDistributionStrategy = new SingleQueueDispatchingStrategy();
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
         DistributionQueue queue = mock(DistributionQueue.class);
-        when(queueProvider.getQueue(DistributionQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
+        when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(DistributionQueueItem.class))).thenReturn(true);
         boolean returnedState = singleQueueDistributionStrategy.add(distributionPackage, queueProvider);
         assertTrue(returnedState);
@@ -80,11 +80,11 @@ public class SingleQueueDistributionStrategyTest {
 
     @Test
     public void testPackageAdditionWithNotNullItemStateFromTheQueue() throws Exception {
-        SingleQueueDistributionStrategy singleQueueDistributionStrategy = new SingleQueueDistributionStrategy();
+        SingleQueueDispatchingStrategy singleQueueDistributionStrategy = new SingleQueueDispatchingStrategy();
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
         DistributionQueue queue = mock(DistributionQueue.class);
-        when(queueProvider.getQueue(DistributionQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
+        when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(DistributionQueueItem.class))).thenReturn(true);
 
         boolean returnedState = singleQueueDistributionStrategy.add(distributionPackage, queueProvider);

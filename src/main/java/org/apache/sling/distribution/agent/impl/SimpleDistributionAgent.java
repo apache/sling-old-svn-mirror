@@ -47,7 +47,7 @@ import org.apache.sling.distribution.packaging.DistributionPackageImportExceptio
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.packaging.SharedDistributionPackage;
 import org.apache.sling.distribution.queue.DistributionQueue;
-import org.apache.sling.distribution.queue.DistributionQueueDistributionStrategy;
+import org.apache.sling.distribution.queue.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemState;
@@ -72,7 +72,7 @@ public class SimpleDistributionAgent implements DistributionAgent, ManagedDistri
     private final DistributionPackageImporter distributionPackageImporter;
     private final DistributionPackageExporter distributionPackageExporter;
 
-    private final DistributionQueueDistributionStrategy queueDistributionStrategy;
+    private final DistributionQueueDispatchingStrategy queueDistributionStrategy;
 
     private final DistributionEventFactory distributionEventFactory;
 
@@ -92,7 +92,7 @@ public class SimpleDistributionAgent implements DistributionAgent, ManagedDistri
                                    DistributionPackageExporter distributionPackageExporter,
                                    DistributionRequestAuthorizationStrategy distributionRequestAuthorizationStrategy,
                                    DistributionQueueProvider queueProvider,
-                                   DistributionQueueDistributionStrategy queueDistributionStrategy,
+                                   DistributionQueueDispatchingStrategy queueDistributionStrategy,
                                    DistributionEventFactory distributionEventFactory,
                                    ResourceResolverFactory resourceResolverFactory,
                                    List<DistributionTrigger> triggers) {
@@ -210,7 +210,7 @@ public class SimpleDistributionAgent implements DistributionAgent, ManagedDistri
             if (queueName.length() > 0) {
                 queue = queueProvider.getQueue(queueName);
             } else {
-                queue = queueProvider.getQueue(DistributionQueueDistributionStrategy.DEFAULT_QUEUE_NAME);
+                queue = queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME);
             }
         } catch (DistributionQueueException e) {
             throw new DistributionAgentException(e);

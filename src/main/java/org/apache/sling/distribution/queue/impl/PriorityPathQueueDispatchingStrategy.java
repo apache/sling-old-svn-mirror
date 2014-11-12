@@ -24,7 +24,7 @@ import java.util.List;
 
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.queue.DistributionQueue;
-import org.apache.sling.distribution.queue.DistributionQueueDistributionStrategy;
+import org.apache.sling.distribution.queue.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
@@ -32,24 +32,72 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The default strategy for delivering packages to queues. Each agent just manages a single queue,
- * no failure / stuck handling where each package is put regardless of anything.
+ * Distribution algorithm which keeps one specific queue to handle specific paths and another queue
+ * for handling all the other paths
  */
-public class SingleQueueDistributionStrategy implements DistributionQueueDistributionStrategy {
+public class PriorityPathQueueDispatchingStrategy implements DistributionQueueDispatchingStrategy {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public boolean add(@Nonnull DistributionPackage distributionPackage, @Nonnull DistributionQueueProvider queueProvider) throws DistributionQueueException {
-        DistributionQueueItem queueItem = getItem(distributionPackage);
-        DistributionQueue queue = queueProvider.getQueue(DEFAULT_QUEUE_NAME);
-        return queue.add(queueItem);
+    private final String[] priorityPaths;
+
+    public PriorityPathQueueDispatchingStrategy(String[] priorityPaths) {
+        this.priorityPaths = priorityPaths;
+
     }
+
+
+
+
+    private DistributionQueue getQueue(DistributionQueueItem distributionPackage, DistributionQueueProvider queueProvider)
+            throws DistributionQueueException {
+        String[] paths = distributionPackage.getPaths();
+
+        log.info("calculating priority for paths {}", Arrays.toString(paths));
+
+        boolean usePriorityQueue = false;
+        String pp = null;
+        for (String path : paths) {
+            for (String priorityPath : priorityPaths) {
+                if (path.startsWith(priorityPath)) {
+                    usePriorityQueue = true;
+                    pp = priorityPath;
+                    break;
+                }
+            }
+        }
+
+        DistributionQueue queue;
+        if (usePriorityQueue) {
+            log.info("using priority queue for path {}", pp);
+            queue = queueProvider.getQueue(pp);
+        } else {
+            log.info("using default queue");
+            queue = queueProvider.getQueue(DEFAULT_QUEUE_NAME);
+        }
+        return queue;
+    }
+
+    public boolean add(@Nonnull DistributionPackage distributionPackage, @Nonnull DistributionQueueProvider queueProvider) throws DistributionQueueException {
+
+        DistributionQueueItem queueItem = getItem(distributionPackage);
+        DistributionQueue queue = getQueue(queueItem, queueProvider);
+        if (queue != null) {
+            return queue.add(queueItem);
+        } else {
+            throw new DistributionQueueException("could not get a queue");
+        }
+    }
+
+
 
     @Nonnull
     public List<String> getQueueNames() {
-        return Arrays.asList(DEFAULT_QUEUE_NAME);
-    }
+        List<String> paths = Arrays.asList(priorityPaths);
+        paths.add(DEFAULT_QUEUE_NAME);
 
+        return paths;
+    }
 
     private DistributionQueueItem getItem(DistributionPackage distributionPackage) {
         DistributionQueueItem distributionQueueItem = new DistributionQueueItem(distributionPackage.getId(),
@@ -60,5 +108,8 @@ public class SingleQueueDistributionStrategy implements DistributionQueueDistrib
 
         return distributionQueueItem;
     }
+
+
+
 
 }

@@ -28,7 +28,7 @@ import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.communication.DistributionParameter;
 import org.apache.sling.distribution.queue.DistributionQueue;
-import org.apache.sling.distribution.queue.DistributionQueueDistributionStrategy;
+import org.apache.sling.distribution.queue.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemState;
 import org.apache.sling.distribution.resources.DistributionConstants;
@@ -50,7 +50,7 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
 
         if (agent != null) {
             try {
-                DistributionQueue queue = agent.getQueue(queueName != null ? queueName : DistributionQueueDistributionStrategy.DEFAULT_QUEUE_NAME);
+                DistributionQueue queue = agent.getQueue(queueName != null ? queueName : DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME);
                 response.getWriter().write(toJSoN(queue)); // TODO : use json writer
                 response.setStatus(200);
             } catch (Exception e) {

@@ -29,7 +29,7 @@ import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.queue.DistributionQueue;
-import org.apache.sling.distribution.queue.DistributionQueueDistributionStrategy;
+import org.apache.sling.distribution.queue.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemState;
@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * delivering packages with an error queue which can be used when an item is stuck in the default
  * queue for too much time, then the stuck item is moved to the error queue or dropped.
  */
-public class ErrorAwareQueueDistributionStrategy implements DistributionQueueDistributionStrategy {
+public class ErrorAwareQueueDispatchingStrategy implements DistributionQueueDispatchingStrategy {
 
     protected static final String ERROR_QUEUE_NAME = "error";
 

@@ -35,7 +35,7 @@ import org.apache.sling.distribution.component.DistributionComponent;
 import org.apache.sling.distribution.component.DistributionComponentProvider;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
-import org.apache.sling.distribution.queue.DistributionQueueDistributionStrategy;
+import org.apache.sling.distribution.queue.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
 import org.osgi.framework.BundleContext;
@@ -53,7 +53,7 @@ import org.slf4j.LoggerFactory;
         @Reference(name = "distributionPackageImporter", referenceInterface = DistributionPackageImporter.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
         @Reference(name = "distributionPackageExporter", referenceInterface = DistributionPackageExporter.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
         @Reference(name = "distributionQueueProvider", referenceInterface = DistributionQueueProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
-        @Reference(name = "distributionQueueDistributionStrategy", referenceInterface = DistributionQueueDistributionStrategy.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
+        @Reference(name = "distributionQueueDistributionStrategy", referenceInterface = DistributionQueueDispatchingStrategy.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
         @Reference(name = "transportAuthenticationProvider", referenceInterface = TransportAuthenticationProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
 })
 public class DefaultDistributionComponentProvider implements DistributionComponentProvider {
@@ -65,7 +65,7 @@ public class DefaultDistributionComponentProvider implements DistributionCompone
 
     private Map<String, DistributionAgent> distributionAgentMap = new ConcurrentHashMap<String, DistributionAgent>();
     private Map<String, DistributionQueueProvider> distributionQueueProviderMap = new ConcurrentHashMap<String, DistributionQueueProvider>();
-    private Map<String, DistributionQueueDistributionStrategy> distributionQueueDistributionStrategyMap = new ConcurrentHashMap<String, DistributionQueueDistributionStrategy>();
+    private Map<String, DistributionQueueDispatchingStrategy> distributionQueueDistributionStrategyMap = new ConcurrentHashMap<String, DistributionQueueDispatchingStrategy>();
     private Map<String, TransportAuthenticationProvider> transportAuthenticationProviderMap = new ConcurrentHashMap<String, TransportAuthenticationProvider>();
     private Map<String, DistributionPackageImporter> distributionPackageImporterMap = new ConcurrentHashMap<String, DistributionPackageImporter>();
     private Map<String, DistributionPackageExporter> distributionPackageExporterMap = new ConcurrentHashMap<String, DistributionPackageExporter>();
@@ -79,7 +79,7 @@ public class DefaultDistributionComponentProvider implements DistributionCompone
             return (ComponentType) distributionPackageImporterMap.get(componentName);
         } else if (type.isAssignableFrom(DistributionQueueProvider.class)) {
             return (ComponentType) distributionQueueProviderMap.get(componentName);
-        } else if (type.isAssignableFrom(DistributionQueueDistributionStrategy.class)) {
+        } else if (type.isAssignableFrom(DistributionQueueDispatchingStrategy.class)) {
             return (ComponentType) distributionQueueDistributionStrategyMap.get(componentName);
         } else if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
             return (ComponentType) transportAuthenticationProviderMap.get(componentName);
@@ -104,15 +104,15 @@ public class DefaultDistributionComponentProvider implements DistributionCompone
         }
     }
 
-    private void bindDistributionQueueDistributionStrategy(DistributionQueueDistributionStrategy distributionQueueDistributionStrategy, Map<String, Object> config) {
+    private void bindDistributionQueueDistributionStrategy(DistributionQueueDispatchingStrategy distributionQueueDispatchingStrategy, Map<String, Object> config) {
 
         String name = (String) config.get("name");
         if (name != null) {
-            distributionQueueDistributionStrategyMap.put(name, distributionQueueDistributionStrategy);
+            distributionQueueDistributionStrategyMap.put(name, distributionQueueDispatchingStrategy);
         }
     }
 
-    private void unbindDistributionQueueDistributionStrategy(DistributionQueueDistributionStrategy distributionQueueDistributionStrategy, Map<String, Object> config) {
+    private void unbindDistributionQueueDistributionStrategy(DistributionQueueDispatchingStrategy distributionQueueDispatchingStrategy, Map<String, Object> config) {
 
         String name = (String) config.get("name");
         if (name != null) {
