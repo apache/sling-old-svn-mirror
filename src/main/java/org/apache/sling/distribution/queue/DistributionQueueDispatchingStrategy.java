@@ -26,11 +26,11 @@ import org.apache.sling.distribution.component.DistributionComponent;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 
 /**
- * a {@link DistributionQueueDistributionStrategy} implements an algorithm for the distribution of
+ * a {@link DistributionQueueDispatchingStrategy} implements an algorithm for dispatching
  * {@link org.apache.sling.distribution.packaging.DistributionPackage}s among the available queues
  */
 @ConsumerType
-public interface DistributionQueueDistributionStrategy extends DistributionComponent {
+public interface DistributionQueueDispatchingStrategy extends DistributionComponent {
     String DEFAULT_QUEUE_NAME = "default";
 
     /**

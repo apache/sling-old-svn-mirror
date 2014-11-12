@@ -25,7 +25,7 @@ import aQute.bnd.annotation.ConsumerType;
  * initialization and releasing of its underlying (and implementation specific) resources.
  */
 @ConsumerType
-public interface ManagedDistributionComponent {
+public interface ManagedDistributionComponent extends DistributionComponent {
 
     /**
      * Enable the component
