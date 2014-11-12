@@ -329,9 +329,10 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
             }
         } catch (LoginException e) {
             LOG.error("Unable to obtain a resource resolver.", e);
-        }
-        if (rr != null) {
-            rr.close();
+        } finally {
+            if (rr != null) {
+                rr.close();
+            }
         }
         return modelsForResourceType;
     }
