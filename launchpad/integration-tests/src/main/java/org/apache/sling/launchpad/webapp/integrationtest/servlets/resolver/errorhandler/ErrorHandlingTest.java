@@ -136,15 +136,15 @@ public class ErrorHandlingTest extends RenderingTestBase {
     }
 
     public void test_421_exception() throws Throwable{
-        final String expected = "IOException in ErrorHandler";
+        final String expected = "421 from rendering script";
         final String url =  testNodePath + SELECTOR_421 + ".errorScriptException.html"; 
-        assertWithRetries(url, 500, expected);
+        assertWithRetries(url, 421, expected);
     }
 
     public void test_421_error() throws Throwable{
-        final String expected = "IOException in ErrorHandler";
+        final String expected = "421 from rendering script";
         final String url =  testNodePath + SELECTOR_421 + ".errorScriptError.html"; 
-        assertWithRetries(url, 500, expected);
+        assertWithRetries(url, 421, expected);
     }
 
 	public void test_throwable_errorhandling() throws Throwable{	
