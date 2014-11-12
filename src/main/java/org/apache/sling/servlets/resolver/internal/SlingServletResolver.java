@@ -755,6 +755,9 @@ public class SlingServletResolver
             request.setAttribute(SlingConstants.ERROR_SERVLET_NAME, errorHandler.getServletConfig().getServletName());
         }
 
+        // Let the error handler servlet process the request and
+        // forward exceptions (but not throwable) if it fails.
+        // Before SLING-4143 we only forwarded IOExceptions.
         try {
             errorHandler.service(request, response);
             // commit the response
@@ -762,8 +765,11 @@ public class SlingServletResolver
             // close the response (SLING-2724)
             response.getWriter().close();
         } catch (final IOException ioe) {
-            // forward the IOException
             throw ioe;
+        } catch (final Exception e) {
+            throw new IOException("Error handling servlet failed", e);
+        } catch (final Error r) {
+            throw r;
         } catch (final Throwable t) {
             LOGGER.error("Calling the error handler resulted in an error", t);
             LOGGER.error("Original error " + request.getAttribute(SlingConstants.ERROR_EXCEPTION_TYPE),
