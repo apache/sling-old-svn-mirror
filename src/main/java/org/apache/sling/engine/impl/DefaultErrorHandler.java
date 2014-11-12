@@ -64,11 +64,11 @@ public class DefaultErrorHandler implements ErrorHandler {
         return delegate;
     }
     
-    private void delegateFailed(Throwable t, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        final String m = t.getClass().getSimpleName() + " in ErrorHandler";
+    private void delegateFailed(int originalStatus, String originalMessage, Throwable t, HttpServletRequest request, HttpServletResponse response) throws IOException {
         // don't include Throwable in the response, gives too much information
+        final String m = "Error handler failed:" + t.getClass().getName();
         log.error(m, t);
-        sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, m, null, request, response);
+        sendError(originalStatus, originalMessage, null, request, response);
     }
 
     // ---------- ErrorHandler interface (default implementation) --------------
@@ -95,9 +95,9 @@ public class DefaultErrorHandler implements ErrorHandler {
             try {
                 delegate.handleError(status, message, request, response);
             } catch(Exception e) {
-                delegateFailed(e, request, response);
+                delegateFailed(status, message, e, request, response);
             } catch(Error r) {
-                delegateFailed(r, request, response);
+                delegateFailed(status, message, r, request, response);
             }
             return;
         }
@@ -126,19 +126,20 @@ public class DefaultErrorHandler implements ErrorHandler {
             final SlingHttpServletRequest request,
             final SlingHttpServletResponse response)
     throws IOException {
+        final int status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
         // If we have a delegate let it handle the error 
         if(delegate != null) {
             try {
                 delegate.handleError(throwable, request, response);
             } catch(Exception e) {
-                delegateFailed(e, request, response);
+                delegateFailed(status, throwable.toString(), e, request, response);
             } catch(Error r) {
-                delegateFailed(r, request, response);
+                delegateFailed(status, throwable.toString(), r, request, response);
             }
             return;
         }
         
-        sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+        sendError(status,
             throwable.getMessage(), throwable, request, response);
     }
 
