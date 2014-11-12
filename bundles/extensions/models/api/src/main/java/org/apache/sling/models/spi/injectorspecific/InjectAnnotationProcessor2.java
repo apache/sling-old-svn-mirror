@@ -14,7 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Version("1.1.0")
-package org.apache.sling.models.annotations.injectorspecific;
+package org.apache.sling.models.spi.injectorspecific;
 
-import aQute.bnd.annotation.Version;
+import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
+
+/**
+ * Processor for injector-specific annotations.
+ */
+@SuppressWarnings("deprecation")
+public interface InjectAnnotationProcessor2 extends InjectAnnotationProcessor{
+
+    
+    /**
+     * Tries to get the information whether the injection is optional.
+     * 
+     * @return {@code REQUIRED} if injection is mandatory, {@code OPTIONAL} if injection is optional or {@code DEFAULT} in
+     *         which case the standard annotation/injection strategy should be used.
+     */
+    InjectionStrategy getInjectionStrategy();
+
+}

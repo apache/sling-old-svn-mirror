@@ -25,13 +25,18 @@ import javax.inject.Named;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.sling.models.annotations.Default;
+import org.apache.sling.models.annotations.DefaultInjectionStrategy;
+import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.Optional;
 import org.apache.sling.models.annotations.Required;
 import org.apache.sling.models.annotations.Source;
 import org.apache.sling.models.annotations.Via;
+import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 import org.apache.sling.models.impl.ModelAdapterFactory;
 import org.apache.sling.models.impl.ReflectionUtil;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor2;
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
 import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,26 +52,30 @@ abstract class AbstractInjectableElement implements InjectableElement {
     private final Object defaultValue;
     private final boolean isOptional;
     private final boolean isRequired;
+    private final DefaultInjectionStrategy injectionStrategy;
+    private final DefaultInjectionStrategy defaultInjectionStrategy;
     
     private static final Logger log = LoggerFactory.getLogger(ModelAdapterFactory.class);
     
     public AbstractInjectableElement(AnnotatedElement element, Type type, String defaultName,
-            StaticInjectAnnotationProcessorFactory[] processorFactories) {
+            StaticInjectAnnotationProcessorFactory[] processorFactories, DefaultInjectionStrategy defaultInjectionStrategy) {
         this.element = element;
         this.type = type;
-        InjectAnnotationProcessor annotationProcessor = getAnnotationProcessor(element, processorFactories);
+        InjectAnnotationProcessor2 annotationProcessor = getAnnotationProcessor(element, processorFactories);
         this.name = getName(element, defaultName, annotationProcessor);
         this.source = getSource(element);
         this.via = getVia(element, annotationProcessor);
         this.hasDefaultValue = getHasDefaultValue(element, annotationProcessor);
         this.defaultValue = getDefaultValue(element, type, annotationProcessor);
-        this.isOptional = getOptional(element, annotationProcessor);
-        this.isRequired = getRequired(element, annotationProcessor);
+        this.isOptional = isOptional(element, annotationProcessor);
+        this.isRequired = isRequired(element, annotationProcessor);
+        this.injectionStrategy = getInjectionStrategy(element, annotationProcessor, defaultInjectionStrategy);
+        this.defaultInjectionStrategy = defaultInjectionStrategy;
     }
     
-    private static InjectAnnotationProcessor getAnnotationProcessor(AnnotatedElement element, StaticInjectAnnotationProcessorFactory[] processorFactories) {
+    private static InjectAnnotationProcessor2 getAnnotationProcessor(AnnotatedElement element, StaticInjectAnnotationProcessorFactory[] processorFactories) {
         for (StaticInjectAnnotationProcessorFactory processorFactory : processorFactories) {
-            InjectAnnotationProcessor annotationProcessor = processorFactory.createAnnotationProcessor(element);
+            InjectAnnotationProcessor2 annotationProcessor = processorFactory.createAnnotationProcessor(element);
             if (annotationProcessor != null) {
                 return annotationProcessor;
             }
@@ -74,7 +83,7 @@ abstract class AbstractInjectableElement implements InjectableElement {
         return null;
     }
     
-    private static String getName(AnnotatedElement element, String defaultName, InjectAnnotationProcessor annotationProcessor) {
+    private static String getName(AnnotatedElement element, String defaultName, InjectAnnotationProcessor2 annotationProcessor) {
         String name = null;
         if (annotationProcessor != null) {
             name = annotationProcessor.getName();
@@ -99,7 +108,7 @@ abstract class AbstractInjectableElement implements InjectableElement {
         return null;
     }
     
-    private static String getVia(AnnotatedElement element, InjectAnnotationProcessor annotationProcessor) {
+    private static String getVia(AnnotatedElement element, InjectAnnotationProcessor2 annotationProcessor) {
         String via = null;
         if (annotationProcessor != null) {
             via = annotationProcessor.getVia();
@@ -113,14 +122,14 @@ abstract class AbstractInjectableElement implements InjectableElement {
         return via;
     }
 
-    private static boolean getHasDefaultValue(AnnotatedElement element, InjectAnnotationProcessor annotationProcessor) {
+    private static boolean getHasDefaultValue(AnnotatedElement element, InjectAnnotationProcessor2 annotationProcessor) {
         if (annotationProcessor != null) {
             return annotationProcessor.hasDefault();
         }
         return element.isAnnotationPresent(Default.class);
     }
 
-    private static Object getDefaultValue(AnnotatedElement element, Type type, InjectAnnotationProcessor annotationProcessor) {
+    private static Object getDefaultValue(AnnotatedElement element, Type type, InjectAnnotationProcessor2 annotationProcessor) {
         if (annotationProcessor != null && annotationProcessor.hasDefault()) {
             return annotationProcessor.getDefault();
         }
@@ -190,7 +199,7 @@ abstract class AbstractInjectableElement implements InjectableElement {
         return value;
     }
 
-    private static boolean getOptional(AnnotatedElement element, InjectAnnotationProcessor annotationProcessor) {
+    private static boolean isOptional(AnnotatedElement element, InjectAnnotationProcessor annotationProcessor) {
         if (annotationProcessor != null) {
             Boolean optional = annotationProcessor.isOptional();
             if (optional != null) {
@@ -199,15 +208,27 @@ abstract class AbstractInjectableElement implements InjectableElement {
         }
         return element.isAnnotationPresent(Optional.class);
     }
-
-    private static boolean getRequired(AnnotatedElement element, InjectAnnotationProcessor annotationProcessor) {
+    
+    private static boolean isRequired(AnnotatedElement element, InjectAnnotationProcessor annotationProcessor) {
+        // do not evaluate the injector-specific annotation (those are only considered for optional)
+        // even setting optional=false will not make an attribute mandatory
+        return element.isAnnotationPresent(Required.class);
+    }
+    
+    private static DefaultInjectionStrategy getInjectionStrategy(AnnotatedElement element, InjectAnnotationProcessor annotationProcessor, DefaultInjectionStrategy defaultInjectionStrategy) {
         if (annotationProcessor != null) {
-            Boolean optional = annotationProcessor.isOptional();
-            if (optional != null) {
-                return !optional.booleanValue();
+            if (annotationProcessor instanceof InjectAnnotationProcessor2) {
+                switch (((InjectAnnotationProcessor2)annotationProcessor).getInjectionStrategy()) {
+                    case OPTIONAL:
+                        return DefaultInjectionStrategy.OPTIONAL;
+                    case REQUIRED:
+                        return DefaultInjectionStrategy.REQUIRED;
+                    case DEFAULT:
+                        break;
+                }
             }
         }
-        return element.isAnnotationPresent(Required.class);
+        return defaultInjectionStrategy;
     }
     
     @Override
@@ -246,13 +267,22 @@ abstract class AbstractInjectableElement implements InjectableElement {
     }
 
     @Override
-    public boolean isOptional() {
-        return this.isOptional;
+    public boolean isOptional(InjectAnnotationProcessor annotationProcessor) {
+        // evaluate annotationProcessor 
+        DefaultInjectionStrategy injectionStrategy = this.injectionStrategy;
+        boolean isOptional = this.isOptional;
+        boolean isRequired = this.isRequired;
+        
+        if (annotationProcessor != null) {
+            isOptional = isOptional(getAnnotatedElement(), annotationProcessor);
+            isRequired = isRequired(getAnnotatedElement(), annotationProcessor);
+            injectionStrategy = getInjectionStrategy(element, annotationProcessor, defaultInjectionStrategy);
+        }
+        if (injectionStrategy == DefaultInjectionStrategy.REQUIRED) {
+            return isOptional;
+        } else {
+            return !isRequired;
+        }
     }
 
-    @Override
-    public boolean isRequired() {
-        return this.isRequired;
-    }
-    
 }

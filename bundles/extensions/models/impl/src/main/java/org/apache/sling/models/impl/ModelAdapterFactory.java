@@ -76,7 +76,9 @@ import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.ImplementationPicker;
 import org.apache.sling.models.spi.Injector;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor2;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory2;
 import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -143,6 +145,12 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     private final Map<Object, InjectAnnotationProcessorFactory> injectAnnotationProcessorFactories = new TreeMap<Object, InjectAnnotationProcessorFactory>();
 
     private volatile InjectAnnotationProcessorFactory[] sortedInjectAnnotationProcessorFactories = new InjectAnnotationProcessorFactory[0];
+    
+    @Reference(name = "injectAnnotationProcessorFactory2", referenceInterface = InjectAnnotationProcessorFactory.class,
+            cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
+    private final Map<Object, InjectAnnotationProcessorFactory2> injectAnnotationProcessorFactories2 = new TreeMap<Object, InjectAnnotationProcessorFactory2>();
+
+    private volatile InjectAnnotationProcessorFactory2[] sortedInjectAnnotationProcessorFactories2 = new InjectAnnotationProcessorFactory2[0];
 
     @Reference(name = "staticInjectAnnotationProcessorFactory", referenceInterface = StaticInjectAnnotationProcessorFactory.class,
             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
@@ -338,10 +346,18 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         boolean wasInjectionSuccessful = false;
 
         // find an appropriate annotation processor
-        for (InjectAnnotationProcessorFactory factory : sortedInjectAnnotationProcessorFactories) {
+        for (InjectAnnotationProcessorFactory2 factory : sortedInjectAnnotationProcessorFactories2) {
             annotationProcessor = factory.createAnnotationProcessor(adaptable, element.getAnnotatedElement());
             if (annotationProcessor != null) {
                 break;
+            }
+        }
+        if (annotationProcessor == null) {
+            for (InjectAnnotationProcessorFactory factory : sortedInjectAnnotationProcessorFactories) {
+                annotationProcessor = factory.createAnnotationProcessor(adaptable, element.getAnnotatedElement());
+                if (annotationProcessor != null) {
+                    break;
+                }
             }
         }
 
@@ -369,7 +385,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
         // if default is not set, check if mandatory
         if (!wasInjectionSuccessful) {
-            if (isOptional(element, modelAnnotation, annotationProcessor)) {
+            if (element.isOptional(annotationProcessor)) {
                 if (element.isPrimitive()) {
                     injectPrimitiveInitialValue(element, callback, result);
                 }
@@ -526,21 +542,6 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             return null;
         }
         return constructor.getConstructor().newInstance(paramValues.toArray(new Object[paramValues.size()]));
-    }
-
-    private boolean isOptional(InjectableElement point, Model modelAnnotation, InjectAnnotationProcessor annotationProcessor) {
-        if (annotationProcessor != null) {
-            Boolean isOptional = annotationProcessor.isOptional();
-            if (isOptional != null) {
-                return isOptional.booleanValue();
-            }
-        }
-        if (modelAnnotation.defaultInjectionStrategy() == DefaultInjectionStrategy.REQUIRED) {
-            return (point.isOptional());
-        } else {
-            return (!point.isRequired());
-        }
-        
     }
 
     private boolean injectDefaultValue(InjectableElement point, InjectAnnotationProcessor processor,
@@ -879,6 +880,19 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         synchronized (injectAnnotationProcessorFactories) {
             injectAnnotationProcessorFactories.remove(ServiceUtil.getComparableForServiceRanking(props));
             sortedInjectAnnotationProcessorFactories = injectAnnotationProcessorFactories.values().toArray(new InjectAnnotationProcessorFactory[injectAnnotationProcessorFactories.size()]);
+        }
+    }
+    protected void bindInjectAnnotationProcessorFactory2(final InjectAnnotationProcessorFactory2 factory, final Map<String, Object> props) {
+        synchronized (injectAnnotationProcessorFactories2) {
+            injectAnnotationProcessorFactories2.put(ServiceUtil.getComparableForServiceRanking(props), factory);
+            sortedInjectAnnotationProcessorFactories2 = injectAnnotationProcessorFactories2.values().toArray(new InjectAnnotationProcessorFactory2[injectAnnotationProcessorFactories.size()]);
+        }
+    }
+
+    protected void unbindInjectAnnotationProcessorFactory2(final InjectAnnotationProcessorFactory2 factory, final Map<String, Object> props) {
+        synchronized (injectAnnotationProcessorFactories2) {
+            injectAnnotationProcessorFactories2.remove(ServiceUtil.getComparableForServiceRanking(props));
+            sortedInjectAnnotationProcessorFactories2 = injectAnnotationProcessorFactories2.values().toArray(new InjectAnnotationProcessorFactory2[injectAnnotationProcessorFactories.size()]);
         }
     }
 

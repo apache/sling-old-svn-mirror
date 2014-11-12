@@ -31,10 +31,11 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 import org.apache.sling.models.annotations.injectorspecific.ValueMapValue;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
-import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor;
+import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor2;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
 import org.osgi.framework.Constants;
@@ -139,7 +140,7 @@ public class ValueMapInjector extends AbstractInjector implements Injector, Inje
         return null;
     }
 
-    private static class ValueAnnotationProcessor extends AbstractInjectAnnotationProcessor {
+    private static class ValueAnnotationProcessor extends AbstractInjectAnnotationProcessor2 {
 
         private final ValueMapValue annotation;
 
@@ -172,10 +173,15 @@ public class ValueMapInjector extends AbstractInjector implements Injector, Inje
                 return null;
             }
         }
-
+        
         @Override
         public Boolean isOptional() {
             return annotation.optional();
+        }
+
+        @Override
+        public InjectionStrategy getInjectionStrategy() {
+            return annotation.injectionStrategy();
         }
     }
 }

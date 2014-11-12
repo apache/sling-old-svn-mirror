@@ -20,6 +20,7 @@ package org.apache.sling.models.impl.model;
 
 import java.lang.reflect.Field;
 
+import org.apache.sling.models.annotations.DefaultInjectionStrategy;
 import org.apache.sling.models.impl.ReflectionUtil;
 import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 
@@ -27,8 +28,8 @@ public class InjectableField extends AbstractInjectableElement {
     
     private final Field field;
     
-    public InjectableField(Field field, StaticInjectAnnotationProcessorFactory[] processorFactories) {
-        super(field, ReflectionUtil.mapPrimitiveClasses(field.getGenericType()), field.getName(), processorFactories);
+    public InjectableField(Field field, StaticInjectAnnotationProcessorFactory[] processorFactories, DefaultInjectionStrategy defaultInjectionStrategy) {
+        super(field, ReflectionUtil.mapPrimitiveClasses(field.getGenericType()), field.getName(), processorFactories, defaultInjectionStrategy);
         this.field = field;
     }
     

@@ -21,6 +21,7 @@ package org.apache.sling.models.impl.model;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
+import org.apache.sling.models.annotations.DefaultInjectionStrategy;
 import org.apache.sling.models.impl.ReflectionUtil;
 import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 
@@ -29,8 +30,8 @@ public class InjectableMethod extends AbstractInjectableElement {
     private final Method method;
     private final Type genericReturnType;
 
-    public InjectableMethod(Method method, StaticInjectAnnotationProcessorFactory[] processorFactories) {
-        super(method, ReflectionUtil.mapPrimitiveClasses(method.getGenericReturnType()), getDefaultName(method), processorFactories);
+    public InjectableMethod(Method method, StaticInjectAnnotationProcessorFactory[] processorFactories, DefaultInjectionStrategy defaultInjectionStrategy) {
+        super(method, ReflectionUtil.mapPrimitiveClasses(method.getGenericReturnType()), getDefaultName(method), processorFactories, defaultInjectionStrategy);
         this.method = method;
         this.genericReturnType = method.getGenericReturnType();
     }
