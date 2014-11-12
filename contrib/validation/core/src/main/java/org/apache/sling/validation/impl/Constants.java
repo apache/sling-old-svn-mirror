@@ -25,7 +25,7 @@ public final class Constants {
 
     public static final String VALIDATED_RESOURCE_TYPE = "validatedResourceType";
     public static final String APPLICABLE_PATHS = "applicablePaths";
-    public static final String MODELS_HOME = "sling/validation/models/";
+    public static final String MODELS_HOME = "validation/";
     public static final String VALIDATION_MODEL_RESOURCE_TYPE = "sling/validation/model";
     public static final String PROPERTIES = "properties";
     public static final String PROPERTY_TYPE = "propertyType";
