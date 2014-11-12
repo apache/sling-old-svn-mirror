@@ -68,9 +68,7 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
 
     // used fields ....
 
-    private final DefaultErrorHandler defaultErrorHandler = new DefaultErrorHandler();
-
-    private ErrorHandler errorHandler = defaultErrorHandler;
+    private final DefaultErrorHandler errorHandler = new DefaultErrorHandler();
 
     private ServletResolver servletResolver;
 
@@ -81,16 +79,16 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
     // ---------- helper setters
 
     void setServerInfo(final String serverInfo) {
-        defaultErrorHandler.setServerInfo(serverInfo);
+        errorHandler.setServerInfo(serverInfo);
     }
 
-    void setErrorHandler(final ErrorHandler errorHandler) {
-        this.errorHandler = errorHandler;
+    void setErrorHandler(final ErrorHandler eh) {
+        errorHandler.setDelegate(eh);
     }
 
-    void unsetErrorHandler(final ErrorHandler errorHandler) {
-        if (this.errorHandler == errorHandler) {
-            this.errorHandler = defaultErrorHandler;
+    void unsetErrorHandler(final ErrorHandler eh) {
+        if (errorHandler.getDelegate() == eh) {
+            errorHandler.setDelegate(null);
         }
     }
 

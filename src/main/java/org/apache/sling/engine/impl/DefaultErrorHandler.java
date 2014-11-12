@@ -46,11 +46,29 @@ public class DefaultErrorHandler implements ErrorHandler {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private String serverInfo = SlingMainServlet.PRODUCT_NAME;
+    
+    /** Use this if not null, and if that fails output a report about that failure */
+    private ErrorHandler delegate;
 
     void setServerInfo(final String serverInfo) {
         this.serverInfo = (serverInfo != null)
                 ? serverInfo
                 : SlingMainServlet.PRODUCT_NAME;
+    }
+    
+    public void setDelegate(ErrorHandler eh) {
+        delegate = eh;
+    }
+    
+    public ErrorHandler getDelegate() {
+        return delegate;
+    }
+    
+    private void delegateFailed(Throwable t, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        final String m = t.getClass().getSimpleName() + " in ErrorHandler";
+        // don't include Throwable in the response, gives too much information
+        log.error(m, t);
+        sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, m, null, request, response);
     }
 
     // ---------- ErrorHandler interface (default implementation) --------------
@@ -71,7 +89,19 @@ public class DefaultErrorHandler implements ErrorHandler {
             final SlingHttpServletRequest request,
             final SlingHttpServletResponse response)
     throws IOException {
-
+        
+        // If we have a delegate let it handle the error 
+        if(delegate != null) {
+            try {
+                delegate.handleError(status, message, request, response);
+            } catch(Exception e) {
+                delegateFailed(e, request, response);
+            } catch(Error r) {
+                delegateFailed(r, request, response);
+            }
+            return;
+        }
+        
         if (message == null) {
             message = "HTTP ERROR:" + String.valueOf(status);
         } else {
@@ -96,6 +126,18 @@ public class DefaultErrorHandler implements ErrorHandler {
             final SlingHttpServletRequest request,
             final SlingHttpServletResponse response)
     throws IOException {
+        // If we have a delegate let it handle the error 
+        if(delegate != null) {
+            try {
+                delegate.handleError(throwable, request, response);
+            } catch(Exception e) {
+                delegateFailed(e, request, response);
+            } catch(Error r) {
+                delegateFailed(r, request, response);
+            }
+            return;
+        }
+        
         sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
             throwable.getMessage(), throwable, request, response);
     }
