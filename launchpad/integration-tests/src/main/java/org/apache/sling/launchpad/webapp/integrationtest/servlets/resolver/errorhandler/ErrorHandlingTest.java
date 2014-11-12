@@ -41,6 +41,7 @@ public class ErrorHandlingTest extends RenderingTestBase {
 	private static final String SELECTOR_500 =".500";
 
 	private static final String SELECTOR_401 =".401";
+    private static final String SELECTOR_421 =".421";
 
 	private static final String SELECTOR_THROWABLE =".throwable";
 
@@ -60,6 +61,7 @@ public class ErrorHandlingTest extends RenderingTestBase {
 		uploadTestScript("servlets/errorhandler/Throwable.jsp", "sling/servlet/errorhandler/Throwable.jsp");
 		uploadTestScript("servlets/errorhandler/500.jsp", "sling/servlet/errorhandler/500.jsp");
 		uploadTestScript("servlets/errorhandler/401.jsp", "sling/servlet/errorhandler/401.jsp");
+        uploadTestScript("servlets/errorhandler/421.jsp", "sling/servlet/errorhandler/421.jsp");
 		uploadTestScript(THROW_ERROR_PATH+"/"+THROW_ERROR_PAGE, THROW_ERROR_PATH+"/"+THROW_ERROR_PAGE);
  
 		final Map<String, String> props = new HashMap<String, String>();
@@ -104,7 +106,8 @@ public class ErrorHandlingTest extends RenderingTestBase {
 
 	public void test_404_errorhandling() throws Throwable{	
 		final String expected = "No resource found (404) - custom error page";
-		final String url =  testNodePath+NOT_EXISTING_NODE_PATH +".html";	
+		final String url =  testNodePath+NOT_EXISTING_NODE_PATH +".html";
+		// 404.jsp does not set status so we get 200
         assertWithRetries(url, 200, expected);
 	}
 
@@ -120,9 +123,37 @@ public class ErrorHandlingTest extends RenderingTestBase {
         assertWithRetries(url, 401, expected);
 	}
 
+    public void test_421_plain() throws Throwable{
+        final String expected = "421 test - 421 error page";
+        final String url =  testNodePath +SELECTOR_421+".html"; 
+        assertWithRetries(url, 421, expected);
+    }
+
+    public void test_421_312() throws Throwable{
+        final String expected = "421 test - 421 error page";
+        final String url =  testNodePath + SELECTOR_421 + ".312.html"; 
+        assertWithRetries(url, 312, expected);
+    }
+
+    public void test_421_exception() throws Throwable{
+        // we get a blank page in this case
+        final String expected = "";
+        final String url =  testNodePath + SELECTOR_421 + ".errorScriptException.html"; 
+        assertWithRetries(url, 421, expected);
+    }
+
+    public void test_421_error() throws Throwable{
+        // we get a blank page in this case
+        final String expected = "";
+        final String url =  testNodePath + SELECTOR_421 + ".errorScriptError.html"; 
+        assertWithRetries(url, 421, expected);
+    }
+
 	public void test_throwable_errorhandling() throws Throwable{	
 		final String expected = "Exception thrown - custom error page";
 		final String url =  testNodePath +SELECTOR_THROWABLE+".html";
+		
+		// Throwable.jsp doesn't set status by default so we get 200
         assertWithRetries(url, 200, expected);
  	}
 	

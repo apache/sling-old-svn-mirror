@@ -22,8 +22,11 @@
 	import="java.util.Arrays, org.apache.sling.api.SlingHttpServletRequest" 
 %>
 
-<%	
+<%
+// Script that handles the /apps/testNode, sending various error codes
+// or throwing exceptions according to request selectors	
 final String SELECTOR_401 ="401";
+final String SELECTOR_421 ="421";
 final String SELECTOR_500 ="500";
 final String SELECTOR_THROWABLE ="throwable";
 final SlingHttpServletRequest slingRequest = (SlingHttpServletRequest)request;
@@ -31,6 +34,9 @@ final SlingHttpServletRequest slingRequest = (SlingHttpServletRequest)request;
 if(Arrays.asList(slingRequest.getRequestPathInfo().getSelectors()).contains(SELECTOR_401)) {
 	 response.setStatus(401);
 	 response.sendError(401);
+}else if(Arrays.asList(slingRequest.getRequestPathInfo().getSelectors()).contains(SELECTOR_421)) {
+     response.setStatus(421);
+     response.sendError(421,"421 from rendering script");
 }else if(Arrays.asList(slingRequest.getRequestPathInfo().getSelectors()).contains(SELECTOR_500)) {
 	response.setStatus(500);
  	response.sendError(500);
