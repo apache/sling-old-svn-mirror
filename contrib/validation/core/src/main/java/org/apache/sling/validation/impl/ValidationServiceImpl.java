@@ -64,7 +64,7 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(ValidationServiceImpl.class);
 
-    static final String MODEL_XPATH_QUERY = "/jcr:root/%s/" + Constants.MODELS_HOME + "*[@sling:resourceType=\"%s\" and @%s=\"%s\"]";
+    static final String MODEL_XPATH_QUERY = "/jcr:root%s//" + Constants.MODELS_HOME + "/*[@sling:resourceType=\"%s\" and @%s=\"%s\"]";
     static final String[] TOPICS = {SlingConstants.TOPIC_RESOURCE_REMOVED, SlingConstants.TOPIC_RESOURCE_CHANGED,
             SlingConstants.TOPIC_RESOURCE_ADDED};
 
@@ -196,7 +196,7 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
                 if (searchPath.endsWith("/")) {
                     searchPath = searchPath.substring(0, searchPath.length() - 1);
                 }
-                String path = searchPath + "/" + Constants.MODELS_HOME;
+                String path = searchPath + "/*" + Constants.MODELS_HOME;
                 sb.append("(path=").append(path).append("*)");
             }
             sb.append(")");
