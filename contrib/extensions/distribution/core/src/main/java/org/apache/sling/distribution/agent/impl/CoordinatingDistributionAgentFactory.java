@@ -39,9 +39,9 @@ import org.apache.sling.distribution.component.DistributionComponentProvider;
 import org.apache.sling.distribution.component.ManagedDistributionComponent;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
-import org.apache.sling.distribution.queue.DistributionQueueDistributionStrategy;
+import org.apache.sling.distribution.queue.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
-import org.apache.sling.distribution.queue.impl.SingleQueueDistributionStrategy;
+import org.apache.sling.distribution.queue.impl.SingleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
 import org.apache.sling.distribution.resources.impl.OsgiUtils;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
@@ -196,8 +196,8 @@ public class CoordinatingDistributionAgentFactory implements DistributionCompone
                                                                                    @Nullable String componentName) {
         if (type.isAssignableFrom(DistributionQueueProvider.class)) {
             return (ComponentType) new JobHandlingDistributionQueueProvider(agentName, jobManager, savedContext);
-        } else if (type.isAssignableFrom(DistributionQueueDistributionStrategy.class)) {
-            return (ComponentType) new SingleQueueDistributionStrategy();
+        } else if (type.isAssignableFrom(DistributionQueueDispatchingStrategy.class)) {
+            return (ComponentType) new SingleQueueDispatchingStrategy();
         } else if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
             return (ComponentType) transportAuthenticationProvider;
         }

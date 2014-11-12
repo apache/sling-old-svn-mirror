@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.sling.distribution.communication.DistributionRequest;
+import org.apache.sling.distribution.component.ManagedDistributionComponent;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.distribution.trigger.DistributionTriggerException;
@@ -40,11 +41,11 @@ import org.slf4j.LoggerFactory;
  * Abstract implementation of a {@link org.apache.sling.distribution.trigger.DistributionTrigger} that listens for 'safe'
  * events and triggers a {@link org.apache.sling.distribution.communication.DistributionRequest} from that.
  */
-public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
+public abstract class AbstractJcrEventTrigger implements DistributionTrigger, ManagedDistributionComponent {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final Map<String, JcrEventdistributionTriggerListener> registeredListeners = new ConcurrentHashMap<String, JcrEventdistributionTriggerListener>();
+    private final Map<String, JcrEventDistributionTriggerListener> registeredListeners = new ConcurrentHashMap<String, JcrEventDistributionTriggerListener>();
 
     private final String path;
     private final String serviceUser;
@@ -63,7 +64,7 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
         Session session;
         try {
             session = getSession();
-            JcrEventdistributionTriggerListener listener = new JcrEventdistributionTriggerListener(requestHandler);
+            JcrEventDistributionTriggerListener listener = new JcrEventDistributionTriggerListener(requestHandler);
             registeredListeners.put(requestHandler.toString(), listener);
             session.getWorkspace().getObservationManager().addEventListener(
                     listener, getEventTypes(), path, true, null, null, false);
@@ -73,7 +74,7 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
     }
 
     public void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
-        JcrEventdistributionTriggerListener listener = registeredListeners.get(requestHandler.toString());
+        JcrEventDistributionTriggerListener listener = registeredListeners.get(requestHandler.toString());
         if (listener != null) {
             Session session;
             try {
@@ -85,10 +86,10 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
         }
     }
 
-    private class JcrEventdistributionTriggerListener implements EventListener {
+    private class JcrEventDistributionTriggerListener implements EventListener {
         private final DistributionRequestHandler requestHandler;
 
-        public JcrEventdistributionTriggerListener(DistributionRequestHandler requestHandler) {
+        public JcrEventDistributionTriggerListener(DistributionRequestHandler requestHandler) {
             this.requestHandler = requestHandler;
         }
 
@@ -107,6 +108,17 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
                     log.error("Error while handling event {}", event, e);
                 }
             }
+        }
+    }
+
+    public void enable() {
+
+    }
+
+    public void disable() {
+        if (cachedSession != null) {
+            cachedSession.logout();
+            cachedSession = null;
         }
     }
 

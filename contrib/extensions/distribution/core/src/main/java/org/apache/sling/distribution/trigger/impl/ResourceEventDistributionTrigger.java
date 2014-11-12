@@ -115,6 +115,9 @@ public class ResourceEventDistributionTrigger implements DistributionTrigger, Ma
             DistributionActionType action = SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic()) ?
                     DistributionActionType.DELETE : DistributionActionType.ADD;
             log.info("triggering distribution from event {}", event);
+            for (String pn : event.getPropertyNames()) {
+                log.info("property {} : {}", pn, event.getProperty(pn));
+            }
 
             Object pathProperty = event.getProperty("path");
             if (pathProperty != null) {

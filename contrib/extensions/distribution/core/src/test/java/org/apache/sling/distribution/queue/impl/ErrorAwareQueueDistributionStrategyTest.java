@@ -22,7 +22,7 @@ import java.util.Dictionary;
 
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.queue.DistributionQueue;
-import org.apache.sling.distribution.queue.DistributionQueueDistributionStrategy;
+import org.apache.sling.distribution.queue.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemState;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
@@ -36,17 +36,17 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Testcase for {@link org.apache.sling.distribution.queue.impl.ErrorAwareQueueDistributionStrategy}
+ * Testcase for {@link ErrorAwareQueueDispatchingStrategy}
  */
 public class ErrorAwareQueueDistributionStrategyTest {
 
     @Test
     public void testPackageAdditionWithSucceedingItemDelivery() throws Exception {
-        ErrorAwareQueueDistributionStrategy errorAwareDistributionStrategy = new ErrorAwareQueueDistributionStrategy();
+        ErrorAwareQueueDispatchingStrategy errorAwareDistributionStrategy = new ErrorAwareQueueDispatchingStrategy();
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
         DistributionQueue queue = mock(DistributionQueue.class);
-        when(queueProvider.getQueue(DistributionQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
+        when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(DistributionQueueItem.class))).thenReturn(true);
 
         boolean returnedState = errorAwareDistributionStrategy.add(distributionPackage, queueProvider);
@@ -56,13 +56,13 @@ public class ErrorAwareQueueDistributionStrategyTest {
 
     @Test
     public void testPackageAdditionWithFailingItemDelivery() throws Exception {
-        ErrorAwareQueueDistributionStrategy errorAwareDistributionStrategy = new ErrorAwareQueueDistributionStrategy();
+        ErrorAwareQueueDispatchingStrategy errorAwareDistributionStrategy = new ErrorAwareQueueDispatchingStrategy();
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
         DistributionQueue queue = mock(DistributionQueue.class);
         DistributionQueueItem queueItem = mock(DistributionQueueItem.class);
 
-        when(queueProvider.getQueue(DistributionQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
+        when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(queueItem)).thenReturn(true);
         DistributionQueueItemState state = mock(DistributionQueueItemState.class);
         when(state.isSuccessful()).thenReturn(false);
@@ -73,7 +73,7 @@ public class ErrorAwareQueueDistributionStrategyTest {
 
     @Test
     public void testPackageAdditionWithMultipleFailingItemsDeliveryAndErrorQueue() throws Exception {
-        ErrorAwareQueueDistributionStrategy errorAwareDistributionStrategy = new ErrorAwareQueueDistributionStrategy();
+        ErrorAwareQueueDispatchingStrategy errorAwareDistributionStrategy = new ErrorAwareQueueDispatchingStrategy();
         ComponentContext context = mock(ComponentContext.class);
         Dictionary properties = mock(Dictionary.class);
         when(properties.get("attempts.threshold")).thenReturn(new String[]{"1"});
@@ -85,12 +85,12 @@ public class ErrorAwareQueueDistributionStrategyTest {
         DistributionQueue queue = mock(DistributionQueue.class);
         DistributionQueueItem queueItem = mock(DistributionQueueItem.class);
 
-        when(queueProvider.getQueue(DistributionQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
+        when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(queueItem)).thenReturn(true);
         when(queue.getHead()).thenReturn(queueItem);
         DistributionQueue errorQueue = mock(DistributionQueue.class);
         when(errorQueue.add(queueItem)).thenReturn(true);
-        when(queueProvider.getQueue(ErrorAwareQueueDistributionStrategy.ERROR_QUEUE_NAME)).thenReturn(errorQueue);
+        when(queueProvider.getQueue(ErrorAwareQueueDispatchingStrategy.ERROR_QUEUE_NAME)).thenReturn(errorQueue);
         DistributionQueueItemState state = mock(DistributionQueueItemState.class);
         when(state.isSuccessful()).thenReturn(false);
         when(state.getAttempts()).thenReturn(2);
@@ -101,7 +101,7 @@ public class ErrorAwareQueueDistributionStrategyTest {
 
     @Test
     public void testPackageAdditionWithMultipleFailingItemsDeliveryAndDropFromQueue() throws Exception {
-        ErrorAwareQueueDistributionStrategy errorAwareDistributionStrategy = new ErrorAwareQueueDistributionStrategy();
+        ErrorAwareQueueDispatchingStrategy errorAwareDistributionStrategy = new ErrorAwareQueueDispatchingStrategy();
         ComponentContext context = mock(ComponentContext.class);
         Dictionary properties = mock(Dictionary.class);
         when(properties.get("attempts.threshold")).thenReturn(new String[]{"1"});
@@ -112,7 +112,7 @@ public class ErrorAwareQueueDistributionStrategyTest {
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
         DistributionQueue queue = mock(DistributionQueue.class);
 
-        when(queueProvider.getQueue(DistributionQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
+        when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(DistributionQueueItem.class))).thenReturn(true);
         when(queue.getHead()).thenReturn(mock(DistributionQueueItem.class));
         DistributionQueueItemState state = mock(DistributionQueueItemState.class);
@@ -125,12 +125,12 @@ public class ErrorAwareQueueDistributionStrategyTest {
 
     @Test
     public void testPackageAdditionWithNullItemStateFromTheQueue() throws Exception {
-        ErrorAwareQueueDistributionStrategy errorAwareDistributionStrategy = new ErrorAwareQueueDistributionStrategy();
+        ErrorAwareQueueDispatchingStrategy errorAwareDistributionStrategy = new ErrorAwareQueueDispatchingStrategy();
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
         DistributionQueue queue = mock(DistributionQueue.class);
 
-        when(queueProvider.getQueue(DistributionQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
+        when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(DistributionQueueItem.class))).thenReturn(true);
         boolean returnedState = errorAwareDistributionStrategy.add(distributionPackage, queueProvider);
         assertTrue(returnedState);
@@ -138,11 +138,11 @@ public class ErrorAwareQueueDistributionStrategyTest {
 
     @Test
     public void testPackageAdditionWithNotNullItemStateFromTheQueue() throws Exception {
-        ErrorAwareQueueDistributionStrategy errorAwareDistributionStrategy = new ErrorAwareQueueDistributionStrategy();
+        ErrorAwareQueueDispatchingStrategy errorAwareDistributionStrategy = new ErrorAwareQueueDispatchingStrategy();
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
         DistributionQueue queue = mock(DistributionQueue.class);
-        when(queueProvider.getQueue(DistributionQueueDistributionStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
+        when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(DistributionQueueItem.class))).thenReturn(true);
 
         boolean returnedState = errorAwareDistributionStrategy.add(distributionPackage, queueProvider);

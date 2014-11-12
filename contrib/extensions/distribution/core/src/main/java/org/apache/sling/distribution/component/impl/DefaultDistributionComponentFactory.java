@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -50,10 +49,10 @@ import org.apache.sling.distribution.packaging.impl.exporter.LocalDistributionPa
 import org.apache.sling.distribution.packaging.impl.exporter.RemoteDistributionPackageExporter;
 import org.apache.sling.distribution.packaging.impl.importer.LocalDistributionPackageImporter;
 import org.apache.sling.distribution.packaging.impl.importer.RemoteDistributionPackageImporter;
-import org.apache.sling.distribution.queue.DistributionQueueDistributionStrategy;
+import org.apache.sling.distribution.queue.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
-import org.apache.sling.distribution.queue.impl.PriorityPathDistributionStrategy;
-import org.apache.sling.distribution.queue.impl.SingleQueueDistributionStrategy;
+import org.apache.sling.distribution.queue.impl.PriorityPathQueueDispatchingStrategy;
+import org.apache.sling.distribution.queue.impl.SingleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.simple.SimpleDistributionQueueProvider;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
@@ -159,7 +158,7 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
             DistributionRequestAuthorizationStrategy packageExporterStrategy = createAuthorizationStrategy(authorizationStrategyProperties, componentProvider);
 
             Map<String, Object> queueDistributionStrategyProperties = extractMap(COMPONENT_QUEUE_DISTRIBUTION_STRATEGY, properties);
-            DistributionQueueDistributionStrategy queueDistributionStrategy = createDistributionStrategy(queueDistributionStrategyProperties, componentProvider);
+            DistributionQueueDispatchingStrategy queueDistributionStrategy = createDistributionStrategy(queueDistributionStrategyProperties, componentProvider);
 
             Map<String, Object> queueProviderProperties = extractMap(COMPONENT_QUEUE_PROVIDER, properties);
             queueProviderProperties.put(QUEUE_PROVIDER_PROPERTY_QUEUE_PREFIX, agentName);
@@ -281,20 +280,20 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
         return null;
     }
 
-    DistributionQueueDistributionStrategy createDistributionStrategy(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
+    DistributionQueueDispatchingStrategy createDistributionStrategy(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
         if (COMPONENT_TYPE_SERVICE.equals(factory)) {
             String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
-            return componentProvider.getComponent(DistributionQueueDistributionStrategy.class, name);
+            return componentProvider.getComponent(DistributionQueueDispatchingStrategy.class, name);
         }
         else if (QUEUE_DISTRIBUTION_STRATEGY_SINGLE.equals(factory)) {
-            return new SingleQueueDistributionStrategy();
+            return new SingleQueueDispatchingStrategy();
         }
         else if (QUEUE_DISTRIBUTION_STRATEGY_PRIORITY.equals(factory)) {
             String[] priorityPaths = PropertiesUtil.toStringArray(properties.get(QUEUE_DISTRIBUTION_STRATEGY_PRIORITY_PROPERTY_PATHS), null);
 
-            return new PriorityPathDistributionStrategy(priorityPaths);
+            return new PriorityPathQueueDispatchingStrategy(priorityPaths);
         }
 
         return null;
