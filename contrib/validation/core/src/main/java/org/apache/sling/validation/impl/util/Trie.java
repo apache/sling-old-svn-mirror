@@ -34,14 +34,16 @@ public class Trie<T> {
     /**
      * Inserts an object {@link T} under the specified {@code key}.
      *
-     * @param key   the key under which the object will be stored
+     * @param key   the key under which the object will be stored. If empty String, the value of the root node will be overwritten!
      * @param value the object to be stored
      */
     public void insert(String key, T value) {
-        if (key != null && !"".equals(key)) {
-            int length = key.length();
-            TrieNode<T> node = ROOT;
-            for (int index = 0; index < length; index++) {
+        if (key == null) {
+            throw new IllegalArgumentException("Key cannot be null!");
+        }
+        int length = key.length();
+        TrieNode<T> node = ROOT;
+        for (int index = 0; index < length; index++) {
                 Map<Character, TrieNode<T>> children = node.getChildren();
                 char character = key.charAt(index);
                 node = children.get(character);
@@ -49,10 +51,9 @@ public class Trie<T> {
                     node = new TrieNode<T>(character);
                     children.put(character, node);
                 }
-            }
-            node.setLeaf(true);
-            node.setValue(value);
         }
+        node.setLeaf(true);
+        node.setValue(value);
     }
 
     /**
