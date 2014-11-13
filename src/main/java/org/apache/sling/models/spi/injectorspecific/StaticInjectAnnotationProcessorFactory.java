@@ -16,28 +16,22 @@
  */
 package org.apache.sling.models.spi.injectorspecific;
 
+import java.lang.reflect.AnnotatedElement;
+
 /**
- * Default implementation of {@link InjectAnnotationProcessor}.
+ * Factory for {@link InjectAnnotationProcessor} that is evaluated once
+ * a sling model implementation class is registered.
+ * Whenever possible this interface should be favored above {@link InjectAnnotationProcessorFactory}.
  */
-public class AbstractInjectAnnotationProcessor implements InjectAnnotationProcessor {
+public interface StaticInjectAnnotationProcessorFactory {
 
-    public String getName() {
-        return null;
-    }
+    /**
+     * 
+     * @param element the field or method which is annotated
+     * @return a ModelAnnotationProcessor in case there is a known
+     *         injector-specific annotation on the given element found otherwise
+     *         null
+     */
+    InjectAnnotationProcessor createAnnotationProcessor(AnnotatedElement element);
 
-    public String getVia() {
-        return null;
-    }
-
-    public boolean hasDefault() {
-        return false;
-    }
-
-    public Object getDefault() {
-        return null;
-    }
-
-    public Boolean isOptional() {
-        return null;
-    }
 }
