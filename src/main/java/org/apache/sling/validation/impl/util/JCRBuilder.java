@@ -68,6 +68,9 @@ public class JCRBuilder {
                         ValueMap validatorProperties = validator.adaptTo(ValueMap.class);
                         String validatorName = validator.getName();
                         Validator v = vls.getValidator(validatorName);
+                        if (v == null) {
+                            throw new IllegalArgumentException("Could not find validator with name '" + validatorName + "'");
+                        }
                         String[] validatorArguments = validatorProperties.get(Constants.VALIDATOR_ARGUMENTS, String[].class);
                         Map<String, String> validatorArgumentsMap = new HashMap<String, String>();
                         if (validatorArguments != null) {
