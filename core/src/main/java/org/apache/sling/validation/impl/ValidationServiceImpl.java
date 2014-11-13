@@ -18,6 +18,7 @@
  */
 package org.apache.sling.validation.impl;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -50,6 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.query.Query;
+
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -283,6 +285,9 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
         Trie<JCRValidationModel> modelsForResourceType = null;
         ResourceResolver rr = null;
         JCRValidationModel vm;
+        if (StringUtils.isBlank(validatedResourceType)) {
+            throw new IllegalArgumentException("validatedResourceType cannot be null or blank!");
+        }
         try {
             rr = rrf.getAdministrativeResourceResolver(null);
             String[] searchPaths = rr.getSearchPath();
@@ -297,10 +302,10 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
                     Resource model = models.next();
                     LOG.info("Found validation model resource {}.", model.getPath());
                     String jcrPath = model.getPath();
-                    ValueMap validationModelProperties = model.adaptTo(ValueMap.class);
-                    String[] applicablePaths = PropertiesUtil.toStringArray(validationModelProperties.get(Constants.APPLICABLE_PATHS,
-                            String[].class));
-                    if (validatedResourceType != null && !"".equals(validatedResourceType)) {
+                    try {
+                        ValueMap validationModelProperties = model.adaptTo(ValueMap.class);
+                        String[] applicablePaths = PropertiesUtil.toStringArray(validationModelProperties.get(Constants.APPLICABLE_PATHS,
+                                String[].class));
                         Resource r = model.getChild(Constants.PROPERTIES);
                         if (r != null) {
                             Set<ResourceProperty> resourceProperties = JCRBuilder.buildProperties(validatorLookupService, r);
@@ -312,7 +317,7 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
                                  * if the modelsForResourceType is null the canAcceptModel will return true: performance optimisation so that
                                  * the Trie is created only if the model is accepted
                                  */
-
+    
                                 if (canAcceptModel(vm, searchPath, searchPaths, modelsForResourceType)) {
                                     if (modelsForResourceType == null) {
                                         modelsForResourceType = new Trie<JCRValidationModel>();
@@ -324,6 +329,8 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
                                 }
                             }
                         }
+                    } catch (IllegalArgumentException e) {
+                        LOG.error("Found invalid validation model in '{}': {}", jcrPath, e.getMessage());
                     }
                 }
             }

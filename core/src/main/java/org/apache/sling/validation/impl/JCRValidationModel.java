@@ -21,6 +21,7 @@ package org.apache.sling.validation.impl;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.sling.validation.api.ChildResource;
 import org.apache.sling.validation.api.ResourceProperty;
 import org.apache.sling.validation.api.ValidationModel;
@@ -38,7 +39,21 @@ public class JCRValidationModel implements ValidationModel {
         this.jcrPath = jcrPath;
         this.resourceProperties = resourceProperties;
         this.validatedResourceType = validatedResourceType;
-        this.applicablePaths = applicablePaths;
+        // if this property was not set
+        if (applicablePaths == null) {
+            // set this to the empty string (which matches all paths)
+            this.applicablePaths = new String[] {""};
+        } else {
+            if (applicablePaths.length == 0) {
+                throw new IllegalArgumentException("applicablePaths cannot be an empty array!");
+            }
+            for (String applicablePath : applicablePaths) {
+                if (StringUtils.isBlank(applicablePath)) {
+                    throw new IllegalArgumentException("applicablePaths may not contain empty values!");
+                }
+            }
+            this.applicablePaths = applicablePaths;
+        }
         this.children = children;
     }
 
