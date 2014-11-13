@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# sling defaults
+
+set -a
+SLING_DATA=/var/lib/sling
+set +a
+
+# usage: org.apache.sling.launchpad.app.Main [ start | stop | status ] [ -j adr ] [ -l loglevel ] [ -f logfile ] [ -c slinghome ] [ -i launchpadhome ] [ -a address ] [ -p port ] { -Dn=v } [ -h ]
+#     start         listen for control connection (uses -j)
+#     stop          terminate running Apache Sling (uses -j)
+#     status        check whether Apache Sling is running (uses -j)
+#     -j adr        host and port to use for control connection in the format '[host:]port' (default 127.0.0.1:0)
+#     -l loglevel   the initial loglevel (0..4, FATAL, ERROR, WARN, INFO, DEBUG)
+#     -f logfile    the log file, "-" for stdout (default logs/error.log)
+#     -c slinghome  the sling context directory (default sling)
+#     -i launchpadhome  the launchpad directory (default slinghome)
+#     -a address    the interfact to bind to (use 0.0.0.0 for any)
+#     -p port       the port to listen to (default 8080)
+#     -r path       the root servlet context path for the http service (default is /)
+#     -n            don't install the shutdown hook
+#     -Dn=v         sets property n to value v. Make sure to use this option *after* the jar filename. The JVM also has a -D option which has a different meaning
+#     -h            prints this usage message
+
+JAVA_ARGS="-Xmx384M "
+# Uncomment for debugging:
+#JAVA_DEBUG_ARGS="-agentlib:jdwp=transport=dt_socket,address=30303,server=y,suspend=n"
+
+SLING_DEFAULT_ARGS="-c $SLING_DATA -p 8090 -a 0.0.0.0 $DEBUG_ARGS"
+
+
+# Don't change anything below this line unless you want to break something
+# ========================================================================
+
+set -a
+SLING_HOME=/opt/sling
+SLING_LOG_DIR=/var/log/sling
+LOG_FILE=$SLING_LOG_DIR/${NAME}-start.log
+SLING_USER=sling
+SLING_DATA=/var/lib/sling
+SLING_DEFAULTS=/etc/default/sling
+set +a

@@ -1,0 +1,119 @@
+#!/bin/bash
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+#
+# Usage
+#
+function usage () {
+   echo "Purpose: Stop/Start sling"
+   echo "Usage  : $0 { stop | start }"
+}
+
+NAME=sling
+
+PID=/var/run/${NAME}.pid
+
+[ "$DEBUG" ] && set -x
+
+. /etc/profile
+
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
+
+SLING_DEFAULTS=/etc/default/sling
+[ -r $SLING_DEFAULTS ] && . $SLING_DEFAULTS
+
+SLING_JAR=$(find $SLING_HOME -name \*-standalone.jar)
+
+running()
+{
+  local PID=$(cat "$1" 2>/dev/null) || return 1
+  kill -0 "$PID" 2>/dev/null
+}
+
+status() 
+{
+	if running "$PID"
+	then
+	  echo "OK"
+	else
+	  echo "FAILED"
+	fi
+}
+
+#
+# Stop current sling instance
+#
+function stop () {
+	start-stop-daemon --stop --pidfile $PID --chdir $SLING_HOME --startas "./$NAME" --signal TERM
+}
+
+#
+# Start batch job scheduler
+#
+function start () {
+
+  if start-stop-daemon --start \
+	  --chdir "$SLING_HOME" \
+	  --chuid $SLING_USER \
+	  --pidfile "$PID" \
+	  --make-pidfile \
+	  --startas $(which java) \
+	  -- \
+	  $JAVA_ARGS $JAVA_DEBUG_ARGS \
+	  -jar $SLING_JAR $SLING_DEFAULT_ARGS \
+	  >>$LOG_FILE 2>&1 &
+  then
+	sleep 3s
+	status
+  fi
+
+}
+
+if test -z "$1"; then
+   usage
+   exit
+fi
+case $1 in 
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		stop
+		while ps --pid $(cat $PID) >/dev/null ; do
+			sleep 1
+		done
+		start
+		;;
+	status)
+		if [ $(status) == "OK" ] ; then
+			exit 0
+		else
+			exit 1
+		fi
+		;;
+	*)
+		echo "Unknown parameter: $1"
+		usage
+		;;
+	esac
+
+
+# end_of_file

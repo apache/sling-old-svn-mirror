@@ -1,0 +1,9 @@
+Package: [[artifactId]]
+Version: [[version]]
+Section: misc
+Priority: optional
+Architecture: all
+Maintainer: Bruce Edge <bruce.edge@nextissuemedia.com>
+Depends: oracle-java7-installer
+Description: [[description]]
+Distribution: development

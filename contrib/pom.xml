@@ -135,6 +135,7 @@
           <module>validation</module>
           <module>launchpad/karaf</module>
           <module>launchpad/testing</module>
+          <module>launchpad/debian</module>
     </modules>
     <profiles>
         <profile>
