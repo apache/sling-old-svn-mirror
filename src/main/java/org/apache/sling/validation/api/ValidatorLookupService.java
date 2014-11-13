@@ -23,5 +23,10 @@ package org.apache.sling.validation.api;
  */
 public interface ValidatorLookupService {
 
+    /**
+     * Returns a {@link Validator} with the given class name.
+     * @param validatorType the class name of the requested validator
+     * @return a validator or {@code null} in case no validator could be found with the given name.
+     */
     Validator getValidator(String validatorType);
 }
