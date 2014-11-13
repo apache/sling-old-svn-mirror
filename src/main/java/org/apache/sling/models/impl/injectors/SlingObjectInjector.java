@@ -37,7 +37,7 @@ import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
 import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
-import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
+import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 import org.osgi.framework.Constants;
 
 /**
@@ -48,7 +48,7 @@ import org.osgi.framework.Constants;
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = Integer.MAX_VALUE)
-public final class SlingObjectInjector implements Injector, InjectAnnotationProcessorFactory, AcceptsNullName {
+public final class SlingObjectInjector implements Injector, StaticInjectAnnotationProcessorFactory, AcceptsNullName {
 
     /**
      * Injector name
@@ -124,7 +124,7 @@ public final class SlingObjectInjector implements Injector, InjectAnnotationProc
     }
 
     @Override
-    public InjectAnnotationProcessor createAnnotationProcessor(final Object adaptable, final AnnotatedElement element) {
+    public InjectAnnotationProcessor createAnnotationProcessor(final AnnotatedElement element) {
         // check if the element has the expected annotation
         SlingObject annotation = element.getAnnotation(SlingObject.class);
         if (annotation != null) {

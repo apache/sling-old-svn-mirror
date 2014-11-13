@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.models.impl;
+package org.apache.sling.models.impl.model;
 
 import java.lang.reflect.Constructor;
 import java.util.Comparator;

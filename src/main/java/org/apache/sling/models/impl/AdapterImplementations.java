@@ -24,19 +24,27 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.sling.models.impl.model.ModelClass;
 import org.apache.sling.models.spi.ImplementationPicker;
+import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 
 /**
  * Collects alternative adapter implementations that may be defined in a @Model.adapters attribute.
  * If multiple models implement the same adapter they are all collected and can be chose via a ImplementationPicker.
+ * Additionally it acts as a cache for model classes without adapter definitions, where adapter and implementation type is the same.
  * The implementation is thread-safe.
  */
 final class AdapterImplementations {
     
-    private final ConcurrentMap<String,ConcurrentNavigableMap<String,Class<?>>> adapterImplementations
-            = new ConcurrentHashMap<String,ConcurrentNavigableMap<String,Class<?>>>();
+    private final ConcurrentMap<String,ConcurrentNavigableMap<String,ModelClass<?>>> adapterImplementations
+            = new ConcurrentHashMap<String,ConcurrentNavigableMap<String,ModelClass<?>>>();
 
+    private final ConcurrentMap<String,ModelClass<?>> modelClasses
+            = new ConcurrentHashMap<String,ModelClass<?>>();
+    
     private volatile ImplementationPicker[] sortedImplementationPickers = new ImplementationPicker[0];
+    private volatile StaticInjectAnnotationProcessorFactory[] sortedStaticInjectAnnotationProcessorFactories = new StaticInjectAnnotationProcessorFactory[0];
 
     public void setImplementationPickers(Collection<ImplementationPicker> implementationPickers) {
         this.sortedImplementationPickers = implementationPickers.toArray(new ImplementationPicker[implementationPickers.size()]);
@@ -45,23 +53,38 @@ final class AdapterImplementations {
     public ImplementationPicker[] getImplementationPickers() {
         return this.sortedImplementationPickers;
     }
+    
+    public StaticInjectAnnotationProcessorFactory[] getStaticInjectAnnotationProcessorFactories() {
+        return sortedStaticInjectAnnotationProcessorFactories;
+    }
+
+    public void setStaticInjectAnnotationProcessorFactories(
+            Collection<StaticInjectAnnotationProcessorFactory> factories) {
+        this.sortedStaticInjectAnnotationProcessorFactories = factories.toArray(new StaticInjectAnnotationProcessorFactory[factories.size()]);
+    }
 
     /**
      * Add implementation mapping for the given adapter type.
      * @param adapterType Adapter type
      * @param implType Implementation type
      */
+    @SuppressWarnings("unchecked")
     public void add(Class<?> adapterType, Class<?> implType) {
-        // although we already use a ConcurrentMap synchronize explicitly because we apply non-atomic operations on it
-        synchronized (adapterImplementations) {
-            String key = adapterType.getName();
-            ConcurrentNavigableMap<String,Class<?>> implementations = adapterImplementations.get(key);
-            if (implementations == null) {
-                // to have a consistent ordering independent of bundle loading use a ConcurrentSkipListMap that sorts by class name
-                implementations = new ConcurrentSkipListMap<String,Class<?>>();
-                adapterImplementations.put(key, implementations);
+        String key = adapterType.getName();
+        if (adapterType == implType) {
+            modelClasses.put(key, new ModelClass(implType, sortedStaticInjectAnnotationProcessorFactories));
+        }
+        else {
+            // although we already use a ConcurrentMap synchronize explicitly because we apply non-atomic operations on it
+            synchronized (adapterImplementations) {
+                ConcurrentNavigableMap<String,ModelClass<?>> implementations = adapterImplementations.get(key);
+                if (implementations == null) {
+                    // to have a consistent ordering independent of bundle loading use a ConcurrentSkipListMap that sorts by class name
+                    implementations = new ConcurrentSkipListMap<String,ModelClass<?>>();
+                    adapterImplementations.put(key, implementations);
+                }
+                implementations.put(implType.getName(), new ModelClass(implType, sortedStaticInjectAnnotationProcessorFactories));
             }
-            implementations.put(implType.getName(), implType);
         }
     }
     
@@ -71,14 +94,19 @@ final class AdapterImplementations {
      * @param implTypeName Implementation type name
      */
     public void remove(String adapterTypeName, String implTypeName) {
-        // although we already use a ConcurrentMap synchronize explicitly because we apply non-atomic operations on it
-        synchronized (adapterImplementations) {
-            String key = adapterTypeName;
-            ConcurrentNavigableMap<String,Class<?>> implementations = adapterImplementations.get(key);
-            if (implementations != null) {
-                implementations.remove(implTypeName);
-                if (implementations.isEmpty()) {
-                    adapterImplementations.remove(key);
+        String key = adapterTypeName;
+        if (StringUtils.equals(adapterTypeName, implTypeName)) {
+            modelClasses.remove(key);
+        }
+        else {
+            // although we already use a ConcurrentMap synchronize explicitly because we apply non-atomic operations on it
+            synchronized (adapterImplementations) {
+                ConcurrentNavigableMap<String,ModelClass<?>> implementations = adapterImplementations.get(key);
+                if (implementations != null) {
+                    implementations.remove(implTypeName);
+                    if (implementations.isEmpty()) {
+                        adapterImplementations.remove(key);
+                    }
                 }
             }
         }
@@ -88,6 +116,7 @@ final class AdapterImplementations {
      * Remove all implementation mappings.
      */
     public void removeAll() {
+        modelClasses.clear();
         adapterImplementations.clear();
     }
 
@@ -97,20 +126,38 @@ final class AdapterImplementations {
      * @param adaptable Adaptable for reference
      * @return Implementation type or null if none detected
      */
-    public Class<?> lookup(Class<?> adapterType, Object adaptable) {
+    @SuppressWarnings("unchecked")
+    public <ModelType> ModelClass<ModelType> lookup(Class<ModelType> adapterType, Object adaptable) {
         String key = adapterType.getName();
+        
+        // lookup in cache for models without adapter classes
+        ModelClass<ModelType> modelClass = (ModelClass<ModelType>)modelClasses.get(key);
+        if (modelClass!=null) {
+            return modelClass;
+        }
 
-        ConcurrentNavigableMap<String,Class<?>> implementations = adapterImplementations.get(key);
+        // not found? look in cache with adapter classes
+        ConcurrentNavigableMap<String,ModelClass<?>> implementations = adapterImplementations.get(key);
         if (implementations==null || implementations.isEmpty()) {
             return null;
         }
-        Collection<Class<?>> implementationsCollection = implementations.values();
-        Class<?>[] implementationsArray = implementationsCollection.toArray(new Class<?>[implementationsCollection.size()]);
+        Collection<ModelClass<?>> implementationsCollection = implementations.values();
+        ModelClass<?>[] implementationWrappersArray = implementationsCollection.toArray(new ModelClass<?>[implementationsCollection.size()]);
+        
+        // prepare array for implementation picker
+        Class<?>[] implementationsArray = new Class<?>[implementationsCollection.size()];
+        for (int i=0; i<implementationWrappersArray.length; i++) {
+            implementationsArray[i] = implementationWrappersArray[i].getType();
+        }
 
         for (ImplementationPicker picker : this.sortedImplementationPickers) {
             Class<?> implementation = picker.pick(adapterType, implementationsArray, adaptable);
             if (implementation != null) {
-                return implementation;
+                for (int i=0; i<implementationWrappersArray.length; i++) {
+                    if (implementation==implementationWrappersArray[i].getType()) {
+                        return (ModelClass<ModelType>)implementationWrappersArray[i];
+                    }
+                }
             }
         }
 

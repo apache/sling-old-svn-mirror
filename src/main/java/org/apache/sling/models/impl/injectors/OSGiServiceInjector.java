@@ -36,13 +36,13 @@ import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.models.annotations.Filter;
 import org.apache.sling.models.annotations.injectorspecific.OSGiService;
+import org.apache.sling.models.spi.AcceptsNullName;
 import org.apache.sling.models.spi.DisposalCallback;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
-import org.apache.sling.models.spi.AcceptsNullName;
 import org.apache.sling.models.spi.Injector;
 import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
-import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
+import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 5000)
-public class OSGiServiceInjector implements Injector, InjectAnnotationProcessorFactory, AcceptsNullName {
+public class OSGiServiceInjector implements Injector, StaticInjectAnnotationProcessorFactory, AcceptsNullName {
 
     private static final Logger log = LoggerFactory.getLogger(OSGiServiceInjector.class);
 
@@ -217,7 +217,7 @@ public class OSGiServiceInjector implements Injector, InjectAnnotationProcessorF
     }
 
     @Override
-    public InjectAnnotationProcessor createAnnotationProcessor(Object adaptable, AnnotatedElement element) {
+    public InjectAnnotationProcessor createAnnotationProcessor(AnnotatedElement element) {
         // check if the element has the expected annotation
         OSGiService annotation = element.getAnnotation(OSGiService.class);
         if (annotation != null) {

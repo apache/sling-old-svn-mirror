@@ -73,7 +73,7 @@ public class MultipleInjectorTest {
         factory.activate(componentCtx);
         factory.bindInjector(bindingsInjector, new ServicePropertiesMap(1, 1));
         factory.bindInjector(attributesInjector, new ServicePropertiesMap(2, 2));
-        factory.bindInjectAnnotationProcessorFactory(bindingsInjector, new ServicePropertiesMap(1, 1));
+        factory.bindStaticInjectAnnotationProcessorFactory(bindingsInjector, new ServicePropertiesMap(1, 1));
 
         when(request.getAttribute(SlingBindings.class.getName())).thenReturn(bindings);
     }
@@ -92,7 +92,7 @@ public class MultipleInjectorTest {
         assertEquals(obj.firstAttribute, bindingsValue);
 
         verifyNoMoreInteractions(attributesInjector);
-        verify(bindingsInjector).createAnnotationProcessor(any(), any(AnnotatedElement.class));
+        verify(bindingsInjector).createAnnotationProcessor(any(AnnotatedElement.class));
         verify(bindingsInjector).getValue(eq(request), eq("firstAttribute"), eq(String.class), any(AnnotatedElement.class), any(DisposalCallbackRegistry.class));
         verifyNoMoreInteractions(bindingsInjector);
     }
@@ -111,7 +111,7 @@ public class MultipleInjectorTest {
         assertEquals(obj.firstAttribute, attributeValue);
 
         verify(bindingsInjector).getName();
-        verify(bindingsInjector).createAnnotationProcessor(any(), any(AnnotatedElement.class));
+        verify(bindingsInjector).createAnnotationProcessor(any(AnnotatedElement.class));
         verifyNoMoreInteractions(bindingsInjector);
     }
 
