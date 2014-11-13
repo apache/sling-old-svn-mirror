@@ -171,11 +171,7 @@ public class Result<ModelType> {
     public void setModel(ModelType model) {
         this.model = model;
     }
-/*
-    public void setType(Class<? extends ModelType> type) {
-        this.type = type;
-    }
-*/
+
     public void throwException(Logger log) {
         for (int i = 0; i < failures.size() - 1; i++) {
             failures.get(i).log(log);

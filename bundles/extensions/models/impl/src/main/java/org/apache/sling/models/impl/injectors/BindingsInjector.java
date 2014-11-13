@@ -30,7 +30,7 @@ import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
 import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
-import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
+import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 1000)
-public class BindingsInjector implements Injector, InjectAnnotationProcessorFactory {
+public class BindingsInjector implements Injector, StaticInjectAnnotationProcessorFactory {
 
     private static final Logger log = LoggerFactory.getLogger(BindingsInjector.class);
 
@@ -76,7 +76,7 @@ public class BindingsInjector implements Injector, InjectAnnotationProcessorFact
     }
 
     @Override
-    public InjectAnnotationProcessor createAnnotationProcessor(Object adaptable, AnnotatedElement element) {
+    public InjectAnnotationProcessor createAnnotationProcessor(AnnotatedElement element) {
         // check if the element has the expected annotation
         ScriptVariable annotation = element.getAnnotation(ScriptVariable.class);
         if (annotation != null) {

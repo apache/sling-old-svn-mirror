@@ -73,6 +73,9 @@
         
         <!-- Options for the VM that executes our runnable jar -->
         <jar.executor.vm.options>-Xmx512m</jar.executor.vm.options>
+        <!-- Alternative with JVM debug port
+        <jar.executor.vm.options>-Xmx512m -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=38080,suspend=n</jar.executor.vm.options>
+        -->
         
         <!-- Change this to use longer or shorter timeouts for testing -->
         <sling.testing.timeout.multiplier>1.0</sling.testing.timeout.multiplier>
@@ -316,7 +319,7 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad</artifactId>
             <classifier>standalone</classifier>
-            <version>7</version>
+            <version>8-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

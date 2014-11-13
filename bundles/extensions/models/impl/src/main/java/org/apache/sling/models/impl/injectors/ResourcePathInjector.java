@@ -33,14 +33,14 @@ import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
 import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
-import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
+import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 import org.osgi.framework.Constants;
 
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 2500)
 public class ResourcePathInjector extends AbstractInjector implements Injector, AcceptsNullName,
-        InjectAnnotationProcessorFactory {
+        StaticInjectAnnotationProcessorFactory {
 
     @Override
     public String getName() {
@@ -83,11 +83,11 @@ public class ResourcePathInjector extends AbstractInjector implements Injector, 
     }
 
     @Override
-    public InjectAnnotationProcessor createAnnotationProcessor(Object adaptable, AnnotatedElement element) {
+    public InjectAnnotationProcessor createAnnotationProcessor(AnnotatedElement element) {
         // check if the element has the expected annotation
         ResourcePath annotation = element.getAnnotation(ResourcePath.class);
         if (annotation != null) {
-            return new ResourcePathAnnotationProcessor(annotation, adaptable);
+            return new ResourcePathAnnotationProcessor(annotation);
         }
         return null;
     }
@@ -96,7 +96,7 @@ public class ResourcePathInjector extends AbstractInjector implements Injector, 
 
         private final ResourcePath annotation;
 
-        public ResourcePathAnnotationProcessor(ResourcePath annotation, Object adaptable) {
+        public ResourcePathAnnotationProcessor(ResourcePath annotation) {
             this.annotation = annotation;
         }
 

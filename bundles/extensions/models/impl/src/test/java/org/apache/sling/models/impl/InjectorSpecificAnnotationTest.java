@@ -95,15 +95,15 @@ public class InjectorSpecificAnnotationTest {
                 Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 4L));
         factory.bindInjector(osgiInjector, Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 5L));
 
-        factory.bindInjectAnnotationProcessorFactory(bindingsInjector,
+        factory.bindStaticInjectAnnotationProcessorFactory(bindingsInjector,
                 Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 1L));
         factory.bindInjectAnnotationProcessorFactory(valueMapInjector,
                 Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 2L));
         factory.bindInjectAnnotationProcessorFactory(childResourceInjector,
                 Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 3L));
-        factory.bindInjectAnnotationProcessorFactory(requestAttributeInjector,
+        factory.bindStaticInjectAnnotationProcessorFactory(requestAttributeInjector,
                 Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 4L));
-        factory.bindInjectAnnotationProcessorFactory(osgiInjector,
+        factory.bindStaticInjectAnnotationProcessorFactory(osgiInjector,
                 Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 5L));
 
         SlingBindings bindings = new SlingBindings();

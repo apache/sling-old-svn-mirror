@@ -29,13 +29,13 @@ import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
 import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
-import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
+import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 import org.osgi.framework.Constants;
 
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 4000)
-public class RequestAttributeInjector implements Injector, InjectAnnotationProcessorFactory {
+public class RequestAttributeInjector implements Injector, StaticInjectAnnotationProcessorFactory {
 
     @Override
     public String getName() {
@@ -53,7 +53,7 @@ public class RequestAttributeInjector implements Injector, InjectAnnotationProce
     }
 
     @Override
-    public InjectAnnotationProcessor createAnnotationProcessor(Object adaptable, AnnotatedElement element) {
+    public InjectAnnotationProcessor createAnnotationProcessor(AnnotatedElement element) {
         // check if the element has the expected annotation
         RequestAttribute annotation = element.getAnnotation(RequestAttribute.class);
         if (annotation != null) {

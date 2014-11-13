@@ -107,9 +107,7 @@ public class ModelPackageBundleListener implements BundleTrackerCustomizer {
                             // register adapter only if given adapters are valid
                             if (validateAdapterClasses(implType, adapterTypes)) {
                                 for (Class<?> adapterType : adapterTypes) {
-                                    if (adapterType != implType) {
-                                        adapterImplementations.add(adapterType, implType);
-                                    }
+                                    adapterImplementations.add(adapterType, implType);
                                 }
                                 ServiceRegistration reg = registerAdapterFactory(adapterTypes, annotation.adaptables(), implType, annotation.condition());
                                 regs.add(reg);
