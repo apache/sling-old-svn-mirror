@@ -1,10 +1,7 @@
 Apache Sling Scripting Thymeleaf
 ================================
 
-scripting engine for _Thymeleaf_ templates
-
-* http://www.thymeleaf.org
-* https://github.com/thymeleaf/thymeleaf
+scripting engine for [_Thymeleaf_](http://www.thymeleaf.org) templates
 
 Features
 --------
@@ -13,6 +10,22 @@ Features
 * runtime configurable `TemplateModeHandler`s for _XML_, _VALIDXML_, _XHTML_, _VALIDXHTML_, _HTML5_ and _LEGACYHTML5_
 * `ResourceResolver` backed by Sling's `ResourceResolver`
 * `MessageResolver` backed by `ResourceBundleProvider` from `org.apache.sling.i18n`
+
+Installation
+------------
+
+For running Sling Scripting Thymeleaf with Sling's Launchpad some dependencies need to be resolved. This can be achieved by installing the following bundles:
+
+    mvn:org.apache.sling/org.apache.sling.i18n/2.2.10
+    mvn:org.javassist/javassist/3.18.2-GA
+    mvn:commons-io/commons-io/2.4
+    mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xerces/2.11.0_1
+    mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xmlresolver/1.2_5
+
+There is a feature for Karaf:
+
+    karaf@root()> feature:repo-add mvn:org.apache.sling/org.apache.sling.launchpad.karaf-features/0.1.1-SNAPSHOT/xml/features
+    karaf@root()> feature:install sling-scripting-thymeleaf
 
 relevant Thymeleaf issues
 -------------------------
