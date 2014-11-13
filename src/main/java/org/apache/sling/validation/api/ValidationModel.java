@@ -41,7 +41,9 @@ public interface ValidationModel {
     String getValidatedResourceType();
 
     /**
-     * Returns the paths under which resources will be validated by this model.
+     * Returns the paths under which resources will be validated by this model. 
+     * Is never null nor an empty array. Might return a single element array containing only the empty string, 
+     * in which case the validation model has no path restriction.
      *
      * @return a path array
      */
