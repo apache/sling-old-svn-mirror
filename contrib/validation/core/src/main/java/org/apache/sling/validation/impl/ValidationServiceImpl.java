@@ -262,7 +262,7 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
                 result.addFailureMessage(property, "Missing required property.");
             }
             Type propertyType = resourceProperty.getType();
-            Map<Validator<?>, Map<String, String>> validators = resourceProperty.getValidators();
+            Map<Validator, Map<String, String>> validators = resourceProperty.getValidators();
             if (fieldValues instanceof String[]) {
                 for (String fieldValue : (String[]) fieldValues) {
                    //validatePropertyValue(result, property, fieldValue, propertyType, validators);
@@ -396,34 +396,11 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
         return true;
     }
     
-    protected static Class<?> getValidatorDataClass(Validator<?> validator) {
-        for (java.lang.reflect.Type type : validator.getClass().getGenericInterfaces()) {
-            if (Validator.class.equals(type)) {
-                if (type instanceof ParameterizedType) {
-                    ParameterizedType pt = (ParameterizedType)type;
-                    java.lang.reflect.Type[] typeArguments = pt.getActualTypeArguments();
-                    if (typeArguments.length != 1) {
-                        throw new IllegalArgumentException("Validator " + validator + " must have exactly one parameterized type but has " + typeArguments.length);
-                    }
-                    
-                    if (typeArguments[0] instanceof Class<?>) {
-                        if (((Class<?>) typeArguments[0]).isArray()) {
-                            throw new IllegalArgumentException("Parameterized type of Validator " + validator +" should not be an array!");
-                        }
-                        // only support non-primitives!
-                        return (Class<?>) typeArguments[0];
-                    } else {
-                        throw new IllegalArgumentException("Validator " + validator + " must have exactly one parameterized type which is a class but it is " + typeArguments[0]);
-                    }
-                } else {
-                    throw new IllegalArgumentException("Validator " + validator + " must have one parameterized type!");
-                }
-            }
-        }
-        throw new IllegalArgumentException("No Validator interface found on validator " + validator);
+    protected static Class<?> getValidatorDataClass(Validator validator) {
+        return validator.getExpectedDataClass();
     }
 
-    private void validatePropertyValue(ValidationResultImpl result, String property, ValueMap valueMap, Type propertyType, Map<Validator<?>,
+    private void validatePropertyValue(ValidationResultImpl result, String property, ValueMap valueMap, Type propertyType, Map<Validator,
             Map<String, String>> validators) {
         /**
         if (!propertyType.isValid(value)) {
@@ -432,8 +409,8 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
         
         
             
-        for (Map.Entry<Validator<?>, Map<String, String>> validatorEntry : validators.entrySet()) {
-            Validator<?> validator = validatorEntry.getKey();
+        for (Map.Entry<Validator, Map<String, String>> validatorEntry : validators.entrySet()) {
+            Validator validator = validatorEntry.getKey();
             // retrieve the type parameter from the 
             Class<?> clazz = getValidatorDataClass(validator);
             Map<String, String> arguments = validatorEntry.getValue();
