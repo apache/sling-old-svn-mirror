@@ -17,7 +17,7 @@
     <property name="service.ranking" type="Integer" value="200"/>
     <property name="service.pid" value="org.apache.sling.testing.mock.osgi.ReflectionServiceUtilTest$Service2"/>
   </scr:component>
-  <scr:component name="org.apache.sling.testing.mock.osgi.ReflectionServiceUtilTest$Service3" activate="activate" deactivate="deactivate">
+  <scr:component name="org.apache.sling.testing.mock.osgi.ReflectionServiceUtilTest$Service3" activate="activate" deactivate="deactivate" modified="modified">
     <implementation class="org.apache.sling.testing.mock.osgi.ReflectionServiceUtilTest$Service3"/>
     <property name="service.pid" value="org.apache.sling.testing.mock.osgi.ReflectionServiceUtilTest$Service3"/>
     <reference name="reference2" interface="org.apache.sling.testing.mock.osgi.ReflectionServiceUtilTest$ServiceInterface2" cardinality="1..n" policy="static" bind="bindReference2" unbind="unbindReference2"/>

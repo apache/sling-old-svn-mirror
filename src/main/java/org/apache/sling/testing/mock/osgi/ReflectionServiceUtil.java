@@ -53,8 +53,7 @@ final class ReflectionServiceUtil {
      * Simulate activation or deactivation of OSGi service instance.
      * @param target Service instance.
      * @param componentContext Component context
-     * @return true if activation method was called. False if such a method did
-     *         not exist.
+     * @return true if activation/deactivation method was called. False if it failed.
      */
     public static boolean activateDeactivate(Object target, ComponentContext componentContext, boolean activate) {
         Class<?> targetClass = target.getClass();
@@ -71,7 +70,7 @@ final class ReflectionServiceUtil {
             return false;
         }
 
-        // try to find matchin activate/deactivate method and execute it
+        // try to find matching activate/deactivate method and execute it
         
         // 1. componentContext
         Method method = getMethod(targetClass, methodName, new Class<?>[] { ComponentContext.class });
@@ -143,7 +142,31 @@ final class ReflectionServiceUtil {
             return true;
         }
         
-        log.warn("Method {}(ComponentContext) not found in class {}", methodName, targetClass.getName());
+        log.warn("Method {} not found in class {}", methodName, targetClass.getName());
+        return false;
+    }
+
+    /**
+     * Simulate modification of configuration of OSGi service instance.
+     * @param target Service instance.
+     * @param properties Updated configuration
+     * @return true if modified method was called. False if it failed.
+     */
+    public static boolean modified(Object target, BundleContext bundleContext, Map<String,Object> properties) {
+        Class<?> targetClass = target.getClass();
+
+        // get method name for activation/deactivation from osgi metadata
+        Document metadata = OsgiMetadataUtil.getMetadata(targetClass);
+        String methodName = OsgiMetadataUtil.getModifiedMethodName(targetClass, metadata);
+        
+        // try to find matching modified method and execute it
+        Method method = getMethod(targetClass, methodName, new Class<?>[] { Map.class });
+        if (method != null) {
+            invokeMethod(target, method, new Object[] { properties });
+            return true;
+        }
+        
+        log.warn("Method {} not found in class {}", methodName, targetClass.getName());
         return false;
     }
 
