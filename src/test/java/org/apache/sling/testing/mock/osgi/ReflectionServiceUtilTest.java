@@ -78,7 +78,7 @@ public class ReflectionServiceUtilTest {
         assertEquals(1, references2.size());
         assertSame(service2, references2.get(0));
 
-        List<ServiceInterface3> references3 = service3.getReferences3();
+        List<ServiceSuperInterface3> references3 = service3.getReferences3();
         assertEquals(1, references3.size());
         assertSame(service2, references3.get(0));
 
@@ -108,7 +108,11 @@ public class ReflectionServiceUtilTest {
         // no methods
     }
 
-    public interface ServiceInterface3 {
+    public interface ServiceInterface3 extends ServiceSuperInterface3 {
+        // no methods
+    }
+
+    public interface ServiceSuperInterface3 {
         // no methods
     }
 
@@ -136,7 +140,7 @@ public class ReflectionServiceUtilTest {
         private List<ServiceReference> references2 = new ArrayList<ServiceReference>();
 
         @Reference(name = "reference3", referenceInterface = ServiceInterface3.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE)
-        private List<ServiceInterface3> references3 = new ArrayList<ServiceInterface3>();
+        private List<ServiceSuperInterface3> references3 = new ArrayList<ServiceSuperInterface3>();
         private List<Map<String, Object>> reference3Configs = new ArrayList<Map<String, Object>>();
 
         private ComponentContext componentContext;
@@ -163,7 +167,7 @@ public class ReflectionServiceUtilTest {
             return services;
         }
 
-        public List<ServiceInterface3> getReferences3() {
+        public List<ServiceSuperInterface3> getReferences3() {
             return this.references3;
         }
 
@@ -191,12 +195,12 @@ public class ReflectionServiceUtilTest {
             references2.remove(serviceReference);
         }
 
-        protected void bindReference3(ServiceInterface3 service, Map<String, Object> serviceConfig) {
+        protected void bindReference3(ServiceSuperInterface3 service, Map<String, Object> serviceConfig) {
             references3.add(service);
             reference3Configs.add(serviceConfig);
         }
 
-        protected void unbindReference3(ServiceInterface3 service, Map<String, Object> serviceConfig) {
+        protected void unbindReference3(ServiceSuperInterface3 service, Map<String, Object> serviceConfig) {
             references3.remove(service);
             reference3Configs.remove(serviceConfig);
         }
