@@ -135,6 +135,7 @@
           <module>validation</module>
           <module>launchpad/karaf</module>
           <module>launchpad/testing</module>
+          <module>xss</module>
           <!-- disabled due to SLING-4151 for now <module>launchpad/debian</module> -->
     </modules>
     <profiles>
