@@ -26,7 +26,7 @@ import org.apache.sling.validation.api.exceptions.SlingValidationException;
 /**
  * A {@code Validator} is responsible for validating a single piece of information according to an internal constraint.
  */
-public interface Validator {
+public interface Validator <T> {
 
     /**
      * Validates the {@code data} and/or the {@code valueMap} according to the internal constraints of this validator.
@@ -60,19 +60,13 @@ public interface Validator {
      *    <td>once per property with {@code data} containing the value of the property</td>
      *  </tr>
      * </table>
+     * If the data cannot be converted into the type {@code T} the validator is not called, but validation fails.
      *
-     * @param data the data to validate (primary property), never {@code null}. The data can always safely be casted to the type returned by {@link getExpectedDataClass}.
+     * @param data the data to validate (primary property), never {@code null}.
      * @param valueMap all properties (only used for validations considering multiple properties), never {@code null}.
      * @param arguments the parameterization of the validator. Might be {@code null} in case no arguments were given.
      * @return validation error message if validation was not successful, {@code null} otherwise. In case an empty string is returned a generic validation error message is used.
      * @throws org.apache.sling.validation.api.exceptions.SlingValidationException if some expected arguments are missing from the arguments map
      */
-    String validate(Object data, ValueMap valueMap, Map<String, String> arguments) throws SlingValidationException;
-    
-    
-    /**
-     * 
-     * @return the expected data type of the {@code data} parameter within the {@code validate} method. 
-     */
-    Class<?> getExpectedDataClass();
+    String validate(T data, ValueMap valueMap, Map<String, String> arguments) throws SlingValidationException;
 }
