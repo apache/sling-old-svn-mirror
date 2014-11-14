@@ -55,11 +55,15 @@ final class ReflectionServiceUtil {
      * @param componentContext Component context
      * @return true if activation/deactivation method was called. False if it failed.
      */
+    @SuppressWarnings("unchecked")
     public static boolean activateDeactivate(Object target, ComponentContext componentContext, boolean activate) {
         Class<?> targetClass = target.getClass();
 
         // get method name for activation/deactivation from osgi metadata
         Document metadata = OsgiMetadataUtil.getMetadata(targetClass);
+        if (metadata==null) {
+            throw new NoScrMetadataException(targetClass);
+        }
         String methodName;
         if (activate) {
             methodName = OsgiMetadataUtil.getActivateMethodName(targetClass, metadata);
@@ -89,7 +93,7 @@ final class ReflectionServiceUtil {
         // 3. map
         method = getMethod(targetClass, methodName, new Class<?>[] { Map.class });
         if (method != null) {
-            invokeMethod(target, method, new Object[] { componentContext.getProperties() });
+            invokeMethod(target, method, new Object[] { MapUtil.toMap(componentContext.getProperties()) });
             return true;
         }
         
@@ -125,7 +129,7 @@ final class ReflectionServiceUtil {
                     args[i] = componentContext.getBundleContext();
                 }
                 else if (method.getParameterTypes()[i] == Map.class) {
-                    args[i] = componentContext.getProperties();
+                    args[i] = MapUtil.toMap(componentContext.getProperties());
                 }
                 else if (method.getParameterTypes()[i] == int.class || method.getParameterTypes()[i] == Integer.class) {
                     args[i] = 0;
@@ -157,6 +161,9 @@ final class ReflectionServiceUtil {
 
         // get method name for activation/deactivation from osgi metadata
         Document metadata = OsgiMetadataUtil.getMetadata(targetClass);
+        if (metadata==null) {
+            throw new NoScrMetadataException(targetClass);
+        }
         String methodName = OsgiMetadataUtil.getModifiedMethodName(targetClass, metadata);
         
         // try to find matching modified method and execute it
@@ -257,7 +264,12 @@ final class ReflectionServiceUtil {
 
         // collect all declared reference annotations on class and field level
         Class<?> targetClass = target.getClass();
-        List<Reference> references = getReferences(targetClass);
+
+        Document metadata = OsgiMetadataUtil.getMetadata(targetClass);
+        if (metadata==null) {
+            throw new NoScrMetadataException(targetClass);
+        }
+        List<Reference> references = OsgiMetadataUtil.getReferences(targetClass, metadata);
 
         // try to inject services
         boolean allInjected = true;
@@ -266,11 +278,6 @@ final class ReflectionServiceUtil {
             allInjected = allInjected && injectSuccess;
         }
         return allInjected;
-    }
-
-    private static List<Reference> getReferences(Class clazz) {
-        Document metadata = OsgiMetadataUtil.getMetadata(clazz);
-        return OsgiMetadataUtil.getReferences(clazz, metadata);
     }
 
     private static boolean injectServiceReference(Reference reference, Object target, BundleContext bundleContext) {

@@ -89,6 +89,10 @@ final class OsgiMetadataUtil {
             return NAMESPACES.keySet().iterator();
         }
     };
+    
+    public static String getMetadataPath(Class clazz) {
+        return "/OSGI-INF/" + StringUtils.substringBefore(clazz.getName(), "$") + ".xml";
+    }
 
     /**
      * Try to read OSGI-metadata from /OSGI-INF and read all implemented
@@ -97,7 +101,7 @@ final class OsgiMetadataUtil {
      * @return Metadata document or null
      */
     public static Document getMetadata(Class clazz) {
-        String metadataPath = "/OSGI-INF/" + StringUtils.substringBefore(clazz.getName(), "$") + ".xml";
+        String metadataPath = getMetadataPath(clazz);
         InputStream metadataStream = clazz.getResourceAsStream(metadataPath);
         if (metadataStream == null) {
             log.debug("No OSGi metadata found at {}", metadataPath);
@@ -124,16 +128,14 @@ final class OsgiMetadataUtil {
 
     public static Set<String> getServiceInterfaces(Class clazz, Document metadata) {
         Set<String> serviceInterfaces = new HashSet<String>();
-        if (metadata != null) {
-            String query = "/components/component[@name='" + clazz.getName() + "']/service/provide[@interface!='']";
-            NodeList nodes = queryNodes(metadata, query);
-            if (nodes != null) {
-                for (int i = 0; i < nodes.getLength(); i++) {
-                    Node node = nodes.item(i);
-                    String serviceInterface = getAttributeValue(node, "interface");
-                    if (StringUtils.isNotBlank(serviceInterface)) {
-                        serviceInterfaces.add(serviceInterface);
-                    }
+        String query = "/components/component[@name='" + clazz.getName() + "']/service/provide[@interface!='']";
+        NodeList nodes = queryNodes(metadata, query);
+        if (nodes != null) {
+            for (int i = 0; i < nodes.getLength(); i++) {
+                Node node = nodes.item(i);
+                String serviceInterface = getAttributeValue(node, "interface");
+                if (StringUtils.isNotBlank(serviceInterface)) {
+                    serviceInterfaces.add(serviceInterface);
                 }
             }
         }
@@ -142,20 +144,18 @@ final class OsgiMetadataUtil {
 
     public static Map<String, Object> getProperties(Class clazz, Document metadata) {
         Map<String, Object> props = new HashMap<String, Object>();
-        if (metadata != null) {
-            String query = "/components/component[@name='" + clazz.getName() + "']/property[@name!='' and @value!='']";
-            NodeList nodes = queryNodes(metadata, query);
-            if (nodes != null) {
-                for (int i = 0; i < nodes.getLength(); i++) {
-                    Node node = nodes.item(i);
-                    String name = getAttributeValue(node, "name");
-                    String value = getAttributeValue(node, "value");
-                    String type = getAttributeValue(node, "type");
-                    if (StringUtils.equals("Integer", type)) {
-                        props.put(name, Integer.parseInt(value));
-                    } else {
-                        props.put(name, value);
-                    }
+        String query = "/components/component[@name='" + clazz.getName() + "']/property[@name!='' and @value!='']";
+        NodeList nodes = queryNodes(metadata, query);
+        if (nodes != null) {
+            for (int i = 0; i < nodes.getLength(); i++) {
+                Node node = nodes.item(i);
+                String name = getAttributeValue(node, "name");
+                String value = getAttributeValue(node, "value");
+                String type = getAttributeValue(node, "type");
+                if (StringUtils.equals("Integer", type)) {
+                    props.put(name, Integer.parseInt(value));
+                } else {
+                    props.put(name, value);
                 }
             }
         }
@@ -164,14 +164,12 @@ final class OsgiMetadataUtil {
 
     public static List<Reference> getReferences(Class clazz, Document metadata) {
         List<Reference> references = new ArrayList<Reference>();
-        if (metadata != null) {
-            String query = "/components/component[@name='" + clazz.getName() + "']/reference[@name!='']";
-            NodeList nodes = queryNodes(metadata, query);
-            if (nodes != null) {
-                for (int i = 0; i < nodes.getLength(); i++) {
-                    Node node = nodes.item(i);
-                    references.add(new Reference(node));
-                }
+        String query = "/components/component[@name='" + clazz.getName() + "']/reference[@name!='']";
+        NodeList nodes = queryNodes(metadata, query);
+        if (nodes != null) {
+            for (int i = 0; i < nodes.getLength(); i++) {
+                Node node = nodes.item(i);
+                references.add(new Reference(node));
             }
         }
         return references;
@@ -190,12 +188,10 @@ final class OsgiMetadataUtil {
     }
 
     private static String getLifecycleMethodName(Class clazz, Document metadata, String methodName) {
-        if (metadata != null) {
-            String query = "/components/component[@name='" + clazz.getName() + "']";
-            Node node = queryNode(metadata, query);
-            if (node != null) {
-                return getAttributeValue(node, methodName);
-            }
+        String query = "/components/component[@name='" + clazz.getName() + "']";
+        Node node = queryNode(metadata, query);
+        if (node != null) {
+            return getAttributeValue(node, methodName);
         }
         return null;
     }

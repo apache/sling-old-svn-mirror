@@ -36,12 +36,12 @@ class MockComponentContext implements ComponentContext {
     private final Dictionary<String, Object> properties;
 
     public MockComponentContext(final MockBundleContext mockBundleContext) {
-        this(mockBundleContext, new Hashtable<String, Object>());
+        this(mockBundleContext, null);
     }
 
     public MockComponentContext(final MockBundleContext mockBundleContext, final Dictionary<String, Object> properties) {
         this.bundleContext = mockBundleContext;
-        this.properties = properties;
+        this.properties = properties != null ? properties : new Hashtable<String, Object>();
     }
 
     @Override

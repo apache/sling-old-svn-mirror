@@ -19,9 +19,6 @@
 package org.apache.sling.testing.mock.osgi;
 
 import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Map;
 
 import org.osgi.framework.BundleContext;
@@ -75,7 +72,7 @@ public final class MockOsgi {
      * @return Mocked {@link ComponentContext} instance
      */
     public static ComponentContext newComponentContext(Map<String, Object> properties) {
-        return newComponentContext(toDictionary(properties));
+        return newComponentContext(MapUtil.toDictionary(properties));
     }
 
     /**
@@ -94,7 +91,7 @@ public final class MockOsgi {
      * @return Mocked {@link ComponentContext} instance
      */
     public static ComponentContext newComponentContext(BundleContext bundleContext, Map<String, Object> properties) {
-        return newComponentContext(bundleContext, toDictionary(properties));
+        return newComponentContext(bundleContext, MapUtil.toDictionary(properties));
     }
 
     /**
@@ -147,7 +144,7 @@ public final class MockOsgi {
      * @return true if activation method was called. False if it failed.
      */
     public static boolean activate(Object target, Map<String, Object> properties) {
-        return activate(target, toDictionary(properties));
+        return activate(target, MapUtil.toDictionary(properties));
     }
 
     /**
@@ -171,7 +168,7 @@ public final class MockOsgi {
      * @return true if activation method was called. False if it failed.
      */
     public static boolean activate(Object target, BundleContext bundleContext, Map<String, Object> properties) {
-        return activate(target, bundleContext, toDictionary(properties));
+        return activate(target, bundleContext, MapUtil.toDictionary(properties));
     }
 
     /**
@@ -202,7 +199,7 @@ public final class MockOsgi {
      * @return true if deactivation method was called. False if it failed.
      */
     public static boolean deactivate(Object target, Map<String, Object> properties) {
-        return deactivate(target, toDictionary(properties));
+        return deactivate(target, MapUtil.toDictionary(properties));
     }
 
     /**
@@ -225,7 +222,7 @@ public final class MockOsgi {
      * @return true if activation method was called. False if it failed.
      */
     public static boolean deactivate(Object target, BundleContext bundleContext, Map<String, Object> properties) {
-        return deactivate(target, bundleContext, toDictionary(properties));
+        return deactivate(target, bundleContext, MapUtil.toDictionary(properties));
     }
 
     /**
@@ -236,7 +233,7 @@ public final class MockOsgi {
      * @return true if modified method was called. False if it failed.
      */
     public static boolean modified(Object target, BundleContext bundleContext, Dictionary<String, Object> properties) {
-        return modified(target, bundleContext, toMap(properties));
+        return modified(target, bundleContext, MapUtil.toMap(properties));
     }
 
     /**
@@ -250,18 +247,4 @@ public final class MockOsgi {
         return ReflectionServiceUtil.modified(target, bundleContext, properties);
     }
     
-    static Dictionary<String, Object> toDictionary(Map<String, Object> map) {
-        return new Hashtable<String, Object>(map);
-    }
-
-    static Map<String, Object> toMap(Dictionary<String, Object> dictionary) {
-        Map<String,Object> map = new HashMap<String, Object>();
-        Enumeration<String> keys = dictionary.keys();
-        while (keys.hasMoreElements()) {
-            String key = keys.nextElement();
-            map.put(key, dictionary.get(key));
-        }
-        return map;
-    }
-
 }
