@@ -28,7 +28,7 @@ public interface OsgiContextCallback {
 
     /**
      * Execute callback action
-     * @param context Sling context
+     * @param context OSGi context
      * @throws IOException
      * @throws PersistenceException
      */
