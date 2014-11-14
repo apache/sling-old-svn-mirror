@@ -33,12 +33,12 @@ import java.util.regex.Pattern;
  */
 @Component()
 @Service(Validator.class)
-public class RegexValidator implements Validator {
+public class RegexValidator implements Validator<String> {
 
     public static final String REGEX_PARAM = "regex";
 
     @Override
-    public String validate(Object data, ValueMap valueMap, Map<String, String> arguments)
+    public String validate(String data, ValueMap valueMap, Map<String, String> arguments)
             throws SlingValidationException {
         if (arguments == null) {
             throw new SlingValidationException("Cannot perform data validation with null parameters");
@@ -54,9 +54,6 @@ public class RegexValidator implements Validator {
         return "Property does not match the pattern " + regex;
     }
 
-    @Override
-    public Class<?> getExpectedDataClass() {
-        return String.class;
-    }
+   
     
 }

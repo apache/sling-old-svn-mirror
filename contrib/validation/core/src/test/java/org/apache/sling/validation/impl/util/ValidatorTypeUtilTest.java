@@ -18,6 +18,7 @@
  */
 package org.apache.sling.validation.impl.util;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.apache.sling.api.resource.ValueMap;
@@ -26,7 +27,9 @@ import org.apache.sling.validation.api.exceptions.SlingValidationException;
 import org.apache.sling.validation.impl.util.examplevalidators.DerivedStringValidator;
 import org.apache.sling.validation.impl.util.examplevalidators.ExtendedStringValidator;
 import org.apache.sling.validation.impl.util.examplevalidators.IntegerValidator;
+import org.apache.sling.validation.impl.util.examplevalidators.StringArrayValidator;
 import org.apache.sling.validation.impl.util.examplevalidators.StringValidator;
+import org.apache.sling.validation.impl.validators.RegexValidator;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
@@ -36,6 +39,7 @@ public class ValidatorTypeUtilTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testGetValidatorTypeOfDirectImplementations() {
+        Assert.assertThat((Class<String>)ValidatorTypeUtil.getValidatorType(new RegexValidator()), Matchers.equalTo(String.class));
         Assert.assertThat((Class<String>)ValidatorTypeUtil.getValidatorType(new StringValidator()), Matchers.equalTo(String.class));
         Assert.assertThat((Class<Integer>)ValidatorTypeUtil.getValidatorType(new IntegerValidator()), Matchers.equalTo(Integer.class));
     }
@@ -57,7 +61,6 @@ public class ValidatorTypeUtilTest {
         @Override
         public String validate(String data, ValueMap valueMap, Map<String, String> arguments)
                 throws SlingValidationException {
-            // TODO Auto-generated method stub
             return null;
         }
     }
@@ -79,5 +82,22 @@ public class ValidatorTypeUtilTest {
             }
             
         }), Matchers.equalTo(String.class));
+    }
+    
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testGetValidatorTypeWithArrayType() {
+        Assert.assertThat((Class<String[]>)ValidatorTypeUtil.getValidatorType(new StringArrayValidator()), Matchers.equalTo(String[].class));
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void testGetValidatorTypeWithCollectionType() {
+        ValidatorTypeUtil.getValidatorType(new Validator<Collection<String>>() {
+            @Override
+            public String validate(Collection<String> data, ValueMap valueMap, Map<String, String> arguments)
+                    throws SlingValidationException {
+                return null;
+            }
+        });
     }
 }

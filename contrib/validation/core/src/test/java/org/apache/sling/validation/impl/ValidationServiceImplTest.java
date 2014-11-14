@@ -20,6 +20,7 @@ package org.apache.sling.validation.impl;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -111,27 +112,6 @@ public class ValidationServiceImplTest {
         validatorLookupService = mock(ValidatorLookupService.class);
     }
     
-    @Test 
-    public void testGetValidatorDataClass() {
-        Class<?> clazz = ValidationServiceImpl.getValidatorDataClass(new RegexValidator());
-        Assert.assertEquals(String.class, clazz);
-    }
-    
-    
-    @Test (expected=IllegalArgumentException.class)
-    public void testGetValidatorDataClassOfArray() {
-        ValidationServiceImpl.getValidatorDataClass(new Validator<String[]>() {
-
-            @Override
-            public String validate(String[] data, ValueMap valueMap, Map<String, String> arguments)
-                    throws SlingValidationException {
-                // TODO Auto-generated method stub
-                return null;
-            }
-            
-        });
-    }
-
     @Test
     public void testGetValidationModel() throws Exception {
         when(validatorLookupService.getValidator("org.apache.sling.validation.impl.validators.RegexValidator")).thenReturn(new
@@ -372,7 +352,7 @@ public class ValidationServiceImplTest {
             ValidationModel vm = validationService.getValidationModel("sling/validation/test", "/apps/validation/1/resource");
             ValidationResult vr = validationService.validate(testResource, vm);
             assertFalse(vr.isValid());
-            assertTrue(vr.getFailureMessages().containsKey("child1/hello"));
+            assertThat(vr.getFailureMessages(), Matchers.hasKey("child1/hello"));
         } finally {
             if (rr != null) {
                 if (model1 != null) {

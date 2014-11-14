@@ -16,11 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.impl.util.examplevalidators;
+package org.apache.sling.validation.api;
 
-import org.apache.sling.validation.api.Validator;
+import java.util.Map;
 
-public abstract class AbstractValidatorWithAdditionalType<A,T,B> implements Validator<T>{
-    public abstract A getA();
-    public abstract B getB();
+/**
+ * Defines a validator instance with information about the type and the parameterization of the validator.
+ *
+ */
+public interface ParameterizedValidator {
+
+    public abstract Validator<?> getValidator();
+
+    public abstract Map<String, String> getParameters();
+
+    public abstract Class<?> getType();
+
 }

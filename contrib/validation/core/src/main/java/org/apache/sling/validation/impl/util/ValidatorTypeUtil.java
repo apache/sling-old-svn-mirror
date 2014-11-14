@@ -45,8 +45,9 @@ public class ValidatorTypeUtil {
                     if (type instanceof Class<?>) {
                         return (Class)type;
                     }
+                    // type may also be a parmeterized type (e.g. for Collection<String>), this is not allowed!
                     else {
-                        throw new IllegalArgumentException("What happened here?");
+                        throw new IllegalArgumentException("Validators may not use parameterized types as type parameter. Only simple class types and arrays of class types are allowed.");
                     }
                 }
             }

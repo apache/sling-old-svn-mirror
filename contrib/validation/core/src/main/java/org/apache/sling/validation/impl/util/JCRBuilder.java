@@ -30,12 +30,14 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.validation.api.ChildResource;
+import org.apache.sling.validation.api.ParameterizedValidator;
 import org.apache.sling.validation.api.ResourceProperty;
 import org.apache.sling.validation.api.Type;
 import org.apache.sling.validation.api.Validator;
 import org.apache.sling.validation.api.ValidatorLookupService;
 import org.apache.sling.validation.impl.ChildResourceImpl;
 import org.apache.sling.validation.impl.Constants;
+import org.apache.sling.validation.impl.ParameterizedValidatorImpl;
 import org.apache.sling.validation.impl.ResourcePropertyImpl;
 
 /**
@@ -60,7 +62,7 @@ public class JCRBuilder {
                 Type type = Type.getType(propertyValueMap.get(Constants.PROPERTY_TYPE, String.class));
                 Boolean propertyMultiple = PropertiesUtil.toBoolean(propertyValueMap.get(Constants.PROPERTY_MULTIPLE), false);
                 Resource validators = property.getChild(Constants.VALIDATORS);
-                Map<Validator, Map<String, String>> validatorsMap = new HashMap<Validator, Map<String, String>>();
+                List<ParameterizedValidator> parameterizedValidators = new ArrayList<ParameterizedValidator>();
                 if (validators != null) {
                     Iterator<Resource> validatorsIterator = validators.listChildren();
                     while (validatorsIterator.hasNext()) {
@@ -71,6 +73,7 @@ public class JCRBuilder {
                         if (v == null) {
                             throw new IllegalArgumentException("Could not find validator with name '" + validatorName + "'");
                         }
+                        // get type of validator
                         String[] validatorArguments = validatorProperties.get(Constants.VALIDATOR_ARGUMENTS, String[].class);
                         Map<String, String> validatorArgumentsMap = new HashMap<String, String>();
                         if (validatorArguments != null) {
@@ -82,10 +85,10 @@ public class JCRBuilder {
                                 validatorArgumentsMap.put(keyValuePair[0], keyValuePair[1]);
                             }
                         }
-                        validatorsMap.put(v, validatorArgumentsMap);
+                        parameterizedValidators.add(new ParameterizedValidatorImpl(v, validatorArgumentsMap));
                     }
                 }
-                ResourceProperty f = new ResourcePropertyImpl(fieldName, type, propertyMultiple, validatorsMap);
+                ResourceProperty f = new ResourcePropertyImpl(fieldName, type, propertyMultiple, parameterizedValidators);
                 properties.add(f);
             }
         }

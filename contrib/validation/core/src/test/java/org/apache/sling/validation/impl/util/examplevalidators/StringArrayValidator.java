@@ -18,9 +18,18 @@
  */
 package org.apache.sling.validation.impl.util.examplevalidators;
 
-import org.apache.sling.validation.api.Validator;
+import java.util.Map;
 
-public abstract class AbstractValidatorWithAdditionalType<A,T,B> implements Validator<T>{
-    public abstract A getA();
-    public abstract B getB();
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.validation.api.Validator;
+import org.apache.sling.validation.api.exceptions.SlingValidationException;
+
+public class StringArrayValidator implements Validator<String[]> {
+
+    @Override
+    public String validate(String[] data, ValueMap valueMap, Map<String, String> arguments)
+            throws SlingValidationException {
+        return null;
+    }
+
 }

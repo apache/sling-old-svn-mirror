@@ -18,7 +18,7 @@
  */
 package org.apache.sling.validation.api;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * Describes a {@link org.apache.sling.api.resource.Resource} property.
@@ -47,10 +47,9 @@ public interface ResourceProperty {
     boolean isMultiple();
 
     /**
-     * Returns a map containing the validators that should be applied to this property together with the arguments for each validator, also
-     * stored in a key-value map.
+     * Returns a list of {@link ParameterizedValidator}s which should be applied on this property.
      *
-     * @return the validators
+     * @return the list of validators
      */
-    Map<Validator, Map<String, String>> getValidators();
+    List<ParameterizedValidator> getValidators();
 }
