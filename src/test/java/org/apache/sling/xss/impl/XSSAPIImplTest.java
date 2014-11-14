@@ -1,0 +1,370 @@
+/*******************************************************************************
+ * Licensed to the Apache Software Foundation (ASF) under one or
+ * more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information regarding
+ * copyright ownership. The ASF licenses this file to you under the
+ * Apache License, Version 2.0 (the "License"); you may not use
+ * this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0 Unless required by
+ * applicable law or agreed to in writing, software distributed
+ * under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions
+ * and limitations under the License.
+ ******************************************************************************/
+package org.apache.sling.xss.impl;
+
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.util.Map;
+
+import org.apache.sling.xss.XSSAPI;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+import org.owasp.validator.html.AntiSamy;
+import org.owasp.validator.html.Policy;
+
+public class XSSAPIImplTest {
+
+    private XSSAPI xssAPI;
+
+    @Before
+    public void Setup() {
+        try {
+            InputStream policyStream = new FileInputStream("./src/main/resources/SLING-INF/content/config.xml");
+            Policy policy = Policy.getInstance(policyStream);
+            AntiSamy antiSamy = new AntiSamy(policy);
+
+            PolicyHandler mockPolicyHandler = mock(PolicyHandler.class, Mockito.RETURNS_DEEP_STUBS);
+            when(mockPolicyHandler.getPolicy()).thenReturn(policy);
+            when(mockPolicyHandler.getAntiSamy()).thenReturn(antiSamy);
+
+            XSSFilterImpl xssFilter = new XSSFilterImpl();
+            Field policiesField = XSSFilterImpl.class.getDeclaredField("policies");
+            policiesField.setAccessible(true);
+            ((Map<String, PolicyHandler>) policiesField.get(xssFilter)).put(XSSFilterRule.DEFAULT_POLICY_PATH, mockPolicyHandler);
+
+            xssAPI = new XSSAPIImpl();
+            Field filterField = XSSAPIImpl.class.getDeclaredField("xssFilter");
+            filterField.setAccessible(true);
+            filterField.set(xssAPI, xssFilter);
+
+            ResourceResolver mockResolver = mock(ResourceResolver.class, Mockito.RETURNS_DEEP_STUBS);
+            when(mockResolver.map(anyString())).thenAnswer(new Answer() {
+                public Object answer(InvocationOnMock invocation) {
+                    Object[] args = invocation.getArguments();
+                    String url = (String) args[0];
+                    return url.replaceAll("jcr:", "_jcr_");
+                }
+            });
+
+            SlingHttpServletRequest mockRequest = mock(SlingHttpServletRequest.class, Mockito.RETURNS_DEEP_STUBS);
+            when(mockRequest.getResourceResolver()).thenReturn(mockResolver);
+
+            xssAPI = xssAPI.getRequestSpecificAPI(mockRequest);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void TestEncodeForHTML() {
+        String[][] testData = {
+                //         Source                            Expected Result
+                //
+                {"simple", "simple"},
+
+                {"<script>", "&lt;script&gt;"},
+                {"<b>", "&lt;b&gt;"},
+
+                {"günter", "günter"},
+                {"\u30e9\u30c9\u30af\u30ea\u30d5\u3001\u30de\u30e9\u30bd\u30f3\u4e94\u8f2a\u4ee3\u8868\u306b1\u4e07m\u51fa\u5834\u306b\u3082\u542b\u307f", "\u30e9\u30c9\u30af\u30ea\u30d5\u3001\u30de\u30e9\u30bd\u30f3\u4e94\u8f2a\u4ee3\u8868\u306b1\u4e07m\u51fa\u5834\u306b\u3082\u542b\u307f"}
+        };
+
+        for (String[] aTestData : testData) {
+            String source = aTestData[0];
+            String expected = aTestData[1];
+
+            String result = xssAPI.encodeForHTML(source);
+            if (!result.equals(expected)) {
+                fail("HTML Encoding '" + source + "', expecting '" + expected + "', but got '" + result + "'");
+            }
+        }
+    }
+
+    @Test
+    public void TestEncodeForXML() {
+        String[][] testData = {
+                //         Source                            Expected Result
+                //
+                {"simple", "simple"},
+
+                {"<script>", "&lt;script&gt;"},
+                {"<b>", "&lt;b&gt;"},
+
+                {"günter", "günter"}
+        };
+
+        for (String[] aTestData : testData) {
+            String source = aTestData[0];
+            String expected = aTestData[1];
+
+            String result = xssAPI.encodeForXML(source);
+            if (!result.equals(expected)) {
+                fail("XML Encoding '" + source + "', expecting '" + expected + "', but got '" + result + "'");
+            }
+        }
+    }
+
+    @Test
+    public void TestFilterHTML() {
+        String[][] testData = {
+                //         Source                            Expected Result
+                {"simple", "simple"},
+
+                {"<script>ugly</script>", ""},
+                {"<b>wow!</b>", "<b>wow!</b>"},
+
+                {"<p onmouseover='ugly'>nice</p>", "<p>nice</p>"},
+
+                {"<img src='javascript:ugly'/>", ""},
+                {"<img src='nice.jpg'/>", "<img src=\"nice.jpg\" />"},
+
+                {"<ul><li>1</li><li>2</li></ul>", "<ul><li>1</li><li>2</li></ul>"},
+
+                {"günter", "günter"},
+
+
+                {"<strike>strike</strike>", "<strike>strike</strike>"},
+                {"<s>s</s>", "<s>s</s>"},
+
+                {"<a href=\"\">empty href</a>", "<a href=\"\">empty href</a>"}
+        };
+
+        for (String[] aTestData : testData) {
+            String source = aTestData[0];
+            String expected = aTestData[1];
+
+            String result = xssAPI.filterHTML(source);
+            if (!result.equals(expected)) {
+                fail("Filtering '" + source + "', expecting '" + expected + "', but got '" + result + "'");
+            }
+        }
+    }
+
+    @Test
+    public void TestGetValidHref() {
+        String[][] testData = {
+                //         Href                                        Expected Result
+                //
+                {"simple", "simple"},
+
+                {"../parent", "../parent"},
+                {"repo/günter", "repo/günter"},
+
+                // JCR namespaces:
+                {"my/page/jcr:content.feed", "my/page/_jcr_content.feed"},
+                {"my/jcr:content/page/jcr:content", "my/_jcr_content/page/_jcr_content"},
+
+                {"\" onClick=ugly", "%22%20onClick=ugly"},
+                {"javascript:ugly", ""},
+                {"http://localhost:4502", "http://localhost:4502"},
+                {"http://localhost:4502/test", "http://localhost:4502/test"},
+                {"http://localhost:4502/jcr:content/test", "http://localhost:4502/_jcr_content/test"},
+                {"http://localhost:4502/test.html?a=b&b=c", "http://localhost:4502/test.html?a=b&b=c"},
+
+                // space
+                {"/test/ab cd", "/test/ab%20cd"},
+                {"http://localhost:4502/test/ab cd", "http://localhost:4502/test/ab%20cd"},
+                {"/test/ab attr=c", "/test/ab%20attr=c"},
+                {"http://localhost:4502/test/ab attr=c", "http://localhost:4502/test/ab%20attr=c"},
+                // "
+                {"/test/ab\"cd", "/test/ab%22cd"},
+                {"http://localhost:4502/test/ab\"cd", "http://localhost:4502/test/ab%22cd"},
+                // '
+                {"/test/ab'cd", "/test/ab%27cd"},
+                {"http://localhost:4502/test/ab'cd", "http://localhost:4502/test/ab%27cd"},
+                // =
+                {"/test/ab=cd", "/test/ab=cd"},
+                {"http://localhost:4502/test/ab=cd", "http://localhost:4502/test/ab=cd"},
+                // >
+                {"/test/ab>cd", "/test/ab%3Ecd"},
+                {"http://localhost:4502/test/ab>cd", "http://localhost:4502/test/ab%3Ecd"},
+                // <
+                {"/test/ab<cd", "/test/ab%3Ccd"},
+                {"http://localhost:4502/test/ab<cd", "http://localhost:4502/test/ab%3Ccd"},
+                // `
+                {"/test/ab`cd", "/test/ab%60cd"},
+                {"http://localhost:4502/test/ab`cd", "http://localhost:4502/test/ab%60cd"},
+        };
+
+        for (String[] aTestData : testData) {
+            String href = aTestData[0];
+            String expected = aTestData[1];
+
+            String result = xssAPI.getValidHref(href);
+            if (!result.equals(expected)) {
+                fail("Requested '" + href + "', expecting '" + expected + "', but got '" + result + "'");
+            }
+        }
+    }
+
+    @Test
+    public void TestGetValidInteger() {
+        String[][] testData = {
+                //         Source                                        Expected Result
+                //
+                {"100", "100"},
+                {"0", "0"},
+
+                {"junk", "123"},
+                {"100.5", "123"},
+                {"", "123"},
+                {"null", "123"}
+        };
+
+        for (String[] aTestData : testData) {
+            String source = aTestData[0];
+            int expected = new Integer(aTestData[1]);
+
+            int result = xssAPI.getValidInteger(source, 123);
+            if (result != expected) {
+                fail("Validating integer '" + source + "', expecting '" + expected + "', but got '" + result + "'");
+            }
+        }
+    }
+
+    @Test
+    public void TestGetValidDimension() {
+        String[][] testData = {
+                //         Source                                        Expected Result
+                //
+                {"100", "100"},
+                {"0", "0"},
+
+                {"junk", "123"},
+                {"100.5", "123"},
+                {"", "123"},
+                {"null", "123"},
+
+                {"\"auto\"", "\"auto\""},
+                {"'auto'", "\"auto\""},
+                {"auto", "\"auto\""},
+
+                {"autox", "123"}
+        };
+
+        for (String[] aTestData : testData) {
+            String source = aTestData[0];
+            String expected = aTestData[1];
+
+            String result = xssAPI.getValidDimension(source, "123");
+            if (!result.equals(expected)) {
+                fail("Validating dimension '" + source + "', expecting '" + expected + "', but got '" + result + "'");
+            }
+        }
+    }
+
+    @Test
+    public void TestEncodeForJSString() {
+        String[][] testData = {
+                //         Source                            Expected Result
+                //
+                {"simple", "simple"},
+
+                {"break\"out", "break\\x22out"},
+                {"break'out", "break\\x27out"},
+
+                {"</script>", "<\\/script>"}
+        };
+
+        for (String[] aTestData : testData) {
+            String source = aTestData[0];
+            String expected = aTestData[1];
+
+            String result = xssAPI.encodeForJSString(source);
+            if (!result.equals(expected)) {
+                fail("Encoding '" + source + "', expecting '" + expected + "', but got '" + result + "'");
+            }
+        }
+    }
+
+    @Test
+    public void TestGetValidJSToken() {
+        String[][] testData = {
+                //         Source                            Expected Result
+                //
+                {"simple", "simple"},
+                {"clickstreamcloud.thingy", "clickstreamcloud.thingy"},
+
+                {"break out", "rubbish"},
+                {"break,out", "rubbish"},
+
+                {"\"literal string\"", "\"literal string\""},
+                {"'literal string'", "'literal string'"},
+                {"\"bad literal'", "rubbish"},
+                {"'literal'); junk'", "'literal\\x27); junk'"},
+
+                {"1200", "1200"},
+                {"3.14", "3.14"},
+                {"1,200", "rubbish"},
+                {"1200 + 1", "rubbish"}
+        };
+
+        for (String[] aTestData : testData) {
+            String source = aTestData[0];
+            String expected = aTestData[1];
+
+            String result = xssAPI.getValidJSToken(source, "rubbish");
+            if (!result.equals(expected)) {
+                fail("Validating Javascript token '" + source + "', expecting '" + expected + "', but got '" + result + "'");
+            }
+        }
+    }
+
+    @Test
+    public void TestGetValidCSSColor() {
+        String[][] testData = {
+                //      Source                          Expected Result
+                //
+                {"rgb(0,+0,-0)", "rgb(0,+0,-0)"},
+                {"rgba ( 0\f%, 0%,\t0%,\n100%\r)", "rgba ( 0\f%, 0%,\t0%,\n100%\r)",},
+
+                {"#ddd", "#ddd"},
+                {"#eeeeee", "#eeeeee",},
+
+                {"hsl(0,1,2)", "hsl(0,1,2)"},
+                {"hsla(0,1,2,3)", "hsla(0,1,2,3)"},
+                {"currentColor", "currentColor"},
+                {"transparent", "transparent"},
+
+                {"\f\r\n\t MenuText\f\r\n\t ", "MenuText"},
+                {"expression(99,99,99)", "rubbish"},
+                {"blue;", "rubbish"},
+                {"url(99,99,99)", "rubbish"}
+        };
+
+        for (String[] aTestData : testData) {
+            String source = aTestData[0];
+            String expected = aTestData[1];
+
+            String result = xssAPI.getValidCSSColor(source, "rubbish");
+            if (!result.equals(expected)) {
+                fail("Validating CSS Color '" + source + "', expecting '" + expected + "', but got '" + result + "'");
+            }
+        }
+    }
+}
