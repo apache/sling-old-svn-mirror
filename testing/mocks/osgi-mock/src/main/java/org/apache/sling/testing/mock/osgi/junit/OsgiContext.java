@@ -16,39 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.testing.mock.sling.junit;
+package org.apache.sling.testing.mock.osgi.junit;
 
-import org.apache.sling.testing.mock.sling.ResourceResolverType;
-import org.apache.sling.testing.mock.sling.context.SlingContextImpl;
+import org.apache.sling.testing.mock.osgi.context.OsgiContextImpl;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 /**
- * JUnit rule for setting up and tearing down Sling context objects for unit
- * tests.
+ * JUnit rule for setting up and tearing down OSGi context for unit tests.
  */
-public final class SlingContext extends SlingContextImpl implements TestRule {
+public final class OsgiContext extends OsgiContextImpl implements TestRule {
 
-    private final SlingContextCallback setUpCallback;
-    private final SlingContextCallback tearDownCallback;
+    private final OsgiContextCallback setUpCallback;
+    private final OsgiContextCallback tearDownCallback;
     private final TestRule delegate;
 
     /**
      * Initialize Sling context with default resource resolver type:
      * {@link org.apache.sling.testing.mock.sling.MockSling#DEFAULT_RESOURCERESOLVER_TYPE}.
      */
-    public SlingContext() {
-        this(null, null, null);
-    }
-
-    /**
-     * Initialize Sling context with resource resolver type.
-     * @param resourceResolverType Resource resolver type.
-     */
-    public SlingContext(final ResourceResolverType resourceResolverType) {
-        this(null, null, resourceResolverType);
+    public OsgiContext() {
+        this(null, null);
     }
 
     /**
@@ -58,35 +48,10 @@ public final class SlingContext extends SlingContextImpl implements TestRule {
      *            function that is called after the built-in setup rules are
      *            executed.
      */
-    public SlingContext(final SlingContextCallback setUpCallback) {
-        this(setUpCallback, null, null);
+    public OsgiContext(final OsgiContextCallback setUpCallback) {
+        this(setUpCallback, null);
     }
 
-    /**
-     * Initialize Sling context with resource resolver type.
-     * @param setUpCallback Allows the application to register an own callback
-     *            function that is called after the built-in setup rules are
-     *            executed.
-     * @param resourceResolverType Resource resolver type.
-     */
-    public SlingContext(final SlingContextCallback setUpCallback, final ResourceResolverType resourceResolverType) {
-        this(setUpCallback, null, resourceResolverType);
-    }
-
-    /**
-     * Initialize Sling context with default resource resolver type:
-     * {@link org.apache.sling.testing.mock.sling.MockSling#DEFAULT_RESOURCERESOLVER_TYPE}.
-     * @param setUpCallback Allows the application to register an own callback
-     *            function that is called after the built-in setup rules are
-     *            executed.
-     * @param tearDownCallback Allows the application to register an own
-     *            callback function that is called before the built-in teardown
-     *            rules are executed.
-     */
-    public SlingContext(final SlingContextCallback setUpCallback, final SlingContextCallback tearDownCallback) {
-        this(setUpCallback, tearDownCallback, null);
-    }
-    
     /**
      * Initialize Sling context with resource resolver type.
      * @param setUpCallback Allows the application to register an own callback
@@ -97,27 +62,23 @@ public final class SlingContext extends SlingContextImpl implements TestRule {
      *            rules are executed.
      * @param resourceResolverType Resource resolver type.
      */
-    public SlingContext(final SlingContextCallback setUpCallback, final SlingContextCallback tearDownCallback,
-            final ResourceResolverType resourceResolverType) {
+    public OsgiContext(final OsgiContextCallback setUpCallback, final OsgiContextCallback tearDownCallback) {
 
         this.setUpCallback = setUpCallback;
         this.tearDownCallback = tearDownCallback;
-
-        // set resource resolver type in parent context
-        setResourceResolverType(this.resourceResolverType);
 
         // wrap {@link ExternalResource} rule executes each test method once
         this.delegate = new ExternalResource() {
             @Override
             protected void before() {
-                SlingContext.this.setUp();
-                SlingContext.this.executeSetUpCallback();
+                OsgiContext.this.setUp();
+                OsgiContext.this.executeSetUpCallback();
             }
 
             @Override
             protected void after() {
-                SlingContext.this.executeTearDownCallback();
-                SlingContext.this.tearDown();
+                OsgiContext.this.executeTearDownCallback();
+                OsgiContext.this.tearDown();
             }
         };
     }

@@ -24,9 +24,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -47,7 +44,6 @@ import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletRequest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.framework.ServiceReference;
 
 public class SlingContextImplTest {
 
@@ -86,41 +82,6 @@ public class SlingContextImplTest {
         assertSame(context.request(), bindings.get(SlingBindings.REQUEST));
         assertSame(context.response(), bindings.get(SlingBindings.RESPONSE));
         assertSame(context.slingScriptHelper(), bindings.get(SlingBindings.SLING));
-    }
-
-    @Test
-    public void testRegisterService() {
-        Set<String> myService = new HashSet<String>();
-        context.registerService(Set.class, myService);
-
-        Set<?> serviceResult = context.getService(Set.class);
-        assertSame(myService, serviceResult);
-    }
-
-    @Test
-    public void testRegisterServiceWithProperties() {
-        Map<String, Object> props = new HashMap<String, Object>();
-        props.put("prop1", "value1");
-
-        Set<String> myService = new HashSet<String>();
-        context.registerService(Set.class, myService, props);
-
-        ServiceReference serviceReference = context.bundleContext().getServiceReference(Set.class.getName());
-        Object serviceResult = context.bundleContext().getService(serviceReference);
-        assertSame(myService, serviceResult);
-        assertEquals("value1", serviceReference.getProperty("prop1"));
-    }
-
-    @Test
-    public void testRegisterMultipleServices() {
-        Set<String> myService1 = new HashSet<String>();
-        context.registerService(Set.class, myService1);
-        Set<String> myService2 = new HashSet<String>();
-        context.registerService(Set.class, myService2);
-
-        Set[] serviceResults = context.getServices(Set.class, null);
-        assertSame(myService1, serviceResults[0]);
-        assertSame(myService2, serviceResults[1]);
     }
 
     @Test
@@ -175,11 +136,6 @@ public class SlingContextImplTest {
         ServiceInterface model = request.adaptTo(ServiceInterface.class);
         assertNotNull(model);
         assertEquals("myValue", model.getPropValue());
-    }
-
-    @Test
-    public void testRegisterInjectActivate() {
-        context.registerInjectActivateService(new Object());
     }
 
     @Test

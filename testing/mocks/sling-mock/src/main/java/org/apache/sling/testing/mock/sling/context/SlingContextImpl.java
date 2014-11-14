@@ -18,9 +18,6 @@
  */
 package org.apache.sling.testing.mock.sling.context;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.Map;
 import java.util.Set;
 
 import javax.jcr.RepositoryException;
@@ -47,7 +44,7 @@ import org.apache.sling.models.impl.injectors.ValueMapInjector;
 import org.apache.sling.models.spi.ImplementationPicker;
 import org.apache.sling.models.spi.Injector;
 import org.apache.sling.settings.SlingSettingsService;
-import org.apache.sling.testing.mock.osgi.MockOsgi;
+import org.apache.sling.testing.mock.osgi.context.OsgiContextImpl;
 import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.builder.ContentBuilder;
@@ -58,11 +55,10 @@ import org.apache.sling.testing.mock.sling.services.MockSlingSettingService;
 import org.apache.sling.testing.mock.sling.servlet.MockRequestPathInfo;
 import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletRequest;
 import org.apache.sling.testing.mock.sling.servlet.MockSlingHttpServletResponse;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.component.ComponentContext;
 
-import com.google.common.collect.ImmutableMap;
+import aQute.bnd.annotation.ConsumerType;
+
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -70,7 +66,8 @@ import com.google.common.collect.ImmutableSet;
  * directly but via the {@link org.apache.sling.testing.mock.sling.junit.SlingContext} JUnit
  * rule.
  */
-public class SlingContextImpl {
+@ConsumerType
+public class SlingContextImpl extends OsgiContextImpl {
 
     // default to publish instance run mode
     static final Set<String> DEFAULT_RUN_MODES = ImmutableSet.<String> builder().add("publish").build();
@@ -78,7 +75,6 @@ public class SlingContextImpl {
     protected ResourceResolverFactory resourceResolverFactory;
     protected MockModelAdapterFactory modelAdapterFactory;
     protected ResourceResolverType resourceResolverType;
-    protected ComponentContext componentContext;
     protected ResourceResolver resourceResolver;
     protected MockSlingHttpServletRequest request;
     protected MockSlingHttpServletResponse response;
@@ -97,6 +93,7 @@ public class SlingContextImpl {
      * Setup actions before test method execution
      */
     protected void setUp() {
+        super.setUp();
         MockSling.setAdapterManagerBundleContext(bundleContext());
         this.resourceResolverFactory = newResourceResolverFactory();
         registerDefaultServices();
@@ -171,6 +168,8 @@ public class SlingContextImpl {
         this.contentBuilder = null;
 
         MockSling.clearAdapterManagerBundleContext();
+        
+        super.tearDown();
     }
 
     /**
@@ -178,23 +177,6 @@ public class SlingContextImpl {
      */
     public final ResourceResolverType resourceResolverType() {
         return this.resourceResolverType;
-    }
-
-    /**
-     * @return OSGi component context
-     */
-    public final ComponentContext componentContext() {
-        if (this.componentContext == null) {
-            this.componentContext = MockOsgi.newComponentContext();
-        }
-        return this.componentContext;
-    }
-
-    /**
-     * @return OSGi Bundle context
-     */
-    public final BundleContext bundleContext() {
-        return componentContext().getBundleContext();
     }
 
     /**
@@ -274,94 +256,6 @@ public class SlingContextImpl {
             this.contentBuilder = new ContentBuilder(resourceResolver());
         }
         return this.contentBuilder;
-    }
-
-    /**
-     * Registers a service in the mocked OSGi environment.
-     * @param <T> Service type
-     * @param service Service instance
-     * @return Registered service instance
-     */
-    public final <T> T registerService(final T service) {
-        return registerService(null, service, null);
-    }
-
-    /**
-     * Registers a service in the mocked OSGi environment.
-     * @param <T> Service type
-     * @param serviceClass Service class
-     * @param service Service instance
-     * @return Registered service instance
-     */
-    public final <T> T registerService(final Class<T> serviceClass, final T service) {
-        return registerService(serviceClass, service, null);
-    }
-
-    /**
-     * Registers a service in the mocked OSGi environment.
-     * @param <T> Service type
-     * @param serviceClass Service class
-     * @param service Service instance
-     * @param properties Service properties (optional)
-     * @return Registered service instance
-     */
-    public final <T> T registerService(final Class<T> serviceClass, final T service, final Map<String, Object> properties) {
-        Dictionary<String, Object> serviceProperties = null;
-        if (properties != null) {
-            serviceProperties = new Hashtable<String, Object>(properties);
-        }
-        bundleContext().registerService(serviceClass != null ? serviceClass.getName() : null, service,
-                serviceProperties);
-        return service;
-    }
-
-    /**
-     * Injects dependencies, activates and registers a service in the mocked
-     * OSGi environment.
-     * @param <T> Service type
-     * @param service Service instance
-     * @return Registered service instance
-     */
-    public final <T> T registerInjectActivateService(final T service) {
-        return registerInjectActivateService(service, ImmutableMap.<String, Object> of());
-    }
-
-    /**
-     * Injects dependencies, activates and registers a service in the mocked
-     * OSGi environment.
-     * @param <T> Service type
-     * @param service Service instance
-     * @param properties Service properties (optional)
-     * @return Registered service instance
-     */
-    public final <T> T registerInjectActivateService(final T service, final Map<String, Object> properties) {
-        MockOsgi.injectServices(service, bundleContext());
-        MockOsgi.activate(service, bundleContext(), properties);
-        registerService(null, service, null);
-        return service;
-    }
-
-    /**
-     * Lookup a single service
-     * @param <ServiceType> Service type
-     * @param serviceType The type (interface) of the service.
-     * @return The service instance, or null if the service is not available.
-     */
-    public final <ServiceType> ServiceType getService(final Class<ServiceType> serviceType) {
-        return slingScriptHelper().getService(serviceType);
-    }
-
-    /**
-     * Lookup one or several services
-     * @param <ServiceType> Service type
-     * @param serviceType The type (interface) of the service.
-     * @param filter An optional filter (LDAP-like, see OSGi spec)
-     * @return The services object or null.
-     * @throws org.apache.sling.api.scripting.InvalidServiceFilterSyntaxException If the <code>filter</code>
-     *             string is not a valid OSGi service filter string.
-     */
-    public final <ServiceType> ServiceType[] getServices(final Class<ServiceType> serviceType, final String filter) {
-        return slingScriptHelper().getServices(serviceType, filter);
     }
 
     /**

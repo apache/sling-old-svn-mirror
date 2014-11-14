@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.testing.mock.sling.junit;
+package org.apache.sling.testing.mock.osgi.junit;
 
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
@@ -24,8 +24,6 @@ import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
 
-import org.apache.sling.api.resource.PersistenceException;
-import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,24 +31,23 @@ import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class SlingContextTest {
+public class OsgiContextTest {
 
-    private final SlingContextCallback contextSetup = mock(SlingContextCallback.class);
-    private final SlingContextCallback contextTeardown = mock(SlingContextCallback.class);
+    private final OsgiContextCallback contextSetup = mock(OsgiContextCallback.class);
+    private final OsgiContextCallback contextTeardown = mock(OsgiContextCallback.class);
 
     // Run all unit tests for each resource resolver types listed here
     @Rule
-    public SlingContext context = new SlingContext(contextSetup, contextTeardown,
-            ResourceResolverType.RESOURCERESOLVER_MOCK);
+    public OsgiContext context = new OsgiContext(contextSetup, contextTeardown);
 
     @Before
-    public void setUp() throws IOException, PersistenceException {
+    public void setUp() throws IOException {
         verify(contextSetup).execute(context);
     }
 
     @Test
-    public void testRequest() {
-        assertNotNull(context.request());
+    public void testBundleContext() {
+        assertNotNull(context.bundleContext());
     }
 
 }

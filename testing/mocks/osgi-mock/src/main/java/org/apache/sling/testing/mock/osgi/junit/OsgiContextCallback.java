@@ -16,8 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.sling.testing.mock.osgi.junit;
+
+import java.io.IOException;
+
 /**
- * Rule for providing easy access to Sling context in JUnit tests.
+ * Callback-interface for application-specific setup and teardown operations to
+ * customize the {@link OsgiContext} JUnit rule.
  */
-@aQute.bnd.annotation.Version("2.0")
-package org.apache.sling.testing.mock.sling.junit;
+public interface OsgiContextCallback {
+
+    /**
+     * Execute callback action
+     * @param context Sling context
+     * @throws IOException
+     * @throws PersistenceException
+     */
+    void execute(OsgiContext context) throws IOException;
+
+}
