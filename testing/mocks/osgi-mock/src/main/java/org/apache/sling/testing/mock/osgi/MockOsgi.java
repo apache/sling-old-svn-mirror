@@ -19,6 +19,8 @@
 package org.apache.sling.testing.mock.osgi;
 
 import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -226,8 +228,40 @@ public final class MockOsgi {
         return deactivate(target, bundleContext, toDictionary(properties));
     }
 
-    private static Dictionary<String, Object> toDictionary(Map<String, Object> map) {
+    /**
+     * Simulate configuration modification of service instance. Invokes the @Modified annotated method.
+     * @param target Service instance.
+     * @param bundleContext Bundle context
+     * @param properties Properties
+     * @return true if modified method was called. False if it failed.
+     */
+    public static boolean modified(Object target, BundleContext bundleContext, Dictionary<String, Object> properties) {
+        return modified(target, bundleContext, toMap(properties));
+    }
+
+    /**
+     * Simulate configuration modification of service instance. Invokes the @Modified annotated method.
+     * @param target Service instance.
+     * @param bundleContext Bundle context
+     * @param properties Properties
+     * @return true if modified method was called. False if it failed.
+     */
+    public static boolean modified(Object target, BundleContext bundleContext, Map<String, Object> properties) {
+        return ReflectionServiceUtil.modified(target, bundleContext, properties);
+    }
+    
+    static Dictionary<String, Object> toDictionary(Map<String, Object> map) {
         return new Hashtable<String, Object>(map);
+    }
+
+    static Map<String, Object> toMap(Dictionary<String, Object> dictionary) {
+        Map<String,Object> map = new HashMap<String, Object>();
+        Enumeration<String> keys = dictionary.keys();
+        while (keys.hasMoreElements()) {
+            String key = keys.nextElement();
+            map.put(key, dictionary.get(key));
+        }
+        return map;
     }
 
 }

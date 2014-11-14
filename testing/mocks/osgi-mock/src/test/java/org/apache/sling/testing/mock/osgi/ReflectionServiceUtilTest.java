@@ -45,6 +45,9 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Modified;
+
+import com.google.common.collect.ImmutableMap;
 
 public class ReflectionServiceUtilTest {
 
@@ -85,11 +88,31 @@ public class ReflectionServiceUtilTest {
         List<Map<String, Object>> reference3Configs = service3.getReference3Configs();
         assertEquals(1, reference3Configs.size());
         assertEquals(200, reference3Configs.get(0).get(Constants.SERVICE_RANKING));
-
+        
         assertTrue(MockOsgi.deactivate(service3));
         assertNull(service3.getComponentContext());
     }
 
+    @Test
+    public void testService3_Config() {
+        BundleContext bundleContext = MockOsgi.newBundleContext();
+        
+        Map<String,Object> initialProperites = ImmutableMap.<String, Object>of("prop1", "value1");
+
+        Service3 service3 = new Service3();
+        MockOsgi.activate(service3, bundleContext, initialProperites);
+        assertEquals(initialProperites, service3.getConfig());
+        
+        Map<String,Object> newProperties = ImmutableMap.<String, Object>of("prop2", "value2");
+        MockOsgi.modified(service3, bundleContext, newProperties);
+        assertEquals(newProperties, service3.getConfig());
+
+        newProperties = ImmutableMap.<String, Object>of("prop3", "value3");
+        Dictionary<String,Object> newPropertiesDictonary = new Hashtable<String,Object>(newProperties);
+        MockOsgi.modified(service3, bundleContext, newPropertiesDictonary);
+        assertEquals(newProperties, service3.getConfig());
+    }
+    
     @Test
     public void testService4() {
         Service4 service4 = new Service4();
@@ -144,15 +167,23 @@ public class ReflectionServiceUtilTest {
         private List<Map<String, Object>> reference3Configs = new ArrayList<Map<String, Object>>();
 
         private ComponentContext componentContext;
+        private Map<String, Object> config;
 
+        @SuppressWarnings("unchecked")
         @Activate
         private void activate(ComponentContext ctx) {
             this.componentContext = ctx;
+            this.config = MockOsgi.toMap(ctx.getProperties());
         }
 
         @Deactivate
         private void deactivate(ComponentContext ctx) {
             this.componentContext = null;
+        }
+        
+        @Modified
+        private void modified(Map<String,Object> newConfig) {
+            this.config = newConfig;
         }
 
         public ServiceInterface1 getReference1() {
@@ -177,6 +208,10 @@ public class ReflectionServiceUtilTest {
 
         public ComponentContext getComponentContext() {
             return this.componentContext;
+        }
+        
+        public Map<String, Object> getConfig() {
+            return config;
         }
 
         protected void bindReference1(ServiceInterface1 service) {

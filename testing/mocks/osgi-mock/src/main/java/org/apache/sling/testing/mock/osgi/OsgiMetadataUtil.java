@@ -178,22 +178,23 @@ final class OsgiMetadataUtil {
     }
 
     public static String getActivateMethodName(Class clazz, Document metadata) {
-        if (metadata != null) {
-            String query = "/components/component[@name='" + clazz.getName() + "']";
-            Node node = queryNode(metadata, query);
-            if (node != null) {
-                return getAttributeValue(node, "activate");
-            }
-        }
-        return null;
+        return getLifecycleMethodName(clazz, metadata, "activate");
     }
 
     public static String getDeactivateMethodName(Class clazz, Document metadata) {
+        return getLifecycleMethodName(clazz, metadata, "deactivate");
+    }
+
+    public static String getModifiedMethodName(Class clazz, Document metadata) {
+        return getLifecycleMethodName(clazz, metadata, "modified");
+    }
+
+    private static String getLifecycleMethodName(Class clazz, Document metadata, String methodName) {
         if (metadata != null) {
             String query = "/components/component[@name='" + clazz.getName() + "']";
             Node node = queryNode(metadata, query);
             if (node != null) {
-                return getAttributeValue(node, "deactivate");
+                return getAttributeValue(node, methodName);
             }
         }
         return null;
