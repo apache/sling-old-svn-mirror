@@ -128,12 +128,10 @@ public final class MockOsgi {
     }
 
     /**
-     * Simulate activation of service instance. Invokes the @Activate annotated
-     * method.
+     * Simulate activation of service instance. Invokes the @Activate annotated method.
      * @param target Service instance.
      * @param properties Properties
-     * @return true if activation method was called. False if such a method did
-     *         not exist.
+     * @return true if activation method was called. False if it failed.
      */
     public static boolean activate(Object target, Dictionary<String, Object> properties) {
         ComponentContext componentContext = newComponentContext(properties);
@@ -141,12 +139,10 @@ public final class MockOsgi {
     }
 
     /**
-     * Simulate activation of service instance. Invokes the @Activate annotated
-     * method.
+     * Simulate activation of service instance. Invokes the @Activate annotated method.
      * @param target Service instance.
      * @param properties Properties
-     * @return true if activation method was called. False if such a method did
-     *         not exist.
+     * @return true if activation method was called. False if it failed.
      */
     public static boolean activate(Object target, Map<String, Object> properties) {
         return activate(target, toDictionary(properties));
@@ -158,8 +154,7 @@ public final class MockOsgi {
      * @param target Service instance.
      * @param bundleContext Bundle context
      * @param properties Properties
-     * @return true if activation method was called. False if such a method did
-     *         not exist.
+     * @return true if activation method was called. False if it failed.
      */
     public static boolean activate(Object target, BundleContext bundleContext, Dictionary<String, Object> properties) {
         ComponentContext componentContext = newComponentContext(bundleContext, properties);
@@ -167,24 +162,20 @@ public final class MockOsgi {
     }
 
     /**
-     * Simulate activation of service instance. Invokes the @Activate annotated
-     * method.
+     * Simulate activation of service instance. Invokes the @Activate annotated method.
      * @param target Service instance.
      * @param bundleContext Bundle context
      * @param properties Properties
-     * @return true if activation method was called. False if such a method did
-     *         not exist.
+     * @return true if activation method was called. False if it failed.
      */
     public static boolean activate(Object target, BundleContext bundleContext, Map<String, Object> properties) {
         return activate(target, bundleContext, toDictionary(properties));
     }
 
     /**
-     * Simulate deactivation of service instance. Invokes the @Activate
-     * annotated method.
+     * Simulate deactivation of service instance. Invokes the @Deactivate annotated method.
      * @param target Service instance.
-     * @return true if deactivation method was called. False if such a method
-     *         did not exist.
+     * @return true if deactivation method was called. False if it failed.
      */
     public static boolean deactivate(Object target) {
         ComponentContext componentContext = newComponentContext();
@@ -192,12 +183,10 @@ public final class MockOsgi {
     }
 
     /**
-     * Simulate deactivation of service instance. Invokes the @Activate
-     * annotated method.
+     * Simulate deactivation of service instance. Invokes the @Deactivate annotated method.
      * @param target Service instance.
      * @param properties Properties
-     * @return true if deactivation method was called. False if such a method
-     *         did not exist.
+     * @return true if deactivation method was called. False if it failed.
      */
     public static boolean deactivate(Object target, Dictionary<String, Object> properties) {
         ComponentContext componentContext = newComponentContext(properties);
@@ -205,25 +194,21 @@ public final class MockOsgi {
     }
 
     /**
-     * Simulate deactivation of service instance. Invokes the @Activate
-     * annotated method.
+     * Simulate deactivation of service instance. Invokes the @Deactivate annotated method.
      * @param target Service instance.
      * @param properties Properties
-     * @return true if deactivation method was called. False if such a method
-     *         did not exist.
+     * @return true if deactivation method was called. False if it failed.
      */
     public static boolean deactivate(Object target, Map<String, Object> properties) {
         return deactivate(target, toDictionary(properties));
     }
 
     /**
-     * Simulate deactivation of service instance. Invokes the @Activate
-     * annotated method.
+     * Simulate deactivation of service instance. Invokes the @Deactivate annotated method.
      * @param target Service instance.
      * @param bundleContext Bundle context
      * @param properties Properties
-     * @return true if deactivation method was called. False if such a method
-     *         did not exist.
+     * @return true if deactivation method was called. False if it failed.
      */
     public static boolean deactivate(Object target, BundleContext bundleContext, Dictionary<String, Object> properties) {
         ComponentContext componentContext = newComponentContext(bundleContext, properties);
@@ -231,13 +216,11 @@ public final class MockOsgi {
     }
 
     /**
-     * Simulate activation of service instance. Invokes the @Activate annotated
-     * method.
+     * Simulate activation of service instance. Invokes the @Deactivate annotated method.
      * @param target Service instance.
      * @param bundleContext Bundle context
      * @param properties Properties
-     * @return true if activation method was called. False if such a method did
-     *         not exist.
+     * @return true if activation method was called. False if it failed.
      */
     public static boolean deactivate(Object target, BundleContext bundleContext, Map<String, Object> properties) {
         return deactivate(target, bundleContext, toDictionary(properties));
