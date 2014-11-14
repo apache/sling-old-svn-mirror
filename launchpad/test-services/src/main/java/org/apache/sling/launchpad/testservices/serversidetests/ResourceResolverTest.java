@@ -2306,7 +2306,7 @@ public class ResourceResolverTest {
         // define an alias for the rootPath
         String alias = "testAlias";
         rootNode.setProperty("sling:alias", alias);
-        session.save();
+        saveMappings(session);
 
         try {
             String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
@@ -2334,7 +2334,7 @@ public class ResourceResolverTest {
         String alias = "testAlias";
         Node content = rootNode.addNode("jcr:content", "nt:unstructured");
         content.setProperty("sling:alias", alias);
-        session.save();
+        saveMappings(session);
 
         try {
             String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
