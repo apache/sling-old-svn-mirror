@@ -32,8 +32,6 @@ import org.osgi.service.component.ComponentContext;
 
 import aQute.bnd.annotation.ConsumerType;
 
-import com.google.common.collect.ImmutableMap;
-
 /**
  * Defines OSGi context objects and helper methods. Should not be used directly
  * but via the {@link org.apache.sling.testing.mock.osgi.junit.OsgiContext} JUnit rule.
@@ -108,8 +106,7 @@ public class OsgiContextImpl {
         if (properties != null) {
             serviceProperties = new Hashtable<String, Object>(properties);
         }
-        bundleContext().registerService(serviceClass != null ? serviceClass.getName() : null, service,
-                serviceProperties);
+        bundleContext().registerService(serviceClass != null ? serviceClass.getName() : null, service, serviceProperties);
         return service;
     }
 
@@ -121,7 +118,7 @@ public class OsgiContextImpl {
      * @return Registered service instance
      */
     public final <T> T registerInjectActivateService(final T service) {
-        return registerInjectActivateService(service, ImmutableMap.<String, Object> of());
+        return registerInjectActivateService(service, null);
     }
 
     /**
@@ -135,7 +132,7 @@ public class OsgiContextImpl {
     public final <T> T registerInjectActivateService(final T service, final Map<String, Object> properties) {
         MockOsgi.injectServices(service, bundleContext());
         MockOsgi.activate(service, bundleContext(), properties);
-        registerService(null, service, null);
+        registerService(null, service, properties);
         return service;
     }
 

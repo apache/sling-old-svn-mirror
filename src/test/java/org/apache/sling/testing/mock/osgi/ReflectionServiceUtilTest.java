@@ -123,6 +123,26 @@ public class ReflectionServiceUtilTest {
         assertSame(service1, service4.getReference1());
     }
 
+    @Test(expected=NoScrMetadataException.class)
+    public void testInjectServicesNoMetadata() {
+        MockOsgi.injectServices(new Object(), MockOsgi.newBundleContext());
+    }
+    
+    @Test(expected=NoScrMetadataException.class)
+    public void testActivateNoMetadata() {
+        MockOsgi.activate(new Object());
+    }
+    
+    @Test(expected=NoScrMetadataException.class)
+    public void testDeactivateNoMetadata() {
+        MockOsgi.deactivate(new Object());
+    }
+    
+    @Test(expected=NoScrMetadataException.class)
+    public void testModifiedNoMetadata() {
+        MockOsgi.modified(new Object(), MockOsgi.newBundleContext(), ImmutableMap.<String,Object>of());
+    }
+    
     public interface ServiceInterface1 {
         // no methods
     }
@@ -173,7 +193,7 @@ public class ReflectionServiceUtilTest {
         @Activate
         private void activate(ComponentContext ctx) {
             this.componentContext = ctx;
-            this.config = MockOsgi.toMap(ctx.getProperties());
+            this.config = MapUtil.toMap(ctx.getProperties());
         }
 
         @Deactivate

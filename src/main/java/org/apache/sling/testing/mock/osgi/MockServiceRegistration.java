@@ -44,12 +44,11 @@ class MockServiceRegistration implements ServiceRegistration {
     private Dictionary<String, Object> properties;
     private final ServiceReference serviceReference;
 
-    @SuppressWarnings("unchecked")
     public MockServiceRegistration(final Bundle bundle, final String[] clazzes, final Object service,
             final Dictionary<String, Object> properties) {
         this.clazzes = new HashSet<String>(ImmutableList.copyOf(clazzes));
         this.service = service;
-        this.properties = properties != null ? properties : new Hashtable();
+        this.properties = properties != null ? properties : new Hashtable<String,Object>();
         this.properties.put(Constants.SERVICE_ID, ++serviceCounter);
         this.serviceReference = new MockServiceReference(bundle, this);
         readOsgiMetadata();
@@ -91,6 +90,9 @@ class MockServiceRegistration implements ServiceRegistration {
     private void readOsgiMetadata() {
         Class<?> serviceClass = service.getClass();
         Document doc = OsgiMetadataUtil.getMetadata(serviceClass);
+        if (doc == null) {
+            return;
+        }
 
         // add service interfaces from OSGi metadata
         clazzes.addAll(OsgiMetadataUtil.getServiceInterfaces(serviceClass, doc));

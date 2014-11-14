@@ -27,6 +27,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.sling.testing.mock.osgi.NoScrMetadataException;
+import org.apache.sling.testing.mock.osgi.ReflectionServiceUtilTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -90,6 +92,11 @@ public class OsgiContextImplTest {
 
     @Test
     public void testRegisterInjectActivate() {
+        context.registerInjectActivateService(new ReflectionServiceUtilTest.Service3());
+    }
+
+    @Test(expected=NoScrMetadataException.class)
+    public void testRegisterInjectActivateInvalid() {
         context.registerInjectActivateService(new Object());
     }
 
