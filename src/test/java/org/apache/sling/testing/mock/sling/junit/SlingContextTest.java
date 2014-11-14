@@ -20,14 +20,12 @@ package org.apache.sling.testing.mock.sling.junit;
 
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
 
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -53,14 +51,6 @@ public class SlingContextTest {
     @Test
     public void testRequest() {
         assertNotNull(context.request());
-    }
-
-    @After
-    public void tearDown() {
-        // reset required because mockito gets puzzled with the parameterized
-        // JUnit rule
-        // TODO: better solution?
-        reset(contextSetup);
     }
 
 }
