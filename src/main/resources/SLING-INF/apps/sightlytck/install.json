@@ -1,0 +1,11 @@
+{
+    "jcr:primaryType" : "sling:Folder",
+    "org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl" : {
+        "jcr:primaryType" : "sling:OsgiConfig",
+        "resource.resolver.searchpath" : [
+            "/apps",
+            "/libs",
+            "/sightlytck/scripts"
+        ]
+    }
+}
