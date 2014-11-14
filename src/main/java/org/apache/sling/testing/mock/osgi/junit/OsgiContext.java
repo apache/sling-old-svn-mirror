@@ -34,16 +34,14 @@ public final class OsgiContext extends OsgiContextImpl implements TestRule {
     private final TestRule delegate;
 
     /**
-     * Initialize Sling context with default resource resolver type:
-     * {@link org.apache.sling.testing.mock.sling.MockSling#DEFAULT_RESOURCERESOLVER_TYPE}.
+     * Initialize OSGi context.
      */
     public OsgiContext() {
         this(null, null);
     }
 
     /**
-     * Initialize Sling context with default resource resolver type:
-     * {@link org.apache.sling.testing.mock.sling.MockSling#DEFAULT_RESOURCERESOLVER_TYPE}.
+     * Initialize OSGi context.
      * @param setUpCallback Allows the application to register an own callback
      *            function that is called after the built-in setup rules are
      *            executed.
@@ -53,7 +51,7 @@ public final class OsgiContext extends OsgiContextImpl implements TestRule {
     }
 
     /**
-     * Initialize Sling context with resource resolver type.
+     * Initialize OSGi context.
      * @param setUpCallback Allows the application to register an own callback
      *            function that is called after the built-in setup rules are
      *            executed.
