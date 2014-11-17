@@ -48,11 +48,10 @@ under the License.
             jdeb plugin version for debian package
         -->
         <jdeb.version>1.0.1</jdeb.version>
-        <!--
-            builder artifact identifier
-        -->
-        <builder.artifact>org.apache.sling.launchpad</builder.artifact>
 
+        <launchpad.artifact>org.apache.sling.launchpad</launchpad.artifact>
+        <launchpad.version>8-SNAPSHOT</launchpad.version>
+        <launchpad.classifier>standalone</launchpad.classifier>
     </properties>
 
     <build>
@@ -70,7 +69,7 @@ under the License.
                         <configuration>
                             <dataSet>
                                 <data>
-                                    <src>../../../launchpad/builder/target/${builder.artifact}-${project.version}-standalone.jar</src>
+                                    <src>${project.build.directory}/${launchpad.artifact}-${project.version}-${launchpad.classifier}.jar</src>
                                     <type>file</type>
                                     <mapper>
                                         <type>perm</type>
@@ -91,9 +90,38 @@ under the License.
                     </execution>
                 </executions>
             </plugin>
-
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copy-dependencies</id>
+						<goals>
+    						<goal>copy-dependencies</goal>
+						</goals>
+						<phase>process-resources</phase>
+						<configuration>
+							<outputDirectory>${project.build.directory}</outputDirectory>
+							<includeArtifactIds>${launchpad.artifact}</includeArtifactIds>
+							<excludeTransitive>true</excludeTransitive>
+							<overWriteReleases>false</overWriteReleases>
+							<overWriteSnapshots>false</overWriteSnapshots>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
         </plugins>
     </build>
+    
+	<dependencies>
+	    <dependency>
+	        <groupId>org.apache.sling</groupId>
+	        <artifactId>${launchpad.artifact}</artifactId>
+	        <version>${launchpad.version}</version>
+	        <classifier>${launchpad.classifier}</classifier>
+	    </dependency>
+	</dependencies>
+        
     <reporting>
         <plugins>
             <plugin>
@@ -123,4 +151,3 @@ under the License.
         </repository>
     </repositories>
 </project>
-
