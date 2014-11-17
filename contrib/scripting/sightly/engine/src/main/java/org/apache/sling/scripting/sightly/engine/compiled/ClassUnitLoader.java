@@ -50,17 +50,6 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.scripting.SlingBindings;
-import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.scripting.sightly.compiler.util.GlobalShadowCheckBackend;
-import org.apache.sling.scripting.sightly.engine.UnitLoader;
-import org.apache.sling.settings.SlingSettingsService;
-import org.osgi.service.component.ComponentContext;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventConstants;
-import org.osgi.service.event.EventHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.sling.scripting.sightly.api.RenderUnit;
 import org.apache.sling.scripting.sightly.api.SightlyEngineException;
 import org.apache.sling.scripting.sightly.api.SightlyParsingException;
@@ -73,6 +62,13 @@ import org.apache.sling.scripting.sightly.compiler.util.GlobalShadowCheckBackend
 import org.apache.sling.scripting.sightly.engine.SightlyEngineConfiguration;
 import org.apache.sling.scripting.sightly.engine.SightlyScriptEngineFactory;
 import org.apache.sling.scripting.sightly.engine.UnitLoader;
+import org.apache.sling.settings.SlingSettingsService;
+import org.osgi.service.component.ComponentContext;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventConstants;
+import org.osgi.service.event.EventHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Obtain render units by compiling Sightly to Java
@@ -114,9 +110,6 @@ public class ClassUnitLoader implements UnitLoader, EventHandler {
     private Map<String, Long> slyScriptsMap = new ConcurrentHashMap<String, Long>();
 
     private final Map<String, Lock> activeWrites = new HashMap<String, Lock>();
-
-    @Reference
-    private SlingRepository repository = null;
 
     @Reference
     private SightlyCompiler compiler = null;
