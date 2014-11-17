@@ -23,7 +23,6 @@ import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.*;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
-import org.apache.sling.distribution.component.DistributionComponentFactory;
 import org.apache.sling.distribution.component.ManagedDistributionComponent;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -71,7 +70,8 @@ public class ResourceBasedDistributionComponentFactory {
 
 
     @Reference
-    DistributionComponentFactory componentFactory;
+    private DistributionComponentFactoryManager componentManager;
+
 
     @Reference
     ResourceResolverFactory resourceResolverFactory;
@@ -186,7 +186,7 @@ public class ResourceBasedDistributionComponentFactory {
             Map<String, Object> componentConfig = extractMap(0, resource);
 
             putMap(0, componentConfig, config);
-            config.put(DistributionComponentFactory.COMPONENT_NAME, name);
+            config.put(DefaultDistributionComponentFactoryConstants.COMPONENT_NAME, name);
 
             register(name, config);
         } catch (LoginException e) {
@@ -263,7 +263,7 @@ public class ResourceBasedDistributionComponentFactory {
 
         if ("agent".equals(kind)) {
             componentClass = DistributionAgent.class.getName();
-            componentObject = componentFactory.createComponent(DistributionAgent.class, config, null);
+            componentObject = componentManager.createComponent(DistributionAgent.class, config);
         }
 
 

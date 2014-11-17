@@ -23,7 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.distribution.agent.DistributionAgent;
-import org.apache.sling.distribution.component.DistributionComponentFactory;
+import org.apache.sling.distribution.component.impl.DefaultDistributionComponentFactoryConstants;
+import org.apache.sling.distribution.component.impl.DistributionComponentFactoryManager;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 
@@ -84,15 +85,17 @@ public class CoordinatingDistributionAgentFactoryTest {
                 "endpoints[1]=http://localhost:102/libs/sling/distribution/services/importers/default",
                 "endpoints[2]=http://localhost:103/libs/sling/distribution/services/importers/default",
                 "endpoints.strategy=All"});
-        DistributionComponentFactory distributionComponentFactory = mock(DistributionComponentFactory.class);
+        DistributionComponentFactoryManager componentManager = mock(DistributionComponentFactoryManager.class);
         DistributionAgent distributionAgent = mock(DistributionAgent.class);
         CoordinatingDistributionAgentFactory coordinatingdistributionAgentFactory = new CoordinatingDistributionAgentFactory();
-        when(distributionComponentFactory.createComponent(DistributionAgent.class, config, coordinatingdistributionAgentFactory)).
+
+        config.put(DefaultDistributionComponentFactoryConstants.COMPONENT_PROVIDER, coordinatingdistributionAgentFactory);
+        when(componentManager.createComponent(DistributionAgent.class, config)).
                 thenReturn(distributionAgent);
 
-        Field componentFactory = coordinatingdistributionAgentFactory.getClass().getDeclaredField("componentFactory");
-        componentFactory.setAccessible(true);
-        componentFactory.set(coordinatingdistributionAgentFactory, distributionComponentFactory);
+        Field componentManagerField= coordinatingdistributionAgentFactory.getClass().getDeclaredField("componentManager");
+        componentManagerField.setAccessible(true);
+        componentManagerField.set(coordinatingdistributionAgentFactory, componentManager);
 
         coordinatingdistributionAgentFactory.activate(context, config);
     }

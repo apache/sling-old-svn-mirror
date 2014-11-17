@@ -22,12 +22,12 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import aQute.bnd.annotation.ConsumerType;
+import aQute.bnd.annotation.ProviderType;
 
 /**
  * provider for already existing {@link DistributionComponent}s
  */
-@ConsumerType
+@ProviderType
 public interface DistributionComponentProvider {
 
     /**

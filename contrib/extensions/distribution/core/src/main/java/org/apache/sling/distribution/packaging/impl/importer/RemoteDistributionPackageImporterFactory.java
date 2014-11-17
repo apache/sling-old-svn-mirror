@@ -34,13 +34,13 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.component.DistributionComponent;
-import org.apache.sling.distribution.component.DistributionComponentFactory;
 import org.apache.sling.distribution.component.DistributionComponentProvider;
+import org.apache.sling.distribution.component.impl.DefaultDistributionComponentFactoryConstants;
+import org.apache.sling.distribution.component.impl.DistributionComponentFactoryManager;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
-import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,23 +54,23 @@ import org.slf4j.LoggerFactory;
         policy = ConfigurationPolicy.REQUIRE)
 @Service(value = DistributionPackageImporter.class)
 public class RemoteDistributionPackageImporterFactory implements DistributionPackageImporter, DistributionComponentProvider {
-    private static final String TRANSPORT_AUTHENTICATION_PROVIDER_TARGET = DistributionComponentFactory.COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER + ".target";
+    private static final String TRANSPORT_AUTHENTICATION_PROVIDER_TARGET = DefaultDistributionComponentFactoryConstants.COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER + ".target";
 
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(value = DistributionComponentFactory.PACKAGE_IMPORTER_REMOTE, propertyPrivate = true)
-    private static final String TYPE = DistributionComponentFactory.COMPONENT_TYPE;
+    @Property(value = DefaultDistributionComponentFactoryConstants.PACKAGE_IMPORTER_REMOTE, propertyPrivate = true)
+    private static final String TYPE = DefaultDistributionComponentFactoryConstants.COMPONENT_TYPE;
 
     @Property
-    private static final String NAME = DistributionComponentFactory.COMPONENT_NAME;
+    private static final String NAME = DefaultDistributionComponentFactoryConstants.COMPONENT_NAME;
 
     @Property(name = TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
     @Reference(name = "TransportAuthenticationProvider", policy = ReferencePolicy.STATIC)
     private volatile TransportAuthenticationProvider transportAuthenticationProvider;
 
     @Property(cardinality = 100)
-    public static final String ENDPOINTS = DistributionComponentFactory.PACKAGE_IMPORTER_REMOTE_PROPERTY_ENDPOINTS;
+    public static final String ENDPOINTS = DefaultDistributionComponentFactoryConstants.PACKAGE_IMPORTER_REMOTE_PROPERTY_ENDPOINTS;
 
     @Property(options = {
             @PropertyOption(name = "All",
@@ -81,12 +81,13 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
             )},
             value = "One"
     )
-    private static final String ENDPOINT_STRATEGY = DistributionComponentFactory.PACKAGE_IMPORTER_REMOTE_PROPERTY_ENDPOINTS_STRATEGY;
+    private static final String ENDPOINT_STRATEGY = DefaultDistributionComponentFactoryConstants.PACKAGE_IMPORTER_REMOTE_PROPERTY_ENDPOINTS_STRATEGY;
 
     private DistributionPackageImporter importer;
 
     @Reference
-    DistributionComponentFactory distributionComponentFactory;
+    private DistributionComponentFactoryManager componentManager;
+
 
     @Activate
     protected void activate(Map<String, Object> config) {
@@ -94,7 +95,9 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
         Map<String, Object> properties = new HashMap<String, Object>();
         properties.putAll(config);
 
-        importer = distributionComponentFactory.createComponent(DistributionPackageImporter.class, properties, this);
+        properties.put(DefaultDistributionComponentFactoryConstants.COMPONENT_PROVIDER, this);
+
+        importer = componentManager.createComponent(DistributionPackageImporter.class, properties);
 
     }
 
