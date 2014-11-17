@@ -219,7 +219,7 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
             List<ParameterizedValidator> validators = resourceProperty.getValidators();
             if (resourceProperty.isMultiple()) {
                 if (!fieldValues.getClass().isArray()) {
-                    result.addFailureMessage(property, "Expected multiple-valued property.");
+                    result.addFailureMessage(relativePathName + property, "Expected multiple-valued property.");
                 }
             }
             validatePropertyValue(result, property, relativePathName, valueMap, validators);
@@ -380,8 +380,13 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
                 // call validate for each entry in the array (supports both singlevalue and multivalue)
                 if (typedValue.getClass().isArray()) {
                     Object[] array = (Object[])typedValue;
-                    for (Object item : array) {
-                        validateValue(result, item, property, relativePath, valueMap, validator);
+                    if (array.length == 1) {
+                        validateValue(result, array[0], property, relativePath, valueMap, validator);
+                    } else {
+                        int n = 0;
+                        for (Object item : array) {
+                            validateValue(result, item, property + "[" + n++ + "]", relativePath, valueMap, validator);
+                        }
                     }
                 }
             }

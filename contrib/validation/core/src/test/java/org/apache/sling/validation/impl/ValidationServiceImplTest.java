@@ -369,7 +369,6 @@ public class ValidationServiceImplTest {
     
     @Test
     public void testResourceWithMultivalueProperties() throws Exception {
-        // TODO: Fixme
         when(validatorLookupService.getValidator("org.apache.sling.validation.impl.validators.RegexValidator")).thenReturn(new
                 RegexValidator());
         Whitebox.setInternalState(validationService, "validatorLookupService", validatorLookupService);
@@ -377,68 +376,32 @@ public class ValidationServiceImplTest {
         List<TestProperty> fields = new ArrayList<TestProperty>();
         TestProperty property = new TestProperty();
         property.name = "field1";
-        property.validators.put("org.apache.sling.validation.impl.validators.RegexValidator", new String[] {RegexValidator.REGEX_PARAM + "=" + "\\d"});
+        final String TEST_REGEX = "^testvalue.*$";
+        property.validators.put("org.apache.sling.validation.impl.validators.RegexValidator", new String[] {"regex="+TEST_REGEX});
         fields.add(property);
         ResourceResolver rr = rrf.getAdministrativeResourceResolver(null);
         Resource model1 = null;
-        Resource testResource = null;
         try {
             if (rr != null) {
                 model1 = createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", "sling/validation/test",
                         new String[]{"/apps/validation"}, fields);
-                Resource modelChildren = rr.create(model1, "children", new HashMap<String, Object>(){{
-                    put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
-                }});
-                Resource child = rr.create(modelChildren, "child1", new HashMap<String, Object>(){{
-                    put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
-                }});
-                Resource childProperties = rr.create(child, "properties", new HashMap<String, Object>(){{
-                    put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
-                }});
-                Resource childProperty = rr.create(childProperties, "hello", new HashMap<String, Object>(){{
-                    put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
-                    put(Constants.PROPERTY_TYPE, "string");
-                }});
-                Resource grandChildren = rr.create(child, "children", new HashMap<String, Object>(){{
-                    put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
-                }});
-                Resource grandChild = rr.create(grandChildren, "grandChild1", new HashMap<String, Object>(){{
-                    put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
-                }});
-
-                testResource = ResourceUtil.getOrCreateResource(rr, "/apps/validation/1/resource", JcrConstants.NT_UNSTRUCTURED,
-                        JcrConstants.NT_UNSTRUCTURED, true);
-                Resource childResource = rr.create(testResource, "child1", new HashMap<String, Object>(){{
-                    put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
-                }});
-                rr.commit();
-
-                ModifiableValueMap mvm = testResource.adaptTo(ModifiableValueMap.class);
-                mvm.put("field1", "1");
-                rr.commit();
-
-                // /apps/validation/1/resource/child1 will miss its mandatory "hello" property
-                Resource resourceChild = rr.create(testResource, "child1", new HashMap<String, Object>(){{
-                    put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
-                }});
-
-                Resource resourceGrandChild = rr.create(resourceChild, "grandChild1", new HashMap<String, Object>(){{
-                    put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
-                }});
-                rr.commit();
             }
             ValidationModel vm = validationService.getValidationModel("sling/validation/test", "/apps/validation/1/resource");
-            ValidationResult vr = validationService.validate(testResource, vm);
+            HashMap<String, Object> hashMap = new HashMap<String, Object>() {{
+                put("field1", new String[] {"testvalue1", "test2value", "testvalue3"});
+            }};
+            ValueMap map = new ValueMapDecorator(hashMap);
+            ValidationResult vr = validationService.validate(map, vm);
             assertFalse(vr.isValid());
-            assertThat(vr.getFailureMessages(), Matchers.hasKey("child1/hello"));
+            // check for correct error message
+            Map<String, List<String>> expectedFailureMessages = new HashMap<String, List<String>>();
+            expectedFailureMessages.put("field1[1]", Arrays.asList("Property does not match the pattern " + TEST_REGEX));
+            Assert.assertThat(vr.getFailureMessages().entrySet(), Matchers.equalTo(expectedFailureMessages.entrySet()));
         } finally {
+            if (model1 != null) {
+                rr.delete(model1);
+            }
             if (rr != null) {
-                if (model1 != null) {
-                    rr.delete(model1);
-                }
-                if (testResource != null) {
-                    rr.delete(testResource);
-                }
                 rr.commit();
                 rr.close();
             }
@@ -473,7 +436,7 @@ public class ValidationServiceImplTest {
                                 if (v.getValue() != null) {
                                     validatorProperties.put(Constants.VALIDATOR_ARGUMENTS, v.getValue());
                                 }
-                                ResourceUtil.getOrCreateResource(rr, validators.getPath() + "/" + v.getKey(), validatorProperties, null,
+                                 ResourceUtil.getOrCreateResource(rr, validators.getPath() + "/" + v.getKey(), validatorProperties, null,
                                         true);
                             }
                         }
