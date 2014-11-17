@@ -34,9 +34,10 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.component.DistributionComponent;
-import org.apache.sling.distribution.component.DistributionComponentFactory;
 import org.apache.sling.distribution.component.DistributionComponentProvider;
 import org.apache.sling.distribution.component.ManagedDistributionComponent;
+import org.apache.sling.distribution.component.impl.DefaultDistributionComponentFactoryConstants;
+import org.apache.sling.distribution.component.impl.DistributionComponentFactoryManager;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.queue.DistributionQueueDispatchingStrategy;
@@ -65,37 +66,37 @@ import org.slf4j.LoggerFactory;
 )
 public class CoordinatingDistributionAgentFactory implements DistributionComponentProvider {
 
-    private static final String TRANSPORT_AUTHENTICATION_PROVIDER_TARGET = DistributionComponentFactory.COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER + ".target";
+    private static final String TRANSPORT_AUTHENTICATION_PROVIDER_TARGET = DefaultDistributionComponentFactoryConstants.COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER + ".target";
 
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Property(boolValue = true, label = "Enabled")
-    private static final String ENABLED = DistributionComponentFactory.COMPONENT_ENABLED;
+    private static final String ENABLED = DefaultDistributionComponentFactoryConstants.COMPONENT_ENABLED;
 
-    @Property(value = DistributionComponentFactory.AGENT_SIMPLE, propertyPrivate = true)
-    private static final String TYPE = DistributionComponentFactory.COMPONENT_TYPE;
+    @Property(value = DefaultDistributionComponentFactoryConstants.AGENT_SIMPLE, propertyPrivate = true)
+    private static final String TYPE = DefaultDistributionComponentFactoryConstants.COMPONENT_TYPE;
 
     @Property(label = "Name")
-    public static final String NAME = DistributionComponentFactory.COMPONENT_NAME;
+    public static final String NAME = DefaultDistributionComponentFactoryConstants.COMPONENT_NAME;
 
     @Property(boolValue = false, propertyPrivate = true)
-    public static final String IS_PASSIVE = DistributionComponentFactory.AGENT_SIMPLE_PROPERTY_IS_PASSIVE;
+    public static final String IS_PASSIVE = DefaultDistributionComponentFactoryConstants.AGENT_SIMPLE_PROPERTY_IS_PASSIVE;
 
     @Property(label = "Service Name")
-    public static final String SERVICE_NAME = DistributionComponentFactory.AGENT_SIMPLE_PROPERTY_SERVICE_NAME;
+    public static final String SERVICE_NAME = DefaultDistributionComponentFactoryConstants.AGENT_SIMPLE_PROPERTY_SERVICE_NAME;
 
     @Property(label = "Request Authorization Strategy Properties", cardinality = 100)
-    public static final String REQUEST_AUTHORIZATION_STRATEGY = DistributionComponentFactory.COMPONENT_REQUEST_AUTHORIZATION_STRATEGY;
+    public static final String REQUEST_AUTHORIZATION_STRATEGY = DefaultDistributionComponentFactoryConstants.COMPONENT_REQUEST_AUTHORIZATION_STRATEGY;
 
     @Property(label = "Package Exporter Properties", cardinality = 100)
-    public static final String PACKAGE_EXPORTER = DistributionComponentFactory.COMPONENT_PACKAGE_EXPORTER;
+    public static final String PACKAGE_EXPORTER = DefaultDistributionComponentFactoryConstants.COMPONENT_PACKAGE_EXPORTER;
 
     @Property(label = "Package Importer Properties", cardinality = 100)
-    public static final String PACKAGE_IMPORTER = DistributionComponentFactory.COMPONENT_PACKAGE_IMPORTER;
+    public static final String PACKAGE_IMPORTER = DefaultDistributionComponentFactoryConstants.COMPONENT_PACKAGE_IMPORTER;
 
     @Property(label = "Trigger Properties", cardinality = 100)
-    public static final String TRIGGER = DistributionComponentFactory.COMPONENT_TRIGGER;
+    public static final String TRIGGER = DefaultDistributionComponentFactoryConstants.COMPONENT_TRIGGER;
 
     @Property(label = "Target TransportAuthenticationProvider", name = TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
     @Reference(name = "transportAuthenticationProvider")
@@ -111,7 +112,7 @@ public class CoordinatingDistributionAgentFactory implements DistributionCompone
     private JobManager jobManager;
 
     @Reference
-    private DistributionComponentFactory componentFactory;
+    private DistributionComponentFactoryManager componentManager;
 
     private BundleContext savedContext;
 
@@ -160,8 +161,9 @@ public class CoordinatingDistributionAgentFactory implements DistributionCompone
                 ((Map) properties.get(PACKAGE_EXPORTER)).put("type", "remote");
                 ((Map) properties.get(PACKAGE_IMPORTER)).put("type", "remote");
 
+                properties.put(DefaultDistributionComponentFactoryConstants.COMPONENT_PROVIDER, this);
 
-                DistributionAgent agent = componentFactory.createComponent(DistributionAgent.class, properties, this);
+                DistributionAgent agent = componentManager.createComponent(DistributionAgent.class, properties);
 
                 log.debug("activated agent {}", agentName);
 

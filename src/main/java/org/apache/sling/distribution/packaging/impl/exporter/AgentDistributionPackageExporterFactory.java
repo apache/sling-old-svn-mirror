@@ -36,8 +36,9 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.component.DistributionComponent;
-import org.apache.sling.distribution.component.DistributionComponentFactory;
 import org.apache.sling.distribution.component.DistributionComponentProvider;
+import org.apache.sling.distribution.component.impl.DefaultDistributionComponentFactoryConstants;
+import org.apache.sling.distribution.component.impl.DistributionComponentFactoryManager;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExportException;
@@ -54,11 +55,11 @@ import org.slf4j.LoggerFactory;
 public class AgentDistributionPackageExporterFactory implements DistributionPackageExporter, DistributionComponentProvider {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(value = DistributionComponentFactory.PACKAGE_EXPORTER_AGENT, propertyPrivate = true)
-    private static final String TYPE = DistributionComponentFactory.COMPONENT_TYPE;
+    @Property(value = DefaultDistributionComponentFactoryConstants.PACKAGE_EXPORTER_AGENT, propertyPrivate = true)
+    private static final String TYPE = DefaultDistributionComponentFactoryConstants.COMPONENT_TYPE;
 
     @Property
-    private static final String NAME = DistributionComponentFactory.COMPONENT_NAME;
+    private static final String NAME = DefaultDistributionComponentFactoryConstants.COMPONENT_NAME;
 
     @Property(label = "Target DistributionAgent", name = "DistributionAgent.target")
     @Reference(name = "DistributionAgent", policy = ReferencePolicy.STATIC)
@@ -66,10 +67,10 @@ public class AgentDistributionPackageExporterFactory implements DistributionPack
 
 
     @Property(label = "Package Builder Properties", cardinality = 100)
-    public static final String PACKAGE_BUILDER = DistributionComponentFactory.COMPONENT_PACKAGE_BUILDER;
+    public static final String PACKAGE_BUILDER = DefaultDistributionComponentFactoryConstants.COMPONENT_PACKAGE_BUILDER;
 
     @Reference
-    DistributionComponentFactory distributionComponentFactory;
+    private DistributionComponentFactoryManager componentManager;
 
     private DistributionPackageExporter packageExporter;
 
@@ -81,8 +82,9 @@ public class AgentDistributionPackageExporterFactory implements DistributionPack
         properties.putAll(config);
         String[] packageBuilderProperties = PropertiesUtil.toStringArray(config.get(PACKAGE_BUILDER));
         properties.put(PACKAGE_BUILDER, SettingsUtils.parseLines(packageBuilderProperties));
+        properties.put(DefaultDistributionComponentFactoryConstants.COMPONENT_PROVIDER, this);
 
-        packageExporter = distributionComponentFactory.createComponent(DistributionPackageExporter.class, properties, this);
+        packageExporter = componentManager.createComponent(DistributionPackageExporter.class, properties);
     }
 
     @Nonnull

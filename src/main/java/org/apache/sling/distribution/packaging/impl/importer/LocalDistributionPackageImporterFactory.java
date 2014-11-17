@@ -31,7 +31,8 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.distribution.component.DistributionComponentFactory;
+import org.apache.sling.distribution.component.impl.DefaultDistributionComponentFactoryConstants;
+import org.apache.sling.distribution.component.impl.DistributionComponentFactoryManager;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImportException;
@@ -52,18 +53,19 @@ import org.slf4j.LoggerFactory;
 public class LocalDistributionPackageImporterFactory implements DistributionPackageImporter {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(value = DistributionComponentFactory.PACKAGE_IMPORTER_LOCAL, propertyPrivate = true)
-    private static final String TYPE = DistributionComponentFactory.COMPONENT_TYPE;
+    @Property(value = DefaultDistributionComponentFactoryConstants.PACKAGE_IMPORTER_LOCAL, propertyPrivate = true)
+    private static final String TYPE = DefaultDistributionComponentFactoryConstants.COMPONENT_TYPE;
 
     @Property
-    private static final String NAME = DistributionComponentFactory.COMPONENT_NAME;
+    private static final String NAME = DefaultDistributionComponentFactoryConstants.COMPONENT_NAME;
 
 
     @Property(label = "Package Builder Properties", cardinality = 100)
-    public static final String PACKAGE_BUILDER = DistributionComponentFactory.COMPONENT_PACKAGE_BUILDER;
+    public static final String PACKAGE_BUILDER = DefaultDistributionComponentFactoryConstants.COMPONENT_PACKAGE_BUILDER;
 
     @Reference
-    private DistributionComponentFactory componentFactory;
+    private DistributionComponentFactoryManager componentManager;
+
 
     private DistributionPackageImporter importer;
 
@@ -74,7 +76,7 @@ public class LocalDistributionPackageImporterFactory implements DistributionPack
         String[] packageBuilderProperties = PropertiesUtil.toStringArray(config.get(PACKAGE_BUILDER));
         properties.put(PACKAGE_BUILDER, SettingsUtils.parseLines(packageBuilderProperties));
 
-        importer = componentFactory.createComponent(DistributionPackageImporter.class, properties, null);
+        importer = componentManager.createComponent(DistributionPackageImporter.class, properties);
     }
 
 

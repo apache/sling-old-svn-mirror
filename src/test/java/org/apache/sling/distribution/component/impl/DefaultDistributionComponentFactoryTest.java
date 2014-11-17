@@ -51,7 +51,7 @@ public class DefaultDistributionComponentFactoryTest {
         DistributionAgent agent = mock(DistributionAgent.class);
         when(provider.getComponent(DistributionAgent.class, name)).thenReturn(agent);
         try {
-            defaultdistributionComponentFactory.createComponent(DistributionAgent.class, properties, provider);
+            defaultdistributionComponentFactory.createComponent(DistributionAgent.class, properties);
             fail("agents cannot be referenced by service name using the factory");
         }
         catch (IllegalArgumentException e) {
@@ -68,7 +68,9 @@ public class DefaultDistributionComponentFactoryTest {
         DistributionComponentProvider provider = mock(DistributionComponentProvider.class);
         DistributionTrigger trigger = mock(DistributionTrigger.class);
         when(provider.getComponent(DistributionTrigger.class, name)).thenReturn(trigger);
-        DistributionTrigger component = defaultdistributionComponentFactory.createComponent(DistributionTrigger.class, properties, provider);
+        properties.put(DefaultDistributionComponentFactoryConstants.COMPONENT_PROVIDER, provider);
+
+        DistributionTrigger component = defaultdistributionComponentFactory.createComponent(DistributionTrigger.class, properties);
         assertNotNull(component);
     }
 
@@ -81,7 +83,9 @@ public class DefaultDistributionComponentFactoryTest {
         DistributionComponentProvider provider = mock(DistributionComponentProvider.class);
         TransportAuthenticationProvider authenticationProvider = mock(TransportAuthenticationProvider.class);
         when(provider.getComponent(TransportAuthenticationProvider.class, name)).thenReturn(authenticationProvider);
-        TransportAuthenticationProvider component = defaultdistributionComponentFactory.createComponent(TransportAuthenticationProvider.class, properties, provider);
+        properties.put(DefaultDistributionComponentFactoryConstants.COMPONENT_PROVIDER, provider);
+
+        TransportAuthenticationProvider component = defaultdistributionComponentFactory.createComponent(TransportAuthenticationProvider.class, properties);
         assertNotNull(component);
     }
 
@@ -94,7 +98,9 @@ public class DefaultDistributionComponentFactoryTest {
         DistributionComponentProvider provider = mock(DistributionComponentProvider.class);
         DistributionPackageImporter importer = mock(DistributionPackageImporter.class);
         when(provider.getComponent(DistributionPackageImporter.class, name)).thenReturn(importer);
-        DistributionPackageImporter component = defaultdistributionComponentFactory.createComponent(DistributionPackageImporter.class, properties, provider);
+        properties.put(DefaultDistributionComponentFactoryConstants.COMPONENT_PROVIDER, provider);
+
+        DistributionPackageImporter component = defaultdistributionComponentFactory.createComponent(DistributionPackageImporter.class, properties);
         assertNotNull(component);
     }
 
@@ -107,7 +113,9 @@ public class DefaultDistributionComponentFactoryTest {
         DistributionComponentProvider provider = mock(DistributionComponentProvider.class);
         DistributionPackageExporter exporter = mock(DistributionPackageExporter.class);
         when(provider.getComponent(DistributionPackageExporter.class, name)).thenReturn(exporter);
-        DistributionPackageExporter component = defaultdistributionComponentFactory.createComponent(DistributionPackageExporter.class, properties, provider);
+        properties.put(DefaultDistributionComponentFactoryConstants.COMPONENT_PROVIDER, provider);
+
+        DistributionPackageExporter component = defaultdistributionComponentFactory.createComponent(DistributionPackageExporter.class, properties);
         assertNotNull(component);
     }
 

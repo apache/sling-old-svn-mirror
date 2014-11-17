@@ -25,10 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.scr.annotations.*;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
@@ -72,6 +69,7 @@ import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static org.apache.sling.distribution.component.impl.DefaultDistributionComponentFactoryConstants.*;
 
 /**
  * A generic factory for distribution components using a compact configuration, already existing OSGi services
@@ -88,6 +86,7 @@ import org.slf4j.LoggerFactory;
         immediate = true
 )
 @Service(DistributionComponentFactory.class)
+@Property(name = "name", value = "default")
 public class DefaultDistributionComponentFactory implements DistributionComponentFactory, DistributionComponentProvider {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -118,9 +117,9 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
     }
 
     public <ComponentType extends DistributionComponent> ComponentType createComponent(@Nonnull Class<ComponentType> type,
-                                                                                      @Nonnull Map<String, Object> properties,
-                                                                                      @Nullable DistributionComponentProvider componentProvider) {
+                                                                                      @Nonnull Map<String, Object> properties) {
 
+        DistributionComponentProvider componentProvider = (DistributionComponentProvider) properties.get(COMPONENT_PROVIDER);
         if (componentProvider == null) {
             componentProvider = this;
         }
@@ -142,9 +141,9 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
 
     DistributionAgent createAgent(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
 
-        String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), DistributionComponentFactory.AGENT_SIMPLE);
+        String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), AGENT_SIMPLE);
 
-        if (DistributionComponentFactory.AGENT_SIMPLE.equals(factory)) {
+        if (AGENT_SIMPLE.equals(factory)) {
             String agentName = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
 
 
@@ -168,9 +167,9 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
             List<DistributionTrigger> triggers = createTriggerList(triggersProperties, componentProvider);
 
 
-            String serviceName = PropertiesUtil.toString(properties.get(DistributionComponentFactory.AGENT_SIMPLE_PROPERTY_SERVICE_NAME), null);
+            String serviceName = PropertiesUtil.toString(properties.get(AGENT_SIMPLE_PROPERTY_SERVICE_NAME), null);
 
-            boolean isPassive = PropertiesUtil.toBoolean(properties.get(DistributionComponentFactory.AGENT_SIMPLE_PROPERTY_IS_PASSIVE), false);
+            boolean isPassive = PropertiesUtil.toBoolean(properties.get(AGENT_SIMPLE_PROPERTY_IS_PASSIVE), false);
 
             return new SimpleDistributionAgent(agentName, isPassive, serviceName,
                     packageImporter, packageExporter, packageExporterStrategy,

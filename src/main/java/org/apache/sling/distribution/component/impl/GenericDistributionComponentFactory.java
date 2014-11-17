@@ -36,7 +36,6 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.component.DistributionComponent;
-import org.apache.sling.distribution.component.DistributionComponentFactory;
 import org.apache.sling.distribution.component.DistributionComponentProvider;
 import org.apache.sling.distribution.component.ManagedDistributionComponent;
 import org.apache.sling.distribution.resources.impl.OsgiUtils;
@@ -57,16 +56,16 @@ import org.slf4j.LoggerFactory;
         policy = ConfigurationPolicy.REQUIRE
 )
 public class GenericDistributionComponentFactory implements DistributionComponentProvider {
-    private static final String TRANSPORT_AUTHENTICATION_PROVIDER_TARGET = DistributionComponentFactory.COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER + ".target";
+    private static final String TRANSPORT_AUTHENTICATION_PROVIDER_TARGET = DefaultDistributionComponentFactoryConstants.COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER + ".target";
 
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Property(boolValue = true, label = "Enabled")
-    private static final String ENABLED = DistributionComponentFactory.COMPONENT_ENABLED;
+    private static final String ENABLED = DefaultDistributionComponentFactoryConstants.COMPONENT_ENABLED;
 
     @Property(label = "Name")
-    public static final String NAME = DistributionComponentFactory.COMPONENT_NAME;
+    public static final String NAME = DefaultDistributionComponentFactoryConstants.COMPONENT_NAME;
 
     @Property(label = "Properties")
     public static final String PROPERTIES = "properties";
@@ -78,7 +77,8 @@ public class GenericDistributionComponentFactory implements DistributionComponen
     private SlingSettingsService settingsService;
 
     @Reference
-    private DistributionComponentFactory componentFactory;
+    private DistributionComponentFactoryManager componentManager;
+
 
     @Property(label = "Target TransportAuthenticationProvider", name = TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
     @Reference(name = "transportAuthenticationProvider", policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_UNARY)
@@ -120,16 +120,17 @@ public class GenericDistributionComponentFactory implements DistributionComponen
 
                 String componentClass = null;
                 Object componentObject = null;
+                properties.put(DefaultDistributionComponentFactoryConstants.COMPONENT_PROVIDER, this);
 
                 try {
-                    if (DistributionComponentFactory.COMPONENT_AGENT.equals(componentType)) {
-                        DistributionAgent agent = componentFactory.createComponent(DistributionAgent.class, properties, this);
+                    if (DefaultDistributionComponentFactoryConstants.COMPONENT_AGENT.equals(componentType)) {
+                        DistributionAgent agent = componentManager.createComponent(DistributionAgent.class, properties);
                         componentClass = DistributionAgent.class.getName();
                         componentObject = agent;
 
-                    } else if (DistributionComponentFactory.COMPONENT_TRIGGER.equals(componentType)) {
+                    } else if (DefaultDistributionComponentFactoryConstants.COMPONENT_TRIGGER.equals(componentType)) {
 
-                        DistributionTrigger trigger = componentFactory.createComponent(DistributionTrigger.class, properties, this);
+                        DistributionTrigger trigger = componentManager.createComponent(DistributionTrigger.class, properties);
 
                         componentClass = DistributionTrigger.class.getName();
                         componentObject = trigger;
