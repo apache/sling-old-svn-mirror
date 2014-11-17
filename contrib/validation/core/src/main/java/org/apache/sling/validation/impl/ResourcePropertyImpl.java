@@ -22,22 +22,19 @@ import java.util.List;
 
 import org.apache.sling.validation.api.ParameterizedValidator;
 import org.apache.sling.validation.api.ResourceProperty;
-import org.apache.sling.validation.api.Type;
 
 public class ResourcePropertyImpl implements ResourceProperty {
 
     private String name;
-    private Type type;
     private boolean isMultiple;
     private List<ParameterizedValidator> validators;
 
-    public ResourcePropertyImpl(String name, Type type, List<ParameterizedValidator> validators) {
-        this(name, type, false, validators);
+    public ResourcePropertyImpl(String name, List<ParameterizedValidator> validators) {
+        this(name, false, validators);
     }
 
-    public ResourcePropertyImpl(String name, Type type, boolean isMultiple, List<ParameterizedValidator> validators) {
+    public ResourcePropertyImpl(String name, boolean isMultiple, List<ParameterizedValidator> validators) {
         this.name = name;
-        this.type = type;
         this.isMultiple = isMultiple;
         this.validators = validators;
     }
@@ -45,11 +42,6 @@ public class ResourcePropertyImpl implements ResourceProperty {
     @Override
     public String getName() {
         return name;
-    }
-
-    @Override
-    public Type getType() {
-        return type;
     }
 
     @Override

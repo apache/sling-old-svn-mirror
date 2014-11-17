@@ -26,6 +26,7 @@ import org.apache.sling.validation.api.Validator;
 import org.apache.sling.validation.api.exceptions.SlingValidationException;
 import org.apache.sling.validation.impl.util.examplevalidators.DerivedStringValidator;
 import org.apache.sling.validation.impl.util.examplevalidators.ExtendedStringValidator;
+import org.apache.sling.validation.impl.util.examplevalidators.GenericTypeParameterBaseClass;
 import org.apache.sling.validation.impl.util.examplevalidators.IntegerValidator;
 import org.apache.sling.validation.impl.util.examplevalidators.StringArrayValidator;
 import org.apache.sling.validation.impl.util.examplevalidators.StringValidator;
@@ -99,5 +100,18 @@ public class ValidatorTypeUtilTest {
                 return null;
             }
         });
+    }
+    
+    private class InnerStringValidatorWithAdditionalBaseClass extends GenericTypeParameterBaseClass<Integer> implements Validator<String> {
+        @Override
+        public String validate(String data, ValueMap valueMap, Map<String, String> arguments)
+                throws SlingValidationException {
+            return null;
+        }
+    }
+    
+    @Test
+    public void testGetValidatorTypeWithUnrelatedSuperClass() {
+        Assert.assertThat((Class<String>)ValidatorTypeUtil.getValidatorType(new InnerStringValidatorWithAdditionalBaseClass()), Matchers.equalTo(String.class));
     }
 }

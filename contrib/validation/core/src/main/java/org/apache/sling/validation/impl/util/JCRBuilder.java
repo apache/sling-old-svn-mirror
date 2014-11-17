@@ -32,7 +32,6 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.validation.api.ChildResource;
 import org.apache.sling.validation.api.ParameterizedValidator;
 import org.apache.sling.validation.api.ResourceProperty;
-import org.apache.sling.validation.api.Type;
 import org.apache.sling.validation.api.Validator;
 import org.apache.sling.validation.api.ValidatorLookupService;
 import org.apache.sling.validation.impl.ChildResourceImpl;
@@ -59,7 +58,6 @@ public class JCRBuilder {
             for (Resource property : propertiesResource.getChildren()) {
                 String fieldName = property.getName();
                 ValueMap propertyValueMap = property.adaptTo(ValueMap.class);
-                Type type = Type.getType(propertyValueMap.get(Constants.PROPERTY_TYPE, String.class));
                 Boolean propertyMultiple = PropertiesUtil.toBoolean(propertyValueMap.get(Constants.PROPERTY_MULTIPLE), false);
                 Resource validators = property.getChild(Constants.VALIDATORS);
                 List<ParameterizedValidator> parameterizedValidators = new ArrayList<ParameterizedValidator>();
@@ -88,7 +86,7 @@ public class JCRBuilder {
                         parameterizedValidators.add(new ParameterizedValidatorImpl(v, validatorArgumentsMap));
                     }
                 }
-                ResourceProperty f = new ResourcePropertyImpl(fieldName, type, propertyMultiple, parameterizedValidators);
+                ResourceProperty f = new ResourcePropertyImpl(fieldName, propertyMultiple, parameterizedValidators);
                 properties.add(f);
             }
         }

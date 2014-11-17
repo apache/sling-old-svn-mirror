@@ -124,7 +124,6 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
         // validate direct properties of the resource
         validateValueMap(resource.adaptTo(ValueMap.class), model.getResourceProperties(), result, "");
 
-        // TODO: support more than 1 level of children
         // validate children resources, if any
         for (ChildResource childResource : model.getChildren()) {
             Resource expectedResource = resource.getChild(childResource.getName());
@@ -144,39 +143,6 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
         }
         ValidationResultImpl result = new ValidationResultImpl();
         validateValueMap(valueMap, model.getResourceProperties(), result, "");
-        
-        /*
-        for (ResourceProperty resourceProperty : model.getResourceProperties()) {
-            String property = resourceProperty.getName();
-            
-            Object valuesObject = valueMap.get(property);
-            if (valuesObject == null) {
-                result.addFailureMessage(property, "Missing required property.");
-            }
-            org.apache.sling.validation.api.Type propertyType = resourceProperty.getType();
-            List<ParameterizedValidator> validators = resourceProperty.getValidators();
-            if (resourceProperty.isMultiple()) {
-                if (valuesObject instanceof Object[]) {
-                    for (String fieldValue : (String[]) valuesObject) {
-                        //validatePropertyValue(result, property, fieldValue, propertyType, validators);
-                    }
-                } else {
-                    result.addFailureMessage(property, "Expected multiple-valued property.");
-                }
-            } else {
-                if (valuesObject instanceof String[]) {
-                    // treat request attributes which are arrays
-                    String[] fieldValues = (String[]) valuesObject;
-                    if (fieldValues.length == 1) {
-                        //validatePropertyValue(result, property, fieldValues[0], propertyType, validators);
-                    } else {
-                        result.addFailureMessage(property, "Expected single-valued property.");
-                    }
-                } else if (valuesObject instanceof String) {
-                    //validatePropertyValue(result, property, (String) valuesObject, propertyType, validators);
-                }
-            }
-        }*/
         return result;
     }
 
@@ -239,7 +205,6 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
         }
     }
 
-    // TODO: simplify and reuse validate(ValueMap)
     private void validateValueMap(ValueMap valueMap, Set<ResourceProperty> resourceProperties,
                                             ValidationResultImpl result, String relativePathName) {
         if (valueMap == null) {
@@ -251,15 +216,13 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
             if (fieldValues == null) {
                 result.addFailureMessage(relativePathName + property, "Missing required property.");
             }
-            //Type propertyType = resourceProperty.getType();
             List<ParameterizedValidator> validators = resourceProperty.getValidators();
-            if (fieldValues instanceof String[]) {
-                for (String fieldValue : (String[]) fieldValues) {
-                   validatePropertyValue(result, property, relativePathName, valueMap, validators);
+            if (resourceProperty.isMultiple()) {
+                if (!fieldValues.getClass().isArray()) {
+                    result.addFailureMessage(property, "Expected multiple-valued property.");
                 }
-            } else if (fieldValues instanceof String) {
-                validatePropertyValue(result, property, relativePathName, valueMap, validators);
             }
+            validatePropertyValue(result, property, relativePathName, valueMap, validators);
         }
     }
 
@@ -387,28 +350,60 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
     }
     
    
-    @SuppressWarnings("rawtypes")
+    
     private void validatePropertyValue(ValidationResultImpl result, String property, String relativePath, ValueMap valueMap, List<ParameterizedValidator> validators) {
         for (ParameterizedValidator validator : validators) {
-            Object value = valueMap.get(property, validator.getType());
-            if (value == null) {
-                result.addFailureMessage(property, "Property was expected to be of type " + validator.getType());
+            // convert the type always to an array
+            Class<?> type = validator.getType();
+            if (!type.isArray()) {
+                try {
+                    // https://docs.oracle.com/javase/6/docs/api/java/lang/Class.html#getName%28%29 has some hints on class names
+                    type = Class.forName("[L"+type.getName()+";", false, type.getClassLoader());
+                } catch (ClassNotFoundException e) {
+                    throw new SlingValidationException("Could not generate array class for type " + type, e);
+                }
+            }
+            
+            Object[] typedValue = (Object[])valueMap.get(property, type);
+            // see https://issues.apache.org/jira/browse/SLING-4178 for why the second check is necessary
+            if (typedValue == null || typedValue[0] == null) {
+                // here the missing required property case was already treated in validateValueMap
+                result.addFailureMessage(property, "Property was expected to be of type '" + validator.getType() + "' but cannot be converted to that type." );
                 return;
             }
-            try {
-                String validatorMessage = ((Validator)validator.getValidator()).validate(value, valueMap, validator.getParameters());
-                if (validatorMessage != null) {
-                    if (validatorMessage.isEmpty()) {
-                        validatorMessage = "Property does not contain a valid value for the " + validator
-                                .getClass().getName() + " validator";
-                    } 
-                    result.addFailureMessage(relativePath + property, validatorMessage);
+            
+            // see https://issues.apache.org/jira/browse/SLING-662 for a description on how multivalue properties are treated with ValueMap
+            if (validator.getType().isArray()) {
+                // ValueMap already returns an array in both cases (property is single value or multivalue)
+                validateValue(result, typedValue, property, relativePath, valueMap, validator);
+            } else {
+                // call validate for each entry in the array (supports both singlevalue and multivalue)
+                if (typedValue.getClass().isArray()) {
+                    Object[] array = (Object[])typedValue;
+                    for (Object item : array) {
+                        validateValue(result, item, property, relativePath, valueMap, validator);
+                    }
                 }
-            } catch (SlingValidationException e) {
-                // wrap in another SlingValidationException to include information about the property
-                throw new SlingValidationException("Could not call validator " + validator
-                        .getClass().getName() + " for resourceProperty " + relativePath + property, e);
             }
+        }
+    }
+    
+    @SuppressWarnings("rawtypes")
+    private void validateValue(ValidationResultImpl result, Object value, String property, String relativePath, ValueMap valueMap, ParameterizedValidator validator) {
+        try {
+            @SuppressWarnings("unchecked")
+            String validatorMessage = ((Validator)validator.getValidator()).validate(value, valueMap, validator.getParameters());
+            if (validatorMessage != null) {
+                if (validatorMessage.isEmpty()) {
+                    validatorMessage = "Property does not contain a valid value for the " + validator
+                            .getClass().getName() + " validator";
+                } 
+                result.addFailureMessage(relativePath + property, validatorMessage);
+            }
+        } catch (SlingValidationException e) {
+            // wrap in another SlingValidationException to include information about the property
+            throw new SlingValidationException("Could not call validator " + validator
+                    .getClass().getName() + " for resourceProperty " + relativePath + property, e);
         }
     }
 }
