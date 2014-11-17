@@ -437,7 +437,24 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             while (path != null) {
                 String alias = null;
                 if (current != null && !path.endsWith(JCR_CONTENT_LEAF)) {
-                    alias = ResourceResolverContext.getProperty(current, PROP_ALIAS);
+                    if (factory.getMapEntries().isOptimizeAliasResolutionEnabled()) {
+                        logger.debug("map: Optimize Alias Resolution is Enabled");
+                        String parentPath = ResourceUtil.getParent(path);    
+                        if (parentPath != null) {         
+                            final Map<String, String> aliases = factory.getMapEntries().getAliasMap(parentPath);
+                            if (aliases!= null && aliases.containsValue(current.getName())) {
+                                for (String key:aliases.keySet()) {
+                                    if (current.getName().equals(aliases.get(key))) {
+                                        alias = key;
+                                        break;
+                                    }
+                                }
+                            } 
+                        }
+                    } else {
+                        logger.debug("map: Optimize Alias Resolution is Disabled");
+                        alias = ResourceResolverContext.getProperty(current, PROP_ALIAS);
+                    }                    
                 }
                 if (alias == null || alias.length() == 0) {
                     alias = ResourceUtil.getName(path);
