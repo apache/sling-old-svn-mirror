@@ -480,11 +480,7 @@ public class MapEntries implements EventHandler {
                     path =  path.substring(0, path.length() - "/jcr:content".length());
                 }
                 resourceName = path.substring(path.lastIndexOf("/") + 1);
-                if (path.lastIndexOf("/") == 0) {
-                    path = "/";
-                } else {
-                    path = path.substring(0, path.lastIndexOf("/"));
-                }        
+                path = ResourceUtil.getParent(path);      
             } else {
                 resourceName = "";
             }
