@@ -766,6 +766,73 @@ public class MapEntriesTest {
     }
     
     @Test
+    public void test_doAddAlias2() throws Exception {
+        Method method = MapEntries.class.getDeclaredMethod("doAddAlias", String.class);
+        method.setAccessible(true);
+        
+        Field field0 = MapEntries.class.getDeclaredField("aliasMap");
+        field0.setAccessible(true);   
+        
+        Map<String, Map<String, String>> aliasMap = ( Map<String, Map<String, String>>) field0.get(mapEntries);
+        assertEquals(0, aliasMap.size());        
+        
+        Resource parent = mock(Resource.class);
+        when(parent.getPath()).thenReturn("/");
+        
+        final Resource result = mock(Resource.class);
+        when(resourceResolver.getResource("/parent")).thenReturn(result);
+        when(result.getParent()).thenReturn(parent);
+        when(result.getPath()).thenReturn("/parent");
+        when(result.getName()).thenReturn("parent");
+        when(result.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "alias"));
+        
+        method.invoke(mapEntries, "/parent");
+        
+        Map<String, String> aliasMapEntry = mapEntries.getAliasMap("/");
+        assertNotNull(aliasMapEntry);
+        assertTrue(aliasMapEntry.containsKey("alias"));
+        assertEquals("parent", aliasMapEntry.get("alias"));
+        
+        assertEquals(1, aliasMap.size()); 
+        
+        //test_that_duplicate_alias_doesnt_replace_first_alias
+        final Resource secondResult = mock(Resource.class);
+        when(resourceResolver.getResource("/parent2")).thenReturn(secondResult);
+        when(secondResult.getParent()).thenReturn(parent);
+        when(secondResult.getPath()).thenReturn("/parent2");
+        when(secondResult.getName()).thenReturn("parent2");
+        when(secondResult.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "alias"));
+        
+        method.invoke(mapEntries, "/parent2");
+        
+        aliasMapEntry = mapEntries.getAliasMap("/");
+        assertNotNull(aliasMapEntry);
+        assertTrue(aliasMapEntry.containsKey("alias"));
+        assertEquals("parent", aliasMapEntry.get("alias"));
+        
+        assertEquals(1, aliasMap.size()); 
+        
+        //testing jcr:content node
+        final Resource jcrContentResult = mock(Resource.class);
+        when(resourceResolver.getResource("/parent/jcr:content")).thenReturn(jcrContentResult);
+        when(jcrContentResult.getParent()).thenReturn(result);
+        when(jcrContentResult.getPath()).thenReturn("/parent/jcr:content");
+        when(jcrContentResult.getName()).thenReturn("jcr:content");
+        when(jcrContentResult.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "aliasJcrContent"));
+        
+        method.invoke(mapEntries, "/parent/jcr:content");
+        
+        aliasMapEntry = mapEntries.getAliasMap("/");
+        assertNotNull(aliasMapEntry);
+        assertEquals(2, aliasMapEntry.size()); 
+        assertTrue(aliasMapEntry.containsKey("aliasJcrContent"));
+        assertEquals("parent", aliasMapEntry.get("aliasJcrContent"));
+        
+        assertEquals(1, aliasMap.size()); 
+    }
+    
+    
+    @Test
     public void test_doUpdateAlias() throws Exception {
         Method method = MapEntries.class.getDeclaredMethod("doAddAlias", String.class);
         method.setAccessible(true);
@@ -1128,6 +1195,133 @@ public class MapEntriesTest {
         assertEquals(0, aliasMap.size()); 
         aliasMapEntry = mapEntries.getAliasMap("/parent");
         assertNull(aliasMapEntry);
+    }
+    
+    @Test
+    public void test_doRemoveAlias4() throws Exception {       
+        Method method = MapEntries.class.getDeclaredMethod("doAddAlias", String.class);
+        method.setAccessible(true);
+        
+        Method method1 = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, String[].class, boolean.class, boolean.class);
+        method1.setAccessible(true);
+        
+        Field field0 = MapEntries.class.getDeclaredField("aliasMap");
+        field0.setAccessible(true);   
+        
+        Map<String, Map<String, String>> aliasMap = ( Map<String, Map<String, String>>) field0.get(mapEntries);
+        assertEquals(0, aliasMap.size()); 
+        
+        Resource parent = mock(Resource.class);
+        when(parent.getPath()).thenReturn("/");
+        
+        final Resource result = mock(Resource.class);
+        when(resourceResolver.getResource("/parent")).thenReturn(result);
+        when(result.getParent()).thenReturn(parent);
+        when(result.getPath()).thenReturn("/parent");
+        when(result.getName()).thenReturn("parent");
+        when(result.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "alias"));
+        
+        method.invoke(mapEntries, "/parent");
+        
+        Map<String, String> aliasMapEntry = mapEntries.getAliasMap("/");
+        assertNotNull(aliasMapEntry);
+        assertTrue(aliasMapEntry.containsKey("alias"));
+        assertEquals("parent", aliasMapEntry.get("alias"));
+        
+        assertEquals(1, aliasMap.size()); 
+        
+        method1.invoke(mapEntries, "/parent", new String[] { "sling:alias" }, false, false);
+        
+        aliasMapEntry = mapEntries.getAliasMap("/");
+        assertNull(aliasMapEntry);
+        
+        assertEquals(0, aliasMap.size()); 
+        
+        //re-add node and test nodeDeletion true
+        method.invoke(mapEntries, "/parent");
+        
+        aliasMapEntry = mapEntries.getAliasMap("/");
+        assertNotNull(aliasMapEntry);
+        assertTrue(aliasMapEntry.containsKey("alias"));
+        assertEquals("parent", aliasMapEntry.get("alias"));
+        
+        assertEquals(1, aliasMap.size()); 
+        
+        when(resourceResolver.getResource("/parent")).thenReturn(null);
+        method1.invoke(mapEntries, "/parent", new String[] { "sling:alias" }, true, false);
+        
+        aliasMapEntry = mapEntries.getAliasMap("/");
+        assertNull(aliasMapEntry);
+        
+        assertEquals(0, aliasMap.size()); 
+    } 
+       
+    @Test
+    public void test_doRemoveAlias5() throws Exception { 
+        Method method = MapEntries.class.getDeclaredMethod("doAddAlias", String.class);
+        method.setAccessible(true);
+        
+        Method method1 = MapEntries.class.getDeclaredMethod("doRemoveAttributes", String.class, String[].class, boolean.class, boolean.class);
+        method1.setAccessible(true);
+        
+        Field field0 = MapEntries.class.getDeclaredField("aliasMap");
+        field0.setAccessible(true);   
+        
+        Map<String, Map<String, String>> aliasMap = ( Map<String, Map<String, String>>) field0.get(mapEntries);
+        assertEquals(0, aliasMap.size()); 
+        
+        Resource parent = mock(Resource.class);
+        when(parent.getPath()).thenReturn("/");
+        
+        final Resource result = mock(Resource.class);
+        when(resourceResolver.getResource("/parent")).thenReturn(result);
+        when(result.getParent()).thenReturn(parent);
+        when(result.getPath()).thenReturn("/parent");
+        when(result.getName()).thenReturn("parent");
+        when(result.adaptTo(ValueMap.class)).thenReturn(buildValueMap());
+        
+        //testing jcr:content node removal
+        final Resource jcrContentResult = mock(Resource.class);
+        when(resourceResolver.getResource("/parent/jcr:content")).thenReturn(jcrContentResult);
+        when(jcrContentResult.getParent()).thenReturn(result);
+        when(jcrContentResult.getPath()).thenReturn("/parent/jcr:content");
+        when(jcrContentResult.getName()).thenReturn("jcr:content");
+        when(jcrContentResult.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "aliasJcrContent"));
+        when(result.getChild("jcr:content")).thenReturn(jcrContentResult);
+        
+        method.invoke(mapEntries, "/parent/jcr:content");
+        
+        Map<String, String> aliasMapEntry = mapEntries.getAliasMap("/");
+        assertNotNull(aliasMapEntry);
+        assertTrue(aliasMapEntry.containsKey("aliasJcrContent"));
+        assertEquals("parent", aliasMapEntry.get("aliasJcrContent"));
+        
+        assertEquals(1, aliasMap.size());        
+        
+        method1.invoke(mapEntries, "/parent/jcr:content", new String[] { "sling:alias" }, false, false);
+        
+        aliasMapEntry = mapEntries.getAliasMap("/");
+        assertNull(aliasMapEntry);
+        
+        assertEquals(0, aliasMap.size()); 
+        
+        //re-add node and test nodeDeletion true       
+        method.invoke(mapEntries, "/parent/jcr:content");
+        
+        aliasMapEntry = mapEntries.getAliasMap("/");
+        assertNotNull(aliasMapEntry);
+        assertTrue(aliasMapEntry.containsKey("aliasJcrContent"));
+        assertEquals("parent", aliasMapEntry.get("aliasJcrContent"));
+        
+        assertEquals(1, aliasMap.size());        
+        when(resourceResolver.getResource("/parent/jcr:content")).thenReturn(null);
+        when(result.getChild("jcr:content")).thenReturn(null);
+        method1.invoke(mapEntries, "/parent/jcr:content", new String[] { "sling:alias" }, true, false);
+        
+        aliasMapEntry = mapEntries.getAliasMap("/");
+        assertNull(aliasMapEntry);
+        
+        assertEquals(0, aliasMap.size());
     }
     
     @Test
