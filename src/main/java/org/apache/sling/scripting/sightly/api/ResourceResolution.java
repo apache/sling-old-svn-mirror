@@ -20,12 +20,10 @@
 package org.apache.sling.scripting.sightly.api;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.jcr.resource.JcrResourceConstants;
 
 /**
  * Utility class which used by the Sightly engine & extensions
