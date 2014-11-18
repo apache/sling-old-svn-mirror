@@ -23,7 +23,6 @@ import java.util.Map;
 
 import javax.jcr.Session;
 
-import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -37,9 +36,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
-import org.apache.sling.jcr.resource.internal.helper.jcr.JcrItemAdapterFactory;
 import org.osgi.framework.Constants;
-import org.osgi.service.component.ComponentContext;
 
 /**
  * The <code>JcrResourceResolverFactoryImpl</code> is the
@@ -65,22 +62,6 @@ public class JcrResourceResolverFactoryImpl implements
     /** The dynamic class loader */
     @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
     private volatile DynamicClassLoaderManager dynamicClassLoaderManager;
-
-    private JcrItemAdapterFactory jcrItemAdapterFactory;
-
-    @Activate
-    protected void activate(final ComponentContext componentContext) {
-        jcrItemAdapterFactory = new JcrItemAdapterFactory(
-                componentContext.getBundleContext(), this);
-    }
-
-    /** Deativates this component, called by SCR to take out of service */
-    protected void deactivate(final ComponentContext componentContext) {
-        if (jcrItemAdapterFactory != null) {
-            jcrItemAdapterFactory.dispose();
-            jcrItemAdapterFactory = null;
-        }
-    }
 
     /** Get the dynamic class loader if available */
     public ClassLoader getDynamicClassLoader() {
