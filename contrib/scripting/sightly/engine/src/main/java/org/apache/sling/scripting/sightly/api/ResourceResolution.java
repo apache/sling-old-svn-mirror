@@ -25,11 +25,14 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Utility class which used by the Sightly engine & extensions
  * to resolve resources
  */
-public class ResourceResolution {
+@ProviderType
+public final class ResourceResolution {
 
     /**
      * Maximum number of iterations that can be performed when searching for a resource in

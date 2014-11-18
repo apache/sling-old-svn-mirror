@@ -19,9 +19,12 @@
 
 package org.apache.sling.scripting.sightly.api;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Runtime interface provided to Sightly scripts
  */
+@ProviderType
 public interface SightlyRuntime {
 
     /**

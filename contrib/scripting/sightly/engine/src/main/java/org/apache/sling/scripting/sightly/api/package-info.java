@@ -16,29 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
+@Version("1.0.0")
 package org.apache.sling.scripting.sightly.api;
 
-import aQute.bnd.annotation.ProviderType;
-
-/**
- * Exception thrown by runtime extensions
- * @see RuntimeExtension
- */
-@ProviderType
-public class RuntimeExtensionException extends RuntimeException {
-
-    public RuntimeExtensionException() {
-    }
-
-    public RuntimeExtensionException(String message) {
-        super(message);
-    }
-
-    public RuntimeExtensionException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public RuntimeExtensionException(Throwable cause) {
-        super(cause);
-    }
-}
+import aQute.bnd.annotation.Version;

@@ -24,10 +24,13 @@ import java.util.Map;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Rendering context for Sightly rendering units.
  * @see RenderUnit
  */
+@ProviderType
 public class RenderContext {
 
     private final StackedWriter writer;

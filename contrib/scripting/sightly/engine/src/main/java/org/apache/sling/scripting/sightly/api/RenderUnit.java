@@ -20,10 +20,13 @@ package org.apache.sling.scripting.sightly.api;
 
 import javax.script.Bindings;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Basic unit of rendering. This also extends the record interface.
  * The properties for a unit are the sub-units
  */
+@ProviderType
 public interface RenderUnit extends Record<RenderUnit> {
 
     /**

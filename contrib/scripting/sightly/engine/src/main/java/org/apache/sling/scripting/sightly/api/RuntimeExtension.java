@@ -18,9 +18,12 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.api;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * Extensions provided to the Sightly runtime
  */
+@ConsumerType
 public interface RuntimeExtension {
 
     /**

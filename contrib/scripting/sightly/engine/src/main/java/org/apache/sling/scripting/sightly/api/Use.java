@@ -20,6 +20,9 @@ package org.apache.sling.scripting.sightly.api;
 
 import javax.script.Bindings;
 
+import aQute.bnd.annotation.ConsumerType;
+
+@ConsumerType
 public interface Use {
 
     public void init(Bindings bindings);

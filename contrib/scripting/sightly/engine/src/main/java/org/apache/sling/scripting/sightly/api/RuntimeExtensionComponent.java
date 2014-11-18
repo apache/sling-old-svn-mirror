@@ -22,9 +22,12 @@ import java.util.Dictionary;
 
 import org.osgi.service.component.ComponentContext;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Component-based implementation for extensions
  */
+@ProviderType
 public abstract class RuntimeExtensionComponent implements RuntimeExtension {
 
     public static final String SCR_PROP_NAME = "org.apache.sling.scripting.sightly.rtextension.name";

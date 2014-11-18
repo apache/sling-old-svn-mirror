@@ -19,9 +19,12 @@
 
 package org.apache.sling.scripting.sightly.api;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Result returned by a use provider
  */
+@ProviderType
 public final class ProviderOutcome {
 
     private boolean success;

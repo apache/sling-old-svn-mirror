@@ -18,9 +18,12 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.api;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * An instance of an {@link RuntimeExtension}
  */
+@ProviderType
 public interface ExtensionInstance {
 
     /**
