@@ -18,6 +18,8 @@
  ******************************************************************************/
 lexer grammar SightlyLexer;
 
+ESC_EXPR: '\${'.*? '}';
+
 EXPR_START: '${' -> pushMode(ExpressionMode);
 
 TEXT_PART: .; //$hello ${expr}
