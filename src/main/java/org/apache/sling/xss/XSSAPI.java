@@ -86,6 +86,16 @@ public interface XSSAPI {
     public String getValidJSToken(String token, String defaultValue);
 
     /**
+     * Validate a style/CSS token. Valid CSS tokens are specified at http://www.w3.org/TR/css3-syntax/
+     *
+     * @param token        the source token
+     * @param defaultValue a default value to use if the source doesn't meet validity constraints.
+     *
+     * @return a string containing sanitized style token
+     */
+    public String getValidStyleToken(String token, String defaultValue);
+
+    /**
      * Validate a CSS color value. Color values as specified at http://www.w3.org/TR/css3-color/#colorunits
      * are safe and definitively allowed. Vulnerable constructs will be disallowed. Currently known
      * vulnerable constructs include url(...), expression(...), and anything with a semicolon.
