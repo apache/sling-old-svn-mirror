@@ -44,7 +44,7 @@ public class SynchronousJcrResourceListener extends JcrResourceListener implemen
             final ResourceResolver resolver,
             final ServiceTracker tracker)
             throws LoginException, RepositoryException, NoSuchFieldException {
-        super("/", new ObservationListenerSupport(bundleContext, repo));
+        super("/", new ObservationListenerSupport(bundleContext, repo), new PathMapperImpl());
         PrivateAccessor.setField(this.support, "resourceResolver", resolver);
         PrivateAccessor.setField(this.support, "eventAdminTracker", tracker);
     }

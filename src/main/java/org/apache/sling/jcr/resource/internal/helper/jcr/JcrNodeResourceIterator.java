@@ -51,16 +51,20 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
 
     private final ClassLoader dynamicClassLoader;
 
+    private final PathMapper pathMapper;
+
     /**
      * Creates an instance using the given resource manager and the nodes
      * provided as a node iterator.
      */
     public JcrNodeResourceIterator(final ResourceResolver resourceResolver,
                                    final NodeIterator nodes,
-                                   final ClassLoader dynamicClassLoader) {
+                                   final ClassLoader dynamicClassLoader,
+                                   final PathMapper pathMapper) {
         this.resourceResolver = resourceResolver;
         this.nodes = nodes;
         this.dynamicClassLoader = dynamicClassLoader;
+        this.pathMapper = pathMapper;
         this.nextResult = seek();
     }
 
@@ -90,11 +94,14 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
         while (nodes.hasNext()) {
             try {
                 final Node n = nodes.nextNode();
-                Resource resource = new JcrNodeResource(resourceResolver,
-                    n.getPath(),
-                    n, dynamicClassLoader);
-                LOGGER.debug("seek: Returning Resource {}", resource);
-                return resource;
+                final String path = pathMapper.mapJCRPathToResourcePath(n.getPath());
+                if ( path != null ) {
+                    final Resource resource = new JcrNodeResource(resourceResolver,
+                        path,
+                        n, dynamicClassLoader, pathMapper);
+                    LOGGER.debug("seek: Returning Resource {}", resource);
+                    return resource;
+                }
             } catch (final Throwable t) {
                 LOGGER.error(
                     "seek: Problem creating Resource for next node, skipping",

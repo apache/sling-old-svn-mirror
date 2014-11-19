@@ -65,7 +65,7 @@ public class JcrResourceListenerScalabilityTest {
         when(bundleContext.getServiceReferences(anyString(), anyString())).thenReturn(serviceRefs);
         when(bundleContext.getService(serviceRef)).thenReturn(eventAdmin);
 
-        jcrResourceListener = new JcrResourceListener("/", new ObservationListenerSupport(bundleContext, repository));
+        jcrResourceListener = new JcrResourceListener("/", new ObservationListenerSupport(bundleContext, repository), new PathMapperImpl());
 
         Event event = mock(MockEvent.class);
         events = mock(EventIterator.class);
