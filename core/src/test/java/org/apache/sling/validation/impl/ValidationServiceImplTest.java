@@ -19,8 +19,8 @@
 package org.apache.sling.validation.impl;
 
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -41,10 +41,7 @@ import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.validation.api.ValidationModel;
 import org.apache.sling.validation.api.ValidationResult;
-import org.apache.sling.validation.api.ValidationService;
 import org.apache.sling.validation.api.Validator;
-import org.apache.sling.validation.api.ValidatorLookupService;
-import org.apache.sling.validation.api.exceptions.SlingValidationException;
 import org.apache.sling.validation.impl.setup.MockedResourceResolver;
 import org.apache.sling.validation.impl.util.examplevalidators.DateValidator;
 import org.apache.sling.validation.impl.validators.RegexValidator;
@@ -69,8 +66,7 @@ public class ValidationServiceImplTest {
     private static ResourceResolverFactory rrf;
     private static Resource appsValidatorsRoot;
     private static Resource libsValidatorsRoot;
-    private ValidationService validationService;
-    private ValidatorLookupService validatorLookupService;
+    private ValidationServiceImpl validationService;
 
     @BeforeClass
     public static void init() throws Exception {
@@ -108,16 +104,15 @@ public class ValidationServiceImplTest {
     @Before
     public void setUp() {
         validationService = new ValidationServiceImpl();
+        validationService.validators = new HashMap<String, Validator<?>>();
         Whitebox.setInternalState(validationService, "rrf", rrf);
-        validatorLookupService = mock(ValidatorLookupService.class);
+       
     }
     
     @Test
     public void testGetValidationModel() throws Exception {
-        when(validatorLookupService.getValidator("org.apache.sling.validation.impl.validators.RegexValidator")).thenReturn(new
-                RegexValidator());
-        Whitebox.setInternalState(validationService, "validatorLookupService", validatorLookupService);
-
+        validationService.validators.put("org.apache.sling.validation.impl.validators.RegexValidator", new RegexValidator());
+        
         List<TestProperty> properties = new ArrayList<TestProperty>();
         TestProperty property = new TestProperty();
         property.name = "field1";
@@ -158,9 +153,7 @@ public class ValidationServiceImplTest {
 
     @Test
     public void testGetValidationModelWithOverlay() throws Exception {
-        when(validatorLookupService.getValidator("org.apache.sling.validation.impl.validators.RegexValidator")).thenReturn(new
-                RegexValidator());
-        Whitebox.setInternalState(validationService, "validatorLookupService", validatorLookupService);
+        validationService.validators.put("org.apache.sling.validation.impl.validators.RegexValidator", new RegexValidator());
 
         List<TestProperty> fields = new ArrayList<TestProperty>();
         TestProperty field = new TestProperty();
@@ -206,15 +199,12 @@ public class ValidationServiceImplTest {
 
     @Test()
     public void testValueMapWithWrongDataType() throws Exception {
-        when(validatorLookupService.getValidator("org.apache.sling.validation.impl.validators.RegexValidator")).thenReturn(new
-                RegexValidator());
-        Whitebox.setInternalState(validationService, "validatorLookupService", validatorLookupService);
+        validationService.validators.put("org.apache.sling.validation.impl.validators.RegexValidator", new RegexValidator());
 
         List<TestProperty> properties = new ArrayList<TestProperty>();
         TestProperty property = new TestProperty();
         property.name = "field1";
-        when(validatorLookupService.getValidator("org.apache.sling.validation.impl.util.examplevalidators.DateValidator")).thenReturn(new
-                DateValidator());
+        validationService.validators.put("org.apache.sling.validation.impl.util.examplevalidators.DateValidator",new DateValidator());
         property.validators.put("org.apache.sling.validation.impl.util.examplevalidators.DateValidator", null);
         properties.add(property);
         ResourceResolver rr = rrf.getAdministrativeResourceResolver(null);
@@ -247,9 +237,7 @@ public class ValidationServiceImplTest {
 
     @Test
     public void testValueMapWithCorrectDataType() throws Exception {
-        when(validatorLookupService.getValidator("org.apache.sling.validation.impl.validators.RegexValidator")).thenReturn(new
-                RegexValidator());
-        Whitebox.setInternalState(validationService, "validatorLookupService", validatorLookupService);
+        validationService.validators.put("org.apache.sling.validation.impl.validators.RegexValidator", new RegexValidator());
 
         List<TestProperty> fields = new ArrayList<TestProperty>();
         TestProperty field = new TestProperty();
@@ -292,9 +280,7 @@ public class ValidationServiceImplTest {
 
     @Test
     public void testResourceWithMissingChildProperty() throws Exception {
-        when(validatorLookupService.getValidator("org.apache.sling.validation.impl.validators.RegexValidator")).thenReturn(new
-                RegexValidator());
-        Whitebox.setInternalState(validationService, "validatorLookupService", validatorLookupService);
+        validationService.validators.put("org.apache.sling.validation.impl.validators.RegexValidator", new RegexValidator());
 
         List<TestProperty> fields = new ArrayList<TestProperty>();
         TestProperty property = new TestProperty();
@@ -369,9 +355,7 @@ public class ValidationServiceImplTest {
     
     @Test
     public void testResourceWithMultivalueProperties() throws Exception {
-        when(validatorLookupService.getValidator("org.apache.sling.validation.impl.validators.RegexValidator")).thenReturn(new
-                RegexValidator());
-        Whitebox.setInternalState(validationService, "validatorLookupService", validatorLookupService);
+        validationService.validators.put("org.apache.sling.validation.impl.validators.RegexValidator", new RegexValidator());
 
         List<TestProperty> fields = new ArrayList<TestProperty>();
         TestProperty property = new TestProperty();

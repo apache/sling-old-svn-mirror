@@ -18,25 +18,21 @@
  */
 package org.apache.sling.validation.impl;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jcr.query.Query;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
@@ -54,7 +50,6 @@ import org.apache.sling.validation.api.ValidationModel;
 import org.apache.sling.validation.api.ValidationResult;
 import org.apache.sling.validation.api.ValidationService;
 import org.apache.sling.validation.api.Validator;
-import org.apache.sling.validation.api.ValidatorLookupService;
 import org.apache.sling.validation.api.exceptions.SlingValidationException;
 import org.apache.sling.validation.impl.util.JCRBuilder;
 import org.apache.sling.validation.impl.util.Trie;
@@ -66,9 +61,6 @@ import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-
-
 @Component()
 @Service(ValidationService.class)
 public class ValidationServiceImpl implements ValidationService, EventHandler {
@@ -79,15 +71,20 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
     static final String[] TOPICS = {SlingConstants.TOPIC_RESOURCE_REMOVED, SlingConstants.TOPIC_RESOURCE_CHANGED,
             SlingConstants.TOPIC_RESOURCE_ADDED};
 
-    private Map<String, Trie<JCRValidationModel>> validationModelsCache = new ConcurrentHashMap<String, Trie<JCRValidationModel>>();
+    protected Map<String, Trie<JCRValidationModel>> validationModelsCache = new ConcurrentHashMap<String, Trie<JCRValidationModel>>();
     private ThreadPool threadPool;
     private ServiceRegistration eventHandlerRegistration;
 
     @Reference
     private ResourceResolverFactory rrf = null;
 
-    @Reference
-    private ValidatorLookupService validatorLookupService = null;
+    @Reference(
+            name = "validator",
+            referenceInterface = Validator.class,
+            policy = ReferencePolicy.DYNAMIC,
+            cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE
+    )
+    Map<String, Validator<?>> validators = new ConcurrentHashMap<String, Validator<?>>();
 
     @Reference
     private ThreadPoolManager tpm = null;
@@ -283,9 +280,9 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
                                 String[].class));
                         Resource r = model.getChild(Constants.PROPERTIES);
                         if (r != null) {
-                            Set<ResourceProperty> resourceProperties = JCRBuilder.buildProperties(validatorLookupService, r);
+                            Set<ResourceProperty> resourceProperties = JCRBuilder.buildProperties(validators, r);
                             if (!resourceProperties.isEmpty()) {
-                                List<ChildResource> children = JCRBuilder.buildChildren(model, model, validatorLookupService);
+                                List<ChildResource> children = JCRBuilder.buildChildren(model, model, validators);
                                 vm = new JCRValidationModel(jcrPath, resourceProperties, validatedResourceType, applicablePaths, children);
                                 modelsForResourceType = validationModelsCache.get(validatedResourceType);
                                 /**
@@ -412,5 +409,14 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
             throw new SlingValidationException("Could not call validator " + validator
                     .getClass().getName() + " for resourceProperty " + relativePath + property, e);
         }
+    }
+    
+    // OSGi ################################################################################################################################
+    protected void bindValidator(Validator<?> validator, Map<?, ?> properties) {
+        validators.put(validator.getClass().getName(), validator);
+    }
+
+    protected void unbindValidator(Validator<?> validator, Map<?, ?> properties) {
+        validators.remove(validator.getClass().getName());
     }
 }
