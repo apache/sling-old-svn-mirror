@@ -27,7 +27,7 @@ import java.util.Stack;
 /**
  * Text writing utility which allows stacking of temporary buffers
  */
-public class StackedWriter extends Writer {
+public final class StackedWriter extends Writer {
 
     private final PrintWriter baseWriter;
     private final Stack<StringWriter> writerStack = new Stack<StringWriter>();

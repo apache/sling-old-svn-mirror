@@ -16,26 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
+@Version("1.0.0")
 package org.apache.sling.scripting.sightly.api;
 
-import aQute.bnd.annotation.ConsumerType;
-
-/**
- * Extensions provided to the Sightly runtime
- */
-@ConsumerType
-public interface RuntimeExtension {
-
-    /**
-     * Provide an instance of this extension
-     * @param renderContext - the runtime context
-     * @return an extension instance
-     */
-    ExtensionInstance provide(RenderContext renderContext);
-
-    /**
-     * The name of this extension
-     * @return - the name of the extension
-     */
-    String name();
-}
+import aQute.bnd.annotation.Version;

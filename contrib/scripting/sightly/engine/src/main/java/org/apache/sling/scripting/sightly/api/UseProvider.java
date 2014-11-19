@@ -21,10 +21,13 @@ package org.apache.sling.scripting.sightly.api;
 
 import javax.script.Bindings;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * Provides instances for the use API. Providers are tried in the order
  * of their priority until one is found which can provide a non-null instance
  */
+@ConsumerType
 public interface UseProvider extends Comparable<UseProvider> {
 
     int DEFAULT_PRIORITY = 0;
