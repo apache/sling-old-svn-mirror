@@ -39,6 +39,8 @@ import org.owasp.validator.html.Policy;
 
 public class XSSAPIImplTest {
 
+    public static final String RUBBISH = "rubbish";
+
     private XSSAPI xssAPI;
 
     @Before
@@ -310,27 +312,93 @@ public class XSSAPIImplTest {
                 {"simple", "simple"},
                 {"clickstreamcloud.thingy", "clickstreamcloud.thingy"},
 
-                {"break out", "rubbish"},
-                {"break,out", "rubbish"},
+                {"break out", RUBBISH},
+                {"break,out", RUBBISH},
 
                 {"\"literal string\"", "\"literal string\""},
                 {"'literal string'", "'literal string'"},
-                {"\"bad literal'", "rubbish"},
+                {"\"bad literal'", RUBBISH},
                 {"'literal'); junk'", "'literal\\x27); junk'"},
 
                 {"1200", "1200"},
                 {"3.14", "3.14"},
-                {"1,200", "rubbish"},
-                {"1200 + 1", "rubbish"}
+                {"1,200", RUBBISH},
+                {"1200 + 1", RUBBISH}
         };
 
         for (String[] aTestData : testData) {
             String source = aTestData[0];
             String expected = aTestData[1];
 
-            String result = xssAPI.getValidJSToken(source, "rubbish");
+            String result = xssAPI.getValidJSToken(source, RUBBISH);
             if (!result.equals(expected)) {
                 fail("Validating Javascript token '" + source + "', expecting '" + expected + "', but got '" + result + "'");
+            }
+        }
+    }
+
+    @Test
+    public void TestGetValidStyleToken() {
+        String[][] testData = {
+                // Source                           Expected result
+
+                // CSS close
+                {"}"                                , RUBBISH},
+
+                // line break
+                {"br\neak"                          , RUBBISH},
+
+                // no javascript:
+                {"javascript:alert(1)"              , RUBBISH},
+                {"url(javascript:alert(1))"         , RUBBISH},
+
+                // no expression
+                {"expression(alert(1))"             , RUBBISH},
+                {"expression  (alert(1))"           , RUBBISH},
+                {"expression(this.location='a.co')" , RUBBISH},
+
+                // html tags
+                {"</style><script>alert(1)</script>", RUBBISH},
+
+                // usual CSS stuff
+                {"background-color"                 , "background-color"},
+                {"-moz-box-sizing"                  , "-moz-box-sizing"},
+                {".42%"                             , ".42%"},
+                {"#fff"                             , "#fff"},
+
+                // valid strings
+                {"'literal string'"                 , "'literal string'"},
+                {"\"literal string\""               , "\"literal string\""},
+                {"'it\\'s here'"                    , "'it\\'s here'"},
+                {"\"it\\\"s here\""                 , "\"it\\\"s here\""},
+
+                // invalid strings
+                {"\"bad string"                     , RUBBISH},
+                {"'it's here'"                      , RUBBISH},
+                {"\"it\"s here\""                   , RUBBISH},
+
+                // valid parenthesis
+                {"rgb(255, 255, 255)"               , "rgb(255, 255, 255)"},
+
+                // invalid parenthesis
+                {"rgb(255, 255, 255"               , RUBBISH},
+                {"255, 255, 255)"                  , RUBBISH},
+
+                // valid tokens
+                {"url(http://example.com/test.png)", "url(http://example.com/test.png)"},
+                {"url('image/test.png')"           , "url('image/test.png')"},
+
+                // invalid tokens
+                {"color: red"                      , RUBBISH}
+        };
+
+        for (String[] aTestData : testData) {
+            String source = aTestData[0];
+            String expected = aTestData[1];
+
+            String result = xssAPI.getValidStyleToken(source, RUBBISH);
+            if (!result.equals(expected)) {
+                fail("Validating style token '" + source + "', expecting '" + expected + "', but got '" + result + "'");
             }
         }
     }
@@ -352,16 +420,16 @@ public class XSSAPIImplTest {
                 {"transparent", "transparent"},
 
                 {"\f\r\n\t MenuText\f\r\n\t ", "MenuText"},
-                {"expression(99,99,99)", "rubbish"},
-                {"blue;", "rubbish"},
-                {"url(99,99,99)", "rubbish"}
+                {"expression(99,99,99)", RUBBISH},
+                {"blue;", RUBBISH},
+                {"url(99,99,99)", RUBBISH}
         };
 
         for (String[] aTestData : testData) {
             String source = aTestData[0];
             String expected = aTestData[1];
 
-            String result = xssAPI.getValidCSSColor(source, "rubbish");
+            String result = xssAPI.getValidCSSColor(source, RUBBISH);
             if (!result.equals(expected)) {
                 fail("Validating CSS Color '" + source + "', expecting '" + expected + "', but got '" + result + "'");
             }

@@ -190,6 +190,46 @@ public class XSSAPIImpl implements XSSAPI {
         }
     }
 
+    private static final String NON_ASCII = "\\x00\\x08\\x0B\\x0C\\x0E-\\x1F";
+    /** http://www.w3.org/TR/css-syntax-3/#number-token-diagram */
+    private static final String NUMBER = "[+-]?[\\d]*[\\.]?[\\d]*(?:[e][+-]?\\d+)?";
+    /** http://www.w3.org/TR/css-syntax-3/#hex-digit-diagram */
+    private static final String HEX_DIGITS = "#[0-9a-f]*";
+    /** http://www.w3.org/TR/css-syntax-3/#ident-token-diagram */
+    private static final String IDENTIFIER = "-?[a-z_" + NON_ASCII + "][\\w_\\-" + NON_ASCII + "]*";
+    /** http://www.w3.org/TR/css-syntax-3/#string-token-diagram */
+    private static final String STRING = "\"(?:[^\"^\\\\^\\n]|(?:\\\\\"))*\"|'(?:[^'^\\\\^\\n]|(?:\\\\'))*'";
+    /** http://www.w3.org/TR/css-syntax-3/#dimension-token-diagram */
+    private static final String DIMENSION = NUMBER + IDENTIFIER;
+    /** http://www.w3.org/TR/css-syntax-3/#percentage-token-diagram */
+    private static final String PERCENT = NUMBER + "%";
+    /** http://www.w3.org/TR/css-syntax-3/#function-token-diagram */
+    private static final String FUNCTION = IDENTIFIER + "\\((?:(?:" + NUMBER + ")|(?:" + IDENTIFIER + ")|(?:[\\s]*)|(?:,))*\\)";
+    /** http://www.w3.org/TR/css-syntax-3/#url-unquoted-diagram */
+    private static final String URL_UNQUOTED = "[^\"^'^\\(^\\)^[" + NON_ASCII + "]]*";
+    /** http://www.w3.org/TR/css-syntax-3/#url-token-diagram */
+    private static final String URL = "url\\((?:(?:" + URL_UNQUOTED + ")|(?:" + STRING + "))\\)";
+    /** composite regular expression for style token validation */
+    private static final String CSS_TOKEN = "(?i)" // case insensitive
+            + "(?:" + NUMBER + ")"
+            + "|(?:" + DIMENSION + ")"
+            + "|(?:" + PERCENT + ")"
+            + "|(?:" + HEX_DIGITS + ")"
+            + "|(?:" + IDENTIFIER + ")"
+            + "|(?:" + STRING + ")"
+            + "|(?:" + FUNCTION + ")"
+            + "|(?:" + URL + ")";
+
+    /**
+     * @see org.apache.sling.xss.XSSAPI#getValidStyleToken(String, String)
+     */
+    public String getValidStyleToken(String token, String defaultValue) {
+        if (token.matches(CSS_TOKEN)) {
+            return token;
+        }
+        return defaultValue;
+    }
+
     /**
      * @see org.apache.sling.xss.XSSAPI#getValidCSSColor(String, String)
      */
