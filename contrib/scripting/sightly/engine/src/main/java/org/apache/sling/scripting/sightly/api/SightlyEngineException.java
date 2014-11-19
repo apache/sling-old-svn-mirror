@@ -18,9 +18,12 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.api;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Exceptions caused by the Sightly engine
  */
+@ProviderType
 public class SightlyEngineException extends RuntimeException {
 
     public SightlyEngineException() {

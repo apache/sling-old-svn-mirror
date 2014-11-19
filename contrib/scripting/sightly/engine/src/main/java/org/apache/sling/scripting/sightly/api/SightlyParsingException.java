@@ -19,9 +19,12 @@
 
 package org.apache.sling.scripting.sightly.api;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The runtime {@code SightlyParsingException} is thrown during the parsing stage for any grammar offending input.
  */
+@ProviderType
 public class SightlyParsingException extends RuntimeException {
 
     private String offendingInput;

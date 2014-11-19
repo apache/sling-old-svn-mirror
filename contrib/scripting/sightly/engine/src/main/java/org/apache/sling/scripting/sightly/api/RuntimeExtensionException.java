@@ -18,10 +18,13 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.api;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Exception thrown by runtime extensions
  * @see RuntimeExtension
  */
+@ProviderType
 public class RuntimeExtensionException extends RuntimeException {
 
     public RuntimeExtensionException() {

@@ -19,9 +19,12 @@
 
 package org.apache.sling.scripting.sightly.api;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Exception raised by the use resolving mechanism
  */
+@ProviderType
 public class SightlyUseException extends RuntimeException {
     public SightlyUseException() {
     }
