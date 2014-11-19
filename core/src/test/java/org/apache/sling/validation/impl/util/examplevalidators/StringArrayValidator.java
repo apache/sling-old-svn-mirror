@@ -16,33 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.api;
+package org.apache.sling.validation.impl.util.examplevalidators;
 
-import java.util.List;
+import java.util.Map;
 
-/**
- * Describes a {@link org.apache.sling.api.resource.Resource} property.
- */
-public interface ResourceProperty {
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.validation.api.Validator;
+import org.apache.sling.validation.api.exceptions.SlingValidationException;
 
-    /**
-     * Returns the name of this property.
-     *
-     * @return the name
-     */
-    String getName();
+public class StringArrayValidator implements Validator<String[]> {
 
-    /**
-     * Returns {@code true} if this property is expected to be a multiple property (e.g. array of values).
-     *
-     * @return {@code true} if the  property is multiple, {@code false} otherwise
-     */
-    boolean isMultiple();
+    @Override
+    public String validate(String[] data, ValueMap valueMap, Map<String, String> arguments)
+            throws SlingValidationException {
+        return null;
+    }
 
-    /**
-     * Returns a list of {@link ParameterizedValidator}s which should be applied on this property.
-     *
-     * @return the list of validators
-     */
-    List<ParameterizedValidator> getValidators();
 }

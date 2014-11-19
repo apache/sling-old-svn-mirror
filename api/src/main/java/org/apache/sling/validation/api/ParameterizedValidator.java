@@ -18,31 +18,18 @@
  */
 package org.apache.sling.validation.api;
 
-import java.util.List;
+import java.util.Map;
 
 /**
- * Describes a {@link org.apache.sling.api.resource.Resource} property.
+ * Defines a validator instance with information about the type and the parameterization of the validator.
+ *
  */
-public interface ResourceProperty {
+public interface ParameterizedValidator {
 
-    /**
-     * Returns the name of this property.
-     *
-     * @return the name
-     */
-    String getName();
+    public abstract Validator<?> getValidator();
 
-    /**
-     * Returns {@code true} if this property is expected to be a multiple property (e.g. array of values).
-     *
-     * @return {@code true} if the  property is multiple, {@code false} otherwise
-     */
-    boolean isMultiple();
+    public abstract Map<String, String> getParameters();
 
-    /**
-     * Returns a list of {@link ParameterizedValidator}s which should be applied on this property.
-     *
-     * @return the list of validators
-     */
-    List<ParameterizedValidator> getValidators();
+    public abstract Class<?> getType();
+
 }
