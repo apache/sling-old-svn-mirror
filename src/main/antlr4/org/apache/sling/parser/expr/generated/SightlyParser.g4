@@ -47,6 +47,8 @@ textFrag returns [String str]
 @init { StringBuilder sb = new StringBuilder(); }
     :   (TEXT_PART { sb.append($TEXT_PART.text); })+
         { $str = sb.toString(); }
+    | (ESC_EXPR { sb.append($ESC_EXPR.text); })+
+        { $str = sb.toString().substring(1); }
     ;
 
 expression returns [Expression expr]
