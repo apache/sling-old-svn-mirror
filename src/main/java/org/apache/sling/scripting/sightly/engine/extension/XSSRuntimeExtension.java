@@ -103,35 +103,29 @@ public class XSSRuntimeExtension extends RuntimeExtensionComponent {
             }
 
             private String applyXSSFilter(String text, MarkupContext xssContext) {
-                if (xssContext.equals(MarkupContext.ATTRIBUTE)) {
-                    return xssapi.encodeForHTMLAttr(text);
-                }
-                if (xssContext.equals(MarkupContext.COMMENT) ||
-                        xssContext.equals(MarkupContext.TEXT)) {
-                    return xssapi.encodeForHTML(text);
-                }
-                if (xssContext.equals(MarkupContext.ATTRIBUTE_NAME)) {
-                    return escapeAttributeName(text);
-                }
-                if (xssContext.equals(MarkupContext.NUMBER)) {
-                    return xssapi.getValidLong(text, 0).toString();
-                }
-                if (xssContext.equals(MarkupContext.URI)) {
-                    return xssapi.getValidHref(text);
-                }
-                if (xssContext.equals(MarkupContext.SCRIPT_TOKEN)
-                        || xssContext.equals(MarkupContext.SCRIPT_COMMENT)) {
-                    return xssapi.getValidJSToken(text, "");
-                }
-                if (xssContext.equals(MarkupContext.SCRIPT_STRING)
-                        || xssContext.equals(MarkupContext.STYLE_STRING)) {
-                    return xssapi.encodeForJSString(text);
-                }
-                if (xssContext.equals(MarkupContext.ELEMENT_NAME)) {
-                    return escapeElementName(text);
-                }
-                if (xssContext.equals(MarkupContext.HTML)) {
-                    return xssapi.filterHTML(text);
+                switch (xssContext) {
+                    case ATTRIBUTE:
+                        return xssapi.encodeForHTMLAttr(text);
+                    case COMMENT:
+                    case TEXT:
+                        return xssapi.encodeForHTML(text);
+                    case ATTRIBUTE_NAME:
+                        return escapeAttributeName(text);
+                    case NUMBER:
+                        return xssapi.getValidLong(text, 0).toString();
+                    case URI:
+                        return xssapi.getValidHref(text);
+                    case SCRIPT_TOKEN:
+                    case SCRIPT_COMMENT:
+                        return xssapi.getValidJSToken(text, "");
+                    case STYLE_TOKEN:
+                        return xssapi.getValidStyleToken(text, "");
+                    case SCRIPT_STRING:
+                        return xssapi.encodeForJSString(text);
+                    case ELEMENT_NAME:
+                        return escapeElementName(text);
+                    case HTML:
+                        return xssapi.filterHTML(text);
                 }
                 return text; //todo: apply the rest of XSS filters
             }
