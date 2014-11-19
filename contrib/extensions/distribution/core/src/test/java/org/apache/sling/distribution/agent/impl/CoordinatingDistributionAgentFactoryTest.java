@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.distribution.agent.DistributionAgent;
-import org.apache.sling.distribution.component.impl.DefaultDistributionComponentFactoryConstants;
+import org.apache.sling.distribution.component.impl.DistributionComponentManager;
 import org.apache.sling.distribution.component.impl.DistributionComponentFactoryManager;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
@@ -85,12 +85,11 @@ public class CoordinatingDistributionAgentFactoryTest {
                 "endpoints[1]=http://localhost:102/libs/sling/distribution/services/importers/default",
                 "endpoints[2]=http://localhost:103/libs/sling/distribution/services/importers/default",
                 "endpoints.strategy=All"});
-        DistributionComponentFactoryManager componentManager = mock(DistributionComponentFactoryManager.class);
+        DistributionComponentManager componentManager = mock(DistributionComponentFactoryManager.class);
         DistributionAgent distributionAgent = mock(DistributionAgent.class);
         CoordinatingDistributionAgentFactory coordinatingdistributionAgentFactory = new CoordinatingDistributionAgentFactory();
 
-        config.put(DefaultDistributionComponentFactoryConstants.COMPONENT_PROVIDER, coordinatingdistributionAgentFactory);
-        when(componentManager.createComponent(DistributionAgent.class, config)).
+        when(componentManager.createComponent(DistributionAgent.class, config, coordinatingdistributionAgentFactory)).
                 thenReturn(distributionAgent);
 
         Field componentManagerField= coordinatingdistributionAgentFactory.getClass().getDeclaredField("componentManager");

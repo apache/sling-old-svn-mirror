@@ -38,7 +38,7 @@ import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.component.DistributionComponent;
 import org.apache.sling.distribution.component.DistributionComponentProvider;
 import org.apache.sling.distribution.component.impl.DefaultDistributionComponentFactoryConstants;
-import org.apache.sling.distribution.component.impl.DistributionComponentFactoryManager;
+import org.apache.sling.distribution.component.impl.DistributionComponentManager;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExportException;
@@ -70,7 +70,7 @@ public class AgentDistributionPackageExporterFactory implements DistributionPack
     public static final String PACKAGE_BUILDER = DefaultDistributionComponentFactoryConstants.COMPONENT_PACKAGE_BUILDER;
 
     @Reference
-    private DistributionComponentFactoryManager componentManager;
+    private DistributionComponentManager componentManager;
 
     private DistributionPackageExporter packageExporter;
 
@@ -82,9 +82,8 @@ public class AgentDistributionPackageExporterFactory implements DistributionPack
         properties.putAll(config);
         String[] packageBuilderProperties = PropertiesUtil.toStringArray(config.get(PACKAGE_BUILDER));
         properties.put(PACKAGE_BUILDER, SettingsUtils.parseLines(packageBuilderProperties));
-        properties.put(DefaultDistributionComponentFactoryConstants.COMPONENT_PROVIDER, this);
 
-        packageExporter = componentManager.createComponent(DistributionPackageExporter.class, properties);
+        packageExporter = componentManager.createComponent(DistributionPackageExporter.class, properties, this);
     }
 
     @Nonnull

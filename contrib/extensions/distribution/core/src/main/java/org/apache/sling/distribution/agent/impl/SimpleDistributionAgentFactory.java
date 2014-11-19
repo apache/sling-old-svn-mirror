@@ -36,11 +36,10 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.component.DistributionComponent;
-import org.apache.sling.distribution.component.DistributionComponentFactory;
 import org.apache.sling.distribution.component.DistributionComponentProvider;
 import org.apache.sling.distribution.component.ManagedDistributionComponent;
 import org.apache.sling.distribution.component.impl.DefaultDistributionComponentFactoryConstants;
-import org.apache.sling.distribution.component.impl.DistributionComponentFactoryManager;
+import org.apache.sling.distribution.component.impl.DistributionComponentManager;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.queue.DistributionQueueDispatchingStrategy;
@@ -115,7 +114,7 @@ public class SimpleDistributionAgentFactory implements DistributionComponentProv
     private JobManager jobManager;
 
     @Reference
-    private DistributionComponentFactoryManager componentFactoryManager;
+    private DistributionComponentManager componentFactoryManager;
 
     private ServiceRegistration componentReg;
     private BundleContext savedContext;
@@ -155,11 +154,10 @@ public class SimpleDistributionAgentFactory implements DistributionComponentProv
                 properties.put(PACKAGE_IMPORTER, SettingsUtils.parseLines(packageImporterProperties));
                 properties.put(PACKAGE_EXPORTER, SettingsUtils.parseLines(packageExporterProperties));
                 properties.put(TRIGGER, SettingsUtils.parseLines(triggerProperties));
-                properties.put(DefaultDistributionComponentFactoryConstants.COMPONENT_PROVIDER, this);
 
                 DistributionAgent agent = null;
                 try {
-                    agent = componentFactoryManager.createComponent(DistributionAgent.class, properties);
+                    agent = componentFactoryManager.createComponent(DistributionAgent.class, properties, this);
                 }
                 catch (IllegalArgumentException e) {
                     log.warn("cannot create agent", e);

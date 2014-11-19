@@ -87,7 +87,7 @@ import static org.apache.sling.distribution.component.impl.DefaultDistributionCo
 )
 @Service(DistributionComponentFactory.class)
 @Property(name = "name", value = "default")
-public class DefaultDistributionComponentFactory implements DistributionComponentFactory, DistributionComponentProvider {
+public class DefaultDistributionComponentFactory implements DistributionComponentFactory {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -117,29 +117,34 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
     }
 
     public <ComponentType extends DistributionComponent> ComponentType createComponent(@Nonnull Class<ComponentType> type,
-                                                                                      @Nonnull Map<String, Object> properties) {
+                                                                                      @Nonnull Map<String, Object> properties,
+                                                                                      DistributionComponentFactory componentFactory) {
 
-        DistributionComponentProvider componentProvider = (DistributionComponentProvider) properties.get(COMPONENT_PROVIDER);
-        if (componentProvider == null) {
-            componentProvider = this;
-        }
+
+        DistributionComponentFactoryWrapper wrappingComponentFactory = new DistributionComponentFactoryWrapper(componentFactory);
 
         if (type.isAssignableFrom(DistributionAgent.class)) {
-            return (ComponentType) createAgent(properties, componentProvider);
+            return (ComponentType) createAgent(properties, wrappingComponentFactory);
         } else if (type.isAssignableFrom(DistributionTrigger.class)) {
-            return (ComponentType) createTrigger(properties, componentProvider);
+            return (ComponentType) createTrigger(properties, wrappingComponentFactory);
         } else if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
-            return (ComponentType) createTransportAuthenticationProvider(properties, componentProvider);
+            return (ComponentType) createTransportAuthenticationProvider(properties, wrappingComponentFactory);
         } else if (type.isAssignableFrom(DistributionPackageImporter.class)) {
-            return (ComponentType) createImporter(properties, componentProvider);
+            return (ComponentType) createImporter(properties, wrappingComponentFactory);
         } else if (type.isAssignableFrom(DistributionPackageExporter.class)) {
-            return (ComponentType) createExporter(properties, componentProvider);
+            return (ComponentType) createExporter(properties, wrappingComponentFactory);
+        } else if (type.isAssignableFrom(DistributionQueueDispatchingStrategy.class)) {
+            return (ComponentType) createDispatchingStrategy(properties, wrappingComponentFactory);
+        } else if (type.isAssignableFrom(DistributionQueueProvider.class)) {
+            return (ComponentType) createQueueProvider(properties, wrappingComponentFactory);
+        } else if (type.isAssignableFrom(DistributionRequestAuthorizationStrategy.class)) {
+            return (ComponentType) createAuthorizationStrategy(properties, wrappingComponentFactory);
         }
 
         return null;
     }
 
-    DistributionAgent createAgent(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
+    DistributionAgent createAgent(Map<String, Object> properties, DistributionComponentFactoryWrapper componentFactory) {
 
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), AGENT_SIMPLE);
 
@@ -148,24 +153,27 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
 
 
             Map<String, Object> exporterProperties = extractMap(COMPONENT_PACKAGE_EXPORTER, properties);
-            DistributionPackageExporter packageExporter = createExporter(exporterProperties, componentProvider);
+            DistributionPackageExporter packageExporter = componentFactory.createComponent(DistributionPackageExporter.class, exporterProperties);
 
             Map<String, Object> importerProperties = extractMap(COMPONENT_PACKAGE_IMPORTER, properties);
-            DistributionPackageImporter packageImporter = createImporter(importerProperties, componentProvider);
+            DistributionPackageImporter packageImporter = componentFactory.createComponent(DistributionPackageImporter.class, importerProperties);
 
             Map<String, Object> authorizationStrategyProperties = extractMap(COMPONENT_REQUEST_AUTHORIZATION_STRATEGY, properties);
-            DistributionRequestAuthorizationStrategy packageExporterStrategy = createAuthorizationStrategy(authorizationStrategyProperties, componentProvider);
+            DistributionRequestAuthorizationStrategy packageExporterStrategy = componentFactory.createComponent(DistributionRequestAuthorizationStrategy.class,
+                    authorizationStrategyProperties);
 
             Map<String, Object> queueDistributionStrategyProperties = extractMap(COMPONENT_QUEUE_DISTRIBUTION_STRATEGY, properties);
-            DistributionQueueDispatchingStrategy queueDistributionStrategy = createDistributionStrategy(queueDistributionStrategyProperties, componentProvider);
+            DistributionQueueDispatchingStrategy queueDistributionStrategy = componentFactory.createComponent(DistributionQueueDispatchingStrategy.class, queueDistributionStrategyProperties);
 
             Map<String, Object> queueProviderProperties = extractMap(COMPONENT_QUEUE_PROVIDER, properties);
             queueProviderProperties.put(QUEUE_PROVIDER_PROPERTY_QUEUE_PREFIX, agentName);
-            DistributionQueueProvider queueProvider = createQueueProvider(queueProviderProperties, componentProvider);
+            DistributionQueueProvider queueProvider = componentFactory.createComponent(DistributionQueueProvider.class, queueProviderProperties);
 
             List<Map<String, Object>> triggersProperties = extractMapList(COMPONENT_TRIGGER, properties);
-            List<DistributionTrigger> triggers = createTriggerList(triggersProperties, componentProvider);
-
+            List<DistributionTrigger> triggers = new ArrayList<DistributionTrigger>();
+            for (Map<String, Object>  triggerProperties : triggersProperties) {
+                triggers.add(componentFactory.createComponent(DistributionTrigger.class, triggerProperties));
+            }
 
             String serviceName = PropertiesUtil.toString(properties.get(AGENT_SIMPLE_PROPERTY_SERVICE_NAME), null);
 
@@ -181,15 +189,11 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
 
     }
 
-    private DistributionRequestAuthorizationStrategy createAuthorizationStrategy(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
+    private DistributionRequestAuthorizationStrategy createAuthorizationStrategy(Map<String, Object> properties, DistributionComponentFactoryWrapper componentFactory) {
 
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
-        if (COMPONENT_TYPE_SERVICE.equals(factory)) {
-            String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
-            return componentProvider.getComponent(DistributionRequestAuthorizationStrategy.class, name);
-
-        } else if (REQUEST_AUTHORIZATION_STRATEGY_PRIVILEGE.equals(factory)) {
+        if (REQUEST_AUTHORIZATION_STRATEGY_PRIVILEGE.equals(factory)) {
             String jcrPrivilege = PropertiesUtil.toString(properties.get(REQUEST_AUTHORIZATION_STRATEGY_PRIVILEGE_PROPERTY_JCR_PRIVILEGE), null);
             return new PrivilegeDistributionRequestAuthorizationStrategy(jcrPrivilege);
         }
@@ -198,21 +202,18 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
     }
 
 
-    DistributionPackageExporter createExporter(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
+    DistributionPackageExporter createExporter(Map<String, Object> properties, DistributionComponentFactoryWrapper componentFactory) {
 
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
-        if (COMPONENT_TYPE_SERVICE.equals(factory)) {
-            String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
-            return componentProvider.getComponent(DistributionPackageExporter.class, name);
-
-        } else if (PACKAGE_EXPORTER_LOCAL.equals(factory)) {
+        if (PACKAGE_EXPORTER_LOCAL.equals(factory)) {
             Map<String, Object> builderProperties = extractMap(COMPONENT_PACKAGE_BUILDER, properties);
             DistributionPackageBuilder packageBuilder = createBuilder(builderProperties);
             return new LocalDistributionPackageExporter(packageBuilder);
         } else if (PACKAGE_EXPORTER_REMOTE.equals(factory)) {
             Map<String, Object> authenticationProviderProperties = extractMap(COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER, properties);
-            TransportAuthenticationProvider authenticationProvider = createTransportAuthenticationProvider(authenticationProviderProperties, componentProvider);
+            TransportAuthenticationProvider authenticationProvider = componentFactory.createComponent(TransportAuthenticationProvider.class,
+                    authenticationProviderProperties);
 
             Map<String, Object> builderProperties = extractMap(COMPONENT_PACKAGE_BUILDER, properties);
             DistributionPackageBuilder packageBuilder = createBuilder(builderProperties);
@@ -226,7 +227,7 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
         } else if (PACKAGE_EXPORTER_AGENT.equals(factory)) {
             Map<String, Object> builderProperties = extractMap(COMPONENT_PACKAGE_BUILDER, properties);
             DistributionPackageBuilder packageBuilder = createBuilder(builderProperties);
-            DistributionAgent agent = componentProvider.getComponent(DistributionAgent.class, null);
+            DistributionAgent agent = componentFactory.createComponent(DistributionAgent.class, new HashMap<String, Object>());
 
             return new AgentDistributionPackageExporter(properties, agent, packageBuilder);
         }
@@ -235,20 +236,18 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
         return null;
     }
 
-    DistributionPackageImporter createImporter(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
+    DistributionPackageImporter createImporter(Map<String, Object> properties, DistributionComponentFactoryWrapper componentFactory) {
 
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
-        if (COMPONENT_TYPE_SERVICE.equals(factory)) {
-            String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
-            return componentProvider.getComponent(DistributionPackageImporter.class, name);
-        } else if (PACKAGE_IMPORTER_LOCAL.equals(factory)) {
+        if (PACKAGE_IMPORTER_LOCAL.equals(factory)) {
             Map<String, Object> builderProperties = extractMap(COMPONENT_PACKAGE_BUILDER, properties);
             DistributionPackageBuilder packageBuilder = createBuilder(builderProperties);
             return new LocalDistributionPackageImporter(packageBuilder, distributionEventFactory);
         } else if (PACKAGE_IMPORTER_REMOTE.equals(factory)) {
             Map<String, Object> authenticationProviderProperties = extractMap(COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER, properties);
-            TransportAuthenticationProvider authenticationProvider = createTransportAuthenticationProvider(authenticationProviderProperties, componentProvider);
+            TransportAuthenticationProvider authenticationProvider = componentFactory.createComponent(TransportAuthenticationProvider.class,
+                    authenticationProviderProperties);
 
             String[] endpoints = PropertiesUtil.toStringArray(properties.get(PACKAGE_EXPORTER_REMOTE_PROPERTY_ENDPOINTS), new String[0]);
             String endpointStrategyName = PropertiesUtil.toString(properties.get(PACKAGE_EXPORTER_REMOTE_PROPERTY_ENDPOINTS_STRATEGY), "One");
@@ -259,14 +258,10 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
         return null;
     }
 
-    DistributionQueueProvider createQueueProvider(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
+    DistributionQueueProvider createQueueProvider(Map<String, Object> properties, DistributionComponentFactoryWrapper componentFactory) {
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
-        if (COMPONENT_TYPE_SERVICE.equals(factory)) {
-            String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
-            return componentProvider.getComponent(DistributionQueueProvider.class, name);
-        }
-        else if (QUEUE_PROVIDER_JOB.equals(factory)) {
+        if (QUEUE_PROVIDER_JOB.equals(factory)) {
             String prefix = PropertiesUtil.toString(properties.get(QUEUE_PROVIDER_PROPERTY_QUEUE_PREFIX), null);
             return new JobHandlingDistributionQueueProvider(prefix, jobManager, bundleContext);
         }
@@ -279,14 +274,10 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
         return null;
     }
 
-    DistributionQueueDispatchingStrategy createDistributionStrategy(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
+    DistributionQueueDispatchingStrategy createDispatchingStrategy(Map<String, Object> properties, DistributionComponentFactoryWrapper componentFactory) {
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
-        if (COMPONENT_TYPE_SERVICE.equals(factory)) {
-            String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
-            return componentProvider.getComponent(DistributionQueueDispatchingStrategy.class, name);
-        }
-        else if (QUEUE_DISTRIBUTION_STRATEGY_SINGLE.equals(factory)) {
+        if (QUEUE_DISTRIBUTION_STRATEGY_SINGLE.equals(factory)) {
             return new SingleQueueDispatchingStrategy();
         }
         else if (QUEUE_DISTRIBUTION_STRATEGY_PRIORITY.equals(factory)) {
@@ -298,14 +289,10 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
         return null;
     }
 
-    TransportAuthenticationProvider createTransportAuthenticationProvider(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
+    TransportAuthenticationProvider createTransportAuthenticationProvider(Map<String, Object> properties, DistributionComponentFactoryWrapper componentFactory) {
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
-        if (COMPONENT_TYPE_SERVICE.equals(factory)) {
-            String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
-            return componentProvider.getComponent(TransportAuthenticationProvider.class, name);
-
-        } else if (TRANSPORT_AUTHENTICATION_PROVIDER_USER.equals(factory)) {
+        if (TRANSPORT_AUTHENTICATION_PROVIDER_USER.equals(factory)) {
             String username = PropertiesUtil.toString(properties.get(TRANSPORT_AUTHENTICATION_PROVIDER_USER_PROPERTY_USERNAME), "").trim();
             String password = PropertiesUtil.toString(properties.get(TRANSPORT_AUTHENTICATION_PROVIDER_USER_PROPERTY_PASSWORD), "").trim();
             return new UserCredentialsTransportAuthenticationProvider(username, password);
@@ -331,17 +318,14 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
     }
 
 
-    DistributionTrigger createTrigger(Map<String, Object> properties, DistributionComponentProvider componentProvider) {
+    DistributionTrigger createTrigger(Map<String, Object> properties, DistributionComponentFactoryWrapper componentFactory) {
         String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
 
-        if (COMPONENT_TYPE_SERVICE.equals(factory)) {
-            String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
-            return componentProvider.getComponent(DistributionTrigger.class, name);
-
-        } else if (TRIGGER_REMOTE_EVENT.equals(factory)) {
+        if (TRIGGER_REMOTE_EVENT.equals(factory)) {
             Map<String, Object> authenticationProviderProperties = extractMap(COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER, properties);
 
-            TransportAuthenticationProvider authenticationProvider = createTransportAuthenticationProvider(authenticationProviderProperties, componentProvider);
+            TransportAuthenticationProvider authenticationProvider = componentFactory.createComponent(TransportAuthenticationProvider.class,
+                    authenticationProviderProperties);
             String endpoint = PropertiesUtil.toString(properties.get(TRIGGER_REMOTE_EVENT_PROPERTY_ENDPOINT), null);
 
             return new RemoteEventDistributionTrigger(endpoint, authenticationProvider, scheduler);
@@ -375,14 +359,7 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
         return null;
     }
 
-    private List<DistributionTrigger> createTriggerList(List<Map<String, Object>> triggersProperties, DistributionComponentProvider componentProvider) {
-        List<DistributionTrigger> triggers = new ArrayList<DistributionTrigger>();
-        for (Map<String, Object> properties : triggersProperties) {
-            triggers.add(createTrigger(properties, componentProvider));
-        }
 
-        return triggers;
-    }
 
     Map<String, Object> extractMap(String key, Map<String, Object> sourceMap) {
         sourceMap = sourceMap == null ? new HashMap<String, Object>() : sourceMap;
@@ -418,8 +395,20 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
 
     }
 
-    public <ComponentType extends DistributionComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type,
-                                                                                   @Nullable String componentName) {
-        return null;
+
+    private class DistributionComponentFactoryWrapper {
+
+        private final DistributionComponentFactory distributionComponentFactory;
+
+
+        public DistributionComponentFactoryWrapper(DistributionComponentFactory distributionComponentFactory) {
+
+            this.distributionComponentFactory = distributionComponentFactory;
+        }
+
+        public <ComponentType extends DistributionComponent> ComponentType createComponent(@Nonnull Class<ComponentType> type, @Nonnull Map<String, Object> properties) {
+
+            return distributionComponentFactory.createComponent(type, properties, null);
+        }
     }
 }

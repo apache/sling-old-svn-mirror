@@ -36,7 +36,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.component.DistributionComponent;
 import org.apache.sling.distribution.component.DistributionComponentProvider;
 import org.apache.sling.distribution.component.impl.DefaultDistributionComponentFactoryConstants;
-import org.apache.sling.distribution.component.impl.DistributionComponentFactoryManager;
+import org.apache.sling.distribution.component.impl.DistributionComponentManager;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
@@ -86,7 +86,7 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
     private DistributionPackageImporter importer;
 
     @Reference
-    private DistributionComponentFactoryManager componentManager;
+    private DistributionComponentManager componentManager;
 
 
     @Activate
@@ -95,9 +95,7 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
         Map<String, Object> properties = new HashMap<String, Object>();
         properties.putAll(config);
 
-        properties.put(DefaultDistributionComponentFactoryConstants.COMPONENT_PROVIDER, this);
-
-        importer = componentManager.createComponent(DistributionPackageImporter.class, properties);
+        importer = componentManager.createComponent(DistributionPackageImporter.class, properties, this);
 
     }
 

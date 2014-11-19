@@ -37,7 +37,7 @@ import org.apache.sling.distribution.component.DistributionComponent;
 import org.apache.sling.distribution.component.DistributionComponentProvider;
 import org.apache.sling.distribution.component.ManagedDistributionComponent;
 import org.apache.sling.distribution.component.impl.DefaultDistributionComponentFactoryConstants;
-import org.apache.sling.distribution.component.impl.DistributionComponentFactoryManager;
+import org.apache.sling.distribution.component.impl.DistributionComponentManager;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.queue.DistributionQueueDispatchingStrategy;
@@ -112,7 +112,7 @@ public class CoordinatingDistributionAgentFactory implements DistributionCompone
     private JobManager jobManager;
 
     @Reference
-    private DistributionComponentFactoryManager componentManager;
+    private DistributionComponentManager componentManager;
 
     private BundleContext savedContext;
 
@@ -161,9 +161,8 @@ public class CoordinatingDistributionAgentFactory implements DistributionCompone
                 ((Map) properties.get(PACKAGE_EXPORTER)).put("type", "remote");
                 ((Map) properties.get(PACKAGE_IMPORTER)).put("type", "remote");
 
-                properties.put(DefaultDistributionComponentFactoryConstants.COMPONENT_PROVIDER, this);
 
-                DistributionAgent agent = componentManager.createComponent(DistributionAgent.class, properties);
+                DistributionAgent agent = componentManager.createComponent(DistributionAgent.class, properties, this);
 
                 log.debug("activated agent {}", agentName);
 

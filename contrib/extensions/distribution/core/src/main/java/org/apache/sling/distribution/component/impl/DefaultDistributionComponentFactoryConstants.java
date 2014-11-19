@@ -38,11 +38,6 @@ public final class DefaultDistributionComponentFactoryConstants {
     public static final String COMPONENT_TYPE_SERVICE = "service";
 
     /**
-     * property that contains a custom component provider
-     */
-    public static final String COMPONENT_PROVIDER = "componentProvider";
-
-    /**
      * component enabled
      */
     public static final String COMPONENT_ENABLED = "enabled";
