@@ -29,6 +29,7 @@ import aQute.bnd.annotation.ProviderType;
 /**
  * factory for {@link DistributionComponent}s.
  * A client should register a component factory if it has custom implementations of distribution components.
+ * As components are hierarchical a factory can delegate the creation of its sub components to another factory.
  */
 @ConsumerType
 public interface DistributionComponentFactory {
@@ -41,10 +42,12 @@ public interface DistributionComponentFactory {
      * @param properties        the properties to be supplied for the initialization of the component
      * @param <ComponentType>   the actual type of the {@link DistributionComponent}
      *                          to be created
+     * @param subComponentFactory   the factory to be called for creating sub components
      * @return a {@link DistributionComponent} of the specified type initialized with given properties or <code>null</code>
      * if that could not be created
      */
     @CheckForNull
     <ComponentType extends DistributionComponent> ComponentType createComponent(@Nonnull java.lang.Class<ComponentType> type,
-                                                                               @Nonnull Map<String, Object> properties);
+                                                                               @Nonnull Map<String, Object> properties,
+                                                                               @Nullable DistributionComponentFactory subComponentFactory);
 }
