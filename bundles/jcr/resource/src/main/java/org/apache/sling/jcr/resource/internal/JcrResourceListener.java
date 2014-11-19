@@ -37,6 +37,8 @@ import org.apache.jackrabbit.api.observation.JackrabbitEvent;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProvider;
+import org.apache.sling.jcr.resource.internal.helper.jcr.PathMapper;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventProperties;
@@ -70,6 +72,8 @@ public class JcrResourceListener implements EventListener, Closeable {
     /** Helper object. */
     final ObservationListenerSupport support;
 
+    private final PathMapper pathMapper;
+
     /**
      * Marker event for {@link #processOsgiEventQueue()} to be signaled to
      * terminate processing Events.
@@ -78,8 +82,10 @@ public class JcrResourceListener implements EventListener, Closeable {
 
     public JcrResourceListener(
                     final String mountPrefix,
-                    final ObservationListenerSupport support)
+                    final ObservationListenerSupport support,
+                    final PathMapper pathMapper)
     throws RepositoryException {
+        this.pathMapper = pathMapper;
         boolean foundClass = false;
         try {
             this.getClass().getClassLoader().loadClass(JackrabbitEvent.class.getName());
@@ -289,16 +295,21 @@ public class JcrResourceListener implements EventListener, Closeable {
             final String topic,
             final ChangedAttributes changedAttributes) {
 
-        if (changedAttributes != null) {
-            changedAttributes.mergeAttributesInto(properties);
+        final String resourcePath = pathMapper.mapJCRPathToResourcePath(path);
+        if ( resourcePath != null ) {
+            if (changedAttributes != null) {
+                changedAttributes.mergeAttributesInto(properties);
+            }
+
+            // set the path (might have been changed for nt:file content)
+            properties.put(SlingConstants.PROPERTY_PATH, resourcePath);
+            properties.put(EventConstants.EVENT_TOPIC, topic);
+
+            // enqueue event for dispatching
+            this.osgiEventQueue.offer(properties);
+        } else {
+            logger.error("Dropping observation event for {}", path);
         }
-
-        // set the path (might have been changed for nt:file content)
-        properties.put(SlingConstants.PROPERTY_PATH, path);
-        properties.put(EventConstants.EVENT_TOPIC, topic);
-
-        // enqueue event for dispatching
-        this.osgiEventQueue.offer(properties);
     }
 
     /**

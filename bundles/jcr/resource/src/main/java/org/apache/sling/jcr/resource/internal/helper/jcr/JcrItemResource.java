@@ -53,15 +53,19 @@ abstract class JcrItemResource<T extends Item> // this should be package private
 
     private final ResourceMetadata metadata;
 
+    private final PathMapper pathMapper;
+
     protected JcrItemResource(final ResourceResolver resourceResolver,
                               final String path,
                               final T item,
-                              final ResourceMetadata metadata) {
+                              final ResourceMetadata metadata,
+                              final PathMapper pathMapper) {
 
         this.resourceResolver = resourceResolver;
         this.path = path;
         this.item = item;
         this.metadata = metadata;
+        this.pathMapper = pathMapper;
     }
 
     /**

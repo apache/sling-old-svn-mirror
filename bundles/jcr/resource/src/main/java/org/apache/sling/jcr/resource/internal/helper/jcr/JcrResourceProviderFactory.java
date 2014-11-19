@@ -108,6 +108,9 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
     @Reference(policy=ReferencePolicy.STATIC, cardinality=ReferenceCardinality.OPTIONAL_UNARY)
     private Executor executor;
 
+    @Reference
+    private PathMapper pathMapper;
+
     /** The JCR observation listener. */
     private Closeable listener;
 
@@ -144,7 +147,7 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
         try {
             if ( isOak ) {
                 try {
-                    this.listener = new OakResourceListener(root, support, context.getBundleContext(), executor);
+                    this.listener = new OakResourceListener(root, support, context.getBundleContext(), executor, pathMapper);
                     log.info("Detected Oak based repository. Using improved JCR Resource Listener");
                 } catch ( final RepositoryException re ) {
                     throw re;
@@ -153,7 +156,7 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
                 }
             }
             if ( this.listener == null ) {
-                this.listener = new JcrResourceListener(root, support);
+                this.listener = new JcrResourceListener(root, support, pathMapper);
             }
             closeSupport = false;
         } finally {
@@ -344,7 +347,7 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
             holder.setSession(session);
         }
 
-        return new JcrResourceProvider(session, this.getDynamicClassLoader(), holder);
+        return new JcrResourceProvider(session, this.getDynamicClassLoader(), holder, pathMapper);
     }
 
     /**

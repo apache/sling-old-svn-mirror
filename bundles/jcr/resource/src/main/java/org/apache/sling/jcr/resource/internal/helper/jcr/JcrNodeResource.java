@@ -69,6 +69,8 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
 
     private final ClassLoader dynamicClassLoader;
 
+    private final PathMapper pathMapper;
+
     /**
      * Constructor
      * @param resourceResolver
@@ -80,8 +82,10 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
     public JcrNodeResource(final ResourceResolver resourceResolver,
                            final String path,
                            final Node node,
-                           final ClassLoader dynamicClassLoader) {
-        super(resourceResolver, path, node, new JcrNodeResourceMetadata(node));
+                           final ClassLoader dynamicClassLoader,
+                           final PathMapper pathMapper) {
+        super(resourceResolver, path, node, new JcrNodeResourceMetadata(node), pathMapper);
+        this.pathMapper = pathMapper;
         this.dynamicClassLoader = dynamicClassLoader;
         this.resourceSuperType = UNSET_RESOURCE_SUPER_TYPE;
     }
@@ -259,7 +263,7 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
         try {
             if (getNode().hasNodes()) {
                 return new JcrNodeResourceIterator(getResourceResolver(),
-                    getNode().getNodes(), this.dynamicClassLoader);
+                    getNode().getNodes(), this.dynamicClassLoader, pathMapper);
             }
         } catch (final RepositoryException re) {
             LOGGER.error("listChildren: Cannot get children of " + this, re);
