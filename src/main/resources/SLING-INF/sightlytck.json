@@ -21,6 +21,10 @@
         "xss" : {
             "jcr:primaryType": "nt:unstructured",
             "sling:resourceType": "/sightlytck/scripts/exprlang/xss"
+        },
+        "escapedexpr": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/exprlang/escapedexpr"
         }
     },
     "blockstatements": {
