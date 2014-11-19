@@ -19,13 +19,22 @@
 package org.apache.sling.distribution.component.impl;
 
 import org.apache.felix.scr.annotations.*;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.component.DistributionComponent;
 import org.apache.sling.distribution.component.DistributionComponentFactory;
+import org.apache.sling.distribution.component.DistributionComponentProvider;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
 
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static org.apache.sling.distribution.component.impl.DefaultDistributionComponentFactoryConstants.COMPONENT_NAME;
+import static org.apache.sling.distribution.component.impl.DefaultDistributionComponentFactoryConstants.COMPONENT_TYPE;
+import static org.apache.sling.distribution.component.impl.DefaultDistributionComponentFactoryConstants.COMPONENT_TYPE_SERVICE;
 
 /**
  * Manager of all {@link DistributionComponentFactory}s. The manager iterates through all of them to create a suitable component.
@@ -34,10 +43,12 @@ import java.util.concurrent.ConcurrentHashMap;
 @References({
         @Reference(name = "distributionComponentFactory", referenceInterface = DistributionComponentFactory.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
 })
-@Service(DistributionComponentFactoryManager.class)
-public class DistributionComponentFactoryManager implements DistributionComponentFactory {
+@Service(DistributionComponentManager.class)
+public class DistributionComponentFactoryManager implements DistributionComponentManager {
 
 
+    @Reference
+    private EventAdmin eventAdmin;
 
     Map<String, DistributionComponentFactory> distributionComponentFactoryMap = new ConcurrentHashMap<String, DistributionComponentFactory>();
 
@@ -48,6 +59,7 @@ public class DistributionComponentFactoryManager implements DistributionComponen
         String name = (String) config.get("name");
         if (name != null) {
             distributionComponentFactoryMap.put(name, distributionComponentFactory);
+            postRefreshEvent();
         }
     }
 
@@ -56,12 +68,60 @@ public class DistributionComponentFactoryManager implements DistributionComponen
         String name = (String) config.get("name");
         if (name != null) {
             distributionComponentFactoryMap.remove(name);
+            postRefreshEvent();
         }
     }
 
-    public <ComponentType extends DistributionComponent> ComponentType createComponent(@Nonnull Class<ComponentType> type, @Nonnull Map<String, Object> properties) {
+    private void postRefreshEvent() {
+        eventAdmin.postEvent(new Event(TOPIC_DISTRIBUTION_COMPONENT_REFRESH, null));
+    }
+
+
+
+    public <ComponentType extends DistributionComponent> ComponentType createComponent(@Nonnull Class<ComponentType> type,
+                                                                                               @Nonnull Map<String, Object> properties,
+                                                                                               final DistributionComponentProvider componentProvider) {
+        return createComponentInternal(type, properties, componentProvider);
+
+    }
+
+    public <ComponentType extends DistributionComponent> ComponentType createComponent(@Nonnull Class<ComponentType> type,
+                                                                                       @Nonnull Map<String, Object> properties) {
+        return createComponentInternal(type, properties, null);
+
+    }
+
+
+
+
+
+    private  <ComponentType extends DistributionComponent> ComponentType createComponentInternal(@Nonnull Class<ComponentType> type,
+                                                                                       @Nonnull Map<String, Object> properties,
+                                                                                       final DistributionComponentProvider componentProvider) {
+
+        // try to see if the required component is already available
+        String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
+        if (componentProvider != null && COMPONENT_TYPE_SERVICE.equals(factory)) {
+            String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
+
+            return componentProvider.getComponent(type, name);
+        }
+
         for (DistributionComponentFactory distributionComponentFactory : distributionComponentFactoryMap.values()) {
-            ComponentType component = distributionComponentFactory.createComponent(type, properties);
+            ComponentType component = distributionComponentFactory.createComponent(type, properties, new DistributionComponentFactory() {
+                public <ComponentType extends DistributionComponent> ComponentType createComponent(@Nonnull Class<ComponentType> type, @Nonnull Map<String, Object> properties, @Nullable DistributionComponentFactory subComponentFactory) {
+
+                    // try to see if the required component is already available
+                    String factory = PropertiesUtil.toString(properties.get(COMPONENT_TYPE), COMPONENT_TYPE_SERVICE);
+                    if (componentProvider != null && COMPONENT_TYPE_SERVICE.equals(factory)) {
+                        String name = PropertiesUtil.toString(properties.get(COMPONENT_NAME), null);
+
+                        return componentProvider.getComponent(type, name);
+                    }
+
+                    return createComponentInternal(type, properties, componentProvider);
+                }
+            });
             if (component != null) {
                 return component;
             }

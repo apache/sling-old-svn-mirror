@@ -26,7 +26,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.distribution.component.impl.DefaultDistributionComponentFactoryConstants;
-import org.apache.sling.distribution.component.impl.DistributionComponentFactoryManager;
+import org.apache.sling.distribution.component.impl.DistributionComponentManager;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationContext;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationException;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
@@ -54,14 +54,14 @@ public class UserCredentialsTransportAuthenticationProviderFactory implements
 
 
     @Reference
-    private DistributionComponentFactoryManager componentManager;
+    private DistributionComponentManager componentManager;
 
 
     private TransportAuthenticationProvider transportAuthenticationProvider;
 
 
     public void activate(Map<String, Object> config) {
-        transportAuthenticationProvider = componentManager.createComponent(TransportAuthenticationProvider.class, config);
+        transportAuthenticationProvider = componentManager.createComponent(TransportAuthenticationProvider.class, config, null);
     }
 
     public Object authenticate(Object authenticable, TransportAuthenticationContext context)

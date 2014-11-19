@@ -70,7 +70,7 @@ public class ResourceBasedDistributionComponentFactory {
 
 
     @Reference
-    private DistributionComponentFactoryManager componentManager;
+    private DistributionComponentManager componentManager;
 
 
     @Reference

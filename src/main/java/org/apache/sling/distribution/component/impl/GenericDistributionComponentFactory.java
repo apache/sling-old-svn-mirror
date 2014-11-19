@@ -77,7 +77,7 @@ public class GenericDistributionComponentFactory implements DistributionComponen
     private SlingSettingsService settingsService;
 
     @Reference
-    private DistributionComponentFactoryManager componentManager;
+    private DistributionComponentManager componentManager;
 
 
     @Property(label = "Target TransportAuthenticationProvider", name = TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
@@ -120,17 +120,16 @@ public class GenericDistributionComponentFactory implements DistributionComponen
 
                 String componentClass = null;
                 Object componentObject = null;
-                properties.put(DefaultDistributionComponentFactoryConstants.COMPONENT_PROVIDER, this);
 
                 try {
                     if (DefaultDistributionComponentFactoryConstants.COMPONENT_AGENT.equals(componentType)) {
-                        DistributionAgent agent = componentManager.createComponent(DistributionAgent.class, properties);
+                        DistributionAgent agent = componentManager.createComponent(DistributionAgent.class, properties, this);
                         componentClass = DistributionAgent.class.getName();
                         componentObject = agent;
 
                     } else if (DefaultDistributionComponentFactoryConstants.COMPONENT_TRIGGER.equals(componentType)) {
 
-                        DistributionTrigger trigger = componentManager.createComponent(DistributionTrigger.class, properties);
+                        DistributionTrigger trigger = componentManager.createComponent(DistributionTrigger.class, properties, this);
 
                         componentClass = DistributionTrigger.class.getName();
                         componentObject = trigger;
