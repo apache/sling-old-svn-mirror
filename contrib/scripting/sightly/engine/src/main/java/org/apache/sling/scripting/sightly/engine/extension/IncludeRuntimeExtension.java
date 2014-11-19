@@ -39,6 +39,7 @@ import org.apache.sling.scripting.sightly.api.ExtensionInstance;
 import org.apache.sling.scripting.sightly.api.RenderContext;
 import org.apache.sling.scripting.sightly.api.RuntimeExtension;
 import org.apache.sling.scripting.sightly.api.RuntimeExtensionComponent;
+import org.apache.sling.scripting.sightly.api.SightlyEngineException;
 import org.apache.sling.scripting.sightly.api.SightlyRenderException;
 import org.apache.sling.scripting.sightly.plugin.IncludePlugin;
 import org.slf4j.Logger;
@@ -118,7 +119,7 @@ public class IncludeRuntimeExtension extends RuntimeExtensionComponent {
                                 PrintWriterResponseWrapper resWrapper = new PrintWriterResponseWrapper(out, response);
                                 servlet.service(request, resWrapper);
                             } catch (Exception e) {
-                                LOG.error("Failed to include script {}", script, e);
+                            	throw new SightlyEngineException("failed to include script ".concat(script), e);
                             }
                         } else {
                             LOG.error("Failed to locate script {}", script);
