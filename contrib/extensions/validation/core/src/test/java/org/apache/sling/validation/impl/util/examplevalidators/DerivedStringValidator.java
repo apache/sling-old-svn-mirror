@@ -16,33 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.validation.api;
+package org.apache.sling.validation.impl.util.examplevalidators;
 
-import java.util.List;
+public class DerivedStringValidator extends StringValidator {
 
-/**
- * Describes a {@link org.apache.sling.api.resource.Resource} property.
- */
-public interface ResourceProperty {
-
-    /**
-     * Returns the name of this property.
-     *
-     * @return the name
-     */
-    String getName();
-
-    /**
-     * Returns {@code true} if this property is expected to be a multiple property (e.g. array of values).
-     *
-     * @return {@code true} if the  property is multiple, {@code false} otherwise
-     */
-    boolean isMultiple();
-
-    /**
-     * Returns a list of {@link ParameterizedValidator}s which should be applied on this property.
-     *
-     * @return the list of validators
-     */
-    List<ParameterizedValidator> getValidators();
 }
