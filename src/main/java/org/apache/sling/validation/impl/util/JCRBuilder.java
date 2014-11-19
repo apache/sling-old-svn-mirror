@@ -33,7 +33,6 @@ import org.apache.sling.validation.api.ChildResource;
 import org.apache.sling.validation.api.ParameterizedValidator;
 import org.apache.sling.validation.api.ResourceProperty;
 import org.apache.sling.validation.api.Validator;
-import org.apache.sling.validation.api.ValidatorLookupService;
 import org.apache.sling.validation.impl.ChildResourceImpl;
 import org.apache.sling.validation.impl.Constants;
 import org.apache.sling.validation.impl.ParameterizedValidatorImpl;
@@ -47,12 +46,12 @@ public class JCRBuilder {
     /**
      * Creates a set of the properties that a resource is expected to have, together with the associated validators.
      *
-     * @param vls                the {@link ValidatorLookupService}
+     * @param validatorsMap      a map containing {@link Validator}s as values and their class names as values
      * @param propertiesResource the resource identifying the properties node from a validation model's structure
      * @return a set of properties or an empty set if no properties are defined
      * @see ResourceProperty
      */
-    public static Set<ResourceProperty> buildProperties(ValidatorLookupService vls, Resource propertiesResource) {
+    public static Set<ResourceProperty> buildProperties(Map<String, Validator<?>> validatorsMap, Resource propertiesResource) {
         Set<ResourceProperty> properties = new HashSet<ResourceProperty>();
         if (propertiesResource != null) {
             for (Resource property : propertiesResource.getChildren()) {
@@ -67,7 +66,7 @@ public class JCRBuilder {
                         Resource validator = validatorsIterator.next();
                         ValueMap validatorProperties = validator.adaptTo(ValueMap.class);
                         String validatorName = validator.getName();
-                        Validator v = vls.getValidator(validatorName);
+                        Validator<?> v = validatorsMap.get(validatorName);
                         if (v == null) {
                             throw new IllegalArgumentException("Could not find validator with name '" + validatorName + "'");
                         }
@@ -100,18 +99,18 @@ public class JCRBuilder {
      * @param modelResource          the resource describing a {@link org.apache.sling.validation.api.ValidationModel}
      * @param rootResource           the model's resource from which to search for children (this resource has to have a {@link
      *                               Constants#CHILDREN} node directly underneath it)
-     * @param validatorLookupService the {@link ValidatorLookupService}
+     * @param validatorsMap          a map containing {@link Validator}s as values and their class names as values
      * @return a list of all the children resources; the list will be empty if there are no children resources
      */
     public static List<ChildResource> buildChildren(Resource modelResource, Resource rootResource,
-                                                    ValidatorLookupService validatorLookupService) {
+                                                    Map<String, Validator<?>> validatorsMap) {
         List<ChildResource> children = new ArrayList<ChildResource>();
         Resource childrenResource = rootResource.getChild(Constants.CHILDREN);
         if (childrenResource != null) {
             for (Resource child : childrenResource.getChildren()) {
-                ChildResource childResource = new ChildResourceImpl(modelResource, child, validatorLookupService);
+                ChildResource childResource = new ChildResourceImpl(modelResource, child, validatorsMap);
                 children.add(childResource);
-                children.addAll(buildChildren(modelResource, child, validatorLookupService));
+                children.addAll(buildChildren(modelResource, child, validatorsMap));
             }
         }
         return children;
