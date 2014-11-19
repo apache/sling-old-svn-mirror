@@ -21,7 +21,6 @@ import static org.apache.jackrabbit.JcrConstants.JCR_DATA;
 import static org.apache.jackrabbit.JcrConstants.NT_FILE;
 
 import java.io.InputStream;
-import java.net.URL;
 import java.security.AccessControlException;
 import java.util.Iterator;
 import java.util.Map;
@@ -32,7 +31,6 @@ import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 
-import org.apache.jackrabbit.net.URLFactory;
 import org.apache.sling.adapter.annotations.Adaptable;
 import org.apache.sling.adapter.annotations.Adapter;
 import org.apache.sling.api.resource.ModifiableValueMap;
@@ -49,7 +47,7 @@ import org.slf4j.LoggerFactory;
 
 /** A Resource that wraps a JCR Node */
 @Adaptable(adaptableClass=Resource.class, adapters={
-        @Adapter({Node.class, Map.class, Item.class, ValueMap.class, URL.class}),
+        @Adapter({Node.class, Map.class, Item.class, ValueMap.class}),
         @Adapter(value=PersistableValueMap.class, condition="If the resource is a JcrNodeResource and the user has set property privileges on the node."),
         @Adapter(value=InputStream.class, condition="If the resource is a JcrNodeResource and has a jcr:data property or is an nt:file node.")
 })
@@ -57,8 +55,6 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
 
     /** marker value for the resourceSupertType before trying to evaluate */
     private static final String UNSET_RESOURCE_SUPER_TYPE = "<unset>";
-
-    private static volatile boolean loggedUrlWarning = false;
 
     /** default log */
     private static final Logger LOGGER = LoggerFactory.getLogger(JcrNodeResource.class);
@@ -132,8 +128,6 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
             return (Type) getNode(); // unchecked cast
         } else if (type == InputStream.class) {
             return (Type) getInputStream(); // unchecked cast
-        } else if (type == URL.class) {
-            return (Type) getURL(); // unchecked cast
         } else if (type == Map.class || type == ValueMap.class) {
             return (Type) new JcrPropertyMap(getNode(), this.dynamicClassLoader); // unchecked cast
         } else if (type == PersistableValueMap.class ) {
@@ -238,21 +232,6 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
         }
 
         // fallback to non-streamable resource
-        return null;
-    }
-
-    private URL getURL() {
-        if ( !loggedUrlWarning ) {
-            loggedUrlWarning = true;
-            LOGGER.warn("Adapting a JCR resource to a URL is deprecated. This feature will be " +
-                    "removed in future versions. Please adjust your code.");
-        }
-        try {
-            return URLFactory.createURL(getNode().getSession(), getPath());
-        } catch (final Exception ex) {
-            LOGGER.error("getURL: Cannot create URL for " + this, ex);
-        }
-
         return null;
     }
 
