@@ -26,9 +26,12 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.service.component.ComponentContext;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * Component-based use provider
  */
+@ConsumerType
 public abstract class UseProviderComponent implements UseProvider {
 
     public static final String PRIORITY = "org.apache.sling.scripting.sightly.api.use.priority";

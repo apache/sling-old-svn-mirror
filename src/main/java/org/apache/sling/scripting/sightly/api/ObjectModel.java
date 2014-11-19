@@ -22,10 +22,13 @@ package org.apache.sling.scripting.sightly.api;
 import java.util.Collection;
 import java.util.Map;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Defines the dynamic queries that values must support
  * in Sightly
  */
+@ProviderType
 public interface ObjectModel {
 
     String PROPERTY_ACCESS = "resolveProperty";

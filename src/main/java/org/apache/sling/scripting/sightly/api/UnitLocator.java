@@ -18,9 +18,12 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.api;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Locates rendering units
  */
+@ProviderType
 public interface UnitLocator {
 
     /**

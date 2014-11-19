@@ -26,9 +26,12 @@ import java.util.Set;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Compiled version of render units
  */
+@ProviderType
 public abstract class BaseRenderUnit implements RenderUnit {
 
     private final Map<String, RenderUnit> subTemplates = new HashMap<String, RenderUnit>();
