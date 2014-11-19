@@ -20,9 +20,7 @@
  * @version 1.0.0
  */
 @Version("1.0.0")
-@Export(optional = "provide:=true")
 package org.apache.sling.xss;
 
-import aQute.bnd.annotation.Export;
 import aQute.bnd.annotation.Version;
 

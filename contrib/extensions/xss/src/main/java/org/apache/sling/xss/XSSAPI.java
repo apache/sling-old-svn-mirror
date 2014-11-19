@@ -20,6 +20,8 @@ package org.apache.sling.xss;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceResolver;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * A service providing validators and encoders for XSS protection during the composition of HTML
  * pages.
@@ -31,6 +33,7 @@ import org.apache.sling.api.resource.ResourceResolver;
  * <p/>
  * When in doubt, use a validator.
  */
+@ProviderType
 public interface XSSAPI {
 
     // =============================================================================================

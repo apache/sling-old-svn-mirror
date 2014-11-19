@@ -16,12 +16,13 @@
  ******************************************************************************/
 package org.apache.sling.xss;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * This service should be used to protect output against potential XSS attacks.
  * The protection is context based.
- *
- * @since 1.0
  */
+@ProviderType
 public interface XSSFilter {
 
     /**

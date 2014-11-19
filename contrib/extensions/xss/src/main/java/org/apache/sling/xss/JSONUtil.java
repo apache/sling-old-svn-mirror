@@ -24,15 +24,17 @@ import org.apache.sling.commons.json.io.JSONWriter;
  * JSON utilities
  * <p/>
  * Support for handling xss protected values with JSON objects and JSON writers.
- *
- * @since 1.0.0
  */
-public class JSONUtil {
+public final class JSONUtil {
 
     /**
      * Key suffix for XSS protected properties
      */
     public static final String KEY_SUFFIX_XSS = "_xss";
+
+    // no instantiation
+    private JSONUtil() {
+    }
 
     /**
      * Puts a xss protected value into a JSON object.
