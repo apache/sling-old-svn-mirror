@@ -24,11 +24,39 @@ The Sling Content Distribution module consists of the following bundles:
  
 ## Design
 
-The Sling Content Distribution module main design goals are it to be simple, reliable and extensible.
- 
+The Sling Content Distribution module main design goals resume in being: _Reliable_, _extensible_ and _simple_.
 
+Reliability means that the system should be able to keep working also in presence of failures regarding I/O, network, etc.
+An example of such problems is when pushing content from instance A to instance B fails because B is unreachable: in such 
+ scenarios instance A should be able to keep pushing (pulling, etc.) content to other instances seamlessly. Another example
+ is when delivery of a certain content (package) fails too many times the distribution module should be able to either drop 
+ it or move it into a different "bucket" of failed items.
+Extensibility means that the Sling Content Distribution module provides a set of APIs for distributing resources where each
+component coming into place during the distribution lifecycle can be extended or totally replaced.
+Simplicity means that this module should be able to accomplish its tasks by providing clear and easy to use APIs together 
+with smart but not overly complicated or "hacky" implementations (see Bertrand's talk ["Simple software is hard"](http://events.linuxfoundation.org/events/apachecon-europe/program/schedule)).
 
+A distribution _request_ represents the need of aggregating some resources and to copy them from / to another Sling instance.
+Such requests are handled by _agents_ that are the main entry point for working with the distribution module.
+Each agent distributes content from one or more sources to one or more targets, such distribution can be triggered by:
 
+ - "pushing" the content to the (remote) target instances 
+ - "pulling" content from the (remote) source instances
+ - "coordinating" instances, that is they are used to synchronize multiple instances by having them as both sources and targets
+
+An _agent_ is capable of handling a certain distribution _request_ by creating one or more _packages_ of resources out of it 
+from the source(s), dispatching such _packages_ to one or more _queues_ and of processing such queued _packages_ by persisting 
+them into the target instance(s).
+
+The process of creating one or more packages is called _exporting_ as such operation may either happen locally to the agent 
+(the "push" scenario) or remotely (the "pull" scenario).
+
+The process of persisting one or more packages is called _importing_ as such operation may either happen locally (the "pull" 
+scenario) or remotely (the "push" scenario).
+
+In order to properly handle large number of _requests_ against the same _agent_ each of them is provided with _queues_ 
+where the exported _packages_ are sent, the _agent_ takes then care to process such a _queue_ in order to _import_ each 
+_package_. 
  
 ### Distribution agents
 
