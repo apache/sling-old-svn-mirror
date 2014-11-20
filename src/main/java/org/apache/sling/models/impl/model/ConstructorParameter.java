@@ -21,7 +21,9 @@ package org.apache.sling.models.impl.model;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 
+import org.apache.sling.models.annotations.DefaultInjectionStrategy;
 import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 
 /**
@@ -37,8 +39,8 @@ public class ConstructorParameter extends AbstractInjectableElement {
     private final int parameterIndex;
 
     public ConstructorParameter(Annotation[] annotations, Type parameterType, Type genericType, boolean isPrimitive,
-            int parameterIndex, StaticInjectAnnotationProcessorFactory[] processorFactories) {
-        super(new FakeAnnotatedElement(annotations, parameterIndex), genericType, null, processorFactories);
+            int parameterIndex, StaticInjectAnnotationProcessorFactory[] processorFactories, DefaultInjectionStrategy defaultInjectionStrategy) {
+        super(new FakeAnnotatedElement(annotations, parameterIndex), genericType, null, processorFactories, defaultInjectionStrategy);
         this.parameterType = parameterType;
         this.genericType = genericType;
         this.isPrimitive = isPrimitive;
@@ -104,6 +106,12 @@ public class ConstructorParameter extends AbstractInjectableElement {
         
         public int getParameterIndex() {
             return this.parameterIndex;
+        }
+
+        @Override
+        public String toString() {
+            return "FakeAnnotatedElement [annotations=" + Arrays.toString(annotations) + ", parameterIndex="
+                    + parameterIndex + "]";
         }
 
     }

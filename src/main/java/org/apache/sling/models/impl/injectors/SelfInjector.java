@@ -22,13 +22,14 @@ import java.lang.reflect.Type;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 import org.apache.sling.models.annotations.injectorspecific.Self;
 import org.apache.sling.models.impl.model.ConstructorParameter;
 import org.apache.sling.models.spi.AcceptsNullName;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
-import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor;
-import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
+import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor2;
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor2;
 import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 import org.osgi.framework.Constants;
 
@@ -64,7 +65,7 @@ public class SelfInjector implements Injector, StaticInjectAnnotationProcessorFa
     }
 
     @Override
-    public InjectAnnotationProcessor createAnnotationProcessor(AnnotatedElement element) {
+    public InjectAnnotationProcessor2 createAnnotationProcessor(AnnotatedElement element) {
         // check if the element has the expected annotation
         Self annotation = element.getAnnotation(Self.class);
         if (annotation != null) {
@@ -73,7 +74,7 @@ public class SelfInjector implements Injector, StaticInjectAnnotationProcessorFa
         return null;
     }
 
-    private static class SelfAnnotationProcessor extends AbstractInjectAnnotationProcessor {
+    private static class SelfAnnotationProcessor extends AbstractInjectAnnotationProcessor2 {
 
         private final Self annotation;
 
@@ -81,6 +82,11 @@ public class SelfInjector implements Injector, StaticInjectAnnotationProcessorFa
             this.annotation = annotation;
         }
 
+        @Override
+        public InjectionStrategy getInjectionStrategy() {
+            return annotation.injectionStrategy();
+        }
+        
         @Override
         public Boolean isOptional() {
             return annotation.optional();

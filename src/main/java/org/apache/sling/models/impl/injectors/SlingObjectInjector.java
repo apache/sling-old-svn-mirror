@@ -31,12 +31,13 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
+import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 import org.apache.sling.models.annotations.injectorspecific.SlingObject;
 import org.apache.sling.models.spi.AcceptsNullName;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
-import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor;
-import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
+import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor2;
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor2;
 import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 import org.osgi.framework.Constants;
 
@@ -124,7 +125,7 @@ public final class SlingObjectInjector implements Injector, StaticInjectAnnotati
     }
 
     @Override
-    public InjectAnnotationProcessor createAnnotationProcessor(final AnnotatedElement element) {
+    public InjectAnnotationProcessor2 createAnnotationProcessor(final AnnotatedElement element) {
         // check if the element has the expected annotation
         SlingObject annotation = element.getAnnotation(SlingObject.class);
         if (annotation != null) {
@@ -133,7 +134,7 @@ public final class SlingObjectInjector implements Injector, StaticInjectAnnotati
         return null;
     }
 
-    private static class SlingObjectAnnotationProcessor extends AbstractInjectAnnotationProcessor {
+    private static class SlingObjectAnnotationProcessor extends AbstractInjectAnnotationProcessor2 {
 
         private final SlingObject annotation;
 
@@ -142,9 +143,13 @@ public final class SlingObjectInjector implements Injector, StaticInjectAnnotati
         }
 
         @Override
+        public InjectionStrategy getInjectionStrategy() {
+            return annotation.injectionStrategy();
+        }
+        
+        @Override
         public Boolean isOptional() {
-            return this.annotation.optional();
+            return annotation.optional();
         }
     }
-
 }

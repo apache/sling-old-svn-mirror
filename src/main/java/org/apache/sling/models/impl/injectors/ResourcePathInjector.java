@@ -27,12 +27,13 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.models.annotations.Path;
+import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 import org.apache.sling.models.annotations.injectorspecific.ResourcePath;
 import org.apache.sling.models.spi.AcceptsNullName;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
-import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor;
-import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
+import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor2;
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor2;
 import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 import org.osgi.framework.Constants;
 
@@ -83,7 +84,7 @@ public class ResourcePathInjector extends AbstractInjector implements Injector, 
     }
 
     @Override
-    public InjectAnnotationProcessor createAnnotationProcessor(AnnotatedElement element) {
+    public InjectAnnotationProcessor2 createAnnotationProcessor(AnnotatedElement element) {
         // check if the element has the expected annotation
         ResourcePath annotation = element.getAnnotation(ResourcePath.class);
         if (annotation != null) {
@@ -92,7 +93,7 @@ public class ResourcePathInjector extends AbstractInjector implements Injector, 
         return null;
     }
 
-    private static class ResourcePathAnnotationProcessor extends AbstractInjectAnnotationProcessor {
+    private static class ResourcePathAnnotationProcessor extends AbstractInjectAnnotationProcessor2 {
 
         private final ResourcePath annotation;
 
@@ -113,6 +114,11 @@ public class ResourcePathInjector extends AbstractInjector implements Injector, 
         @Override
         public Boolean isOptional() {
             return annotation.optional();
+        }
+
+        @Override
+        public InjectionStrategy getInjectionStrategy() {
+            return annotation.injectionStrategy();
         }
     }
 

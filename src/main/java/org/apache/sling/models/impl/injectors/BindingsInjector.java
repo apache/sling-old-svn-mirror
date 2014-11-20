@@ -25,12 +25,13 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.scripting.SlingBindings;
+import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 import org.apache.sling.models.annotations.injectorspecific.ScriptVariable;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
-import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor;
-import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
 import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
+import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor2;
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor2;
 import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +64,6 @@ public class BindingsInjector implements Injector, StaticInjectAnnotationProcess
             log.debug("BindingsInjector doesn't support non-class type {}", type);
             return null;
         }
-
     }
 
     private SlingBindings getBindings(Object adaptable) {
@@ -76,7 +76,7 @@ public class BindingsInjector implements Injector, StaticInjectAnnotationProcess
     }
 
     @Override
-    public InjectAnnotationProcessor createAnnotationProcessor(AnnotatedElement element) {
+    public InjectAnnotationProcessor2 createAnnotationProcessor(AnnotatedElement element) {
         // check if the element has the expected annotation
         ScriptVariable annotation = element.getAnnotation(ScriptVariable.class);
         if (annotation != null) {
@@ -85,7 +85,7 @@ public class BindingsInjector implements Injector, StaticInjectAnnotationProcess
         return null;
     }
 
-    private static class ScriptVariableAnnotationProcessor extends AbstractInjectAnnotationProcessor {
+    private static class ScriptVariableAnnotationProcessor extends AbstractInjectAnnotationProcessor2 {
 
         private final ScriptVariable annotation;
 
@@ -93,6 +93,11 @@ public class BindingsInjector implements Injector, StaticInjectAnnotationProcess
             this.annotation = annotation;
         }
 
+        @Override
+        public InjectionStrategy getInjectionStrategy() {
+            return annotation.injectionStrategy();
+        }
+        
         @Override
         public Boolean isOptional() {
             return annotation.optional();
