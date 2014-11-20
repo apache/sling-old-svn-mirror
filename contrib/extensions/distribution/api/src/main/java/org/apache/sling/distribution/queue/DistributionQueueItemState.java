@@ -32,15 +32,17 @@ public class DistributionQueueItemState {
 
     private final Calendar entered;
 
-    public DistributionQueueItemState(Calendar entered, ItemState state, int attempts) {
+    private final String queueName;
 
+    public DistributionQueueItemState(Calendar entered, ItemState state, int attempts, String queueName) {
         this.entered = entered;
         this.state = state;
         this.attempts = attempts;
+        this.queueName = queueName;
     }
 
-    public DistributionQueueItemState(ItemState state) {
-        this(Calendar.getInstance(), state, 0);
+    public DistributionQueueItemState(ItemState state, String queueName) {
+        this(Calendar.getInstance(), state, 0, queueName);
     }
 
     public boolean isSuccessful() {
@@ -55,14 +57,20 @@ public class DistributionQueueItemState {
         return state;
     }
 
+    public String getQueueName() {
+        return queueName;
+    }
+
     @Override
     public String toString() {
-        return "{\"attempts\":\"" + attempts + "\",\"" + "successful\":\"" + isSuccessful() + "\",\"" + "state\":\"" + state + "\"}";
+        return "{\"attempts\":\"" + attempts + "\",\"" + "successful\":\"" + isSuccessful() + "\",\"" + "state\":\"" + state +
+                "\",\"" + "queueName\":\"" + queueName + "\"}";
     }
 
     public Calendar getEntered() {
         return entered;
     }
+
 
     public enum ItemState {
         QUEUED, // waiting in queue after adding or for restart after failing

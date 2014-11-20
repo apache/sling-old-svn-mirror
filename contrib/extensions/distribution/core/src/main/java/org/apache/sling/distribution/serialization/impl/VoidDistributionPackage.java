@@ -80,8 +80,7 @@ public class VoidDistributionPackage extends AbstractDistributionPackage impleme
             pathsString = Text.unescape(pathsString);
             String[] paths = pathsString.split(", ");
 
-            DistributionRequest request = new DistributionRequest(Long.valueOf(timeString),
-                    distributionActionType, paths);
+            DistributionRequest request = new DistributionRequest(distributionActionType, paths);
             distributionPackage = new VoidDistributionPackage(request, typeString);
         }
 

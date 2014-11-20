@@ -18,6 +18,8 @@
  */
 package org.apache.sling.distribution.queue.impl;
 
+import java.util.Iterator;
+
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueDispatchingStrategy;
@@ -27,6 +29,7 @@ import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -45,9 +48,15 @@ public class SingleQueueDistributionStrategyTest {
         DistributionQueue queue = mock(DistributionQueue.class);
         when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(DistributionQueueItem.class))).thenReturn(true);
+        DistributionQueueItemState state = mock(DistributionQueueItemState.class);
+        when(queue.getStatus(any(DistributionQueueItem.class))).thenReturn(state);
 
-        boolean returnedState = singleQueueDistributionStrategy.add(distributionPackage, queueProvider);
-        assertTrue(returnedState);
+        Iterable<DistributionQueueItemState> returnedStates = singleQueueDistributionStrategy.add(distributionPackage, queueProvider);
+        assertNotNull(returnedStates);
+        Iterator<DistributionQueueItemState> iterator = returnedStates.iterator();
+        assertNotNull(iterator);
+        assertTrue(iterator.hasNext());
+        assertNotNull(iterator.next());
     }
 
     @Test
@@ -62,20 +71,12 @@ public class SingleQueueDistributionStrategyTest {
         DistributionQueueItemState state = mock(DistributionQueueItemState.class);
         when(state.isSuccessful()).thenReturn(false);
         when(queue.getStatus(queueItem)).thenReturn(state);
-        boolean returnedState = singleQueueDistributionStrategy.add(distributionPackage, queueProvider);
-        assertFalse(returnedState);
-    }
-
-    @Test
-    public void testPackageAdditionWithNullItemStateFromTheQueue() throws Exception {
-        SingleQueueDispatchingStrategy singleQueueDistributionStrategy = new SingleQueueDispatchingStrategy();
-        DistributionPackage distributionPackage = mock(DistributionPackage.class);
-        DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
-        DistributionQueue queue = mock(DistributionQueue.class);
-        when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
-        when(queue.add(any(DistributionQueueItem.class))).thenReturn(true);
-        boolean returnedState = singleQueueDistributionStrategy.add(distributionPackage, queueProvider);
-        assertTrue(returnedState);
+        Iterable<DistributionQueueItemState> returnedStates = singleQueueDistributionStrategy.add(distributionPackage, queueProvider);
+        assertNotNull(returnedStates);
+        Iterator<DistributionQueueItemState> iterator = returnedStates.iterator();
+        assertNotNull(iterator);
+        assertTrue(iterator.hasNext());
+        assertNotNull(iterator.next());
     }
 
     @Test
@@ -86,8 +87,14 @@ public class SingleQueueDistributionStrategyTest {
         DistributionQueue queue = mock(DistributionQueue.class);
         when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(DistributionQueueItem.class))).thenReturn(true);
+        DistributionQueueItemState state = mock(DistributionQueueItemState.class);
+        when(queue.getStatus(any(DistributionQueueItem.class))).thenReturn(state);
 
-        boolean returnedState = singleQueueDistributionStrategy.add(distributionPackage, queueProvider);
-        assertTrue(returnedState);
+        Iterable<DistributionQueueItemState> returnedStates = singleQueueDistributionStrategy.add(distributionPackage, queueProvider);
+        assertNotNull(returnedStates);
+        Iterator<DistributionQueueItemState> iterator = returnedStates.iterator();
+        assertNotNull(iterator);
+        assertTrue(iterator.hasNext());
+        assertNotNull(iterator.next());
     }
 }

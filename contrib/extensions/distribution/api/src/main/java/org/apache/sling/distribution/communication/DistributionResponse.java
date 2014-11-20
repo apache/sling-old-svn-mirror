@@ -18,17 +18,19 @@
  */
 package org.apache.sling.distribution.communication;
 
+import com.sun.istack.internal.Nullable;
+
 /**
  * A distribution response
  */
 public class DistributionResponse {
 
-    private final String status;
+    private final String message;
     private final boolean successful;
 
-    public DistributionResponse(String status, boolean successful) {
-        this.status = status;
+    public DistributionResponse(boolean successful, @Nullable String message) {
         this.successful = successful;
+        this.message = message;
     }
 
     public boolean isSuccessful() {
@@ -37,11 +39,11 @@ public class DistributionResponse {
 
     @Override
     public String toString() {
-        return "{\"success\":" + isSuccessful() + ", \"status\":\"" + getStatus() + "\"}";
+        return "{\"success\":" + isSuccessful() + ", \"message\":\"" + getMessage() + "\"}";
     }
 
-    public String getStatus() {
-        return status != null ? status : "done nothing";
+    public String getMessage() {
+        return message != null ? message : "done nothing";
     }
 
 }

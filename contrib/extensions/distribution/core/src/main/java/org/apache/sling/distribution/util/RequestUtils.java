@@ -36,9 +36,7 @@ public class RequestUtils {
         String action = request.getParameter(DistributionParameter.ACTION.toString());
         String[] paths = request.getParameterValues(DistributionParameter.PATH.toString());
 
-        return new DistributionRequest(System.currentTimeMillis(),
-                DistributionActionType.fromName(action),
-                paths);
+        return new DistributionRequest(DistributionActionType.fromName(action), paths);
     }
 
     public static URI appendDistributionRequest(URI uri, DistributionRequest distributionRequest) throws URISyntaxException {

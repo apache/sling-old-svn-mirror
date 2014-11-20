@@ -63,18 +63,18 @@ public class DistributionAgentServlet extends SlingAllMethodsServlet {
             try {
                 DistributionResponse distributionResponse = agent.execute(resourceResolver, distributionRequest);
                 if (distributionResponse.isSuccessful()) {
-                    if (ItemState.SUCCEEDED.toString().equals(distributionResponse.getStatus())) {
+                    if (ItemState.SUCCEEDED.toString().equals(distributionResponse.getMessage())) {
                         response.setStatus(200);
                     }
-                    if (ItemState.QUEUED.toString().equals(distributionResponse.getStatus())
+                    if (ItemState.QUEUED.toString().equals(distributionResponse.getMessage())
                             || ItemState.ACTIVE.toString().equals(
-                            distributionResponse.getStatus())) {
+                            distributionResponse.getMessage())) {
                         response.setStatus(202);
                     }
 
                 }
                 else {
-                    if (ItemState.DROPPED.toString().equals(distributionResponse.getStatus())) {
+                    if (ItemState.DROPPED.toString().equals(distributionResponse.getMessage())) {
                         response.setStatus(404);
                     } else {
                         response.setStatus(400);

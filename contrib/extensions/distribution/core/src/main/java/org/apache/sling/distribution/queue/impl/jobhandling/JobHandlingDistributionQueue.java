@@ -86,13 +86,13 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
 
                 DistributionQueueItemState itemState = new DistributionQueueItemState(job.getCreated(),
                         ItemState.valueOf(job.getJobState().toString()),
-                        job.getRetryCount());
+                        job.getRetryCount(), name);
 
                 log.info("status of job {} is {}", job.getId(), job.getJobState());
 
                 return itemState;
             } else {
-                DistributionQueueItemState itemState = new DistributionQueueItemState(ItemState.DROPPED);
+                DistributionQueueItemState itemState = new DistributionQueueItemState(ItemState.DROPPED, name);
                 return itemState;
             }
         } catch (Exception e) {

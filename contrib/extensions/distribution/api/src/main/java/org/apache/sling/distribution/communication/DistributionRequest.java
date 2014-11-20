@@ -33,11 +33,7 @@ public class DistributionRequest {
     private final String[] paths;
 
     public DistributionRequest(@Nonnull DistributionActionType action, @Nonnull String... paths) {
-        this(System.currentTimeMillis(), action, paths);
-    }
-
-    public DistributionRequest(long time, @Nonnull DistributionActionType action, @Nonnull String... paths) {
-        this.time = time;
+        this.time = System.currentTimeMillis();
         this.action = action;
         this.paths = paths;
     }

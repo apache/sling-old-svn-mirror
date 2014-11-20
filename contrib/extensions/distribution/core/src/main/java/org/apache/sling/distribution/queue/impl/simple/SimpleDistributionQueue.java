@@ -71,7 +71,7 @@ public class SimpleDistributionQueue implements DistributionQueue {
         } catch (InterruptedException e) {
             log.error("cannot add an item to the queue", e);
         } finally {
-            statusMap.put(item, new DistributionQueueItemState(Calendar.getInstance(), itemState, 0));
+            statusMap.put(item, new DistributionQueueItemState(Calendar.getInstance(), itemState, 0, name));
         }
         return result;
     }
@@ -83,7 +83,7 @@ public class SimpleDistributionQueue implements DistributionQueue {
         if (queue.contains(queueItem)) {
             return itemStatus;
         } else {
-            return new DistributionQueueItemState(itemStatus.getEntered(), ItemState.SUCCEEDED, itemStatus.getAttempts());
+            return new DistributionQueueItemState(itemStatus.getEntered(), ItemState.SUCCEEDED, itemStatus.getAttempts(), name);
         }
     }
 
@@ -93,7 +93,7 @@ public class SimpleDistributionQueue implements DistributionQueue {
             DistributionQueueItemState itemState = statusMap.get(element);
             statusMap.put(element, new DistributionQueueItemState(itemState.getEntered(),
                     itemState.getItemState(),
-                    itemState.getAttempts()+1));
+                    itemState.getAttempts()+1, name));
         }
         return element;
     }

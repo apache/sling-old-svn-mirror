@@ -27,7 +27,11 @@ import org.apache.sling.distribution.packaging.DistributionPackage;
 
 /**
  * a {@link DistributionQueueDispatchingStrategy} implements an algorithm for dispatching
- * {@link org.apache.sling.distribution.packaging.DistributionPackage}s among the available queues
+ * {@link org.apache.sling.distribution.packaging.DistributionPackage}s among the available queues.
+ * <p/>
+ * Usually a {@link org.apache.sling.distribution.packaging.DistributionPackage} will be dispatched to a single {@link org.apache.sling.distribution.queue.DistributionQueue}
+ * but it would also be possible to dispatch the same package to multiple queues, resulting in obtaining multiple states
+ * (one for each queue) for a certain package.
  */
 @ConsumerType
 public interface DistributionQueueDispatchingStrategy extends DistributionComponent {
@@ -37,16 +41,18 @@ public interface DistributionQueueDispatchingStrategy extends DistributionCompon
      * synchronously distribute a {@link org.apache.sling.distribution.packaging.DistributionPackage}
      * to one or more {@link DistributionQueue}s provided by the given {@link DistributionQueueProvider}
      *
-     * @param distributionPackage          a {@link org.apache.sling.distribution.packaging.DistributionPackage} to distribute
-     * @param queueProvider the {@link DistributionQueueProvider} used to provide the queues to be used for the given package
-     * @return <code>true</code> if addition was successful, <code>false</code> otherwise
+     * @param distributionPackage a {@link org.apache.sling.distribution.packaging.DistributionPackage} to distribute
+     * @param queueProvider       the {@link DistributionQueueProvider} used to provide the queues to be used for the given package
+     * @return an {@link java.lang.Iterable} of {@link org.apache.sling.distribution.queue.DistributionQueueItemState}s representing
+     * the states of the {@link org.apache.sling.distribution.queue.DistributionQueueItem}s added to one or more {@link org.apache.sling.distribution.queue.DistributionQueue}s
      * @throws DistributionQueueException if any internal error happens during distribution
      */
-    boolean add(@Nonnull DistributionPackage distributionPackage, @Nonnull DistributionQueueProvider queueProvider) throws DistributionQueueException;
+    Iterable<DistributionQueueItemState> add(@Nonnull DistributionPackage distributionPackage, @Nonnull DistributionQueueProvider queueProvider) throws DistributionQueueException;
 
 
     /**
      * Returns the queue names available for this strategy.
+     *
      * @return a list of queue names
      */
     @Nonnull

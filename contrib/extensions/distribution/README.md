@@ -4,12 +4,31 @@ This is the README for the Sling Content Distribution module.
 
 ## Overview
 
+The Sling Content Distribution module main goal is allowing distribution of content (Sling resources) among different Sling 
+instances. The term "distribution" here means the ability of picking one or more resources on a certain Sling instance in order 
+to copy and persist them onto another Sling instance. The Sling Content Distribution module is able to distribute content 
+by:
+
+ - "pushing" from Sling instance A to Sling instance B
+ - "pulling" from Sling instance B to Sling instance A
+ - "synchronizing" Sling instances A and B via a third coordinating instance C
+
+### Bundles
+
 The Sling Content Distribution module consists of the following bundles:
 
  - org.apache.sling.distribution.api: this is where the APIs are defined
  - org.apache.sling.distribution.core: this is where the basic infrastructure for distributing content is implemented
  - org.apache.sling.distribution.sample: this is a set of sample configurations and implementations for demo purpose 
  - org.apache.sling.distribution.it: this is the integration testing suite
+ 
+## Design
+
+The Sling Content Distribution module main design goals are it to be simple, reliable and extensible.
+ 
+
+
+
  
 ### Distribution agents
 

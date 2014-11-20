@@ -119,7 +119,7 @@ public class ChainDistributeDistributionTrigger implements DistributionTrigger, 
                         log.info("triggering chain distribution from event {}", event);
 
                         DistributionActionType action = DistributionActionType.valueOf(String.valueOf(actionProperty));
-                        requestHandler.handle(new DistributionRequest(System.currentTimeMillis(), action, paths));
+                        requestHandler.handle(new DistributionRequest(action, paths));
                         break;
                     }
                 }

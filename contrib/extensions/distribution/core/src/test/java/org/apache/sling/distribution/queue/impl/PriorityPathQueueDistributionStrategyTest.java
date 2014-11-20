@@ -18,13 +18,17 @@
  */
 package org.apache.sling.distribution.queue.impl;
 
+import java.util.Iterator;
+
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
+import org.apache.sling.distribution.queue.DistributionQueueItemState;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.junit.Test;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -45,9 +49,15 @@ public class PriorityPathQueueDistributionStrategyTest {
         DistributionQueue queue = mock(DistributionQueue.class);
         when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(DistributionQueueItem.class))).thenReturn(true);
+        DistributionQueueItemState state = mock(DistributionQueueItemState.class);
+        when(queue.getStatus(any(DistributionQueueItem.class))).thenReturn(state);
 
-        boolean returnedState = priorityPathDistributionStrategy.add(distributionPackage, queueProvider);
-        assertTrue(returnedState);
+        Iterable<DistributionQueueItemState> returnedStates = priorityPathDistributionStrategy.add(distributionPackage, queueProvider);
+        assertNotNull(returnedStates);
+        Iterator<DistributionQueueItemState> iterator = returnedStates.iterator();
+        assertNotNull(iterator);
+        assertTrue(iterator.hasNext());
+        assertNotNull(iterator.next());
     }
 
     @Test
@@ -60,9 +70,15 @@ public class PriorityPathQueueDistributionStrategyTest {
         DistributionQueue queue = mock(DistributionQueue.class);
         when(queueProvider.getQueue("/content")).thenReturn(queue);
         when(queue.add(any(DistributionQueueItem.class))).thenReturn(true);
+        DistributionQueueItemState state = mock(DistributionQueueItemState.class);
+        when(queue.getStatus(any(DistributionQueueItem.class))).thenReturn(state);
 
-        boolean returnedState = priorityPathDistributionStrategy.add(distributionPackage, queueProvider);
-        assertTrue(returnedState);
+        Iterable<DistributionQueueItemState> returnedStates = priorityPathDistributionStrategy.add(distributionPackage, queueProvider);
+        assertNotNull(returnedStates);
+        Iterator<DistributionQueueItemState> iterator = returnedStates.iterator();
+        assertNotNull(iterator);
+        assertTrue(iterator.hasNext());
+        assertNotNull(iterator.next());
     }
 
     @Test
@@ -74,10 +90,14 @@ public class PriorityPathQueueDistributionStrategyTest {
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
         DistributionQueue queue = mock(DistributionQueue.class);
         when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
-        when(queue.add(any(DistributionQueueItem.class))).thenReturn(true);
+        when(queue.add(any(DistributionQueueItem.class))).thenReturn(false);
 
-        boolean returnedState = priorityPathDistributionStrategy.add(distributionPackage, queueProvider);
-        assertTrue(returnedState);
+        Iterable<DistributionQueueItemState> returnedStates = priorityPathDistributionStrategy.add(distributionPackage, queueProvider);
+        assertNotNull(returnedStates);
+        Iterator<DistributionQueueItemState> iterator = returnedStates.iterator();
+        assertNotNull(iterator);
+        assertTrue(iterator.hasNext());
+        assertNotNull(iterator.next());
     }
 
     @Test
@@ -90,40 +110,14 @@ public class PriorityPathQueueDistributionStrategyTest {
         DistributionQueue queue = mock(DistributionQueue.class);
 
         when(queueProvider.getQueue("/content")).thenReturn(queue);
-        when(queue.add(any(DistributionQueueItem.class))).thenReturn(true);
+        when(queue.add(any(DistributionQueueItem.class))).thenReturn(false);
 
-        boolean returnedState = priorityPathDistributionStrategy.add(distributionPackage, queueProvider);
-        assertTrue(returnedState);
-    }
-
-    @Test
-    public void testPackageAdditionWithNullItemStateFromTheQueue() throws Exception {
-        PriorityPathQueueDispatchingStrategy priorityPathDistributionStrategy = new PriorityPathQueueDispatchingStrategy(new String[]{"/content", "/apps"});
-
-        DistributionPackage distributionPackage = mock(DistributionPackage.class);
-        when(distributionPackage.getPaths()).thenReturn(new String[]{"/etc"});
-        DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
-        DistributionQueue queue = mock(DistributionQueue.class);
-
-        when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
-        when(queue.add(any(DistributionQueueItem.class))).thenReturn(true);
-        boolean returnedState = priorityPathDistributionStrategy.add(distributionPackage, queueProvider);
-        assertTrue(returnedState);
-    }
-
-    @Test
-    public void testPackageAdditionWithNullItemStateFromTheQueueOnPriorityPath() throws Exception {
-        PriorityPathQueueDispatchingStrategy priorityPathDistributionStrategy = new PriorityPathQueueDispatchingStrategy(new String[]{"/content", "/apps"});
-
-        DistributionPackage distributionPackage = mock(DistributionPackage.class);
-        when(distributionPackage.getPaths()).thenReturn(new String[]{"/apps/some/stuff"});
-        DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
-        DistributionQueue queue = mock(DistributionQueue.class);
-
-        when(queueProvider.getQueue("/apps")).thenReturn(queue);
-        when(queue.add(any(DistributionQueueItem.class))).thenReturn(true);
-        boolean returnedState = priorityPathDistributionStrategy.add(distributionPackage, queueProvider);
-        assertTrue(returnedState);
+        Iterable<DistributionQueueItemState> returnedStates = priorityPathDistributionStrategy.add(distributionPackage, queueProvider);
+        assertNotNull(returnedStates);
+        Iterator<DistributionQueueItemState> iterator = returnedStates.iterator();
+        assertNotNull(iterator);
+        assertTrue(iterator.hasNext());
+        assertNotNull(iterator.next());
     }
 
     @Test
@@ -136,8 +130,15 @@ public class PriorityPathQueueDistributionStrategyTest {
         DistributionQueue queue = mock(DistributionQueue.class);
         when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(DistributionQueueItem.class))).thenReturn(true);
-        boolean returnedState = priorityPathDistributionStrategy.add(distributionPackage, queueProvider);
-        assertTrue(returnedState);
+        DistributionQueueItemState state = mock(DistributionQueueItemState.class);
+        when(queue.getStatus(any(DistributionQueueItem.class))).thenReturn(state);
+
+        Iterable<DistributionQueueItemState> returnedStates = priorityPathDistributionStrategy.add(distributionPackage, queueProvider);
+        assertNotNull(returnedStates);
+        Iterator<DistributionQueueItemState> iterator = returnedStates.iterator();
+        assertNotNull(iterator);
+        assertTrue(iterator.hasNext());
+        assertNotNull(iterator.next());
     }
 
     @Test
@@ -151,8 +152,14 @@ public class PriorityPathQueueDistributionStrategyTest {
 
         when(queueProvider.getQueue("/apps")).thenReturn(queue);
         when(queue.add(any(DistributionQueueItem.class))).thenReturn(true);
+        DistributionQueueItemState state = mock(DistributionQueueItemState.class);
+        when(queue.getStatus(any(DistributionQueueItem.class))).thenReturn(state);
 
-        boolean returnedState = priorityPathDistributionStrategy.add(distributionPackage, queueProvider);
-        assertTrue(returnedState);
+        Iterable<DistributionQueueItemState> returnedStates = priorityPathDistributionStrategy.add(distributionPackage, queueProvider);
+        assertNotNull(returnedStates);
+        Iterator<DistributionQueueItemState> iterator = returnedStates.iterator();
+        assertNotNull(iterator);
+        assertTrue(iterator.hasNext());
+        assertNotNull(iterator.next());
     }
 }

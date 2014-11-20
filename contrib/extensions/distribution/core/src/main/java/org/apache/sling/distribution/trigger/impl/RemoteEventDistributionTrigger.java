@@ -125,7 +125,7 @@ public class RemoteEventDistributionTrigger implements DistributionTrigger {
             log.debug("content {} received {},{}", new Object[]{buffer, decoder, ioctrl});
 
             // TODO : currently it always triggers poll request on /, should this be configurable?
-            DistributionRequest distributionRequest = new DistributionRequest(System.currentTimeMillis(), DistributionActionType.POLL, "/");
+            DistributionRequest distributionRequest = new DistributionRequest(DistributionActionType.POLL, "/");
             handler.handle(distributionRequest);
             log.info("distribution request to agent {} sent ({} {})", new Object[]{
                     handler,
