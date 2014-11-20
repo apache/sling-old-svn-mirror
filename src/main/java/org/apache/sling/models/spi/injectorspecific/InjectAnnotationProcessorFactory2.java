@@ -14,7 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Version("1.1.0")
-package org.apache.sling.models.annotations.injectorspecific;
+package org.apache.sling.models.spi.injectorspecific;
 
-import aQute.bnd.annotation.Version;
+import java.lang.reflect.AnnotatedElement;
+
+/**
+ * Factory for {@link InjectAnnotationProcessor2} that is evaluated at runtime for each
+ * sling model adaption and may depend on the adaptable. 
+ */
+
+public interface InjectAnnotationProcessorFactory2 {
+    /**
+     * 
+     * @param adaptable the object from which this model is adapted
+     * @param element the field or method which is annotated
+     * @return a ModelAnnotationProcessor in case there is a known
+     *         injector-specific annotation on the given element found otherwise
+     *         null
+     */
+    InjectAnnotationProcessor2 createAnnotationProcessor(Object adaptable, AnnotatedElement element);
+}

@@ -14,7 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Version("1.1.0")
-package org.apache.sling.models.annotations.injectorspecific;
+package org.apache.sling.models.spi.injectorspecific;
 
-import aQute.bnd.annotation.Version;
+import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
+
+/**
+ * Default implementation of {@link InjectAnnotationProcessor2}.
+ *
+ */
+public class AbstractInjectAnnotationProcessor2 extends AbstractInjectAnnotationProcessor implements InjectAnnotationProcessor2 {
+
+    public InjectionStrategy getInjectionStrategy() {
+        return InjectionStrategy.DEFAULT;
+    }
+
+}

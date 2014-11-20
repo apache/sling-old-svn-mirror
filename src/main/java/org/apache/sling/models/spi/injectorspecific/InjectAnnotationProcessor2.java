@@ -16,12 +16,13 @@
  */
 package org.apache.sling.models.spi.injectorspecific;
 
+import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
+
 /**
  * Processor for injector-specific annotations.
- * @deprecated Use {@link InjectAnntoationProcessor2} instead
  */
-@Deprecated
-public interface InjectAnnotationProcessor {
+@SuppressWarnings("deprecation")
+public interface InjectAnnotationProcessor2 extends InjectAnnotationProcessor{
 
     /**
      * Tries to get the name value from the annotation.
@@ -52,16 +53,14 @@ public interface InjectAnnotationProcessor {
      * @return the value to be used if nothing can be injected
      */
     Object getDefault();
-
+    
+    
     /**
      * Tries to get the information whether the injection is optional.
      * 
-     * @return the value to be used for the default or null, in
-     *         which case the standard annotation should be used.
-     * @deprecated use {@link InjectAnntoationProcessor2.getInjectionStrategy} instead
+     * @return {@code REQUIRED} if injection is mandatory, {@code OPTIONAL} if injection is optional or {@code DEFAULT} in
+     *         which case the standard annotation/injection strategy should be used.
      */
-    Boolean isOptional();
-
-   
+    InjectionStrategy getInjectionStrategy();
 
 }
