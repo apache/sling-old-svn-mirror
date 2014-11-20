@@ -87,7 +87,7 @@ public class PersistingJcrEventDistributionTrigger extends AbstractJcrEventTrigg
                     createdNode.setProperty("info", values.toArray(new String[values.size()]));
                     session.save();
                     log.info("event persisted at {}", path);
-                    distributionRequest = new DistributionRequest(System.currentTimeMillis(), DistributionActionType.ADD, path);
+                    distributionRequest = new DistributionRequest(DistributionActionType.ADD, path);
                 } else {
                     log.warn("could not create node {}", nuggetsPath + "/" + nodeName);
                 }

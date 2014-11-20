@@ -21,6 +21,7 @@ package org.apache.sling.distribution.agent.impl;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -169,34 +170,33 @@ public class SimpleDistributionAgent implements DistributionAgent, ManagedDistri
         List<DistributionResponse> distributionResponses = new LinkedList<DistributionResponse>();
 
         for (DistributionPackage distributionPackage : distributionPackages) {
-            distributionResponses.add(schedule(distributionPackage));
+            distributionResponses.addAll(schedule(distributionPackage));
         }
         return distributionResponses.size() == 1 ? distributionResponses.get(0) : new CompositeDistributionResponse(distributionResponses);
     }
 
-    private DistributionResponse schedule(DistributionPackage distributionPackage) {
-        DistributionResponse distributionResponse;
+    private Collection<DistributionResponse> schedule(DistributionPackage distributionPackage) {
+        Collection<DistributionResponse> distributionResponses = new LinkedList<DistributionResponse>();
         log.info("scheduling distribution of package {}", distributionPackage);
-
 
 
         // dispatch the distribution package to the queue distribution handler
         try {
-            boolean success = queueDistributionStrategy.add(distributionPackage, queueProvider);
+            Iterable<DistributionQueueItemState> states = queueDistributionStrategy.add(distributionPackage, queueProvider);
+            for (DistributionQueueItemState state : states) {
+                Dictionary<Object, Object> properties = new Properties();
+                properties.put("distribution.package.paths", distributionPackage.getPaths());
+                properties.put("distribution.agent.name", name);
+                distributionEventFactory.generateEvent(DistributionEventType.PACKAGE_QUEUED, properties);
 
-            Dictionary<Object, Object> properties = new Properties();
-            properties.put("distribution.package.paths", distributionPackage.getPaths());
-            properties.put("distribution.agent.name", name);
-            distributionEventFactory.generateEvent(DistributionEventType.PACKAGE_QUEUED, properties);
-
-            distributionResponse = new DistributionResponse(success? DistributionQueueItemState.ItemState.QUEUED.toString() :
-                    DistributionQueueItemState.ItemState.ERROR.toString(), success);
+                distributionResponses.add(new DistributionResponse(state.isSuccessful(), state.getItemState().toString()));
+            }
         } catch (Exception e) {
-            log.error("an error happened during queue processing", e);
-            distributionResponse = new DistributionResponse(e.toString(), false);
+            log.error("an error happened during dispatching items to the queue(s)", e);
+            distributionResponses.add(new DistributionResponse(false, e.toString()));
         }
 
-        return distributionResponse;
+        return distributionResponses;
     }
 
     @Nonnull
@@ -288,8 +288,7 @@ public class SimpleDistributionAgent implements DistributionAgent, ManagedDistri
 
                 if (distributionPackage instanceof SharedDistributionPackage) {
                     ((SharedDistributionPackage) distributionPackage).release(queueName);
-                }
-                else {
+                } else {
                     distributionPackage.delete();
                 }
                 success = true;
@@ -368,7 +367,7 @@ public class SimpleDistributionAgent implements DistributionAgent, ManagedDistri
         private String status;
 
         public CompositeDistributionResponse(List<DistributionResponse> distributionResponses) {
-            super("", false);
+            super(false, null);
             if (distributionResponses.isEmpty()) {
                 successful = false;
                 status = "empty response";
@@ -377,7 +376,7 @@ public class SimpleDistributionAgent implements DistributionAgent, ManagedDistri
                 StringBuilder statusBuilder = new StringBuilder("[");
                 for (DistributionResponse response : distributionResponses) {
                     successful &= response.isSuccessful();
-                    statusBuilder.append(response.getStatus()).append(", ");
+                    statusBuilder.append(response.getMessage()).append(", ");
                 }
                 int lof = statusBuilder.lastIndexOf(", ");
                 statusBuilder.replace(lof, lof + 2, "]");
@@ -391,7 +390,7 @@ public class SimpleDistributionAgent implements DistributionAgent, ManagedDistri
         }
 
         @Override
-        public String getStatus() {
+        public String getMessage() {
             return status;
         }
     }

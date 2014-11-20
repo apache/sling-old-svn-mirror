@@ -50,7 +50,7 @@ public class JcrEventDistributionTrigger extends AbstractJcrEventTrigger impleme
             if (Event.PROPERTY_REMOVED == type || Event.PROPERTY_CHANGED == type || Event.PROPERTY_ADDED == type) {
                 replicatingPath = replicatingPath.substring(0, replicatingPath.lastIndexOf('/'));
             }
-            distributionRequest = new DistributionRequest(System.currentTimeMillis(), Event.NODE_REMOVED ==
+            distributionRequest = new DistributionRequest(Event.NODE_REMOVED ==
                     type ? DistributionActionType.DELETE : DistributionActionType.ADD, replicatingPath);
             log.info("distributing {}", distributionRequest);
         }

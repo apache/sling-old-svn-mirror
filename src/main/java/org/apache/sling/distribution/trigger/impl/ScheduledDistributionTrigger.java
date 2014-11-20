@@ -78,7 +78,7 @@ public class ScheduledDistributionTrigger implements DistributionTrigger {
         public void run() {
             log.debug("agent {}: scheduling {} distribution of {}", new Object[]{requestHandler, distributionAction, path});
 
-            requestHandler.handle(new DistributionRequest(System.currentTimeMillis(), distributionAction, path));
+            requestHandler.handle(new DistributionRequest(distributionAction, path));
         }
     }
 
