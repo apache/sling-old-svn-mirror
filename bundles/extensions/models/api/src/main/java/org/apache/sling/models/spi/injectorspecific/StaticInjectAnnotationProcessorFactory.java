@@ -32,6 +32,6 @@ public interface StaticInjectAnnotationProcessorFactory {
      *         injector-specific annotation on the given element found otherwise
      *         null
      */
-    InjectAnnotationProcessor createAnnotationProcessor(AnnotatedElement element);
+    InjectAnnotationProcessor2 createAnnotationProcessor(AnnotatedElement element);
 
 }

@@ -23,6 +23,8 @@ import java.lang.reflect.Type;
 
 import javax.inject.Inject;
 
+import org.apache.sling.models.annotations.DefaultInjectionStrategy;
+import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.impl.ReflectionUtil;
 import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 
@@ -32,7 +34,7 @@ public class ModelClassConstructor<ModelType> {
     private final boolean hasInjectAnnotation;
     private final ConstructorParameter[] constructorParametersArray;
 
-    public ModelClassConstructor(Constructor<ModelType> constructor, StaticInjectAnnotationProcessorFactory[] processorFactories) {
+    public ModelClassConstructor(Constructor<ModelType> constructor, StaticInjectAnnotationProcessorFactory[] processorFactories, DefaultInjectionStrategy defaultInjectionStrategy) {
         this.constructor = constructor;
         this.hasInjectAnnotation = constructor.isAnnotationPresent(Inject.class);
 
@@ -44,7 +46,7 @@ public class ModelClassConstructor<ModelType> {
             boolean isPrimitive = (parameterTypes[i] != genericType);
             this.constructorParametersArray[i] = new ConstructorParameter(
                     constructor.getParameterAnnotations()[i], constructor.getParameterTypes()[i], genericType, isPrimitive, i,
-                    processorFactories);
+                    processorFactories, defaultInjectionStrategy);
         }
     }
 

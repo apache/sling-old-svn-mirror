@@ -35,13 +35,14 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.models.annotations.Filter;
+import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 import org.apache.sling.models.annotations.injectorspecific.OSGiService;
 import org.apache.sling.models.spi.AcceptsNullName;
 import org.apache.sling.models.spi.DisposalCallback;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
-import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor;
-import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
+import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor2;
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor2;
 import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -217,7 +218,7 @@ public class OSGiServiceInjector implements Injector, StaticInjectAnnotationProc
     }
 
     @Override
-    public InjectAnnotationProcessor createAnnotationProcessor(AnnotatedElement element) {
+    public InjectAnnotationProcessor2 createAnnotationProcessor(AnnotatedElement element) {
         // check if the element has the expected annotation
         OSGiService annotation = element.getAnnotation(OSGiService.class);
         if (annotation != null) {
@@ -226,7 +227,7 @@ public class OSGiServiceInjector implements Injector, StaticInjectAnnotationProc
         return null;
     }
 
-    private static class OSGiServiceAnnotationProcessor extends AbstractInjectAnnotationProcessor {
+    private static class OSGiServiceAnnotationProcessor extends AbstractInjectAnnotationProcessor2 {
 
         private final OSGiService annotation;
 
@@ -234,6 +235,11 @@ public class OSGiServiceInjector implements Injector, StaticInjectAnnotationProc
             this.annotation = annotation;
         }
 
+        @Override
+        public InjectionStrategy getInjectionStrategy() {
+            return annotation.injectionStrategy();
+        }
+        
         @Override
         public Boolean isOptional() {
             return annotation.optional();

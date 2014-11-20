@@ -99,7 +99,7 @@ public class InjectorSpecificAnnotationTest {
                 Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 1L));
         factory.bindInjectAnnotationProcessorFactory(valueMapInjector,
                 Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 2L));
-        factory.bindInjectAnnotationProcessorFactory(childResourceInjector,
+        factory.bindInjectAnnotationProcessorFactory2(childResourceInjector,
                 Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 3L));
         factory.bindStaticInjectAnnotationProcessorFactory(requestAttributeInjector,
                 Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 4L));

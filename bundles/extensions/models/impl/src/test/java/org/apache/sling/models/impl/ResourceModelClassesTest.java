@@ -51,6 +51,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -71,8 +72,12 @@ public class ResourceModelClassesTest {
 
         factory = new ModelAdapterFactory();
         factory.activate(componentCtx);
-        factory.bindInjector(new ValueMapInjector(), new ServicePropertiesMap(2, 2));
+        ValueMapInjector valueMapInjector = new ValueMapInjector();
+        factory.bindInjector(valueMapInjector, new ServicePropertiesMap(2, 2));
         factory.bindInjector(new ChildResourceInjector(), new ServicePropertiesMap(1, 1));
+        
+        factory.bindInjectAnnotationProcessorFactory(valueMapInjector,
+                Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 2L));
     }
 
     @Test
@@ -205,10 +210,9 @@ public class ResourceModelClassesTest {
     }
 
     @Test
-    public void testRequiredPropertyModelOptionalStrategyAvailable() {
+    public void testRequiredPropertyMissingModelOptionalStrategy() {
         Map<String, Object> map = new HashMap<String, Object>();
         map.put("first", "first-value");
-        map.put("third", "third-value");
         ValueMap vm = spy(new ValueMapDecorator(map));
 
         Resource res = mock(Resource.class);
@@ -217,14 +221,16 @@ public class ResourceModelClassesTest {
         ResourceModelWithRequiredFieldOptionalStrategy model = factory.getAdapter(res, ResourceModelWithRequiredFieldOptionalStrategy.class);
         assertNull(model);
 
-        verify(vm).get("optional", String.class);
-        verify(vm).get("required", String.class);
+        verify(vm).get("optional1", String.class);
+        verify(vm).get("required1", String.class);
     }
 
     @Test
-    public void testRequiredPropertyModelOptionalStrategyNotAvailable() {
+    public void testRequiredPropertyModelOptionalStrategy() {
         Map<String, Object> map = new HashMap<String, Object>();
-        map.put("required", "first-value");
+        map.put("required1", "required value");
+        map.put("required2", "required value");
+        map.put("required3", "required value");
         ValueMap vm = spy(new ValueMapDecorator(map));
 
         Resource res = mock(Resource.class);
@@ -232,9 +238,11 @@ public class ResourceModelClassesTest {
 
         ResourceModelWithRequiredFieldOptionalStrategy model = factory.getAdapter(res, ResourceModelWithRequiredFieldOptionalStrategy.class);
         assertNotNull(model);
-
-        verify(vm).get("optional", String.class);
-        verify(vm).get("required", String.class);
+        assertEquals("required value", model.getRequired1());
+        assertEquals("required value", model.getRequired2());
+        
+        verify(vm).get("optional1", String.class);
+        verify(vm).get("required1", String.class);
     }
 
     @Test

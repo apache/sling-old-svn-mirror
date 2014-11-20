@@ -24,11 +24,12 @@ import javax.servlet.ServletRequest;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 import org.apache.sling.models.annotations.injectorspecific.RequestAttribute;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
-import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor;
-import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
+import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor2;
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor2;
 import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 import org.osgi.framework.Constants;
 
@@ -53,7 +54,7 @@ public class RequestAttributeInjector implements Injector, StaticInjectAnnotatio
     }
 
     @Override
-    public InjectAnnotationProcessor createAnnotationProcessor(AnnotatedElement element) {
+    public InjectAnnotationProcessor2 createAnnotationProcessor(AnnotatedElement element) {
         // check if the element has the expected annotation
         RequestAttribute annotation = element.getAnnotation(RequestAttribute.class);
         if (annotation != null) {
@@ -62,7 +63,7 @@ public class RequestAttributeInjector implements Injector, StaticInjectAnnotatio
         return null;
     }
 
-    private static class RequestAttributeAnnotationProcessor extends AbstractInjectAnnotationProcessor {
+    private static class RequestAttributeAnnotationProcessor extends AbstractInjectAnnotationProcessor2 {
 
         private final RequestAttribute annotation;
 
@@ -70,6 +71,11 @@ public class RequestAttributeInjector implements Injector, StaticInjectAnnotatio
             this.annotation = annotation;
         }
 
+        @Override
+        public InjectionStrategy getInjectionStrategy() {
+            return annotation.injectonStrategy();
+        }
+        
         @Override
         public Boolean isOptional() {
             return annotation.optional();

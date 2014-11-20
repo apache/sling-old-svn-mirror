@@ -22,23 +22,44 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.DefaultInjectionStrategy;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.Required;
+import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
+import org.apache.sling.models.annotations.injectorspecific.ResourcePath;
+import org.apache.sling.models.annotations.injectorspecific.ValueMapValue;
 
 @Model(adaptables = Resource.class, defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL)
 public class ResourceModelWithRequiredFieldOptionalStrategy {
 
+    // although this is marked with optional=false, this is still optional, because injectionStrategy has a higher priority (even if it is only the default)
+    // compare also with https://issues.apache.org/jira/browse/SLING-4155
+    @ValueMapValue(optional=false)
+    private String optional5;
+    
     @Inject
-    private String optional;
+    private String optional1;
 
     @Inject
     @Required
-    private String required;
+    private String required1;
+    
+    @ValueMapValue
+    private String optional2;
+    
+    @ValueMapValue(optional=true)
+    private String optional3;
+    
+    @ValueMapValue(injectionStrategy=InjectionStrategy.OPTIONAL)
+    private String optional4;
+    
+    @ValueMapValue(injectionStrategy=InjectionStrategy.REQUIRED)
+    private String required2;
 
-    public String getRequired() {
-        return required;
+    public String getRequired1() {
+        return required1;
     }
 
-    public String getOptional() {
-        return optional;
+    public String getRequired2() {
+        return required2;
     }
+    
 
 }

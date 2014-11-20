@@ -21,6 +21,7 @@ import java.lang.reflect.AnnotatedElement;
 /**
  * Factory for {@link InjectAnnotationProcessor} that is evaluated at runtime for each
  * sling model adaption and may depend on the adaptable. 
+ * Use {@link StaticInjectAnnotationProcessorFactory} preferably
  */
 public interface InjectAnnotationProcessorFactory {
 
@@ -30,7 +31,7 @@ public interface InjectAnnotationProcessorFactory {
      * @param element the field or method which is annotated
      * @return a ModelAnnotationProcessor in case there is a known
      *         injector-specific annotation on the given element found otherwise
-     *         null
+     *         null. This method should return a {@link InjectAnnotationProcessor2} preferably.
      */
     InjectAnnotationProcessor createAnnotationProcessor(Object adaptable, AnnotatedElement element);
 

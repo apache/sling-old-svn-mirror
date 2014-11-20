@@ -24,6 +24,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.sling.models.annotations.DefaultInjectionStrategy;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.impl.ReflectionUtil;
 import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
@@ -39,13 +40,19 @@ public class ModelClass<ModelType> {
     public ModelClass(Class<ModelType> type, StaticInjectAnnotationProcessorFactory[] processorFactories) {
         this.type = type;
         this.modelAnnotation = type.getAnnotation(Model.class);
-        this.constructors = getConstructors(type, processorFactories);
-        this.injectableFields = getInjectableFields(type, processorFactories);
-        this.injectableMethods = getInjectableMethods(type, processorFactories);
+        final DefaultInjectionStrategy defaultInjectionStrategy;
+        if (modelAnnotation == null) {
+            defaultInjectionStrategy = DefaultInjectionStrategy.REQUIRED;
+        } else {
+            defaultInjectionStrategy = modelAnnotation.defaultInjectionStrategy();
+        }
+        this.constructors = getConstructors(type, processorFactories, defaultInjectionStrategy);
+        this.injectableFields = getInjectableFields(type, processorFactories, defaultInjectionStrategy);
+        this.injectableMethods = getInjectableMethods(type, processorFactories, defaultInjectionStrategy);
     }
     
     @SuppressWarnings("unchecked")
-    private static ModelClassConstructor[] getConstructors(Class<?> type, StaticInjectAnnotationProcessorFactory[] processorFactories) {
+    private static ModelClassConstructor[] getConstructors(Class<?> type, StaticInjectAnnotationProcessorFactory[] processorFactories, DefaultInjectionStrategy defaultInjectionStrategy) {
         if (type.isInterface()) {
             return new ModelClassConstructor[0];
         }
@@ -56,31 +63,31 @@ public class ModelClass<ModelType> {
 
         ModelClassConstructor[] array = new ModelClassConstructor[constructors.length];
         for (int i=0; i<array.length; i++) {
-            array[i] = new ModelClassConstructor(constructors[i], processorFactories);
+            array[i] = new ModelClassConstructor(constructors[i], processorFactories, defaultInjectionStrategy);
         }
         return array;
     }
 
-    private static InjectableField[] getInjectableFields(Class<?> type, StaticInjectAnnotationProcessorFactory[] processorFactories) {
+    private static InjectableField[] getInjectableFields(Class<?> type, StaticInjectAnnotationProcessorFactory[] processorFactories, DefaultInjectionStrategy defaultInjectionStrategy) {
         if (type.isInterface()) {
             return new InjectableField[0];
         }
         List<Field> injectableFields = ReflectionUtil.collectInjectableFields(type);
         InjectableField[] array = new InjectableField[injectableFields.size()];
         for (int i=0; i<array.length; i++) {
-            array[i] = new InjectableField(injectableFields.get(i), processorFactories);
+            array[i] = new InjectableField(injectableFields.get(i), processorFactories, defaultInjectionStrategy);
         }
         return array;
     }
 
-    private static InjectableMethod[] getInjectableMethods(Class<?> type, StaticInjectAnnotationProcessorFactory[] processorFactories) {
+    private static InjectableMethod[] getInjectableMethods(Class<?> type, StaticInjectAnnotationProcessorFactory[] processorFactories, DefaultInjectionStrategy defaultInjectionStrategy) {
         if (!type.isInterface()) {
             return new InjectableMethod[0];
         }
         List<Method> injectableMethods = ReflectionUtil.collectInjectableMethods(type);
         InjectableMethod[] array = new InjectableMethod[injectableMethods.size()];
         for (int i=0; i<array.length; i++) {
-            array[i] = new InjectableMethod(injectableMethods.get(i), processorFactories);
+            array[i] = new InjectableMethod(injectableMethods.get(i), processorFactories, defaultInjectionStrategy);
         }
         return array;
     }

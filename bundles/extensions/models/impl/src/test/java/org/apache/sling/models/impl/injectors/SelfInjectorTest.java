@@ -28,6 +28,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.models.annotations.DefaultInjectionStrategy;
+import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.injectorspecific.Self;
 import org.apache.sling.models.impl.model.ConstructorParameter;
 import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
@@ -48,15 +50,19 @@ public class SelfInjectorTest {
     @Mock
     private AnnotatedElement annotatedElement;
     
+    @Mock
+    private Model modelAnnotation;
+    
     private ConstructorParameter firstConstructorParameter;
     private ConstructorParameter secondConstructorParameter;
     
     @Before
     public void setup() {
+        when(modelAnnotation.defaultInjectionStrategy()).thenReturn(DefaultInjectionStrategy.REQUIRED);
         firstConstructorParameter = new ConstructorParameter(new Annotation[0], Object.class, Object.class, true, 0,
-                new StaticInjectAnnotationProcessorFactory[0]);
+                new StaticInjectAnnotationProcessorFactory[0], null);
         secondConstructorParameter = new ConstructorParameter(new Annotation[0], Object.class, Object.class, true, 1,
-                new StaticInjectAnnotationProcessorFactory[0]);
+                new StaticInjectAnnotationProcessorFactory[0], null);
     }
 
     @Test

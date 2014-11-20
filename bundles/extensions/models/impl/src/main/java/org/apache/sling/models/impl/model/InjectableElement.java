@@ -21,6 +21,9 @@ package org.apache.sling.models.impl.model;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
 
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
+
 public interface InjectableElement {
     
     /**
@@ -64,13 +67,8 @@ public interface InjectableElement {
     Object getDefaultValue();
     
     /**
-     * @return @Optional annotation is present
+     * @return {@code true} if the element is optional otherwise {@code false}
      */
-    boolean isOptional();
+    boolean isOptional(InjectAnnotationProcessor annotationProcessor);
 
-    /**
-     * @return @Required annotation is present
-     */
-    boolean isRequired();
-    
 }
