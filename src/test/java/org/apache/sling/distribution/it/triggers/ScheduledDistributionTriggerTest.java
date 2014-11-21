@@ -29,6 +29,6 @@ public class ScheduledDistributionTriggerTest extends DistributionIntegrationTes
 
     @Test
     public void testTestTriggersOnAuthor() throws Exception {
-        assertResponseContains(author, triggerEventUrl("test-scheduled-event"), "POLL");
+        assertResponseContains(author, triggerEventUrl("test-scheduled-event"), "PULL");
     }
 }
