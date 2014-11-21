@@ -106,11 +106,11 @@ public class DistributionTriggerServlet extends SlingAllMethodsServlet {
         // write the actual data
         // this could be simple text or could be JSON-encoded text that the
         // client then decodes
-        writer.write("data: " + distributionRequest.getActionType() + " " + Arrays.toString(distributionRequest.getPaths()) + "\n\n");
+        writer.write("data: " + distributionRequest.getRequestType() + " " + Arrays.toString(distributionRequest.getPaths()) + "\n\n");
 
         // flush the buffers to make sure the container sends the bytes
         writer.flush();
-        log.debug("SSE event {}: {} {}", new Object[]{distributionRequest.getTime(), distributionRequest.getActionType(),
+        log.debug("SSE event {}: {} {}", new Object[]{distributionRequest.getTime(), distributionRequest.getRequestType(),
                 distributionRequest.getPaths()});
     }
 }

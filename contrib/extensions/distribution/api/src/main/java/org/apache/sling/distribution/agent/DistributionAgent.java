@@ -31,7 +31,7 @@ import org.apache.sling.distribution.queue.DistributionQueue;
 /**
  * A distribution agent is responsible for handling {@link org.apache.sling.distribution.communication.DistributionRequest}s.
  * <p/>
- * This means executing actions of e.g.: a specific {@link org.apache.sling.distribution.communication.DistributionActionType}s on
+ * This means executing actions of e.g.: a specific {@link org.apache.sling.distribution.communication.DistributionRequestType}s on
  * specific path(s) which will resume pulling resources from a certain Sling instance and / or pushing resources to
  * other instances.
  */

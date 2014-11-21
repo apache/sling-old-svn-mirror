@@ -185,7 +185,9 @@ public class SimpleDistributionAgent implements DistributionAgent, ManagedDistri
             Iterable<DistributionQueueItemState> states = queueDistributionStrategy.add(distributionPackage, queueProvider);
             for (DistributionQueueItemState state : states) {
                 Dictionary<Object, Object> properties = new Properties();
-                properties.put("distribution.package.paths", distributionPackage.getPaths());
+                if (distributionPackage.getInfo().getPaths() != null) {
+                    properties.put("distribution.package.paths", distributionPackage.getInfo().getPaths());
+                }
                 properties.put("distribution.agent.name", name);
                 distributionEventFactory.generateEvent(DistributionEventType.PACKAGE_QUEUED, properties);
 
@@ -308,14 +310,13 @@ public class SimpleDistributionAgent implements DistributionAgent, ManagedDistri
 
             DistributionPackage distributionPackage = distributionPackageExporter.getPackage(agentResourceResolver, queueItem.getId());
 
-
             if (distributionPackage != null) {
                 distributionPackage.getInfo().fillInfo(queueItem.getPackageInfo());
 
                 distributionPackageImporter.importPackage(agentResourceResolver, distributionPackage);
 
                 Dictionary<Object, Object> properties = new Properties();
-                properties.put("distribution.package.paths", distributionPackage.getPaths());
+                properties.put("distribution.package.paths", distributionPackage.getInfo().getPaths());
                 properties.put("distribution.agent.name", name);
                 distributionEventFactory.generateEvent(DistributionEventType.PACKAGE_DISTRIBUTED, properties);
 

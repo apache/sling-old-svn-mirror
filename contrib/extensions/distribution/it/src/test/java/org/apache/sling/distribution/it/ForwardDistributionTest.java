@@ -18,7 +18,7 @@
  */
 package org.apache.sling.distribution.it;
 
-import org.apache.sling.distribution.communication.DistributionActionType;
+import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.junit.Test;
 
 import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
@@ -35,7 +35,7 @@ public class ForwardDistributionTest extends DistributionIntegrationTestBase {
     public void testAddContent() throws Exception {
         String nodePath = createRandomNode(authorClient, "/content/forward_add_" + System.nanoTime());
         assertExists(authorClient, nodePath);
-        distribute(author, "publish", DistributionActionType.ADD, nodePath);
+        distribute(author, "publish", DistributionRequestType.ADD, nodePath);
         assertExists(publishClient, nodePath);
     }
 
@@ -43,7 +43,7 @@ public class ForwardDistributionTest extends DistributionIntegrationTestBase {
     public void testDeleteContent() throws Exception {
         String nodePath = createRandomNode(publishClient, "/content/forward_del_" + System.nanoTime());
         assertExists(publishClient, nodePath);
-        distribute(author, "publish", DistributionActionType.DELETE, nodePath);
+        distribute(author, "publish", DistributionRequestType.DELETE, nodePath);
         assertNotExists(publishClient, nodePath);
     }
 

@@ -22,6 +22,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.event.jobs.Job;
@@ -34,17 +35,17 @@ public class JobHandlingUtils {
 
     private static final String TYPE = "distribution.package.type";
 
-    protected static final String ACTION = "distribution.package.action";
+    protected static final String REQUEST_TYPE = "distribution.package.request.type";
 
     protected static final String ORIGIN = "distribution.package.origin";
 
     public static DistributionQueueItem getPackage(final Job job) {
         DistributionPackageInfo packageInfo = new DistributionPackageInfo();
         packageInfo.setOrigin((URI) job.getProperty(ORIGIN));
+        packageInfo.setPaths((String[]) job.getProperty(PATHS));
+        packageInfo.setRequestType((DistributionRequestType) job.getProperty(REQUEST_TYPE));
 
         return new DistributionQueueItem((String) job.getProperty(ID),
-                (String[]) job.getProperty(PATHS),
-                String.valueOf(job.getProperty(ACTION)),
                 String.valueOf(job.getProperty(TYPE)), packageInfo);
     }
 
@@ -53,13 +54,17 @@ public class JobHandlingUtils {
         Map<String, Object> properties = new HashMap<String, Object>();
 
         properties.put(ID, distributionQueueItem.getId());
-        properties.put(PATHS, distributionQueueItem.getPaths());
-        properties.put(ACTION, distributionQueueItem.getAction());
         properties.put(TYPE, distributionQueueItem.getType());
 
-        DistributionPackageInfo packageInfo = distributionQueueItem.getPackageInfo();
-        if (packageInfo != null && packageInfo.getOrigin() != null) {
-            properties.put(ORIGIN, packageInfo.getOrigin());
+        DistributionPackageInfo info = distributionQueueItem.getPackageInfo();
+        if (info.getPaths() != null) {
+            properties.put(PATHS, info.getPaths());
+        }
+        if (info.getRequestType() != null) {
+            properties.put(REQUEST_TYPE, info.getRequestType());
+        }
+        if (info.getOrigin() != null) {
+            properties.put(ORIGIN, info.getOrigin());
         }
 
         return properties;

@@ -21,7 +21,7 @@ package org.apache.sling.distribution.communication;
 import javax.annotation.CheckForNull;
 
 /**
- * The action type tied to a specific {@link org.apache.sling.distribution.communication.DistributionRequest}, used to decide how
+ * The request type tied to a specific {@link org.apache.sling.distribution.communication.DistributionRequest}, used to decide how
  * the distribution content should be aggregated.
  * <p/>
  * {@code ADD} requests can for example lead to the creation of a package of resources to be persisted on the target instance.
@@ -30,7 +30,7 @@ import javax.annotation.CheckForNull;
  * {@code PULL} requests can for example lead to the creation of a "command package" that will trigger fetching of content
  * from the target instance.
  */
-public enum DistributionActionType {
+public enum DistributionRequestType {
 
     /**
      * Action type for adding content
@@ -55,12 +55,12 @@ public enum DistributionActionType {
      * @return the type or {@code null}
      */
     @CheckForNull
-    public static DistributionActionType fromName(String n) {
+    public static DistributionRequestType fromName(String n) {
         if (n == null) {
             return null;
         }
         try {
-            return DistributionActionType.valueOf(n.toUpperCase());
+            return DistributionRequestType.valueOf(n.toUpperCase());
         } catch (IllegalArgumentException e) {
             return null;
         }

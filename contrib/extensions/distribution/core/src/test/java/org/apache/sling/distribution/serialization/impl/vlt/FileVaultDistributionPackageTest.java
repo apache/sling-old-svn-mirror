@@ -24,6 +24,7 @@ import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -49,26 +50,16 @@ public class FileVaultDistributionPackageTest {
         when(file.getAbsolutePath()).thenReturn("/path/to/file.txt");
         when(vaultPackage.getFile()).thenReturn(file);
         FileVaultDistributionPackage fileVaultdistributionPackage = new FileVaultDistributionPackage(vaultPackage);
-        assertNotNull(fileVaultdistributionPackage.getPaths());
+        assertNull(fileVaultdistributionPackage.getInfo().getPaths());
     }
 
     @Test
     public void testCreateInputStream() throws Exception {
         VaultPackage vaultPackage = mock(VaultPackage.class);
-        File file = File.createTempFile("sample","txt");
+        File file = File.createTempFile("sample", "txt");
         when(vaultPackage.getFile()).thenReturn(file);
         FileVaultDistributionPackage fileVaultdistributionPackage = new FileVaultDistributionPackage(vaultPackage);
         assertNotNull(fileVaultdistributionPackage.createInputStream());
-    }
-
-    @Test
-    public void testGetLength() throws Exception {
-        VaultPackage vaultPackage = mock(VaultPackage.class);
-        File file = mock(File.class);
-        when(file.getAbsolutePath()).thenReturn("/path/to/file.txt");
-        when(vaultPackage.getFile()).thenReturn(file);
-        FileVaultDistributionPackage fileVaultdistributionPackage = new FileVaultDistributionPackage(vaultPackage);
-        assertNotNull(fileVaultdistributionPackage.getLength());
     }
 
     @Test
@@ -82,13 +73,13 @@ public class FileVaultDistributionPackageTest {
     }
 
     @Test
-    public void testGetAction() throws Exception {
+    public void testGetRequestType() throws Exception {
         VaultPackage vaultPackage = mock(VaultPackage.class);
         File file = mock(File.class);
         when(file.getAbsolutePath()).thenReturn("/path/to/file.txt");
         when(vaultPackage.getFile()).thenReturn(file);
         FileVaultDistributionPackage fileVaultdistributionPackage = new FileVaultDistributionPackage(vaultPackage);
-        assertNotNull(fileVaultdistributionPackage.getActionType());
+        assertNull(fileVaultdistributionPackage.getInfo().getRequestType());
     }
 
     @Test

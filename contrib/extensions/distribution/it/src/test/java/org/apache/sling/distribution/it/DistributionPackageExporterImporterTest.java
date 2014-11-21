@@ -19,7 +19,7 @@
 package org.apache.sling.distribution.it;
 
 import org.apache.http.protocol.HTTP;
-import org.apache.sling.distribution.communication.DistributionActionType;
+import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.junit.Test;
 
 import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
@@ -35,7 +35,7 @@ public class DistributionPackageExporterImporterTest extends DistributionIntegra
         String nodePath = createRandomNode(publishClient, "/content/export_" + System.nanoTime());
         assertExists(publishClient, nodePath);
 
-        String content = doExport(publish, "default", DistributionActionType.ADD, nodePath);
+        String content = doExport(publish, "default", DistributionRequestType.ADD, nodePath);
 
         publishClient.delete(nodePath);
         assertNotExists(publishClient, nodePath);
@@ -50,7 +50,7 @@ public class DistributionPackageExporterImporterTest extends DistributionIntegra
         String nodePath = createRandomNode(publishClient, "/content/export_" + System.nanoTime());
         assertExists(publishClient, nodePath);
 
-        String content = doExport(publish, "default", DistributionActionType.DELETE, nodePath);
+        String content = doExport(publish, "default", DistributionRequestType.DELETE, nodePath);
 
         doImport(publish, "default", content.getBytes(HTTP.DEFAULT_CONTENT_CHARSET));
         assertNotExists(publishClient, nodePath);

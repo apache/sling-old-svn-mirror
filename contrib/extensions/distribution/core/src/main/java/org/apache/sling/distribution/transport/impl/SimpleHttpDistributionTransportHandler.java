@@ -114,7 +114,7 @@ public class SimpleHttpDistributionTransportHandler implements DistributionTrans
                 Content content = response.returnContent();
                 log.info("distribution content of type {} for {} delivered: {}", new Object[]{
                         distributionPackage.getType(),
-                        Arrays.toString(distributionPackage.getPaths()),
+                        Arrays.toString(distributionPackage.getInfo().getPaths()),
                         content
                 });
             } else {

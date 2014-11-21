@@ -70,11 +70,11 @@ public class LocalDistributionPackageImporter implements DistributionPackageImpo
             success = packageBuilder.installPackage(resourceResolver, distributionPackage);
 
             if (success) {
-                log.info("Distribution package read and installed for path(s) {}", Arrays.toString(distributionPackage.getPaths()));
+                log.info("Distribution package read and installed for path(s) {}", Arrays.toString(distributionPackage.getInfo().getPaths()));
 
                 Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
-                dictionary.put("distribution.action", distributionPackage.getActionType());
-                dictionary.put("distribution.path", distributionPackage.getPaths());
+                dictionary.put("distribution.request.type", distributionPackage.getInfo().getRequestType());
+                dictionary.put("distribution.path", distributionPackage.getInfo().getPaths());
                 distributionEventFactory.generateEvent(DistributionEventType.PACKAGE_INSTALLED, dictionary);
 
             } else {

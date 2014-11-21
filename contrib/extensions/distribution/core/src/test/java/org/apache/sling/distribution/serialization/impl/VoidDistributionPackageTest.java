@@ -22,7 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.sling.distribution.communication.DistributionActionType;
+import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.junit.Test;
 
@@ -36,15 +36,14 @@ public class VoidDistributionPackageTest {
 
     @Test
     public void testCreatedAndReadPackagesEquality() throws Exception {
-        long time = System.currentTimeMillis();
-        DistributionRequest request = new DistributionRequest(DistributionActionType.DELETE, "/abc");
+        DistributionRequest request = new DistributionRequest(DistributionRequestType.DELETE, "/abc");
         VoidDistributionPackage createdPackage = new VoidDistributionPackage(request);
+        long time = System.currentTimeMillis();
         VoidDistributionPackage readPackage = VoidDistributionPackage.fromStream(new ByteArrayInputStream(("DELETE:/abc:" + time + ":VOID").getBytes()));
         assertEquals(createdPackage.getId(), readPackage.getId());
-        assertEquals(createdPackage.getActionType(), readPackage.getActionType());
         assertEquals(createdPackage.getType(), readPackage.getType());
-        assertEquals(createdPackage.getLength(), readPackage.getLength());
-        assertEquals(Arrays.toString(createdPackage.getPaths()), Arrays.toString(readPackage.getPaths()));
+        assertEquals(createdPackage.getInfo().getRequestType(), readPackage.getInfo().getRequestType());
+        assertEquals(Arrays.toString(createdPackage.getInfo().getPaths()), Arrays.toString(readPackage.getInfo().getPaths()));
         assertTrue(IOUtils.contentEquals(createdPackage.createInputStream(), readPackage.createInputStream()));
     }
 }

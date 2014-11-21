@@ -24,7 +24,7 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.sling.distribution.communication.DistributionActionType;
+import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.component.ManagedDistributionComponent;
 import org.apache.sling.distribution.event.DistributionEventType;
@@ -118,7 +118,7 @@ public class ChainDistributeDistributionTrigger implements DistributionTrigger, 
                     if (p.startsWith(path)) {
                         log.info("triggering chain distribution from event {}", event);
 
-                        DistributionActionType action = DistributionActionType.valueOf(String.valueOf(actionProperty));
+                        DistributionRequestType action = DistributionRequestType.valueOf(String.valueOf(actionProperty));
                         requestHandler.handle(new DistributionRequest(action, paths));
                         break;
                     }

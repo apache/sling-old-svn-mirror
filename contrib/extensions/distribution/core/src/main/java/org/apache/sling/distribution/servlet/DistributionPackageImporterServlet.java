@@ -49,7 +49,6 @@ public class DistributionPackageImporterServlet extends SlingAllMethodsServlet {
                 .getResource()
                 .adaptTo(DistributionPackageImporter.class);
 
-        boolean success = false;
         final long start = System.currentTimeMillis();
         response.setContentType("text/plain");
         response.setCharacterEncoding("utf-8");
@@ -59,9 +58,10 @@ public class DistributionPackageImporterServlet extends SlingAllMethodsServlet {
         try {
             DistributionPackage distributionPackage = distributionPackageImporter.importStream(resourceResolver, stream);
             if (distributionPackage != null) {
+                log.info("Package {} imported successfully", distributionPackage);
                 distributionPackage.delete();
             } else {
-                log.warn("cannot import distribution package from request {}", request);
+                log.warn("Cannot import distribution package from request {}", request);
                 response.setStatus(400);
                 response.getWriter().print("error: could not import a package from the request stream");
             }

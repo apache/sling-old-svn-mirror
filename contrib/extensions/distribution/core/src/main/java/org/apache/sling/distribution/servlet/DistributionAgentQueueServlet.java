@@ -118,14 +118,14 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
         StringBuilder builder = new StringBuilder();
         builder.append("\"id\":\"").append(item.getId().replace("\\", "\\\\"));
         builder.append("\",\"paths\":[");
-        for (int i = 0; i < item.getPaths().length; i++) {
+        for (int i = 0; i < item.getPackageInfo().getPaths().length; i++) {
             builder.append("\"");
-            builder.append(item.getPaths()[i]);
+            builder.append(item.getPackageInfo().getPaths()[i]);
             builder.append("\",");
         }
         builder.deleteCharAt(builder.length() - 1);
         builder.append(']');
-        builder.append(",\"action\":\"").append(item.getAction());
+        builder.append(",\"action\":\"").append(item.getPackageInfo().getRequestType());
         builder.append("\",\"type\":\"").append(item.getType());
         builder.append("\"");
         return builder.toString();

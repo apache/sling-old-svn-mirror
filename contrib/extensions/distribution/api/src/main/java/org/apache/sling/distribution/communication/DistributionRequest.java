@@ -29,11 +29,11 @@ public final class DistributionRequest {
 
     private final long time;
 
-    private final DistributionActionType actionType;
+    private final DistributionRequestType actionType;
 
     private final String[] paths;
 
-    public DistributionRequest(@Nonnull DistributionActionType actionType, @Nonnull String... paths) {
+    public DistributionRequest(@Nonnull DistributionRequestType actionType, @Nonnull String... paths) {
         this.time = System.currentTimeMillis();
         this.actionType = actionType;
         this.paths = paths;
@@ -49,11 +49,11 @@ public final class DistributionRequest {
     }
 
     /**
-     * get the {@link DistributionActionType} associated with this request
+     * get the {@link DistributionRequestType} associated with this request
      *
-     * @return the type of actionType for request as a {@link DistributionActionType}
+     * @return the type of actionType for request as a {@link DistributionRequestType}
      */
-    public DistributionActionType getActionType() {
+    public DistributionRequestType getRequestType() {
         return actionType;
     }
 

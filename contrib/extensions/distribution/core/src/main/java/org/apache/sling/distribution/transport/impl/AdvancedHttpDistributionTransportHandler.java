@@ -147,7 +147,8 @@ public class AdvancedHttpDistributionTransportHandler extends SimpleHttpDistribu
         Request req = Request.Post(distributionEndpoint.getUri()).useExpectContinue();
 
         if (useCustomHeaders) {
-            String[] customizedHeaders = getCustomizedHeaders(customHeaders, distributionPackage.getActionType(), distributionPackage.getPaths());
+            String[] customizedHeaders = getCustomizedHeaders(customHeaders, distributionPackage.getInfo().getRequestType().name(),
+                    distributionPackage.getInfo().getPaths());
             for (String header : customizedHeaders) {
                 addHeader(req, header);
             }
@@ -173,7 +174,7 @@ public class AdvancedHttpDistributionTransportHandler extends SimpleHttpDistribu
         if (response != null) {
             Content content = response.returnContent();
             log.info("Distribution content of type {} for {} delivered: {}", new Object[]{
-                    type, Arrays.toString(distributionPackage.getPaths()), content});
+                    type, Arrays.toString(distributionPackage.getInfo().getPaths()), content});
         } else {
             throw new IOException("response is empty");
         }

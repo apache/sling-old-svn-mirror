@@ -21,6 +21,8 @@ package org.apache.sling.distribution.queue.impl.jobhandling;
 import java.util.Collections;
 import java.util.Map;
 
+import org.apache.sling.distribution.communication.DistributionRequestType;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemState;
@@ -57,8 +59,12 @@ public class JobHandlingDistributionQueueTest {
         when(jobManager.findJobs(JobManager.QueryType.ALL, topic, -1)).thenReturn(Collections.<Job>emptySet());
         when(builder.properties(any(Map.class))).thenReturn(builder);
         DistributionQueue queue = new JobHandlingDistributionQueue("aname", topic, jobManager);
-        DistributionQueueItem pkg = mock(DistributionQueueItem.class);
-        assertTrue(queue.add(pkg));
+        DistributionQueueItem distributionQueueItem = mock(DistributionQueueItem.class);
+        DistributionPackageInfo packageInfo = new DistributionPackageInfo();
+        packageInfo.setPaths(new String[]{"/foo"});
+        packageInfo.setRequestType(DistributionRequestType.ADD);
+        when(distributionQueueItem.getPackageInfo()).thenReturn(packageInfo);
+        assertTrue(queue.add(distributionQueueItem));
     }
 
     @SuppressWarnings("unchecked")
@@ -75,9 +81,13 @@ public class JobHandlingDistributionQueueTest {
         when(jobManager.findJobs(JobManager.QueryType.ALL, topic, -1)).thenReturn(Collections.<Job>emptySet());
         when(builder.properties(any(Map.class))).thenReturn(builder);
         DistributionQueue queue = new JobHandlingDistributionQueue("aname", topic, jobManager);
-        DistributionQueueItem pkg = mock(DistributionQueueItem.class);
-        assertTrue(queue.add(pkg));
-        DistributionQueueItemState status = queue.getStatus(pkg);
+        DistributionQueueItem distributionQueueItem = mock(DistributionQueueItem.class);
+        DistributionPackageInfo packageInfo = new DistributionPackageInfo();
+        packageInfo.setPaths(new String[]{"/foo"});
+        packageInfo.setRequestType(DistributionRequestType.ADD);
+        when(distributionQueueItem.getPackageInfo()).thenReturn(packageInfo);
+        assertTrue(queue.add(distributionQueueItem));
+        DistributionQueueItemState status = queue.getStatus(distributionQueueItem);
         assertNotNull(status);
         assertFalse(status.isSuccessful());
         assertEquals(ItemState.DROPPED, status.getItemState());

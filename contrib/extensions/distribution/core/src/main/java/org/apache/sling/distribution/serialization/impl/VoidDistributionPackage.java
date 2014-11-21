@@ -27,8 +27,8 @@ import java.util.Arrays;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.vault.util.Text;
-import org.apache.sling.distribution.communication.DistributionActionType;
 import org.apache.sling.distribution.communication.DistributionRequest;
+import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 
 /**
@@ -44,7 +44,7 @@ public class VoidDistributionPackage extends AbstractDistributionPackage impleme
 
     private final String id;
 
-    private final String action;
+    private final DistributionRequestType requestType;
 
 
     public VoidDistributionPackage(DistributionRequest request) {
@@ -54,11 +54,13 @@ public class VoidDistributionPackage extends AbstractDistributionPackage impleme
     public VoidDistributionPackage(DistributionRequest request, String type) {
         this.type = type;
         this.paths = request.getPaths();
-        this.action = request.getActionType().toString();
-        this.id = request.getActionType().toString()
+        this.requestType = request.getRequestType();
+        this.id = request.getRequestType().toString()
                 + ':' + Arrays.toString(request.getPaths()).replaceAll("\\[", "").replaceAll("\\]", "")
                 + ':' + request.getTime()
                 + ':' + type;
+        this.getInfo().setPaths(paths);
+        this.getInfo().setRequestType(requestType);
     }
 
     public static VoidDistributionPackage fromStream(InputStream stream) throws IOException {
@@ -73,14 +75,14 @@ public class VoidDistributionPackage extends AbstractDistributionPackage impleme
         String timeString = parts[2];
         String typeString = parts[3];
 
-        DistributionActionType distributionActionType = DistributionActionType.fromName(actionString);
+        DistributionRequestType distributionRequestType = DistributionRequestType.fromName(actionString);
 
         VoidDistributionPackage distributionPackage = null;
-        if (distributionActionType != null) {
+        if (distributionRequestType != null) {
             pathsString = Text.unescape(pathsString);
             String[] paths = pathsString.split(", ");
 
-            DistributionRequest request = new DistributionRequest(distributionActionType, paths);
+            DistributionRequest request = new DistributionRequest(distributionRequestType, paths);
             distributionPackage = new VoidDistributionPackage(request, typeString);
         }
 
@@ -96,19 +98,6 @@ public class VoidDistributionPackage extends AbstractDistributionPackage impleme
     }
 
     @Nonnull
-    public String[] getPaths() {
-        return paths;
-    }
-
-    public long getLength() {
-        try {
-            return id.getBytes("UTF-8").length;
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("Unsupported UTF-8 encoding");
-        }
-    }
-
-    @Nonnull
     public InputStream createInputStream() throws IOException {
         return new ByteArrayInputStream(id.getBytes("UTF-8"));
     }
@@ -118,16 +107,9 @@ public class VoidDistributionPackage extends AbstractDistributionPackage impleme
         return id;
     }
 
-    @Nonnull
-    public String getActionType() {
-        return action;
-    }
-
-
     public void delete() {
-
+        // there's nothing to delete
     }
-
 
     @Override
     public String toString() {
@@ -135,7 +117,7 @@ public class VoidDistributionPackage extends AbstractDistributionPackage impleme
                 "type='" + type + '\'' +
                 ", paths=" + Arrays.toString(paths) +
                 ", id='" + id + '\'' +
-                ", action='" + action + '\'' +
+                ", requestType='" + requestType + '\'' +
                 '}';
     }
 }

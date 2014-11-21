@@ -20,7 +20,7 @@ package org.apache.sling.distribution.trigger.impl;
 
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
-import org.apache.sling.distribution.communication.DistributionActionType;
+import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.junit.Test;
 
@@ -34,7 +34,7 @@ public class ScheduledDistributionTriggerTest {
 
     @Test
     public void testRegister() throws Exception {
-        for (DistributionActionType action : DistributionActionType.values()) {
+        for (DistributionRequestType action : DistributionRequestType.values()) {
             String path = "/path/to/somewhere";
             int interval = 10;
             DistributionRequestHandler handler = mock(DistributionRequestHandler.class);
@@ -49,7 +49,7 @@ public class ScheduledDistributionTriggerTest {
 
     @Test
     public void testUnregister() throws Exception {
-        for (DistributionActionType action : DistributionActionType.values()) {
+        for (DistributionRequestType action : DistributionRequestType.values()) {
             String path = "/path/to/somewhere";
             int interval = 10;
             Scheduler scheduler = mock(Scheduler.class);
