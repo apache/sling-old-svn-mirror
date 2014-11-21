@@ -21,8 +21,8 @@ import java.lang.reflect.AnnotatedElement;
 /**
  * Factory for {@link InjectAnnotationProcessor2} that is evaluated at runtime for each
  * sling model adaption and may depend on the adaptable. 
+ * Use {@link StaticInjectAnnotationProcessorFactory} preferably.
  */
-
 public interface InjectAnnotationProcessorFactory2 {
     /**
      * 
