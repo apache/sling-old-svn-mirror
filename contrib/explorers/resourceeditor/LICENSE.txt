@@ -174,3 +174,44 @@
       of your accepting any such warranty or additional liability.
 
    END OF TERMS AND CONDITIONS
+   
+   
+
++++ Third party libraries +++
+
+++ Apache Sling  - http://sling.apache.org/ ++
+Apache 2 license from http://www.apache.org/licenses/LICENSE-2.0.html 
+
+++ Twitter Bootstrap - http://getbootstrap.com/
+MIT License from http://opensource.org/licenses/MIT
+
+++ Glyphicons included in Twitter Bootstrap ++
+http://glyphicons.com/license/ states that the version that is included in Twitter Bootstrap uses the same license as Twitter Bootstrap.
+
+++ Bootbox - http://bootboxjs.com/ ++
+MIT License from http://opensource.org/licenses/MIT
+
+++ Google Webfonts - http://www.google.com/webfonts ++
+Quote from the about page at http://www.google.com/webfonts#AboutPlace:about
+All of the fonts are Open Source. This means that you are free to share your favorites with friends and colleagues. You can even customize them for your own use, or collaborate with the original designer to improve them. And you can use them in every way you want, privately or commercially ��������� in print, on your computer, or in your websites.
+
+++ Less CSS compiler - http://lesscss.org/ ++
+Apache 2 license from http://www.apache.org/licenses/LICENSE-2.0.html
+
+++ jQuery - http://jquery.org/ ++
+MIT License from http://opensource.org/licenses/MIT
+
+++ jQuery scrollTo plugin - http://flesler.blogspot.com/2007/10/jqueryscrollto.html ++
+MIT License from http://opensource.org/licenses/MIT
+
+++ The background image img/alu.gif - http://www.grsites.com/archive/textures/view/source=archive/id=2237 ++
+Attribution from http://www.apache.org/licenses/LICENSE-2.0.html
+
+++ Animate.css - https://github.com/daneden/animate.css ++
+MIT License from http://opensource.org/licenses/MIT
+
+++ jsTree - http://www.jstree.com ++
+MIT License from http://opensource.org/licenses/MIT
+
+++ Select2 - http://ivaynberg.github.io/select2/ ++
+Apache2 License from https://github.com/ivaynberg/select2/blob/master/LICENSE
