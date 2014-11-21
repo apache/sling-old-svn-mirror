@@ -58,7 +58,6 @@ public class DistributionAgentRootServlet extends SlingAllMethodsServlet {
 
         DistributionActionType action = DistributionActionType.fromName(a);
 
-
         DistributionRequest distributionRequest = new DistributionRequest(action, paths);
 
         ResourceResolver resourceResolver = request.getResourceResolver();

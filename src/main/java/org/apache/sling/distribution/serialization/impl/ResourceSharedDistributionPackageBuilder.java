@@ -123,7 +123,7 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
 
         Map<String, Object> properties = new HashMap<String, Object>();
         properties.put(PN_ORIGINAL_ID, distributionPackage.getId());
-        properties.put(PN_ORIGINAL_ACTION, distributionPackage.getAction());
+        properties.put(PN_ORIGINAL_ACTION, distributionPackage.getActionType());
         properties.put(PN_ORIGINAL_PATHS, distributionPackage.getPaths());
 
         Resource resource = ResourceUtil.getOrCreateResource(resourceResolver, packagePath, "sling:Folder", "sling:Folder", false);

@@ -98,7 +98,7 @@ public class PriorityPathQueueDispatchingStrategy implements DistributionQueueDi
     private DistributionQueueItem getItem(DistributionPackage distributionPackage) {
         DistributionQueueItem distributionQueueItem = new DistributionQueueItem(distributionPackage.getId(),
                 distributionPackage.getPaths(),
-                distributionPackage.getAction(),
+                distributionPackage.getActionType(),
                 distributionPackage.getType(),
                 distributionPackage.getInfo());
 

@@ -20,9 +20,6 @@ package org.apache.sling.distribution.servlet;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
 
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -33,7 +30,6 @@ import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.agent.DistributionAgentException;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.communication.DistributionResponse;
-import org.apache.sling.distribution.queue.DistributionQueueItemState.ItemState;
 import org.apache.sling.distribution.resources.DistributionConstants;
 import org.apache.sling.distribution.util.RequestUtils;
 import org.slf4j.Logger;
@@ -55,6 +51,8 @@ public class DistributionAgentServlet extends SlingAllMethodsServlet {
 
         DistributionRequest distributionRequest = RequestUtils.fromServletRequest(request);
 
+        log.debug("distribution request : {}", distributionRequest);
+
         DistributionAgent agent = request.getResource().adaptTo(DistributionAgent.class);
 
         ResourceResolver resourceResolver = request.getResourceResolver();
@@ -62,26 +60,20 @@ public class DistributionAgentServlet extends SlingAllMethodsServlet {
         if (agent != null) {
             try {
                 DistributionResponse distributionResponse = agent.execute(resourceResolver, distributionRequest);
-                if (distributionResponse.isSuccessful()) {
-                    if (ItemState.SUCCEEDED.toString().equals(distributionResponse.getMessage())) {
+                switch (distributionResponse.getState()) {
+                    case SUCCEEDED:
                         response.setStatus(200);
-                    }
-                    if (ItemState.QUEUED.toString().equals(distributionResponse.getMessage())
-                            || ItemState.ACTIVE.toString().equals(
-                            distributionResponse.getMessage())) {
-                        response.setStatus(202);
-                    }
-
-                }
-                else {
-                    if (ItemState.DROPPED.toString().equals(distributionResponse.getMessage())) {
-                        response.setStatus(404);
-                    } else {
+                        break;
+                    case FAILED:
                         response.setStatus(400);
-                    }
+                        break;
+                    case ACCEPTED:
+                        response.setStatus(202);
+                        break;
                 }
-
                 response.getWriter().append(distributionResponse.toString());
+
+                log.debug("distribution response : {}", distributionResponse);
             } catch (DistributionAgentException e) {
                 response.setStatus(503);
                 response.getWriter().append("{\"error\" : \"").append(e.toString()).append("\"}");
@@ -93,12 +85,4 @@ public class DistributionAgentServlet extends SlingAllMethodsServlet {
         }
     }
 
-    String[] toStringArray(Enumeration<String> e) {
-        List<String> l = new ArrayList<String>();
-        while (e.hasMoreElements()) {
-            l.add(e.nextElement());
-        }
-
-        return l.toArray(new String[l.size()]);
-    }
 }

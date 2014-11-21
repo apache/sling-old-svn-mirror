@@ -37,6 +37,7 @@ import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.agent.DistributionAgentException;
 import org.apache.sling.distribution.agent.DistributionRequestAuthorizationStrategy;
 import org.apache.sling.distribution.communication.DistributionRequest;
+import org.apache.sling.distribution.communication.DistributionRequestState;
 import org.apache.sling.distribution.communication.DistributionResponse;
 import org.apache.sling.distribution.component.ManagedDistributionComponent;
 import org.apache.sling.distribution.event.DistributionEventType;
@@ -59,6 +60,8 @@ import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.distribution.trigger.DistributionTriggerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.apache.sling.distribution.queue.DistributionQueueItemState.ItemState;
 
 /**
  * Basic implementation of a {@link org.apache.sling.distribution.agent.DistributionAgent}
@@ -97,7 +100,6 @@ public class SimpleDistributionAgent implements DistributionAgent, ManagedDistri
                                    DistributionEventFactory distributionEventFactory,
                                    ResourceResolverFactory resourceResolverFactory,
                                    List<DistributionTrigger> triggers) {
-
 
         // check configuration is valid
         if (name == null
@@ -139,7 +141,6 @@ public class SimpleDistributionAgent implements DistributionAgent, ManagedDistri
     public DistributionResponse execute(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest)
             throws DistributionAgentException {
 
-
         ResourceResolver agentResourceResolver = null;
 
         try {
@@ -179,7 +180,6 @@ public class SimpleDistributionAgent implements DistributionAgent, ManagedDistri
         Collection<DistributionResponse> distributionResponses = new LinkedList<DistributionResponse>();
         log.info("scheduling distribution of package {}", distributionPackage);
 
-
         // dispatch the distribution package to the queue distribution handler
         try {
             Iterable<DistributionQueueItemState> states = queueDistributionStrategy.add(distributionPackage, queueProvider);
@@ -189,14 +189,47 @@ public class SimpleDistributionAgent implements DistributionAgent, ManagedDistri
                 properties.put("distribution.agent.name", name);
                 distributionEventFactory.generateEvent(DistributionEventType.PACKAGE_QUEUED, properties);
 
-                distributionResponses.add(new DistributionResponse(state.isSuccessful(), state.getItemState().toString()));
+                DistributionRequestState requestState = getRequestStateFromQueueState(state.getItemState());
+                distributionResponses.add(new DistributionResponse(requestState, state.getItemState().toString()));
             }
         } catch (Exception e) {
             log.error("an error happened during dispatching items to the queue(s)", e);
-            distributionResponses.add(new DistributionResponse(false, e.toString()));
+            distributionResponses.add(new DistributionResponse(DistributionRequestState.FAILED, e.toString()));
         }
 
         return distributionResponses;
+    }
+
+    /* Convert the state of a certain item in the queue into a request state */
+    private DistributionRequestState getRequestStateFromQueueState(ItemState itemState) {
+        DistributionRequestState requestState;
+        switch (itemState) {
+            case QUEUED:
+                requestState = DistributionRequestState.ACCEPTED;
+                break;
+            case ACTIVE:
+                requestState = DistributionRequestState.ACCEPTED;
+                break;
+            case SUCCEEDED:
+                requestState = DistributionRequestState.SUCCEEDED;
+                break;
+            case STOPPED:
+                requestState = DistributionRequestState.FAILED;
+                break;
+            case GIVEN_UP:
+                requestState = DistributionRequestState.FAILED;
+                break;
+            case ERROR:
+                requestState = DistributionRequestState.FAILED;
+                break;
+            case DROPPED:
+                requestState = DistributionRequestState.FAILED;
+                break;
+            default:
+                requestState = DistributionRequestState.FAILED;
+                break;
+        }
+        return requestState;
     }
 
     @Nonnull
@@ -362,36 +395,59 @@ public class SimpleDistributionAgent implements DistributionAgent, ManagedDistri
 
     private class CompositeDistributionResponse extends DistributionResponse {
 
-        private boolean successful;
+        private DistributionRequestState state;
 
-        private String status;
+        private String message;
 
         public CompositeDistributionResponse(List<DistributionResponse> distributionResponses) {
-            super(false, null);
+            super(DistributionRequestState.FAILED, null);
             if (distributionResponses.isEmpty()) {
-                successful = false;
-                status = "empty response";
+                state = DistributionRequestState.FAILED;
+                message = "empty response";
             } else {
-                successful = true;
-                StringBuilder statusBuilder = new StringBuilder("[");
+                state = DistributionRequestState.SUCCEEDED;
+                StringBuilder messageBuilder = new StringBuilder("[");
                 for (DistributionResponse response : distributionResponses) {
-                    successful &= response.isSuccessful();
-                    statusBuilder.append(response.getMessage()).append(", ");
+                    state = aggregatedState(state, response.getState());
+                    messageBuilder.append(response.getMessage()).append(", ");
                 }
-                int lof = statusBuilder.lastIndexOf(", ");
-                statusBuilder.replace(lof, lof + 2, "]");
-                status = statusBuilder.toString();
+                int lof = messageBuilder.lastIndexOf(", ");
+                messageBuilder.replace(lof, lof + 2, "]");
+                message = messageBuilder.toString();
             }
         }
 
         @Override
-        public boolean isSuccessful() {
-            return successful;
+        public DistributionRequestState getState() {
+            return state;
         }
 
         @Override
         public String getMessage() {
-            return status;
+            return message;
         }
+    }
+
+    /* Provide the aggregated state of two {@link org.apache.sling.distribution.communication.DistributionRequestState}s */
+    private DistributionRequestState aggregatedState(DistributionRequestState first, DistributionRequestState second) {
+        DistributionRequestState aggregatedState;
+        switch (second) {
+            case SUCCEEDED:
+                aggregatedState = first;
+                break;
+            case FAILED:
+                aggregatedState = DistributionRequestState.FAILED;
+                break;
+            case ACCEPTED:
+                if (first.equals(DistributionRequestState.SUCCEEDED)) {
+                    aggregatedState = DistributionRequestState.ACCEPTED;
+                } else {
+                    aggregatedState = first;
+                }
+                break;
+            default:
+                aggregatedState = DistributionRequestState.FAILED;
+        }
+        return aggregatedState;
     }
 }

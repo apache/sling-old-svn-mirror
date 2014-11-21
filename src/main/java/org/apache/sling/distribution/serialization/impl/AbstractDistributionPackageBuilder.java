@@ -66,7 +66,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
             distributionPackage = createPackageForAdd(resourceResolver, request);
         } else if (DistributionActionType.DELETE.equals(request.getActionType())) {
             distributionPackage = new VoidDistributionPackage(request, type);
-        } else if (DistributionActionType.POLL.equals(request.getActionType())) {
+        } else if (DistributionActionType.PULL.equals(request.getActionType())) {
             distributionPackage = new VoidDistributionPackage(request, type);
         } else {
             throw new DistributionPackageBuildingException("unknown action type "
@@ -74,7 +74,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         }
         if (distributionPackage != null && distributionEventFactory != null) {
             Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
-            dictionary.put("distribution.action", distributionPackage.getAction());
+            dictionary.put("distribution.action", distributionPackage.getActionType());
             dictionary.put("distribution.path", distributionPackage.getPaths());
             distributionEventFactory.generateEvent(DistributionEventType.PACKAGE_CREATED, dictionary);
         }
@@ -109,7 +109,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
     }
 
     public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageReadingException {
-        DistributionActionType actionType = DistributionActionType.fromName(distributionPackage.getAction());
+        DistributionActionType actionType = DistributionActionType.fromName(distributionPackage.getActionType());
         boolean installed;
         if (DistributionActionType.DELETE.equals(actionType)) {
             installed = installDeletePackage(resourceResolver, distributionPackage);
@@ -119,7 +119,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
 
         if (installed && distributionEventFactory != null) {
             Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
-            dictionary.put("distribution.action", distributionPackage.getAction());
+            dictionary.put("distribution.action", distributionPackage.getActionType());
             dictionary.put("distribution.path", distributionPackage.getPaths());
             distributionEventFactory.generateEvent(DistributionEventType.PACKAGE_INSTALLED, dictionary);
         }

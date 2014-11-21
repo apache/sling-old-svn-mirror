@@ -21,6 +21,7 @@ package org.apache.sling.distribution.packaging.impl.exporter;
 import java.util.List;
 
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.distribution.communication.DistributionActionType;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
@@ -46,7 +47,7 @@ public class RemoteDistributionPackageExporterTest {
             RemoteDistributionPackageExporter remotedistributionPackageExporter = new RemoteDistributionPackageExporter(
                     packageBuilder, authProvider, endpoints, strategy.name(), 1);
             ResourceResolver resourceResolver = mock(ResourceResolver.class);
-            DistributionRequest distributionRequest = mock(DistributionRequest.class);
+            DistributionRequest distributionRequest = new DistributionRequest(DistributionActionType.ADD, "/");
             List<DistributionPackage> distributionPackages = remotedistributionPackageExporter.exportPackages(resourceResolver, distributionRequest);
             assertNotNull(distributionPackages);
             assertTrue(distributionPackages.isEmpty());

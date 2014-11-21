@@ -125,7 +125,7 @@ public class ErrorAwareQueueDispatchingStrategy implements DistributionQueueDisp
     private DistributionQueueItem getItem(DistributionPackage distributionPackage) {
         DistributionQueueItem distributionQueueItem = new DistributionQueueItem(distributionPackage.getId(),
                 distributionPackage.getPaths(),
-                distributionPackage.getAction(),
+                distributionPackage.getActionType(),
                 distributionPackage.getType(),
                 distributionPackage.getInfo());
 

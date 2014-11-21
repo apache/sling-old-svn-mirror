@@ -19,7 +19,6 @@
 package org.apache.sling.distribution.component.impl;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +36,6 @@ import org.apache.sling.distribution.agent.impl.SimpleDistributionAgent;
 import org.apache.sling.distribution.communication.DistributionActionType;
 import org.apache.sling.distribution.component.DistributionComponent;
 import org.apache.sling.distribution.component.DistributionComponentFactory;
-import org.apache.sling.distribution.component.DistributionComponentProvider;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
@@ -221,9 +219,9 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
 
             String[] endpoints = PropertiesUtil.toStringArray(properties.get(PACKAGE_EXPORTER_REMOTE_PROPERTY_ENDPOINTS), new String[0]);
             String endpointStrategyName = PropertiesUtil.toString(properties.get(PACKAGE_EXPORTER_REMOTE_PROPERTY_ENDPOINTS_STRATEGY), "One");
-            int pollItems = PropertiesUtil.toInteger(properties.get(PACKAGE_EXPORTER_REMOTE_PROPERTY_POLL_ITEMS), Integer.MAX_VALUE);
+            int pullItems = PropertiesUtil.toInteger(properties.get(PACKAGE_EXPORTER_REMOTE_PROPERTY_PULL_ITEMS), Integer.MAX_VALUE);
 
-            return new RemoteDistributionPackageExporter(packageBuilder, authenticationProvider, endpoints, endpointStrategyName, pollItems);
+            return new RemoteDistributionPackageExporter(packageBuilder, authenticationProvider, endpoints, endpointStrategyName, pullItems);
         } else if (PACKAGE_EXPORTER_AGENT.equals(factory)) {
             Map<String, Object> builderProperties = extractMap(COMPONENT_PACKAGE_BUILDER, properties);
             DistributionPackageBuilder packageBuilder = createBuilder(builderProperties);
@@ -334,7 +332,7 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
 
             return new ResourceEventDistributionTrigger(path, bundleContext);
         } else if (TRIGGER_SCHEDULED_EVENT.equals(factory)) {
-            String action = PropertiesUtil.toString(properties.get(TRIGGER_SCHEDULED_EVENT_PROPERTY_ACTION), DistributionActionType.POLL.name());
+            String action = PropertiesUtil.toString(properties.get(TRIGGER_SCHEDULED_EVENT_PROPERTY_ACTION), DistributionActionType.PULL.name());
             String path = PropertiesUtil.toString(properties.get(TRIGGER_SCHEDULED_EVENT_PROPERTY_PATH), "/");
             int interval = PropertiesUtil.toInteger(properties.get(TRIGGER_SCHEDULED_EVENT_PROPERTY_SECONDS), 30);
 

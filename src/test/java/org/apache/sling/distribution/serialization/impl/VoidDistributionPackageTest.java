@@ -41,7 +41,7 @@ public class VoidDistributionPackageTest {
         VoidDistributionPackage createdPackage = new VoidDistributionPackage(request);
         VoidDistributionPackage readPackage = VoidDistributionPackage.fromStream(new ByteArrayInputStream(("DELETE:/abc:" + time + ":VOID").getBytes()));
         assertEquals(createdPackage.getId(), readPackage.getId());
-        assertEquals(createdPackage.getAction(), readPackage.getAction());
+        assertEquals(createdPackage.getActionType(), readPackage.getActionType());
         assertEquals(createdPackage.getType(), readPackage.getType());
         assertEquals(createdPackage.getLength(), readPackage.getLength());
         assertEquals(Arrays.toString(createdPackage.getPaths()), Arrays.toString(readPackage.getPaths()));

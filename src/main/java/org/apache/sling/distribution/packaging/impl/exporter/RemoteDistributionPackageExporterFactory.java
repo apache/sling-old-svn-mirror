@@ -76,8 +76,8 @@ public class RemoteDistributionPackageExporterFactory implements DistributionPac
     @Property(cardinality = 100)
     public static final String ENDPOINTS = DefaultDistributionComponentFactoryConstants.PACKAGE_EXPORTER_REMOTE_PROPERTY_ENDPOINTS;
 
-    @Property(name = "poll items", description = "number of subsequent poll requests to make", intValue = 1)
-    public static final String POLL_ITEMS = "poll.items";
+    @Property(name = "pull items", description = "number of subsequent pull requests to make", intValue = 1)
+    public static final String PULL_ITEMS = "pull.items";
 
     @Property(options = {
             @PropertyOption(name = "All",

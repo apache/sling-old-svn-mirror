@@ -19,7 +19,6 @@
 package org.apache.sling.distribution.agent.impl;
 
 import java.util.Arrays;
-import java.util.Iterator;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;

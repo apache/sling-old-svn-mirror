@@ -119,7 +119,7 @@ public class VoidDistributionPackage extends AbstractDistributionPackage impleme
     }
 
     @Nonnull
-    public String getAction() {
+    public String getActionType() {
         return action;
     }
 
