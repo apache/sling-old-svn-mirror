@@ -73,7 +73,7 @@ public class LocalDistributionPackageImporter implements DistributionPackageImpo
                 log.info("Distribution package read and installed for path(s) {}", Arrays.toString(distributionPackage.getPaths()));
 
                 Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
-                dictionary.put("distribution.action", distributionPackage.getAction());
+                dictionary.put("distribution.action", distributionPackage.getActionType());
                 dictionary.put("distribution.path", distributionPackage.getPaths());
                 distributionEventFactory.generateEvent(DistributionEventType.PACKAGE_INSTALLED, dictionary);
 

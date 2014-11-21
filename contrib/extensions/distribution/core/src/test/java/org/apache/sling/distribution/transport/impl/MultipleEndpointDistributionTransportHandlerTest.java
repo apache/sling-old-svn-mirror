@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.distribution.communication.DistributionActionType;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.transport.DistributionTransportHandler;
@@ -54,7 +55,7 @@ public class MultipleEndpointDistributionTransportHandlerTest {
     public void testRetrievePackagesWithoutSubHandlers() throws Exception {
         List<DistributionTransportHandler> subHandlers = new ArrayList<DistributionTransportHandler>();
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
-        DistributionRequest distributionRequest = mock(DistributionRequest.class);
+        DistributionRequest distributionRequest = new DistributionRequest(DistributionActionType.ADD, "/");
         for (TransportEndpointStrategyType strategy : TransportEndpointStrategyType.values()) {
             MultipleEndpointDistributionTransportHandler multipleEndpointdistributionTransportHandler = new MultipleEndpointDistributionTransportHandler(subHandlers, strategy);
             List<DistributionPackage> distributionPackages = multipleEndpointdistributionTransportHandler.retrievePackages(resourceResolver, distributionRequest);
@@ -82,7 +83,7 @@ public class MultipleEndpointDistributionTransportHandlerTest {
         subHandlers.add(mock(DistributionTransportHandler.class));
         subHandlers.add(mock(DistributionTransportHandler.class));
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
-        DistributionRequest distributionRequest = mock(DistributionRequest.class);
+        DistributionRequest distributionRequest = new DistributionRequest(DistributionActionType.ADD, "/");
         for (TransportEndpointStrategyType strategy : TransportEndpointStrategyType.values()) {
             MultipleEndpointDistributionTransportHandler multipleEndpointdistributionTransportHandler = new MultipleEndpointDistributionTransportHandler(subHandlers, strategy);
             List<DistributionPackage> distributionPackages = multipleEndpointdistributionTransportHandler.retrievePackages(resourceResolver, distributionRequest);
@@ -93,7 +94,7 @@ public class MultipleEndpointDistributionTransportHandlerTest {
 
     @Test
     public void testRetrievePackagesWithOneReturningSubHandlerAndAllStrategy() throws Exception {
-        DistributionRequest distributionRequest = mock(DistributionRequest.class);
+        DistributionRequest distributionRequest = new DistributionRequest(DistributionActionType.ADD, "/");
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         List<DistributionTransportHandler> subHandlers = new ArrayList<DistributionTransportHandler>();
         DistributionTransportHandler handler1 = mock(DistributionTransportHandler.class);
@@ -113,7 +114,7 @@ public class MultipleEndpointDistributionTransportHandlerTest {
 
     @Test
     public void testRetrievePackagesWithOneEmptyOneReturningSubHandlerAndOneStrategy() throws Exception {
-        DistributionRequest distributionRequest = mock(DistributionRequest.class);
+        DistributionRequest distributionRequest = new DistributionRequest(DistributionActionType.ADD, "/");
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         List<DistributionTransportHandler> subHandlers = new ArrayList<DistributionTransportHandler>();
         subHandlers.add(mock(DistributionTransportHandler.class));
@@ -132,7 +133,7 @@ public class MultipleEndpointDistributionTransportHandlerTest {
 
     @Test
     public void testRetrievePackagesWithTwoReturningSubHandlersAndAllStrategy() throws Exception {
-        DistributionRequest distributionRequest = mock(DistributionRequest.class);
+        DistributionRequest distributionRequest = new DistributionRequest(DistributionActionType.ADD, "/");
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         List<DistributionTransportHandler> subHandlers = new ArrayList<DistributionTransportHandler>();
         DistributionTransportHandler handler1 = mock(DistributionTransportHandler.class);
@@ -160,7 +161,7 @@ public class MultipleEndpointDistributionTransportHandlerTest {
 
     @Test
     public void testRetrievePackagesWithTwoReturningSubHandlersAndOneStrategy() throws Exception {
-        DistributionRequest distributionRequest = mock(DistributionRequest.class);
+        DistributionRequest distributionRequest = new DistributionRequest(DistributionActionType.ADD, "/");
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         List<DistributionTransportHandler> subHandlers = new ArrayList<DistributionTransportHandler>();
         DistributionTransportHandler handler1 = mock(DistributionTransportHandler.class);

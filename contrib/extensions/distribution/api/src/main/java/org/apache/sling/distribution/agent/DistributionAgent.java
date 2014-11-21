@@ -20,7 +20,6 @@ package org.apache.sling.distribution.agent;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 import aQute.bnd.annotation.ProviderType;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -39,9 +38,9 @@ import org.apache.sling.distribution.queue.DistributionQueue;
 @ProviderType
 public interface DistributionAgent extends DistributionComponent {
 
-
     /**
      * retrieves the names of the queues for this agent.
+     *
      * @return the list of queue names
      */
     @Nonnull
@@ -51,17 +50,25 @@ public interface DistributionAgent extends DistributionComponent {
      * get the agent queue with the given name
      *
      * @param name a queue name
-     * @return a {@link org.apache.sling.distribution.queue.DistributionQueue} with the given name bound to this agent, if it exists, <code>null</code> otherwise
+     * @return a {@link org.apache.sling.distribution.queue.DistributionQueue} with the given name bound to this agent, if it exists,
+     * {@code null} otherwise
      * @throws DistributionAgentException if an error occurs in retrieving the queue
      */
     @CheckForNull
     DistributionQueue getQueue(@Nonnull String name) throws DistributionAgentException;
 
     /**
-     * executes a {@link org.apache.sling.distribution.communication.DistributionRequest}
+     * Perform a {@link org.apache.sling.distribution.communication.DistributionRequest} to distribute content from a source
+     * instance to a target instance.
+     * The content to be sent will be assembled according to the information contained in the request.
+     * A {@link org.apache.sling.distribution.communication.DistributionResponse} holding the {@link org.apache.sling.distribution.communication.DistributionRequestState}
+     * of the provided request will be returned.
+     * Synchronous {@link org.apache.sling.distribution.agent.DistributionAgent}s will usally block until the execution has finished
+     * while asynchronous agents will usually return the response as soon as the content to be distributed has been assembled
+     * and scheduled for distribution.
      *
      * @param distributionRequest the distribution request
-     * @param resourceResolver   the resource resolver used for authenticating the request,
+     * @param resourceResolver    the resource resolver used for authenticating the request,
      * @return a {@link org.apache.sling.distribution.communication.DistributionResponse}
      * @throws DistributionAgentException if any error happens during the execution of the request or if the authentication fails
      */

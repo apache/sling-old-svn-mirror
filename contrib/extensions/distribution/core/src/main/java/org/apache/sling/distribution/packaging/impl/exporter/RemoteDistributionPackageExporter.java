@@ -48,7 +48,7 @@ public class RemoteDistributionPackageExporter implements DistributionPackageExp
                                              TransportAuthenticationProvider transportAuthenticationProvider,
                                              String[] endpoints,
                                              String transportEndpointStrategyName,
-                                             int pollItems) {
+                                             int pullItems) {
         if (packageBuilder == null) {
             throw new IllegalArgumentException("packageBuilder is required");
         }
@@ -62,7 +62,7 @@ public class RemoteDistributionPackageExporter implements DistributionPackageExp
         for (String endpoint : endpoints) {
             if (endpoint != null && endpoint.length() > 0) {
                 transportHandlers.add(new SimpleHttpDistributionTransportHandler(transportAuthenticationProvider,
-                        new DistributionEndpoint(endpoint), packageBuilder, pollItems));
+                        new DistributionEndpoint(endpoint), packageBuilder, pullItems));
             }
         }
         transportHandler = new MultipleEndpointDistributionTransportHandler(transportHandlers,

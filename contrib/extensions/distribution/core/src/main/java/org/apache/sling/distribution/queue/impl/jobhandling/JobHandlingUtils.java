@@ -18,6 +18,7 @@
  */
 package org.apache.sling.distribution.queue.impl.jobhandling;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,7 +40,7 @@ public class JobHandlingUtils {
 
     public static DistributionQueueItem getPackage(final Job job) {
         DistributionPackageInfo packageInfo = new DistributionPackageInfo();
-        packageInfo.setOrigin((String) job.getProperty(ORIGIN));
+        packageInfo.setOrigin((URI) job.getProperty(ORIGIN));
 
         return new DistributionQueueItem((String) job.getProperty(ID),
                 (String[]) job.getProperty(PATHS),

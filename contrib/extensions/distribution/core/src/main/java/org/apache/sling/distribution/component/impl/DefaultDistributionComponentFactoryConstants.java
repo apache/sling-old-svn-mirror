@@ -124,9 +124,9 @@ public final class DefaultDistributionComponentFactoryConstants {
     public static final String PACKAGE_EXPORTER_REMOTE_PROPERTY_ENDPOINTS_STRATEGY = "endpoints.strategy";
 
     /**
-     * no. of items to poll property
+     * no. of items to pull property
      */
-    public static final String PACKAGE_EXPORTER_REMOTE_PROPERTY_POLL_ITEMS = "poll.items";
+    public static final String PACKAGE_EXPORTER_REMOTE_PROPERTY_PULL_ITEMS = "pull.items";
 
     /**
      * package exporter's agent property

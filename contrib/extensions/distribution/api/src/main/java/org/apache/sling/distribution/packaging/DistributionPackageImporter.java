@@ -38,7 +38,7 @@ public interface DistributionPackageImporter extends DistributionComponent {
      *
      * @param resourceResolver   - the resource resolver used to import the resources
      * @param distributionPackage - the package to be imported
-     * @return <code>true</code> if the import succeeded, <code>false</code> otherwise
+     * @return {@code true} if the import succeeded, {@code false} otherwise
      * @throws DistributionPackageImportException if any error occurs during import
      */
     boolean importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageImportException;

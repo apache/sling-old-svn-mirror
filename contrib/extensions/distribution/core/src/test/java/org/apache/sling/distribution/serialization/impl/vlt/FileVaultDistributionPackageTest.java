@@ -88,7 +88,7 @@ public class FileVaultDistributionPackageTest {
         when(file.getAbsolutePath()).thenReturn("/path/to/file.txt");
         when(vaultPackage.getFile()).thenReturn(file);
         FileVaultDistributionPackage fileVaultdistributionPackage = new FileVaultDistributionPackage(vaultPackage);
-        assertNotNull(fileVaultdistributionPackage.getAction());
+        assertNotNull(fileVaultdistributionPackage.getActionType());
     }
 
     @Test

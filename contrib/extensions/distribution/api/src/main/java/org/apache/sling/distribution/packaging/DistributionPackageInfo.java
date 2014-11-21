@@ -19,20 +19,23 @@
 
 package org.apache.sling.distribution.packaging;
 
+import javax.annotation.CheckForNull;
+import java.net.URI;
 
 /**
  * Additional information about a package.
  * Additional information is optional and components should expect every piece of it to be null.
  */
-public class DistributionPackageInfo {
+public final class DistributionPackageInfo {
 
-    private String origin;
+    private URI origin;
 
     /**
      * retrieves the origin of the package.
      * @return the package origin
      */
-    public String getOrigin() {
+    @CheckForNull
+    public URI getOrigin() {
         return origin;
     }
 
@@ -40,7 +43,7 @@ public class DistributionPackageInfo {
      * sets the origin of the package.
      * @param origin the originating instance of this package
      */
-    public void setOrigin(String origin) {
+    public void setOrigin(URI origin) {
         this.origin = origin;
     }
 

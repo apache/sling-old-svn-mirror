@@ -147,7 +147,7 @@ public class AdvancedHttpDistributionTransportHandler extends SimpleHttpDistribu
         Request req = Request.Post(distributionEndpoint.getUri()).useExpectContinue();
 
         if (useCustomHeaders) {
-            String[] customizedHeaders = getCustomizedHeaders(customHeaders, distributionPackage.getAction(), distributionPackage.getPaths());
+            String[] customizedHeaders = getCustomizedHeaders(customHeaders, distributionPackage.getActionType(), distributionPackage.getPaths());
             for (String header : customizedHeaders) {
                 addHeader(req, header);
             }

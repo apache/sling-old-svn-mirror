@@ -6,7 +6,7 @@
 
     "properties": [
         "type=scheduledEvent",
-        "action=poll",
+        "action=pull",
         "seconds=30"
     ]
 }

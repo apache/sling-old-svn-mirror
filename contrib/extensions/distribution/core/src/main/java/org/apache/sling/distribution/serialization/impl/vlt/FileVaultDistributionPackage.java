@@ -95,7 +95,7 @@ public class FileVaultDistributionPackage extends AbstractDistributionPackage im
     }
 
     @Nonnull
-    public String getAction() {
+    public String getActionType() {
         return action;
     }
 

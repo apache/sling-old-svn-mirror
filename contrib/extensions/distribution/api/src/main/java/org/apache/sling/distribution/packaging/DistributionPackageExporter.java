@@ -42,7 +42,7 @@ public interface DistributionPackageExporter extends DistributionComponent {
      *
      * @param resourceResolver   - the resource resolver used to export the packages
      * @param distributionRequest - the request containing the information about which content is to be exported
-     * @return a <code>List</code> of {@link DistributionPackage}s
+     * @return a {@link java.util.List} of {@link DistributionPackage}s
      */
     @Nonnull
     List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionPackageExportException;
@@ -52,7 +52,7 @@ public interface DistributionPackageExporter extends DistributionComponent {
      *
      * @param resourceResolver     - the resource resolver use to obtain the package.
      * @param distributionPackageId - the id of the package to be retrieved
-     * @return a {@link DistributionPackage} if available, <code>null</code> otherwise
+     * @return a {@link DistributionPackage} if available, {@code null} otherwise
      */
     @CheckForNull
     DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId);

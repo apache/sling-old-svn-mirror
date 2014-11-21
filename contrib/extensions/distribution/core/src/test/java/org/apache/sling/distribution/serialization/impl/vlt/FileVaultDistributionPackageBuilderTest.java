@@ -137,7 +137,7 @@ public class FileVaultDistributionPackageBuilderTest {
         when(resourceResolver.adaptTo(Session.class)).thenReturn(session);
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         when(distributionPackage.getId()).thenReturn(tempFile.getAbsolutePath());
-        when(distributionPackage.getAction()).thenReturn(DistributionActionType.ADD.name());
+        when(distributionPackage.getActionType()).thenReturn(DistributionActionType.ADD.name());
         when(distributionPackage.getPaths()).thenReturn(new String[]{"/something"});
 
         boolean success = fileVaultdistributionPackageBuilder.installPackage(resourceResolver, distributionPackage);
@@ -166,7 +166,7 @@ public class FileVaultDistributionPackageBuilderTest {
         when(resourceResolver.adaptTo(Session.class)).thenReturn(session);
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         when(distributionPackage.getId()).thenReturn(tempFile.getAbsolutePath());
-        when(distributionPackage.getAction()).thenReturn(DistributionActionType.ADD.name());
+        when(distributionPackage.getActionType()).thenReturn(DistributionActionType.ADD.name());
         when(distributionPackage.getPaths()).thenReturn(new String[]{"/something"});
 
         boolean success = fileVaultdistributionPackageBuilder.installPackage(resourceResolver, distributionPackage);

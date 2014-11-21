@@ -92,8 +92,8 @@ public class ResourceSharedDistributionPackage implements SharedDistributionPack
     }
 
     @Nonnull
-    public String getAction() {
-        return distributionPackage.getAction();
+    public String getActionType() {
+        return distributionPackage.getActionType();
     }
 
     @Nonnull

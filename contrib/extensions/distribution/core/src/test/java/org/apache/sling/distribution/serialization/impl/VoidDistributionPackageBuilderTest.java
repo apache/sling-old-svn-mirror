@@ -33,7 +33,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Testcase for {@link VoidDistributionPackageBuilder}
@@ -46,11 +45,8 @@ public class VoidDistributionPackageBuilderTest {
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         String[] paths = new String[0];
         for (DistributionActionType action : DistributionActionType.values()) {
-            DistributionRequest request = mock(DistributionRequest.class);
-            when(request.getActionType()).thenReturn(action);
-            when(request.getPaths()).thenReturn(paths);
-            when(request.getTime()).thenReturn(System.currentTimeMillis());
-            DistributionPackage distributionPackage = voiddistributionPackageBuilder.createPackage(resourceResolver, request);
+            DistributionRequest distributionRequest = new DistributionRequest(action, paths);
+            DistributionPackage distributionPackage = voiddistributionPackageBuilder.createPackage(resourceResolver, distributionRequest);
             assertNotNull(distributionPackage);
         }
     }

@@ -77,11 +77,11 @@ public class SimpleHttpDistributionTransportHandler implements DistributionTrans
     public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionTransportException {
         String hostAndPort = getHostAndPort(distributionEndpoint.getUri());
 
-        if (hostAndPort.equals(distributionPackage.getInfo().getOrigin())) {
+        URI packageOrigin = distributionPackage.getInfo().getOrigin();
+        if (packageOrigin != null && hostAndPort.equals(getHostAndPort(packageOrigin))) {
             log.info("skipping distribution of package {} to same origin {}", distributionPackage.getId(), hostAndPort);
             return;
         }
-
 
         log.info("delivering package {} to {} using auth {}", new Object[]{
                         distributionPackage.getId(),
@@ -128,7 +128,7 @@ public class SimpleHttpDistributionTransportHandler implements DistributionTrans
 
     @Nonnull
     public List<DistributionPackage> retrievePackages(@Nonnull final ResourceResolver resourceResolver, @Nonnull final DistributionRequest distributionRequest) throws DistributionTransportException {
-        log.debug("polling from {}", distributionEndpoint.getUri());
+        log.debug("pulling from {}", distributionEndpoint.getUri());
 
         try {
             URI distributionURI = RequestUtils.appendDistributionRequest(distributionEndpoint.getUri(), distributionRequest);
@@ -149,30 +149,29 @@ public class SimpleHttpDistributionTransportHandler implements DistributionTrans
             HttpResponse httpResponse;
             try {
 
-                int polls = 0;
+                int pulls = 0;
                 while ((httpResponse = executor.execute(req).returnResponse())
                         .getStatusLine().getStatusCode() == 200
-                        && polls < maxNumberOfPackages) {
+                        && pulls < maxNumberOfPackages) {
                     HttpEntity entity = httpResponse.getEntity();
                     if (entity != null) {
                         final DistributionPackage responsePackage = packageBuilder.readPackage(resourceResolver, entity.getContent());
                         if (responsePackage != null) {
-                            String origin = getHostAndPort(distributionURI);
-                            responsePackage.getInfo().setOrigin(origin);
+                            responsePackage.getInfo().setOrigin(distributionURI);
                             result.add(responsePackage);
                         }
                         else {
                             log.warn("responsePackage is null");
                         }
 
-                        polls++;
+                        pulls++;
                     } else {
                         log.info("");
                         break;
                     }
                 }
 
-                log.info("polled {} packages from {}", polls, distributionEndpoint.getUri());
+                log.info("pulled {} packages from {}", pulls, distributionEndpoint.getUri());
 
             } catch (HttpHostConnectException e) {
                 log.info("could not connect to {} - skipping", distributionEndpoint.getUri());

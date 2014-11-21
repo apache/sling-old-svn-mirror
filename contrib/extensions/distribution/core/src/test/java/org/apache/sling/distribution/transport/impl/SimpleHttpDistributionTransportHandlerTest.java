@@ -66,7 +66,7 @@ public class SimpleHttpDistributionTransportHandlerTest {
                 authProvider, endpoint, packageBuilder, maxNoOfPackages);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
-        when(distributionPackage.getInfo()).thenReturn(mock(DistributionPackageInfo.class));
+        when(distributionPackage.getInfo()).thenReturn(new DistributionPackageInfo());
         InputStream stream = mock(InputStream.class);
         when(distributionPackage.createInputStream()).thenReturn(stream);
         simpleHttpdistributionTransportHandler.deliverPackage(resourceResolver, distributionPackage);
@@ -117,13 +117,13 @@ public class SimpleHttpDistributionTransportHandlerTest {
         DistributionEndpoint endpoint = new DistributionEndpoint("http://127.0.0.1:8080/some/resource");
         DistributionPackageBuilder packageBuilder = mock(DistributionPackageBuilder.class);
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
-        when(distributionPackage.getInfo()).thenReturn(mock(DistributionPackageInfo.class));
+        when(distributionPackage.getInfo()).thenReturn(new DistributionPackageInfo());
         when(packageBuilder.readPackage(any(ResourceResolver.class), any(InputStream.class))).thenReturn(distributionPackage);
         int maxNoOfPackages = 1;
         SimpleHttpDistributionTransportHandler simpleHttpdistributionTransportHandler = new SimpleHttpDistributionTransportHandler(
                 authProvider, endpoint, packageBuilder, maxNoOfPackages);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
-        DistributionRequest distributionRequest = new DistributionRequest(DistributionActionType.ADD, new String[]{"/"});
+        DistributionRequest distributionRequest = new DistributionRequest(DistributionActionType.ADD, "/");
         List<DistributionPackage> packages = simpleHttpdistributionTransportHandler.retrievePackages(resourceResolver, distributionRequest);
         assertNotNull(packages);
         assertFalse(packages.isEmpty());

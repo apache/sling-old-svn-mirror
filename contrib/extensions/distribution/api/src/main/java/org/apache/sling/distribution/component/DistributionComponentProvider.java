@@ -32,14 +32,14 @@ public interface DistributionComponentProvider {
 
     /**
      * Retrieves an already existing component by name.
-     * If <code>null</code> is passed as componentName then a default component is returned.
+     * If {@code null} is passed as componentName then a default component is returned.
      *
      * @param type            the {@link java.lang.Class} of the component to be retrieved
      * @param componentName   the component name
      * @param <ComponentType> the actual type of the {@link DistributionComponent}
      *                        to be retrieved
      * @return the {@link DistributionComponent} of the specified type,
-     * with the specified name, or <code>null</code> if such a {@link DistributionComponent}
+     * with the specified name, or {@code null} if such a {@link DistributionComponent}
      * doesn't exist
      */
     @CheckForNull

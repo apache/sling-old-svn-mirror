@@ -43,7 +43,7 @@ public interface DistributionComponentFactory {
      * @param <ComponentType>   the actual type of the {@link DistributionComponent}
      *                          to be created
      * @param subComponentFactory   the factory to be called for creating sub components
-     * @return a {@link DistributionComponent} of the specified type initialized with given properties or <code>null</code>
+     * @return a {@link DistributionComponent} of the specified type initialized with given properties or {@code null}
      * if that could not be created
      */
     @CheckForNull
