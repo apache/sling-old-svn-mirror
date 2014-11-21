@@ -19,7 +19,7 @@
 package org.apache.sling.distribution.it;
 
 
-import org.apache.sling.distribution.communication.DistributionActionType;
+import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.junit.Test;
 
 import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
@@ -36,7 +36,7 @@ public class ReverseDistributionTest extends DistributionIntegrationTestBase {
     public void testAddContent() throws Exception {
         String nodePath = createRandomNode(publishClient, "/content/reverse_add_" + System.nanoTime());
         assertExists(publishClient, nodePath);
-        distribute(publish, "reverse", DistributionActionType.ADD, nodePath);
+        distribute(publish, "reverse", DistributionRequestType.ADD, nodePath);
         assertExists(authorClient, nodePath);
     }
 
@@ -44,7 +44,7 @@ public class ReverseDistributionTest extends DistributionIntegrationTestBase {
     public void testDeleteContent() throws Exception {
         String nodePath = createRandomNode(authorClient, "/content/reverse_del_" + System.nanoTime());
         assertExists(authorClient, nodePath);
-        distribute(publish, "reverse", DistributionActionType.DELETE, nodePath);
+        distribute(publish, "reverse", DistributionRequestType.DELETE, nodePath);
         assertNotExists(authorClient, nodePath);
     }
 }
