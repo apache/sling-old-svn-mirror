@@ -40,22 +40,6 @@ public interface DistributionPackage {
     String getId();
 
     /**
-     * get the paths covered by this package
-     *
-     * @return an array of paths
-     */
-    @Nonnull
-    String[] getPaths();
-
-    /**
-     * get the action this package is used for
-     *
-     * @return the action
-     */
-    @Nonnull
-    String getActionType();
-
-    /**
      * get the type of package
      *
      * @return the package type
@@ -72,13 +56,6 @@ public interface DistributionPackage {
      */
     @Nonnull
     InputStream createInputStream() throws IOException;
-
-    /**
-     * get package stream length
-     *
-     * @return the package length
-     */
-    long getLength();
 
     /**
      * releases all resources associated with this package
