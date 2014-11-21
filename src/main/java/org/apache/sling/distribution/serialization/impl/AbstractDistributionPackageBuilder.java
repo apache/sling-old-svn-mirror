@@ -30,8 +30,8 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.communication.DistributionActionType;
 import org.apache.sling.distribution.communication.DistributionRequest;
+import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.event.DistributionEventType;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.packaging.DistributionPackage;
@@ -62,21 +62,25 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
     public DistributionPackage createPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request)
             throws DistributionPackageBuildingException {
         DistributionPackage distributionPackage;
-        if (DistributionActionType.ADD.equals(request.getActionType())) {
+        if (DistributionRequestType.ADD.equals(request.getRequestType())) {
             distributionPackage = createPackageForAdd(resourceResolver, request);
-        } else if (DistributionActionType.DELETE.equals(request.getActionType())) {
+        } else if (DistributionRequestType.DELETE.equals(request.getRequestType())) {
             distributionPackage = new VoidDistributionPackage(request, type);
-        } else if (DistributionActionType.PULL.equals(request.getActionType())) {
+        } else if (DistributionRequestType.PULL.equals(request.getRequestType())) {
             distributionPackage = new VoidDistributionPackage(request, type);
         } else {
             throw new DistributionPackageBuildingException("unknown action type "
-                    + request.getActionType());
+                    + request.getRequestType());
         }
-        if (distributionPackage != null && distributionEventFactory != null) {
-            Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
-            dictionary.put("distribution.action", distributionPackage.getActionType());
-            dictionary.put("distribution.path", distributionPackage.getPaths());
-            distributionEventFactory.generateEvent(DistributionEventType.PACKAGE_CREATED, dictionary);
+        if (distributionPackage != null) {
+            distributionPackage.getInfo().setRequestType(request.getRequestType());
+            distributionPackage.getInfo().setPaths(request.getPaths());
+            if (distributionEventFactory != null) {
+                Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
+                dictionary.put("distribution.request.type", distributionPackage.getInfo().getRequestType());
+                dictionary.put("distribution.path", distributionPackage.getInfo().getPaths());
+                distributionEventFactory.generateEvent(DistributionEventType.PACKAGE_CREATED, dictionary);
+            }
         }
         return distributionPackage;
     }
@@ -109,9 +113,9 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
     }
 
     public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageReadingException {
-        DistributionActionType actionType = DistributionActionType.fromName(distributionPackage.getActionType());
+        DistributionRequestType actionType = distributionPackage.getInfo().getRequestType();
         boolean installed;
-        if (DistributionActionType.DELETE.equals(actionType)) {
+        if (DistributionRequestType.DELETE.equals(actionType)) {
             installed = installDeletePackage(resourceResolver, distributionPackage);
         } else {
             installed = installPackageInternal(resourceResolver, distributionPackage);
@@ -119,8 +123,8 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
 
         if (installed && distributionEventFactory != null) {
             Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
-            dictionary.put("distribution.action", distributionPackage.getActionType());
-            dictionary.put("distribution.path", distributionPackage.getPaths());
+            dictionary.put("distribution.request.type", distributionPackage.getInfo().getRequestType());
+            dictionary.put("distribution.path", distributionPackage.getInfo().getPaths());
             distributionEventFactory.generateEvent(DistributionEventType.PACKAGE_INSTALLED, dictionary);
         }
 
@@ -132,7 +136,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         try {
             if (distributionPackage != null) {
                 session = getSession(resourceResolver);
-                for (String path : distributionPackage.getPaths()) {
+                for (String path : distributionPackage.getInfo().getPaths()) {
                     if (session.itemExists(path)) {
                         session.removeItem(path);
                     }
@@ -174,13 +178,13 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
     }
 
     protected void ungetSession(Session session) {
-       if (session != null) {
-           try {
-               session.save();
-           } catch (RepositoryException e) {
-               log.debug("Cannot save session", e);
-           }
-       }
+        if (session != null) {
+            try {
+                session.save();
+            } catch (RepositoryException e) {
+                log.debug("Cannot save session", e);
+            }
+        }
     }
 
     protected abstract DistributionPackage createPackageForAdd(ResourceResolver resourceResolver, DistributionRequest request)

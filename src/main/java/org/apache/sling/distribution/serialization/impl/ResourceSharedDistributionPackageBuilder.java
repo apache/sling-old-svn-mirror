@@ -41,7 +41,7 @@ import org.apache.sling.distribution.serialization.DistributionPackageReadingExc
 public class ResourceSharedDistributionPackageBuilder implements DistributionPackageBuilder {
 
     private final String PN_ORIGINAL_ID = "original.package.id";
-    private final String PN_ORIGINAL_ACTION = "original.package.action";
+    private final String PN_ORIGINAL_REQUEST_TYPE = "original.package.request.type";
     private final String PN_ORIGINAL_PATHS = "original.package.paths";
 
     private final String PACKAGE_NAME_PREFIX = "distrpackage";
@@ -123,8 +123,8 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
 
         Map<String, Object> properties = new HashMap<String, Object>();
         properties.put(PN_ORIGINAL_ID, distributionPackage.getId());
-        properties.put(PN_ORIGINAL_ACTION, distributionPackage.getActionType());
-        properties.put(PN_ORIGINAL_PATHS, distributionPackage.getPaths());
+        properties.put(PN_ORIGINAL_REQUEST_TYPE, distributionPackage.getInfo().getRequestType());
+        properties.put(PN_ORIGINAL_PATHS, distributionPackage.getInfo().getPaths());
 
         Resource resource = ResourceUtil.getOrCreateResource(resourceResolver, packagePath, "sling:Folder", "sling:Folder", false);
 

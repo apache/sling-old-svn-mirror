@@ -23,13 +23,14 @@ import java.util.Arrays;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.distribution.agent.DistributionRequestAuthorizationStrategy;
-import org.apache.sling.distribution.communication.DistributionActionType;
+import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.communication.DistributionResponse;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueItemState;
@@ -68,11 +69,11 @@ public class SimpleDistributionAgentTest {
                 packageExporter, packageExporterStrategy,
                 queueProvider, distributionHandler,
                 distributionEventFactory, resolverFactory,  null);
-        DistributionRequest request = new DistributionRequest(DistributionActionType.ADD, "/");
+        DistributionRequest request = new DistributionRequest(DistributionRequestType.ADD, "/");
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
 
-        when(distributionPackage.getPaths()).thenReturn(new String[]{"/"});
+        when(distributionPackage.getInfo()).thenReturn(new DistributionPackageInfo());
         when(packageExporter.exportPackages(any(ResourceResolver.class), any(DistributionRequest.class)))
                 .thenReturn(Arrays.asList(distributionPackage));
         when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME)).thenReturn(
@@ -97,11 +98,11 @@ public class SimpleDistributionAgentTest {
                 packageExporter, packageExporterStrategy,
                 queueProvider,
                 distributionHandler, distributionEventFactory, resolverFactory, null);
-        DistributionRequest request = new DistributionRequest(DistributionActionType.ADD, "/");
+        DistributionRequest request = new DistributionRequest(DistributionRequestType.ADD, "/");
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
 
-        when(distributionPackage.getPaths()).thenReturn(new String[]{"/"});
+        when(distributionPackage.getInfo()).thenReturn(new DistributionPackageInfo());
         Iterable<DistributionQueueItemState> states = Arrays.asList(new DistributionQueueItemState(DistributionQueueItemState.ItemState.QUEUED,
                 DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME));
         when(distributionHandler.add(any(DistributionPackage.class), any(DistributionQueueProvider.class))).thenReturn(states);
@@ -130,11 +131,12 @@ public class SimpleDistributionAgentTest {
                 packageExporter, packageExporterStrategy,
                 queueProvider, distributionHandler,
                 distributionEventFactory, resolverFactory, null);
-        DistributionRequest request = new DistributionRequest(DistributionActionType.ADD, "/");
+        DistributionRequest request = new DistributionRequest(DistributionRequestType.ADD, "/");
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
+        DistributionPackageInfo packageInfo = new DistributionPackageInfo();
+        when(distributionPackage.getInfo()).thenReturn(packageInfo);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
 
-        when(distributionPackage.getPaths()).thenReturn(new String[]{"/"});
         when(packageExporter.exportPackages(resourceResolver, request)).thenReturn(Arrays.asList(distributionPackage));
         when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME)).thenReturn(
                 new SimpleDistributionQueue(name, "name"));

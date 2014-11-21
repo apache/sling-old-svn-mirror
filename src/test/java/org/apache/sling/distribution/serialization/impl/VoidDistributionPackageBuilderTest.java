@@ -22,7 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.communication.DistributionActionType;
+import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageReadingException;
@@ -44,7 +44,7 @@ public class VoidDistributionPackageBuilderTest {
         VoidDistributionPackageBuilder voiddistributionPackageBuilder = new VoidDistributionPackageBuilder();
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         String[] paths = new String[0];
-        for (DistributionActionType action : DistributionActionType.values()) {
+        for (DistributionRequestType action : DistributionRequestType.values()) {
             DistributionRequest distributionRequest = new DistributionRequest(action, paths);
             DistributionPackage distributionPackage = voiddistributionPackageBuilder.createPackage(resourceResolver, distributionRequest);
             assertNotNull(distributionPackage);
@@ -77,7 +77,7 @@ public class VoidDistributionPackageBuilderTest {
     public void testReadPackageWithValidStream() throws Exception {
         VoidDistributionPackageBuilder voiddistributionPackageBuilder = new VoidDistributionPackageBuilder();
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
-        for (DistributionActionType action : DistributionActionType.values()) {
+        for (DistributionRequestType action : DistributionRequestType.values()) {
             DistributionRequest request = new DistributionRequest(action, new String[]{"/"});
             InputStream stream = new VoidDistributionPackage(request).createInputStream();
             DistributionPackage distributionPackage = voiddistributionPackageBuilder.readPackage(resourceResolver, stream);
@@ -97,7 +97,7 @@ public class VoidDistributionPackageBuilderTest {
     public void testGetMatchingIdPackage() throws Exception {
         VoidDistributionPackageBuilder voiddistributionPackageBuilder = new VoidDistributionPackageBuilder();
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
-        String id = new VoidDistributionPackage(new DistributionRequest(DistributionActionType.DELETE, new String[]{"/"})).getId();
+        String id = new VoidDistributionPackage(new DistributionRequest(DistributionRequestType.DELETE, new String[]{"/"})).getId();
         DistributionPackage distributionPackage = voiddistributionPackageBuilder.getPackage(resourceResolver, id);
         assertNotNull(distributionPackage);
     }

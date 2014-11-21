@@ -87,16 +87,6 @@ public class ResourceSharedDistributionPackage implements SharedDistributionPack
     }
 
     @Nonnull
-    public String[] getPaths() {
-        return distributionPackage.getPaths();
-    }
-
-    @Nonnull
-    public String getActionType() {
-        return distributionPackage.getActionType();
-    }
-
-    @Nonnull
     public String getType() {
         return distributionPackage.getType();
     }
@@ -104,10 +94,6 @@ public class ResourceSharedDistributionPackage implements SharedDistributionPack
     @Nonnull
     public InputStream createInputStream() throws IOException {
         return distributionPackage.createInputStream();
-    }
-
-    public long getLength() {
-        return distributionPackage.getLength();
     }
 
     public void delete() {

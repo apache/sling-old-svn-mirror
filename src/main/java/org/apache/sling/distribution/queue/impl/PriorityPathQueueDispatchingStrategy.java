@@ -49,24 +49,25 @@ public class PriorityPathQueueDispatchingStrategy implements DistributionQueueDi
 
     private DistributionQueue getQueue(DistributionQueueItem distributionPackage, DistributionQueueProvider queueProvider)
             throws DistributionQueueException {
-        String[] paths = distributionPackage.getPaths();
+        String[] paths = distributionPackage.getPackageInfo().getPaths();
 
-        log.info("calculating priority for paths {}", Arrays.toString(paths));
-
-        boolean usePriorityQueue = false;
         String pp = null;
-        for (String path : paths) {
-            for (String priorityPath : priorityPaths) {
-                if (path.startsWith(priorityPath)) {
-                    usePriorityQueue = true;
-                    pp = priorityPath;
-                    break;
+
+        if (paths != null) {
+            log.info("calculating priority for paths {}", Arrays.toString(paths));
+
+            for (String path : paths) {
+                for (String priorityPath : priorityPaths) {
+                    if (path.startsWith(priorityPath)) {
+                        pp = priorityPath;
+                        break;
+                    }
                 }
             }
         }
 
         DistributionQueue queue;
-        if (usePriorityQueue) {
+        if (pp != null) {
             log.info("using priority queue for path {}", pp);
             queue = queueProvider.getQueue(pp);
         } else {
@@ -97,8 +98,6 @@ public class PriorityPathQueueDispatchingStrategy implements DistributionQueueDi
 
     private DistributionQueueItem getItem(DistributionPackage distributionPackage) {
         DistributionQueueItem distributionQueueItem = new DistributionQueueItem(distributionPackage.getId(),
-                distributionPackage.getPaths(),
-                distributionPackage.getActionType(),
                 distributionPackage.getType(),
                 distributionPackage.getInfo());
 

@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.sling.api.SlingConstants;
-import org.apache.sling.distribution.communication.DistributionActionType;
+import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.component.ManagedDistributionComponent;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
@@ -112,8 +112,8 @@ public class ResourceEventDistributionTrigger implements DistributionTrigger, Ma
         }
 
         public void handleEvent(Event event) {
-            DistributionActionType action = SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic()) ?
-                    DistributionActionType.DELETE : DistributionActionType.ADD;
+            DistributionRequestType action = SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic()) ?
+                    DistributionRequestType.DELETE : DistributionRequestType.ADD;
             log.info("triggering distribution from event {}", event);
             for (String pn : event.getPropertyNames()) {
                 log.info("property {} : {}", pn, event.getProperty(pn));

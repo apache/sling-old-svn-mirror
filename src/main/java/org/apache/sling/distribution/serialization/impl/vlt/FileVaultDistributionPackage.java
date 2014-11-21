@@ -31,7 +31,7 @@ import org.apache.jackrabbit.vault.fs.api.WorkspaceFilter;
 import org.apache.jackrabbit.vault.fs.config.DefaultWorkspaceFilter;
 import org.apache.jackrabbit.vault.fs.config.MetaInf;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
-import org.apache.sling.distribution.communication.DistributionActionType;
+import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.impl.AbstractDistributionPackage;
 
@@ -44,30 +44,25 @@ public class FileVaultDistributionPackage extends AbstractDistributionPackage im
 
     private final String id;
 
-    private final String[] paths;
-
     private final VaultPackage pkg;
-
-    private final String action;
 
     public FileVaultDistributionPackage(VaultPackage pkg) {
         this.pkg = pkg;
         MetaInf metaInf = pkg.getMetaInf();
-        String[] paths = new String[0];
         if (metaInf != null) {
             WorkspaceFilter filter = metaInf.getFilter();
             if (filter == null) {
                 filter = new DefaultWorkspaceFilter();
             }
             List<PathFilterSet> filterSets = filter.getFilterSets();
-            paths = new String[filterSets.size()];
+            String[] paths = new String[filterSets.size()];
             for (int i = 0; i < paths.length; i++) {
                 paths[i] = filterSets.get(i).getRoot();
             }
+            this.getInfo().setPaths(paths);
+            this.getInfo().setRequestType(DistributionRequestType.ADD);
         }
-        this.paths = paths;
         this.id = pkg.getFile().getAbsolutePath();
-        this.action = DistributionActionType.ADD.toString();
     }
 
     @Nonnull
@@ -76,27 +71,13 @@ public class FileVaultDistributionPackage extends AbstractDistributionPackage im
     }
 
     @Nonnull
-    public String[] getPaths() {
-        return paths;
-    }
-
-    @Nonnull
     public InputStream createInputStream() throws IOException {
         return new FileInputStream(pkg.getFile());
-    }
-
-    public long getLength() {
-        return pkg.getFile().length();
     }
 
     @Nonnull
     public String getType() {
         return FileVaultDistributionPackageBuilder.PACKAGING_TYPE;
-    }
-
-    @Nonnull
-    public String getActionType() {
-        return action;
     }
 
     public void close() {
@@ -118,9 +99,7 @@ public class FileVaultDistributionPackage extends AbstractDistributionPackage im
     public String toString() {
         return "FileVaultDistributionPackage{" +
                 "id='" + id + '\'' +
-                ", paths=" + Arrays.toString(paths) +
                 ", pkg=" + pkg +
-                ", action='" + action + '\'' +
                 '}';
     }
 }

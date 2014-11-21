@@ -22,7 +22,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
-import org.apache.sling.distribution.communication.DistributionActionType;
+import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
@@ -40,7 +40,7 @@ public class ScheduledDistributionTrigger implements DistributionTrigger {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final DistributionActionType distributionAction;
+    private final DistributionRequestType distributionAction;
     private final String path;
     private final int secondsInterval;
 
@@ -48,7 +48,7 @@ public class ScheduledDistributionTrigger implements DistributionTrigger {
 
 
     public ScheduledDistributionTrigger(String distributionActionName, String path, int secondsInterval, Scheduler scheduler) {
-        this.distributionAction = DistributionActionType.fromName(distributionActionName);
+        this.distributionAction = DistributionRequestType.fromName(distributionActionName);
         this.path = path;
         this.secondsInterval = secondsInterval;
         this.scheduler = scheduler;

@@ -27,7 +27,7 @@ import javax.jcr.security.Privilege;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.agent.DistributionRequestAuthorizationException;
 import org.apache.sling.distribution.agent.DistributionRequestAuthorizationStrategy;
-import org.apache.sling.distribution.communication.DistributionActionType;
+import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.communication.DistributionRequest;
 
 public class PrivilegeDistributionRequestAuthorizationStrategy implements DistributionRequestAuthorizationStrategy {
@@ -46,10 +46,10 @@ public class PrivilegeDistributionRequestAuthorizationStrategy implements Distri
         Session session = resourceResolver.adaptTo(Session.class);
 
         try {
-           if (DistributionActionType.ADD.equals(distributionRequest.getActionType())) {
+           if (DistributionRequestType.ADD.equals(distributionRequest.getRequestType())) {
                checkPermissionForAdd(session, distributionRequest.getPaths());
            }
-           else if (DistributionActionType.DELETE.equals(distributionRequest.getActionType())) {
+           else if (DistributionRequestType.DELETE.equals(distributionRequest.getRequestType())) {
                checkPermissionForDelete(session, distributionRequest.getPaths());
            }
 

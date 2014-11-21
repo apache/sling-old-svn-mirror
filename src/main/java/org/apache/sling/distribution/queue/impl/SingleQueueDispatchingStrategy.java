@@ -58,8 +58,6 @@ public class SingleQueueDispatchingStrategy implements DistributionQueueDispatch
 
     private DistributionQueueItem getItem(DistributionPackage distributionPackage) {
         DistributionQueueItem distributionQueueItem = new DistributionQueueItem(distributionPackage.getId(),
-                distributionPackage.getPaths(),
-                distributionPackage.getActionType(),
                 distributionPackage.getType(),
                 distributionPackage.getInfo());
 

@@ -20,6 +20,8 @@ package org.apache.sling.distribution.queue.impl.jobhandling;
 
 import java.util.Map;
 
+import org.apache.sling.distribution.communication.DistributionRequestType;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.junit.Test;
 
@@ -35,17 +37,23 @@ public class JobHandlingUtilsTest {
     @Test
     public void testFullPropertiesFromPackageCreation() throws Exception {
         DistributionQueueItem distributionQueueItem = mock(DistributionQueueItem.class);
-        when(distributionQueueItem.getAction()).thenReturn("ADD");
+        DistributionPackageInfo info = new DistributionPackageInfo();
+        info.setRequestType(DistributionRequestType.ADD);
+        info.setPaths(new String[]{"/content", "/apps"});
+        when(distributionQueueItem.getPackageInfo()).thenReturn(info);
         when(distributionQueueItem.getId()).thenReturn("an-id");
-        when(distributionQueueItem.getPaths()).thenReturn(new String[]{"/content", "/apps"});
         when(distributionQueueItem.getType()).thenReturn("vlt");
+        DistributionPackageInfo packageInfo = new DistributionPackageInfo();
+        packageInfo.setPaths(new String[]{"/foo"});
+        packageInfo.setRequestType(DistributionRequestType.ADD);
+        when(distributionQueueItem.getPackageInfo()).thenReturn(packageInfo);
         Map<String, Object> fullPropertiesFromPackage = JobHandlingUtils.createFullProperties(distributionQueueItem);
         assertNotNull(fullPropertiesFromPackage);
         assertEquals(4, fullPropertiesFromPackage.size());
         assertNotNull(fullPropertiesFromPackage.get("distribution.package.paths"));
         assertNotNull(fullPropertiesFromPackage.get("distribution.package.id"));
         assertNotNull(fullPropertiesFromPackage.get("distribution.package.type"));
-        assertNotNull(fullPropertiesFromPackage.get("distribution.package.action"));
+        assertNotNull(fullPropertiesFromPackage.get("distribution.package.request.type"));
     }
 
     @Test

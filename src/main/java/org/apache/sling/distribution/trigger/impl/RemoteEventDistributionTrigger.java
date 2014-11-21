@@ -40,7 +40,7 @@ import org.apache.http.nio.protocol.BasicAsyncRequestProducer;
 import org.apache.http.nio.protocol.BasicAsyncResponseConsumer;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
-import org.apache.sling.distribution.communication.DistributionActionType;
+import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationContext;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
@@ -125,11 +125,11 @@ public class RemoteEventDistributionTrigger implements DistributionTrigger {
             log.debug("content {} received {},{}", new Object[]{buffer, decoder, ioctrl});
 
             // TODO : currently it always triggers pull request on /, should this be configurable?
-            DistributionRequest distributionRequest = new DistributionRequest(DistributionActionType.PULL, "/");
+            DistributionRequest distributionRequest = new DistributionRequest(DistributionRequestType.PULL, "/");
             handler.handle(distributionRequest);
             log.info("distribution request to agent {} sent ({} {})", new Object[]{
                     handler,
-                    distributionRequest.getActionType(),
+                    distributionRequest.getRequestType(),
                     distributionRequest.getPaths()});
 
             super.onContentReceived(decoder, ioctrl);

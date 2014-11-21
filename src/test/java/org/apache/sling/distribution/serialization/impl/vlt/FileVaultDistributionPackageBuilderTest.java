@@ -33,10 +33,11 @@ import org.apache.jackrabbit.vault.packaging.PackageManager;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.communication.DistributionActionType;
+import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
@@ -77,7 +78,7 @@ public class FileVaultDistributionPackageBuilderTest {
 
         FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder(
                 packaging, eventFactory);
-        DistributionRequest request = new DistributionRequest(DistributionActionType.ADD, new String[]{"/"});
+        DistributionRequest request = new DistributionRequest(DistributionRequestType.ADD, new String[]{"/"});
         DistributionPackage distributionPackage = fileVaultdistributionPackageBuilder.createPackageForAdd(resourceResolver, request);
         assertNotNull(distributionPackage);
     }
@@ -137,8 +138,10 @@ public class FileVaultDistributionPackageBuilderTest {
         when(resourceResolver.adaptTo(Session.class)).thenReturn(session);
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         when(distributionPackage.getId()).thenReturn(tempFile.getAbsolutePath());
-        when(distributionPackage.getActionType()).thenReturn(DistributionActionType.ADD.name());
-        when(distributionPackage.getPaths()).thenReturn(new String[]{"/something"});
+        DistributionPackageInfo info = new DistributionPackageInfo();
+        info.setRequestType(DistributionRequestType.ADD);
+        info.setPaths(new String[]{"/something"});
+        when(distributionPackage.getInfo()).thenReturn(info);
 
         boolean success = fileVaultdistributionPackageBuilder.installPackage(resourceResolver, distributionPackage);
         assertTrue(success);
@@ -166,8 +169,10 @@ public class FileVaultDistributionPackageBuilderTest {
         when(resourceResolver.adaptTo(Session.class)).thenReturn(session);
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         when(distributionPackage.getId()).thenReturn(tempFile.getAbsolutePath());
-        when(distributionPackage.getActionType()).thenReturn(DistributionActionType.ADD.name());
-        when(distributionPackage.getPaths()).thenReturn(new String[]{"/something"});
+        DistributionPackageInfo info = new DistributionPackageInfo();
+        info.setRequestType(DistributionRequestType.ADD);
+        info.setPaths(new String[]{"/something"});
+        when(distributionPackage.getInfo()).thenReturn(info);
 
         boolean success = fileVaultdistributionPackageBuilder.installPackage(resourceResolver, distributionPackage);
         assertTrue(success);

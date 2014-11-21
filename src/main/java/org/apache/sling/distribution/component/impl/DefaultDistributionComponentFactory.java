@@ -33,7 +33,7 @@ import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.agent.DistributionRequestAuthorizationStrategy;
 import org.apache.sling.distribution.agent.impl.PrivilegeDistributionRequestAuthorizationStrategy;
 import org.apache.sling.distribution.agent.impl.SimpleDistributionAgent;
-import org.apache.sling.distribution.communication.DistributionActionType;
+import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.component.DistributionComponent;
 import org.apache.sling.distribution.component.DistributionComponentFactory;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
@@ -332,7 +332,7 @@ public class DefaultDistributionComponentFactory implements DistributionComponen
 
             return new ResourceEventDistributionTrigger(path, bundleContext);
         } else if (TRIGGER_SCHEDULED_EVENT.equals(factory)) {
-            String action = PropertiesUtil.toString(properties.get(TRIGGER_SCHEDULED_EVENT_PROPERTY_ACTION), DistributionActionType.PULL.name());
+            String action = PropertiesUtil.toString(properties.get(TRIGGER_SCHEDULED_EVENT_PROPERTY_ACTION), DistributionRequestType.PULL.name());
             String path = PropertiesUtil.toString(properties.get(TRIGGER_SCHEDULED_EVENT_PROPERTY_PATH), "/");
             int interval = PropertiesUtil.toInteger(properties.get(TRIGGER_SCHEDULED_EVENT_PROPERTY_SECONDS), 30);
 
