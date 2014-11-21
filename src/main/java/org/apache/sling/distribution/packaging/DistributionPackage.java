@@ -53,7 +53,7 @@ public interface DistributionPackage {
      * @return the action
      */
     @Nonnull
-    String getAction();
+    String getActionType();
 
     /**
      * get the type of package
@@ -84,7 +84,6 @@ public interface DistributionPackage {
      * releases all resources associated with this package
      */
     void delete();
-
 
     /**
      * gets an additional info holder for this package.

@@ -33,7 +33,7 @@ public interface DistributionQueue {
     /**
      * get this queue name
      *
-     * @return queue name as a <code>String</code>
+     * @return the queue name
      */
     @Nonnull
     String getName();
@@ -42,8 +42,8 @@ public interface DistributionQueue {
      * add a distribution item to this queue
      *
      * @param item a distribution item representing the package to distribute
-     * @return <code>true</code> if the distribution item was added correctly to the queue,
-     * <code>false</code otherwise
+     * @return {@code true} if the distribution item was added correctly to the queue,
+     * {@code false} otherwise
      */
     boolean add(@Nonnull DistributionQueueItem item);
 
@@ -61,7 +61,7 @@ public interface DistributionQueue {
     /**
      * get the first item (FIFO wise, the next to be processed) into the queue
      *
-     * @return the first item into the queue or <code>null</code> if the queue is empty
+     * @return the first item into the queue or {@code null} if the queue is empty
      */
     @CheckForNull
     DistributionQueueItem getHead();
@@ -69,7 +69,7 @@ public interface DistributionQueue {
     /**
      * check if the queue is empty
      *
-     * @return <code>true</code> if the queue is empty, <code>false</code> otherwise
+     * @return {@code true} if the queue is empty, {@code false} otherwise
      */
     boolean isEmpty();
 
@@ -78,7 +78,7 @@ public interface DistributionQueue {
      *
      * @param queueItemSelector represents the criteria to filter queue items.
      *                          if null is passed then all items are returned.
-     * @return a <code>Iterable</code> of {@link DistributionQueueItem}s
+     * @return a {@link java.lang.Iterable} of {@link DistributionQueueItem}s
      */
     @Nonnull
     Iterable<DistributionQueueItem> getItems(@Nullable DistributionQueueItemSelector queueItemSelector);
@@ -86,7 +86,7 @@ public interface DistributionQueue {
     /**
      * remove an item from the queue by specifying its id
      *
-     * @param id <code>String</code> representing an item's identifier
+     * @param id an item's identifier
      */
     void remove(@Nonnull String id);
 }

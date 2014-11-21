@@ -18,32 +18,37 @@
  */
 package org.apache.sling.distribution.communication;
 
-import com.sun.istack.internal.Nullable;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
- * A distribution response
+ * A {@link org.apache.sling.distribution.communication.DistributionResponse} represents the outcome of a
+ * {@link org.apache.sling.distribution.communication.DistributionRequest} as handled by a certain {@link org.apache.sling.distribution.agent.DistributionAgent}.
+ * Such a response will include the {@link org.apache.sling.distribution.communication.DistributionRequestState state} of
+ * the {@link org.apache.sling.distribution.communication.DistributionRequest request} and optionally a message for more
+ * verbose information about the outcome of the request.
  */
 public class DistributionResponse {
 
+    private final DistributionRequestState state;
     private final String message;
-    private final boolean successful;
 
-    public DistributionResponse(boolean successful, @Nullable String message) {
-        this.successful = successful;
+    public DistributionResponse(@Nonnull DistributionRequestState state, @Nullable String message) {
+        this.state = state;
         this.message = message;
     }
 
-    public boolean isSuccessful() {
-        return successful;
+    public DistributionRequestState getState() {
+        return state;
+    }
+
+    public String getMessage() {
+        return message != null ? message : "";
     }
 
     @Override
     public String toString() {
-        return "{\"success\":" + isSuccessful() + ", \"message\":\"" + getMessage() + "\"}";
-    }
-
-    public String getMessage() {
-        return message != null ? message : "done nothing";
+        return "{\"state\":" + state + ", \"message\":\"" + message + "\"}";
     }
 
 }

@@ -18,57 +18,43 @@
  */
 package org.apache.sling.distribution.communication;
 
+import javax.annotation.CheckForNull;
+
 /**
- * The type of a specific distribution action, used to decide what to do with specific distribution
- * items / requests.
+ * The action type tied to a specific {@link org.apache.sling.distribution.communication.DistributionRequest}, used to decide how
+ * the distribution content should be aggregated.
+ * <p/>
+ * {@code ADD} requests can for example lead to the creation of a package of resources to be persisted on the target instance.
+ * {@code DELETE} requests can for example lead to the creation of a "command package" to be sent to the target instance
+ * to actually remove the resources specified in {@link DistributionRequest#getPaths()}.
+ * {@code PULL} requests can for example lead to the creation of a "command package" that will trigger fetching of content
+ * from the target instance.
  */
 public enum DistributionActionType {
 
     /**
-     * Content is added
+     * Action type for adding content
      */
-    ADD("Add"),
+    ADD,
 
     /**
-     * Content is deleted
+     * Action type for deleting content
      */
-    DELETE("Delete"),
+    DELETE,
 
     /**
-     * Content is polled
+     * Action type for pulling content
      */
-    POLL("Poll");
-
-    /**
-     * internal human readable name
-     */
-    private final String name;
-
-    /**
-     * Create a type
-     *
-     * @param name name
-     */
-    private DistributionActionType(String name) {
-        this.name = name;
-    }
-
-    /**
-     * Returns the human readable type name of this type.
-     *
-     * @return the name
-     */
-    public String getName() {
-        return name;
-    }
+    PULL;
 
     /**
      * Creates an action type for the given name. if the name cannot be mapped to a enum type or if
-     * it's <code>null</code>, <code>null</code> is returned.
+     * it's {@code null}, {@code null} is returned.
      *
      * @param n the name
-     * @return the type or <code>null</code>
+     * @return the type or {@code null}
      */
+    @CheckForNull
     public static DistributionActionType fromName(String n) {
         if (n == null) {
             return null;

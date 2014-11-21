@@ -29,11 +29,11 @@ import aQute.bnd.annotation.ConsumerType;
 public interface DistributionQueueProcessor {
 
     /**
-     * Process an item from a certain <code>distributionQueue</code>
+     * Process an item from a certain {@link org.apache.sling.distribution.queue.DistributionQueue}
      *
-     * @param queueName            the name of the <code>distributionQueue</code> to be processed
-     * @param distributionQueueItem the <code>distributionQueueItem</code> to be processed
-     * @return <code>true</code> if the item was successfully processed, <code>false</code> otherwise
+     * @param queueName            the name of the {@link org.apache.sling.distribution.queue.DistributionQueue} to be processed
+     * @param distributionQueueItem the {@link org.apache.sling.distribution.queue.DistributionQueueItem} to be processed
+     * @return {@code true} if the item was successfully processed, {@code false} otherwise
      */
     public boolean process(@Nonnull String queueName, @Nonnull DistributionQueueItem distributionQueueItem);
 }
