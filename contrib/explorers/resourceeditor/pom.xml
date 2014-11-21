@@ -23,7 +23,7 @@
 	<groupId>org.apache.sling</groupId>
 	<artifactId>resource-editor</artifactId>
 	<packaging>bundle</packaging>
-	<version>1.0-SNAPSHOT</version>
+	<version>1.0.1-SNAPSHOT</version>
 	<name>Apache Sling Resource Editor</name>
 	<description>A resource editor for Apache Sling.</description>
 
@@ -42,7 +42,7 @@
 				<artifactId>lesscss-maven-plugin</artifactId>
 				<version>1.7.0.1.1</version>
 				<configuration>
-					<outputDirectory>${project.basedir}/src/main/resources/SLING-INF/libs/reseditor/content/css</outputDirectory>
+					<outputDirectory>${project.basedir}/src/main/resources/SLING-INF/libs/sling/resource-editor-static-content/css</outputDirectory>
 					<includes>
 						<include>bootstrap.less</include>
 					</includes>
@@ -73,17 +73,28 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-						<Sling-Initial-Content>SLING-INF/libs/sling/servlet/default/reseditor;overwrite:=true;path:=/libs/sling/servlet/default/reseditor,SLING-INF/libs/reseditor;overwrite:=true;path:=/libs/reseditor</Sling-Initial-Content>
-						<Import-Package>*,javax.servlet;version="[2.5.0,
-							3.1.0)",javax.servlet.http;version="[2.5.0,
-							3.1.0)",javax.servlet.jsp.jstl.core,javax.servlet.jsp.jstl.fmt,javax.servlet.jsp.jstl.sql,javax.servlet.jsp.jstl.tlv,
-							org.apache.xalan.serialize,org.apache.xalan.templates,org.apache.xml.utils,org.apache.xpath,org.apache.xpath.objects,
-							org.apache.taglibs.standard,org.apache.taglibs.standard.extra.spath,org.apache.taglibs.standard.functions,org.apache.taglibs.standard.lang.jstl,org.apache.taglibs.standard.lang.jstl.parser,org.apache.taglibs.standard.lang.jstl.test,org.apache.taglibs.standard.lang.jstl.test.beans,org.apache.taglibs.standard.lang.support,org.apache.taglibs.standard.resources,org.apache.taglibs.standard.tag.common.core,org.apache.taglibs.standard.tag.common.fmt,org.apache.taglibs.standard.tag.common.sql,org.apache.taglibs.standard.tag.common.xml,org.apache.taglibs.standard.tag.el.core,org.apache.taglibs.standard.tag.el.fmt,org.apache.taglibs.standard.tag.el.sql,org.apache.taglibs.standard.tag.el.xml,org.apache.taglibs.standard.tag.rt.core,org.apache.taglibs.standard.tag.rt.fmt,org.apache.taglibs.standard.tag.rt.sql,org.apache.taglibs.standard.tag.rt.xml,org.apache.taglibs.standard.tei,org.apache.taglibs.standard.tlv,
+						<Sling-Initial-Content>SLING-INF/libs/sling/resource-editor-static-content;overwrite:=true;path:=/libs/sling/resource-editor-static-content,SLING-INF/libs/sling/resource-editor;overwrite:=true;path:=/libs/sling/resource-editor</Sling-Initial-Content>
+						<Import-Package>!org.slf4j.impl,*,
+							de.sandroboehme.jsnodetypes.javascript,
+							javax.el,
+							javax.naming,
+							javax.servlet.jsp,
+							javax.servlet.jsp.el,
+							javax.servlet.jsp.tagext,
+							javax.sql,
+							javax.xml.namespace,
+							javax.xml.parsers,
+							javax.xml.transform,
+							javax.xml.transform.dom,
+							javax.xml.transform.sax,
+							javax.xml.transform.stream,
+							javax.xml.xpath,
+							org.w3c.dom,
+							org.w3c.dom.traversal,
+							org.xml.sax,
+							org.xml.sax.helpers
 						</Import-Package>
-						<Require-Bundle>de.sandroboehme.jsnodetypes</Require-Bundle>
-						<Private-Package>
-							org.apache.sling.reseditor.*
-						</Private-Package>
+						<Export-Package>!org.apache.sling.reseditor</Export-Package>
 					</instructions>
 					<remoteOBR>www.jcrbrowser.org</remoteOBR>
 				</configuration>

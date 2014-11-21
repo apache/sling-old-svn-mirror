@@ -19,7 +19,7 @@ o Call `git clone git://github.com/sandroboehme/resourceeditor.git` in a shell. 
 o Change to the resourceeditor subdirectory and call `mvn clean package` there to install the sources into the running Sling instance.
 
 ++ Develop with the Sling Resource Editor ++
-o Use `mvn install` to deploy changes of Java classes
+o Use `mvn install sling:install` to deploy changes of Java classes
 o To have frontend changes automatically deployed call `mvn install`
 o To have the less sources automatically compiled call `mvn lesscss:compile -Dlesscss.watch=true`
 
