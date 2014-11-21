@@ -26,7 +26,7 @@
 
     "trigger": [
         "scheduledTrigger/type=scheduledEvent",
-        "scheduledTrigger/action=poll",
+        "scheduledTrigger/action=pull",
         "scheduledTrigger/seconds=30",
 
         "remoteTrigger/type=remoteEvent",
