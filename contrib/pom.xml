@@ -116,6 +116,8 @@
           <module>extensions/sling-query</module>
           <module>extensions/superimposing</module>
           <module>extensions/tenant</module>
+          <module>extensions/validation</module>
+          <module>extensions/xss</module>
           <module>jcr/compiler</module>
           <module>jcr/jackrabbit-client</module>
           <module>jcr/ocm</module>
@@ -132,10 +134,8 @@
           <module>scripting/thymeleaf</module>
           <module>scripting/velocity</module>
           <module>scripting/xproc</module>
-          <module>validation</module>
           <module>launchpad/karaf</module>
           <module>launchpad/testing</module>
-          <module>xss</module>
           <module>launchpad/debian</module>
     </modules>
     <profiles>
