@@ -18,7 +18,7 @@
  */
 package org.apache.sling.validation.api;
 
-import java.util.Map;
+import org.apache.sling.api.resource.ValueMap;
 
 /**
  * Defines a validator instance with information about the type and the parameterization of the validator.
@@ -28,7 +28,7 @@ public interface ParameterizedValidator {
 
     public abstract Validator<?> getValidator();
 
-    public abstract Map<String, String> getParameters();
+    public abstract ValueMap getParameters();
 
     public abstract Class<?> getType();
 

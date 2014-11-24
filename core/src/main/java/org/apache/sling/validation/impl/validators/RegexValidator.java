@@ -18,14 +18,14 @@
  */
 package org.apache.sling.validation.impl.validators;
 
+import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.api.Validator;
 import org.apache.sling.validation.api.exceptions.SlingValidationException;
-
-import java.util.Map;
-import java.util.regex.Pattern;
 
 /**
  * Performs regular expressions validation on the supplied data with the help of the {@link Pattern} class. This {@code Validator} expects a
@@ -38,13 +38,13 @@ public class RegexValidator implements Validator<String> {
     public static final String REGEX_PARAM = "regex";
 
     @Override
-    public String validate(String data, ValueMap valueMap, Map<String, String> arguments)
+    public String validate(String data, ValueMap valueMap, ValueMap arguments)
             throws SlingValidationException {
         if (arguments == null) {
             throw new SlingValidationException("Cannot perform data validation with null parameters");
         }
-        String regex = arguments.get(REGEX_PARAM);
-        if (regex == null) {
+        String regex = arguments.get(REGEX_PARAM, "");
+        if (StringUtils.isEmpty(regex)) {
             throw new SlingValidationException("Mandatory " + REGEX_PARAM + " is missing from the arguments map.");
         }
         Pattern pattern = Pattern.compile(regex);
@@ -54,6 +54,4 @@ public class RegexValidator implements Validator<String> {
         return "Property does not match the pattern " + regex;
     }
 
-   
-    
 }

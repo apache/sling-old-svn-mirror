@@ -1,17 +1,16 @@
 package org.apache.sling.validation.impl;
 
-import java.util.Map;
-
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.api.ParameterizedValidator;
 import org.apache.sling.validation.api.Validator;
 import org.apache.sling.validation.impl.util.ValidatorTypeUtil;
 
 public class ParameterizedValidatorImpl implements ParameterizedValidator {
     private final Validator<?> validator;
-    private final Map<String, String> parameters;
+    private final ValueMap parameters;
     private final Class<?> type;
     
-    public ParameterizedValidatorImpl(Validator<?> validator, Map<String, String> parameters) {
+    public ParameterizedValidatorImpl(Validator<?> validator, ValueMap parameters) {
         super();
         this.validator = validator;
         this.parameters = parameters;
@@ -31,7 +30,7 @@ public class ParameterizedValidatorImpl implements ParameterizedValidator {
      * @see org.apache.sling.validation.impl.ParameterizedValidator#getParameters()
      */
     @Override
-    public Map<String, String> getParameters() {
+    public ValueMap getParameters() {
         return parameters;
     }
     
