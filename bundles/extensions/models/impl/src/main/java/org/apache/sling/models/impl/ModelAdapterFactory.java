@@ -883,14 +883,14 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     protected void bindInjectAnnotationProcessorFactory2(final InjectAnnotationProcessorFactory2 factory, final Map<String, Object> props) {
         synchronized (injectAnnotationProcessorFactories2) {
             injectAnnotationProcessorFactories2.put(ServiceUtil.getComparableForServiceRanking(props), factory);
-            sortedInjectAnnotationProcessorFactories2 = injectAnnotationProcessorFactories2.values().toArray(new InjectAnnotationProcessorFactory2[injectAnnotationProcessorFactories.size()]);
+            sortedInjectAnnotationProcessorFactories2 = injectAnnotationProcessorFactories2.values().toArray(new InjectAnnotationProcessorFactory2[injectAnnotationProcessorFactories2.size()]);
         }
     }
 
     protected void unbindInjectAnnotationProcessorFactory2(final InjectAnnotationProcessorFactory2 factory, final Map<String, Object> props) {
         synchronized (injectAnnotationProcessorFactories2) {
             injectAnnotationProcessorFactories2.remove(ServiceUtil.getComparableForServiceRanking(props));
-            sortedInjectAnnotationProcessorFactories2 = injectAnnotationProcessorFactories2.values().toArray(new InjectAnnotationProcessorFactory2[injectAnnotationProcessorFactories.size()]);
+            sortedInjectAnnotationProcessorFactories2 = injectAnnotationProcessorFactories2.values().toArray(new InjectAnnotationProcessorFactory2[injectAnnotationProcessorFactories2.size()]);
         }
     }
 
