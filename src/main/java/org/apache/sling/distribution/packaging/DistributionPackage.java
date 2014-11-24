@@ -66,8 +66,7 @@ public interface DistributionPackage {
      * gets an additional info holder for this package.
      * The additional info object contains control information rather than content information.
      * For example info.origin can be used to skip distributing back to the originating endpoint.
-     * It should not be be serialized between instances as its main purpose is to allow
-     * inter component communication on the same instance.
+     *
      * @return the associated metadata to this package
      */
     @Nonnull

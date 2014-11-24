@@ -57,4 +57,13 @@ public class DistributionQueueItem {
     public DistributionPackageInfo getPackageInfo() {
         return packageInfo;
     }
+
+    @Override
+    public String toString() {
+        return "DistributionQueueItem{" +
+                "id='" + id + '\'' +
+                ", type='" + type + '\'' +
+                ", packageInfo=" + packageInfo +
+                '}';
+    }
 }

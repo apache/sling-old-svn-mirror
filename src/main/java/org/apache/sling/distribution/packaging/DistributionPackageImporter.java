@@ -36,12 +36,11 @@ public interface DistributionPackageImporter extends DistributionComponent {
     /**
      * Imports the given distribution package into the underlying system
      *
-     * @param resourceResolver   - the resource resolver used to import the resources
+     * @param resourceResolver    - the resource resolver used to import the resources
      * @param distributionPackage - the package to be imported
-     * @return {@code true} if the import succeeded, {@code false} otherwise
      * @throws DistributionPackageImportException if any error occurs during import
      */
-    boolean importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageImportException;
+    void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageImportException;
 
     /**
      * Tries to convert an {@link java.io.InputStream} to a {@link DistributionPackage} and then imports it into the underlying system

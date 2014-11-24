@@ -87,6 +87,7 @@ public interface DistributionQueue {
      * remove an item from the queue by specifying its id
      *
      * @param id an item's identifier
+     * @return the removed item, or {@code null} if no item could be removed
      */
-    void remove(@Nonnull String id);
+    DistributionQueueItem remove(@Nonnull String id);
 }

@@ -20,6 +20,7 @@ package org.apache.sling.distribution.packaging;
 
 import javax.annotation.CheckForNull;
 import java.net.URI;
+import java.util.Arrays;
 
 import org.apache.sling.distribution.communication.DistributionRequestType;
 
@@ -101,5 +102,14 @@ public final class DistributionPackageInfo {
             this.setPaths(packageInfo.getPaths());
             this.setRequestType(packageInfo.getRequestType());
         }
+    }
+
+    @Override
+    public String toString() {
+        return "DistributionPackageInfo{" +
+                "origin=" + origin +
+                ", requestType=" + requestType +
+                ", paths=" + Arrays.toString(paths) +
+                '}';
     }
 }

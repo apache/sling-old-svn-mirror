@@ -32,6 +32,10 @@ import org.apache.sling.distribution.component.DistributionComponent;
  * A {@link DistributionPackageExporter ) is responsible of exporting
  * {@link DistributionPackage }s to be then imported by a {@link org.apache.sling.distribution.agent.DistributionAgent }
  * (via a {@link DistributionPackageImporter }).
+ * <p/>
+ * Exporting a {@link org.apache.sling.distribution.packaging.DistributionPackage} means obtaining that package by either
+ * directly creating it by bundling local Sling resources together or retrieving it from a remote endpoint, e.g. by
+ * executing an HTTP request to another Sling instance exposing already created packages (for remotely changed resources).
  */
 @ConsumerType
 public interface DistributionPackageExporter extends DistributionComponent {
@@ -40,18 +44,23 @@ public interface DistributionPackageExporter extends DistributionComponent {
      * Exports the {@link DistributionPackage}s built from the
      * passed {@link org.apache.sling.distribution.communication.DistributionRequest}.
      *
-     * @param resourceResolver   - the resource resolver used to export the packages
-     * @param distributionRequest - the request containing the information about which content is to be exported
+     * @param resourceResolver    - the resource resolver used to export the packages, for example a 'local' exporter
+     *                            will use the resource resolver to read the content and assemble the binary in a certain
+     *                            location in the repository while a 'remote' exporter will use the resolver just to
+     *                            store the binary of the remotely fetched packages in the repository.
+     * @param distributionRequest - the request containing the needed information for content to be exported
      * @return a {@link java.util.List} of {@link DistributionPackage}s
      */
     @Nonnull
     List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionPackageExportException;
 
     /**
-     * Retrieves a {@link DistributionPackage} given its 'id', if it already exists.
+     * Retrieves a {@link DistributionPackage} given its identifier, if it already exists.
+     * This will be used for example to get already created (and cached) packages that were not yet distributed to the
+     * target instance.
      *
-     * @param resourceResolver     - the resource resolver use to obtain the package.
-     * @param distributionPackageId - the id of the package to be retrieved
+     * @param resourceResolver      - the resource resolver use to obtain the package.
+     * @param distributionPackageId - the {@link DistributionPackage#getId() id of the package} to be retrieved
      * @return a {@link DistributionPackage} if available, {@code null} otherwise
      */
     @CheckForNull
