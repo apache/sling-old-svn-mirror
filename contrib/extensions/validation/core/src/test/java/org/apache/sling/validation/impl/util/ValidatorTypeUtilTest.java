@@ -60,7 +60,7 @@ public class ValidatorTypeUtilTest {
     private class InnerStringValidator implements Validator<String> {
 
         @Override
-        public String validate(String data, ValueMap valueMap, Map<String, String> arguments)
+        public String validate(String data, ValueMap valueMap, ValueMap arguments)
                 throws SlingValidationException {
             return null;
         }
@@ -77,7 +77,7 @@ public class ValidatorTypeUtilTest {
     public void testGetValidatorTypeWithAnonymousClass() {
         Assert.assertThat((Class<String>)ValidatorTypeUtil.getValidatorType(new Validator<String>() {
             @Override
-            public String validate(String data, ValueMap valueMap, Map<String, String> arguments)
+            public String validate(String data, ValueMap valueMap, ValueMap arguments)
                     throws SlingValidationException {
                 return null;
             }
@@ -95,7 +95,7 @@ public class ValidatorTypeUtilTest {
     public void testGetValidatorTypeWithCollectionType() {
         ValidatorTypeUtil.getValidatorType(new Validator<Collection<String>>() {
             @Override
-            public String validate(Collection<String> data, ValueMap valueMap, Map<String, String> arguments)
+            public String validate(Collection<String> data, ValueMap valueMap, ValueMap arguments)
                     throws SlingValidationException {
                 return null;
             }
@@ -104,7 +104,7 @@ public class ValidatorTypeUtilTest {
     
     private class InnerStringValidatorWithAdditionalBaseClass extends GenericTypeParameterBaseClass<Integer> implements Validator<String> {
         @Override
-        public String validate(String data, ValueMap valueMap, Map<String, String> arguments)
+        public String validate(String data, ValueMap valueMap, ValueMap arguments)
                 throws SlingValidationException {
             return null;
         }

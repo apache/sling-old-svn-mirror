@@ -68,5 +68,5 @@ public interface Validator <T> {
      * @return validation error message if validation was not successful, {@code null} otherwise. In case an empty string is returned a generic validation error message is used.
      * @throws org.apache.sling.validation.api.exceptions.SlingValidationException if some expected arguments are missing from the arguments map
      */
-    String validate(T data, ValueMap valueMap, Map<String, String> arguments) throws SlingValidationException;
+    String validate(T data, ValueMap valueMap, ValueMap arguments) throws SlingValidationException;
 }
