@@ -66,7 +66,7 @@ public enum DistributionEventType {
     /**
      * common event topic base for distribution events
      */
-    public static final String EVENT_TOPIC = "org/apache/sling/distribution/event";
+    public static final String EVENT_TOPIC = "org/apache/sling/distribution";
 
     /**
      * get the event topic for this event type

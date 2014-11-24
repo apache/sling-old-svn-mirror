@@ -41,8 +41,7 @@ public class RemoteDistributionPackageImporterTest {
                     authenticationProvider, endpoints, strategy.name());
             ResourceResolver resourceResolver = mock(ResourceResolver.class);
             DistributionPackage distributionPackage = mock(DistributionPackage.class);
-            boolean success = remotedistributionPackageImporter.importPackage(resourceResolver, distributionPackage);
-            assertTrue(success);
+            remotedistributionPackageImporter.importPackage(resourceResolver, distributionPackage);
         }
     }
 }

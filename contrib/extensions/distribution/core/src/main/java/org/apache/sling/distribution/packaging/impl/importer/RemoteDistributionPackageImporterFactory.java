@@ -99,8 +99,8 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
 
     }
 
-    public boolean importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageImportException {
-        return importer.importPackage(resourceResolver, distributionPackage);
+    public void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageImportException {
+        importer.importPackage(resourceResolver, distributionPackage);
     }
 
     public DistributionPackage importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException {

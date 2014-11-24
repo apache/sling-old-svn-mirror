@@ -37,8 +37,8 @@ public class VoidDistributionPackageTest {
     @Test
     public void testCreatedAndReadPackagesEquality() throws Exception {
         DistributionRequest request = new DistributionRequest(DistributionRequestType.DELETE, "/abc");
-        VoidDistributionPackage createdPackage = new VoidDistributionPackage(request);
         long time = System.currentTimeMillis();
+        VoidDistributionPackage createdPackage = new VoidDistributionPackage(request);
         VoidDistributionPackage readPackage = VoidDistributionPackage.fromStream(new ByteArrayInputStream(("DELETE:/abc:" + time + ":VOID").getBytes()));
         assertEquals(createdPackage.getId(), readPackage.getId());
         assertEquals(createdPackage.getType(), readPackage.getType());

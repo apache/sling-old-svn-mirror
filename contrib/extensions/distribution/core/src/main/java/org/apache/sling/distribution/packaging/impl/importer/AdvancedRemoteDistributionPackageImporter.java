@@ -129,15 +129,12 @@ public class AdvancedRemoteDistributionPackageImporter implements DistributionPa
     }
 
 
-    public boolean importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) {
-        boolean result = false;
+    public void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) {
         try {
             transportHandler.deliverPackage(resourceResolver, distributionPackage);
-            result = true;
         } catch (Exception e) {
             log.error("failed delivery", e);
         }
-        return result;
     }
 
     public DistributionPackage importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException {

@@ -70,10 +70,9 @@ public class RemoteDistributionPackageImporter implements DistributionPackageImp
 
     }
 
-    public boolean importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageImportException {
+    public void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageImportException {
         try {
             transportHandler.deliverPackage(resourceResolver, distributionPackage);
-            return true;
         } catch (Exception e) {
             throw new DistributionPackageImportException("failed in importing package " + distributionPackage);
         }

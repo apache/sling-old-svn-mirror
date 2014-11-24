@@ -93,7 +93,7 @@ public class SimpleDistributionQueue implements DistributionQueue {
             DistributionQueueItemState itemState = statusMap.get(element);
             statusMap.put(element, new DistributionQueueItemState(itemState.getEntered(),
                     itemState.getItemState(),
-                    itemState.getAttempts()+1, name));
+                    itemState.getAttempts() + 1, name));
         }
         return element;
     }
@@ -108,8 +108,7 @@ public class SimpleDistributionQueue implements DistributionQueue {
     }
 
 
-
-    public void remove(@Nonnull String id) {
+    public DistributionQueueItem remove(@Nonnull String id) {
         DistributionQueueItem toRemove = null;
         for (DistributionQueueItem item : queue) {
             if (id.equals(item.getId())) {
@@ -121,6 +120,12 @@ public class SimpleDistributionQueue implements DistributionQueue {
             removed = queue.remove(toRemove);
         }
         log.info("item with id {} removed from the queue: {}", id, removed);
+        if (removed) {
+            return toRemove;
+        }
+        else {
+            return null;
+        }
     }
 
 }

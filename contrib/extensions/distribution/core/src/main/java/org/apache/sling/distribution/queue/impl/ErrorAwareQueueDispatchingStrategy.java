@@ -116,8 +116,9 @@ public class ErrorAwareQueueDispatchingStrategy implements DistributionQueueDisp
                         throw new DistributionQueueException("could not move an item to the error queue");
                     }
                 }
-                log.warn("item {} dropped from the default queue", firstItem);
-                defaultQueue.remove(firstItem.getId());
+                if (defaultQueue.remove(firstItem.getId()) != null) {
+                    log.warn("item {} dropped from the default queue", firstItem);
+                }
             }
         }
     }

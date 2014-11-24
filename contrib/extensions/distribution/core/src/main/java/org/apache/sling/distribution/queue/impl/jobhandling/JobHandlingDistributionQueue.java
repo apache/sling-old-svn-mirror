@@ -101,9 +101,9 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
     }
 
     public DistributionQueueItem getHead() {
-        Job firstItem = getFirstJob();
-        if (firstItem != null) {
-            return JobHandlingUtils.getPackage(firstItem);
+        Job firstJob = getFirstJob();
+        if (firstJob != null) {
+            return JobHandlingUtils.getItem(firstJob);
         } else {
             return null;
         }
@@ -140,7 +140,7 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
         Collection<Job> jobs = jobManager.findJobs(QueryType.ALL, topic, actualLimit);
         List<Job> result = new ArrayList<Job>();
 
-        int i =0;
+        int i = 0;
         for (Job job : jobs) {
             if (i >= actualSkip) {
                 result.add(job);
@@ -164,19 +164,25 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
         List<DistributionQueueItem> items = new ArrayList<DistributionQueueItem>();
         Collection<Job> jobs = getJobs(selector.getSkip(), selector.getLimit());
         for (Job job : jobs) {
-            items.add(JobHandlingUtils.getPackage(job));
+            items.add(JobHandlingUtils.getItem(job));
         }
 
         return items;
     }
 
-    public void remove(@Nonnull String id) {
+    public DistributionQueueItem remove(@Nonnull String id) {
+        boolean removed = false;
         Job job = getJob(id);
 
+        DistributionQueueItem item = null;
+
         if (job != null) {
-            boolean removed = jobManager.removeJobById(job.getId());
-            log.info("item with id {} removed from the queue: {}", id, removed);
+            item = JobHandlingUtils.getItem(job);
+            removed = jobManager.removeJobById(job.getId());
         }
+
+        log.info("item with id {} removed from the queue: {}", id, removed);
+        return item;
     }
 
 }
