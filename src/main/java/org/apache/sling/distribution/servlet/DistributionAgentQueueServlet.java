@@ -32,12 +32,16 @@ import org.apache.sling.distribution.queue.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemState;
 import org.apache.sling.distribution.resources.DistributionConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Servlet to retrieve a {@link org.apache.sling.distribution.queue.DistributionQueue} status.
  */
 @SlingServlet(resourceTypes = DistributionConstants.AGENT_QUEUE_RESOURCE_TYPE, methods = {"GET", "POST", "DELETE"})
 public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
+
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response)
@@ -83,7 +87,14 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
 
         while (!queue.isEmpty()) {
             DistributionQueueItem queueItem = queue.getHead();
-            queue.remove(queueItem.getId());
+            DistributionQueueItem removedItem = queue.remove(queueItem.getId());
+            if (removedItem != null) {
+                log.info("item {} removed from the queue {}", removedItem, queue);
+                response.setStatus(200);
+            } else {
+                log.warn("could not remove item {} from the queue {}", queueItem, queue);
+                response.setStatus(400);
+            }
         }
     }
 

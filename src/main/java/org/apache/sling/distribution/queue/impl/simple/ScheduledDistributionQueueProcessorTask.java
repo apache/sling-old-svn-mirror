@@ -18,8 +18,6 @@
  */
 package org.apache.sling.distribution.queue.impl.simple;
 
-import java.util.Arrays;
-
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueProcessor;
@@ -49,7 +47,9 @@ class ScheduledDistributionQueueProcessorTask implements Runnable {
                     DistributionQueueItem item = queue.getHead();
                     if (item != null) {
                         if (queueProcessor.process(queue.getName(), item)) {
-                            queue.remove(item.getId());
+                            if (queue.remove(item.getId()) != null) {
+                                log.info("item {} processed and removed from the queue", item);
+                            }
                         } else {
                             log.warn("processing of item {} failed", item.getId());
                         }

@@ -39,7 +39,7 @@ public class JobHandlingUtils {
 
     protected static final String ORIGIN = "distribution.package.origin";
 
-    public static DistributionQueueItem getPackage(final Job job) {
+    public static DistributionQueueItem getItem(final Job job) {
         DistributionPackageInfo packageInfo = new DistributionPackageInfo();
         packageInfo.setOrigin((URI) job.getProperty(ORIGIN));
         packageInfo.setPaths((String[]) job.getProperty(PATHS));

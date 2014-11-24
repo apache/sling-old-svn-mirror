@@ -39,7 +39,6 @@ public class LocalDistributionPackageImporterTest {
         LocalDistributionPackageImporter localdistributionPackageImporter = new LocalDistributionPackageImporter(packageBuilder, eventFactory);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
-        boolean success = localdistributionPackageImporter.importPackage(resourceResolver, distributionPackage);
-        assertFalse(success);
+        localdistributionPackageImporter.importPackage(resourceResolver, distributionPackage);
     }
 }

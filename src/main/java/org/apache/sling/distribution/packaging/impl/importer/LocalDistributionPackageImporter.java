@@ -64,10 +64,9 @@ public class LocalDistributionPackageImporter implements DistributionPackageImpo
     }
 
 
-    public boolean importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageImportException {
-        boolean success;
+    public void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageImportException {
         try {
-            success = packageBuilder.installPackage(resourceResolver, distributionPackage);
+            boolean success = packageBuilder.installPackage(resourceResolver, distributionPackage);
 
             if (success) {
                 log.info("Distribution package read and installed for path(s) {}", Arrays.toString(distributionPackage.getInfo().getPaths()));
@@ -84,17 +83,13 @@ public class LocalDistributionPackageImporter implements DistributionPackageImpo
             log.error("cannot import a package from the given stream of type {}", distributionPackage.getType());
             throw new DistributionPackageImportException(e);
         }
-        return success;
     }
 
     public DistributionPackage importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException {
         try {
             DistributionPackage distributionPackage = packageBuilder.readPackage(resourceResolver, stream);
-            if (importPackage(resourceResolver, distributionPackage)) {
-                return distributionPackage;
-            } else {
-                throw new DistributionPackageImportException("could not import the package " + distributionPackage);
-            }
+            importPackage(resourceResolver, distributionPackage);
+            return distributionPackage;
         } catch (DistributionPackageReadingException e) {
             throw new DistributionPackageImportException("cannot read a package from the given stream", e);
         }
