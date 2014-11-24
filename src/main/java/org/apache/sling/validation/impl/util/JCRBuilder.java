@@ -28,6 +28,7 @@ import java.util.Set;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.validation.api.ChildResource;
 import org.apache.sling.validation.api.ParameterizedValidator;
@@ -72,7 +73,7 @@ public class JCRBuilder {
                         }
                         // get type of validator
                         String[] validatorArguments = validatorProperties.get(Constants.VALIDATOR_ARGUMENTS, String[].class);
-                        Map<String, String> validatorArgumentsMap = new HashMap<String, String>();
+                        Map<String, Object> validatorArgumentsMap = new HashMap<String, Object>();
                         if (validatorArguments != null) {
                             for (String arg : validatorArguments) {
                                 String[] keyValuePair = arg.split("=");
@@ -82,7 +83,7 @@ public class JCRBuilder {
                                 validatorArgumentsMap.put(keyValuePair[0], keyValuePair[1]);
                             }
                         }
-                        parameterizedValidators.add(new ParameterizedValidatorImpl(v, validatorArgumentsMap));
+                        parameterizedValidators.add(new ParameterizedValidatorImpl(v, new ValueMapDecorator(validatorArgumentsMap)));
                     }
                 }
                 ResourceProperty f = new ResourcePropertyImpl(fieldName, propertyMultiple, parameterizedValidators);

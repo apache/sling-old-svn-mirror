@@ -19,7 +19,6 @@
 package org.apache.sling.validation.impl.util.examplevalidators;
 
 import java.util.Date;
-import java.util.Map;
 
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.api.Validator;
@@ -28,7 +27,7 @@ import org.apache.sling.validation.api.exceptions.SlingValidationException;
 public class DateValidator implements Validator<Date> {
 
     @Override
-    public String validate(Date data, ValueMap valueMap, Map<String, String> arguments) throws SlingValidationException {
+    public String validate(Date data, ValueMap valueMap, ValueMap arguments) throws SlingValidationException {
         return null;
     }
 
