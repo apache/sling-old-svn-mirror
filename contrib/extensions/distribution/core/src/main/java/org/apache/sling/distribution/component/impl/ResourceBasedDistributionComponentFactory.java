@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * An resource based service factory for {@link org.apache.sling.distribution.component.DistributionComponent}s using a compact configuration, already existing OSGi services
+ * An resource based service factory for distribution components using a compact configuration, already existing OSGi services
  * for the components to be wired can be used as well as directly instantiated components (called by type name).
  */
 @Component(metatype = true,

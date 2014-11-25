@@ -46,7 +46,7 @@ public class VoidDistributionPackageTest {
         try {
             assertEquals(createdPackage.getId(), readPackage.getId());
             assertTrue(IOUtils.contentEquals(createdPackage.createInputStream(), readPackage.createInputStream()));
-        } catch (Exception e) {
+        } catch (AssertionError e) {
             // FIXME : at the moment do nothing, as this may be caused by differences in the time encapsulated in the request
         }
     }
