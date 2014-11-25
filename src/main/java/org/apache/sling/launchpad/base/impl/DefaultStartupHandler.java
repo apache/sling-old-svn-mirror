@@ -18,7 +18,10 @@
  */
 package org.apache.sling.launchpad.base.impl;
 
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -52,6 +55,7 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
  * @see StartupListener
  * @since 2.4.0
  */
+@SuppressWarnings("deprecation")
 public class DefaultStartupHandler
     implements StartupHandler, BundleListener, FrameworkListener, Runnable {
 
@@ -77,7 +81,7 @@ public class DefaultStartupHandler
     private final StartupMode startupMode;
 
     /** Service tracker for startup listeners. */
-    private final ServiceTracker listenerTracker;
+    private final ServiceTracker<StartupListener, StartupListener> listenerTracker;
 
     /** Expected bundle counts. */
     private final int expectedBundlesCount;
@@ -103,21 +107,25 @@ public class DefaultStartupHandler
         this.startupMode = manager.getMode();
         this.targetStartLevel = manager.getTargetStartLevel();
 
-        this.listenerTracker = new ServiceTracker(context, StartupListener.class.getName(),
-                new ServiceTrackerCustomizer() {
+        this.listenerTracker = new ServiceTracker<StartupListener, StartupListener>(context, StartupListener.class,
+                new ServiceTrackerCustomizer<StartupListener, StartupListener>() {
 
-                    public void removedService(final ServiceReference reference, final Object service) {
+                    public void removedService(final ServiceReference<StartupListener> reference, final StartupListener service) {
                         context.ungetService(reference);
                     }
 
-                    public void modifiedService(final ServiceReference reference, final Object service) {
+                    public void modifiedService(final ServiceReference<StartupListener> reference, final StartupListener service) {
                         // nothing to do
                     }
 
-                    public Object addingService(final ServiceReference reference) {
-                        final StartupListener listener = (StartupListener) context.getService(reference);
-                        if ( listener != null ) {
-                            listener.inform(startupMode, finished.get());
+                    public StartupListener addingService(final ServiceReference<StartupListener> reference) {
+                        final StartupListener listener = context.getService(reference);
+                        if (listener != null) {
+                            try {
+                                listener.inform(startupMode, finished.get());
+                            } catch (Throwable t) {
+                                logger.log(Logger.LOG_ERROR, "Error calling StartupListener " + listener, t);
+                            }
                         }
                         return listener;
                     }
@@ -271,14 +279,14 @@ public class DefaultStartupHandler
         logger.log(Logger.LOG_INFO, "Startup finished.");
         this.finished.set(true);
 
-        final Object[] listeners = this.listenerTracker.getServices();
-        if ( listeners != null ) {
-            for(final Object l : listeners) {
-                if ( l instanceof StartupListener ) {
-                    ((StartupListener) l).startupFinished(this.startupMode);
-                }
+        for (StartupListener listener : this.getStartupListeners()) {
+            try {
+                listener.startupFinished(this.startupMode);
+            } catch (Throwable t) {
+                logger.log(Logger.LOG_ERROR, "Error calling StartupListener " + listener, t);
             }
         }
+
         // stop the queue
         this.enqueue(false);
 
@@ -297,12 +305,11 @@ public class DefaultStartupHandler
      * @param ratio ratio
      */
     private void startupProgress(final float ratio) {
-        final Object[] listeners = this.listenerTracker.getServices();
-        if ( listeners != null ) {
-            for(final Object l : listeners) {
-                if ( l instanceof StartupListener ) {
-                    ((StartupListener) l).startupProgress(ratio);
-                }
+        for (StartupListener listener : this.getStartupListeners()) {
+            try {
+                listener.startupProgress(ratio);
+            } catch (Throwable t) {
+                logger.log(Logger.LOG_ERROR, "Error calling StartupListener " + listener, t);
             }
         }
     }
@@ -327,5 +334,57 @@ public class DefaultStartupHandler
                 activeBundles.remove(event.getBundle().getSymbolicName());
             }
         }
+    }
+
+    private Iterable<StartupListener> getStartupListeners() {
+        final ServiceReference<StartupListener>[] refs = this.listenerTracker.getServiceReferences();
+        if (refs == null || refs.length == 0) {
+            return Collections.<StartupListener>emptyList();
+        }
+
+        return new Iterable<StartupListener>() {
+
+            @Override
+            public Iterator<StartupListener> iterator() {
+                return new Iterator<StartupListener>() {
+
+                    private int i = 0;
+
+                    private StartupListener next = seek();
+
+                    @Override
+                    public StartupListener next() {
+                        if (this.next == null) {
+                            throw new NoSuchElementException();
+                        }
+
+                        final StartupListener result = this.next;
+                        this.next = seek();
+                        return result;
+                    }
+
+                    @Override
+                    public boolean hasNext() {
+                        return this.next != null;
+                    }
+
+                    @Override
+                    public void remove() {
+                        throw new UnsupportedOperationException();
+                    }
+
+                    private StartupListener seek() {
+                        for (; i < refs.length; i++) {
+                            final StartupListener sl = DefaultStartupHandler.this.listenerTracker.getService(refs[i]);
+                            if (sl != null) {
+                                return sl;
+                            }
+                        }
+
+                        return null;
+                    }
+                };
+            }
+        };
     }
 }
