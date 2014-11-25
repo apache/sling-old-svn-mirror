@@ -23,12 +23,9 @@ import org.apache.sling.testing.tools.sling.SlingInstance;
 import org.apache.sling.testing.tools.sling.SlingInstanceManager;
 import org.junit.BeforeClass;
 
-import static org.apache.sling.distribution.it.DistributionUtils.agentConfigUrl;
-import static org.apache.sling.distribution.it.DistributionUtils.agentUrl;
-import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
-import static org.apache.sling.distribution.it.DistributionUtils.exporterUrl;
-import static org.apache.sling.distribution.it.DistributionUtils.importerUrl;
-import static org.apache.sling.distribution.it.DistributionUtils.setAgentProperties;
+import java.io.IOException;
+
+import static org.apache.sling.distribution.it.DistributionUtils.*;
 
 /**
  * Integration test base class for distribution
@@ -51,29 +48,26 @@ public abstract class DistributionIntegrationTestBase {
         publishClient = new SlingClient(publish.getServerBaseUrl(), publish.getServerUsername(), publish.getServerPassword());
 
         try {
-            assertExists(authorClient, agentConfigUrl("publish"));
-            assertExists(authorClient, agentConfigUrl("publish-reverse"));
+            assertExists(authorClient, authorAgentConfigUrl("publish"));
 
             // change the url for publish agent and wait for it to start
             String remoteImporterUrl = publish.getServerBaseUrl() + importerUrl("default");
 
-            setAgentProperties(author, "publish",
-                    "packageImporter", "type=remote",
-                    "packageImporter", "endpoints[0]=" + remoteImporterUrl,
-                    "packageImporter", "packageBuilder/type=vlt");
+
+            authorClient.setProperties(authorAgentConfigUrl("publish") + "/packageImporter",
+                    "endpoints", remoteImporterUrl);
+
 
             Thread.sleep(3000);
 
             assertExists(authorClient, agentUrl("publish"));
 
-            assertExists(authorClient, agentConfigUrl("publish-reverse"));
+            assertExists(authorClient, authorAgentConfigUrl("publish-reverse"));
 
             String remoteExporterUrl = publish.getServerBaseUrl() + exporterUrl("reverse");
-            setAgentProperties(author, "publish-reverse",
-                    "packageExporter", "type=remote",
-                    "packageExporter", "endpoints[0]=" + remoteExporterUrl,
 
-                    "packageExporter", "packageBuilder/type=vlt");
+            authorClient.setProperties(authorAgentConfigUrl("publish-reverse") + "/packageExporter",
+                    "endpoints", remoteExporterUrl);
 
             Thread.sleep(3000);
             assertExists(authorClient, agentUrl("publish-reverse"));
@@ -82,6 +76,11 @@ public abstract class DistributionIntegrationTestBase {
             throw new RuntimeException(ex);
         }
 
+    }
+
+    public static void setAuthorAgentProperties(String agentName, String... properties) throws IOException {
+        assertPostResourceWithParameters(author, 200, authorAgentConfigUrl(agentName),
+                properties);
     }
 
 }
