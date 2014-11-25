@@ -85,6 +85,8 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
         try {
             session = getSession(resourceResolver);
 
+            // TODO : no tokens
+
             final String[] paths = request.getPaths();
 
             DefaultWorkspaceFilter filter = new DefaultWorkspaceFilter();
