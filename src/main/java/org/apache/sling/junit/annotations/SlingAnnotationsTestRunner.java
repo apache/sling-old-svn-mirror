@@ -40,7 +40,8 @@ public class SlingAnnotationsTestRunner extends BlockJUnit4ClassRunner {
     @Override
     protected Object createTest() throws Exception {
         final BundleContext ctx = Activator.getBundleContext();
-        final ServiceReference ref = ctx.getServiceReference(TestObjectProcessor.class.getName());
+        final ServiceReference ref =
+	    ctx == null ? null : ctx.getServiceReference(TestObjectProcessor.class.getName());
         final TestObjectProcessor top = ref == null ? null : (TestObjectProcessor)ctx.getService(ref);
 
         if(top == null) {
