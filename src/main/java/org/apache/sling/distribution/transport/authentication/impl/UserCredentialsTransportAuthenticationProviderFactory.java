@@ -20,13 +20,9 @@ package org.apache.sling.distribution.transport.authentication.impl;
 
 import java.util.Map;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.distribution.component.impl.DefaultDistributionComponentFactoryConstants;
-import org.apache.sling.distribution.component.impl.DistributionComponentManager;
+import org.apache.felix.scr.annotations.*;
+import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationContext;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationException;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
@@ -41,27 +37,30 @@ import org.slf4j.LoggerFactory;
 public class UserCredentialsTransportAuthenticationProviderFactory implements
         TransportAuthenticationProvider {
 
-    @Property(value = DefaultDistributionComponentFactoryConstants.TRANSPORT_AUTHENTICATION_PROVIDER_USER, propertyPrivate = true)
-    private static final String TYPE = DefaultDistributionComponentFactoryConstants.COMPONENT_TYPE;
+
+    /**
+     * name of this component.
+     */
+    @Property
+    public static final String NAME = DistributionComponentUtils.NAME;
 
     @Property
-    public final static String USERNAME = DefaultDistributionComponentFactoryConstants.TRANSPORT_AUTHENTICATION_PROVIDER_USER_PROPERTY_USERNAME;
+    public final static String USERNAME = "username";
 
     @Property
-    public final static String PASSWORD = DefaultDistributionComponentFactoryConstants.TRANSPORT_AUTHENTICATION_PROVIDER_USER_PROPERTY_PASSWORD;
+    public final static String PASSWORD = "password";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-
-
-    @Reference
-    private DistributionComponentManager componentManager;
 
 
     private TransportAuthenticationProvider transportAuthenticationProvider;
 
 
+    @Activate
     public void activate(Map<String, Object> config) {
-        transportAuthenticationProvider = componentManager.createComponent(TransportAuthenticationProvider.class, config, null);
+        String username = PropertiesUtil.toString(config.get(USERNAME), "").trim();
+        String password = PropertiesUtil.toString(config.get(PASSWORD), "").trim();
+        transportAuthenticationProvider = new UserCredentialsTransportAuthenticationProvider(username, password);
     }
 
     public Object authenticate(Object authenticable, TransportAuthenticationContext context)

@@ -34,7 +34,6 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.distribution.component.impl.DefaultDistributionComponentFactoryConstants;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImportException;
@@ -58,13 +57,12 @@ import org.slf4j.LoggerFactory;
         policy = ConfigurationPolicy.REQUIRE)
 @Service(value = DistributionPackageImporter.class)
 public class AdvancedRemoteDistributionPackageImporter implements DistributionPackageImporter {
-    private static final String TRANSPORT_AUTHENTICATION_PROVIDER_TARGET = DefaultDistributionComponentFactoryConstants.COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER + ".target";
 
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(name = TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
-    @Reference(name = "TransportAuthenticationProvider", policy = ReferencePolicy.DYNAMIC)
+    @Property(name = "transportAuthenticationProvider.target")
+    @Reference(name = "transportAuthenticationProvider")
     private volatile TransportAuthenticationProvider transportAuthenticationProvider;
 
     @Property(cardinality = 100)

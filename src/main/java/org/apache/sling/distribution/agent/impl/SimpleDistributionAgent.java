@@ -39,7 +39,6 @@ import org.apache.sling.distribution.agent.DistributionRequestAuthorizationStrat
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.communication.DistributionRequestState;
 import org.apache.sling.distribution.communication.DistributionResponse;
-import org.apache.sling.distribution.component.ManagedDistributionComponent;
 import org.apache.sling.distribution.event.DistributionEventType;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.packaging.DistributionPackage;
@@ -66,7 +65,7 @@ import static org.apache.sling.distribution.queue.DistributionQueueItemState.Ite
 /**
  * Basic implementation of a {@link org.apache.sling.distribution.agent.DistributionAgent}
  */
-public class SimpleDistributionAgent implements DistributionAgent, ManagedDistributionComponent {
+public class SimpleDistributionAgent implements DistributionAgent {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -260,6 +259,7 @@ public class SimpleDistributionAgent implements DistributionAgent, ManagedDistri
         // register triggers if any
         agentBasedRequestHandler = new AgentBasedRequestHandler(this);
 
+
         for (DistributionTrigger trigger : triggers) {
             try {
                 trigger.register(agentBasedRequestHandler);
@@ -268,12 +268,30 @@ public class SimpleDistributionAgent implements DistributionAgent, ManagedDistri
             }
         }
 
+
         if (!isPassive()) {
             try {
                 queueProvider.enableQueueProcessing(new PackageQueueProcessor());
             } catch (DistributionQueueException e) {
                 log.error("cannot enable queue processing", e);
             }
+        }
+    }
+
+    public void enableTrigger(DistributionTrigger trigger) {
+        try {
+            trigger.register(agentBasedRequestHandler);
+        } catch (DistributionTriggerException e) {
+            log.error("could not register handler {} from trigger {}", agentBasedRequestHandler, trigger);
+        }
+
+    }
+
+    public void disableTrigger(DistributionTrigger trigger) {
+        try {
+            trigger.register(agentBasedRequestHandler);
+        } catch (DistributionTriggerException e) {
+            log.error("could not register handler {} from trigger {}", agentBasedRequestHandler, trigger);
         }
     }
 

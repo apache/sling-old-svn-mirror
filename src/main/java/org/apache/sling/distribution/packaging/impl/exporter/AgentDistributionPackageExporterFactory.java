@@ -20,7 +20,6 @@ package org.apache.sling.distribution.packaging.impl.exporter;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,20 +28,16 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.communication.DistributionRequest;
-import org.apache.sling.distribution.component.DistributionComponent;
-import org.apache.sling.distribution.component.DistributionComponentProvider;
-import org.apache.sling.distribution.component.impl.DefaultDistributionComponentFactoryConstants;
-import org.apache.sling.distribution.component.impl.DistributionComponentManager;
-import org.apache.sling.distribution.component.impl.SettingsUtils;
+import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExportException;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
+import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,25 +47,27 @@ import org.slf4j.LoggerFactory;
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE)
 @Service(value = DistributionPackageExporter.class)
-public class AgentDistributionPackageExporterFactory implements DistributionPackageExporter, DistributionComponentProvider {
+public class AgentDistributionPackageExporterFactory implements DistributionPackageExporter {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(value = DefaultDistributionComponentFactoryConstants.PACKAGE_EXPORTER_AGENT, propertyPrivate = true)
-    private static final String TYPE = DefaultDistributionComponentFactoryConstants.COMPONENT_TYPE;
+
+    /**
+     * name of this component.
+     */
+    @Property
+    public static final String NAME = DistributionComponentUtils.NAME;
 
     @Property
-    private static final String NAME = DefaultDistributionComponentFactoryConstants.COMPONENT_NAME;
+    private static final String QUEUE_NAME = "queue";
 
-    @Property(label = "Target DistributionAgent", name = "DistributionAgent.target")
-    @Reference(name = "DistributionAgent", policy = ReferencePolicy.STATIC)
+    @Property(name = "agent.target")
+    @Reference(name = "agent")
     private DistributionAgent agent;
 
 
-    @Property(label = "Package Builder Properties", cardinality = 100)
-    public static final String PACKAGE_BUILDER = DefaultDistributionComponentFactoryConstants.COMPONENT_PACKAGE_BUILDER;
-
-    @Reference
-    private DistributionComponentManager componentManager;
+    @Property(name = "packageBuilder.target")
+    @Reference(name = "packageBuilder")
+    DistributionPackageBuilder packageBuilder;
 
     private DistributionPackageExporter packageExporter;
 
@@ -78,12 +75,9 @@ public class AgentDistributionPackageExporterFactory implements DistributionPack
     @Activate
     public void activate(Map<String, Object> config) throws Exception {
 
-        Map<String, Object> properties = new HashMap<String, Object>();
-        properties.putAll(config);
-        String[] packageBuilderProperties = PropertiesUtil.toStringArray(config.get(PACKAGE_BUILDER));
-        properties.put(PACKAGE_BUILDER, SettingsUtils.parseLines(packageBuilderProperties));
+        String queueName = PropertiesUtil.toString(config.get(QUEUE_NAME), "");
 
-        packageExporter = componentManager.createComponent(DistributionPackageExporter.class, properties, this);
+        packageExporter = new AgentDistributionPackageExporter(queueName, agent, packageBuilder);
     }
 
     @Nonnull
@@ -95,11 +89,4 @@ public class AgentDistributionPackageExporterFactory implements DistributionPack
         return packageExporter.getPackage(resourceResolver, distributionPackageId);
     }
 
-    public <ComponentType extends DistributionComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type,
-                                                                                   @Nullable String componentName) {
-        if (type.isAssignableFrom(DistributionAgent.class)) {
-            return (ComponentType) agent;
-        }
-        return null;
-    }
 }

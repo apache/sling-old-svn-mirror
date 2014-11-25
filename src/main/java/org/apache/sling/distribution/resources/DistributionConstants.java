@@ -35,4 +35,6 @@ public class DistributionConstants {
     public static final String IMPORTER_RESOURCE_TYPE = "sling/distribution/service/importer";
     public static final String EXPORTER_RESOURCE_TYPE = "sling/distribution/service/exporter";
 
+    public static final String PN_IS_RESOURCE = "isResource";
+
 }
