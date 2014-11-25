@@ -1,0 +1,14 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "pubsync",
+
+    "enabled" : false,
+
+    "serviceName" : "distributionService",
+
+    "requestAuthorizationStrategy.target" : "(name=privilegeRead)",
+
+    "packageExporter.target": "(parent.name=pubsync)",
+
+    "packageImporter.target": "(parent.name=pubsync)"
+}

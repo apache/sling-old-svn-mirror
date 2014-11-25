@@ -19,9 +19,7 @@
 package org.apache.sling.distribution.packaging.impl.importer;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -30,12 +28,10 @@ import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.component.DistributionComponent;
-import org.apache.sling.distribution.component.DistributionComponentProvider;
-import org.apache.sling.distribution.component.impl.DefaultDistributionComponentFactoryConstants;
+import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
 import org.apache.sling.distribution.component.impl.DistributionComponentManager;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImportException;
@@ -53,25 +49,25 @@ import org.slf4j.LoggerFactory;
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE)
 @Service(value = DistributionPackageImporter.class)
-public class RemoteDistributionPackageImporterFactory implements DistributionPackageImporter, DistributionComponentProvider {
-    private static final String TRANSPORT_AUTHENTICATION_PROVIDER_TARGET = DefaultDistributionComponentFactoryConstants.COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER + ".target";
-
+public class RemoteDistributionPackageImporterFactory implements DistributionPackageImporter {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(value = DefaultDistributionComponentFactoryConstants.PACKAGE_IMPORTER_REMOTE, propertyPrivate = true)
-    private static final String TYPE = DefaultDistributionComponentFactoryConstants.COMPONENT_TYPE;
-
+    /**
+     * name of this component.
+     */
     @Property
-    private static final String NAME = DefaultDistributionComponentFactoryConstants.COMPONENT_NAME;
+    public static final String NAME = DistributionComponentUtils.NAME;
 
-    @Property(name = TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
-    @Reference(name = "TransportAuthenticationProvider", policy = ReferencePolicy.STATIC)
-    private volatile TransportAuthenticationProvider transportAuthenticationProvider;
+    /**
+     * endpoints property
+     */
+    @Property(cardinality = -1)
+    public static final String ENDPOINTS = "endpoints";
 
-    @Property(cardinality = 100)
-    public static final String ENDPOINTS = DefaultDistributionComponentFactoryConstants.PACKAGE_IMPORTER_REMOTE_PROPERTY_ENDPOINTS;
-
+    /**
+     * endpoint strategy property
+     */
     @Property(options = {
             @PropertyOption(name = "All",
                     value = "all endpoints"
@@ -81,8 +77,12 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
             )},
             value = "One"
     )
-    private static final String ENDPOINT_STRATEGY = DefaultDistributionComponentFactoryConstants.PACKAGE_IMPORTER_REMOTE_PROPERTY_ENDPOINTS_STRATEGY;
+    public static final String ENDPOINTS_STRATEGY = "endpoints.strategy";
 
+
+    @Property(name = "transportAuthenticationProvider.target")
+    @Reference(name = "transportAuthenticationProvider")
+    TransportAuthenticationProvider transportAuthenticationProvider;
     private DistributionPackageImporter importer;
 
     @Reference
@@ -92,10 +92,11 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
     @Activate
     protected void activate(Map<String, Object> config) {
 
-        Map<String, Object> properties = new HashMap<String, Object>();
-        properties.putAll(config);
+        String[] endpoints = PropertiesUtil.toStringArray(config.get(ENDPOINTS), new String[0]);
+        String endpointStrategyName = PropertiesUtil.toString(config.get(ENDPOINTS_STRATEGY), "One");
 
-        importer = componentManager.createComponent(DistributionPackageImporter.class, properties, this);
+
+        importer =  new RemoteDistributionPackageImporter(transportAuthenticationProvider, endpoints, endpointStrategyName);
 
     }
 
@@ -105,14 +106,5 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
 
     public DistributionPackage importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException {
         return importer.importStream(resourceResolver, stream);
-    }
-
-    public <ComponentType extends DistributionComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type,
-                                                                                   @Nullable String componentName) {
-        if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
-            return (ComponentType) transportAuthenticationProvider;
-        }
-
-        return null;
     }
 }

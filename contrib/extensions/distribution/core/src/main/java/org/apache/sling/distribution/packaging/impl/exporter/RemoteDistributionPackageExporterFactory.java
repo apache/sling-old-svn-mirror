@@ -19,8 +19,6 @@
 package org.apache.sling.distribution.packaging.impl.exporter;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -31,19 +29,16 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.communication.DistributionRequest;
-import org.apache.sling.distribution.component.DistributionComponent;
-import org.apache.sling.distribution.component.DistributionComponentProvider;
-import org.apache.sling.distribution.component.impl.DefaultDistributionComponentFactoryConstants;
+import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
 import org.apache.sling.distribution.component.impl.DistributionComponentManager;
-import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExportException;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
+import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,30 +50,30 @@ import org.slf4j.LoggerFactory;
         metatype = true,
         configurationFactory = true,
         specVersion = "1.1",
-        policy = ConfigurationPolicy.REQUIRE)
+        policy = ConfigurationPolicy.REQUIRE,
+        immediate = true
+)
 @Service(value = DistributionPackageExporter.class)
-public class RemoteDistributionPackageExporterFactory implements DistributionPackageExporter, DistributionComponentProvider {
-    private static final String TRANSPORT_AUTHENTICATION_PROVIDER_TARGET = DefaultDistributionComponentFactoryConstants.COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER + ".target";
+public class RemoteDistributionPackageExporterFactory implements DistributionPackageExporter {
 
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(value = DefaultDistributionComponentFactoryConstants.PACKAGE_EXPORTER_REMOTE, propertyPrivate = true)
-    private static final String TYPE = DefaultDistributionComponentFactoryConstants.COMPONENT_TYPE;
-
+    /**
+     * name of this component.
+     */
     @Property
-    private static final String NAME = DefaultDistributionComponentFactoryConstants.COMPONENT_NAME;
+    public static final String NAME = DistributionComponentUtils.NAME;
 
-    @Property(name = TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
-    @Reference(name = "TransportAuthenticationProvider", policy = ReferencePolicy.STATIC)
-    private volatile TransportAuthenticationProvider transportAuthenticationProvider;
+    /**
+     * endpoints property
+     */
+    @Property(cardinality = -1)
+    public static final String ENDPOINTS = "endpoints";
 
-    @Property(cardinality = 100)
-    public static final String ENDPOINTS = DefaultDistributionComponentFactoryConstants.PACKAGE_EXPORTER_REMOTE_PROPERTY_ENDPOINTS;
-
-    @Property(name = "pull items", description = "number of subsequent pull requests to make", intValue = 1)
-    public static final String PULL_ITEMS = "pull.items";
-
+    /**
+     * endpoint strategy property
+     */
     @Property(options = {
             @PropertyOption(name = "All",
                     value = "all endpoints"
@@ -88,11 +83,21 @@ public class RemoteDistributionPackageExporterFactory implements DistributionPac
             )},
             value = "One"
     )
-    private static final String ENDPOINT_STRATEGY = DefaultDistributionComponentFactoryConstants.PACKAGE_EXPORTER_REMOTE_PROPERTY_ENDPOINTS_STRATEGY;
+    public static final String ENDPOINTS_STRATEGY = "endpoints.strategy";
 
+    /**
+     * no. of items to poll property
+     */
+    @Property(name = "pull items", description = "number of subsequent pull requests to make", intValue = 1)
+    public static final String PULL_ITEMS = "pull.items";
 
-    @Property(label = "Package Builder Properties", cardinality = 100)
-    public static final String PACKAGE_BUILDER = DefaultDistributionComponentFactoryConstants.COMPONENT_PACKAGE_BUILDER;
+    @Property(name = "packageBuilder.target")
+    @Reference(name = "packageBuilder")
+    DistributionPackageBuilder packageBuilder;
+
+    @Property(name = "transportAuthenticationProvider.target")
+    @Reference(name = "transportAuthenticationProvider")
+    TransportAuthenticationProvider transportAuthenticationProvider;
 
     @Reference
     private DistributionComponentManager componentManager;
@@ -101,12 +106,13 @@ public class RemoteDistributionPackageExporterFactory implements DistributionPac
 
     @Activate
     protected void activate(Map<String, Object> config) throws Exception {
-        Map<String, Object> properties = new HashMap<String, Object>();
-        properties.putAll(config);
-        String[] packageBuilderProperties = PropertiesUtil.toStringArray(config.get(PACKAGE_BUILDER));
-        properties.put(PACKAGE_BUILDER, SettingsUtils.parseLines(packageBuilderProperties));
 
-        exporter = componentManager.createComponent(DistributionPackageExporter.class, properties, this);
+
+        String[] endpoints = PropertiesUtil.toStringArray(config.get(ENDPOINTS), new String[0]);
+        String endpointStrategyName = PropertiesUtil.toString(config.get(ENDPOINTS_STRATEGY), "One");
+        int pollItems = PropertiesUtil.toInteger(config.get(PULL_ITEMS), Integer.MAX_VALUE);
+
+        exporter = new RemoteDistributionPackageExporter(packageBuilder, transportAuthenticationProvider, endpoints, endpointStrategyName, pollItems);
     }
 
 
@@ -124,12 +130,5 @@ public class RemoteDistributionPackageExporterFactory implements DistributionPac
         return exporter.getPackage(resourceResolver, distributionPackageId);
     }
 
-    public <ComponentType extends DistributionComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type,
-                                                                                   @Nullable String componentName) {
-        if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
-            return (ComponentType) transportAuthenticationProvider;
-        }
 
-        return null;
-    }
 }

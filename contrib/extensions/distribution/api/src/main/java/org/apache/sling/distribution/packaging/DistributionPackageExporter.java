@@ -26,7 +26,6 @@ import java.util.List;
 import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.communication.DistributionRequest;
-import org.apache.sling.distribution.component.DistributionComponent;
 
 /**
  * A {@link DistributionPackageExporter ) is responsible of exporting
@@ -38,7 +37,7 @@ import org.apache.sling.distribution.component.DistributionComponent;
  * executing an HTTP request to another Sling instance exposing already created packages (for remotely changed resources).
  */
 @ConsumerType
-public interface DistributionPackageExporter extends DistributionComponent {
+public interface DistributionPackageExporter {
 
     /**
      * Exports the {@link DistributionPackage}s built from the

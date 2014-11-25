@@ -1,0 +1,12 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "publish-reverse/exporter",
+    "parent.name": "publish-reverse",
+    "type": "remote",
+
+    "endpoints": [
+        "http://localhost:4503/libs/sling/distribution/services/exporters/reverse"
+    ],
+    "packageBuilder.target" : "(name=vlt)",
+    "transportAuthenticationProvider.target" : "(name=publishAdmin)"
+}

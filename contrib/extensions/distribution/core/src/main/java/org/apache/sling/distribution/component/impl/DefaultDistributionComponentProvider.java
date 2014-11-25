@@ -31,8 +31,6 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.distribution.agent.DistributionAgent;
-import org.apache.sling.distribution.component.DistributionComponent;
-import org.apache.sling.distribution.component.DistributionComponentProvider;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.queue.DistributionQueueDispatchingStrategy;
@@ -42,11 +40,8 @@ import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * default implementation of {@link org.apache.sling.distribution.component.DistributionComponentProvider} (as an OSGi service).
- */
+
 @Component
-@Service(DistributionComponentProvider.class)
 @Property(name = "name", value = "default")
 @References({
         @Reference(name = "distributionAgent", referenceInterface = DistributionAgent.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
@@ -56,7 +51,7 @@ import org.slf4j.LoggerFactory;
         @Reference(name = "distributionQueueDistributionStrategy", referenceInterface = DistributionQueueDispatchingStrategy.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
         @Reference(name = "transportAuthenticationProvider", referenceInterface = TransportAuthenticationProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
 })
-public class DefaultDistributionComponentProvider implements DistributionComponentProvider {
+public class DefaultDistributionComponentProvider {
 
     public static final String COMPONENT_TYPE = "type";
     public static final String NAME = "name";
@@ -71,7 +66,7 @@ public class DefaultDistributionComponentProvider implements DistributionCompone
     private Map<String, DistributionPackageExporter> distributionPackageExporterMap = new ConcurrentHashMap<String, DistributionPackageExporter>();
     private BundleContext bundleContext;
 
-    public <ComponentType extends DistributionComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type,
+    public <ComponentType> ComponentType getComponent(@Nonnull Class<ComponentType> type,
                                                                                    @Nullable String componentName) {
         if (type.isAssignableFrom(DistributionPackageExporter.class)) {
             return (ComponentType) distributionPackageExporterMap.get(componentName);

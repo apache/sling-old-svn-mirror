@@ -23,13 +23,12 @@ import javax.annotation.Nonnull;
 import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.communication.DistributionRequest;
-import org.apache.sling.distribution.component.DistributionComponent;
 
 /**
  * Strategy for authorizing requests
  */
 @ConsumerType
-public interface DistributionRequestAuthorizationStrategy extends DistributionComponent {
+public interface DistributionRequestAuthorizationStrategy {
 
     /**
      * @param resourceResolver   a {@link org.apache.sling.api.resource.ResourceResolver} representing the calling 'user'

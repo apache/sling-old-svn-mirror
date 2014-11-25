@@ -19,24 +19,24 @@
 
 package org.apache.sling.distribution.component.impl;
 
-import org.apache.sling.distribution.component.DistributionComponent;
-import org.apache.sling.distribution.component.DistributionComponentProvider;
-
 import javax.annotation.Nonnull;
 import java.util.Map;
 
-/**
- * The componentManager is used to create components based on all {@link org.apache.sling.distribution.component.DistributionComponentFactory}s
- * registered in the system.
- */
 public interface DistributionComponentManager {
 
-    final static String TOPIC_DISTRIBUTION_COMPONENT_REFRESH = "org/apache/sling/distribution/component/REFRESH";
+    /**
+     * Creates a component of a given type with the specified name. It also creates all the subcomponents defined as
+     * sub-maps in the map of properties.
+     * @param type
+     * @param componentName
+     * @param properties
+     */
+    void createComponent(@Nonnull Class type, @Nonnull String componentName, @Nonnull Map<String, Object> properties);
 
-    <ComponentType extends DistributionComponent> ComponentType createComponent(@Nonnull Class<ComponentType> type,
-                                                                                       @Nonnull Map<String, Object> properties,
-                                                                                       @Nonnull final DistributionComponentProvider componentProvider);
-
-    <ComponentType extends DistributionComponent> ComponentType createComponent(@Nonnull Class<ComponentType> type,
-                                                                                       @Nonnull Map<String, Object> properties);
+    /**
+     * Deletes the component and the associated subcomponents.
+     * @param type
+     * @param componentName
+     */
+    void deleteComponent(@Nonnull Class type, String componentName);
 }

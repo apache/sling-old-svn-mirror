@@ -23,9 +23,7 @@ import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.*;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
-import org.apache.sling.distribution.component.ManagedDistributionComponent;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
@@ -186,7 +184,7 @@ public class ResourceBasedDistributionComponentFactory {
             Map<String, Object> componentConfig = extractMap(0, resource);
 
             putMap(0, componentConfig, config);
-            config.put(DefaultDistributionComponentFactoryConstants.COMPONENT_NAME, name);
+            config.put(DistributionComponentUtils.NAME, name);
 
             register(name, config);
         } catch (LoginException e) {
@@ -198,22 +196,18 @@ public class ResourceBasedDistributionComponentFactory {
 
     }
 
-    private void unregister(String name) {
+    private void register(String componentName, Map<String, Object> config) {
 
-        ServiceRegistration componentReg = componentRegistrations.get(name);
+        if ("agent".equals(kind)) {
+            componentManager.createComponent(DistributionAgent.class, componentName,  config);
+        }
+    }
 
-        if (componentReg != null) {
-            ServiceReference reference = componentReg.getReference();
 
-            if ("agent".equals(kind)) {
-                Object replicationComponent =  savedContext.getService(reference);
-                if (replicationComponent instanceof ManagedDistributionComponent) {
-                    ((ManagedDistributionComponent) replicationComponent).disable();
-                }
-            }
+    private void unregister(String componentName) {
 
-            componentReg.unregister();
-
+        if ("agent".equals(kind)) {
+            componentManager.deleteComponent(DistributionAgent.class, componentName);
         }
     }
 
@@ -257,28 +251,6 @@ public class ResourceBasedDistributionComponentFactory {
 
     }
 
-    private void register(String componentName, Map<String, Object> config) {
-        String componentClass = null;
-        Object componentObject = null;
-
-        if ("agent".equals(kind)) {
-            componentClass = DistributionAgent.class.getName();
-            componentObject = componentManager.createComponent(DistributionAgent.class, config);
-        }
-
-
-        if (componentObject != null && componentClass != null) {
-            if (componentObject instanceof ManagedDistributionComponent) {
-                ((ManagedDistributionComponent) componentObject).enable();
-            }
-
-            Dictionary<String, Object> props = new Hashtable<String, Object>();
-            props.put(NAME, componentName);
-            ServiceRegistration componentReg = savedContext.registerService(componentClass, componentObject, props);
-            componentRegistrations.put(componentName, componentReg);
-            log.debug("activated component kind {} name", kind, componentName);
-        }
-    }
 
     private class ResourceChangeEventHandler implements EventHandler {
 

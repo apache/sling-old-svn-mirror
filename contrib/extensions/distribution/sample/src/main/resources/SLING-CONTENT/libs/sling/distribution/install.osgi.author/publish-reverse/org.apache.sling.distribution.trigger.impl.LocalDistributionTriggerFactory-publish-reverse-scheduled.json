@@ -1,0 +1,11 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+
+    "name": "publish-reverse/triggers/scheduled",
+    "parent.name": "publish-reverse",
+
+    "type": "scheduledEvent",
+    "action": "poll",
+    "seconds": "30"
+
+}

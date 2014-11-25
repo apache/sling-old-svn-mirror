@@ -19,7 +19,6 @@
 package org.apache.sling.distribution.packaging.impl.exporter;
 
 import javax.annotation.Nonnull;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,14 +29,12 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.communication.DistributionRequest;
-import org.apache.sling.distribution.component.impl.DefaultDistributionComponentFactoryConstants;
-import org.apache.sling.distribution.component.impl.DistributionComponentManager;
-import org.apache.sling.distribution.component.impl.SettingsUtils;
+import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExportException;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
+import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,28 +52,21 @@ public class LocalDistributionPackageExporterFactory implements DistributionPack
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(value = DefaultDistributionComponentFactoryConstants.PACKAGE_EXPORTER_LOCAL, propertyPrivate = true)
-    private static final String TYPE = DefaultDistributionComponentFactoryConstants.COMPONENT_TYPE;
-
+    /**
+     * name of this component.
+     */
     @Property
-    private static final String NAME = DefaultDistributionComponentFactoryConstants.COMPONENT_NAME;
+    public static final String NAME = DistributionComponentUtils.NAME;
 
-    @Property(label = "Package Builder Properties", cardinality = 100)
-    public static final String PACKAGE_BUILDER = DefaultDistributionComponentFactoryConstants.COMPONENT_PACKAGE_BUILDER;
-
-    @Reference
-    private DistributionComponentManager componentManager;
+    @Property(name = "packageBuilder.target")
+    @Reference(name = "packageBuilder")
+    DistributionPackageBuilder packageBuilder;
 
     private DistributionPackageExporter exporter;
 
     @Activate
     public void activate(Map<String, Object> config) {
-        Map<String, Object> properties = new HashMap<String, Object>();
-        properties.putAll(config);
-        String[] packageBuilderProperties = PropertiesUtil.toStringArray(config.get(PACKAGE_BUILDER));
-        properties.put(PACKAGE_BUILDER, SettingsUtils.parseLines(packageBuilderProperties));
-
-        exporter = componentManager.createComponent(DistributionPackageExporter.class, properties, null);
+        exporter = new LocalDistributionPackageExporter(packageBuilder);
     }
 
 

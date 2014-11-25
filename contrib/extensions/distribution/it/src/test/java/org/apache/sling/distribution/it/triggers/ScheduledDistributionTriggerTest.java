@@ -20,10 +20,13 @@
 package org.apache.sling.distribution.it.triggers;
 
 import org.apache.sling.distribution.it.DistributionIntegrationTestBase;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.apache.sling.distribution.it.DistributionUtils.assertResponseContains;
 import static org.apache.sling.distribution.it.DistributionUtils.triggerEventUrl;
+
+@Ignore
 
 public class ScheduledDistributionTriggerTest extends DistributionIntegrationTestBase {
 

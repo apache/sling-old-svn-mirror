@@ -30,6 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.distribution.resources.DistributionConstants;
 import org.apache.sling.distribution.resources.impl.common.AbstractReadableResourceProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -93,7 +94,15 @@ public class OsgiServicePropertiesResourceProvider extends AbstractReadableResou
     public Object addingService(ServiceReference serviceReference) {
         String serviceName = PropertiesUtil.toString(serviceReference.getProperty(friendlyNameProperty), null);
 
-        if (serviceName == null) return null;
+        if (serviceName == null)  {
+            return null;
+        }
+
+        boolean isResource = PropertiesUtil.toBoolean(serviceReference.getProperty(DistributionConstants.PN_IS_RESOURCE), false);
+
+        if (!isResource) {
+            return null;
+        }
 
         Map<String, Object> properties = new HashMap<String, Object>();
 
@@ -121,7 +130,15 @@ public class OsgiServicePropertiesResourceProvider extends AbstractReadableResou
     public void removedService(ServiceReference serviceReference, Object o) {
         String serviceName = PropertiesUtil.toString(serviceReference.getProperty(friendlyNameProperty), null);
 
-        if (serviceName == null) return;
+        if (serviceName == null)  {
+            return;
+        }
+
+        boolean isResource = PropertiesUtil.toBoolean(serviceReference.getProperty(DistributionConstants.PN_IS_RESOURCE), false);
+
+        if (!isResource) {
+            return;
+        }
 
         services.remove(serviceName);
         serviceProperties.remove(serviceName);

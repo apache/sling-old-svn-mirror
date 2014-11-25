@@ -18,36 +18,25 @@
  */
 package org.apache.sling.distribution.agent.impl;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.*;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
-import org.apache.sling.distribution.component.DistributionComponent;
-import org.apache.sling.distribution.component.DistributionComponentProvider;
-import org.apache.sling.distribution.component.ManagedDistributionComponent;
-import org.apache.sling.distribution.component.impl.DefaultDistributionComponentFactoryConstants;
-import org.apache.sling.distribution.component.impl.DistributionComponentManager;
-import org.apache.sling.distribution.component.impl.SettingsUtils;
+import org.apache.sling.distribution.agent.DistributionRequestAuthorizationStrategy;
+import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
+import org.apache.sling.distribution.packaging.DistributionPackageExporter;
+import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.queue.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.SingleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
+import org.apache.sling.distribution.resources.DistributionConstants;
 import org.apache.sling.distribution.resources.impl.OsgiUtils;
-import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
@@ -66,43 +55,39 @@ import org.slf4j.LoggerFactory;
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE
 )
-public class SimpleDistributionAgentFactory implements DistributionComponentProvider {
-
-    private static final String TRANSPORT_AUTHENTICATION_PROVIDER_TARGET = DefaultDistributionComponentFactoryConstants.COMPONENT_TRANSPORT_AUTHENTICATION_PROVIDER + ".target";
-
+@Reference(name = "triggers", referenceInterface = DistributionTrigger.class, target = SimpleDistributionAgentFactory.DEFAULT_TARGET,
+        policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
+        bind = "bindDistributionTrigger", unbind = "unbindDistributionTrigger")
+public class SimpleDistributionAgentFactory {
+    public static final String DEFAULT_TARGET = DistributionComponentUtils.DEFAULT_TARGET;
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(boolValue = true, label = "Enabled")
-    private static final String ENABLED = DefaultDistributionComponentFactoryConstants.COMPONENT_ENABLED;
-
-    @Property(value = DefaultDistributionComponentFactoryConstants.AGENT_SIMPLE, propertyPrivate = true)
-    private static final String TYPE = DefaultDistributionComponentFactoryConstants.COMPONENT_TYPE;
-
     @Property(label = "Name")
-    public static final String NAME = DefaultDistributionComponentFactoryConstants.COMPONENT_NAME;
+    public static final String NAME = DistributionComponentUtils.NAME;
+
+    @Property(boolValue = true, label = "Enabled")
+    private static final String ENABLED = "enabled";
+
 
     @Property(boolValue = false, label = "Use this agent as a passive one (only queueing)")
-    public static final String IS_PASSIVE = DefaultDistributionComponentFactoryConstants.AGENT_SIMPLE_PROPERTY_IS_PASSIVE;
+    public static final String IS_PASSIVE = "isPassive";
 
-    @Property(label = "Request Authorization Strategy Properties", cardinality = 100)
-    public static final String REQUEST_AUTHORIZATION_STRATEGY = DefaultDistributionComponentFactoryConstants.COMPONENT_REQUEST_AUTHORIZATION_STRATEGY;
-
-    @Property(label = "Package Exporter Properties", cardinality = 100)
-    public static final String PACKAGE_EXPORTER = DefaultDistributionComponentFactoryConstants.COMPONENT_PACKAGE_EXPORTER;
-
-    @Property(label = "Package Importer Properties", cardinality = 100)
-    public static final String PACKAGE_IMPORTER = DefaultDistributionComponentFactoryConstants.COMPONENT_PACKAGE_IMPORTER;
-
-    @Property(label = "Trigger Properties", cardinality = 100)
-    public static final String TRIGGER = DefaultDistributionComponentFactoryConstants.COMPONENT_TRIGGER;
 
     @Property(label = "Service Name")
-    public static final String SERVICE_NAME = DefaultDistributionComponentFactoryConstants.AGENT_SIMPLE_PROPERTY_SERVICE_NAME;
+    public static final String SERVICE_NAME = "serviceName";
 
-    @Property(label = "Target TransportAuthenticationProvider", name = TRANSPORT_AUTHENTICATION_PROVIDER_TARGET)
-    @Reference(name = "transportAuthenticationProvider", policy = ReferencePolicy.DYNAMIC,
-            cardinality = ReferenceCardinality.OPTIONAL_UNARY)
-    private volatile TransportAuthenticationProvider transportAuthenticationProvider;
+    @Property(name = "packageExporter.target")
+    @Reference(name = "packageExporter", target = DEFAULT_TARGET)
+    private DistributionPackageExporter packageExporter;
+
+
+    @Property(name = "packageImporter.target")
+    @Reference(name = "packageImporter", target = DEFAULT_TARGET)
+    private DistributionPackageImporter packageImporter;
+
+    @Property(name = "requestAuthorizationStrategy.target")
+    @Reference(name = "requestAuthorizationStrategy", target = DEFAULT_TARGET)
+    private DistributionRequestAuthorizationStrategy requestAuthorizationStrategy;
 
     @Reference
     private DistributionEventFactory distributionEventFactory;
@@ -114,12 +99,15 @@ public class SimpleDistributionAgentFactory implements DistributionComponentProv
     private JobManager jobManager;
 
     @Reference
-    private DistributionComponentManager componentFactoryManager;
+    private ResourceResolverFactory resourceResolverFactory;
 
     private ServiceRegistration componentReg;
     private BundleContext savedContext;
     private Map<String, Object> savedConfig;
     private String agentName;
+    List<DistributionTrigger> triggers = new CopyOnWriteArrayList<DistributionTrigger>();
+
+    private SimpleDistributionAgent agent;
 
     @Activate
     protected void activate(BundleContext context, Map<String, Object> config) {
@@ -139,25 +127,21 @@ public class SimpleDistributionAgentFactory implements DistributionComponentProv
 
             agentName = PropertiesUtil.toString(config.get(NAME), null);
             props.put(NAME, agentName);
+            props.put(DistributionConstants.PN_IS_RESOURCE, config.get(DistributionConstants.PN_IS_RESOURCE));
 
-            if (componentReg == null && componentFactoryManager != null) {
+            if (componentReg == null) {
 
-                String[] requestAuthProperties = PropertiesUtil.toStringArray(config.get(REQUEST_AUTHORIZATION_STRATEGY), new String[0]);
-                String[] packageImporterProperties = PropertiesUtil.toStringArray(config.get(PACKAGE_IMPORTER), new String[0]);
-                String[] packageExporterProperties = PropertiesUtil.toStringArray(config.get(PACKAGE_EXPORTER), new String[0]);
-                String[] triggerProperties = PropertiesUtil.toStringArray(config.get(TRIGGER), new String[0]);
+                String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
 
-                Map<String, Object> properties = new HashMap<String, Object>();
-                properties.putAll(config);
+                boolean isPassive = PropertiesUtil.toBoolean(config.get(IS_PASSIVE), false);
 
-                properties.put(REQUEST_AUTHORIZATION_STRATEGY, SettingsUtils.parseLines(requestAuthProperties));
-                properties.put(PACKAGE_IMPORTER, SettingsUtils.parseLines(packageImporterProperties));
-                properties.put(PACKAGE_EXPORTER, SettingsUtils.parseLines(packageExporterProperties));
-                properties.put(TRIGGER, SettingsUtils.parseLines(triggerProperties));
-
-                DistributionAgent agent = null;
                 try {
-                    agent = componentFactoryManager.createComponent(DistributionAgent.class, properties, this);
+
+                    DistributionQueueProvider queueProvider =  new JobHandlingDistributionQueueProvider(agentName, jobManager, savedContext);
+                    DistributionQueueDispatchingStrategy dispatchingStrategy = new SingleQueueDispatchingStrategy();
+                    agent = new SimpleDistributionAgent(agentName, isPassive, serviceName,
+                            packageImporter, packageExporter, requestAuthorizationStrategy,
+                            queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory, triggers);
                 }
                 catch (IllegalArgumentException e) {
                     log.warn("cannot create agent", e);
@@ -169,12 +153,25 @@ public class SimpleDistributionAgentFactory implements DistributionComponentProv
 
                     // register agent service
                     componentReg = context.registerService(DistributionAgent.class.getName(), agent, props);
-                    if (agent instanceof ManagedDistributionComponent) {
-                        ((ManagedDistributionComponent) agent).enable();
-                    }
+                    agent.enable();
                 }
             }
+        }
+    }
 
+    private void bindDistributionTrigger(DistributionTrigger distributionTrigger, Map<String, Object> config) {
+        triggers.add(distributionTrigger);
+        if (agent != null) {
+            agent.enableTrigger(distributionTrigger);
+        }
+
+    }
+
+    private void unbindDistributionTrigger(DistributionTrigger distributionTrigger, Map<String, Object> config) {
+        triggers.remove(distributionTrigger);
+
+        if (agent != null) {
+            agent.disableTrigger(distributionTrigger);
         }
     }
 
@@ -183,49 +180,14 @@ public class SimpleDistributionAgentFactory implements DistributionComponentProv
         if (componentReg != null) {
             ServiceReference reference = componentReg.getReference();
             Object service = context.getService(reference);
-            if (service instanceof ManagedDistributionComponent) {
-                ((ManagedDistributionComponent) service).disable();
+            if (service instanceof SimpleDistributionAgent) {
+                ((SimpleDistributionAgent) service).disable();
             }
 
             componentReg.unregister();
             componentReg = null;
+            agent = null;
         }
 
-    }
-
-    public <ComponentType extends DistributionComponent> ComponentType getComponent(@Nonnull Class<ComponentType> type,
-                                                                                   @Nullable String componentName) {
-        if (type.isAssignableFrom(DistributionQueueProvider.class)) {
-            return (ComponentType) new JobHandlingDistributionQueueProvider(agentName, jobManager, savedContext);
-        }
-        else if (type.isAssignableFrom(DistributionQueueDispatchingStrategy.class)) {
-            return (ComponentType) new SingleQueueDispatchingStrategy();
-        }
-        else if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
-            return (ComponentType) transportAuthenticationProvider;
-        }
-        return null;
-    }
-
-    private void refresh() {
-        if (savedContext != null && savedConfig != null) {
-            if (componentReg == null) {
-                activate(savedContext, savedConfig);
-            }
-            else {
-                deactivate(savedContext);
-                activate(savedContext, savedConfig);
-            }
-        }
-    }
-
-    private void bindTransportAuthenticationProvider(TransportAuthenticationProvider transportAuthenticationProvider) {
-        this.transportAuthenticationProvider = transportAuthenticationProvider;
-        refresh();
-    }
-
-    private void unbindTransportAuthenticationProvider(TransportAuthenticationProvider transportAuthenticationProvider) {
-        this.transportAuthenticationProvider = null;
-        refresh();
     }
 }

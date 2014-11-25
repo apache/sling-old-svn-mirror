@@ -18,7 +18,9 @@
  */
 package org.apache.sling.distribution.resources.impl;
 
-import java.util.Map;
+import org.osgi.service.cm.ConfigurationAdmin;
+
+import java.util.*;
 
 public class OsgiUtils {
     /**
@@ -61,5 +63,76 @@ public class OsgiUtils {
 
     private static String safeString(Object obj) {
         return obj == null? "null" : obj.toString();
+    }
+
+
+    public static String getFilter(String configFactory, String propertyName, String propertyValue) {
+        if (propertyName!= null && propertyValue != null) {
+            return "(&(" + ConfigurationAdmin.SERVICE_FACTORYPID + "=" + OsgiUtils.escape(configFactory) + ")("
+                    + OsgiUtils.escape(propertyName) + "=" + OsgiUtils.escape(propertyValue) + "))";
+        } else if (configFactory != null) {
+            return "(" + ConfigurationAdmin.SERVICE_FACTORYPID + "=" + OsgiUtils.escape(configFactory) + ")";
+        }
+
+        return null;
+    }
+
+
+    public static <K, V> Map<K, V> fromDictionary(Dictionary<K, V> dictionary) {
+        if (dictionary == null) {
+            return null;
+        }
+        Map<K, V> map = new HashMap<K, V>(dictionary.size());
+        Enumeration<K> keys = dictionary.keys();
+        while (keys.hasMoreElements()) {
+            K key = keys.nextElement();
+            map.put(key, dictionary.get(key));
+        }
+        return map;
+    }
+
+    public static <K, V> Dictionary<K, V> toDictionary(Map<K, V> map) {
+        if (map == null) {
+            return null;
+        }
+        Dictionary<K, V> dictionary = new Hashtable<K, V>(map.size());
+        for (Map.Entry<K, V> entry : map.entrySet()) {
+            dictionary.put(entry.getKey(), entry.getValue());
+        }
+
+        return dictionary;
+    }
+
+    public static Map<String, Object> sanitize(Map<String, Object> map) {
+        Map<String, Object> result = new HashMap<String, Object>();
+        if (map == null) {
+            return result;
+        }
+
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            if (entry.getValue() == null) {
+                continue;
+            }
+
+            // skip jcr: stuff
+            if (entry.getKey().contains(":")) {
+                continue;
+            }
+
+            Class valueClass = entry.getValue().getClass();
+            if (valueClass.isArray()) {
+                valueClass = valueClass.getComponentType();
+            }
+
+            if (valueClass.isPrimitive()
+                    || valueClass.equals(String.class)
+                    || valueClass.equals(Boolean.class)
+                    || valueClass.equals(Integer.class)) {
+                result.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return result;
+
     }
 }

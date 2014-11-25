@@ -21,11 +21,13 @@ package org.apache.sling.distribution.it.triggers;
 
 
 import org.apache.sling.distribution.it.DistributionIntegrationTestBase;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
 import static org.apache.sling.distribution.it.DistributionUtils.triggerUrl;
 
+@Ignore
 public class DistributionTriggerResourcesTest extends DistributionIntegrationTestBase {
 
     @Test

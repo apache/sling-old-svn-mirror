@@ -177,14 +177,9 @@ public class OsgiConfigurationResourceProvider extends AbstractModifyingResource
     }
 
     String getFilter(String configName) {
-        if (configName != null) {
-            return "(&(" + ConfigurationAdmin.SERVICE_FACTORYPID + "=" + OsgiUtils.escape(configFactory) + ")("
-                    + friendlyNameProperty + "=" + OsgiUtils.escape(configName) + "))";
-        } else if (configFactory != null) {
-            return "(" + ConfigurationAdmin.SERVICE_FACTORYPID + "=" + OsgiUtils.escape(configFactory) + ")";
-        }
 
-        return null;
+        return OsgiUtils.getFilter(configFactory, friendlyNameProperty, configName);
+
     }
 
 
@@ -194,28 +189,11 @@ public class OsgiConfigurationResourceProvider extends AbstractModifyingResource
 
 
     private static <K, V> Map<K, V> fromDictionary(Dictionary<K, V> dictionary) {
-        if (dictionary == null) {
-            return null;
-        }
-        Map<K, V> map = new HashMap<K, V>(dictionary.size());
-        Enumeration<K> keys = dictionary.keys();
-        while (keys.hasMoreElements()) {
-            K key = keys.nextElement();
-            map.put(key, dictionary.get(key));
-        }
-        return map;
+        return OsgiUtils.fromDictionary(dictionary);
     }
 
     private static <K, V> Dictionary<K, V> toDictionary(Map<K, V> map) {
-        if (map == null) {
-            return null;
-        }
-        Dictionary<K, V> dictionary = new Hashtable<K, V>(map.size());
-        for (Map.Entry<K, V> entry : map.entrySet()) {
-            dictionary.put(entry.getKey(), entry.getValue());
-        }
-
-        return dictionary;
+        return OsgiUtils.toDictionary(map);
     }
 
     private Map<String, Object> filterBeforeSave(Map<String, Object> properties) {

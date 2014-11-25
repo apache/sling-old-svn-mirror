@@ -1,0 +1,13 @@
+{
+    "serviceName" : "distributionService",
+
+    "isPassive" : true,
+
+    "packageExporter":  {
+        "type": "local"
+    },
+
+    "packageImporter": {
+        "type" : "local"
+    }
+}

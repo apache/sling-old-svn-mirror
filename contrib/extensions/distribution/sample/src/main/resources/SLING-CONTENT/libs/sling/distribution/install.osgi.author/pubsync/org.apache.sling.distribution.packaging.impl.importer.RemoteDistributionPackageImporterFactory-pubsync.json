@@ -1,0 +1,19 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "pubsync/importer",
+    "parent.name": "pubsync",
+    "type": "remote",
+
+    "endpoints": [
+        "http://localhost:4503/libs/sling/distribution/services/importers/default",
+        "http://localhost:4504/libs/sling/distribution/services/importers/default",
+        "http://localhost:4505/libs/sling/distribution/services/importers/default"
+
+    ],
+
+    "endpoints.strategy": "All",
+
+
+    "packageBuilder.target" : "(name=vlt)",
+    "transportAuthenticationProvider.target" : "(name=publishAdmin)"
+}

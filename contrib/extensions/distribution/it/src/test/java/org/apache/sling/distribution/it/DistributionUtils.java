@@ -46,7 +46,7 @@ public class DistributionUtils {
     private static final String JSON_SELECTOR = ".json";
     private static final String DISTRIBUTION_ROOT_PATH = "/libs/sling/distribution";
 
-    private static String assertPostResourceWithParameters(SlingInstance slingInstance,
+    public static String assertPostResourceWithParameters(SlingInstance slingInstance,
                                                            int status, String path, String... parameters) throws IOException {
         Request request = slingInstance.getRequestBuilder().buildPostRequest(path);
 
@@ -81,11 +81,6 @@ public class DistributionUtils {
         ).assertStatus(status).getContent();
     }
 
-
-    public static void setAgentProperties(SlingInstance slingInstance, String agentName, String... properties) throws IOException {
-        assertPostResourceWithParameters(slingInstance, 200, agentConfigUrl(agentName),
-                properties);
-    }
 
 
     public static void assertResponseContains(SlingInstance slingInstance,
@@ -182,8 +177,12 @@ public class DistributionUtils {
         return agentUrl(agentName) + "/queue";
     }
 
-    public static String agentConfigUrl(String agentName) {
-        return DISTRIBUTION_ROOT_PATH + "/settings/agents/" + agentName;
+    public static String authorAgentConfigUrl(String agentName) {
+        return DISTRIBUTION_ROOT_PATH + "/settings.author/agents/" + agentName;
+    }
+
+    public static String publishAgentConfigUrl(String agentName) {
+        return DISTRIBUTION_ROOT_PATH + "/settings.publish/agents/" + agentName;
     }
 
 

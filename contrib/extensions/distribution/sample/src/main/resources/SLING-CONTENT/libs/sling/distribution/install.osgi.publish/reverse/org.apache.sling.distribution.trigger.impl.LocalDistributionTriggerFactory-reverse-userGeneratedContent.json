@@ -1,0 +1,11 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+
+    "name": "reverse/triggers/userGeneratedContent",
+    "parent.name": "reverse",
+
+    "type" : "jcrEvent",
+    "path" : "/content/usergenerated",
+    "servicename" : "distributionService"
+
+}

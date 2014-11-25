@@ -21,7 +21,6 @@ package org.apache.sling.distribution.trigger;
 import javax.annotation.Nonnull;
 
 import aQute.bnd.annotation.ConsumerType;
-import org.apache.sling.distribution.component.DistributionComponent;
 
 /**
  * A {@link DistributionTrigger} is responsible to trigger
@@ -31,7 +30,7 @@ import org.apache.sling.distribution.component.DistributionComponent;
  * {@link DistributionRequestHandler} can be registered into the same trigger.
  */
 @ConsumerType
-public interface DistributionTrigger extends DistributionComponent {
+public interface DistributionTrigger {
 
     /**
      * register a request handler to be triggered and returns a corresponding registration id

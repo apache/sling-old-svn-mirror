@@ -22,7 +22,6 @@ import javax.annotation.Nonnull;
 import java.util.List;
 
 import aQute.bnd.annotation.ConsumerType;
-import org.apache.sling.distribution.component.DistributionComponent;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 
 /**
@@ -34,7 +33,7 @@ import org.apache.sling.distribution.packaging.DistributionPackage;
  * (one for each queue) for a certain package.
  */
 @ConsumerType
-public interface DistributionQueueDispatchingStrategy extends DistributionComponent {
+public interface DistributionQueueDispatchingStrategy {
     String DEFAULT_QUEUE_NAME = "default";
 
     /**

@@ -21,13 +21,12 @@ package org.apache.sling.distribution.queue;
 import javax.annotation.Nonnull;
 
 import aQute.bnd.annotation.ConsumerType;
-import org.apache.sling.distribution.component.DistributionComponent;
 
 /**
  * A provider for {@link DistributionQueue}s
  */
 @ConsumerType
-public interface DistributionQueueProvider extends DistributionComponent {
+public interface DistributionQueueProvider {
 
     /**
      * provide a named queue for the given agent

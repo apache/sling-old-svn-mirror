@@ -1,0 +1,15 @@
+{
+    "serviceName" : "distributionService",
+
+    "packageExporter":  {
+        "type": "local"
+    },
+
+    "packageImporter": {
+        "type" : "remote",
+
+        "endpoints" : [
+            "http://localhost:4503/libs/sling/distribution/services/importers/default"
+        ]
+    }
+}
