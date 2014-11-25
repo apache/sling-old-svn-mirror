@@ -19,7 +19,6 @@
 package org.apache.sling.distribution.transport.authentication;
 
 import aQute.bnd.annotation.ConsumerType;
-import org.apache.sling.distribution.component.DistributionComponent;
 
 /**
  * A {@link org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider} is responsible for
@@ -29,7 +28,7 @@ import org.apache.sling.distribution.component.DistributionComponent;
  *
  */
 @ConsumerType
-public interface TransportAuthenticationProvider<A, T> extends DistributionComponent {
+public interface TransportAuthenticationProvider<A, T> {
 
     /**
      * Check if this provider is able to authenticate objects belonging to given 'authenticable' class.

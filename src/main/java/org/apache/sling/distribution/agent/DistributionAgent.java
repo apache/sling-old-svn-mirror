@@ -25,7 +25,6 @@ import aQute.bnd.annotation.ProviderType;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.communication.DistributionResponse;
-import org.apache.sling.distribution.component.DistributionComponent;
 import org.apache.sling.distribution.queue.DistributionQueue;
 
 /**
@@ -36,7 +35,7 @@ import org.apache.sling.distribution.queue.DistributionQueue;
  * other instances.
  */
 @ProviderType
-public interface DistributionAgent extends DistributionComponent {
+public interface DistributionAgent {
 
     /**
      * retrieves the names of the queues for this agent.
