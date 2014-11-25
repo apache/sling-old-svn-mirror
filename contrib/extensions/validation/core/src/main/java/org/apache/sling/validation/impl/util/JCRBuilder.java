@@ -109,9 +109,8 @@ public class JCRBuilder {
         Resource childrenResource = rootResource.getChild(Constants.CHILDREN);
         if (childrenResource != null) {
             for (Resource child : childrenResource.getChildren()) {
-                ChildResource childResource = new ChildResourceImpl(modelResource, child, validatorsMap);
+                ChildResource childResource = new ChildResourceImpl(modelResource, child, validatorsMap, buildChildren(modelResource, child, validatorsMap));
                 children.add(childResource);
-                children.addAll(buildChildren(modelResource, child, validatorsMap));
             }
         }
         return children;
