@@ -1,0 +1,22 @@
+{
+    "serviceName" : "distributionService",
+
+    "packageExporter":  {
+        "type": "remote",
+        "endpoints" : [
+            "http://localhost:4503/libs/sling/distribution/services/exporters/reverse"
+        ]
+    },
+
+    "packageImporter": {
+        "type" : "local"
+    },
+
+    "triggers" : {
+        "scheduled" : {
+            "type": "scheduledEvent",
+            "action": "pull",
+            "seconds": "30"
+        }
+    }
+}

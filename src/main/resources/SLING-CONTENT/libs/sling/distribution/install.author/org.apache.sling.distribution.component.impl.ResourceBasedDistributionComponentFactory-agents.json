@@ -3,6 +3,6 @@
     "name": "agents",
 
     "kind": "agent",
-    "path": "/libs/sling/distribution/jcrsettings/agents",
-    "defaults.path" : "/libs/sling/distribution/jcrsettings/defaults/agents/global"
+    "path": "/libs/sling/distribution/settings.author/agents",
+    "defaults.path" : "/libs/sling/distribution/settings.author/defaults/agents/global"
 }

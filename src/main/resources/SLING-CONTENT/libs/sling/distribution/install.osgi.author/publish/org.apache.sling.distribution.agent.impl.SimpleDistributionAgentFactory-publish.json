@@ -1,0 +1,15 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+
+    "name": "publish",
+
+    "enabled" : false,
+
+    "serviceName" : "distributionService",
+
+    "requestAuthorizationStrategy.target" : "(name=privilegeRead)",
+
+    "packageExporter.target": "(parent.name=publish)",
+
+    "packageImporter.target": "(parent.name=publish)"
+}

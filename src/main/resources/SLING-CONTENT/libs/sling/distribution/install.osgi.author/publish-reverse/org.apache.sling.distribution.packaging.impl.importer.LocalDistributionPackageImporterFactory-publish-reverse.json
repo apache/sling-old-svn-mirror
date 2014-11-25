@@ -1,10 +1,7 @@
 {
     "jcr:primaryType": "sling:OsgiConfig",
-    "name": "default",
-
-    "isResource" : true,
-
+    "name": "publish-reverse/importer",
+    "parent.name": "publish-reverse",
     "type": "local",
-
     "packageBuilder.target" : "(name=vlt)"
 }

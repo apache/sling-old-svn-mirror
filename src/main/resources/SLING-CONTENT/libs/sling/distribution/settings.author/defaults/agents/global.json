@@ -1,0 +1,53 @@
+{
+    "jcr:primaryType" : "nt:unstructured",
+
+    "kind" : "agent",
+    "type" : "simple",
+
+    "isResource" : "true",
+
+    "requestAuthorizationStrategy" : {
+        "kind" : "requestAuthorization",
+        "type" : "service",
+        "name" : "privilegeRead"
+    },
+
+    "packageExporter":  {
+        "kind" : "exporter",
+
+        "packageBuilder" : {
+            "kind" : "packager",
+            "type" : "service",
+            "name" : "vlt"
+        },
+
+        "transportAuthenticationProvider" : {
+            "kind" : "transportAuthenticator",
+            "type" : "service",
+            "name" : "publishAdmin"
+        }
+
+    },
+
+    "packageImporter": {
+        "kind" : "importer",
+
+        "packageBuilder" : {
+            "kind" : "packager",
+
+            "type" : "service",
+            "name" : "vlt"
+        },
+
+        "transportAuthenticationProvider" : {
+            "kind" : "transportAuthenticator",
+            "type" : "service",
+            "name" : "publishAdmin"
+        }
+    },
+
+    "triggers" : {
+      "kind" : "trigger",
+      "type" : "list"
+    }
+}

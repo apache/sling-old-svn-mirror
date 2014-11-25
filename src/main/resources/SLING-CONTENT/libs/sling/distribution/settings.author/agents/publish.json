@@ -8,12 +8,6 @@
     "packageImporter": {
         "type" : "remote",
 
-        "transportAuthenticationProvider" : {
-            "type" : "user",
-            "username" : "admin",
-            "password" : "admin"
-        },
-
         "endpoints" : [
             "http://localhost:4503/libs/sling/distribution/services/importers/default"
         ]

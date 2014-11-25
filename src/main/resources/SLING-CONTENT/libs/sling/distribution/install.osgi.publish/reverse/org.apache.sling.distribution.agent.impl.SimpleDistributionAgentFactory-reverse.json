@@ -1,0 +1,19 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+
+    "name": "reverse",
+
+    "enabled" : false,
+
+    "isPassive": true,
+
+    "serviceName" : "distributionService",
+
+    "requestAuthorizationStrategy.target" : "(name=privilegeRead)",
+
+    "packageExporter.target": "(parent.name=reverse)",
+
+    "packageImporter.target": "(parent.name=reverse)",
+
+    "triggers.target": "(parent.name=reverse)"
+}
