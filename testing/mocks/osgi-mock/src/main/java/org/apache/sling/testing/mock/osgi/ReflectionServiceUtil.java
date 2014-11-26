@@ -34,16 +34,12 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
 /**
  * Helper methods to inject dependencies and activate services via reflection.
  */
 final class ReflectionServiceUtil {
-
-    private static final Logger log = LoggerFactory.getLogger(ReflectionServiceUtil.class);
 
     private ReflectionServiceUtil() {
         // static methods only
@@ -261,7 +257,7 @@ final class ReflectionServiceUtil {
      * multiple references.
      * @param target Service instance
      * @param bundleContext Bundle context from which services are fetched to inject.
-     * @return true if all dependencies could be injected
+     * @return true if all dependencies could be injected, false if the service has no dependencies.
      */
     public static boolean injectServices(Object target, BundleContext bundleContext) {
 
@@ -273,17 +269,18 @@ final class ReflectionServiceUtil {
             throw new NoScrMetadataException(targetClass);
         }
         List<Reference> references = OsgiMetadataUtil.getReferences(targetClass, metadata);
+        if (references.isEmpty()) {
+            return false;
+        }
 
         // try to inject services
-        boolean allInjected = true;
         for (Reference reference : references) {
-            boolean injectSuccess = injectServiceReference(reference, target, bundleContext);
-            allInjected = allInjected && injectSuccess;
+            injectServiceReference(reference, target, bundleContext);
         }
-        return allInjected;
+        return true;
     }
 
-    private static boolean injectServiceReference(Reference reference, Object target, BundleContext bundleContext) {
+    private static void injectServiceReference(Reference reference, Object target, BundleContext bundleContext) {
         Class<?> targetClass = target.getClass();
 
         // get reference type
@@ -302,18 +299,14 @@ final class ReflectionServiceUtil {
             boolean isOptional = (reference.getCardinality() == ReferenceCardinality.OPTIONAL_UNARY || reference
                     .getCardinality() == ReferenceCardinality.OPTIONAL_MULTIPLE);
             if (!isOptional) {
-                log.warn("Unable to inject mandatory reference '{}' for class {}", reference.getName(),
-                        targetClass.getName());
+                throw new RuntimeException("Unable to inject mandatory reference '" + reference.getName() + "' for class " + targetClass.getName());
             }
-            return isOptional;
         }
 
         // multiple references found? check if reference is not multiple
         if (matchingServices.size() > 1
                 && (reference.getCardinality() == ReferenceCardinality.MANDATORY_UNARY || reference.getCardinality() == ReferenceCardinality.OPTIONAL_UNARY)) {
-            log.warn("Multiple matches found for unary reference '{}' for class {}", reference.getName(),
-                    targetClass.getName());
-            return false;
+            throw new RuntimeException("Multiple matches found for unary reference '" + reference.getName() + "' for class "+ targetClass.getName());
         }
 
         // try to invoke bind method
@@ -326,7 +319,7 @@ final class ReflectionServiceUtil {
                 for (ServiceInfo matchingService : matchingServices) {
                     invokeMethod(target, bindMethod, new Object[] { matchingService.getServiceReference() });
                 }
-                return true;
+                return;
             }
             
             // 2. assignable from service instance
@@ -341,7 +334,7 @@ final class ReflectionServiceUtil {
                 for (ServiceInfo matchingService : matchingServices) {
                     invokeMethod(target, bindMethod, new Object[] { matchingService.getServiceInstance() });
                 }
-                return true;
+                return;
             }
             
             // 3. assignable from service instance plus map
@@ -350,12 +343,12 @@ final class ReflectionServiceUtil {
                 for (ServiceInfo matchingService : matchingServices) {
                     invokeMethod(target, bindMethod, new Object[] { matchingService.getServiceInstance(), matchingService.getServiceConfig() });
                 }
-                return true;
+                return;
             }
         }
 
-        log.warn("Bind method not found for reference '{}' for class {}", reference.getName(), targetClass.getName());
-        return false;
+        throw new RuntimeException("Bind method with name " + bindMethodName + " not found "
+                + "for reference '" + reference.getName() + "' for class {}" +  targetClass.getName());
     }
 
     private static List<ServiceInfo> getMatchingServices(Class<?> type, BundleContext bundleContext) {

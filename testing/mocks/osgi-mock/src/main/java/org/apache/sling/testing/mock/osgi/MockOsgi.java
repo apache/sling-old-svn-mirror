@@ -108,7 +108,7 @@ public final class MockOsgi {
      * is thrown.
      * @param target Service instance
      * @param bundleContext Bundle context from which services are fetched to inject.
-     * @return true if all dependencies could be injected
+     * @return true if all dependencies could be injected, false if the service has no dependencies.
      */
     public static boolean injectServices(Object target, BundleContext bundleContext) {
         return ReflectionServiceUtil.injectServices(target, bundleContext);
