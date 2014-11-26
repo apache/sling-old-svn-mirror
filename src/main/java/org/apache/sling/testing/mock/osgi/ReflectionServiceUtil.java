@@ -146,8 +146,8 @@ final class ReflectionServiceUtil {
             return true;
         }
         
-        log.warn("Method {} not found in class {}", methodName, targetClass.getName());
-        return false;
+        throw new RuntimeException("No matching " + (activate ? "activation" : "deactivation") + " method with name '" + methodName + "' "
+                + " found in class " + targetClass.getName());
     }
 
     /**
@@ -165,6 +165,9 @@ final class ReflectionServiceUtil {
             throw new NoScrMetadataException(targetClass);
         }
         String methodName = OsgiMetadataUtil.getModifiedMethodName(targetClass, metadata);
+        if (StringUtils.isEmpty(methodName)) {
+            return false;
+        }
         
         // try to find matching modified method and execute it
         Method method = getMethod(targetClass, methodName, new Class<?>[] { Map.class });
@@ -173,8 +176,8 @@ final class ReflectionServiceUtil {
             return true;
         }
         
-        log.warn("Method {} not found in class {}", methodName, targetClass.getName());
-        return false;
+        throw new RuntimeException("No matching modified method with name '" + methodName + "' "
+                + " found in class " + targetClass.getName());
     }
 
     private static Method getMethod(Class clazz, String methodName, Class<?>[] types) {
