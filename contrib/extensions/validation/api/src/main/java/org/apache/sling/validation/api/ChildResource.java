@@ -30,13 +30,14 @@ public interface ChildResource {
 
     /**
      * Return this resource's name. This must match the name of the child resource which is validated through this section of the validation model.
+     * Either this method or {@link getNamePattern} must not return {@code null}
      *
      * @return the name (if one is set) or {@code null)
      */
     String getName();
     
     /**
-     * Return this resource's name pattern.
+     * Returns this resource's name pattern. Either this method or {@link getName} must not return {@code null}
      *
      * @return the name pattern (if one is set) or {@code null)
      */

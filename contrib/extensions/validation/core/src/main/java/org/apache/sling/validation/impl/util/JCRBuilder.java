@@ -59,6 +59,7 @@ public class JCRBuilder {
                 String fieldName = property.getName();
                 ValueMap propertyValueMap = property.adaptTo(ValueMap.class);
                 Boolean propertyMultiple = PropertiesUtil.toBoolean(propertyValueMap.get(Constants.PROPERTY_MULTIPLE), false);
+                String nameRegex = PropertiesUtil.toString(propertyValueMap.get(Constants.NAME_REGEX), null);
                 Resource validators = property.getChild(Constants.VALIDATORS);
                 List<ParameterizedValidator> parameterizedValidators = new ArrayList<ParameterizedValidator>();
                 if (validators != null) {
@@ -86,7 +87,7 @@ public class JCRBuilder {
                         parameterizedValidators.add(new ParameterizedValidatorImpl(v, new ValueMapDecorator(validatorArgumentsMap)));
                     }
                 }
-                ResourceProperty f = new ResourcePropertyImpl(fieldName, propertyMultiple, parameterizedValidators);
+                ResourceProperty f = new ResourcePropertyImpl(fieldName, nameRegex, propertyMultiple, parameterizedValidators);
                 properties.add(f);
             }
         }

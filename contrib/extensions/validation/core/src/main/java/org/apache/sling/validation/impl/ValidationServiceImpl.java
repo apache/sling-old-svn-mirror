@@ -240,21 +240,38 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
             throw new IllegalArgumentException("ValueMap may not be null");
         }
         for (ResourceProperty resourceProperty : resourceProperties) {
-            String property = resourceProperty.getName();
-            Object fieldValues = valueMap.get(property);
-            if (fieldValues == null) {
-                result.addFailureMessage(relativePath + property, "Missing required property.");
+            if (resourceProperty.getNamePattern() != null) {
+                boolean foundMatch = false;
+                for (String key : valueMap.keySet()) {
+                    if (resourceProperty.getNamePattern().matcher(key).matches()) {
+                        foundMatch = true;
+                        validateValueMap(key, valueMap, relativePath, resourceProperty, result);
+                    }
+                }
+                if (!foundMatch) {
+                    result.addFailureMessage(relativePath + resourceProperty.getNamePattern(), "Missing required property.");
+                }
+            } else {
+                validateValueMap(resourceProperty.getName(), valueMap, relativePath, resourceProperty, result);
+            }
+        }
+    }
+    
+    
+    private void validateValueMap(String property, ValueMap valueMap, String relativePath, ResourceProperty resourceProperty, ValidationResultImpl result) {
+        Object fieldValues = valueMap.get(property);
+        if (fieldValues == null) {
+            result.addFailureMessage(relativePath + property, "Missing required property.");
+            return;
+        }
+        List<ParameterizedValidator> validators = resourceProperty.getValidators();
+        if (resourceProperty.isMultiple()) {
+            if (!fieldValues.getClass().isArray()) {
+                result.addFailureMessage(relativePath + property, "Expected multiple-valued property.");
                 return;
             }
-            List<ParameterizedValidator> validators = resourceProperty.getValidators();
-            if (resourceProperty.isMultiple()) {
-                if (!fieldValues.getClass().isArray()) {
-                    result.addFailureMessage(relativePath + property, "Expected multiple-valued property.");
-                    return;
-                }
-            }
-            validatePropertyValue(result, property, relativePath, valueMap, validators);
         }
+        validatePropertyValue(result, property, relativePath, valueMap, validators);
     }
 
     /**
