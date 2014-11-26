@@ -22,8 +22,8 @@ import javax.annotation.Nonnull;
 
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
-import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.communication.DistributionRequest;
+import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.distribution.trigger.DistributionTriggerException;

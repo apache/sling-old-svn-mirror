@@ -22,8 +22,8 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.communication.DistributionRequest;
+import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageReadingException;
 import org.junit.Test;

@@ -24,7 +24,6 @@ import org.apache.sling.distribution.transport.authentication.TransportAuthentic
 import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
 import org.junit.Test;
 
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 /**

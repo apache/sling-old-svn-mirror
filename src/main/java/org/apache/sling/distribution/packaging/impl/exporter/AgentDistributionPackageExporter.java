@@ -21,10 +21,8 @@ package org.apache.sling.distribution.packaging.impl.exporter;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;

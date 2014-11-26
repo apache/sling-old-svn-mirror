@@ -23,8 +23,8 @@ import java.util.Arrays;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.distribution.agent.DistributionRequestAuthorizationStrategy;
-import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.communication.DistributionRequest;
+import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.communication.DistributionResponse;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.packaging.DistributionPackage;
@@ -42,7 +42,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
