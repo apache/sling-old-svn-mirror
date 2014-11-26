@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.agent;
+package org.apache.sling.distribution.agent.impl;
 
 import javax.annotation.Nonnull;
 

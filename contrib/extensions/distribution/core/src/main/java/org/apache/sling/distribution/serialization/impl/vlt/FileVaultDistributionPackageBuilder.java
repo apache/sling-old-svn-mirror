@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
@@ -100,7 +101,7 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
             Properties props = new Properties();
             String packageGroup = "sling/distribution";
             props.setProperty(VaultPackage.NAME_GROUP, packageGroup);
-            String packageName = String.valueOf(request.getTime());
+            String packageName = PACKAGING_TYPE + "_" + System.currentTimeMillis() + "_" +  UUID.randomUUID();
             props.setProperty(VaultPackage.NAME_NAME, packageName);
             props.setProperty(VaultPackage.NAME_VERSION, VERSION);
             inf.setProperties(props);

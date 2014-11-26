@@ -27,25 +27,14 @@ import java.util.Arrays;
  */
 public final class DistributionRequest {
 
-    private final long time;
 
     private final DistributionRequestType actionType;
 
     private final String[] paths;
 
     public DistributionRequest(@Nonnull DistributionRequestType actionType, @Nonnull String... paths) {
-        this.time = System.currentTimeMillis();
         this.actionType = actionType;
         this.paths = paths;
-    }
-
-    /**
-     * get the time this distribution request was created as a {@code long} returned by {@code System#currentTimeMillis}.
-     *
-     * @return the distribution request creation time as returned by {@code System#currentTimeMillis}
-     */
-    public long getTime() {
-        return time;
     }
 
     /**
@@ -69,7 +58,6 @@ public final class DistributionRequest {
     @Override
     public String toString() {
         return "DistributionRequest{" +
-                "time=" + time +
                 ", actionType=" + actionType +
                 ", paths=" + Arrays.toString(paths) +
                 '}';

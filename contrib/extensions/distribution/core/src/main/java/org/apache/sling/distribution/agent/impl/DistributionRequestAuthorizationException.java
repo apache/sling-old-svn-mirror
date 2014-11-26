@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.agent;
+package org.apache.sling.distribution.agent.impl;
 
 /**
  * An {@link Exception} representing failed authorization in execution of a certain {@link org.apache.sling.distribution.communication.DistributionRequest}

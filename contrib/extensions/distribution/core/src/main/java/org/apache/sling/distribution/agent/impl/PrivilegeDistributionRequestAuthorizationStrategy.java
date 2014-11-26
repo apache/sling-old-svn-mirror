@@ -24,9 +24,8 @@ import javax.jcr.Session;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.Privilege;
 
+import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.agent.DistributionRequestAuthorizationException;
-import org.apache.sling.distribution.agent.DistributionRequestAuthorizationStrategy;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.communication.DistributionRequestType;
 
@@ -79,11 +78,25 @@ public class PrivilegeDistributionRequestAuthorizationStrategy implements Distri
 
         Privilege[] privileges = new Privilege[] { acMgr.privilegeFromName(jcrPrivilege), acMgr.privilegeFromName(Privilege.JCR_REMOVE_NODE)  };
         for (String path : paths) {
-            if(session.nodeExists(path) && !acMgr.hasPrivileges(path, privileges)) {
+
+            String closestParentPath = getClosestParent(session, path);
+
+            if (closestParentPath == null || !acMgr.hasPrivileges(closestParentPath, privileges)) {
                 throw new DistributionRequestAuthorizationException("Not enough privileges");
             }
         }
+    }
 
+    private String getClosestParent(Session session, String path) throws RepositoryException {
+        do {
+            if (session.nodeExists(path)) {
+                return path;
+            }
+            path = Text.getRelativeParent(path, 1);
+        }
+        while (path != null && path.length() > 0);
+
+        return null;
     }
 
 
