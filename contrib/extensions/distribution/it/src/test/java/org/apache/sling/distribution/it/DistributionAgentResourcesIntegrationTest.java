@@ -23,7 +23,15 @@ import java.util.UUID;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import static org.apache.sling.distribution.it.DistributionUtils.*;
+import static org.apache.sling.distribution.it.DistributionUtils.agentRootUrl;
+import static org.apache.sling.distribution.it.DistributionUtils.agentUrl;
+import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
+import static org.apache.sling.distribution.it.DistributionUtils.assertNotExists;
+import static org.apache.sling.distribution.it.DistributionUtils.assertResponseContains;
+import static org.apache.sling.distribution.it.DistributionUtils.authorAgentConfigUrl;
+import static org.apache.sling.distribution.it.DistributionUtils.deleteNode;
+import static org.apache.sling.distribution.it.DistributionUtils.publishAgentConfigUrl;
+import static org.apache.sling.distribution.it.DistributionUtils.queueUrl;
 
 /**
  * Integration test for {@link org.apache.sling.distribution.agent.DistributionAgent} resources

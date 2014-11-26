@@ -18,9 +18,13 @@
  */
 package org.apache.sling.distribution.resources.impl;
 
-import org.osgi.service.cm.ConfigurationAdmin;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Map;
 
-import java.util.*;
+import org.osgi.service.cm.ConfigurationAdmin;
 
 public class OsgiUtils {
     /**

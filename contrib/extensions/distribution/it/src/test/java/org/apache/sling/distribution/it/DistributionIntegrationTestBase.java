@@ -18,14 +18,19 @@
  */
 package org.apache.sling.distribution.it;
 
+import java.io.IOException;
+
 import org.apache.sling.testing.tools.sling.SlingClient;
 import org.apache.sling.testing.tools.sling.SlingInstance;
 import org.apache.sling.testing.tools.sling.SlingInstanceManager;
 import org.junit.BeforeClass;
 
-import java.io.IOException;
-
-import static org.apache.sling.distribution.it.DistributionUtils.*;
+import static org.apache.sling.distribution.it.DistributionUtils.agentUrl;
+import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
+import static org.apache.sling.distribution.it.DistributionUtils.assertPostResourceWithParameters;
+import static org.apache.sling.distribution.it.DistributionUtils.authorAgentConfigUrl;
+import static org.apache.sling.distribution.it.DistributionUtils.exporterUrl;
+import static org.apache.sling.distribution.it.DistributionUtils.importerUrl;
 
 /**
  * Integration test base class for distribution

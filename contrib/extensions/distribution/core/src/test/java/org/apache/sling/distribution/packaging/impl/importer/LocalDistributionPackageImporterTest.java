@@ -24,7 +24,6 @@ import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.junit.Test;
 
-import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 
 /**
