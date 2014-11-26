@@ -28,14 +28,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.agent.DistributionAgentException;
-import org.apache.sling.distribution.agent.DistributionRequestAuthorizationStrategy;
+
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.communication.DistributionRequestState;
 import org.apache.sling.distribution.communication.DistributionResponse;
@@ -378,7 +377,9 @@ public class SimpleDistributionAgent implements DistributionAgent {
             } catch (PersistenceException e) {
                 log.error("cannot commit changes to resource resolver", e);
             }
-            resourceResolver.close();
+            finally {
+                resourceResolver.close();
+            }
         }
 
     }

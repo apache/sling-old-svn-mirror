@@ -101,7 +101,7 @@ public class DistributionTriggerServlet extends SlingAllMethodsServlet {
     private void writeEvent(PrintWriter writer, DistributionRequest distributionRequest) {
 
         // write the event type (make sure to include the double newline)
-        writer.write("id: " + distributionRequest.getTime() + "\n");
+        writer.write("id: " + System.currentTimeMillis() + "\n");
 
         // write the actual data
         // this could be simple text or could be JSON-encoded text that the
@@ -110,7 +110,6 @@ public class DistributionTriggerServlet extends SlingAllMethodsServlet {
 
         // flush the buffers to make sure the container sends the bytes
         writer.flush();
-        log.debug("SSE event {}: {} {}", new Object[]{distributionRequest.getTime(), distributionRequest.getRequestType(),
-                distributionRequest.getPaths()});
+        log.debug("SSE event {} {}", new Object[]{distributionRequest.getRequestType(), distributionRequest.getPaths()});
     }
 }

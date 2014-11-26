@@ -56,7 +56,6 @@ public class VoidDistributionPackage extends AbstractDistributionPackage impleme
         this.requestType = request.getRequestType();
         this.id = request.getRequestType().toString()
                 + ':' + Arrays.toString(request.getPaths()).replaceAll("\\[", "").replaceAll("\\]", "")
-                + ':' + request.getTime()
                 + ':' + type;
         this.getInfo().setPaths(paths);
         this.getInfo().setRequestType(requestType);
@@ -67,12 +66,11 @@ public class VoidDistributionPackage extends AbstractDistributionPackage impleme
 
         String[] parts = streamString.split(":");
 
-        if (parts.length < 4) return null;
+        if (parts.length < 3) return null;
 
         String actionString = parts[0];
         String pathsString = parts[1];
-        String timeString = parts[2];
-        String typeString = parts[3];
+        String typeString = parts[2];
 
         DistributionRequestType distributionRequestType = DistributionRequestType.fromName(actionString);
 

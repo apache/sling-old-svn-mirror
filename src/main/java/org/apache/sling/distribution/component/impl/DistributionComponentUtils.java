@@ -25,7 +25,7 @@ import java.util.Map;
 
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
-import org.apache.sling.distribution.agent.DistributionRequestAuthorizationStrategy;
+import org.apache.sling.distribution.agent.impl.DistributionRequestAuthorizationStrategy;
 import org.apache.sling.distribution.agent.impl.PrivilegeDistributionRequestAuthorizationStrategy;
 import org.apache.sling.distribution.agent.impl.SimpleDistributionAgentFactory;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
