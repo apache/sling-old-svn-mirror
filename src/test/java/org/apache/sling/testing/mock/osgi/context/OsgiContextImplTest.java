@@ -21,6 +21,7 @@ package org.apache.sling.testing.mock.osgi.context;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
+import static org.mockito.Mockito.mock;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,6 +30,8 @@ import java.util.Set;
 
 import org.apache.sling.testing.mock.osgi.NoScrMetadataException;
 import org.apache.sling.testing.mock.osgi.ReflectionServiceUtilTest;
+import org.apache.sling.testing.mock.osgi.ReflectionServiceUtilTest.ServiceInterface1;
+import org.apache.sling.testing.mock.osgi.ReflectionServiceUtilTest.ServiceInterface2;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -92,6 +95,13 @@ public class OsgiContextImplTest {
 
     @Test
     public void testRegisterInjectActivate() {
+        context.registerService(ServiceInterface1.class, mock(ServiceInterface1.class));
+        context.registerService(ServiceInterface2.class, mock(ServiceInterface2.class));
+        context.registerInjectActivateService(new ReflectionServiceUtilTest.Service3());
+    }
+
+    @Test(expected=RuntimeException.class)
+    public void testRegisterInjectActivate_RefrenceMissing() {
         context.registerInjectActivateService(new ReflectionServiceUtilTest.Service3());
     }
 
