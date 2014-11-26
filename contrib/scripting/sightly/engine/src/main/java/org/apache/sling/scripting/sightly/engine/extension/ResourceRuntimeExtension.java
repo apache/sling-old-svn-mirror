@@ -22,6 +22,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.script.Bindings;
 import javax.servlet.RequestDispatcher;
 
@@ -43,6 +44,7 @@ import org.apache.sling.scripting.sightly.api.RenderContext;
 import org.apache.sling.scripting.sightly.api.RuntimeExtension;
 import org.apache.sling.scripting.sightly.api.RuntimeExtensionComponent;
 import org.apache.sling.scripting.sightly.api.RuntimeExtensionException;
+import org.apache.sling.scripting.sightly.api.SightlyEngineException;
 import org.apache.sling.scripting.sightly.plugin.ResourcePlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -226,7 +228,7 @@ public class ResourceRuntimeExtension extends RuntimeExtensionComponent {
                         RequestDispatcher dispatcher = request.getRequestDispatcher(includeRes, opts);
                         dispatcher.include(request, customResponse);
                     } catch (Exception e) {
-                        LOG.error("Failed to include resource {}", script, e);
+                    	throw new SightlyEngineException("failed to include resource ".concat(script), e);
                     }
                 }
             }
