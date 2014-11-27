@@ -33,4 +33,5 @@ public final class Constants {
     public static final String VALIDATORS = "validators";
     public static final String VALIDATOR_ARGUMENTS = "validatorArguments";
     public static final String CHILDREN = "children";
+    public static final String NAME_REGEX = "name-regex";
 }

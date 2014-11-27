@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
 
 import javax.jcr.query.Query;
 
@@ -119,18 +120,50 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
         ValidationResultImpl result = new ValidationResultImpl();
 
         // validate direct properties of the resource
-        validateValueMap(resource.adaptTo(ValueMap.class), model.getResourceProperties(), result, "");
+        validateValueMap(resource.adaptTo(ValueMap.class), "", model.getResourceProperties(), result );
 
         // validate children resources, if any
-        for (ChildResource childResource : model.getChildren()) {
-            Resource expectedResource = resource.getChild(childResource.getName());
-            if (expectedResource != null) {
-                validateValueMap(expectedResource.adaptTo(ValueMap.class), childResource.getProperties(), result, childResource.getName() + "/");
-            } else {
-                result.addFailureMessage(childResource.getName(), "Missing required child resource.");
-            }
-        }
+        validateChildren(resource, "", model.getChildren(), result);
         return result;
+    }
+
+    /**
+     * Validates a child resource with the help of the given {@code ChildResource} entry from the validation model
+     * @param resource
+     * @param relativePath relativePath of the resource (must be empty or end with "/")
+     * @param result
+     * @param childResources
+     */
+    private void validateChildren(Resource resource, String relativePath, List<ChildResource> childResources, ValidationResultImpl result) {
+        // validate children resources, if any
+        for (ChildResource childResource : childResources) {
+            // if a pattern is set we validate all children matching that pattern
+            if (childResource.getNamePattern() != null) {
+                boolean foundMatch = false;
+                for (Resource child : resource.getChildren()) {
+                    Matcher matcher = childResource.getNamePattern().matcher(child.getName());
+                    if (matcher.matches()) {
+                       validateChildResource(child, relativePath, childResource, result);
+                       foundMatch = true;
+                    }
+                }
+                if (!foundMatch) {
+                    result.addFailureMessage(relativePath + childResource.getNamePattern().pattern(), "Missing required child resource.");
+                }
+            } else {
+                Resource expectedResource = resource.getChild(childResource.getName());
+                if (expectedResource != null) {
+                    validateChildResource(expectedResource, relativePath, childResource, result);
+                } else {
+                    result.addFailureMessage(relativePath + childResource.getName(), "Missing required child resource.");
+                }
+            } 
+        }
+    }
+    
+    private void validateChildResource(Resource resource, String relativePath, ChildResource childResource, ValidationResultImpl result) {
+        validateValueMap(resource.adaptTo(ValueMap.class), relativePath + resource.getName() + "/", childResource.getProperties(), result);
+        validateChildren(resource, relativePath + resource.getName() + "/", childResource.getChildren(), result);
     }
 
     @Override
@@ -139,7 +172,7 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
             throw new IllegalArgumentException("ValidationResult.validate - cannot accept null parameters");
         }
         ValidationResultImpl result = new ValidationResultImpl();
-        validateValueMap(valueMap, model.getResourceProperties(), result, "");
+        validateValueMap(valueMap,  "", model.getResourceProperties(), result);
         return result;
     }
 
@@ -202,27 +235,44 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
         }
     }
 
-    private void validateValueMap(ValueMap valueMap, Set<ResourceProperty> resourceProperties,
-                                            ValidationResultImpl result, String relativePathName) {
+    private void validateValueMap(ValueMap valueMap, String relativePath, Set<ResourceProperty> resourceProperties,
+            ValidationResultImpl result) {
         if (valueMap == null) {
             throw new IllegalArgumentException("ValueMap may not be null");
         }
         for (ResourceProperty resourceProperty : resourceProperties) {
-            String property = resourceProperty.getName();
-            Object fieldValues = valueMap.get(property);
-            if (fieldValues == null) {
-                result.addFailureMessage(relativePathName + property, "Missing required property.");
+            if (resourceProperty.getNamePattern() != null) {
+                boolean foundMatch = false;
+                for (String key : valueMap.keySet()) {
+                    if (resourceProperty.getNamePattern().matcher(key).matches()) {
+                        foundMatch = true;
+                        validateValueMap(key, valueMap, relativePath, resourceProperty, result);
+                    }
+                }
+                if (!foundMatch) {
+                    result.addFailureMessage(relativePath + resourceProperty.getNamePattern(), "Missing required property.");
+                }
+            } else {
+                validateValueMap(resourceProperty.getName(), valueMap, relativePath, resourceProperty, result);
+            }
+        }
+    }
+    
+    
+    private void validateValueMap(String property, ValueMap valueMap, String relativePath, ResourceProperty resourceProperty, ValidationResultImpl result) {
+        Object fieldValues = valueMap.get(property);
+        if (fieldValues == null) {
+            result.addFailureMessage(relativePath + property, "Missing required property.");
+            return;
+        }
+        List<ParameterizedValidator> validators = resourceProperty.getValidators();
+        if (resourceProperty.isMultiple()) {
+            if (!fieldValues.getClass().isArray()) {
+                result.addFailureMessage(relativePath + property, "Expected multiple-valued property.");
                 return;
             }
-            List<ParameterizedValidator> validators = resourceProperty.getValidators();
-            if (resourceProperty.isMultiple()) {
-                if (!fieldValues.getClass().isArray()) {
-                    result.addFailureMessage(relativePathName + property, "Expected multiple-valued property.");
-                    return;
-                }
-            }
-            validatePropertyValue(result, property, relativePathName, valueMap, validators);
         }
+        validatePropertyValue(result, property, relativePath, valueMap, validators);
     }
 
     /**

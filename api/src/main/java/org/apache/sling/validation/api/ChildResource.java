@@ -18,7 +18,9 @@
  */
 package org.apache.sling.validation.api;
 
+import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Defines the validation rules for a child resource, allowing {@link ValidationModel}s to be applied to {@link
@@ -27,11 +29,19 @@ import java.util.Set;
 public interface ChildResource {
 
     /**
-     * Return this resource's name.
+     * Return this resource's name. This must match the name of the child resource which is validated through this section of the validation model.
+     * Either this method or {@link getNamePattern} must not return {@code null}
      *
-     * @return the name
+     * @return the name (if one is set) or {@code null)
      */
     String getName();
+    
+    /**
+     * Returns this resource's name pattern. Either this method or {@link getName} must not return {@code null}
+     *
+     * @return the name pattern (if one is set) or {@code null)
+     */
+    Pattern getNamePattern();
 
     /**
      * Returns the properties this child resource is expected to have.
@@ -39,4 +49,10 @@ public interface ChildResource {
      * @return the properties set
      */
     Set<ResourceProperty> getProperties();
+    
+    /**
+     * Returns the child resources of this part of the Validation Model
+     * @return child resources. Never {@code null}.
+     */
+    List<ChildResource> getChildren();
 }
