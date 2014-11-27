@@ -23,6 +23,8 @@ package org.apache.sling.validation.api.exceptions;
  */
 public class SlingValidationException extends RuntimeException {
 
+    private static final long serialVersionUID = 3123210091593613191L;
+
     public SlingValidationException(String message) {
         super(message);
     }

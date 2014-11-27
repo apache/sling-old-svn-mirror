@@ -18,8 +18,6 @@
  */
 package org.apache.sling.validation.api;
 
-import java.util.Map;
-
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.validation.api.exceptions.SlingValidationException;
 
