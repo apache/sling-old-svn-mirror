@@ -20,7 +20,6 @@ package org.apache.sling.engine.impl.filter;
 
 import java.io.IOException;
 
-import javax.servlet.Filter;
 import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -35,7 +34,7 @@ import org.apache.sling.engine.impl.request.RequestData;
  */
 public class SlingComponentFilterChain extends AbstractSlingFilterChain {
 
-    public SlingComponentFilterChain(Filter[] filters) {
+    public SlingComponentFilterChain(FilterHandle[] filters) {
         super(filters);
     }
 
