@@ -113,12 +113,6 @@ public class SlingAuthenticator implements Authenticator,
     @Property(value = DEFAULT_IMPERSONATION_PARAMETER)
     public static final String PAR_IMPERSONATION_PAR_NAME = "auth.sudo.parameter";
 
-    /** The default new password parameter name */
-    private static final String DEFAULT_NEWPASSWORD_PARAMETER = "newpassword";
-
-    @Property(value = DEFAULT_NEWPASSWORD_PARAMETER)
-    public static final String PAR_NEWPASSWORD_PAR_NAME = "auth.newpassword.parameter";
-
     /** The default value for allowing anonymous access */
     private static final boolean DEFAULT_ANONYMOUS_ALLOWED = true;
 
@@ -180,6 +174,12 @@ public class SlingAuthenticator implements Authenticator,
      * return <code>true</code>.
      */
     private static final String DEFAULT_AUTH_URI_SUFFIX = "/j_security_check";
+    
+    /**
+     * The name of the form submission parameter providing the new password of
+     * the user (value is "j_newpassword").
+     */
+    private static final String PAR_NEW_PASSWORD = "j_newpassword";
 
     /**
      * The name of the configuration property used to set a (potentially
@@ -238,9 +238,6 @@ public class SlingAuthenticator implements Authenticator,
      * @see #getAnonymousCredentials()
      */
     private char[] anonPassword;
-
-    /** name of the new password parameter */
-    private String newPasswordParameterName;
 
     /** HTTP Basic authentication handler */
     private HttpBasicAuthenticationHandler httpBasicHandler;
@@ -358,8 +355,6 @@ public class SlingAuthenticator implements Authenticator,
             this.anonUser = null;
             this.anonPassword = null;
         }
-
-        this.newPasswordParameterName = OsgiUtil.toString(properties.get(PAR_NEWPASSWORD_PAR_NAME), "");
 
         authUriSuffices = OsgiUtil.toStringArray(properties.get(PAR_AUTH_URI_SUFFIX),
             new String[] { DEFAULT_AUTH_URI_SUFFIX });
@@ -1266,7 +1261,7 @@ public class SlingAuthenticator implements Authenticator,
      *            <code>newPassword</code> property is set.
      */
     private void handlePasswordChange(HttpServletRequest req, AuthenticationInfo authInfo) {
-        String newPassword = req.getParameter(this.newPasswordParameterName);
+        String newPassword = req.getParameter(PAR_NEW_PASSWORD );
         if (newPassword != null && newPassword.length() > 0) {
             authInfo.put("user.newpassword", newPassword);
         }
