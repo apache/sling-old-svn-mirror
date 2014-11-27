@@ -144,7 +144,7 @@ public class LocalDistributionTriggerFactory implements DistributionTrigger {
 
     @Activate
     public void activate(BundleContext bundleContext, Map<String, Object> config) {
-        String factory = PropertiesUtil.toString(config.get(DistributionComponentUtils.TYPE), null);
+        String factory = PropertiesUtil.toString(config.get(DistributionComponentUtils.PN_TYPE), null);
 
         if (TRIGGER_RESOURCE_EVENT.equals(factory)) {
             String path = PropertiesUtil.toString(config.get(TRIGGER_RESOURCE_EVENT_PROPERTY_PATH), null);

@@ -54,7 +54,7 @@ public class AgentDistributionPackageExporterFactory implements DistributionPack
      * name of this component.
      */
     @Property
-    public static final String NAME = DistributionComponentUtils.NAME;
+    public static final String NAME = DistributionComponentUtils.PN_NAME;
 
     @Property
     private static final String QUEUE_NAME = "queue";

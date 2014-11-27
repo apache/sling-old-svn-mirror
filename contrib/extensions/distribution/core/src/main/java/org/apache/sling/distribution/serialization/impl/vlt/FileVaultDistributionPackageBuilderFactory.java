@@ -54,7 +54,7 @@ public class FileVaultDistributionPackageBuilderFactory implements DistributionP
      * name of this component.
      */
     @Property
-    public static final String NAME = DistributionComponentUtils.NAME;
+    public static final String NAME = DistributionComponentUtils.PN_NAME;
 
     /**
      * import mode property for file vault package builder

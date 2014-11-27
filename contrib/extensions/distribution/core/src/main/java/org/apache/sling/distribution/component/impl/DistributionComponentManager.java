@@ -22,21 +22,25 @@ package org.apache.sling.distribution.component.impl;
 import javax.annotation.Nonnull;
 import java.util.Map;
 
+/**
+ * The component manager can create component trees out of a map description.
+ * Already existing services can be wire by name.
+ */
 public interface DistributionComponentManager {
 
     /**
      * Creates a component of a given type with the specified name. It also creates all the subcomponents defined as
      * sub-maps in the map of properties.
-     * @param type
+     * @param componentKind
      * @param componentName
      * @param properties
      */
-    void createComponent(@Nonnull Class type, @Nonnull String componentName, @Nonnull Map<String, Object> properties);
+    void createComponent(@Nonnull String componentKind, @Nonnull String componentName, @Nonnull Map<String, Object> properties);
 
     /**
      * Deletes the component and the associated subcomponents.
-     * @param type
+     * @param componentKind
      * @param componentName
      */
-    void deleteComponent(@Nonnull Class type, String componentName);
+    void deleteComponent(@Nonnull String componentKind, String componentName);
 }

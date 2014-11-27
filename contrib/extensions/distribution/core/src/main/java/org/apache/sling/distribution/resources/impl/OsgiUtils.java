@@ -26,6 +26,9 @@ import java.util.Map;
 
 import org.osgi.service.cm.ConfigurationAdmin;
 
+/**
+ * An utility class for manipulating maps of osgi properties
+ */
 public class OsgiUtils {
     /**
      * Encode the value for the ldap filter: \, *, (, and ) should be escaped.
@@ -37,6 +40,9 @@ public class OsgiUtils {
                 .replace(")", "\\)");
     }
 
+    /**
+     * Used to serialize a map for logging purposes
+     */
     public static String osgiPropertyMapToString(Map<String, Object> map) {
         String result = "";
         if (map == null) {
@@ -70,6 +76,9 @@ public class OsgiUtils {
     }
 
 
+    /**
+     * Create a filter for selecting configs of a certain factory
+     */
     public static String getFilter(String configFactory, String propertyName, String propertyValue) {
         if (propertyName!= null && propertyValue != null) {
             return "(&(" + ConfigurationAdmin.SERVICE_FACTORYPID + "=" + OsgiUtils.escape(configFactory) + ")("
@@ -82,6 +91,9 @@ public class OsgiUtils {
     }
 
 
+    /**
+     * Transform a Dictionary into a Map
+     */
     public static <K, V> Map<K, V> fromDictionary(Dictionary<K, V> dictionary) {
         if (dictionary == null) {
             return null;
@@ -95,6 +107,9 @@ public class OsgiUtils {
         return map;
     }
 
+    /**
+     * Transform a Map into a Dictionary
+     */
     public static <K, V> Dictionary<K, V> toDictionary(Map<K, V> map) {
         if (map == null) {
             return null;
@@ -107,6 +122,9 @@ public class OsgiUtils {
         return dictionary;
     }
 
+    /**
+     * Filter out object types that are not compatible with osgi configs
+     */
     public static Map<String, Object> sanitize(Map<String, Object> map) {
         Map<String, Object> result = new HashMap<String, Object>();
         if (map == null) {

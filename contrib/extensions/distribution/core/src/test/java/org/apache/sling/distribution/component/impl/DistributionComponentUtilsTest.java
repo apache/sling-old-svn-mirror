@@ -19,6 +19,7 @@
 package org.apache.sling.distribution.component.impl;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
@@ -34,7 +35,7 @@ public class DistributionComponentUtilsTest {
         Map<String, Object> settings = new HashMap<String, Object>();
 
         DistributionComponentUtils utils = new DistributionComponentUtils();
-        Map<String, Map<String, Object>> result = utils.transformToOsgi(settings);
+        List<Map<String, Object>> result = utils.transformToOsgi("agent", "publish", settings);
 
         assertEquals(0, result.size());
     }
@@ -42,63 +43,51 @@ public class DistributionComponentUtilsTest {
     @Test
     public void testFirstLevelTransform() {
         Map<String, Object> settings = new HashMap<String, Object>();
-        settings.put("kind", "agent");
-        settings.put("name", "publish");
         settings.put("type", "simple");
 
         settings.put("packageExporter", new HashMap<String, Object>());
 
         DistributionComponentUtils utils = new DistributionComponentUtils();
-        Map<String, Map<String, Object>> result = utils.transformToOsgi(settings);
+        List<Map<String, Object>> result = utils.transformToOsgi("agent", "publish", settings);
 
         assertEquals(1, result.size());
-        String resultKey = "agent|simple|publish";
-        assertTrue(result.containsKey(resultKey));
-        assertEquals(4, result.get(resultKey).size());
-        assertTrue(result.get(resultKey).containsKey("name"));
-        assertTrue(result.get(resultKey).containsKey("type"));
-        assertTrue(result.get(resultKey).containsKey("packageExporter.target"));
-        assertEquals("(parent.name=publish)", result.get(resultKey).get("packageExporter.target"));
+        assertEquals(6, result.get(0).size());
+        assertTrue(result.get(0).containsKey("name"));
+        assertTrue(result.get(0).containsKey("type"));
+        assertTrue(result.get(0).containsKey("packageExporter.target"));
+        assertEquals("(parent.ref.id=agent/publish)", result.get(0).get("packageExporter.target"));
     }
 
     @Test
     public void testTwoLevelTransform() {
         Map<String, Object> settings = new HashMap<String, Object>();
-        settings.put("kind", "agent");
-        settings.put("name", "publish");
         settings.put("type", "simple");
         settings.put("packageExporter", new HashMap<String, Object>());
         ((Map) settings.get("packageExporter")).put("kind", "exporter");
         ((Map) settings.get("packageExporter")).put("type", "remote");
 
         DistributionComponentUtils utils = new DistributionComponentUtils();
-        Map<String, Map<String, Object>> result = utils.transformToOsgi(settings);
+        List<Map<String, Object>> result = utils.transformToOsgi("agent", "publish", settings);
 
         assertEquals(2, result.size());
 
         {
-            String resultKey = "agent|simple|publish";
-            assertTrue(result.containsKey(resultKey));
-            assertEquals(4, result.get(resultKey).size());
-            assertTrue(result.get(resultKey).containsKey("kind"));
-            assertTrue(result.get(resultKey).containsKey("name"));
-            assertTrue(result.get(resultKey).containsKey("type"));
-            assertTrue(result.get(resultKey).containsKey("packageExporter.target"));
-            assertEquals("(parent.name=publish)", result.get(resultKey).get("packageExporter.target"));
+            assertEquals(6, result.get(1).size());
+            assertTrue(result.get(1).containsKey("kind"));
+            assertTrue(result.get(1).containsKey("name"));
+            assertTrue(result.get(1).containsKey("type"));
+            assertTrue(result.get(1).containsKey("packageExporter.target"));
+            assertEquals("(parent.ref.id=agent/publish)", result.get(1).get("packageExporter.target"));
         }
 
         {
-            String resultKey = "exporter|remote|publish/packageExporter";
-            assertTrue(result.containsKey(resultKey));
-            assertEquals(4, result.get(resultKey).size());
+            assertEquals(5, result.get(0).size());
         }
     }
 
     @Test
     public void testMultipleTargetTransform() {
         Map<String, Object> settings = new HashMap<String, Object>();
-        settings.put("kind", "agent");
-        settings.put("name", "publish");
         settings.put("type", "simple");
         settings.put("triggers", new HashMap<String, Object>());
         ((Map) settings.get("triggers")).put("type", "list");
@@ -117,17 +106,16 @@ public class DistributionComponentUtilsTest {
 
 
         DistributionComponentUtils utils = new DistributionComponentUtils();
-        Map<String, Map<String, Object>> result = utils.transformToOsgi(settings);
+        List<Map<String, Object>> result = utils.transformToOsgi("agent", "publish", settings);
 
         assertEquals(3, result.size());
         {
-            String resultKey = "agent|simple|publish";
-            assertTrue(result.containsKey(resultKey));
-            assertEquals(4, result.get(resultKey).size());
-            assertTrue(result.get(resultKey).containsKey("name"));
-            assertTrue(result.get(resultKey).containsKey("type"));
-            assertTrue(result.get(resultKey).containsKey("triggers.target"));
-            assertEquals("(parent.name=publish)", result.get(resultKey).get("triggers.target"));
+            String resultKey = "agent|simple|agent/publish";
+            assertEquals(6, result.get(2).size());
+            assertTrue(result.get(2).containsKey("name"));
+            assertTrue(result.get(2).containsKey("type"));
+            assertTrue(result.get(2).containsKey("triggers.target"));
+            assertEquals("(parent.ref.id=agent/publish)", result.get(2).get("triggers.target"));
         }
     }
 }

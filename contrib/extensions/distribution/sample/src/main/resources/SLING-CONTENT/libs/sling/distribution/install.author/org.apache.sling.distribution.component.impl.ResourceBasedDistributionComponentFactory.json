@@ -1,0 +1,4 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "path": "/libs/sling/distribution/settings.author"
+}

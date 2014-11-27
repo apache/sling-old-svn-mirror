@@ -77,6 +77,11 @@ public abstract class DistributionIntegrationTestBase {
             Thread.sleep(3000);
             assertExists(authorClient, agentUrl("publish-reverse"));
 
+            assertExists(publishClient, exporterUrl("reverse"));
+            assertExists(publishClient, exporterUrl("default"));
+            assertExists(publishClient, importerUrl("default"));
+
+
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

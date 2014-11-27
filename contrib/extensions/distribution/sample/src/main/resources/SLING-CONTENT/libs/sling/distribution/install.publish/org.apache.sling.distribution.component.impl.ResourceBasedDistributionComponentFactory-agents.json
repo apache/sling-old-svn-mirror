@@ -1,8 +1,0 @@
-{
-    "jcr:primaryType": "sling:OsgiConfig",
-    "name": "agents",
-
-    "kind": "agent",
-    "path": "/libs/sling/distribution/settings.publish/agents",
-    "defaults.path" : "/libs/sling/distribution/settings.publish/defaults/agents/global"
-}

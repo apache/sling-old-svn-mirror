@@ -47,7 +47,7 @@ public class PrivilegeDistributionRequestAuthorizationStrategyFactory implements
      * name of this component.
      */
     @Property
-    public static final String NAME = DistributionComponentUtils.NAME;
+    public static final String NAME = DistributionComponentUtils.PN_NAME;
 
     /**
      * privilege request authorization strategy jcr privilege property

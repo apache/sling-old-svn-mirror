@@ -46,7 +46,7 @@ public class UserCredentialsTransportAuthenticationProviderFactory implements
      * name of this component.
      */
     @Property
-    public static final String NAME = DistributionComponentUtils.NAME;
+    public static final String NAME = DistributionComponentUtils.PN_NAME;
 
     @Property
     public final static String USERNAME = "username";
