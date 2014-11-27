@@ -18,9 +18,11 @@
  */
 package org.apache.sling.distribution.component.impl;
 
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -28,8 +30,10 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
@@ -38,7 +42,6 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.distribution.agent.DistributionAgent;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
@@ -47,34 +50,53 @@ import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 /**
- * An resource based service factory for distribution components using a compact configuration, already existing OSGi services
- * for the components to be wired can be used as well as directly instantiated components (called by type name).
+ * An resource based service factory for distribution components using resource based configuration.
+ * A root path must be configured for listening on content changes.
+ * The changes to the resource settings will be checked periodically (30s) to avoid event bursts and concurrency issues.
  */
 @Component(metatype = true,
         label = "Sling Distribution - Resource Based Component Factory",
         description = "Resource configuration for Distribution Components Factory",
-        configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE
 )
-public class ResourceBasedDistributionComponentFactory {
+@Service(value = Runnable.class)
+@Properties({
+        @Property( name = "scheduler.period", longValue = 30),
+        @Property( name="scheduler.concurrent", boolValue=false)
 
-    private static final int MAX_LEVEL = 2;
+})
+public class ResourceBasedDistributionComponentFactory implements Runnable {
+
+    /**
+     * Max depth level to explore the content structure for settings
+     * (e.g. .../settings/agents/publish/level1/level2)
+     */
+    private static final int MAX_DEPTH_LEVEL = DistributionComponentUtils.MAX_DEPTH_LEVEL;
+
+    /**
+     * The name of the sub folder that contains defaults
+     * (e.g. .../settings/defaults/agents)
+     */
+    private static final String DEFAULTS_FOLDER = "defaults";
+
+    /**
+     * The name of the file that contains defaults
+     * (e.g. .../settings/defaults/agents/global)
+     */
+    private static final String DEFAULT_FILE = "global";
+
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(label = "Name")
-    public static final String NAME = "name";
 
-    @Property(label = "Kind")
-    public static final String KIND = "kind";
+    @Property(label = "Kind", cardinality = 10)
+    public static final String KIND_FOLDERS = "kind.folder.name";
 
     @Property(label = "Path")
-    public static final String PATH = "path";
-
-    @Property(label = "Defaults Path")
-    public static final String DEFAULTS_PATH = "defaults.path";
+    public static final String ROOT_PATH = "path";
 
 
     @Reference
@@ -84,17 +106,17 @@ public class ResourceBasedDistributionComponentFactory {
     @Reference
     ResourceResolverFactory resourceResolverFactory;
 
+    Map<String, Boolean> scheduledComponentsMap = new ConcurrentHashMap<String, Boolean>();
 
-    private Map<String, ServiceRegistration> componentRegistrations = new ConcurrentHashMap<String, ServiceRegistration>();
+
     private ServiceRegistration resourceListenerRegistration;
+
 
     private BundleContext savedContext;
     private Map<String, Object> savedConfig;
 
-    private String name;
-    private String kind;
-    private String path;
-    private String defaultsPath;
+    private Map<String, String> kindFolders;
+    private String rootPath;
 
     @Activate
     public void activate(BundleContext context, Map<String, Object> config) throws Exception {
@@ -103,30 +125,32 @@ public class ResourceBasedDistributionComponentFactory {
         savedContext = context;
         savedConfig = config;
 
-        // inject configuration
-        Dictionary<String, Object> componentListenerProperties = new Hashtable<String, Object>();
 
-        name = PropertiesUtil.toString(config.get(NAME), null);
-        kind = PropertiesUtil.toString(config.get(KIND), null);
-        path = PropertiesUtil.toString(config.get(PATH), null);
-        defaultsPath = PropertiesUtil.toString(config.get(DEFAULTS_PATH), null);
+        kindFolders = PropertiesUtil.toMap(config.get(KIND_FOLDERS), new String[]{"agent=agents",
+                "importer=importers",
+                "exporter=exporters"
 
-        componentListenerProperties.put(NAME, name);
-
-
-        Dictionary<String, Object> eventProperties = new Hashtable<String, Object>();
-        eventProperties.put(EventConstants.EVENT_TOPIC, new String[]{
-                SlingConstants.TOPIC_RESOURCE_ADDED,
-                SlingConstants.TOPIC_RESOURCE_CHANGED,
-                SlingConstants.TOPIC_RESOURCE_REMOVED
         });
+        rootPath = PropertiesUtil.toString(config.get(ROOT_PATH), null);
 
-        eventProperties.put(EventConstants.EVENT_FILTER, "(path=" + path + "/*)");
-        resourceListenerRegistration = context.registerService(EventHandler.class.getName(),
-                new ResourceChangeEventHandler() , eventProperties);
+        {
+            Dictionary<String, Object> eventProperties = new Hashtable<String, Object>();
+            eventProperties.put(EventConstants.EVENT_TOPIC, new String[]{
+                    SlingConstants.TOPIC_RESOURCE_ADDED,
+                    SlingConstants.TOPIC_RESOURCE_CHANGED,
+                    SlingConstants.TOPIC_RESOURCE_REMOVED
+            });
 
-        registerAll();
+            eventProperties.put(EventConstants.EVENT_FILTER, "(path=" + rootPath + "/*)");
+            resourceListenerRegistration = context.registerService(EventHandler.class.getName(),
+                    new ResourceChangeEventHandler() , eventProperties);
+
+        }
+
+        scheduleRefreshAll();
+
     }
+
 
     @Deactivate
     private void deactivate(BundleContext context) {
@@ -137,37 +161,109 @@ public class ResourceBasedDistributionComponentFactory {
             resourceListenerRegistration = null;
         }
 
+
+
         unregisterAll();
     }
 
-    private void refresh(String name) {
-        unregister(name);
-        register(name);
-    }
 
-
-    private void unregisterAll() {
-        for(String name : componentRegistrations.keySet()) {
-            unregister(name);
-        }
-    }
-
-    private void registerAll() {
+    private void scheduleRefreshAll() {
         ResourceResolver resourceResolver = null;
         try {
             resourceResolver = getResolver();
-            Resource resourceRoot = resourceResolver.getResource(path);
+            Resource resourceRoot = resourceResolver.getResource(rootPath);
+
 
             if (resourceRoot != null && !ResourceUtil.isNonExistingResource(resourceRoot)) {
-                for (Resource resource : resourceResolver.getChildren(resourceRoot)) {
-                    String name = resource.getName();
-                    register(name);
+                for (String folderName : kindFolders.values()) {
+                    Resource folderResource = resourceRoot.getChild(folderName);
+                    if (folderResource != null && !ResourceUtil.isNonExistingResource(folderResource)) {
+                        for (Resource resource : resourceResolver.getChildren(folderResource)) {
+                            scheduleRefresh(resource.getPath());
+                        }
+                    }
                 }
             }
         } catch (LoginException e) {
+            log.error("unable to register", e);
+        }
+        finally {
             if (resourceResolver != null) {
                 resourceResolver.close();
 
+            }
+        }
+    }
+
+    private void scheduleRefresh(String componentPath) {
+        scheduledComponentsMap.put(componentPath, true);
+    }
+
+
+
+    private void unregisterAll() {
+        ResourceResolver resourceResolver = null;
+        try {
+            resourceResolver = getResolver();
+            Resource resourceRoot = resourceResolver.getResource(rootPath);
+
+
+            if (resourceRoot != null && !ResourceUtil.isNonExistingResource(resourceRoot)) {
+                for (String folderName : kindFolders.values()) {
+                    Resource folderResource = resourceRoot.getChild(folderName);
+                    if (folderResource != null && !ResourceUtil.isNonExistingResource(folderResource)) {
+                        for (Resource resource : resourceResolver.getChildren(folderResource)) {
+                            unregister(resource.getPath());
+                        }
+                    }
+                }
+            }
+        } catch (LoginException e) {
+            log.error("unable to register", e);
+        }
+        finally {
+            if (resourceResolver != null) {
+                resourceResolver.close();
+
+            }
+        }
+    }
+
+    private void refreshAll() {
+        List<String> toBeRefreshed = getComponentsToRefresh();
+        if (toBeRefreshed != null && toBeRefreshed.size() > 0) {
+            refreshList(toBeRefreshed);
+        }
+    }
+
+    private List<String> getComponentsToRefresh() {
+        List<String> result = new ArrayList<String>();
+        result.addAll(scheduledComponentsMap.keySet());
+
+        scheduledComponentsMap.clear();
+        return result;
+    }
+
+    private void refreshList(List<String> resourcePaths) {
+        ResourceResolver resourceResolver = null;
+        try {
+            resourceResolver = getResolver();
+
+            for (String resourcePath : resourcePaths) {
+                log.info("Refresh started for {}", resourcePath);
+                unregister(resourcePath);
+                boolean registered = register(resourcePath);
+                log.info("Refresh finished {} for {}",  registered, resourcePath);
+
+                if (!registered) {
+                    scheduleRefresh(resourcePath);
+                }
+            }
+        } catch (LoginException e) {
+            log.error("Cannot obtain resource resolver", e);
+        } finally {
+            if (resourceResolver != null) {
+                resourceResolver.close();
             }
         }
     }
@@ -178,12 +274,21 @@ public class ResourceBasedDistributionComponentFactory {
         return resourceResolver;
     }
 
-    private void register(String name) {
+    private boolean register(String componentPath) {
         ResourceResolver resourceResolver = null;
         try {
             resourceResolver = getResolver();
-            Resource resource = resourceResolver.getResource(path + "/" + name);
+
+            Resource resource = resourceResolver.getResource(componentPath);
+
+            if (resource == null) {
+                return true;
+            }
+
+
             Map<String, Object> config = new HashMap<String, Object>();
+
+            String defaultsPath = getGlobalDefaultsPath(componentPath);
 
             if (defaultsPath != null) {
                 Resource defaultsResource = resourceResolver.getResource(defaultsPath);
@@ -194,35 +299,42 @@ public class ResourceBasedDistributionComponentFactory {
             Map<String, Object> componentConfig = extractMap(0, resource);
 
             putMap(0, componentConfig, config);
-            config.put(DistributionComponentUtils.NAME, name);
 
-            register(name, config);
-        } catch (LoginException e) {
+            String kind = getComponentKind(componentPath);
+            String name = getComponentName(componentPath);
+            componentManager.createComponent(kind, name,  config);
+
+        } catch (Throwable e) {
+            log.error("Cannot register {}", componentPath, e);
+            return false;
+        }
+        finally {
             if (resourceResolver != null) {
                 resourceResolver.close();
-
             }
         }
 
+        return true;
     }
 
-    private void register(String componentName, Map<String, Object> config) {
 
-        if ("agent".equals(kind)) {
-            componentManager.createComponent(DistributionAgent.class, componentName,  config);
+
+    private void unregister(String componentPath) {
+
+        try {
+
+            String kind = getComponentKind(componentPath);
+            String componentName = getComponentName(componentPath);
+            componentManager.deleteComponent(kind, componentName);
+
         }
-    }
-
-
-    private void unregister(String componentName) {
-
-        if ("agent".equals(kind)) {
-            componentManager.deleteComponent(DistributionAgent.class, componentName);
+        catch (Throwable e) {
+            log.error("Cannot unregister {}", componentPath, e);
         }
     }
 
     private Map<String, Object> extractMap(int level, Resource resource) {
-        if (level > MAX_LEVEL)
+        if (level > MAX_DEPTH_LEVEL)
             return null;
 
         Map<String, Object> result = new HashMap<String, Object>();
@@ -240,7 +352,7 @@ public class ResourceBasedDistributionComponentFactory {
     }
 
     private void putMap(int level, Map<String, Object> source, Map<String, Object> target) {
-        if (level > MAX_LEVEL)
+        if (level > MAX_DEPTH_LEVEL)
             return;
 
         for (Map.Entry<String, Object> entry : source.entrySet()) {
@@ -261,21 +373,81 @@ public class ResourceBasedDistributionComponentFactory {
 
     }
 
+    public void run() {
+        try {
+            refreshAll();
+        }
+        catch (Throwable e) {
+            log.error("Cannot refresh components", e);
+        }
+
+    }
 
     private class ResourceChangeEventHandler implements EventHandler {
 
         public void handleEvent(Event event) {
+
             String eventPath = (String) event.getProperty("path");
-            String prefix = path + "/";
-            if (eventPath != null && eventPath.startsWith(prefix)) {
-                String name = eventPath.substring(prefix.length());
-                int slashIndex = name.indexOf('/');
-                if (slashIndex >= 0) {
-                    name = name.substring(0, slashIndex);
-                }
-                refresh(name);
+
+            String componentPath = getComponentPath(eventPath);
+
+            if (componentPath != null) {
+                scheduleRefresh(componentPath);
             }
         }
+    }
+
+
+
+
+    Map<String, String> parsePath(String resourcePath)  {
+        Map<String, String> result = new HashMap<String, String>();
+        if (resourcePath.startsWith(rootPath +"/")) {
+            String relativePath = resourcePath.substring(rootPath.length() + 1);
+            for (Map.Entry<String, String> entry : kindFolders.entrySet()) {
+                String kind = entry.getKey();
+                String folderName = entry.getValue();
+
+                if (relativePath.startsWith(folderName +"/")) {
+                    String componentName = relativePath.substring(folderName.length() + 1);
+                    int idx = componentName.indexOf("/");
+                    if (idx >=0) {
+                        componentName = componentName.substring(0, idx);
+                    }
+
+                    result.put("componentPath", rootPath + "/" + folderName + "/" + componentName);
+                    result.put("componentKind", kind);
+                    result.put("componentName", componentName);
+                }
+            }
+        }
+        return result;
+    }
+
+
+    String getComponentPath(String path) {
+        Map<String, String> result = parsePath(path);
+        return result.get("componentPath");
+    }
+
+    String getGlobalDefaultsPath(String path) {
+        String kind = getComponentKind(path);
+        if (kind != null) {
+            String kindFolder = kindFolders.get(kind);
+            return rootPath + "/" + DEFAULTS_FOLDER + "/" + kindFolder + "/" + DEFAULT_FILE;
+        }
+        return null;
+
+    }
+
+    String getComponentKind(String path) {
+        Map<String, String> result = parsePath(path);
+        return result.get("componentKind");
+    }
+
+    String getComponentName(String path) {
+        Map<String, String> result = parsePath(path);
+        return result.get("componentName");
     }
 
 

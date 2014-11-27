@@ -19,6 +19,7 @@
 package org.apache.sling.distribution.component.impl;
 
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,89 +43,88 @@ import org.apache.sling.distribution.transport.authentication.impl.UserCredentia
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.distribution.trigger.impl.LocalDistributionTriggerFactory;
 
+/**
+ * Helper class that facilitates the transformation of "json" like properties into OSGI configs.
+ */
 public class DistributionComponentUtils {
-    public static final String DEFAULT_TARGET = "(name=)";
-    public static final String KIND = "kind";
-    public static final String TYPE = "type";
-    public static final String TARGET_DESCRIPTOR_SEPARATOR = "|";
-    public static final String NAME_SEPARATOR = "/";
+    public static final int MAX_DEPTH_LEVEL = 5;
 
+    /**
+     * Property representing component kind.
+     */
+    public static final String PN_KIND = "kind";
+
+    /**
+     * Property representing component type.
+     */
+    public static final String PN_TYPE = "type";
+
+    /**
+     * Property representing component name
+     */
+    public static final String PN_NAME = "name";
+
+    /**
+     * Special type value for binding to existing services by name.
+     * packager : { "type" : "service", "name": "vlt" }
+     * is transformed into
+     * packager.target = (name=vlt)
+     */
     public static final String TYPE_SERVICE = "service";
+
+    /**
+     * Special type value for binding to multiple subcomponents.
+     * triggers : { "type" : "list", "kind": "trigger", "trigger1": { .... }, "trigger2": {...} }
+     * is transformed into
+     * triggers.target = (parent.ref.id=myname)
+     */
     public static final String TYPE_LIST = "list";
 
-    public static final String NAME = "name";
-    public static final String PARENT_NAME = "parent.name";
 
-    public static final String OWNER_NAME = "owner.name";
+    private static final String DESCRIPTOR_SEPARATOR = "|";
+    private static final String NAME_SEPARATOR = "/";
 
-//    // kind|type=osgiFactory
-//    static String[] osgiConfigFactories = new String [] {
-//            "agent|simple=org.apache.sling.distribution.agent.impl.SimpleDistributionAgentFactory",
-//
-//            "exporter|local=org.apache.sling.distribution.packaging.impl.exporter.LocalDistributionPackageExporterFactory",
-//            "exporter|remote=org.apache.sling.distribution.packaging.impl.exporter.RemoteDistributionPackageExporterFactory",
-//            "exporter|agent=org.apache.sling.distribution.packaging.impl.exporter.AgentDistributionPackageExporterFactory",
-//
-//            "importer|local=org.apache.sling.distribution.packaging.impl.importer.LocalDistributionPackageImporterFactory",
-//            "importer|remote=org.apache.sling.distribution.packaging.impl.importer.RemoteDistributionPackageImporterFactory",
-//
-//            "packager|vlt=org.apache.sling.distribution.serialization.impl.vlt.FileVaultDistributionPackageBuilderFactory",
-//
-//            "requestAuthorization|privilege=org.apache.sling.distribution.agent.impl.PrivilegeDistributionRequestAuthorizationStrategy",
-//
-//            "transportAuthenticator|user=org.apache.sling.distribution.transport.authentication.impl.UserCredentialsTransportAuthenticationProviderFactory",
-//
-//            "trigger|resourceEvent=org.apache.sling.distribution.trigger.impl.LocalDistributionTriggerFactory",
-//            "trigger|scheduledEvent=org.apache.sling.distribution.trigger.impl.LocalDistributionTriggerFactory",
-//            "trigger|distributionEvent=org.apache.sling.distribution.trigger.impl.LocalDistributionTriggerFactory",
-//            "trigger|persistedJcrEvent=org.apache.sling.distribution.trigger.impl.LocalDistributionTriggerFactory",
-//
-//    };
-//
-//    // kind=osgiService
-//    static String[] osgiServices = new String [] {
-//            "agent=org.apache.sling.distribution.agent.DistributionAgent",
-//            "exporter=org.apache.sling.distribution.packaging.DistributionPackageExporter",
-//            "importer=org.apache.sling.distribution.packaging.DistributionPackageImporter",
-//            "packager=org.apache.sling.distribution.serialization.DistributionPackageBuilder",
-//            "requestAuthorization=org.apache.sling.distribution.agent.DistributionRequestAuthorizationStrategy",
-//            "transportAuthenticator=org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider",
-//            "trigger=org.apache.sling.distribution.trigger.DistributionTrigger",
-//
-//    };
+    // ID properties used to represent references in a tree
+    static final String PN_ID = "ref.id";
+    static final String PN_PARENT_ID = "parent.ref.id";
+    static final String PN_OWNER_ID = "owner.ref.id";
 
     static  {
         osgiConfigFactoryMap = new HashMap<String, String>();
         osgiServiceMap = new HashMap<String, String>();
 
-        addService("agent", DistributionAgent.class);
-        addService("exporter", DistributionPackageExporter.class);
-        addService("importer", DistributionPackageImporter.class);
-        addService("packager", DistributionPackageBuilder.class);
-        addService("requestAuthorization", DistributionRequestAuthorizationStrategy.class);
-        addService("transportAuthenticator", TransportAuthenticationProvider.class);
-        addService("trigger", DistributionTrigger.class);
+        // register "core" services
+        registerService("agent", DistributionAgent.class);
+        registerService("exporter", DistributionPackageExporter.class);
+        registerService("importer", DistributionPackageImporter.class);
+        registerService("packager", DistributionPackageBuilder.class);
+        registerService("requestAuthorization", DistributionRequestAuthorizationStrategy.class);
+        registerService("transportAuthenticator", TransportAuthenticationProvider.class);
+        registerService("trigger", DistributionTrigger.class);
 
 
-        addFactory("agent" ,"simple", SimpleDistributionAgentFactory.class);
+        // register "core" factoreis
+        registerFactory("agent", "simple", SimpleDistributionAgentFactory.class);
 
-        addFactory("exporter", "local", LocalDistributionPackageExporterFactory.class);
-        addFactory("exporter", "remote", RemoteDistributionPackageExporterFactory.class);
-        addFactory("exporter", "agent", AgentDistributionPackageExporterFactory.class);
+        registerFactory("exporter", "local", LocalDistributionPackageExporterFactory.class);
+        registerFactory("exporter", "remote", RemoteDistributionPackageExporterFactory.class);
+        registerFactory("exporter", "agent", AgentDistributionPackageExporterFactory.class);
 
-        addFactory("importer", "local", LocalDistributionPackageImporterFactory.class);
-        addFactory("importer", "remote", RemoteDistributionPackageImporterFactory.class);
+        registerFactory("importer", "local", LocalDistributionPackageImporterFactory.class);
+        registerFactory("importer", "remote", RemoteDistributionPackageImporterFactory.class);
 
-        addFactory("packager", "vlt", FileVaultDistributionPackageBuilderFactory.class);
+        registerFactory("packager", "vlt", FileVaultDistributionPackageBuilderFactory.class);
 
-        addFactory("requestAuthorization", "privilege", PrivilegeDistributionRequestAuthorizationStrategy.class);
+        registerFactory("requestAuthorization", "privilege", PrivilegeDistributionRequestAuthorizationStrategy.class);
 
-        addFactory("transportAuthenticator", "user", UserCredentialsTransportAuthenticationProviderFactory.class);
+        registerFactory("transportAuthenticator", "user", UserCredentialsTransportAuthenticationProviderFactory.class);
 
-        addFactory("trigger", "resourceEvent", LocalDistributionTriggerFactory.class);
-        addFactory("trigger", "scheduledEvent", LocalDistributionTriggerFactory.class);
-        addFactory("trigger", "distributionEvent", LocalDistributionTriggerFactory.class);
-        addFactory("trigger", "persistedJcrEvent", LocalDistributionTriggerFactory.class);
+        registerFactory("trigger", "resourceEvent", LocalDistributionTriggerFactory.class);
+        registerFactory("trigger", "scheduledEvent", LocalDistributionTriggerFactory.class);
+        registerFactory("trigger", "distributionEvent", LocalDistributionTriggerFactory.class);
+        registerFactory("trigger", "persistedJcrEvent", LocalDistributionTriggerFactory.class);
+
+        // TODO: allow external registration of factories
 
     }
 
@@ -139,23 +139,46 @@ public class DistributionComponentUtils {
     }
 
 
-    public Map<String, Map<String, Object>> transformToOsgi(Map<String, Object> settings) {
-        Map<String, Map<String, Object>> result = new HashMap<String, Map<String, Object>>();
+    /**
+     * Returns the list of osgi configs in topological order
+     * @param componentKind the kind of the component
+     * @param componentName the name of the component
+     * @param settings the map representation of the component dependencies
+     * @return a list of osgi configs maps
+     */
+    public List<Map<String,Object>> transformToOsgi(String componentKind, String componentName, Map<String,Object> settings) {
+        settings.put(PN_KIND, componentKind);
+        settings.put(PN_NAME, componentName);
+        settings.put(PN_ID, getComponentID(componentKind, componentName));
+        settings.put(PN_OWNER_ID, getComponentID(componentKind, componentName));
 
-        String kind = PropertiesUtil.toString(settings.get(KIND), null);
-        String type = PropertiesUtil.toString(settings.get(TYPE), null);
-        String name = PropertiesUtil.toString(settings.get(NAME), null);
+        return transformToOsgiInternal(settings, 0);
+    }
 
 
-        if (TYPE_LIST.equals(type)) {
-            name = PropertiesUtil.toString(settings.get(PARENT_NAME), null);
-        }
+    private List<Map<String, Object>> transformToOsgiInternal(Map<String, Object> settings, int level) {
 
-        if (name == null || type == null || kind == null) {
+        List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
+
+        if (level > MAX_DEPTH_LEVEL) {
             return result;
         }
 
-        if (!osgiServiceMap.containsKey(kind)) {
+        String kind = PropertiesUtil.toString(settings.get(PN_KIND), null);
+        String type = PropertiesUtil.toString(settings.get(PN_TYPE), null);
+        String id = PropertiesUtil.toString(settings.get(PN_ID), null);
+        String ownerId = PropertiesUtil.toString(settings.get(PN_OWNER_ID), null);
+
+
+        if (TYPE_LIST.equals(type)) {
+            id = PropertiesUtil.toString(settings.get(PN_PARENT_ID), null);
+        }
+
+        if (id == null || type == null || kind == null || ownerId == null) {
+            return result;
+        }
+
+        if (!isSupportedKind(kind)) {
             return result;
         }
 
@@ -166,25 +189,26 @@ public class DistributionComponentUtils {
 
             if (entry.getValue() instanceof Map) {
                 Map subComponentSettings = (Map) entry.getValue();
-                String subComponentType = PropertiesUtil.toString(subComponentSettings.get(TYPE), null);
+                String subComponentType = PropertiesUtil.toString(subComponentSettings.get(PN_TYPE), null);
 
                 if (TYPE_SERVICE.equals(subComponentType)) {
-                    String subComponentName = PropertiesUtil.toString(subComponentSettings.get(NAME), null);
+                    String subComponentName = PropertiesUtil.toString(subComponentSettings.get(PN_NAME), null);
 
-                    currentConfig.put(property + ".target", "(" + NAME + "=" + subComponentName + ")");
+                    currentConfig.put(property + ".target", "(" + PN_NAME + "=" + subComponentName + ")");
                 }
                 else {
-                    subComponentSettings.put(PARENT_NAME, name);
+                    subComponentSettings.put(PN_PARENT_ID, id);
+                    subComponentSettings.put(PN_OWNER_ID, ownerId);
 
                     if (TYPE_LIST.equals(type)) {
-                        subComponentSettings.put(KIND, kind);
+                        subComponentSettings.put(PN_KIND, kind);
                     }
 
-                    subComponentSettings.put(NAME, name + NAME_SEPARATOR + property);
-                    Map<String, Map<String, Object>> subcomponentConfigs = transformToOsgi(subComponentSettings);
+                    subComponentSettings.put(PN_ID, id + NAME_SEPARATOR + property);
+                    List<Map<String, Object>> subcomponentConfigs = transformToOsgiInternal(subComponentSettings, level + 1);
 
-                    currentConfig.put(property + ".target", "(" + PARENT_NAME + "=" + name + ")");
-                    result.putAll(subcomponentConfigs);
+                    currentConfig.put(property + ".target", "(" + PN_PARENT_ID + "=" + id + ")");
+                    result.addAll(subcomponentConfigs);
                 }
             }
             else {
@@ -193,41 +217,41 @@ public class DistributionComponentUtils {
         }
 
         if (!TYPE_LIST.equals(type)) {
-            result.put(kind + TARGET_DESCRIPTOR_SEPARATOR + type + TARGET_DESCRIPTOR_SEPARATOR + name, currentConfig);
+            result.add(currentConfig);
         }
 
         return result;
     }
 
 
-    public Map<String, Object> transformFromOsgi(List<Map<String, Object>> osgiConfigs) {
-        Map<String, Object> result = new HashMap<String, Object>();
-
-        return result;
-    }
-
-    public String  getFactoryPid(String resultKey) {
-        int index = resultKey.lastIndexOf(DistributionComponentUtils.TARGET_DESCRIPTOR_SEPARATOR);
-        String key = resultKey.substring(0, index);
+    public String  getFactoryPid(String kind, String type) {
+        String key = kind + DESCRIPTOR_SEPARATOR + type;
         return osgiConfigFactoryMap.get(key);
     }
 
-    public String getKind(Class type) {
-        for (Map.Entry<String, String> entry : osgiServiceMap.entrySet()) {
-            if (type.getName().equals(entry.getValue())) {
-                return entry.getKey();
-            }
-        }
+    public List<String> getAllFactoryPids() {
+        List<String> result = new ArrayList<String>();
 
-        return null;
+        result.addAll(osgiConfigFactoryMap.values());
+
+        return result;
     }
 
+    public boolean isSupportedKind(String kind) {
+        return osgiServiceMap.keySet().contains(kind);
+    }
 
-    private static void addService(String kind, Class serviceClass) {
+    private static void registerService(String kind, Class serviceClass) {
         osgiServiceMap.put(kind, serviceClass.getName());
     }
 
-    private static void addFactory(String kind, String type, Class factoryClass) {
-        osgiConfigFactoryMap.put(kind + TARGET_DESCRIPTOR_SEPARATOR + type, factoryClass.getName());
+    private static void registerFactory(String kind, String type, Class factoryClass) {
+        osgiConfigFactoryMap.put(kind + DESCRIPTOR_SEPARATOR + type, factoryClass.getName());
     }
+
+    public String getComponentID(String componentKind, String componentName) {
+        return componentKind + NAME_SEPARATOR + componentName;
+    }
+
+
 }

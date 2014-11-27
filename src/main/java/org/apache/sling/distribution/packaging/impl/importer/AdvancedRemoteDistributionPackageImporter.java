@@ -50,11 +50,7 @@ import org.slf4j.LoggerFactory;
  * Implementation of {@link org.apache.sling.distribution.packaging.DistributionPackageImporter} supporting multiple
  * endpoints and custom HTTP headers and body.
  */
-@Component(label = "Advanced Remote Distribution Package Importer",
-        configurationFactory = true,
-        specVersion = "1.1",
-        policy = ConfigurationPolicy.REQUIRE)
-@Service(value = DistributionPackageImporter.class)
+//FIXME: not yet used and should be cleaned up
 public class AdvancedRemoteDistributionPackageImporter implements DistributionPackageImporter {
 
 

@@ -22,9 +22,9 @@ package org.apache.sling.distribution.component.impl;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -38,6 +38,11 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * {@link DistributionComponentManager} implementation based on OSGI configs.
+ * For each tree of properties a set of OSGI configs is generated and registered in ConfigurationAdmin.
+ * To delete a component all configs owned by that component will be unregistered from ConfigurationAdmin.
+ */
 @Component
 @Service(DistributionComponentManager.class)
 public class DefaultDistributionComponentManager implements DistributionComponentManager {
@@ -50,66 +55,86 @@ public class DefaultDistributionComponentManager implements DistributionComponen
     @Reference
     ConfigurationAdmin configurationAdmin;
 
-    Map<String, List<String>> managedConfigPids = new ConcurrentHashMap<String, List<String>>();
-
     @Activate
     void activate() {
     }
 
-    public void createComponent(@Nonnull Class type, @Nonnull String componentName, @Nonnull Map<String, Object> properties) {
+    public void createComponent(@Nonnull String componentKind, @Nonnull String componentName, @Nonnull Map<String, Object> properties) {
 
-        String kind = componentUtils.getKind(type);
 
-        if (kind != null) {
-            properties.put(DistributionComponentUtils.KIND, kind);
-            Map<String, Map<String, Object>> osgiConfigs = componentUtils.transformToOsgi(properties);
+        if (componentUtils.isSupportedKind(componentKind)) {
+            String componentID = componentUtils.getComponentID(componentKind, componentName);
 
-            List<String> createdPids = new ArrayList<String>();
-            for(Map.Entry<String, Map<String, Object>> entry : osgiConfigs.entrySet()) {
-                String factoryPid = componentUtils.getFactoryPid(entry.getKey());
+
+            List<Map<String, Object>> osgiConfigs = componentUtils.transformToOsgi(componentKind, componentName, properties);
+
+            List<Configuration> createdConfigurations = new ArrayList<Configuration>();
+            for(Map<String, Object> osgiConfig : osgiConfigs) {
+                String kind = PropertiesUtil.toString(osgiConfig.get(DistributionComponentUtils.PN_KIND), null);
+                String type = PropertiesUtil.toString(osgiConfig.get(DistributionComponentUtils.PN_TYPE), null);
+
+                String factoryPid = componentUtils.getFactoryPid(kind, type);
                 if (factoryPid != null) {
-                    String configPid = createOsgiConfig(factoryPid, entry.getValue());
-                    createdPids.add(configPid);
+                    Configuration configuration = createOsgiConfig(factoryPid, osgiConfig);
+                    if (configuration != null) {
+                        createdConfigurations.add(configuration);
+                    }
+                    else {
+                        deleteOsgiConfigs(createdConfigurations);
+                        throw new RuntimeException("Cannot create all configurations");
+                    }
                 }
             }
 
-            String componentFullName = getComponentFullName(type, componentName);
-
-            managedConfigPids.put(componentFullName, createdPids);
+            log.info("Component created {}", componentID);
+        }
+        else {
+            throw new IllegalArgumentException("Unsupported kind " + componentKind);
         }
     }
 
 
 
-    private String createOsgiConfig(String factoryPid, Map<String, Object> properties) {
+    private Configuration createOsgiConfig(String factoryPid, Map<String, Object> properties) {
         try {
-            String configName = PropertiesUtil.toString(properties.get(DistributionComponentUtils.NAME), null);
-            Configuration[] configurations = getConfigurations(factoryPid, configName);
+            String componentId = PropertiesUtil.toString(properties.get(DistributionComponentUtils.PN_ID), null);
+            Configuration[] configurations = getOsgiConfigurations(factoryPid, componentId);
             Configuration configuration = null;
             if (configurations == null || configurations.length == 0) {
                 configuration = configurationAdmin.createFactoryConfiguration(factoryPid);
             }
             else {
                 configuration = configurations[0];
-
             }
 
             properties = OsgiUtils.sanitize(properties);
 
             configuration.update(OsgiUtils.toDictionary(properties));
 
-            return configuration.getPid();
+            return configuration;
         } catch (IOException e) {
-
+            log.error("Cannot create configuration with factory {}", factoryPid, e);
         }
 
         return null;
     }
 
 
-    Configuration[] getConfigurations(String factoryPid, String configName) {
+    private Configuration[] getOsgiConfigurations(String factoryPid, String componentID) {
         try {
-            String filter = OsgiUtils.getFilter(factoryPid, DistributionComponentUtils.NAME, configName);
+            String filter = OsgiUtils.getFilter(factoryPid, DistributionComponentUtils.PN_ID, componentID);
+
+            return configurationAdmin.listConfigurations(filter);
+        } catch (IOException e) {
+            return null;
+        } catch (InvalidSyntaxException e) {
+            return null;
+        }
+    }
+
+    private Configuration[] getOwnedConfigurations(String factoryPid, String ownerID) {
+        try {
+            String filter = OsgiUtils.getFilter(factoryPid, DistributionComponentUtils.PN_OWNER_ID, ownerID);
 
             return configurationAdmin.listConfigurations(filter);
         } catch (IOException e) {
@@ -120,27 +145,44 @@ public class DefaultDistributionComponentManager implements DistributionComponen
     }
 
 
-    public void deleteComponent(@Nonnull Class type, String componentName) {
-        String componentFullName = getComponentFullName(type, componentName);
-        if (managedConfigPids.containsKey(componentFullName)) {
-            List<String> createdPids = managedConfigPids.get(componentFullName);
 
-            for (String createdPid : createdPids) {
-                try {
-                    Configuration configuration = configurationAdmin.getConfiguration(createdPid);
-                    configuration.delete();
-                }
-                catch (IOException ex) {
-                    log.error("Cannot delete config {} for {}", new Object[] { createdPid, componentFullName, ex } );
+    private List<Configuration> getAllOwnedConfigurations(String componentFullName) {
+        List<Configuration> allConfigurations = new ArrayList<Configuration>();
+        List<String> factoryPids = componentUtils.getAllFactoryPids();
+        for (String factoryPid : factoryPids) {
+            Configuration[] configurations = getOwnedConfigurations(factoryPid, componentFullName);
 
-                }
+            if (configurations != null) {
+                allConfigurations.addAll(Arrays.asList(configurations));
+            }
 
+        }
+
+        return allConfigurations;
+    }
+
+
+    public void deleteComponent(@Nonnull String componentKind, String componentName) {
+        String componentID = componentUtils.getComponentID(componentKind, componentName);
+        List<Configuration> ownedConfigurations = getAllOwnedConfigurations(componentID);
+
+        deleteOsgiConfigs(ownedConfigurations);
+
+        log.info("Delete component {}", componentID);
+
+    }
+
+
+    private void deleteOsgiConfigs(List<Configuration> configurations) {
+        for (Configuration configuration : configurations) {
+            try {
+                configuration.delete();
+                log.info("Deleted configuration {}", configuration.getPid());
+            } catch (IOException e) {
+                log.error("Cannot delete configuration {}", configuration.getPid(), e);
             }
         }
     }
 
-    private String getComponentFullName(Class type, String componentName) {
-        String typeName = type.getSimpleName();
-        return typeName + DistributionComponentUtils.TARGET_DESCRIPTOR_SEPARATOR + componentName;
-    }
+
 }

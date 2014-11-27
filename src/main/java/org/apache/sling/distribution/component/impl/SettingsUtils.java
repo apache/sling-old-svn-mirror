@@ -25,6 +25,10 @@ import java.util.Map;
 
 import org.apache.sling.commons.osgi.PropertiesUtil;
 
+//TODO: Consider removing it
+/**
+ * Utility class that provides parsing from linear set of properties into a tree of properties
+ */
 public class SettingsUtils {
 
     private static final String COMPONENT_ROOT = "";
