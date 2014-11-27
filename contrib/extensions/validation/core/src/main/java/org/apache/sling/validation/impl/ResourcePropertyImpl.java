@@ -19,6 +19,7 @@
 package org.apache.sling.validation.impl;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.sling.validation.api.ParameterizedValidator;
 import org.apache.sling.validation.api.ResourceProperty;
@@ -28,13 +29,16 @@ public class ResourcePropertyImpl implements ResourceProperty {
     private String name;
     private boolean isMultiple;
     private List<ParameterizedValidator> validators;
-
-    public ResourcePropertyImpl(String name, List<ParameterizedValidator> validators) {
-        this(name, false, validators);
-    }
-
-    public ResourcePropertyImpl(String name, boolean isMultiple, List<ParameterizedValidator> validators) {
-        this.name = name;
+    private Pattern namePattern;
+    
+    public ResourcePropertyImpl(String name, String nameRegex, boolean isMultiple, List<ParameterizedValidator> validators) {
+        if (nameRegex != null) {
+            this.name = null;
+            this.namePattern = Pattern.compile(nameRegex);
+        } else {
+            this.name = name;
+            this.namePattern = null;
+        }
         this.isMultiple = isMultiple;
         this.validators = validators;
     }
@@ -42,6 +46,11 @@ public class ResourcePropertyImpl implements ResourceProperty {
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public Pattern getNamePattern() {
+        return namePattern;
     }
 
     @Override
@@ -53,4 +62,6 @@ public class ResourcePropertyImpl implements ResourceProperty {
     public List<ParameterizedValidator> getValidators() {
         return validators;
     }
+
+    
 }
