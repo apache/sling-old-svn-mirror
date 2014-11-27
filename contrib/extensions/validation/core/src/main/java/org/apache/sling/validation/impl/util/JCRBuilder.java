@@ -59,6 +59,7 @@ public class JCRBuilder {
                 String fieldName = property.getName();
                 ValueMap propertyValueMap = property.adaptTo(ValueMap.class);
                 Boolean propertyMultiple = PropertiesUtil.toBoolean(propertyValueMap.get(Constants.PROPERTY_MULTIPLE), false);
+                String nameRegex = PropertiesUtil.toString(propertyValueMap.get(Constants.NAME_REGEX), null);
                 Resource validators = property.getChild(Constants.VALIDATORS);
                 List<ParameterizedValidator> parameterizedValidators = new ArrayList<ParameterizedValidator>();
                 if (validators != null) {
@@ -86,7 +87,7 @@ public class JCRBuilder {
                         parameterizedValidators.add(new ParameterizedValidatorImpl(v, new ValueMapDecorator(validatorArgumentsMap)));
                     }
                 }
-                ResourceProperty f = new ResourcePropertyImpl(fieldName, propertyMultiple, parameterizedValidators);
+                ResourceProperty f = new ResourcePropertyImpl(fieldName, nameRegex, propertyMultiple, parameterizedValidators);
                 properties.add(f);
             }
         }
@@ -109,9 +110,8 @@ public class JCRBuilder {
         Resource childrenResource = rootResource.getChild(Constants.CHILDREN);
         if (childrenResource != null) {
             for (Resource child : childrenResource.getChildren()) {
-                ChildResource childResource = new ChildResourceImpl(modelResource, child, validatorsMap);
+                ChildResource childResource = new ChildResourceImpl(modelResource, child, validatorsMap, buildChildren(modelResource, child, validatorsMap));
                 children.add(childResource);
-                children.addAll(buildChildren(modelResource, child, validatorsMap));
             }
         }
         return children;
