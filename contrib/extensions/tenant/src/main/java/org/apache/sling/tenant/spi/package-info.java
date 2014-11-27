@@ -16,8 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-@Version("1.0")
+@Version("1.1")
 package org.apache.sling.tenant.spi;
 
 import aQute.bnd.annotation.Version;

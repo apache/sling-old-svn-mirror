@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -38,6 +39,7 @@ import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
@@ -53,6 +55,7 @@ import org.apache.sling.tenant.TenantManager;
 import org.apache.sling.tenant.TenantProvider;
 import org.apache.sling.tenant.internal.console.WebConsolePlugin;
 import org.apache.sling.tenant.spi.TenantCustomizer;
+import org.apache.sling.tenant.spi.TenantEventListener;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
@@ -73,11 +76,18 @@ import org.slf4j.LoggerFactory;
 @Properties(value = {
     @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling Tenant Provider")
 })
-@Reference(
+@References(value = {
+    @Reference(
         name = "tenantSetup",
         referenceInterface = TenantCustomizer.class,
         cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
+        policy = ReferencePolicy.DYNAMIC),
+    @Reference(
+        name = "tenantListener",
+        referenceInterface = TenantEventListener.class,
+        cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
         policy = ReferencePolicy.DYNAMIC)
+})
 public class TenantProviderImpl implements TenantProvider, TenantManager {
 
     /** default log */
@@ -94,6 +104,9 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
     private static final String[] DEFAULT_PATH_MATCHER = {};
 
     private SortedMap<Comparable<Object>, TenantCustomizer> registeredTenantHandlers = new TreeMap<Comparable<Object>, TenantCustomizer>(
+        Collections.reverseOrder());
+
+    private SortedMap<Comparable<Object>, TenantEventListener> registeredTenantListeners = new TreeMap<Comparable<Object>, TenantEventListener>(
         Collections.reverseOrder());
 
     @Property(
@@ -142,8 +155,22 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
         registeredTenantHandlers.remove(ServiceUtil.getComparableForServiceRanking(config));
     }
 
+    @SuppressWarnings("unused")
+    private synchronized void bindTenantListener(TenantEventListener tenantListener, Map<String, Object> config) {
+        registeredTenantListeners.put(ServiceUtil.getComparableForServiceRanking(config), tenantListener);
+    }
+
+    @SuppressWarnings("unused")
+    private synchronized void unbindTenantListener(TenantEventListener tenantListener, Map<String, Object> config) {
+        registeredTenantListeners.remove(ServiceUtil.getComparableForServiceRanking(config));
+    }
+
     private synchronized Collection<TenantCustomizer> getTenantHandlers() {
         return registeredTenantHandlers.values();
+    }
+
+    private synchronized Collection<TenantEventListener> getTenantListeners() {
+        return registeredTenantListeners.values();
     }
 
     public Tenant getTenant(final String tenantId) {
@@ -216,6 +243,15 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                     // resource
                     tenant.loadProperties(tenantRes);
 
+                    // call tenant event listeners
+                    for (TenantEventListener tenantListener : getTenantListeners()) {
+                        try {
+                            tenantListener.created(tenantId);
+                        } catch (Exception e) {
+                            log.info("create: Unexpected problem calling TenantEventListener " + tenantListener, e);
+                        }
+                    }
+
                     return tenant;
 
                 } catch (PersistenceException e) {
@@ -236,6 +272,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                 try {
                     Resource tenantRes = getTenantResource(resolver, tenant.getId());
                     if (tenantRes != null) {
+                        final String tenantId = tenant.getId();
                         // call tenant setup handler
                         for (TenantCustomizer ts : getTenantHandlers()) {
                             try {
@@ -247,6 +284,15 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
 
                         resolver.delete(tenantRes);
                         resolver.commit();
+
+                        // call tenant event listeners
+                        for (TenantEventListener tl : getTenantListeners()) {
+                            try {
+                                tl.removed(tenantId);
+                            } catch (Exception e) {
+                                log.info("removeTenant: Unexpected problem calling TenantEventListener " + tl, e);
+                            }
+                        }
                     }
                 } catch (PersistenceException e) {
                     log.error("remove({}): Cannot persist Tenant removal", tenant.getId(), e);
@@ -266,10 +312,11 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                     properties.remove(name);
                 }
             }
-        });
+        }, false, name);
     }
 
     public void setProperties(final Tenant tenant, final Map<String, Object> properties) {
+        final Set<String> featureNames = properties.keySet();
         updateProperties(tenant, new PropertiesUpdater() {
             public void update(ModifiableValueMap vm) {
                 for (Entry<String, Object> entry : properties.entrySet()) {
@@ -280,7 +327,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                     }
                 }
             }
-        });
+        }, false, featureNames.toArray(new String[featureNames.size()]));
     }
 
     public void removeProperties(final Tenant tenant, final String... propertyNames) {
@@ -290,7 +337,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                     properties.remove(name);
                 }
             }
-        });
+        }, true, propertyNames);
     }
 
     @SuppressWarnings("serial")
@@ -374,11 +421,13 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
         return result;
     }
 
-    private void updateProperties(final Tenant tenant, final PropertiesUpdater updater) {
+    private void updateProperties(final Tenant tenant, final PropertiesUpdater updater,
+                                  final boolean remove, final String ... propertyName) {
         call(new ResourceResolverTask<Void>() {
             public Void call(ResourceResolver resolver) {
                 try {
-                    Resource tenantRes = getTenantResource(resolver, tenant.getId());
+                    final String tenantId = tenant.getId();
+                    Resource tenantRes = getTenantResource(resolver, tenantId);
                     if (tenantRes != null) {
                         updater.update(tenantRes.adaptTo(ModifiableValueMap.class));
 
@@ -392,6 +441,19 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
 
                         if (tenant instanceof TenantImpl) {
                             ((TenantImpl) tenant).loadProperties(tenantRes);
+                        }
+
+                        // call tenant event listeners
+                        for (TenantEventListener tenantListener : getTenantListeners()) {
+                            try {
+                                if (remove) {
+                                    tenantListener.removedProperties(tenantId, propertyName);
+                                } else {
+                                    tenantListener.setProperties(tenantId, propertyName);
+                                }
+                            } catch (Exception e) {
+                                log.info("updateProperties: Unexpected problem calling TenantEventListener " + tenantListener, e);
+                            }
                         }
                     }
                 } catch (PersistenceException pe) {
