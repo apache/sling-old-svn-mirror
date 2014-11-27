@@ -27,7 +27,6 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.security.AccessControlException;
 
-import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
@@ -49,6 +48,7 @@ import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
 import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.engine.impl.filter.AbstractSlingFilterChain;
+import org.apache.sling.engine.impl.filter.FilterHandle;
 import org.apache.sling.engine.impl.filter.RequestSlingFilterChain;
 import org.apache.sling.engine.impl.filter.ServletFilterManager;
 import org.apache.sling.engine.impl.filter.ServletFilterManager.FilterChainType;
@@ -140,7 +140,7 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
             Resource resource = requestData.initResource(resourceResolver);
             requestData.initServlet(resource, sr);
 
-            Filter[] filters = filterManager.getFilters(FilterChainType.REQUEST);
+            FilterHandle[] filters = filterManager.getFilters(FilterChainType.REQUEST);
             if (filters != null) {
                 FilterChain processor = new RequestSlingFilterChain(this,
                     filters);
@@ -273,7 +273,7 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
             final FilterChainType filterChainType) throws IOException,
             ServletException {
 
-        Filter filters[] = filterManager.getFilters(filterChainType);
+        FilterHandle filters[] = filterManager.getFilters(filterChainType);
         if (filters != null) {
 
             FilterChain processor = new SlingComponentFilterChain(filters);
@@ -335,7 +335,7 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
         // the response output stream if reset does not reset this
         response = new ErrorResponseWrapper(response);
 
-        Filter[] filters = filterManager.getFilters(FilterChainType.ERROR);
+        FilterHandle[] filters = filterManager.getFilters(FilterChainType.ERROR);
         if (filters != null && filters.length > 0) {
             FilterChain processor = new AbstractSlingFilterChain(filters) {
 
@@ -367,7 +367,7 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
         // the response output stream if reset does not reset this
         response = new ErrorResponseWrapper(response);
 
-        Filter[] filters = filterManager.getFilters(FilterChainType.ERROR);
+        FilterHandle[] filters = filterManager.getFilters(FilterChainType.ERROR);
         if (filters != null && filters.length > 0) {
             FilterChain processor = new AbstractSlingFilterChain(filters) {
 

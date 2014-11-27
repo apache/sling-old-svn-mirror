@@ -119,7 +119,7 @@ public class ServletFilterManager extends ServiceTracker {
         return filterChains[chain.ordinal()];
     }
 
-    public Filter[] getFilters(final FilterChainType chain) {
+    public FilterHandle[] getFilters(final FilterChainType chain) {
         return getFilterChain(chain).getFilters();
     }
 

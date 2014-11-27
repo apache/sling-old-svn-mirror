@@ -22,9 +22,9 @@ import java.io.PrintWriter;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
+import org.apache.sling.engine.impl.filter.FilterHandle;
 import org.apache.sling.engine.impl.filter.ServletFilterManager;
 import org.apache.sling.engine.impl.filter.ServletFilterManager.FilterChainType;
-import org.apache.sling.engine.impl.filter.SlingFilterChainHelper;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -79,19 +79,14 @@ public class WebConsoleConfigPrinter {
     /**
      * Helper method for printing out a filter chain.
      */
-    private void printFilterChain(final PrintWriter pw, final SlingFilterChainHelper.FilterListEntry[] entries) {
+    private void printFilterChain(final PrintWriter pw, final FilterHandle[] entries) {
         if ( entries == null ) {
             pw.println("---");
         } else {
-            for(final SlingFilterChainHelper.FilterListEntry entry : entries) {
-                pw.print(entry.getOrder());
-                pw.print(" : ");
-                pw.print(entry.getFilter().getClass());
-                pw.print(" (id: ");
-                pw.print(entry.getFilterId());
-                pw.print(", property: ");
-                pw.print(entry.getOrderSource());
-                pw.println(")");
+            for(final FilterHandle entry : entries) {
+                pw.printf("%d : %s (id: %d, property: %s); called: %d; time: %dms; time/call: %dµs%n",
+                    entry.getOrder(), entry.getFilter().getClass(), entry.getFilterId(), entry.getOrderSource(),
+                    entry.getCalls(), entry.getTime(), entry.getTimePerCall());
             }
         }
     }
@@ -106,7 +101,7 @@ public class WebConsoleConfigPrinter {
             pw.println();
             pw.println(type + " Filters:");
             printFilterChain(pw,
-                filterManager.getFilterChain(type).getFilterListEntries());
+                filterManager.getFilterChain(type).getFilters());
         }
     }
 }

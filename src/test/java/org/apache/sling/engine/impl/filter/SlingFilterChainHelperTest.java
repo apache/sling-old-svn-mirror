@@ -42,7 +42,7 @@ public class SlingFilterChainHelperTest {
         chain.addFilter(context.mock(Filter.class, "D"), 4L, -1000, "4:-1000");
         chain.addFilter(context.mock(Filter.class, "E"), 5L, 1000, "5:1000");
 
-        final SlingFilterChainHelper.FilterListEntry[] entries = chain.getFilterListEntries();
+        final FilterHandle[] entries = chain.getFilters();
         assertEquals(5, entries.length);
         assertEquals("5:1000", entries[0].getOrderSource());
         assertEquals("1:100", entries[1].getOrderSource());

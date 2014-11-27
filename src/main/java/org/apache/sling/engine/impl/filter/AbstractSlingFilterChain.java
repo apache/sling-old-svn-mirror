@@ -20,7 +20,6 @@ package org.apache.sling.engine.impl.filter;
 
 import java.io.IOException;
 
-import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -33,18 +32,23 @@ import org.apache.sling.engine.impl.request.RequestData;
 
 public abstract class AbstractSlingFilterChain implements FilterChain {
 
-    private Filter[] filters;
+    private FilterHandle[] filters;
 
     private int current;
 
-    protected AbstractSlingFilterChain(Filter[] filters) {
+    private long[] times;
+
+    protected AbstractSlingFilterChain(FilterHandle[] filters) {
         this.filters = filters;
         this.current = -1;
+        this.times = (filters != null) ? new long[filters.length + 1] : null;
     }
 
     public void doFilter(ServletRequest request, ServletResponse response)
             throws ServletException, IOException {
-        this.current++;
+
+        final int filterIdx = ++this.current;
+        final long start = System.currentTimeMillis();
 
         // the previous filter may have wrapped non-Sling request and response
         // wrappers (e.g. WebCastellum does this), so we have to make
@@ -52,17 +56,26 @@ public abstract class AbstractSlingFilterChain implements FilterChain {
         SlingHttpServletRequest slingRequest = toSlingRequest(request);
         SlingHttpServletResponse slingResponse = toSlingResponse(response);
 
-        if (this.current < this.filters.length) {
+        try {
 
-            // continue filtering with the next filter
-            Filter filter = this.filters[this.current];
-            trackFilter(slingRequest, filter);
-            filter.doFilter(slingRequest, slingResponse, this);
+            if (this.current < this.filters.length) {
 
-        } else {
+                // continue filtering with the next filter
+                FilterHandle filter = this.filters[this.current];
+                trackFilter(slingRequest, filter);
+                filter.getFilter().doFilter(slingRequest, slingResponse, this);
 
-            this.render(slingRequest, slingResponse);
+            } else {
 
+                this.render(slingRequest, slingResponse);
+
+            }
+
+        } finally {
+            times[filterIdx] = System.currentTimeMillis() - start;
+            if (filterIdx == 0) {
+                consolidateFilterTimings(slingRequest);
+            }
         }
     }
 
@@ -72,12 +85,28 @@ public abstract class AbstractSlingFilterChain implements FilterChain {
 
     // ---------- internal helper
 
-    private void trackFilter(ServletRequest request, Filter filter) {
+    private void trackFilter(ServletRequest request, FilterHandle filter) {
         RequestData data = RequestData.getRequestData(request);
         if (data != null) {
             RequestProgressTracker tracker = data.getRequestProgressTracker();
             tracker.log("Calling filter: {0}",
-                this.filters[this.current].getClass().getName());
+                filter.getFilter().getClass().getName());
+        }
+        filter.track();
+    }
+
+    private void consolidateFilterTimings(ServletRequest request) {
+        if (filters != null) {
+            RequestData data = RequestData.getRequestData(request);
+            RequestProgressTracker tracker = (data != null) ? data.getRequestProgressTracker() : null;
+
+            for (int i = filters.length - 1; i > 0; i--) {
+                filters[i].trackTime(times[i] - times[i + 1]);
+                if (tracker != null) {
+                    tracker.log("Filter timing: filter={0}, inner={1}, total={2}, outer={3}",
+                        filters[i].getFilter().getClass().getName(), times[i + 1], times[i], (times[i] - times[i + 1]));
+                }
+            }
         }
     }
 
