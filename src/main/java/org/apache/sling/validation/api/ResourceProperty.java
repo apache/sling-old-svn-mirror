@@ -19,6 +19,7 @@
 package org.apache.sling.validation.api;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Describes a {@link org.apache.sling.api.resource.Resource} property.
@@ -27,10 +28,18 @@ public interface ResourceProperty {
 
     /**
      * Returns the name of this property.
+     * Either this method or {@link getNamePattern} must not return {@code null}
      *
-     * @return the name
+     * @return the name or {@code null}
      */
     String getName();
+    
+    /**
+     * Returns the name pattern for this property. Either this method or {@link getName} must not return {@code null}
+     *
+     * @return the name pattern (if one is set) or {@code null)
+     */
+    Pattern getNamePattern();
 
     /**
      * Returns {@code true} if this property is expected to be a multiple property (e.g. array of values).
