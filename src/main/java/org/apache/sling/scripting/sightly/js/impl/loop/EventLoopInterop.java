@@ -16,27 +16,38 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-package org.apache.sling.scripting.sightly.js.async;
+package org.apache.sling.scripting.sightly.js.impl.loop;
 
-import javax.script.Bindings;
-
-import org.apache.sling.scripting.api.BindingsValuesProvider;
-
-import org.apache.sling.scripting.sightly.js.Variables;
+import org.mozilla.javascript.Context;
 
 /**
- * Value provider for timing functions
+ * Event-loop utilities for interoperability with JS code
  */
-public final class TimingBindingsValuesProvider implements BindingsValuesProvider {
+public class EventLoopInterop {
 
-    public static final TimingBindingsValuesProvider INSTANCE = new TimingBindingsValuesProvider();
+    public static final String EVENT_LOOP_KEY = "EventLoop";
 
-    private TimingBindingsValuesProvider() {
+    public static EventLoop obtainEventLoop(Context context) {
+        EventLoop eventLoop = getEventLoop(context);
+        if (eventLoop == null) {
+            eventLoop = new EventLoop();
+            context.putThreadLocal(EVENT_LOOP_KEY, eventLoop);
+        }
+        return eventLoop;
     }
 
-    @Override
-    public void addBindings(Bindings bindings) {
-        bindings.put(Variables.SET_TIMEOUT, TimingFunction.INSTANCE);
-        bindings.put(Variables.SET_IMMEDIATE, TimingFunction.INSTANCE);
+    public static void cleanupEventLoop(Context context) {
+        context.removeThreadLocal(EVENT_LOOP_KEY);
     }
+
+    public static Task schedule(Context context, Runnable runnable) {
+        Task task = new Task(runnable);
+        obtainEventLoop(context).schedule(task);
+        return task;
+    }
+
+    private static EventLoop getEventLoop(Context context) {
+        return (EventLoop) context.getThreadLocal(EVENT_LOOP_KEY);
+    }
+
 }

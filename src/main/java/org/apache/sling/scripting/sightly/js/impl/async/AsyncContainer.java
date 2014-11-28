@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-package org.apache.sling.scripting.sightly.js.async;
+package org.apache.sling.scripting.sightly.js.impl.async;
 
 import java.util.ArrayList;
 import java.util.List;

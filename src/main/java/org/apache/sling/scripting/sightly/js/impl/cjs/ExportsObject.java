@@ -16,54 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-package org.apache.sling.scripting.sightly.js.cjs;
+package org.apache.sling.scripting.sightly.js.impl.cjs;
+
 
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 
 /**
- * CommonJS module implementation
+ * The default exports object
  */
-public class CommonJsModule extends ScriptableObject {
+public class ExportsObject extends ScriptableObject {
 
-    private static final String EXPORTS = "exports";
-
-    private Object exports = new ExportsObject();
-    private boolean modifiedModule;
-
-
-    @Override
-    public Object get(String name, Scriptable start) {
-        if (name.equals(EXPORTS)) {
-            return exports;
-        }
-        return super.get(name, start);
-    }
+    private boolean modified;
 
     @Override
     public void put(String name, Scriptable start, Object value) {
-        if (name.equals(EXPORTS)) {
-            setExports(value);
-        } else {
-            super.put(name, start, value);
-        }
-    }
-
-    public Object getExports() {
-        return exports;
-    }
-
-    public void setExports(Object exports) {
-        modifiedModule = true;
-        this.exports = exports;
+        modified = true;
+        super.put(name, start, value);
     }
 
     public boolean isModified() {
-        return modifiedModule || ((ExportsObject) exports).isModified();
+        return modified;
     }
 
     @Override
     public String getClassName() {
-        return "Module";
+        return "exports";
     }
 }

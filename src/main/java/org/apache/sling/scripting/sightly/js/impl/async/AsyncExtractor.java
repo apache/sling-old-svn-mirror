@@ -16,16 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-package org.apache.sling.scripting.sightly.js.async;
+package org.apache.sling.scripting.sightly.js.impl.async;
 
-import org.apache.sling.scripting.sightly.api.SightlyUseException;
 import org.mozilla.javascript.BaseFunction;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
-
-import org.apache.sling.scripting.sightly.js.loop.EventLoopInterop;
+import org.apache.sling.scripting.sightly.js.impl.loop.EventLoopInterop;
+import org.apache.sling.scripting.sightly.use.SightlyUseException;
 
 /**
  *

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-package org.apache.sling.scripting.sightly.js.rhino;
+package org.apache.sling.scripting.sightly.js.impl.rhino;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,9 +30,8 @@ import org.mozilla.javascript.Function;
 import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Wrapper;
-
-import org.apache.sling.scripting.sightly.js.async.AsyncContainer;
-import org.apache.sling.scripting.sightly.js.async.AsyncExtractor;
+import org.apache.sling.scripting.sightly.js.impl.async.AsyncContainer;
+import org.apache.sling.scripting.sightly.js.impl.async.AsyncExtractor;
 
 /**
  * Converts JS objects to Java objects

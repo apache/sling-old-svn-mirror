@@ -16,16 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-package org.apache.sling.scripting.sightly.js.async;
+package org.apache.sling.scripting.sightly.js.impl.loop;
 
 /**
- * Unary callback function
+ * Task in an event loop
  */
-public interface UnaryCallback {
+public class Task {
 
-    /**
-     * Call the callback with one argument
-     * @param arg the callback argument
-     */
-    void invoke(Object arg);
+    private final Runnable runnable;
+    private boolean active;
+
+    public Task(Runnable runnable) {
+        this.runnable = runnable;
+        this.active = true;
+    }
+
+    public void run() {
+        if (active) {
+            runnable.run();
+        }
+    }
+
+    public void deactivate() {
+        this.active = false;
+    }
 }

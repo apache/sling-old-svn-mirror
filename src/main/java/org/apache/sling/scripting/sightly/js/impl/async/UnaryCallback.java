@@ -16,19 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-package org.apache.sling.scripting.sightly.js;
+package org.apache.sling.scripting.sightly.js.impl.async;
 
 /**
- * Variables exposed to js scripts
+ * Unary callback function
  */
-public final class Variables {
+public interface UnaryCallback {
 
-    public static final String CONSOLE = "console";
-
-    public static final String JS_USE = "use";
-    public static final String SET_TIMEOUT = "setTimeout";
-    public static final String SET_IMMEDIATE = "setImmediate";
-
-    public static final String MODULE = "module";
-    public static final String EXPORTS = "exports";
+    /**
+     * Call the callback with one argument
+     * @param arg the callback argument
+     */
+    void invoke(Object arg);
 }

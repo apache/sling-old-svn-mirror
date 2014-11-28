@@ -16,38 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-package org.apache.sling.scripting.sightly.js.loop;
+package org.apache.sling.scripting.sightly.js.impl.rhino;
 
 import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Function;
+import org.mozilla.javascript.Scriptable;
 
 /**
- * Event-loop utilities for interoperability with JS code
+ * Utilities when inter-operating with JS scripts
  */
-public class EventLoopInterop {
+public class JsUtils {
 
-    public static final String EVENT_LOOP_KEY = "EventLoop";
-
-    public static EventLoop obtainEventLoop(Context context) {
-        EventLoop eventLoop = getEventLoop(context);
-        if (eventLoop == null) {
-            eventLoop = new EventLoop();
-            context.putThreadLocal(EVENT_LOOP_KEY, eventLoop);
+    public static Object callFn(Function function, Context cx, Scriptable scope, Scriptable thisObj, Object[] args) {
+        boolean exitContext = false;
+        if (Context.getCurrentContext() == null) {
+            Context.enter();
+            exitContext = true;
         }
-        return eventLoop;
+        Context context = (cx == null) ? Context.getCurrentContext() : cx;
+        Object result = function.call(context, scope, thisObj, args);
+        if (exitContext) {
+            Context.exit();
+        }
+        return result;
     }
 
-    public static void cleanupEventLoop(Context context) {
-        context.removeThreadLocal(EVENT_LOOP_KEY);
-    }
 
-    public static Task schedule(Context context, Runnable runnable) {
-        Task task = new Task(runnable);
-        obtainEventLoop(context).schedule(task);
-        return task;
-    }
-
-    private static EventLoop getEventLoop(Context context) {
-        return (EventLoop) context.getThreadLocal(EVENT_LOOP_KEY);
-    }
 
 }

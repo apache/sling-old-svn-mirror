@@ -17,9 +17,10 @@
  * under the License.
  ******************************************************************************/
 
-package org.apache.sling.scripting.sightly.js.use;
+package org.apache.sling.scripting.sightly.js.impl.use;
 
 import javax.script.Bindings;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,11 +33,10 @@ import org.mozilla.javascript.NativeArray;
 import org.mozilla.javascript.NativeObject;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
-
-import org.apache.sling.scripting.sightly.js.async.AsyncContainer;
-import org.apache.sling.scripting.sightly.js.async.UnaryCallback;
-import org.apache.sling.scripting.sightly.js.loop.EventLoopInterop;
-import org.apache.sling.scripting.sightly.js.rhino.JsUtils;
+import org.apache.sling.scripting.sightly.js.impl.async.AsyncContainer;
+import org.apache.sling.scripting.sightly.js.impl.async.UnaryCallback;
+import org.apache.sling.scripting.sightly.js.impl.loop.EventLoopInterop;
+import org.apache.sling.scripting.sightly.js.impl.rhino.JsUtils;
 
 /**
  * The JavaScript {@code use} function

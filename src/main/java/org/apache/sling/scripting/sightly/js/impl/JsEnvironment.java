@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-package org.apache.sling.scripting.sightly.js;
+package org.apache.sling.scripting.sightly.js.impl;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -33,20 +33,19 @@ import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
-import org.apache.sling.scripting.sightly.api.ResourceResolution;
-import org.apache.sling.scripting.sightly.api.SightlyUseException;
+import org.apache.sling.scripting.sightly.ResourceResolution;
 import org.mozilla.javascript.Context;
 import org.slf4j.LoggerFactory;
-
-import org.apache.sling.scripting.sightly.js.async.AsyncContainer;
-import org.apache.sling.scripting.sightly.js.async.TimingBindingsValuesProvider;
-import org.apache.sling.scripting.sightly.js.async.UnaryCallback;
-import org.apache.sling.scripting.sightly.js.cjs.CommonJsModule;
-import org.apache.sling.scripting.sightly.js.loop.EventLoop;
-import org.apache.sling.scripting.sightly.js.loop.EventLoopInterop;
-import org.apache.sling.scripting.sightly.js.loop.Task;
-import org.apache.sling.scripting.sightly.js.use.DependencyResolver;
-import org.apache.sling.scripting.sightly.js.use.UseFunction;
+import org.apache.sling.scripting.sightly.js.impl.async.AsyncContainer;
+import org.apache.sling.scripting.sightly.js.impl.async.TimingBindingsValuesProvider;
+import org.apache.sling.scripting.sightly.js.impl.async.UnaryCallback;
+import org.apache.sling.scripting.sightly.js.impl.cjs.CommonJsModule;
+import org.apache.sling.scripting.sightly.js.impl.loop.EventLoop;
+import org.apache.sling.scripting.sightly.js.impl.loop.EventLoopInterop;
+import org.apache.sling.scripting.sightly.js.impl.loop.Task;
+import org.apache.sling.scripting.sightly.js.impl.use.DependencyResolver;
+import org.apache.sling.scripting.sightly.js.impl.use.UseFunction;
+import org.apache.sling.scripting.sightly.use.SightlyUseException;
 
 /**
  * Environment for running JS scripts

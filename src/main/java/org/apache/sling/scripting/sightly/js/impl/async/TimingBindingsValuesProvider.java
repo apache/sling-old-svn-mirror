@@ -16,34 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-package org.apache.sling.scripting.sightly.js;
+package org.apache.sling.scripting.sightly.js.impl.async;
 
-import org.slf4j.Logger;
+import javax.script.Bindings;
+
+import org.apache.sling.scripting.api.BindingsValuesProvider;
+import org.apache.sling.scripting.sightly.js.impl.Variables;
 
 /**
- * The console object, used for logging
+ * Value provider for timing functions
  */
-public class Console {
+public final class TimingBindingsValuesProvider implements BindingsValuesProvider {
 
-    private final Logger logger;
+    public static final TimingBindingsValuesProvider INSTANCE = new TimingBindingsValuesProvider();
 
-    public Console(Logger logger) {
-        this.logger = logger;
+    private TimingBindingsValuesProvider() {
     }
 
-    public void log(String msg) {
-        logger.info(msg);
-    }
-
-    public void warn(String msg) {
-        logger.warn(msg);
-    }
-
-    public void error(String msg) {
-        logger.error(msg);
-    }
-
-    public void debug(String msg) {
-        logger.debug(msg);
+    @Override
+    public void addBindings(Bindings bindings) {
+        bindings.put(Variables.SET_TIMEOUT, TimingFunction.INSTANCE);
+        bindings.put(Variables.SET_IMMEDIATE, TimingFunction.INSTANCE);
     }
 }

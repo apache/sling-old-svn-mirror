@@ -16,31 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-package org.apache.sling.scripting.sightly.js.cjs;
+package org.apache.sling.scripting.sightly.js.impl;
 
-
-import org.mozilla.javascript.Scriptable;
-import org.mozilla.javascript.ScriptableObject;
+import org.slf4j.Logger;
 
 /**
- * The default exports object
+ * The console object, used for logging
  */
-public class ExportsObject extends ScriptableObject {
+public class Console {
 
-    private boolean modified;
+    private final Logger logger;
 
-    @Override
-    public void put(String name, Scriptable start, Object value) {
-        modified = true;
-        super.put(name, start, value);
+    public Console(Logger logger) {
+        this.logger = logger;
     }
 
-    public boolean isModified() {
-        return modified;
+    public void log(String msg) {
+        logger.info(msg);
     }
 
-    @Override
-    public String getClassName() {
-        return "exports";
+    public void warn(String msg) {
+        logger.warn(msg);
+    }
+
+    public void error(String msg) {
+        logger.error(msg);
+    }
+
+    public void debug(String msg) {
+        logger.debug(msg);
     }
 }

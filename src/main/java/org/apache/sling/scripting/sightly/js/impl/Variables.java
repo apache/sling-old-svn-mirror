@@ -16,31 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-package org.apache.sling.scripting.sightly.js;
-
-import javax.script.Bindings;
-import javax.script.SimpleBindings;
-import java.util.Collections;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.sling.api.scripting.SlingBindings;
-import org.apache.sling.api.scripting.SlingScriptHelper;
+package org.apache.sling.scripting.sightly.js.impl;
 
 /**
- * Utilities for script evaluation
+ * Variables exposed to js scripts
  */
-public class Utils {
-    private static final String EXTENSION = "js";
+public final class Variables {
 
-    public static final Bindings EMPTY_BINDINGS = new SimpleBindings(Collections.<String, Object>emptyMap());
+    public static final String CONSOLE = "console";
 
-    public static SlingScriptHelper getHelper(Bindings bindings) {
-        return (SlingScriptHelper) bindings.get(SlingBindings.SLING);
-    }
+    public static final String JS_USE = "use";
+    public static final String SET_TIMEOUT = "setTimeout";
+    public static final String SET_IMMEDIATE = "setImmediate";
 
-    public static boolean isJsScript(String identifier) {
-        String extension = StringUtils.substringAfterLast(identifier, ".");
-        return EXTENSION.equalsIgnoreCase(extension);
-    }
-
+    public static final String MODULE = "module";
+    public static final String EXPORTS = "exports";
 }

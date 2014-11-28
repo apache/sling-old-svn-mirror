@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-package org.apache.sling.scripting.sightly.js.jsapi;
+package org.apache.sling.scripting.sightly.js.impl.jsapi;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,6 +24,7 @@ import java.io.InputStreamReader;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -45,15 +46,15 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.scripting.api.BindingsValuesProvider;
-import org.apache.sling.scripting.sightly.js.JsEnvironment;
-import org.apache.sling.scripting.sightly.js.Variables;
-import org.apache.sling.scripting.sightly.js.async.AsyncContainer;
-import org.apache.sling.scripting.sightly.js.async.AsyncExtractor;
-import org.apache.sling.scripting.sightly.js.async.TimingBindingsValuesProvider;
-import org.apache.sling.scripting.sightly.js.async.TimingFunction;
-import org.apache.sling.scripting.sightly.js.cjs.CommonJsModule;
-import org.apache.sling.scripting.sightly.js.rhino.HybridObject;
-import org.apache.sling.scripting.sightly.js.rhino.JsValueAdapter;
+import org.apache.sling.scripting.sightly.js.impl.JsEnvironment;
+import org.apache.sling.scripting.sightly.js.impl.Variables;
+import org.apache.sling.scripting.sightly.js.impl.async.AsyncContainer;
+import org.apache.sling.scripting.sightly.js.impl.async.AsyncExtractor;
+import org.apache.sling.scripting.sightly.js.impl.async.TimingBindingsValuesProvider;
+import org.apache.sling.scripting.sightly.js.impl.async.TimingFunction;
+import org.apache.sling.scripting.sightly.js.impl.cjs.CommonJsModule;
+import org.apache.sling.scripting.sightly.js.impl.rhino.HybridObject;
+import org.apache.sling.scripting.sightly.js.impl.rhino.JsValueAdapter;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Script;

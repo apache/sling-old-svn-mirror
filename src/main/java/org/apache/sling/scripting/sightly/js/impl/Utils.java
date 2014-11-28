@@ -16,31 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-package org.apache.sling.scripting.sightly.js.rhino;
+package org.apache.sling.scripting.sightly.js.impl;
 
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.Function;
-import org.mozilla.javascript.Scriptable;
+import javax.script.Bindings;
+import javax.script.SimpleBindings;
+import java.util.Collections;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.sling.api.scripting.SlingBindings;
+import org.apache.sling.api.scripting.SlingScriptHelper;
 
 /**
- * Utilities when inter-operating with JS scripts
+ * Utilities for script evaluation
  */
-public class JsUtils {
+public class Utils {
+    private static final String EXTENSION = "js";
 
-    public static Object callFn(Function function, Context cx, Scriptable scope, Scriptable thisObj, Object[] args) {
-        boolean exitContext = false;
-        if (Context.getCurrentContext() == null) {
-            Context.enter();
-            exitContext = true;
-        }
-        Context context = (cx == null) ? Context.getCurrentContext() : cx;
-        Object result = function.call(context, scope, thisObj, args);
-        if (exitContext) {
-            Context.exit();
-        }
-        return result;
+    public static final Bindings EMPTY_BINDINGS = new SimpleBindings(Collections.<String, Object>emptyMap());
+
+    public static SlingScriptHelper getHelper(Bindings bindings) {
+        return (SlingScriptHelper) bindings.get(SlingBindings.SLING);
     }
 
-
+    public static boolean isJsScript(String identifier) {
+        String extension = StringUtils.substringAfterLast(identifier, ".");
+        return EXTENSION.equalsIgnoreCase(extension);
+    }
 
 }
