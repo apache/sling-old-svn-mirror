@@ -68,7 +68,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Sling-Initial-Content>SLING-INF;overwrite=true</Sling-Initial-Content>
+                        <Sling-Bundle-Resources>/libs/sling/sightly/js;path:=/SLING-INF/libs/sling/sightly/js</Sling-Bundle-Resources>
                     </instructions>
                 </configuration>
             </plugin>
