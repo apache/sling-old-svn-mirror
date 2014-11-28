@@ -226,6 +226,76 @@ public class ValidationServiceImplTest {
             }
         }
     }
+    
+    @Test()
+    public void testValueMapWithMissingOptionalValue() throws Exception {
+        validationService.validators.put("org.apache.sling.validation.impl.validators.RegexValidator", new RegexValidator());
+
+        TestProperty property = new TestProperty("field1");
+        property.optional = true;
+        property.addValidator("org.apache.sling.validation.impl.validators.RegexValidator", "");
+        
+        ResourceResolver rr = rrf.getAdministrativeResourceResolver(null);
+        Resource model1 = null;
+        try {
+            if (rr != null) {
+                model1 = createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", "sling/validation/test",
+                        new String[]{"/apps/validation"}, property);
+            }
+            ValidationModel vm = validationService.getValidationModel("sling/validation/test", "/apps/validation/1/resource");
+            HashMap<String, Object> hashMap = new HashMap<String, Object>() {{
+                put("field2", "1");
+            }};
+            ValueMap map = new ValueMapDecorator(hashMap);
+            ValidationResult vr = validationService.validate(map, vm);
+            Assert.assertTrue(vr.isValid());
+        } finally {
+            if (model1 != null) {
+                rr.delete(model1);
+            }
+            if (rr != null) {
+                rr.commit();
+                rr.close();
+            }
+        }
+    }
+    
+    @Test()
+    public void testValueMapWithEmptyOptionalValue() throws Exception {
+        validationService.validators.put("org.apache.sling.validation.impl.validators.RegexValidator", new RegexValidator());
+
+        TestProperty property = new TestProperty("field1");
+        property.optional = true;
+        property.addValidator("org.apache.sling.validation.impl.validators.RegexValidator", "regex=abc");
+        
+        ResourceResolver rr = rrf.getAdministrativeResourceResolver(null);
+        Resource model1 = null;
+        try {
+            if (rr != null) {
+                model1 = createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", "sling/validation/test",
+                        new String[]{"/apps/validation"}, property);
+            }
+            ValidationModel vm = validationService.getValidationModel("sling/validation/test", "/apps/validation/1/resource");
+            HashMap<String, Object> hashMap = new HashMap<String, Object>() {{
+                put("field1", "");
+            }};
+            ValueMap map = new ValueMapDecorator(hashMap);
+            ValidationResult vr = validationService.validate(map, vm);
+            Assert.assertFalse(vr.isValid());
+            // check for correct error message
+            Map<String, List<String>> expectedFailureMessages = new HashMap<String, List<String>>();
+            expectedFailureMessages.put("field2", Arrays.asList("Property does not match the pattern abc"));
+            Assert.assertThat(vr.getFailureMessages().entrySet(), Matchers.equalTo(expectedFailureMessages.entrySet()));
+        } finally {
+            if (model1 != null) {
+                rr.delete(model1);
+            }
+            if (rr != null) {
+                rr.commit();
+                rr.close();
+            }
+        }
+    }
 
     @Test
     public void testValueMapWithCorrectDataType() throws Exception {
@@ -281,27 +351,23 @@ public class ValidationServiceImplTest {
                 model1 = createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", "sling/validation/test",
                         new String[]{"/apps/validation"}, property);
                 
-                Resource child = createValidationModelChildResource(model1, "child1", null, new TestProperty("hello"));
-                createValidationModelChildResource(child, "grandChild1", null, new TestProperty("hello"));
+                Resource child = createValidationModelChildResource(model1, "child1", null, false,  new TestProperty("hello"));
+                createValidationModelChildResource(child, "grandChild1", null, false, new TestProperty("hello"));
 
                 testResource = ResourceUtil.getOrCreateResource(rr, "/apps/validation/1/resource", JcrConstants.NT_UNSTRUCTURED,
                         JcrConstants.NT_UNSTRUCTURED, true);
                 ModifiableValueMap mvm = testResource.adaptTo(ModifiableValueMap.class);
                 mvm.put("field1", "1");
-                rr.commit();
                 
                 Resource childResource = rr.create(testResource, "child1", new HashMap<String, Object>(){{
                     put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
                 }});
-                rr.commit();
-               
                 
                 Resource resourceChild = rr.create(testResource, "child1", new HashMap<String, Object>(){{
                     put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
                 }});
                 mvm = resourceChild.adaptTo(ModifiableValueMap.class);
                 mvm.put("hello", "1");
-                rr.commit();
 
                 // /apps/validation/1/resource/child1/grandChild1 will miss its mandatory "hello" property
                 Resource resourceGrandChild = rr.create(resourceChild, "grandChild1", new HashMap<String, Object>(){{
@@ -320,15 +386,54 @@ public class ValidationServiceImplTest {
             assertThat(vr.getFailureMessages().keySet(), Matchers.hasSize(1));
         } finally {
             if (rr != null) {
-                if (model1 != null) {
-                    rr.delete(model1);
-                }
-                if (testResource != null) {
-                    rr.delete(testResource);
-                }
-                rr.commit();
-                rr.close();
+                rr.delete(model1);
             }
+            if (testResource != null) {
+                 rr.delete(testResource);
+            }
+            rr.commit();
+            rr.close();
+        }
+    }
+    
+    @Test
+    public void testResourceWithMissingOptionalChildProperty() throws Exception {
+        validationService.validators.put("org.apache.sling.validation.impl.validators.RegexValidator", new RegexValidator());
+
+        TestProperty property = new TestProperty("field1");
+        property.addValidator("org.apache.sling.validation.impl.validators.RegexValidator", RegexValidator.REGEX_PARAM + "=" + "\\d");
+        ResourceResolver rr = rrf.getAdministrativeResourceResolver(null);
+        Resource model1 = null;
+        Resource testResource = null;
+        try {
+            if (rr != null) {
+                model1 = createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", "sling/validation/test",
+                        new String[]{"/apps/validation"}, property);
+                
+                createValidationModelChildResource(model1, "child1", null, true, new TestProperty("hello"));
+
+                testResource = ResourceUtil.getOrCreateResource(rr, "/apps/validation/1/resource", JcrConstants.NT_UNSTRUCTURED,
+                        JcrConstants.NT_UNSTRUCTURED, true);
+                ModifiableValueMap mvm = testResource.adaptTo(ModifiableValueMap.class);
+                mvm.put("field1", "1");
+                
+                rr.create(testResource, "child2", new HashMap<String, Object>(){{
+                    put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
+                }});
+                rr.commit();
+            }
+            ValidationModel vm = validationService.getValidationModel("sling/validation/test", "/apps/validation/1/resource");
+            ValidationResult vr = validationService.validate(testResource, vm);
+            assertTrue(vr.isValid());
+        } finally {
+            if (rr != null) {
+                rr.delete(model1);
+            }
+            if (testResource != null) {
+                 rr.delete(testResource);
+            }
+            rr.commit();
+            rr.close();
         }
     }
     
@@ -346,8 +451,8 @@ public class ValidationServiceImplTest {
                 model1 = createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", "sling/validation/test",
                         new String[]{"/apps/validation"}, property);
                 
-                Resource child = createValidationModelChildResource(model1, "child1", null, new TestProperty("hello"));
-                createValidationModelChildResource(child, "grandChild1", null, new TestProperty("hello"));
+                Resource child = createValidationModelChildResource(model1, "child1", null, false, new TestProperty("hello"));
+                createValidationModelChildResource(child, "grandChild1", null, false, new TestProperty("hello"));
 
                 testResource = ResourceUtil.getOrCreateResource(rr, "/apps/validation/1/resource", JcrConstants.NT_UNSTRUCTURED,
                         JcrConstants.NT_UNSTRUCTURED, true);
@@ -401,8 +506,8 @@ public class ValidationServiceImplTest {
             if (rr != null) {
                 model1 = createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", "sling/validation/test",
                         new String[]{"/apps/validation"}, property);
-                Resource child = createValidationModelChildResource(model1, "child1", "child.*", new TestProperty("hello"));
-                createValidationModelChildResource(child, "grandChild", "grandChild.*", new TestProperty("hello"));
+                Resource child = createValidationModelChildResource(model1, "child1", "child.*", false, new TestProperty("hello"));
+                createValidationModelChildResource(child, "grandChild", "grandChild.*", false, new TestProperty("hello"));
                 rr.commit();
                 
                 testResource = ResourceUtil.getOrCreateResource(rr, "/apps/validation/1/resource", JcrConstants.NT_UNSTRUCTURED,
@@ -560,10 +665,12 @@ public class ValidationServiceImplTest {
                 Resource propertyResource = ResourceUtil.getOrCreateResource(rr, propertiesResource.getPath() + "/" + property.name,
                         modelPropertyJCRProperties, null, true);
                 if (propertyResource != null) {
+                    ModifiableValueMap values = propertyResource.adaptTo(ModifiableValueMap.class);
                     if (property.nameRegex != null) {
-                        ModifiableValueMap values = propertyResource.adaptTo(ModifiableValueMap.class);
                         values.put(Constants.NAME_REGEX, property.nameRegex);
                     }
+                    values.put(Constants.PROPERTY_MULTIPLE, property.multiple);
+                    values.put(Constants.OPTIONAL, property.optional);
                     Resource validators = ResourceUtil.getOrCreateResource(rr,
                             propertyResource.getPath() + "/" + Constants.VALIDATORS,
                             JcrConstants.NT_UNSTRUCTURED, null, true);
@@ -583,7 +690,7 @@ public class ValidationServiceImplTest {
         }
     }
     
-    private Resource createValidationModelChildResource(Resource parentResource, String name, String nameRegex, TestProperty... properties) throws PersistenceException {
+    private Resource createValidationModelChildResource(Resource parentResource, String name, String nameRegex, boolean isOptional, TestProperty... properties) throws PersistenceException {
         ResourceResolver rr = parentResource.getResourceResolver();
         Resource modelChildren = rr.create(parentResource, Constants.CHILDREN, new HashMap<String, Object>(){{
             put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
@@ -591,10 +698,11 @@ public class ValidationServiceImplTest {
         Resource child = rr.create(modelChildren, name, new HashMap<String, Object>(){{
             put(JcrConstants.JCR_PRIMARYTYPE, JcrConstants.NT_UNSTRUCTURED);
         }});
+        ModifiableValueMap mvm = child.adaptTo(ModifiableValueMap.class);
         if (nameRegex != null) {
-            ModifiableValueMap mvm = child.adaptTo(ModifiableValueMap.class);
             mvm.put(Constants.NAME_REGEX, nameRegex);
         }
+        mvm.put(Constants.OPTIONAL, isOptional);
         createValidationModelProperties(child, properties);
         return child;
     }
@@ -613,6 +721,8 @@ public class ValidationServiceImplTest {
     }
 
     private class TestProperty {
+        public boolean optional;
+        public boolean multiple;
         final String name;
         String nameRegex;
         final Map<String, String[]> validators;
@@ -621,6 +731,8 @@ public class ValidationServiceImplTest {
             validators = new HashMap<String, String[]>();
             this.name = name;
             this.nameRegex = null;
+            this.optional = false;
+            this.multiple = false;
         }
         
         TestProperty setNameRegex(String nameRegex) {

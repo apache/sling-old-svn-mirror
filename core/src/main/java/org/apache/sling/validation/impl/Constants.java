@@ -30,6 +30,7 @@ public final class Constants {
     public static final String PROPERTIES = "properties";
     public static final String PROPERTY_TYPE = "propertyType";
     public static final String PROPERTY_MULTIPLE = "propertyMultiple";
+    public static final String OPTIONAL = "optional";
     public static final String VALIDATORS = "validators";
     public static final String VALIDATOR_ARGUMENTS = "validatorArguments";
     public static final String CHILDREN = "children";
