@@ -28,10 +28,11 @@ public class ResourcePropertyImpl implements ResourceProperty {
 
     private String name;
     private boolean isMultiple;
+    private boolean isRequired;
     private List<ParameterizedValidator> validators;
     private Pattern namePattern;
     
-    public ResourcePropertyImpl(String name, String nameRegex, boolean isMultiple, List<ParameterizedValidator> validators) {
+    public ResourcePropertyImpl(String name, String nameRegex, boolean isMultiple, boolean isRequired, List<ParameterizedValidator> validators) {
         if (nameRegex != null) {
             this.name = null;
             this.namePattern = Pattern.compile(nameRegex);
@@ -40,6 +41,7 @@ public class ResourcePropertyImpl implements ResourceProperty {
             this.namePattern = null;
         }
         this.isMultiple = isMultiple;
+        this.isRequired = isRequired;
         this.validators = validators;
     }
 
@@ -56,6 +58,11 @@ public class ResourcePropertyImpl implements ResourceProperty {
     @Override
     public boolean isMultiple() {
         return isMultiple;
+    }
+
+    @Override
+    public boolean isRequired() {
+        return isRequired;
     }
 
     @Override

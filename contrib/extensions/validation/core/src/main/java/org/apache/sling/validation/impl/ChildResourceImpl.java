@@ -8,6 +8,7 @@ import java.util.regex.PatternSyntaxException;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.validation.api.ChildResource;
 import org.apache.sling.validation.api.ResourceProperty;
 import org.apache.sling.validation.api.Validator;
@@ -22,6 +23,7 @@ public class ChildResourceImpl implements ChildResource {
     private final Pattern namePattern;
     private final Set<ResourceProperty> properties;
     private final List<ChildResource> children;
+    private final boolean isRequired;
 
     public ChildResourceImpl(Resource modelResource, Resource childResource, Map<String, Validator<?>> validatorsMap, List<ChildResource> children) {
         String root = modelResource.getPath();
@@ -46,7 +48,7 @@ public class ChildResourceImpl implements ChildResource {
             name = childResource.getName();
             namePattern = null;
         }
-        
+        isRequired = !PropertiesUtil.toBoolean(childrenProperties.get(Constants.OPTIONAL), false);
         properties = JCRBuilder.buildProperties(validatorsMap, childResource.getChild(Constants.PROPERTIES));
         this.children = children;
     }
@@ -68,5 +70,10 @@ public class ChildResourceImpl implements ChildResource {
     
     public List<ChildResource> getChildren() {
         return children;
+    }
+
+    @Override
+    public boolean isRequired() {
+        return isRequired;
     }
 }
