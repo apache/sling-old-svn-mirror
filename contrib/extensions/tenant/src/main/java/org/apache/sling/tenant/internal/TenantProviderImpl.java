@@ -21,11 +21,14 @@ package org.apache.sling.tenant.internal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -49,6 +52,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.osgi.ServiceUtil;
 import org.apache.sling.tenant.Tenant;
+import org.apache.sling.tenant.TenantConstants;
 import org.apache.sling.tenant.TenantManager;
 import org.apache.sling.tenant.TenantProvider;
 import org.apache.sling.tenant.internal.console.WebConsolePlugin;
@@ -58,6 +62,8 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,6 +114,12 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
     @Reference
     private ResourceResolverFactory factory;
 
+    /**
+     * The service tracker for the event admin
+     */
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
+    private volatile EventAdmin eventAdmin;
+
     private TenantAdapterFactory adapterFactory;
 
     private WebConsolePlugin plugin;
@@ -149,11 +161,11 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
     public Tenant getTenant(final String tenantId) {
         if (tenantId != null && tenantId.length() > 0) {
             return call(new ResourceResolverTask<Tenant>() {
-                public Tenant call(ResourceResolver resolver) {
+                public Tenant call(ResourceResolver resolver, EventAdmin eventAdmin) {
                     Resource tenantRes = getTenantResource(resolver, tenantId);
                     return (tenantRes != null) ? new TenantImpl(tenantRes) : null;
                 }
-            });
+            }, eventAdmin);
         }
 
         // in case of some problem
@@ -177,7 +189,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
         }
 
         Iterator<Tenant> result = call(new ResourceResolverTask<Iterator<Tenant>>() {
-            public Iterator<Tenant> call(ResourceResolver resolver) {
+            public Iterator<Tenant> call(ResourceResolver resolver, EventAdmin eventAdmin) {
                 Resource tenantRootRes = resolver.getResource(tenantRootPath);
 
                 List<Tenant> tenantList = new ArrayList<Tenant>();
@@ -192,7 +204,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                 }
                 return tenantList.iterator();
             }
-        });
+        }, eventAdmin);
 
         if (result == null) {
             // no filter or no resource resolver for calling
@@ -204,7 +216,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
 
     public Tenant create(final String tenantId, final Map<String, Object> properties) {
         return call(new ResourceResolverTask<Tenant>() {
-            public Tenant call(ResourceResolver adminResolver) {
+            public Tenant call(ResourceResolver adminResolver, EventAdmin eventAdmin) {
                 try {
                     // create the tenant
                     Resource tenantRes = createTenantResource(adminResolver, tenantId, properties);
@@ -215,6 +227,15 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                     // refresh tenant instance, as it copies property from
                     // resource
                     tenant.loadProperties(tenantRes);
+
+                    // post tenant added event
+                    if (eventAdmin != null) {
+                        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+                        props.put(TenantConstants.PROPERTY_TENANTID,
+                                tenant.getId());
+                        eventAdmin.postEvent(new Event(
+                                TenantConstants.TOPIC_TENANT_CREATED, props));
+                    }
 
                     return tenant;
 
@@ -227,12 +248,12 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                 // no new tenant in case of problems
                 return null;
             }
-        });
+        }, eventAdmin);
     }
 
     public void remove(final Tenant tenant) {
         call(new ResourceResolverTask<Void>() {
-            public Void call(ResourceResolver resolver) {
+            public Void call(ResourceResolver resolver, EventAdmin eventAdmin) {
                 try {
                     Resource tenantRes = getTenantResource(resolver, tenant.getId());
                     if (tenantRes != null) {
@@ -247,6 +268,15 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
 
                         resolver.delete(tenantRes);
                         resolver.commit();
+
+                        // post tenant removed event
+                        if (eventAdmin != null) {
+                            final Dictionary<String, Object> props = new Hashtable<String, Object>();
+                            props.put(TenantConstants.PROPERTY_TENANTID,
+                                    tenant.getId());
+                            eventAdmin.postEvent(new Event(
+                                    TenantConstants.TOPIC_TENANT_REMOVED, props));
+                        }
                     }
                 } catch (PersistenceException e) {
                     log.error("remove({}): Cannot persist Tenant removal", tenant.getId(), e);
@@ -254,7 +284,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
 
                 return null;
             }
-        });
+        }, eventAdmin);
     }
 
     public void setProperty(final Tenant tenant, final String name, final Object value) {
@@ -266,10 +296,11 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                     properties.remove(name);
                 }
             }
-        });
+        }, false, name);
     }
 
     public void setProperties(final Tenant tenant, final Map<String, Object> properties) {
+        final Set<String> featureNames = properties.keySet();
         updateProperties(tenant, new PropertiesUpdater() {
             public void update(ModifiableValueMap vm) {
                 for (Entry<String, Object> entry : properties.entrySet()) {
@@ -280,7 +311,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                     }
                 }
             }
-        });
+        }, false, featureNames.toArray(new String[featureNames.size()]));
     }
 
     public void removeProperties(final Tenant tenant, final String... propertyNames) {
@@ -290,7 +321,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                     properties.remove(name);
                 }
             }
-        });
+        }, true, propertyNames);
     }
 
     @SuppressWarnings("serial")
@@ -356,13 +387,13 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
         }
     }
 
-    private <T> T call(ResourceResolverTask<T> task) {
+    private <T> T call(ResourceResolverTask<T> task, EventAdmin eventAdmin) {
         ResourceResolver resolver = null;
         T result = null;
 
         try {
             resolver = factory.getAdministrativeResourceResolver(null);
-            result = task.call(resolver);
+            result = task.call(resolver, eventAdmin);
         } catch (LoginException le) {
             // unexpected, thus ignore
         } finally {
@@ -374,9 +405,10 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
         return result;
     }
 
-    private void updateProperties(final Tenant tenant, final PropertiesUpdater updater) {
+    private void updateProperties(final Tenant tenant, final PropertiesUpdater updater,
+                                  final boolean remove, final String... propertyNames) {
         call(new ResourceResolverTask<Void>() {
-            public Void call(ResourceResolver resolver) {
+            public Void call(ResourceResolver resolver, EventAdmin eventAdmin) {
                 try {
                     Resource tenantRes = getTenantResource(resolver, tenant.getId());
                     if (tenantRes != null) {
@@ -393,6 +425,17 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                         if (tenant instanceof TenantImpl) {
                             ((TenantImpl) tenant).loadProperties(tenantRes);
                         }
+
+                        // post tenant property event (set|removed)
+                        if (eventAdmin != null) {
+                            final Dictionary<String, Object> props = new Hashtable<String, Object>();
+                            props.put(TenantConstants.PROPERTY_TENANTID, tenant.getId());
+                            props.put(TenantConstants.PROPERTY_NAMES, propertyNames);
+                            final String topic = remove
+                                    ? TenantConstants.TOPIC_TENANT_PROPERTY_REMOVED
+                                    : TenantConstants.TOPIC_TENANT_PROPERTY_SET;
+                            eventAdmin.postEvent(new Event(topic, props));
+                        }
                     }
                 } catch (PersistenceException pe) {
                     log.error("setProperty({}): Cannot persist Tenant removal", tenant.getId(), pe);
@@ -400,11 +443,11 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
 
                 return null;
             }
-        });
+        }, eventAdmin);
     }
 
     private static interface ResourceResolverTask<T> {
-        T call(ResourceResolver resolver);
+        T call(ResourceResolver resolver, EventAdmin eventAdmin);
     }
 
     private static interface PropertiesUpdater {
