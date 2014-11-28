@@ -21,13 +21,13 @@ package org.apache.sling.scripting.sightly;
 
 import java.util.Set;
 
-import aQute.bnd.annotation.ProviderType;
+import aQute.bnd.annotation.ConsumerType;
 
 /**
  * A key-value immutable object understood by the Sightly runtime
  * @param <T> the type of values for this record
  */
-@ProviderType
+@ConsumerType
 public interface Record<T> {
 
     /**
