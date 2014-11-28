@@ -52,3 +52,12 @@ h2,h3,h4 {
 .note {
   font-size:80%;    
 }
+
+ul li .link a {
+    font-size: 90%;
+    text-decoration: none;
+}
+
+ul li .link a:visited {
+    color: rgb(0, 0, 238);
+}
