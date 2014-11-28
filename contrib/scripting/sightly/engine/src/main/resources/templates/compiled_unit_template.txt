@@ -18,24 +18,20 @@
  ******************************************************************************/
 package ##PackageName##;
 
+import java.io.PrintWriter;
 import java.util.Collection;
 import javax.script.Bindings;
 
-import org.apache.sling.scripting.sightly.api.ObjectModel;
-import org.apache.sling.scripting.sightly.api.StackedWriter;
-import org.apache.sling.scripting.sightly.api.SightlyRuntime;
-import org.apache.sling.scripting.sightly.api.BaseRenderUnit;
-import org.apache.sling.scripting.sightly.api.RenderContext;
+import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderUnit;
+import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 
-public final class ##ClassName## extends BaseRenderUnit {
+public final class ##ClassName## extends RenderUnit {
 
     @Override
-    protected final void render(StackedWriter out,
+    protected final void render(PrintWriter out,
                                 Bindings bindings,
                                 Bindings arguments,
-                                ObjectModel objectModel,
-                                SightlyRuntime runtime,
-                                RenderContext renderContext) {
+                                RenderContextImpl renderContext) {
 // Main Template Body -----------------------------------------------------------------------------
 
 ##MainBody##

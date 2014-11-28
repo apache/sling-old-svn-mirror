@@ -16,15 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new BaseRenderUnit() {
+addSubTemplate("##Name##", new RenderUnit() {
 
     @Override
-    protected final void render(StackedWriter out,
+    protected final void render(PrintWriter out,
                                 Bindings bindings,
                                 Bindings arguments,
-                                ObjectModel objectModel,
-                                SightlyRuntime runtime,
-                                RenderContext renderContext) {
+                                RenderContextImpl renderContext) {
 // Main Sub-Template Body -------------------------------------------------------------------------
 
 ##MainBody##
