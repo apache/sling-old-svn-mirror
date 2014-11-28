@@ -16,28 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
+package org.apache.sling.scripting.sightly.impl.compiler.expression.node;
 
-    @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
+import org.apache.sling.scripting.sightly.impl.compiler.expression.ExpressionNode;
 
-##MainBody##
+/**
+ * Nodes that can be translated to simple text, like identifiers
+ * or string constants.
+ */
+public interface Atom extends ExpressionNode {
 
-// End Of Main Sub-Template Body ------------------------------------------------------------------
-    }
+    /**
+     * Get the text content for this node
+     * @return The text content
+     */
+    String getText();
 
+}
 
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
-    }
-    
-});

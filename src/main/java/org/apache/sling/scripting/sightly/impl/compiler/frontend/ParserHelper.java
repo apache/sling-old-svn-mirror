@@ -16,28 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
 
-    @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
+package org.apache.sling.scripting.sightly.impl.compiler.frontend;
 
-##MainBody##
+import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.sling.scripting.sightly.impl.compiler.expression.node.StringConstant;
 
-// End Of Main Sub-Template Body ------------------------------------------------------------------
+/**
+ * Helper utilities for the ANTLR parser
+ */
+public class ParserHelper {
+
+    public static String unEscape(String original) {
+        return original.replaceAll("\\\\\"", "\"").replaceAll("\\\\'", "'");
     }
 
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
+    public static StringConstant createStringConstant(String original) {
+        String escaped = StringEscapeUtils.unescapeJava(original);
+        String trimmed = escaped.substring(1, escaped.length() - 1);
+        return new StringConstant(trimmed);
     }
-    
-});
+
+}

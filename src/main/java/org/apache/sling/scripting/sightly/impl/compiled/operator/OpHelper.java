@@ -16,28 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
 
-    @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
+package org.apache.sling.scripting.sightly.impl.compiled.operator;
 
-##MainBody##
+import org.apache.sling.scripting.sightly.impl.compiled.Type;
 
-// End Of Main Sub-Template Body ------------------------------------------------------------------
+/**
+ * Helper class for operator generation
+ */
+public class OpHelper {
+
+    public static Type sameType(TypedNode left, TypedNode right) {
+        if (left.getType().equals(right.getType())) {
+            return left.getType();
+        }
+        return null;
     }
 
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
+    public static boolean isNumericType(Type type) {
+        return type == Type.LONG || type == Type.DOUBLE;
     }
-    
-});
+}

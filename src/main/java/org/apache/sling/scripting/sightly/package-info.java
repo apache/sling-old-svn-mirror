@@ -16,28 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
+@Version("1.0.0")
+package org.apache.sling.scripting.sightly;
 
-    @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
-
-##MainBody##
-
-// End Of Main Sub-Template Body ------------------------------------------------------------------
-    }
-
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
-    }
-    
-});
+import aQute.bnd.annotation.Version;

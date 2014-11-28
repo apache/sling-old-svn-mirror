@@ -16,28 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
+package org.apache.sling.scripting.sightly.impl.html.dom.template;
 
-    @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
+public class TemplateCommentNode extends TemplateNode {
 
-##MainBody##
+    private final String text;
 
-// End Of Main Sub-Template Body ------------------------------------------------------------------
+    public TemplateCommentNode(final String t) {
+        this.text = t;
     }
 
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
+    public String getText() {
+        return this.text;
     }
-    
-});
+}

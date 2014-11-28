@@ -16,28 +16,37 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
+package org.apache.sling.scripting.sightly.impl.compiler.visitor;
+
+import org.apache.sling.scripting.sightly.impl.compiler.ris.Command;
+
+/**
+ * Ignore a nested range of commands
+ */
+public abstract class IgnoreRange extends UniformVisitor {
+
+    private final Class<? extends Command> rangeStart;
+    private final Class<? extends Command> rangeEnd;
+
+    private int skipCount = 1;
+
+    public IgnoreRange(Class<? extends Command> rangeStart, Class<? extends Command> rangeEnd) {
+        this.rangeStart = rangeStart;
+        this.rangeEnd = rangeEnd;
+    }
 
     @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
-
-##MainBody##
-
-// End Of Main Sub-Template Body ------------------------------------------------------------------
+    public void onCommand(Command command) {
+        Class<? extends Command> commandClass = command.getClass();
+        if (commandClass.equals(rangeStart)) {
+            skipCount++;
+        } else if (commandClass.equals(rangeEnd)) {
+            skipCount--;
+        }
+        if (skipCount == 0) {
+            onCompleted();
+        }
     }
 
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
-    }
-    
-});
+    protected abstract void onCompleted();
+}

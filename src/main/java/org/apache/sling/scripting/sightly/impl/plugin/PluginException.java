@@ -16,28 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
+package org.apache.sling.scripting.sightly.impl.plugin;
 
-    @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
+/**
+ * Plugin runtime exception caused by a plugin
+ */
+public class PluginException extends RuntimeException {
 
-##MainBody##
+    private Plugin plugin;
 
-// End Of Main Sub-Template Body ------------------------------------------------------------------
+    public PluginException(Plugin plugin, String message) {
+        super(message);
+        this.plugin = plugin;
     }
 
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
+    public Plugin getPlugin() {
+        return plugin;
     }
-    
-});
+}

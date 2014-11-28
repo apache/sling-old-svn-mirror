@@ -16,28 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
+
+package org.apache.sling.scripting.sightly.impl.compiled.operator;
+
+import org.apache.sling.scripting.sightly.impl.compiled.Type;
+
+/**
+ * Generator for long numeric operators
+ */
+public class LongOpGen extends NumericOpGen {
+
+    public LongOpGen(String javaOperator) {
+        super(javaOperator);
+    }
 
     @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
-
-##MainBody##
-
-// End Of Main Sub-Template Body ------------------------------------------------------------------
+    protected Type commonType(Type leftType, Type rightType) {
+        return Type.LONG;
     }
-
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
-    }
-    
-});
+}

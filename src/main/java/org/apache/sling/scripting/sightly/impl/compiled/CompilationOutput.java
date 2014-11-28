@@ -16,28 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
 
-    @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
+package org.apache.sling.scripting.sightly.impl.compiled;
 
-##MainBody##
+import java.util.Map;
 
-// End Of Main Sub-Template Body ------------------------------------------------------------------
+/**
+ * Result from compilation
+ */
+public class CompilationOutput {
+
+    private final String mainBody;
+    private final Map<String, CompilationOutput> subTemplates;
+
+    public CompilationOutput(String mainBody, Map<String, CompilationOutput> subTemplates) {
+        this.mainBody = mainBody;
+        this.subTemplates = subTemplates;
     }
 
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
+    public String getMainBody() {
+        return mainBody;
     }
-    
-});
+
+    public Map<String, CompilationOutput> getSubTemplates() {
+        return subTemplates;
+    }
+}

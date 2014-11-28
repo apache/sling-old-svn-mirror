@@ -16,28 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
 
-    @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
+package org.apache.sling.scripting.sightly;
 
-##MainBody##
+import java.util.Set;
 
-// End Of Main Sub-Template Body ------------------------------------------------------------------
-    }
+import aQute.bnd.annotation.ProviderType;
 
+/**
+ * A key-value immutable object understood by the Sightly runtime
+ * @param <T> the type of values for this record
+ */
+@ProviderType
+public interface Record<T> {
 
+    /**
+     * Get the value of the specified property
+     * @param name the name of the property
+     * @return the value of the property or null if this record does not
+     * have the specified property
+     */
+    T get(String name);
 
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
+    /**
+     * Get the set of properties for this record
+     * @return this record's properties
+     */
+    Set<String> properties();
 
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
-    }
-    
-});
+}

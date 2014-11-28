@@ -16,28 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
 
-    @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
+package org.apache.sling.scripting.sightly.use;
 
-##MainBody##
+import javax.script.Bindings;
 
-// End Of Main Sub-Template Body ------------------------------------------------------------------
-    }
+import org.apache.sling.scripting.sightly.render.RenderContext;
 
+import aQute.bnd.annotation.ConsumerType;
 
+/**
+ * Provides instances for the use API. Providers are tried in the order
+ * of their priority until one is found which can provide a non-null instance
+ */
+@ConsumerType
+public interface UseProvider {
 
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
-    }
-    
-});
+    /**
+     * Provide an instance based on the given identifier
+     * @param identifier the identifier of the dependency
+     * @param renderContext the current rendering context
+     * @param arguments Specific arguments provided by the use plugin
+     * @return a container with the instance that corresponds to the identifier. If the identifier cannot be
+     * handled by this provider, a failed outcome is returned
+     */
+    ProviderOutcome provide(String identifier, RenderContext renderContext, Bindings arguments);
+}

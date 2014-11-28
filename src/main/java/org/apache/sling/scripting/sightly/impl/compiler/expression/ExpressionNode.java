@@ -16,28 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
+package org.apache.sling.scripting.sightly.impl.compiler.expression;
 
-    @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
+/**
+ * ExpressionNode in a Sightly expression tree
+ */
+public interface ExpressionNode {
 
-##MainBody##
+    /**
+     * Accept a visitor to process this node.
+     * @param visitor The visitor
+     */
+    <T> T accept(NodeVisitor<T> visitor);
 
-// End Of Main Sub-Template Body ------------------------------------------------------------------
-    }
-
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
-    }
-    
-});
+}

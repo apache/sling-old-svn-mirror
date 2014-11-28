@@ -16,28 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
+package org.apache.sling.scripting.sightly.impl.compiler.expression.node;
+
+import org.apache.sling.scripting.sightly.impl.compiler.expression.ExpressionNode;
+import org.apache.sling.scripting.sightly.impl.compiler.expression.NodeVisitor;
+
+/**
+ * The null literal
+ */
+public final class NullLiteral implements ExpressionNode {
+
+    public static final NullLiteral INSTANCE = new NullLiteral();
+
+    private NullLiteral() {
+    }
 
     @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
-
-##MainBody##
-
-// End Of Main Sub-Template Body ------------------------------------------------------------------
+    public <T> T accept(NodeVisitor<T> visitor) {
+        return visitor.evaluate(this);
     }
-
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
-    }
-    
-});
+}

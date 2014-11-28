@@ -16,28 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
+
+package org.apache.sling.scripting.sightly.impl.compiler.optimization;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.sling.scripting.sightly.impl.compiler.ris.CommandStream;
+
+/**
+ * Applies a list of transformations in sequence
+ */
+public class SequenceStreamTransformer implements StreamTransformer {
+
+    private List<StreamTransformer> transformers;
+
+    public SequenceStreamTransformer(List<StreamTransformer> transformers) {
+        this.transformers = new ArrayList<StreamTransformer>(transformers);
+    }
 
     @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
-
-##MainBody##
-
-// End Of Main Sub-Template Body ------------------------------------------------------------------
+    public CommandStream transform(CommandStream inStream) {
+        CommandStream stream = inStream;
+        for (StreamTransformer transformer : transformers) {
+            stream = transformer.transform(stream);
+        }
+        return stream;
     }
-
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
-    }
-    
-});
+}

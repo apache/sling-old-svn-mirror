@@ -16,28 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
+package org.apache.sling.scripting.sightly.impl.compiler.expression.node;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import org.apache.sling.scripting.sightly.impl.compiler.expression.ExpressionNode;
+import org.apache.sling.scripting.sightly.impl.compiler.expression.NodeVisitor;
+
+/**
+ * Syntactical structure for an array of items
+ */
+public class ArrayLiteral implements ExpressionNode {
+
+    private final List<ExpressionNode> items;
+
+    public ArrayLiteral(List<ExpressionNode> items) {
+        this.items = new ArrayList<ExpressionNode>(items);
+    }
+
+    public List<ExpressionNode> getItems() {
+        return Collections.unmodifiableList(items);
+    }
 
     @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
-
-##MainBody##
-
-// End Of Main Sub-Template Body ------------------------------------------------------------------
+    public <T> T accept(NodeVisitor<T> visitor) {
+        return visitor.evaluate(this);
     }
-
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
-    }
-    
-});
+}

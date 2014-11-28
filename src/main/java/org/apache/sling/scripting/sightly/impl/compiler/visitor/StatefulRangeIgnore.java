@@ -16,28 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
+
+package org.apache.sling.scripting.sightly.impl.compiler.visitor;
+
+import org.apache.sling.scripting.sightly.impl.compiler.ris.Command;
+
+/**
+ * Variant of {@link IgnoreRange} to be used in stateful visitors.
+ */
+public class StatefulRangeIgnore extends IgnoreRange {
+
+    private final StatefulVisitor.StateControl stateControl;
+
+    public StatefulRangeIgnore(StatefulVisitor.StateControl stateControl, Class<? extends Command> rangeStart,
+                               Class<? extends Command> rangeEnd) {
+        super(rangeStart, rangeEnd);
+        this.stateControl = stateControl;
+    }
 
     @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
-
-##MainBody##
-
-// End Of Main Sub-Template Body ------------------------------------------------------------------
+    protected void onCompleted() {
+        stateControl.pop();
     }
-
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
-    }
-    
-});
+}

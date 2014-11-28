@@ -16,28 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
+package org.apache.sling.scripting.sightly.impl.compiler.util.stream;
+
+import java.util.List;
+
+import org.apache.sling.scripting.sightly.impl.compiler.ris.Command;
+import org.apache.sling.scripting.sightly.impl.compiler.ris.CommandHandler;
+import org.apache.sling.scripting.sightly.impl.compiler.ris.CommandStream;
+
+/**
+ * A stream which replays the same commands for all handlers
+ */
+public class ReplayStream implements CommandStream {
+
+    private final List<Command> commands;
+
+    public ReplayStream(List<Command> commands) {
+        this.commands = commands;
+    }
 
     @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
-
-##MainBody##
-
-// End Of Main Sub-Template Body ------------------------------------------------------------------
+    public void addHandler(CommandHandler handler) {
+        for (Command command : commands) {
+            handler.onEmit(command);
+        }
+        handler.onDone();
     }
-
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
-    }
-    
-});
+}

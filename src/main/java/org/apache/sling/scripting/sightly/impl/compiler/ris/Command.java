@@ -16,28 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
+package org.apache.sling.scripting.sightly.impl.compiler.ris;
 
-    @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
+/**
+ * A text rendering command
+ */
+public interface Command {
 
-##MainBody##
+    /**
+     * Accept a visitor
+     * @param visitor - the visitor that will process this command
+     */
+    void accept(CommandVisitor visitor);
 
-// End Of Main Sub-Template Body ------------------------------------------------------------------
-    }
-
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
-    }
-    
-});
+}

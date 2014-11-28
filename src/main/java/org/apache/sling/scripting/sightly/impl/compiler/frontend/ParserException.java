@@ -16,28 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
+package org.apache.sling.scripting.sightly.impl.compiler.frontend;
 
-    @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
+/**
+ * Plugin runtime exception to be used for either html or expression parser exceptions.
+ */
+public class ParserException extends RuntimeException {
 
-##MainBody##
-
-// End Of Main Sub-Template Body ------------------------------------------------------------------
+    public ParserException() {
+        super();
     }
 
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
+    public ParserException(String message) {
+        super(message);
     }
-    
-});
+
+    public ParserException(String message, Throwable throwable) {
+        super(message, throwable);
+    }
+
+    public ParserException(Throwable throwable) {
+        super(throwable);
+    }
+}

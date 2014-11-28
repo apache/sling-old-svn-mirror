@@ -16,28 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
+package org.apache.sling.scripting.sightly.extension;
 
-    @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
+import org.apache.sling.scripting.sightly.render.RenderContext;
 
-##MainBody##
+import aQute.bnd.annotation.ConsumerType;
 
-// End Of Main Sub-Template Body ------------------------------------------------------------------
-    }
+/**
+ * Extensions provided to the Sightly runtime
+ */
+@ConsumerType
+public interface RuntimeExtension {
 
+    String SCR_PROP_NAME = "org.apache.sling.scripting.sightly.extension.name";
 
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
-    }
-    
-});
+    /**
+     * Provide an instance of this extension
+     * @param renderContext - the runtime context
+     * @return an extension instance
+     */
+    ExtensionInstance provide(RenderContext renderContext);
+}

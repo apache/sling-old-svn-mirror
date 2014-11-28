@@ -16,28 +16,37 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
+package org.apache.sling.scripting.sightly.impl.compiler.debug;
+
+import org.apache.sling.scripting.sightly.impl.compiler.ris.Command;
+import org.apache.sling.scripting.sightly.impl.compiler.ris.CommandHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Handler which logs all commands
+ */
+public final class LoggingHandler implements CommandHandler {
+
+    public static final LoggingHandler INSTANCE = new LoggingHandler();
+
+    private final Logger LOG = LoggerFactory.getLogger(LoggingHandler.class);
+
+    private LoggingHandler() {
+    }
 
     @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
-
-##MainBody##
-
-// End Of Main Sub-Template Body ------------------------------------------------------------------
+    public void onEmit(Command command) {
+        LOG.info("Emitting {}", command);
     }
 
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
+    @Override
+    public void onError(String errorMessage) {
+        LOG.info("Error: {}", errorMessage);
     }
-    
-});
+
+    @Override
+    public void onDone() {
+        LOG.info("Finished");
+    }
+}

@@ -16,28 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
+
+package org.apache.sling.scripting.sightly.impl.compiled.operator;
+
+import org.apache.sling.scripting.sightly.impl.compiled.ExpressionTranslator;
+import org.apache.sling.scripting.sightly.impl.compiled.GenHelper;
+import org.apache.sling.scripting.sightly.impl.compiled.JavaSource;
+import org.apache.sling.scripting.sightly.impl.compiled.Type;
+
+/**
+ * Concatenation operator generation
+ */
+public final class ConcatenateOpGen implements BinaryOpGen {
+
+    public static final ConcatenateOpGen INSTANCE = new ConcatenateOpGen();
+
+    private ConcatenateOpGen() {
+    }
 
     @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
-
-##MainBody##
-
-// End Of Main Sub-Template Body ------------------------------------------------------------------
+    public Type returnType(Type leftType, Type rightType) {
+        return Type.STRING;
     }
 
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
+    @Override
+    public void generate(JavaSource source, ExpressionTranslator visitor, TypedNode left, TypedNode right) {
+        GenHelper.typeCoercion(source, visitor, left, Type.STRING);
+        source.append("+");
+        GenHelper.typeCoercion(source, visitor, right, Type.STRING);
     }
-    
-});
+}

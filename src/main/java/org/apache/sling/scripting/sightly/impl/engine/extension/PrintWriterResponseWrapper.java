@@ -16,38 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-package ##PackageName##;
+package org.apache.sling.scripting.sightly.impl.engine.extension;
 
+import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Collection;
-import javax.script.Bindings;
 
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderUnit;
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
+import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
 
-public final class ##ClassName## extends RenderUnit {
+/**
+ * Wrapper response to redirect the output into a specified print writer
+ */
+public class PrintWriterResponseWrapper extends SlingHttpServletResponseWrapper {
 
-    @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Template Body -----------------------------------------------------------------------------
+    private final PrintWriter writer;
 
-##MainBody##
-
-// End Of Main Template Body ----------------------------------------------------------------------
+    /**
+     * Create a wrapper for the supplied wrappedRequest
+     *
+     * @param writer - the base writer
+     * @param wrappedResponse - the wrapped response
+     */
+    public PrintWriterResponseWrapper(PrintWriter writer, SlingHttpServletResponse wrappedResponse) {
+        super(wrappedResponse);
+        this.writer = writer;
     }
 
-
-
-    {
-//Sub-Templates Initialization --------------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Templates Initialization -------------------------------------------------------------
+    @Override
+    public PrintWriter getWriter() throws IOException {
+        return writer;
     }
 
 }
-

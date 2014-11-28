@@ -16,28 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
 
-    @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
+package org.apache.sling.scripting.sightly.impl.compiled.operator;
 
-##MainBody##
+import org.apache.sling.scripting.sightly.impl.compiled.ExpressionTranslator;
+import org.apache.sling.scripting.sightly.impl.compiled.JavaSource;
+import org.apache.sling.scripting.sightly.impl.compiled.Type;
 
-// End Of Main Sub-Template Body ------------------------------------------------------------------
-    }
+/**
+ * Interface for generators of unary operators
+ */
+public interface UnaryOpGen {
 
+    Type returnType(Type operandType);
 
+    void generate(JavaSource source, ExpressionTranslator visitor, TypedNode typedNode);
 
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
-    }
-    
-});
+}

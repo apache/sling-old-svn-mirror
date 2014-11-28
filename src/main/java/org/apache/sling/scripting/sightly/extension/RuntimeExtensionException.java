@@ -16,28 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
+package org.apache.sling.scripting.sightly.extension;
 
-    @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
+import org.apache.sling.scripting.sightly.SightlyException;
 
-##MainBody##
+/**
+ * Exception thrown by runtime extensions
+ * @see RuntimeExtension
+ */
+public class RuntimeExtensionException extends SightlyException {
 
-// End Of Main Sub-Template Body ------------------------------------------------------------------
+    public RuntimeExtensionException() {
     }
 
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
+    public RuntimeExtensionException(String message) {
+        super(message);
     }
-    
-});
+
+    public RuntimeExtensionException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public RuntimeExtensionException(Throwable cause) {
+        super(cause);
+    }
+}

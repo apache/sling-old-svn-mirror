@@ -16,28 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
+package org.apache.sling.scripting.sightly.impl.compiler.ris.command;
+
+import org.apache.sling.scripting.sightly.impl.compiler.ris.Command;
+import org.apache.sling.scripting.sightly.impl.compiler.ris.CommandVisitor;
+
+/**
+ * Render the content of a variable
+ */
+public class OutVariable implements Command {
+
+    private final String variableName;
+
+    public OutVariable(String variableName) {
+        this.variableName = variableName;
+    }
 
     @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
-
-##MainBody##
-
-// End Of Main Sub-Template Body ------------------------------------------------------------------
+    public void accept(CommandVisitor visitor) {
+        visitor.visit(this);
     }
 
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
+    public String getVariableName() {
+        return variableName;
     }
-    
-});
+
+    @Override
+    public String toString() {
+        return "OutVariable{" +
+                "variableName='" + variableName + '\'' +
+                '}';
+    }
+}

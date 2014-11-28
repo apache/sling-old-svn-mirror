@@ -16,28 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
 
-    @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
+package org.apache.sling.scripting.sightly.impl.compiled;
 
-##MainBody##
-
-// End Of Main Sub-Template Body ------------------------------------------------------------------
-    }
-
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
-    }
-    
-});
+/**
+ * The scope of a variable in a Sightly script
+ */
+public enum VariableScope {
+    DYNAMIC, SCOPED, GLOBAL
+}

@@ -16,28 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
+package org.apache.sling.scripting.sightly.impl.compiler.ris;
 
-    @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
+/**
+ * Handles commands from streams
+ */
+public interface CommandHandler {
 
-##MainBody##
+    /**
+     * Handle the incoming command
+     * @param command - the received command
+     */
+    void onEmit(Command command);
 
-// End Of Main Sub-Template Body ------------------------------------------------------------------
-    }
+    /**
+     * Called when an error occurs.
+     * @param errorMessage - the message of the error
+     */
+    void onError(String errorMessage);
 
+    /**
+     * Called when the stream has finished. The contract is that after this call, no other
+     * commands or errors will be emitted.
+     */
+    void onDone();
 
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
-    }
-    
-});
+}

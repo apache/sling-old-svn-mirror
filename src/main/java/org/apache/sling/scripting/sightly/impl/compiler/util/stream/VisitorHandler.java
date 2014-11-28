@@ -16,28 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
+package org.apache.sling.scripting.sightly.impl.compiler.util.stream;
+
+import org.apache.sling.scripting.sightly.impl.compiler.ris.Command;
+import org.apache.sling.scripting.sightly.impl.compiler.ris.CommandHandler;
+import org.apache.sling.scripting.sightly.impl.compiler.ris.CommandVisitor;
+
+/**
+ * Delegates commands to a visitor
+ */
+public class VisitorHandler implements CommandHandler {
+
+    private CommandVisitor visitor;
+
+    public VisitorHandler(CommandVisitor visitor) {
+        this.visitor = visitor;
+    }
 
     @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
-
-##MainBody##
-
-// End Of Main Sub-Template Body ------------------------------------------------------------------
+    public void onEmit(Command command) {
+        command.accept(visitor);
     }
 
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
+    @Override
+    public void onError(String errorMessage) {
+        throw new RuntimeException(errorMessage);
     }
-    
-});
+
+    @Override
+    public void onDone() {
+
+    }
+}

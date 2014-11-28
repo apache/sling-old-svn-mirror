@@ -16,28 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
+package org.apache.sling.scripting.sightly.impl.compiler.util;
 
-    @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
+public class SymbolGenerator {
 
-##MainBody##
+    public static final String DEFAULT_VAR_PREFIX = "var_";
 
-// End Of Main Sub-Template Body ------------------------------------------------------------------
+    private int counter = 0;
+    private final String prefix;
+
+    public SymbolGenerator() {
+        this(DEFAULT_VAR_PREFIX);
     }
 
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
+    public SymbolGenerator(String prefix) {
+        this.prefix = prefix;
     }
-    
-});
+
+    public String next(String hint) {
+        String middle = (hint != null) ? hint.replaceAll("\\-", "_") : "";
+        return prefix + middle + counter++;
+    }
+
+    public String next() {
+        return next(null);
+    }
+
+}

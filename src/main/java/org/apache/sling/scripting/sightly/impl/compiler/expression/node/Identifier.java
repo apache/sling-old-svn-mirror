@@ -16,38 +16,49 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-package ##PackageName##;
+package org.apache.sling.scripting.sightly.impl.compiler.expression.node;
 
-import java.io.PrintWriter;
-import java.util.Collection;
-import javax.script.Bindings;
+import org.apache.sling.scripting.sightly.impl.compiler.expression.NodeVisitor;
 
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderUnit;
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
+/**
+ * A single variable. Ex: "myVar"
+ */
+public class Identifier implements Atom {
 
-public final class ##ClassName## extends RenderUnit {
+    private final String name;
+
+    /**
+     * Create an identifier
+     * @param name the name of the identifier
+     */
+    public Identifier(String name) {
+        this.name = name;
+    }
 
     @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Template Body -----------------------------------------------------------------------------
+    public <T> T accept(NodeVisitor<T> visitor) {
+        return visitor.evaluate(this);
+    }
 
-##MainBody##
-
-// End Of Main Template Body ----------------------------------------------------------------------
+    /**
+     * Retrieve the name of the identifier
+     * @return the name string
+     */
+    public String getName() {
+        return name;
     }
 
 
+    @Override
+    public String getText() {
+        return getName();
+    }
 
-    {
-//Sub-Templates Initialization --------------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Templates Initialization -------------------------------------------------------------
+    @Override
+    public String toString() {
+        return "Identifier{" +
+                "name='" + name + '\'' +
+                '}';
     }
 
 }
-

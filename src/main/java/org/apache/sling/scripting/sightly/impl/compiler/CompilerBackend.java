@@ -16,28 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
+package org.apache.sling.scripting.sightly.impl.compiler;
 
-    @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
+import org.apache.sling.scripting.sightly.impl.compiler.ris.CommandStream;
 
-##MainBody##
+/**
+ * A compiler backend
+ */
+public interface CompilerBackend {
 
-// End Of Main Sub-Template Body ------------------------------------------------------------------
-    }
+    /**
+     * Process a stream of commands
+     * @param stream - the stream of commands
+     */
+    void handle(CommandStream stream);
 
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
-    }
-    
-});
+}

@@ -16,28 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
+
+package org.apache.sling.scripting.sightly.impl.compiler.util;
+
+import java.util.Set;
+
+import org.apache.sling.scripting.sightly.impl.compiler.CompilerBackend;
+import org.apache.sling.scripting.sightly.impl.compiler.ris.CommandStream;
+import org.apache.sling.scripting.sightly.impl.compiler.util.stream.VisitorHandler;
+
+/**
+ * Wrapping backend that checks for global bindings shadowing
+ */
+public class GlobalShadowCheckBackend implements CompilerBackend {
+
+    private final CompilerBackend baseBackend;
+    private final Set<String> globals;
+
+    public GlobalShadowCheckBackend(CompilerBackend baseBackend, Set<String> globals) {
+        this.baseBackend = baseBackend;
+        this.globals = globals;
+    }
 
     @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
-
-##MainBody##
-
-// End Of Main Sub-Template Body ------------------------------------------------------------------
+    public void handle(CommandStream stream) {
+        stream.addHandler(new VisitorHandler(new GlobalShadowChecker(globals)));
+        baseBackend.handle(stream);
     }
-
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
-    }
-    
-});
+}

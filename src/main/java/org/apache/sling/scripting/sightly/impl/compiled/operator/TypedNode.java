@@ -16,28 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
 
-    @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
+package org.apache.sling.scripting.sightly.impl.compiled.operator;
 
-##MainBody##
+import org.apache.sling.scripting.sightly.impl.compiled.Type;
+import org.apache.sling.scripting.sightly.impl.compiler.expression.ExpressionNode;
 
-// End Of Main Sub-Template Body ------------------------------------------------------------------
+/**
+ * Expression node with type information
+ */
+public class TypedNode {
+    private final ExpressionNode node;
+    private final Type type;
+
+    public TypedNode(ExpressionNode node, Type type) {
+        this.node = node;
+        this.type = type;
     }
 
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
+    public ExpressionNode getNode() {
+        return node;
     }
-    
-});
+
+    public Type getType() {
+        return type;
+    }
+}

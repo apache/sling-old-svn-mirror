@@ -16,38 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-package ##PackageName##;
+package org.apache.sling.scripting.sightly.pojo;
 
-import java.io.PrintWriter;
-import java.util.Collection;
 import javax.script.Bindings;
 
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderUnit;
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
+import aQute.bnd.annotation.ConsumerType;
 
-public final class ##ClassName## extends RenderUnit {
+/**
+ * The <code>Use</code> interface can be implemented by Java objects
+ * which are instantiated as part of processing {@code data-sly-use}
+ * attributes.
+ *
+ * @see <a href="http://docs.adobe.com/docs/en/aem/6-0/develop/sightly.html#use">Sightly Block Statements - Use</a>
+ */
+@ConsumerType
+public interface Use {
 
-    @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Template Body -----------------------------------------------------------------------------
-
-##MainBody##
-
-// End Of Main Template Body ----------------------------------------------------------------------
-    }
-
-
-
-    {
-//Sub-Templates Initialization --------------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Templates Initialization -------------------------------------------------------------
-    }
+    /**
+     * Called to initialize the Java object with the current Java Scripting
+     * API bindings.
+     * <p>
+     * This method is called only if the object has been instantiated by
+     * Sightly as part of processing the {@code data-sly-use} attribute.
+     * <p>
+     * The Java Scripting API bindings provide all the global variables
+     * known to a script being executed. Consider these bindings of a map
+     * from variable name to the variable's value.
+     *
+     * @param bindings The Java Scripting API bindings.
+     */
+    public void init(Bindings bindings);
 
 }
-

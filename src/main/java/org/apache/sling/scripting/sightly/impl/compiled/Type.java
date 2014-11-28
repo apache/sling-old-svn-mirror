@@ -16,28 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
 
-    @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
+package org.apache.sling.scripting.sightly.impl.compiled;
 
-##MainBody##
+/**
+ * Type inferred for an expression
+ */
+public enum Type {
+    UNKNOWN("Object", false),
+    STRING("String", false),
+    LONG("long", true),
+    DOUBLE("double", true),
+    BOOLEAN("boolean", true),
+    MAP("java.util.Map", false);
 
-// End Of Main Sub-Template Body ------------------------------------------------------------------
+    private final String nativeClass;
+    private final boolean isPrimitive;
+
+    Type(String nativeClass, boolean isPrimitive) {
+        this.nativeClass = nativeClass;
+        this.isPrimitive = isPrimitive;
     }
 
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
+    public String getNativeClass() {
+        return nativeClass;
     }
-    
-});
+
+    public boolean isPrimitive() {
+        return isPrimitive;
+    }
+}

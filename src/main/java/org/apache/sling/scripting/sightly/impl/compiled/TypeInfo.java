@@ -16,28 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-addSubTemplate("##Name##", new RenderUnit() {
 
-    @Override
-    protected final void render(PrintWriter out,
-                                Bindings bindings,
-                                Bindings arguments,
-                                RenderContextImpl renderContext) {
-// Main Sub-Template Body -------------------------------------------------------------------------
+package org.apache.sling.scripting.sightly.impl.compiled;
 
-##MainBody##
+import java.util.Map;
 
-// End Of Main Sub-Template Body ------------------------------------------------------------------
+import org.apache.sling.scripting.sightly.impl.compiled.operator.TypedNode;
+import org.apache.sling.scripting.sightly.impl.compiler.expression.ExpressionNode;
+
+/**
+ * Provide type information for expressions
+ */
+public class TypeInfo {
+
+    private final Map<ExpressionNode, Type> typeMap;
+
+    public TypeInfo(Map<ExpressionNode, Type> typeMap) {
+        this.typeMap = typeMap;
     }
 
-
-
-    {
-//Sub-Sub-Templates Initialization ----------------------------------------------------------------
-
-##SubTemplateMapInit##
-
-//End of Sub-Sub-Templates Initialization ---------------------------------------------------------
+    public Type typeOf(ExpressionNode node) {
+        Type type = typeMap.get(node);
+        if (type == null) {
+            return Type.UNKNOWN;
+        }
+        return type;
     }
-    
-});
+
+    public TypedNode getTyped(ExpressionNode expressionNode) {
+        return new TypedNode(expressionNode, typeOf(expressionNode));
+    }
+}
