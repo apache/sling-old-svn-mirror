@@ -147,14 +147,14 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
                        foundMatch = true;
                     }
                 }
-                if (!foundMatch) {
+                if (!foundMatch && childResource.isRequired()) {
                     result.addFailureMessage(relativePath + childResource.getNamePattern().pattern(), "Missing required child resource.");
                 }
             } else {
                 Resource expectedResource = resource.getChild(childResource.getName());
                 if (expectedResource != null) {
                     validateChildResource(expectedResource, relativePath, childResource, result);
-                } else {
+                } else if (childResource.isRequired()) {
                     result.addFailureMessage(relativePath + childResource.getName(), "Missing required child resource.");
                 }
             } 
@@ -249,7 +249,7 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
                         validateValueMap(key, valueMap, relativePath, resourceProperty, result);
                     }
                 }
-                if (!foundMatch) {
+                if (!foundMatch && resourceProperty.isRequired()) {
                     result.addFailureMessage(relativePath + resourceProperty.getNamePattern(), "Missing required property.");
                 }
             } else {
@@ -262,7 +262,9 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
     private void validateValueMap(String property, ValueMap valueMap, String relativePath, ResourceProperty resourceProperty, ValidationResultImpl result) {
         Object fieldValues = valueMap.get(property);
         if (fieldValues == null) {
-            result.addFailureMessage(relativePath + property, "Missing required property.");
+            if (resourceProperty.isRequired()) {
+                result.addFailureMessage(relativePath + property, "Missing required property.");
+            }
             return;
         }
         List<ParameterizedValidator> validators = resourceProperty.getValidators();
