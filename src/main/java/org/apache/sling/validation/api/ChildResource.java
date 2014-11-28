@@ -44,6 +44,13 @@ public interface ChildResource {
     Pattern getNamePattern();
 
     /**
+     * Returns {@code true} if at least one resource matching the name/namePattern is required.
+     * 
+     * @return {@code true} if the resource is required, {@code false} otherwise
+     */
+    boolean isRequired();
+
+    /**
      * Returns the properties this child resource is expected to have.
      *
      * @return the properties set

@@ -49,6 +49,13 @@ public interface ResourceProperty {
     boolean isMultiple();
 
     /**
+     * Returns {@code true} if at least one property matching the name/namePattern is required.
+     * 
+     * @return {@code true} if the property is required, {@code false} otherwise
+     */
+    boolean isRequired();
+
+    /**
      * Returns a list of {@link ParameterizedValidator}s which should be applied on this property.
      *
      * @return the list of validators
