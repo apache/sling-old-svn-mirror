@@ -45,122 +45,118 @@ import org.osgi.framework.Constants;
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 2500)
-public class ResourcePathInjector extends AbstractInjector implements Injector,
-		AcceptsNullName, StaticInjectAnnotationProcessorFactory {
+public class ResourcePathInjector extends AbstractInjector implements Injector, AcceptsNullName,
+        StaticInjectAnnotationProcessorFactory {
 
-	@Override
-	public String getName() {
-		return "resource-path";
-	}
+    @Override
+    public String getName() {
+        return "resource-path";
+    }
 
-	@Override
-	public Object getValue(Object adaptable, String name, Type declaredType,
-			AnnotatedElement element, DisposalCallbackRegistry callbackRegistry) {
-		String resourcePath = null;
-		Path pathAnnotation = element.getAnnotation(Path.class);
-		if (pathAnnotation != null) {
-			resourcePath = pathAnnotation.value();
-		} else {
-			ResourcePath resourcePathAnnotation = element
-					.getAnnotation(ResourcePath.class);
-			if (resourcePathAnnotation != null) {
-				resourcePath = resourcePathAnnotation.path();
-				if (resourcePath.isEmpty()) {
-					resourcePath = null;
-				}
-			}
-		}
-		if (resourcePath != null) {
-			ResourceResolver resolver = getResourceResolver(adaptable);
-			if (resolver != null) {
-				return resolver.getResource(resourcePath);
-			}
-		} else if (name != null) {
-			// try to get from value map
+    @Override
+    public Object getValue(Object adaptable, String name, Type declaredType, AnnotatedElement element,
+            DisposalCallbackRegistry callbackRegistry) {
+        String resourcePath = null;
+        Path pathAnnotation = element.getAnnotation(Path.class);
+        if (pathAnnotation != null) {
+            resourcePath = pathAnnotation.value();
+        } else {
+            ResourcePath resourcePathAnnotation = element.getAnnotation(ResourcePath.class);
+            if (resourcePathAnnotation != null) {
+                resourcePath = resourcePathAnnotation.path();
+                if (resourcePath.isEmpty()) {
+                    resourcePath = null;
+                }
+            }
+        }
+        if (resourcePath != null) {
+            ResourceResolver resolver = getResourceResolver(adaptable);
+            if (resolver != null) {
+                return resolver.getResource(resourcePath);
+            }
+        } else if (name != null) {
+            // try to get from value map
 
-			if (isDeclaredTypeCollection(declaredType)) {
-				return getResourceList(name, adaptable);
-			} else {
-				return getSingleResource(name, adaptable);
+            if (isDeclaredTypeCollection(declaredType)) {
+                return getResourceList(name, adaptable);
+            } else {
+                return getSingleResource(name, adaptable);
 
-			}
+            }
 
-		}
+        }
 
-		return null;
-	}
+        return null;
+    }
 
-	private List<Resource> getResourceList(String name, Object adaptable) {
-		List<Resource> result = new ArrayList<Resource>();
-		ValueMap map = getValueMap(adaptable);
-		String[] resourcePaths = map.get(name, String[].class);
-		ResourceResolver resolver = getResourceResolver(adaptable);
-		if (resolver == null) {
-			return null;
-		}
-		for (String resourcePath : resourcePaths) {
-			result.add(resolver.getResource(resourcePath));
-		}
-		return result;
+    private List<Resource> getResourceList(String name, Object adaptable) {
+        List<Resource> result = new ArrayList<Resource>();
+        ValueMap map = getValueMap(adaptable);
+        String[] resourcePaths = map.get(name, String[].class);
+        ResourceResolver resolver = getResourceResolver(adaptable);
+        if (resolver == null) {
+            return null;
+        }
+        for (String resourcePath : resourcePaths) {
+            result.add(resolver.getResource(resourcePath));
+        }
+        return result;
 
-	}
+    }
 
-	private Resource getSingleResource(String name, Object adaptable) {
-		ValueMap map = getValueMap(adaptable);
-		if (map == null) {
-			return null;
-		}
-		String resourcePath = map.get(name, String.class);
-		if (resourcePath != null) {
-			ResourceResolver resolver = getResourceResolver(adaptable);
-			if (resolver != null) {
-				return resolver.getResource(resourcePath);
-			}
-		}
-		return null;
+    private Resource getSingleResource(String name, Object adaptable) {
+        ValueMap map = getValueMap(adaptable);
+        if (map == null) {
+            return null;
+        }
+        String resourcePath = map.get(name, String.class);
+        if (resourcePath != null) {
+            ResourceResolver resolver = getResourceResolver(adaptable);
+            if (resolver != null) {
+                return resolver.getResource(resourcePath);
+            }
+        }
 
-	}
+        return null;
+    }
 
-	@Override
-	public InjectAnnotationProcessor2 createAnnotationProcessor(
-			AnnotatedElement element) {
-		// check if the element has the expected annotation
-		ResourcePath annotation = element.getAnnotation(ResourcePath.class);
-		if (annotation != null) {
-			return new ResourcePathAnnotationProcessor(annotation);
-		}
-		return null;
-	}
+    @Override
+    public InjectAnnotationProcessor2 createAnnotationProcessor(AnnotatedElement element) {
+        // check if the element has the expected annotation
+        ResourcePath annotation = element.getAnnotation(ResourcePath.class);
+        if (annotation != null) {
+            return new ResourcePathAnnotationProcessor(annotation);
+        }
+        return null;
+    }
 
-	private static class ResourcePathAnnotationProcessor extends
-			AbstractInjectAnnotationProcessor2 {
+    private static class ResourcePathAnnotationProcessor extends AbstractInjectAnnotationProcessor2 {
 
-		private final ResourcePath annotation;
+        private final ResourcePath annotation;
 
-		public ResourcePathAnnotationProcessor(ResourcePath annotation) {
-			this.annotation = annotation;
-		}
+        public ResourcePathAnnotationProcessor(ResourcePath annotation) {
+            this.annotation = annotation;
+        }
 
-		@Override
-		public String getName() {
-			// since null is not allowed as default value in annotations, the
-			// empty string means, the default should be
-			// used!
-			if (annotation.name().isEmpty()) {
-				return null;
-			}
-			return annotation.name();
-		}
+        @Override
+        public String getName() {
+            // since null is not allowed as default value in annotations, the empty string means, the default should be
+            // used!
+            if (annotation.name().isEmpty()) {
+                return null;
+            }
+            return annotation.name();
+        }
 
-		@Override
-		public Boolean isOptional() {
-			return annotation.optional();
-		}
+        @Override
+        public Boolean isOptional() {
+            return annotation.optional();
+        }
 
-		@Override
-		public InjectionStrategy getInjectionStrategy() {
-			return annotation.injectionStrategy();
-		}
-	}
+        @Override
+        public InjectionStrategy getInjectionStrategy() {
+            return annotation.injectionStrategy();
+        }
+    }
 
 }
