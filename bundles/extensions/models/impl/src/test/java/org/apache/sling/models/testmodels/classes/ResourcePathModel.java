@@ -18,6 +18,8 @@
  */
 package org.apache.sling.models.testmodels.classes;
 
+import java.util.List;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -40,6 +42,9 @@ public class ResourcePathModel {
 
     @ResourcePath(path = "/some/path2")
     private Resource fromPath2;
+    
+    @ResourcePath(name="propertyWithSeveralPaths")
+    private List<Resource> multipleResources;
 
     @ResourcePath(name = "anotherPropertyContainingAPath")
     private Resource derefProperty2;
@@ -58,6 +63,10 @@ public class ResourcePathModel {
 
     public Resource getByDerefProperty2() {
         return derefProperty2;
+    }
+    
+    public List<Resource> getMultipleResources(){
+    	return this.multipleResources;
     }
 
 }

@@ -23,6 +23,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -77,6 +78,10 @@ public class ResourcePathInjectionTest {
         Map<String, Object> map = new HashMap<String, Object>();
         map.put("propertyContainingAPath", "/some/other/path");
         map.put("anotherPropertyContainingAPath", "/some/other/path2");
+        String[] paths= new String[2];
+        paths[0]="/some/other/path";
+        paths[1]="/some/other/path2";
+        map.put("propertyWithSeveralPaths",paths);
 
         ValueMap properties = new ValueMapDecorator(map);
 
@@ -129,5 +134,16 @@ public class ResourcePathInjectionTest {
         assertNull(model.getFromPath2());
         assertNull(model.getByDerefProperty2());
    }
-
+    @Test
+    public void testMultiplePathInjection(){
+    ResourcePathModel model = factory.getAdapter(adaptable, ResourcePathModel.class);
+    assertNotNull(model);
+    List<Resource> resources=model.getMultipleResources();
+    assertNotNull(resources);
+    assertEquals(2,resources.size());
+    assertEquals(byPropertyValueResource, resources.get(0));
+    assertEquals(byPropertyValueResource2, resources.get(1));
+   
+    	
+    }
 }
