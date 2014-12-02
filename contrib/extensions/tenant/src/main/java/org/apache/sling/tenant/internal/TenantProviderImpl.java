@@ -28,7 +28,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -161,11 +160,11 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
     public Tenant getTenant(final String tenantId) {
         if (tenantId != null && tenantId.length() > 0) {
             return call(new ResourceResolverTask<Tenant>() {
-                public Tenant call(ResourceResolver resolver, EventAdmin eventAdmin) {
+                public Tenant call(ResourceResolver resolver) {
                     Resource tenantRes = getTenantResource(resolver, tenantId);
                     return (tenantRes != null) ? new TenantImpl(tenantRes) : null;
                 }
-            }, eventAdmin);
+            });
         }
 
         // in case of some problem
@@ -189,7 +188,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
         }
 
         Iterator<Tenant> result = call(new ResourceResolverTask<Iterator<Tenant>>() {
-            public Iterator<Tenant> call(ResourceResolver resolver, EventAdmin eventAdmin) {
+            public Iterator<Tenant> call(ResourceResolver resolver) {
                 Resource tenantRootRes = resolver.getResource(tenantRootPath);
 
                 List<Tenant> tenantList = new ArrayList<Tenant>();
@@ -204,7 +203,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                 }
                 return tenantList.iterator();
             }
-        }, eventAdmin);
+        });
 
         if (result == null) {
             // no filter or no resource resolver for calling
@@ -216,7 +215,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
 
     public Tenant create(final String tenantId, final Map<String, Object> properties) {
         return call(new ResourceResolverTask<Tenant>() {
-            public Tenant call(ResourceResolver adminResolver, EventAdmin eventAdmin) {
+            public Tenant call(ResourceResolver adminResolver) {
                 try {
                     // create the tenant
                     Resource tenantRes = createTenantResource(adminResolver, tenantId, properties);
@@ -229,13 +228,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                     tenant.loadProperties(tenantRes);
 
                     // post tenant added event
-                    if (eventAdmin != null) {
-                        final Dictionary<String, Object> props = new Hashtable<String, Object>();
-                        props.put(TenantConstants.PROPERTY_TENANTID,
-                                tenant.getId());
-                        eventAdmin.postEvent(new Event(
-                                TenantConstants.TOPIC_TENANT_CREATED, props));
-                    }
+                    sendEvent(EventTypes.CREATED, tenant.getId(), null, TenantImpl.getProperties(tenant));
 
                     return tenant;
 
@@ -248,15 +241,16 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                 // no new tenant in case of problems
                 return null;
             }
-        }, eventAdmin);
+        });
     }
 
     public void remove(final Tenant tenant) {
         call(new ResourceResolverTask<Void>() {
-            public Void call(ResourceResolver resolver, EventAdmin eventAdmin) {
+            public Void call(ResourceResolver resolver) {
                 try {
                     Resource tenantRes = getTenantResource(resolver, tenant.getId());
                     if (tenantRes != null) {
+                        final Map<String, Object> oldProps = TenantImpl.getProperties(tenant);
                         // call tenant setup handler
                         for (TenantCustomizer ts : getTenantHandlers()) {
                             try {
@@ -270,13 +264,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                         resolver.commit();
 
                         // post tenant removed event
-                        if (eventAdmin != null) {
-                            final Dictionary<String, Object> props = new Hashtable<String, Object>();
-                            props.put(TenantConstants.PROPERTY_TENANTID,
-                                    tenant.getId());
-                            eventAdmin.postEvent(new Event(
-                                    TenantConstants.TOPIC_TENANT_REMOVED, props));
-                        }
+                        sendEvent(EventTypes.REMOVED, tenant.getId(), oldProps, null);
                     }
                 } catch (PersistenceException e) {
                     log.error("remove({}): Cannot persist Tenant removal", tenant.getId(), e);
@@ -284,23 +272,30 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
 
                 return null;
             }
-        }, eventAdmin);
+        });
     }
 
     public void setProperty(final Tenant tenant, final String name, final Object value) {
         updateProperties(tenant, new PropertiesUpdater() {
             public void update(ModifiableValueMap properties) {
-                if (value != null) {
-                    properties.put(name, value);
-                } else {
+                if (isPropertyRemoval()) {
                     properties.remove(name);
+                } else {
+                    properties.put(name, value);
                 }
             }
-        }, false, name);
+
+            public boolean isPropertyRemoval() {
+                return value == null;
+            }
+
+            public String[] getPropertyNames() {
+                return new String[]{name};
+            }
+        });
     }
 
     public void setProperties(final Tenant tenant, final Map<String, Object> properties) {
-        final Set<String> featureNames = properties.keySet();
         updateProperties(tenant, new PropertiesUpdater() {
             public void update(ModifiableValueMap vm) {
                 for (Entry<String, Object> entry : properties.entrySet()) {
@@ -311,17 +306,35 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                     }
                 }
             }
-        }, false, featureNames.toArray(new String[featureNames.size()]));
+
+            public boolean isPropertyRemoval() {
+                return false;
+            }
+
+            public String[] getPropertyNames() {
+                return properties.keySet().toArray(new String[properties.size()]);
+            }
+        });
     }
 
     public void removeProperties(final Tenant tenant, final String... propertyNames) {
-        updateProperties(tenant, new PropertiesUpdater() {
-            public void update(ModifiableValueMap properties) {
-                for (String name : propertyNames) {
-                    properties.remove(name);
+        if (propertyNames != null && propertyNames.length > 0) {
+            updateProperties(tenant, new PropertiesUpdater() {
+                public void update(ModifiableValueMap properties) {
+                    for (String name : propertyNames) {
+                        properties.remove(name);
+                    }
                 }
-            }
-        }, true, propertyNames);
+
+                public boolean isPropertyRemoval() {
+                    return true;
+                }
+
+                public String[] getPropertyNames() {
+                    return propertyNames;
+                }
+            });
+        }
     }
 
     @SuppressWarnings("serial")
@@ -387,13 +400,23 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
         }
     }
 
-    private <T> T call(ResourceResolverTask<T> task, EventAdmin eventAdmin) {
+    private void sendEvent(final EventTypes topic, final String tenantId, final Map<String, Object> oldProps, final Map<String, Object> newProps) {
+        EventAdmin eventAdmin = this.eventAdmin;
+        if (eventAdmin != null) {
+            final Dictionary<String, Object> props = new Hashtable<String, Object>();
+            props.put(TenantConstants.PROPERTY_TENANTID, tenantId);
+            topic.setProps(props, oldProps, newProps);
+            eventAdmin.postEvent(new Event(topic.getTopic(), props));
+        }
+    }
+
+    private <T> T call(ResourceResolverTask<T> task) {
         ResourceResolver resolver = null;
         T result = null;
 
         try {
             resolver = factory.getAdministrativeResourceResolver(null);
-            result = task.call(resolver, eventAdmin);
+            result = task.call(resolver);
         } catch (LoginException le) {
             // unexpected, thus ignore
         } finally {
@@ -405,13 +428,15 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
         return result;
     }
 
-    private void updateProperties(final Tenant tenant, final PropertiesUpdater updater,
-                                  final boolean remove, final String... propertyNames) {
+    private void updateProperties(final Tenant tenant, final PropertiesUpdater updater) {
         call(new ResourceResolverTask<Void>() {
-            public Void call(ResourceResolver resolver, EventAdmin eventAdmin) {
+            public Void call(ResourceResolver resolver) {
                 try {
                     Resource tenantRes = getTenantResource(resolver, tenant.getId());
                     if (tenantRes != null) {
+
+                        final Map<String, Object> oldProps = TenantImpl.getProperties(tenant);
+
                         updater.update(tenantRes.adaptTo(ModifiableValueMap.class));
 
                         //refresh so that customizer gets a refreshed tenant instance
@@ -422,20 +447,10 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                         customizeTenant(tenantRes, tenant);
                         resolver.commit();
 
-                        if (tenant instanceof TenantImpl) {
-                            ((TenantImpl) tenant).loadProperties(tenantRes);
-                        }
+                        final Map<String, Object> newProps = TenantImpl.getProperties(tenant);
 
-                        // post tenant property event (set|removed)
-                        if (eventAdmin != null) {
-                            final Dictionary<String, Object> props = new Hashtable<String, Object>();
-                            props.put(TenantConstants.PROPERTY_TENANTID, tenant.getId());
-                            props.put(TenantConstants.PROPERTY_NAMES, propertyNames);
-                            final String topic = remove
-                                    ? TenantConstants.TOPIC_TENANT_PROPERTY_REMOVED
-                                    : TenantConstants.TOPIC_TENANT_PROPERTY_SET;
-                            eventAdmin.postEvent(new Event(topic, props));
-                        }
+                        // post tenant tenant updated event
+                        sendEvent(EventTypes.UPDATED, tenant.getId(), oldProps, newProps);
                     }
                 } catch (PersistenceException pe) {
                     log.error("setProperty({}): Cannot persist Tenant removal", tenant.getId(), pe);
@@ -443,14 +458,16 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
 
                 return null;
             }
-        }, eventAdmin);
+        });
     }
 
     private static interface ResourceResolverTask<T> {
-        T call(ResourceResolver resolver, EventAdmin eventAdmin);
+        T call(ResourceResolver resolver);
     }
 
     private static interface PropertiesUpdater {
         void update(ModifiableValueMap properties);
+        boolean isPropertyRemoval();
+        String[] getPropertyNames();
     }
 }

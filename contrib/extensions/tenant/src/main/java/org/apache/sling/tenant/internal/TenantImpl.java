@@ -18,6 +18,7 @@
  */
 package org.apache.sling.tenant.internal;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -40,6 +41,20 @@ class TenantImpl implements Tenant {
     TenantImpl(Resource resource) {
         this.id = resource.getName();
         loadProperties(resource);
+    }
+
+    static Map<String, Object> getProperties(final Tenant tenant) {
+        Map<String, Object> props;
+        if (tenant instanceof TenantImpl) {
+            props = new HashMap<String, Object>(((TenantImpl) tenant).vm);
+        } else {
+            props = new HashMap<String, Object>();
+            for (Iterator<String> i = tenant.getPropertyNames(); i.hasNext();) {
+                final String name = i.next();
+                props.put(name, tenant.getProperty(name));
+            }
+        }
+        return Collections.unmodifiableMap(props);
     }
 
     void loadProperties(Resource resource) {

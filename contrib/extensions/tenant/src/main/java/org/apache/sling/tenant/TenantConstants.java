@@ -46,20 +46,12 @@ public interface TenantConstants {
     public static final String TOPIC_TENANT_REMOVED = "org/apache/sling/tenant/REMOVED";
 
     /**
-     * <p>The topic for the OSGi event which is sent when one or more properties have been set to a tenant.</p>
-     * <p>The event contains at least the {@link #PROPERTY_TENANTID} and {@link #PROPERTY_NAMES}.</p>
+     * <p>The topic for the OSGi event which is sent when a tenant has been updated.</p>
+     * <p>The event contains at least the {@link #PROPERTY_TENANTID}.</p>
      *
      * @since 1.1
      */
-    public static final String TOPIC_TENANT_PROPERTY_SET = "org/apache/sling/tenant/properties/SET";
-
-    /**
-     * <p>The topic for the OSGi event which is sent when one or more properties have been removed from a tenant.</p>
-     * <p>The event contains at least the {@link #PROPERTY_TENANTID} and {@link #PROPERTY_NAMES}.</p>
-     *
-     * @since 1.1
-     */
-    public static final String TOPIC_TENANT_PROPERTY_REMOVED = "org/apache/sling/tenant/properties/REMOVED";
+    public static final String TOPIC_TENANT_UPDATED = "org/apache/sling/tenant/UPDATED";
 
     /**
      * <p>The name of the event property holding the identifier of the tenant affected by a change.</p>
@@ -70,11 +62,98 @@ public interface TenantConstants {
     public static final String PROPERTY_TENANTID = "tenantId";
 
     /**
-     * <p>The name of the event property holding the names of the properties affected by a change.</p>
-     * <p>The value of the property is a {@code String[]}.</p>
+     * <p>
+     * The name of the event property holding an unmodifiable map of properties
+     * added.
+     * </p>
+     * <p>
+     * The value of the property is a {@code Map&lt;String, Object&gt;}.
+     * </p>
+     * <p>
+     * Depending on the topic, this property is defined as follows:
+     * </p>
+     * <table>
+     * <tr>
+     * <td>{@link #TOPIC_TENANT_CREATED}</td>
+     * <td>All tenant properties after creating the tenant and calling all
+     * {@link org.apache.sling.tenant.spi.TenantCustomizer} services.</td>
+     * </tr>
+     * <tr>
+     * <td>{@link #TOPIC_TENANT_UPDATED}</td>
+     * <td>Tenant properties added through one of the property setter commands
+     * or by {@link org.apache.sling.tenant.spi.TenantCustomizer} services.</td>
+     * </tr>
+     * <tr>
+     * <td>{@link #TOPIC_TENANT_REMOVED}</td>
+     * <td>not present</td>
+     * </tr>
+     * </table>
      *
      * @since 1.1
      */
-    public static final String PROPERTY_NAMES = "propertyNames";
+    public static final String PROPERTIES_ADDED = "properties_added";
+
+    /**
+     * <p>
+     * The name of the event property holding an unmodifiable map of properties
+     * updated.
+     * </p>
+     * <p>
+     * The value of the property is a {@code Map&lt;String, Object&gt;}.
+     * </p>
+     * <p>
+     * Depending on the topic, this property is defined as follows:
+     * </p>
+     * <table>
+     * <tr>
+     * <td>{@link #TOPIC_TENANT_CREATED}</td>
+     * <td>not present</td>
+     * </tr>
+     * <tr>
+     * <td>{@link #TOPIC_TENANT_UPDATED}</td>
+     * <td>New values of properties modified through one of the property setter commands
+     * or by {@link org.apache.sling.tenant.spi.TenantCustomizer} services.</td>
+     * </tr>
+     * <tr>
+     * <td>{@link #TOPIC_TENANT_REMOVED}</td>
+     * <td>not present</td>
+     * </tr>
+     * </table>
+     *
+     * @since 1.1
+     */
+    public static final String PROPERTIES_UPDATED = "properties_updated";
+
+    /**
+     * <p>
+     * The name of the event property holding an unmodifiable map of properties
+     * added.
+     * </p>
+     * <p>
+     * The value of the property is a {@code Map&lt;String, Object&gt;}.
+     * </p>
+     * <p>
+     * Depending on the topic, this property is defined as follows:
+     * </p>
+     * <table>
+     * <tr>
+     * <td>{@link #TOPIC_TENANT_CREATED}</td>
+     * <td>not present</td>
+     * </tr>
+     * <tr>
+     * <td>{@link #TOPIC_TENANT_UPDATED}</td>
+     * <td>Tenant properties removed through one of the property setter commands
+     * or by {@link  org.apache.sling.tenant.spi.TenantCustomizer} services.</td>
+     * </tr>
+     * <tr>
+     * <td>{@link #TOPIC_TENANT_REMOVED}</td>
+     * <td>All tenant properties before removing the tenant and calling all
+     * {@link org.apache.sling.tenant.spi.TenantCustomizer} services.</td>
+     * </tr>
+     * </table>
+     *
+     * @since 1.1
+     */
+    public static final String PROPERTIES_REMOVED = "properties_removed";
 
 }
