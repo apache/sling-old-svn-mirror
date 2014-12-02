@@ -159,10 +159,10 @@
               </execution>
             </executions>
             <configuration>
-              <includes>
-                <include>**/SlingExtensionModelsIT.*</include>
-                <!-- <include>**/SlingScriptingJavaIT.*</include> -->
-              </includes>
+              <excludes>
+                <exclude>**/SlingExtensionModelsIT.*</exclude>
+                <exclude>**/SlingScriptingJavaIT.*</exclude>
+              </excludes>
             </configuration>
           </plugin>
         </plugins>
