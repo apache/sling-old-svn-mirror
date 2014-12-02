@@ -228,7 +228,8 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                     tenant.loadProperties(tenantRes);
 
                     // post tenant added event
-                    sendEvent(EventTypes.CREATED, tenant.getId(), null, TenantImpl.getProperties(tenant));
+                    sendEvent(TenantConstants.TOPIC_TENANT_CREATED,
+                            tenant.getId(), TenantImpl.getProperties(tenant), null, null);
 
                     return tenant;
 
@@ -264,7 +265,8 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                         resolver.commit();
 
                         // post tenant removed event
-                        sendEvent(EventTypes.REMOVED, tenant.getId(), oldProps, null);
+                        sendEvent(TenantConstants.TOPIC_TENANT_REMOVED,
+                                tenant.getId(), null, null, oldProps);
                     }
                 } catch (PersistenceException e) {
                     log.error("remove({}): Cannot persist Tenant removal", tenant.getId(), e);
@@ -278,19 +280,11 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
     public void setProperty(final Tenant tenant, final String name, final Object value) {
         updateProperties(tenant, new PropertiesUpdater() {
             public void update(ModifiableValueMap properties) {
-                if (isPropertyRemoval()) {
+                if (value == null) {
                     properties.remove(name);
                 } else {
                     properties.put(name, value);
                 }
-            }
-
-            public boolean isPropertyRemoval() {
-                return value == null;
-            }
-
-            public String[] getPropertyNames() {
-                return new String[]{name};
             }
         });
     }
@@ -306,14 +300,6 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                     }
                 }
             }
-
-            public boolean isPropertyRemoval() {
-                return false;
-            }
-
-            public String[] getPropertyNames() {
-                return properties.keySet().toArray(new String[properties.size()]);
-            }
         });
     }
 
@@ -324,14 +310,6 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                     for (String name : propertyNames) {
                         properties.remove(name);
                     }
-                }
-
-                public boolean isPropertyRemoval() {
-                    return true;
-                }
-
-                public String[] getPropertyNames() {
-                    return propertyNames;
                 }
             });
         }
@@ -400,13 +378,26 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
         }
     }
 
-    private void sendEvent(final EventTypes topic, final String tenantId, final Map<String, Object> oldProps, final Map<String, Object> newProps) {
+    private void sendEvent(final String topic, final String tenantId, final Map<String, Object> addedProps,
+                           final Map<String, Object> updatedProps, final Map<String, Object> removedProps) {
         EventAdmin eventAdmin = this.eventAdmin;
         if (eventAdmin != null) {
             final Dictionary<String, Object> props = new Hashtable<String, Object>();
             props.put(TenantConstants.PROPERTY_TENANTID, tenantId);
-            topic.setProps(props, oldProps, newProps);
-            eventAdmin.postEvent(new Event(topic.getTopic(), props));
+            setEventProperties(props,
+                    TenantConstants.PROPERTIES_ADDED, addedProps);
+            setEventProperties(props,
+                    TenantConstants.PROPERTIES_UPDATED, updatedProps);
+            setEventProperties(props,
+                    TenantConstants.PROPERTIES_REMOVED, removedProps);
+            eventAdmin.postEvent(new Event(topic, props));
+        }
+    }
+
+    private void setEventProperties(final Dictionary<String, Object> event, final String propertyType,
+                               final Map<String, Object> properties) {
+        if (properties != null && properties.size() > 0) {
+            event.put(propertyType, properties);
         }
     }
 
@@ -449,8 +440,31 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
 
                         final Map<String, Object> newProps = TenantImpl.getProperties(tenant);
 
+                        // compute properties changes
+
+                        final Map<String, Object> added = new HashMap<String, Object>();
+                        final Map<String, Object> updated = new HashMap<String, Object>();
+                        final Map<String, Object> removed = new HashMap<String, Object>();
+
+                        // handle new (only in newProps) and updated (in both new and old) entries
+                        for (String key : newProps.keySet()) {
+                            if (oldProps.containsKey(key)) {
+                                updated.put(key, newProps.get(key));
+                            } else {
+                                added.put(key, newProps.get(key));
+                            }
+                        }
+
+                        // handle removed (only in oldProps) entries
+                        for (String key : oldProps.keySet()) {
+                            if (!newProps.containsKey(key)) {
+                                removed.put(key, newProps.get(key));
+                            }
+                        }
+
                         // post tenant tenant updated event
-                        sendEvent(EventTypes.UPDATED, tenant.getId(), oldProps, newProps);
+                        sendEvent(TenantConstants.TOPIC_TENANT_UPDATED,
+                                tenant.getId(), added, updated, removed);
                     }
                 } catch (PersistenceException pe) {
                     log.error("setProperty({}): Cannot persist Tenant removal", tenant.getId(), pe);
@@ -467,7 +481,5 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
 
     private static interface PropertiesUpdater {
         void update(ModifiableValueMap properties);
-        boolean isPropertyRemoval();
-        String[] getPropertyNames();
     }
 }
