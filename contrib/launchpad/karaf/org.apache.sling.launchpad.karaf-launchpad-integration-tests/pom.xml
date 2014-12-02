@@ -153,12 +153,13 @@
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/post/PostServletPrivilegesUpdateTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/auth/AuthenticationResponseCodeTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/repository/OakRepositoryNameTest.*</exclude>
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/ContentLoaderMiscPropertyTest.*</exclude>
+                <exclude>org/apache/sling/launchpad/webapp/integrationtest/runmodes/InactiveRunModeTest.*</exclude>
+                <exclude>org/apache/sling/launchpad/webapp/integrationtest/ExportedPackagesTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/FiltersTest.*</exclude>
-                <exclude>org/apache/sling/launchpad/webapp/integrationtest/InitialContentTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/JUnitCategoriesTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/JspForwardTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/LaunchpadConfigInstallerTest.*</exclude>
+                <exclude>org/apache/sling/launchpad/webapp/integrationtest/ResourceResolverProxyTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/ServletResolverConfigTest.*</exclude>
                 <exclude>org/apache/sling/launchpad/webapp/integrationtest/servlets/resolution/WarSelectorServletTest.*</exclude>
               </excludes>
