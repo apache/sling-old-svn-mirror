@@ -287,6 +287,10 @@
     <feature version="${project.version}">sling</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.query/2.0.0</bundle>
   </feature>
+  <feature name="sling-extension-resourcemerger" version="1.2.0">
+    <feature version="${project.version}">sling</feature>
+    <bundle>mvn:org.apache.sling/org.apache.sling.resourcemerger/1.2.0</bundle>
+  </feature>
   <!-- Apache Sling Scripting (contrib) -->
   <feature name="sling-scripting-groovy" version="1.0.0">
     <feature version="${project.version}">sling</feature>
