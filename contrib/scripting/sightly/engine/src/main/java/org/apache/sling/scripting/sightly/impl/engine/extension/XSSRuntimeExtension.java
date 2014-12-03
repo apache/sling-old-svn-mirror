@@ -119,6 +119,8 @@ public class XSSRuntimeExtension implements RuntimeExtension {
                         return xssapi.getValidStyleToken(text, "");
                     case SCRIPT_STRING:
                         return xssapi.encodeForJSString(text);
+                    case STYLE_STRING:
+                        return xssapi.encodeForCSSString(text);
                     case ELEMENT_NAME:
                         return escapeElementName(text);
                     case HTML:
