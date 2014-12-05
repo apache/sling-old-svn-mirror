@@ -20,7 +20,7 @@ package org.apache.sling.distribution.packaging.impl.importer;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
 import org.junit.Test;
 
@@ -33,11 +33,11 @@ public class RemoteDistributionPackageImporterTest {
 
     @Test
     public void testDummyImport() throws Exception {
-        TransportAuthenticationProvider authenticationProvider = mock(TransportAuthenticationProvider.class);
+        DistributionTransportSecretProvider distributionTransportSecretProvider = mock(DistributionTransportSecretProvider.class);
         String[] endpoints = new String[0];
         for (TransportEndpointStrategyType strategy : TransportEndpointStrategyType.values()) {
             RemoteDistributionPackageImporter remotedistributionPackageImporter = new RemoteDistributionPackageImporter(
-                    authenticationProvider, endpoints, strategy.name());
+                    distributionTransportSecretProvider, endpoints, strategy.name());
             ResourceResolver resourceResolver = mock(ResourceResolver.class);
             DistributionPackage distributionPackage = mock(DistributionPackage.class);
             remotedistributionPackageImporter.importPackage(resourceResolver, distributionPackage);

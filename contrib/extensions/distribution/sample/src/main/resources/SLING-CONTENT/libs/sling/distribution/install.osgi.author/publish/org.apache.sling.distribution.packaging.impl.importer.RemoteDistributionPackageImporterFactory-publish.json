@@ -8,5 +8,5 @@
         "http://localhost:4503/libs/sling/distribution/services/importers/default"
     ],
     "packageBuilder.target" : "(name=vlt)",
-    "transportAuthenticationProvider.target" : "(name=publishAdmin)"
+    "distributionTransportSecretProvider.target" : "(name=publishAdmin)"
 }

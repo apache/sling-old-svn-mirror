@@ -34,7 +34,7 @@ import org.apache.sling.distribution.communication.DistributionRequest;
  * <p/>
  * Exporting a {@link org.apache.sling.distribution.packaging.DistributionPackage} means obtaining that package by either
  * directly creating it by bundling local Sling resources together or retrieving it from a remote endpoint, e.g. by
- * executing an HTTP request to another Sling instance exposing already created packages (for remotely changed resources).
+ * executing an HTTP POST request on another Sling instance exposing already created packages (for remotely changed resources).
  */
 @ConsumerType
 public interface DistributionPackageExporter {

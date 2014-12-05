@@ -36,7 +36,7 @@ import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
-import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,9 +80,9 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
     public static final String ENDPOINTS_STRATEGY = "endpoints.strategy";
 
 
-    @Property(name = "transportAuthenticationProvider.target")
-    @Reference(name = "transportAuthenticationProvider")
-    TransportAuthenticationProvider transportAuthenticationProvider;
+    @Property(name = "distributionTransportSecretProvider.target")
+    @Reference(name = "distributionTransportSecretProvider")
+    DistributionTransportSecretProvider distributionTransportSecretProvider;
     private DistributionPackageImporter importer;
 
     @Reference
@@ -96,7 +96,7 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
         String endpointStrategyName = PropertiesUtil.toString(config.get(ENDPOINTS_STRATEGY), "One");
 
 
-        importer =  new RemoteDistributionPackageImporter(transportAuthenticationProvider, endpoints, endpointStrategyName);
+        importer =  new RemoteDistributionPackageImporter(distributionTransportSecretProvider, endpoints, endpointStrategyName);
 
     }
 

@@ -27,11 +27,11 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
-import org.apache.sling.distribution.transport.DistributionTransportHandler;
-import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.distribution.transport.DistributionTransport;
+import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
-import org.apache.sling.distribution.transport.impl.MultipleEndpointDistributionTransportHandler;
-import org.apache.sling.distribution.transport.impl.SimpleHttpDistributionTransportHandler;
+import org.apache.sling.distribution.transport.impl.MultipleEndpointDistributionTransport;
+import org.apache.sling.distribution.transport.impl.SimpleHttpDistributionTransport;
 import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,36 +43,37 @@ public class RemoteDistributionPackageImporter implements DistributionPackageImp
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private DistributionTransportHandler transportHandler;
+    private DistributionTransport transportHandler;
+    private DistributionTransportSecretProvider distributionTransportSecretProvider;
 
 
-    public RemoteDistributionPackageImporter(TransportAuthenticationProvider transportAuthenticationProvider,
+    public RemoteDistributionPackageImporter(DistributionTransportSecretProvider distributionTransportSecretProvider,
                                              String[] endpoints,
                                              String transportEndpointStrategyName) {
+        this.distributionTransportSecretProvider = distributionTransportSecretProvider;
 
-        if (transportAuthenticationProvider == null) {
-            throw new IllegalArgumentException("transportAuthenticationProviderFactory is required");
+        if (distributionTransportSecretProvider == null) {
+            throw new IllegalArgumentException("distributionTransportSecretProvider is required");
         }
 
         TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(transportEndpointStrategyName);
 
 
-        List<DistributionTransportHandler> transportHandlers = new ArrayList<DistributionTransportHandler>();
+        List<DistributionTransport> transportHandlers = new ArrayList<DistributionTransport>();
 
         for (String endpoint : endpoints) {
             if (endpoint != null && endpoint.length() > 0) {
-                transportHandlers.add(new SimpleHttpDistributionTransportHandler(transportAuthenticationProvider,
-                        new DistributionEndpoint(endpoint), null, -1));
+                transportHandlers.add(new SimpleHttpDistributionTransport(new DistributionEndpoint(endpoint), null, -1));
             }
         }
-        transportHandler = new MultipleEndpointDistributionTransportHandler(transportHandlers,
+        transportHandler = new MultipleEndpointDistributionTransport(transportHandlers,
                 transportEndpointStrategyType);
 
     }
 
     public void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageImportException {
         try {
-            transportHandler.deliverPackage(resourceResolver, distributionPackage);
+            transportHandler.deliverPackage(resourceResolver, distributionPackage, distributionTransportSecretProvider.getSecret());
         } catch (Exception e) {
             throw new DistributionPackageImportException("failed in importing package " + distributionPackage);
         }

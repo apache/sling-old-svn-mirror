@@ -58,7 +58,7 @@ public final class DistributionRequest {
     @Override
     public String toString() {
         return "DistributionRequest{" +
-                ", actionType=" + actionType +
+                "actionType=" + actionType +
                 ", paths=" + Arrays.toString(paths) +
                 '}';
     }

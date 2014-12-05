@@ -38,8 +38,8 @@ import org.apache.sling.distribution.packaging.impl.importer.LocalDistributionPa
 import org.apache.sling.distribution.packaging.impl.importer.RemoteDistributionPackageImporterFactory;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.serialization.impl.vlt.FileVaultDistributionPackageBuilderFactory;
-import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
-import org.apache.sling.distribution.transport.authentication.impl.UserCredentialsTransportAuthenticationProviderFactory;
+import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
+import org.apache.sling.distribution.transport.impl.UserCredentialsDistributionTransportSecretProvider;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.distribution.trigger.impl.LocalDistributionTriggerFactory;
 
@@ -99,7 +99,7 @@ public class DistributionComponentUtils {
         registerService("importer", DistributionPackageImporter.class);
         registerService("packager", DistributionPackageBuilder.class);
         registerService("requestAuthorization", DistributionRequestAuthorizationStrategy.class);
-        registerService("transportAuthenticator", TransportAuthenticationProvider.class);
+        registerService("distributionTransportSecretProvider", DistributionTransportSecretProvider.class);
         registerService("trigger", DistributionTrigger.class);
 
 
@@ -117,7 +117,7 @@ public class DistributionComponentUtils {
 
         registerFactory("requestAuthorization", "privilege", PrivilegeDistributionRequestAuthorizationStrategy.class);
 
-        registerFactory("transportAuthenticator", "user", UserCredentialsTransportAuthenticationProviderFactory.class);
+        registerFactory("distributionTransportSecretProvider", "user", UserCredentialsDistributionTransportSecretProvider.class);
 
         registerFactory("trigger", "resourceEvent", LocalDistributionTriggerFactory.class);
         registerFactory("trigger", "scheduledEvent", LocalDistributionTriggerFactory.class);

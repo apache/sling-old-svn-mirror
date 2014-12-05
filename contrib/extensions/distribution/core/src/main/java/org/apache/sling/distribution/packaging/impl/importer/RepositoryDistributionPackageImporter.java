@@ -35,8 +35,7 @@ import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
-import org.apache.sling.distribution.transport.authentication.TransportAuthenticationContext;
-import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.slf4j.Logger;
@@ -58,17 +57,19 @@ public class RepositoryDistributionPackageImporter implements DistributionPackag
 
     private DistributionEventFactory distributionEventFactory;
 
-    private TransportAuthenticationProvider<SlingRepository, Session> transportAuthenticationProvider;
+    private DistributionTransportSecretProvider distributionTransportSecretProvider;
+
+    private String serviceName;
+    private String path;
+    private String privilege;
 
     public void deliverPackageToEndpoint(DistributionPackage distributionPackage, DistributionEndpoint distributionEndpoint)
             throws Exception {
 
         Session session = null;
         try {
-            TransportAuthenticationContext transportAuthenticationContext = new TransportAuthenticationContext();
             String path = distributionEndpoint.getUri().toString().replace("repo:/", "");
-            transportAuthenticationContext.addAttribute("path", path);
-            session = transportAuthenticationProvider.authenticate(repository, transportAuthenticationContext);
+            session = authenticate();
             int lastSlash = distributionPackage.getId().lastIndexOf('/');
             String nodeName = Text.escape(lastSlash < 0 ? distributionPackage.getId() : distributionPackage.getId().substring(lastSlash + 1));
             log.info("creating node {} in {}", distributionPackage.getId(), nodeName);
@@ -110,5 +111,18 @@ public class RepositoryDistributionPackageImporter implements DistributionPackag
 
     public DistributionPackage importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException {
         throw new DistributionPackageImportException("not supported");
+    }
+
+
+    private Session authenticate() throws Exception {
+        Session session = repository.loginService(serviceName, null);
+
+        if (!session.hasPermission(path, privilege)) {
+            session.logout();
+            throw new Exception("failed to access path " + path + " with privilege " + privilege);
+        }
+
+        log.info("authenticated path {} with privilege {}", path, privilege);
+        return session;
     }
 }
