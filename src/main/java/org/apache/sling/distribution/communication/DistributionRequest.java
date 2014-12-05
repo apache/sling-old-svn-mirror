@@ -28,22 +28,39 @@ import java.util.Arrays;
 public final class DistributionRequest {
 
 
-    private final DistributionRequestType actionType;
+    private final DistributionRequestType requestType;
 
+    private final boolean deep;
     private final String[] paths;
 
-    public DistributionRequest(@Nonnull DistributionRequestType actionType, @Nonnull String... paths) {
-        this.actionType = actionType;
+    /**
+     * Creates distribution request with "deep" or "shallow" paths.
+     * @param requestType the request type
+     * @param isDeep is <code>true</code> if all paths are "deep" and is <code>false</code> if all paths are "shallow"
+     * @param paths the array of paths to be distributed
+     */
+    public DistributionRequest(@Nonnull DistributionRequestType requestType, boolean isDeep, @Nonnull String... paths) {
+        this.requestType = requestType;
+        deep = isDeep;
         this.paths = paths;
+    }
+
+    /**
+     * Creates a distribution request with "shallow" paths.
+     * @param requestType the request type
+     * @param paths the array of paths to be distributed
+     */
+    public DistributionRequest(@Nonnull DistributionRequestType requestType, @Nonnull String... paths) {
+        this(requestType, false, paths);
     }
 
     /**
      * get the {@link DistributionRequestType} associated with this request
      *
-     * @return the type of actionType for request as a {@link DistributionRequestType}
+     * @return the type of the request as a {@link DistributionRequestType}
      */
     public DistributionRequestType getRequestType() {
-        return actionType;
+        return requestType;
     }
 
     /**
@@ -55,11 +72,22 @@ public final class DistributionRequest {
         return paths;
     }
 
+
+    /**
+     * Returns whether the paths are covering the entire subtree (deep) or just the specified nodes (shallow)
+     * @return <code>true</code> if the paths are deep
+     */
+    public boolean isDeep() {
+        return deep;
+    }
+
     @Override
     public String toString() {
         return "DistributionRequest{" +
-                "actionType=" + actionType +
+                ", requestType=" + requestType +
                 ", paths=" + Arrays.toString(paths) +
                 '}';
     }
+
+
 }
