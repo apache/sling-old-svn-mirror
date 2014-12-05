@@ -35,16 +35,27 @@ public class RequestUtils {
     public static DistributionRequest fromServletRequest(HttpServletRequest request) {
         String action = request.getParameter(DistributionParameter.ACTION.toString());
         String[] paths = request.getParameterValues(DistributionParameter.PATH.toString());
+        String deepParam = request.getParameter(DistributionParameter.DEEP.toString());
 
-        return new DistributionRequest(DistributionRequestType.fromName(action), paths);
+        boolean deep = false;
+        if ("true".equals(deepParam)) {
+            deep = true;
+        }
+
+
+        return new DistributionRequest(DistributionRequestType.fromName(action), deep, paths);
     }
 
     public static URI appendDistributionRequest(URI uri, DistributionRequest distributionRequest) throws URISyntaxException {
         URIBuilder uriBuilder = new URIBuilder(uri);
         uriBuilder.addParameter(DistributionParameter.ACTION.toString(), distributionRequest.getRequestType().name());
+        if (distributionRequest.isDeep()) {
+            uriBuilder.addParameter(DistributionParameter.DEEP.toString(), "true");
+        }
         for (String path : distributionRequest.getPaths()) {
             uriBuilder.addParameter(DistributionParameter.PATH.toString(), path);
         }
+
         return uriBuilder.build();
     }
 

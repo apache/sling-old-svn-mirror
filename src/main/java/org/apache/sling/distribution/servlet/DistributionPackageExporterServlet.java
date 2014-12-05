@@ -73,6 +73,7 @@ public class DistributionPackageExporterServlet extends SlingAllMethodsServlet {
 
                 for (DistributionPackage distributionPackage : distributionPackages) {
                     if (distributionPackage != null) {
+                        consumed++;
                         InputStream inputStream = null;
                         int bytesCopied = -1;
                         try {
