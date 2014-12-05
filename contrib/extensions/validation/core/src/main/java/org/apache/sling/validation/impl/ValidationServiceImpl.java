@@ -331,25 +331,25 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
                         String[] applicablePaths = PropertiesUtil.toStringArray(validationModelProperties.get(Constants.APPLICABLE_PATHS,
                                 String[].class));
                         Resource r = model.getChild(Constants.PROPERTIES);
-                        if (r != null) {
-                            Set<ResourceProperty> resourceProperties = JCRBuilder.buildProperties(validators, r);
-                            if (!resourceProperties.isEmpty()) {
-                                List<ChildResource> children = JCRBuilder.buildChildren(model, model, validators);
-                                vm = new JCRValidationModel(jcrPath, resourceProperties, validatedResourceType, applicablePaths, children);
-                                modelsForResourceType = validationModelsCache.get(validatedResourceType);
-                                /**
-                                 * if the modelsForResourceType is null the canAcceptModel will return true: performance optimisation so that
-                                 * the Trie is created only if the model is accepted
-                                 */
-    
-                                if (canAcceptModel(vm, searchPath, searchPaths, modelsForResourceType)) {
-                                    if (modelsForResourceType == null) {
-                                        modelsForResourceType = new Trie<JCRValidationModel>();
-                                        validationModelsCache.put(validatedResourceType, modelsForResourceType);
-                                    }
-                                    for (String applicablePath : vm.getApplicablePaths()) {
-                                        modelsForResourceType.insert(applicablePath, vm);
-                                    }
+                        Set<ResourceProperty> resourceProperties = JCRBuilder.buildProperties(validators, r);
+                        List<ChildResource> children = JCRBuilder.buildChildren(model, model, validators);
+                        if (resourceProperties.isEmpty() && children.isEmpty()) {
+                            LOG.warn("Incomplete validation model resource {}. Neither children nor properties set.", model.getPath());
+                        } else {
+                            vm = new JCRValidationModel(jcrPath, resourceProperties, validatedResourceType, applicablePaths, children);
+                            modelsForResourceType = validationModelsCache.get(validatedResourceType);
+                            /**
+                             * if the modelsForResourceType is null the canAcceptModel will return true: performance
+                             * optimisation so that the Trie is created only if the model is accepted
+                             */
+
+                            if (canAcceptModel(vm, searchPath, searchPaths, modelsForResourceType)) {
+                                if (modelsForResourceType == null) {
+                                    modelsForResourceType = new Trie<JCRValidationModel>();
+                                    validationModelsCache.put(validatedResourceType, modelsForResourceType);
+                                }
+                                for (String applicablePath : vm.getApplicablePaths()) {
+                                    modelsForResourceType.insert(applicablePath, vm);
                                 }
                             }
                         }

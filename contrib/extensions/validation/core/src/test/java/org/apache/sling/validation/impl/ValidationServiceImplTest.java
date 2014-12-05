@@ -284,7 +284,7 @@ public class ValidationServiceImplTest {
             Assert.assertFalse(vr.isValid());
             // check for correct error message
             Map<String, List<String>> expectedFailureMessages = new HashMap<String, List<String>>();
-            expectedFailureMessages.put("field2", Arrays.asList("Property does not match the pattern abc"));
+            expectedFailureMessages.put("field1", Arrays.asList("Property does not match the pattern abc"));
             Assert.assertThat(vr.getFailureMessages().entrySet(), Matchers.equalTo(expectedFailureMessages.entrySet()));
         } finally {
             if (model1 != null) {
