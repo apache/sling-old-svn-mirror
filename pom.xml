@@ -267,7 +267,6 @@
                         All bundles must be listed as dependencies in this pom, or they won't be installed.
                         -->
 
-
                         <sling.additional.bundle.1>httpcore-osgi</sling.additional.bundle.1>
                         <sling.additional.bundle.2>httpclient-osgi</sling.additional.bundle.2>
                         <sling.additional.bundle.3>org.apache.sling.discovery.impl</sling.additional.bundle.3>
