@@ -1,0 +1,79 @@
+package org.apache.sling.distribution.serialization.impl.vlt;
+
+import org.apache.jackrabbit.vault.packaging.JcrPackage;
+import org.apache.sling.distribution.communication.DistributionRequestType;
+import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.serialization.impl.AbstractDistributionPackage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import java.io.IOException;
+import java.io.InputStream;
+/**
+ * a JcrPackage based {@link org.apache.sling.distribution.packaging.DistributionPackage}
+ */
+public class JcrVaultDistributionPackage extends AbstractDistributionPackage implements DistributionPackage {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
+
+    private final String type;
+    private final JcrPackage jcrPackage;
+    private final Session session;
+
+    public JcrVaultDistributionPackage(String type, JcrPackage jcrPackage, Session session) {
+        this.type = type;
+        this.jcrPackage = jcrPackage;
+        this.session = session;
+        String[] paths = new String[0];
+        try {
+            paths = VltUtils.getPaths(jcrPackage.getDefinition().getMetaInf());
+        } catch (Throwable e) {
+            log.error("cannot read paths", e);
+        }
+        this.getInfo().setPaths(paths);
+        this.getInfo().setRequestType(DistributionRequestType.ADD);
+
+    }
+
+    @Nonnull
+    public String getId() {
+        try {
+            return jcrPackage.getPackage().getId().getName();
+        } catch (RepositoryException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (IOException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+
+        return null;
+    }
+
+    @Nonnull
+    public String getType() {
+        return type;
+    }
+
+    @Nonnull
+    public InputStream createInputStream() throws IOException {
+        try {
+            return jcrPackage.getData().getBinary().getStream();
+        } catch (RepositoryException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+        return null;
+    }
+
+    public void delete() {
+        Node node = jcrPackage.getNode();
+        try {
+            node.remove();
+            session.save();
+        } catch (RepositoryException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+    }
+}

@@ -26,12 +26,14 @@ import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.api.WorkspaceFilter;
 import org.apache.jackrabbit.vault.fs.config.DefaultMetaInf;
 import org.apache.jackrabbit.vault.fs.config.DefaultWorkspaceFilter;
+import org.apache.jackrabbit.vault.fs.config.MetaInf;
 import org.apache.jackrabbit.vault.fs.filter.DefaultPathFilter;
 import org.apache.jackrabbit.vault.fs.io.AccessControlHandling;
 import org.apache.jackrabbit.vault.fs.io.ImportOptions;
 import org.apache.jackrabbit.vault.packaging.ExportOptions;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -48,6 +50,24 @@ public class VltUtils {
         }
 
         return filter;
+    }
+
+    public static String[] getPaths(MetaInf metaInf) {
+        if (metaInf == null) {
+            return null;
+        }
+
+        WorkspaceFilter filter = metaInf.getFilter();
+        if (filter == null) {
+            filter = new DefaultWorkspaceFilter();
+        }
+        List<PathFilterSet> filterSets = filter.getFilterSets();
+        String[] paths = new String[filterSets.size()];
+        for (int i = 0; i < paths.length; i++) {
+            paths[i] = filterSets.get(i).getRoot();
+        }
+
+        return paths;
     }
 
     private static PathFilterSet createFilterSet(String path, boolean deep) {

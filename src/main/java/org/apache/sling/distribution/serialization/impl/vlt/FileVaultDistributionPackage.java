@@ -47,20 +47,9 @@ public class FileVaultDistributionPackage extends AbstractDistributionPackage im
 
     public FileVaultDistributionPackage(VaultPackage pkg) {
         this.pkg = pkg;
-        MetaInf metaInf = pkg.getMetaInf();
-        if (metaInf != null) {
-            WorkspaceFilter filter = metaInf.getFilter();
-            if (filter == null) {
-                filter = new DefaultWorkspaceFilter();
-            }
-            List<PathFilterSet> filterSets = filter.getFilterSets();
-            String[] paths = new String[filterSets.size()];
-            for (int i = 0; i < paths.length; i++) {
-                paths[i] = filterSets.get(i).getRoot();
-            }
-            this.getInfo().setPaths(paths);
-            this.getInfo().setRequestType(DistributionRequestType.ADD);
-        }
+        String[] paths = VltUtils.getPaths(pkg.getMetaInf());
+        this.getInfo().setPaths(paths);
+        this.getInfo().setRequestType(DistributionRequestType.ADD);
         this.id = pkg.getFile().getAbsolutePath();
     }
 
