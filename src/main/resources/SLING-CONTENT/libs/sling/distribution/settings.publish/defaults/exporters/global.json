@@ -6,7 +6,7 @@
     "isResource" : "true",
 
     "packageBuilder" : {
-        "kind" : "packager",
+        "kind" : "packageBuilder",
         "type" : "service",
         "name" : "vlt"
     }
