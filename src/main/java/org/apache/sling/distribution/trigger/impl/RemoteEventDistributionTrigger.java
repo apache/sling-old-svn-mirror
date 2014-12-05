@@ -27,6 +27,8 @@ import java.util.concurrent.Future;
 
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIUtils;
@@ -42,8 +44,7 @@ import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.communication.DistributionRequestType;
-import org.apache.sling.distribution.transport.authentication.TransportAuthenticationContext;
-import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
@@ -61,26 +62,22 @@ public class RemoteEventDistributionTrigger implements DistributionTrigger {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final DistributionEndpoint endpoint;
-    private final TransportAuthenticationProvider<CredentialsProvider, CredentialsProvider> authenticationProvider;
+    private final DistributionTransportSecretProvider distributionTransportSecretProvider;
 
     private Scheduler scheduler;
 
     private final Map<String, Future<HttpResponse>> requests = new ConcurrentHashMap<String, Future<HttpResponse>>();
 
-    public RemoteEventDistributionTrigger(String endpoint, TransportAuthenticationProvider<CredentialsProvider, CredentialsProvider> authenticationProvider, Scheduler scheduler) {
+    public RemoteEventDistributionTrigger(String endpoint, DistributionTransportSecretProvider distributionTransportSecretProvider, Scheduler scheduler) {
         if (endpoint == null) {
             throw new IllegalArgumentException("Endpoint is required");
         }
 
-        if (authenticationProvider == null) {
+        if (distributionTransportSecretProvider == null) {
             throw new IllegalArgumentException("Authentication provider is required");
         }
 
-        if (!authenticationProvider.canAuthenticate(CredentialsProvider.class)) {
-            throw new IllegalArgumentException("Authentication provider cannot authenticate CredentialsProvider");
-        }
-
-        this.authenticationProvider = authenticationProvider;
+        this.distributionTransportSecretProvider = distributionTransportSecretProvider;
         this.endpoint = new DistributionEndpoint(endpoint);
         this.scheduler = scheduler;
     }
@@ -159,43 +156,47 @@ public class RemoteEventDistributionTrigger implements DistributionTrigger {
 
                 CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 
-                TransportAuthenticationContext context = new TransportAuthenticationContext();
-                context.addAttribute("endpoint", endpoint);
-                credentialsProvider = authenticationProvider.authenticate(credentialsProvider, context);
+                Map<String, String> credentialsMap = distributionTransportSecretProvider.getSecret().asCredentialsMap();
+                if (credentialsMap != null) {
+                    String username = credentialsMap.get("username");
+                    String password = credentialsMap.get("password");
+                    credentialsProvider.setCredentials(new AuthScope(new HttpHost(endpoint.getUri().getHost(), endpoint.getUri().getPort())),
+                            new UsernamePasswordCredentials(username, password));
 
-                final CloseableHttpAsyncClient httpClient = HttpAsyncClients.custom()
-                        .setDefaultCredentialsProvider(credentialsProvider)
-                        .build();
+                    final CloseableHttpAsyncClient httpClient = HttpAsyncClients.custom()
+                            .setDefaultCredentialsProvider(credentialsProvider)
+                            .build();
 
-                HttpGet get = new HttpGet(endpoint.getUri());
-                HttpHost target = URIUtils.extractHost(get.getURI());
-                BasicAsyncRequestProducer basicAsyncRequestProducer = new BasicAsyncRequestProducer(target, get);
-                httpClient.start();
-                try {
-                    log.debug("sending request");
-                    Future<HttpResponse> futureResponse = httpClient.execute(
-                            basicAsyncRequestProducer,
-                            new SSEResponseConsumer(requestHandler), new FutureCallback<HttpResponse>() {
-                                public void completed(HttpResponse httpResponse) {
-                                    log.debug("response received {}", httpResponse);
-                                }
+                    HttpGet get = new HttpGet(endpoint.getUri());
+                    HttpHost target = URIUtils.extractHost(get.getURI());
+                    BasicAsyncRequestProducer basicAsyncRequestProducer = new BasicAsyncRequestProducer(target, get);
+                    httpClient.start();
+                    try {
+                        log.debug("sending request");
+                        Future<HttpResponse> futureResponse = httpClient.execute(
+                                basicAsyncRequestProducer,
+                                new SSEResponseConsumer(requestHandler), new FutureCallback<HttpResponse>() {
+                                    public void completed(HttpResponse httpResponse) {
+                                        log.debug("response received {}", httpResponse);
+                                    }
 
-                                public void failed(Exception e) {
-                                    log.warn("failed request {}", e.toString());
-                                }
+                                    public void failed(Exception e) {
+                                        log.warn("failed request {}", e.toString());
+                                    }
 
-                                public void cancelled() {
-                                    log.warn("request cancelled");
-                                }
-                            });
-                    requests.put(requestHandler.toString(), futureResponse);
-                    futureResponse.get();
+                                    public void cancelled() {
+                                        log.warn("request cancelled");
+                                    }
+                                });
+                        requests.put(requestHandler.toString(), futureResponse);
+                        futureResponse.get();
 
-                } catch (Exception e) {
-                    log.warn("cannot communicate with {}", endpoint, e);
+                    } catch (Exception e) {
+                        log.warn("cannot communicate with {}", endpoint, e);
+                    }
+                    httpClient.close();
+                    log.debug("request finished");
                 }
-                httpClient.close();
-                log.debug("request finished");
             } catch (Exception e) {
                 log.error("cannot run event based distribution {}", e);
             }

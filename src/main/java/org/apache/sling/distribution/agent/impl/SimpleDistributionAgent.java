@@ -148,11 +148,10 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
             return scheduleImport(exportPackages(agentResourceResolver, distributionRequest));
         } catch (Exception e) {
-            log.error("Error executing distribution request {}", distributionRequest, e);
+            log.error("[{}] Error executing distribution request {}", name, distributionRequest);
             throw new DistributionAgentException(e);
         } finally {
             ungetAgentResourceResolver(agentResourceResolver);
-
         }
 
     }

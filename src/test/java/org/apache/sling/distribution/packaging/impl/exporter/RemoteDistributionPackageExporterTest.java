@@ -25,7 +25,7 @@ import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
 import org.junit.Test;
 
@@ -41,11 +41,11 @@ public class RemoteDistributionPackageExporterTest {
     @Test
     public void testDummyExport() throws Exception {
         DistributionPackageBuilder packageBuilder = mock(DistributionPackageBuilder.class);
-        TransportAuthenticationProvider authProvider = mock(TransportAuthenticationProvider.class);
+        DistributionTransportSecretProvider distributionTransportSecretProvider = mock(DistributionTransportSecretProvider.class);
         String[] endpoints = new String[0];
         for (TransportEndpointStrategyType strategy : TransportEndpointStrategyType.values()) {
             RemoteDistributionPackageExporter remotedistributionPackageExporter = new RemoteDistributionPackageExporter(
-                    packageBuilder, authProvider, endpoints, strategy.name(), 1);
+                    packageBuilder, distributionTransportSecretProvider, endpoints, strategy.name(), 1);
             ResourceResolver resourceResolver = mock(ResourceResolver.class);
             DistributionRequest distributionRequest = new DistributionRequest(DistributionRequestType.ADD, "/");
             List<DistributionPackage> distributionPackages = remotedistributionPackageExporter.exportPackages(resourceResolver, distributionRequest);

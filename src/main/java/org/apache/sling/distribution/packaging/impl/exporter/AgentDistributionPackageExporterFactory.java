@@ -47,8 +47,8 @@ import org.slf4j.LoggerFactory;
         policy = ConfigurationPolicy.REQUIRE)
 @Service(value = DistributionPackageExporter.class)
 public class AgentDistributionPackageExporterFactory implements DistributionPackageExporter {
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
      * name of this component.

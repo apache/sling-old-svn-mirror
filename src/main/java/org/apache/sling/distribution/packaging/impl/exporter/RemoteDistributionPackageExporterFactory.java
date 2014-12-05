@@ -33,13 +33,12 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.communication.DistributionRequest;
-import org.apache.sling.distribution.component.impl.DistributionComponentManager;
 import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExportException;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,8 +49,7 @@ import org.slf4j.LoggerFactory;
         metatype = true,
         configurationFactory = true,
         specVersion = "1.1",
-        policy = ConfigurationPolicy.REQUIRE,
-        immediate = true
+        policy = ConfigurationPolicy.REQUIRE
 )
 @Service(value = DistributionPackageExporter.class)
 public class RemoteDistributionPackageExporterFactory implements DistributionPackageExporter {
@@ -93,26 +91,23 @@ public class RemoteDistributionPackageExporterFactory implements DistributionPac
 
     @Property(name = "packageBuilder.target")
     @Reference(name = "packageBuilder")
-    DistributionPackageBuilder packageBuilder;
+    private DistributionPackageBuilder packageBuilder;
 
-    @Property(name = "transportAuthenticationProvider.target")
-    @Reference(name = "transportAuthenticationProvider")
-    TransportAuthenticationProvider transportAuthenticationProvider;
-
-    @Reference
-    private DistributionComponentManager componentManager;
+    @Property(name = "distributionTransportSecretProvider.target")
+    @Reference(name = "distributionTransportSecretProvider")
+    private DistributionTransportSecretProvider distributionTransportSecretProvider;
 
     private DistributionPackageExporter exporter;
 
     @Activate
     protected void activate(Map<String, Object> config) throws Exception {
-
+        log.info("activating remote exporter with pb {} and dtsp {}", packageBuilder, distributionTransportSecretProvider);
 
         String[] endpoints = PropertiesUtil.toStringArray(config.get(ENDPOINTS), new String[0]);
         String endpointStrategyName = PropertiesUtil.toString(config.get(ENDPOINTS_STRATEGY), "One");
         int pollItems = PropertiesUtil.toInteger(config.get(PULL_ITEMS), Integer.MAX_VALUE);
 
-        exporter = new RemoteDistributionPackageExporter(packageBuilder, transportAuthenticationProvider, endpoints, endpointStrategyName, pollItems);
+        exporter = new RemoteDistributionPackageExporter(packageBuilder, distributionTransportSecretProvider, endpoints, endpointStrategyName, pollItems);
     }
 
 

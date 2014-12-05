@@ -28,11 +28,11 @@ import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExportException;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.transport.DistributionTransportHandler;
-import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.distribution.transport.DistributionTransport;
+import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
-import org.apache.sling.distribution.transport.impl.MultipleEndpointDistributionTransportHandler;
-import org.apache.sling.distribution.transport.impl.SimpleHttpDistributionTransportHandler;
+import org.apache.sling.distribution.transport.impl.MultipleEndpointDistributionTransport;
+import org.apache.sling.distribution.transport.impl.SimpleHttpDistributionTransport;
 import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
 
 /**
@@ -41,11 +41,12 @@ import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyTyp
 public class RemoteDistributionPackageExporter implements DistributionPackageExporter {
 
     private final DistributionPackageBuilder packageBuilder;
+    private final DistributionTransportSecretProvider secretProvider;
 
-    private DistributionTransportHandler transportHandler;
+    private DistributionTransport transportHandler;
 
     public RemoteDistributionPackageExporter(DistributionPackageBuilder packageBuilder,
-                                             TransportAuthenticationProvider transportAuthenticationProvider,
+                                             DistributionTransportSecretProvider secretProvider,
                                              String[] endpoints,
                                              String transportEndpointStrategyName,
                                              int pullItems) {
@@ -54,25 +55,29 @@ public class RemoteDistributionPackageExporter implements DistributionPackageExp
         }
 
         this.packageBuilder = packageBuilder;
+        this.secretProvider = secretProvider;
 
         TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(transportEndpointStrategyName);
 
-        List<DistributionTransportHandler> transportHandlers = new ArrayList<DistributionTransportHandler>();
+        List<DistributionTransport> transportHandlers = new ArrayList<DistributionTransport>();
 
         for (String endpoint : endpoints) {
             if (endpoint != null && endpoint.length() > 0) {
-                transportHandlers.add(new SimpleHttpDistributionTransportHandler(transportAuthenticationProvider,
-                        new DistributionEndpoint(endpoint), packageBuilder, pullItems));
+                transportHandlers.add(new SimpleHttpDistributionTransport(new DistributionEndpoint(endpoint), packageBuilder, pullItems));
             }
         }
-        transportHandler = new MultipleEndpointDistributionTransportHandler(transportHandlers,
+        transportHandler = new MultipleEndpointDistributionTransport(transportHandlers,
                 transportEndpointStrategyType);
     }
 
     @Nonnull
     public List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionPackageExportException {
         try {
-            return transportHandler.retrievePackages(resourceResolver, distributionRequest);
+            List<DistributionPackage> packages = new ArrayList<DistributionPackage>();
+            for (DistributionPackage distributionPackage : transportHandler.retrievePackages(resourceResolver, distributionRequest, secretProvider.getSecret())) {
+                packages.add(distributionPackage);
+            }
+            return packages;
         } catch (Exception e) {
             throw new DistributionPackageExportException(e);
         }

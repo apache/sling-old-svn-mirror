@@ -25,23 +25,20 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
-import org.apache.sling.distribution.transport.DistributionTransportHandler;
-import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
-import org.apache.sling.distribution.transport.impl.AdvancedHttpDistributionTransportHandler;
+import org.apache.sling.distribution.transport.DistributionTransport;
+import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
+import org.apache.sling.distribution.transport.impl.AdvancedHttpDistributionTransport;
 import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
-import org.apache.sling.distribution.transport.impl.MultipleEndpointDistributionTransportHandler;
+import org.apache.sling.distribution.transport.impl.MultipleEndpointDistributionTransport;
 import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,9 +53,9 @@ public class AdvancedRemoteDistributionPackageImporter implements DistributionPa
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(name = "transportAuthenticationProvider.target")
-    @Reference(name = "transportAuthenticationProvider")
-    private volatile TransportAuthenticationProvider transportAuthenticationProvider;
+    @Property(name = "distributionTransportSecretProvider.target")
+    @Reference(name = "distributionTransportSecretProvider")
+    private volatile DistributionTransportSecretProvider distributionTransportSecretProvider;
 
     @Property(cardinality = 100)
     public static final String ENDPOINTS = "endpoints";
@@ -89,7 +86,7 @@ public class AdvancedRemoteDistributionPackageImporter implements DistributionPa
     @Reference
     private DistributionEventFactory distributionEventFactory;
 
-    private DistributionTransportHandler transportHandler;
+    private DistributionTransport transportHandler;
 
     @Activate
     protected void activate(Map<String, ?> config) throws Exception {
@@ -106,17 +103,16 @@ public class AdvancedRemoteDistributionPackageImporter implements DistributionPa
         String customBody = PropertiesUtil.toString(config.get(CUSTOM_BODY), "");
 
 
-        List<DistributionTransportHandler> transportHandlers = new ArrayList<DistributionTransportHandler>();
+        List<DistributionTransport> transportHandlers = new ArrayList<DistributionTransport>();
 
         for (String endpoint : endpoints) {
             if (endpoint != null && endpoint.length() > 0) {
-                transportHandlers.add(new AdvancedHttpDistributionTransportHandler(useCustomHeaders, customHeaders,
+                transportHandlers.add(new AdvancedHttpDistributionTransport(useCustomHeaders, customHeaders,
                         useCustomBody, customBody,
-                        transportAuthenticationProvider,
                         new DistributionEndpoint(endpoint), null, -1));
             }
         }
-        transportHandler = new MultipleEndpointDistributionTransportHandler(transportHandlers,
+        transportHandler = new MultipleEndpointDistributionTransport(transportHandlers,
                 transportEndpointStrategyType);
 
     }
@@ -124,7 +120,7 @@ public class AdvancedRemoteDistributionPackageImporter implements DistributionPa
 
     public void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) {
         try {
-            transportHandler.deliverPackage(resourceResolver, distributionPackage);
+            transportHandler.deliverPackage(resourceResolver, distributionPackage, distributionTransportSecretProvider.getSecret());
         } catch (Exception e) {
             log.error("failed delivery", e);
         }
