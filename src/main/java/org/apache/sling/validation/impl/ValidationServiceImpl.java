@@ -334,7 +334,7 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
                         Set<ResourceProperty> resourceProperties = JCRBuilder.buildProperties(validators, r);
                         List<ChildResource> children = JCRBuilder.buildChildren(model, model, validators);
                         if (resourceProperties.isEmpty() && children.isEmpty()) {
-                            LOG.warn("Incomplete validation model resource {}. Neither children nor properties set.", model.getPath());
+                            throw new IllegalArgumentException("Neither children nor properties set.");
                         } else {
                             vm = new JCRValidationModel(jcrPath, resourceProperties, validatedResourceType, applicablePaths, children);
                             modelsForResourceType = validationModelsCache.get(validatedResourceType);
@@ -354,12 +354,12 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
                             }
                         }
                     } catch (IllegalArgumentException e) {
-                        LOG.error("Found invalid validation model in '{}': {}", jcrPath, e.getMessage());
+                        throw new IllegalStateException("Found invalid validation model in '" + jcrPath +"': " + e.getMessage(), e);
                     }
                 }
             }
         } catch (LoginException e) {
-            LOG.error("Unable to obtain a resource resolver.", e);
+            throw new IllegalStateException("Unable to obtain a resource resolver.", e);
         } finally {
             if (rr != null) {
                 rr.close();
