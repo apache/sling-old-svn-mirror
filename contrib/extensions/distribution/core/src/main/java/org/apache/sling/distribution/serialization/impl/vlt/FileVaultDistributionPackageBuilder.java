@@ -68,13 +68,13 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
 
     private AccessControlHandling aclHandling;
 
-    public FileVaultDistributionPackageBuilder(Packaging packaging, DistributionEventFactory distributionEventFactory) {
-        super(PACKAGING_TYPE, distributionEventFactory);
+    public FileVaultDistributionPackageBuilder(Packaging packaging) {
+        super(PACKAGING_TYPE);
         this.packaging = packaging;
     }
 
-    public FileVaultDistributionPackageBuilder(Packaging packaging, DistributionEventFactory distributionEventFactory, String importMode, String aclHandling) {
-        super(PACKAGING_TYPE, distributionEventFactory);
+    public FileVaultDistributionPackageBuilder(Packaging packaging, String importMode, String aclHandling) {
+        super(PACKAGING_TYPE);
         this.packaging = packaging;
         this.importMode = ImportMode.valueOf(importMode);
         this.aclHandling = AccessControlHandling.valueOf(aclHandling);

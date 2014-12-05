@@ -16,13 +16,13 @@
         "kind" : "exporter",
 
         "packageBuilder" : {
-            "kind" : "packager",
+            "kind" : "packageBuilder",
             "type" : "service",
             "name" : "vlt"
         },
 
-        "distributionTransportSecretProvider" : {
-            "kind" : "transportAuthenticator",
+        "transportSecretProvider" : {
+            "kind" : "transportSecretProvider",
             "type" : "service",
             "name" : "publishAdmin"
         }
@@ -33,14 +33,14 @@
         "kind" : "importer",
 
         "packageBuilder" : {
-            "kind" : "packager",
+            "kind" : "packageBuilder",
 
             "type" : "service",
             "name" : "vlt"
         },
 
-        "distributionTransportSecretProvider" : {
-            "kind" : "transportAuthenticator",
+        "transportSecretProvider" : {
+            "kind" : "transportSecretProvider",
             "type" : "service",
             "name" : "publishAdmin"
         }

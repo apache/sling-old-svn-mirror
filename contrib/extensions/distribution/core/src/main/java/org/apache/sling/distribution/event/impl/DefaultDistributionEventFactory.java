@@ -20,11 +20,13 @@ package org.apache.sling.distribution.event.impl;
 
 import javax.annotation.Nonnull;
 import java.util.Dictionary;
+import java.util.Hashtable;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.distribution.event.DistributionEventType;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.slf4j.Logger;
@@ -45,6 +47,14 @@ public class DefaultDistributionEventFactory implements DistributionEventFactory
     public void generateEvent(@Nonnull DistributionEventType distributionEventType, @Nonnull Dictionary<?, ?> properties) {
         eventAdmin.postEvent(new Event(distributionEventType.getTopic(), properties));
         log.debug("distribution event {} posted", distributionEventType.name());
+    }
+
+    public void generateAgentPackageEvent(@Nonnull DistributionEventType distributionEventType, @Nonnull String agentName, @Nonnull DistributionPackageInfo info) {
+        Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
+        dictionary.put("distribution.agent.name", agentName);
+        dictionary.put("distribution.request.type", info.getRequestType());
+        dictionary.put("distribution.path", info.getPaths());
+        generateEvent(distributionEventType, dictionary);
     }
 
 }

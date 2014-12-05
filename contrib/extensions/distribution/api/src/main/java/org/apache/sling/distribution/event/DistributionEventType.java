@@ -26,27 +26,17 @@ public enum DistributionEventType {
     /**
      * event for package created
      */
-    PACKAGE_CREATED,
+    AGENT_PACKAGE_CREATED,
 
     /**
      * event for package queued
      */
-    PACKAGE_QUEUED,
+    AGENT_PACKAGE_QUEUED,
 
     /**
      * event for package distributed
      */
-    PACKAGE_DISTRIBUTED,
-
-    /**
-     * event for package installed
-     */
-    PACKAGE_INSTALLED,
-
-    /**
-     * event for package imported
-     */
-    PACKAGE_IMPORTED,
+    AGENT_PACKAGE_DISTRIBUTED,
 
     /**
      * event for agent created

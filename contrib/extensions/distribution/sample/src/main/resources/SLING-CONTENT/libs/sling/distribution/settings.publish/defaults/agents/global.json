@@ -16,7 +16,7 @@
         "kind" : "exporter",
 
         "packageBuilder" : {
-            "kind" : "packager",
+            "kind" : "packageBuilder",
             "type" : "service",
             "name" : "vlt"
         }
@@ -27,7 +27,7 @@
 
 
         "packageBuilder" : {
-            "kind" : "packager",
+            "kind" : "packageBuilder",
 
             "type" : "service",
             "name" : "vlt"

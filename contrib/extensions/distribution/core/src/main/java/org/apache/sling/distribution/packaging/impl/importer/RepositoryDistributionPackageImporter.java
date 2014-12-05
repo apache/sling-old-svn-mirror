@@ -92,9 +92,6 @@ public class RepositoryDistributionPackageImporter implements DistributionPackag
                 log.info("package {} imported into the repository as node {} ",
                         distributionPackage.getId(), addedNode.getPath());
 
-                Dictionary<Object, Object> props = new Properties();
-                props.put("path", distributionPackage.getInfo().getPaths());
-                distributionEventFactory.generateEvent(DistributionEventType.PACKAGE_IMPORTED, props);
             } else {
                 throw new Exception("could not get a Session to deliver package to the repository");
             }

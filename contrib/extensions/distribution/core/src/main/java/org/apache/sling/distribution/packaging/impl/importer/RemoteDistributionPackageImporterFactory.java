@@ -80,8 +80,8 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
     public static final String ENDPOINTS_STRATEGY = "endpoints.strategy";
 
 
-    @Property(name = "distributionTransportSecretProvider.target")
-    @Reference(name = "distributionTransportSecretProvider")
+    @Property(name = "transportSecretProvider.target")
+    @Reference(name = "transportSecretProvider")
     DistributionTransportSecretProvider distributionTransportSecretProvider;
     private DistributionPackageImporter importer;
 

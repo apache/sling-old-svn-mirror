@@ -146,7 +146,9 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
             distributionRequestAuthorizationStrategy.checkPermission(resourceResolver, distributionRequest);
 
-            return scheduleImport(exportPackages(agentResourceResolver, distributionRequest));
+            List<DistributionPackage> distributionPackages = exportPackages(agentResourceResolver, distributionRequest);
+
+            return scheduleImport(distributionPackages);
         } catch (Exception e) {
             log.error("[{}] Error executing distribution request {}", name, distributionRequest);
             throw new DistributionAgentException(e);
@@ -161,7 +163,12 @@ public class SimpleDistributionAgent implements DistributionAgent {
     }
 
     private List<DistributionPackage> exportPackages(ResourceResolver agentResourceResolver, DistributionRequest distributionRequest) throws DistributionPackageExportException {
-        return distributionPackageExporter.exportPackages(agentResourceResolver, distributionRequest);
+        List<DistributionPackage> distributionPackages = distributionPackageExporter.exportPackages(agentResourceResolver, distributionRequest);
+        for (DistributionPackage distributionPackage : distributionPackages) {
+            distributionEventFactory.generateAgentPackageEvent(DistributionEventType.AGENT_PACKAGE_CREATED, name, distributionPackage.getInfo());
+        }
+
+        return distributionPackages;
     }
 
     private DistributionResponse scheduleImport(List<DistributionPackage> distributionPackages) {
@@ -181,16 +188,11 @@ public class SimpleDistributionAgent implements DistributionAgent {
         try {
             Iterable<DistributionQueueItemState> states = queueDistributionStrategy.add(distributionPackage, queueProvider);
             for (DistributionQueueItemState state : states) {
-                Dictionary<Object, Object> properties = new Properties();
-                if (distributionPackage.getInfo().getPaths() != null) {
-                    properties.put("distribution.package.paths", distributionPackage.getInfo().getPaths());
-                }
-                properties.put("distribution.agent.name", name);
-                distributionEventFactory.generateEvent(DistributionEventType.PACKAGE_QUEUED, properties);
-
                 DistributionRequestState requestState = getRequestStateFromQueueState(state.getItemState());
                 distributionResponses.add(new DistributionResponse(requestState, state.getItemState().toString()));
             }
+
+            distributionEventFactory.generateAgentPackageEvent(DistributionEventType.AGENT_PACKAGE_QUEUED, name, distributionPackage.getInfo());
         } catch (Exception e) {
             log.error("an error happened during dispatching items to the queue(s)", e);
             distributionResponses.add(new DistributionResponse(DistributionRequestState.FAILED, e.toString()));
@@ -330,11 +332,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
                 distributionPackage.getInfo().fillInfo(queueItem.getPackageInfo());
 
                 distributionPackageImporter.importPackage(agentResourceResolver, distributionPackage);
-
-                Dictionary<Object, Object> properties = new Properties();
-                properties.put("distribution.package.paths", distributionPackage.getInfo().getPaths());
-                properties.put("distribution.agent.name", name);
-                distributionEventFactory.generateEvent(DistributionEventType.PACKAGE_DISTRIBUTED, properties);
+                distributionEventFactory.generateAgentPackageEvent(DistributionEventType.AGENT_PACKAGE_DISTRIBUTED, name, distributionPackage.getInfo());
 
                 if (distributionPackage instanceof SharedDistributionPackage) {
                     ((SharedDistributionPackage) distributionPackage).release(queueName);

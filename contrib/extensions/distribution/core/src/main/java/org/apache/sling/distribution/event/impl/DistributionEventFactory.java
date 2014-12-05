@@ -22,6 +22,8 @@ import javax.annotation.Nonnull;
 import java.util.Dictionary;
 
 import org.apache.sling.distribution.event.DistributionEventType;
+import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 
 /**
  * generate distribution related events
@@ -32,7 +34,7 @@ public interface DistributionEventFactory {
      * generate a distribution event
      *
      * @param distributionEventType the type of event to be generated
-     * @param properties           a dictionary of properties to be attached to the event
      */
-    void generateEvent(@Nonnull DistributionEventType distributionEventType, @Nonnull Dictionary<?, ?> properties);
+    void generateAgentPackageEvent(@Nonnull DistributionEventType distributionEventType, @Nonnull String agentName, @Nonnull DistributionPackageInfo info);
+
 }
