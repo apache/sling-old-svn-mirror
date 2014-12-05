@@ -292,7 +292,7 @@ public class UnitLoader implements EventHandler {
             if (StringUtils.isNotEmpty(offendingInput)) {
                 offendingInput = StringEscapeUtils.unescapeHtml(offendingInput.trim());
                 int errorLine = getLineWhereErrorOccurred(scriptSource, offendingInput);
-                throw new SightlyParsingException("Parsing error in template " + identifier.getResource().getPath() + " at line " +
+                throw new SightlyException("Parsing error in template " + identifier.getResource().getPath() + " at line " +
                         errorLine + ":\n" + offendingInput + "\n");
             } else {
                 throw e;
