@@ -417,7 +417,7 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
             
             Object[] typedValue = (Object[])valueMap.get(property, type);
             // see https://issues.apache.org/jira/browse/SLING-4178 for why the second check is necessary
-            if (typedValue == null || typedValue[0] == null) {
+            if (typedValue == null || (typedValue.length > 0 && typedValue[0] == null)) {
                 // here the missing required property case was already treated in validateValueMap
                 result.addFailureMessage(property, "Property was expected to be of type '" + validator.getType() + "' but cannot be converted to that type." );
                 return;
