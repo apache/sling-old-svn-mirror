@@ -54,6 +54,11 @@ public class RemoteDistributionPackageExporter implements DistributionPackageExp
             throw new IllegalArgumentException("packageBuilder is required");
         }
 
+        if (secretProvider == null) {
+            throw new IllegalArgumentException("distributionTransportSecretProvider is required");
+        }
+
+
         this.packageBuilder = packageBuilder;
         this.secretProvider = secretProvider;
 

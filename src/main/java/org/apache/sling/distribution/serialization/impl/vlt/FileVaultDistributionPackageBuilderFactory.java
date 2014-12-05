@@ -69,9 +69,6 @@ public class FileVaultDistributionPackageBuilderFactory implements DistributionP
     public static final String PACKAGE_BUILDER_FILEVLT_ACLHANDLING = "aclHandling";
 
     @Reference
-    private DistributionEventFactory distributionEventFactory;
-
-    @Reference
     private Packaging packaging;
 
     private DistributionPackageBuilder packageBuilder;
@@ -83,9 +80,9 @@ public class FileVaultDistributionPackageBuilderFactory implements DistributionP
         String importMode = PropertiesUtil.toString(config.get(PACKAGE_BUILDER_FILEVLT_IMPORT_MODE), null);
         String aclHandling = PropertiesUtil.toString(config.get(PACKAGE_BUILDER_FILEVLT_ACLHANDLING), null);
         if (importMode != null && aclHandling != null) {
-            packageBuilder = new ResourceSharedDistributionPackageBuilder(new FileVaultDistributionPackageBuilder(packaging, distributionEventFactory, importMode, aclHandling));
+            packageBuilder = new ResourceSharedDistributionPackageBuilder(new FileVaultDistributionPackageBuilder(packaging, importMode, aclHandling));
         } else {
-            packageBuilder = new ResourceSharedDistributionPackageBuilder(new FileVaultDistributionPackageBuilder(packaging, distributionEventFactory));
+            packageBuilder = new ResourceSharedDistributionPackageBuilder(new FileVaultDistributionPackageBuilder(packaging));
         }
     }
 

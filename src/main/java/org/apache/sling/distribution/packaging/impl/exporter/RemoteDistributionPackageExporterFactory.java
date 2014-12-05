@@ -93,8 +93,8 @@ public class RemoteDistributionPackageExporterFactory implements DistributionPac
     @Reference(name = "packageBuilder")
     private DistributionPackageBuilder packageBuilder;
 
-    @Property(name = "distributionTransportSecretProvider.target")
-    @Reference(name = "distributionTransportSecretProvider")
+    @Property(name = "transportSecretProvider.target")
+    @Reference(name = "transportSecretProvider")
     private DistributionTransportSecretProvider distributionTransportSecretProvider;
 
     private DistributionPackageExporter exporter;

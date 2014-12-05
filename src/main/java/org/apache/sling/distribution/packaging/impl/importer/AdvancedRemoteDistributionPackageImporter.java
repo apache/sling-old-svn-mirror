@@ -53,8 +53,8 @@ public class AdvancedRemoteDistributionPackageImporter implements DistributionPa
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(name = "distributionTransportSecretProvider.target")
-    @Reference(name = "distributionTransportSecretProvider")
+    @Property(name = "transportSecretProvider.target")
+    @Reference(name = "transportSecretProvider")
     private volatile DistributionTransportSecretProvider distributionTransportSecretProvider;
 
     @Property(cardinality = 100)

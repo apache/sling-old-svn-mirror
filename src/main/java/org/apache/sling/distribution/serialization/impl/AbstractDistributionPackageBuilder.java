@@ -51,11 +51,8 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
 
     private final String type;
 
-    private final DistributionEventFactory distributionEventFactory;
-
-    protected AbstractDistributionPackageBuilder(String type, DistributionEventFactory distributionEventFactory) {
+    protected AbstractDistributionPackageBuilder(String type) {
         this.type = type;
-        this.distributionEventFactory = distributionEventFactory;
     }
 
     @CheckForNull
@@ -75,12 +72,6 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         if (distributionPackage != null) {
             distributionPackage.getInfo().setRequestType(request.getRequestType());
             distributionPackage.getInfo().setPaths(request.getPaths());
-            if (distributionEventFactory != null) {
-                Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
-                dictionary.put("distribution.request.type", distributionPackage.getInfo().getRequestType());
-                dictionary.put("distribution.path", distributionPackage.getInfo().getPaths());
-                distributionEventFactory.generateEvent(DistributionEventType.PACKAGE_CREATED, dictionary);
-            }
         }
         return distributionPackage;
     }
@@ -119,13 +110,6 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
             installed = installDeletePackage(resourceResolver, distributionPackage);
         } else {
             installed = installPackageInternal(resourceResolver, distributionPackage);
-        }
-
-        if (installed && distributionEventFactory != null) {
-            Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
-            dictionary.put("distribution.request.type", distributionPackage.getInfo().getRequestType());
-            dictionary.put("distribution.path", distributionPackage.getInfo().getPaths());
-            distributionEventFactory.generateEvent(DistributionEventType.PACKAGE_INSTALLED, dictionary);
         }
 
         return installed;

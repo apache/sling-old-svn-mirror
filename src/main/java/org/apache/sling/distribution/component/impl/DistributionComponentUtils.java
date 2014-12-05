@@ -93,17 +93,17 @@ public class DistributionComponentUtils {
         osgiConfigFactoryMap = new HashMap<String, String>();
         osgiServiceMap = new HashMap<String, String>();
 
-        // register "core" services
+        // register "core" services kind -> ComponentClass
         registerService("agent", DistributionAgent.class);
         registerService("exporter", DistributionPackageExporter.class);
         registerService("importer", DistributionPackageImporter.class);
-        registerService("packager", DistributionPackageBuilder.class);
+        registerService("packageBuilder", DistributionPackageBuilder.class);
         registerService("requestAuthorization", DistributionRequestAuthorizationStrategy.class);
-        registerService("distributionTransportSecretProvider", DistributionTransportSecretProvider.class);
+        registerService("transportSecretProvider", DistributionTransportSecretProvider.class);
         registerService("trigger", DistributionTrigger.class);
 
 
-        // register "core" factoreis
+        // register "core" factories kind, type -> ComponentFactoryClass
         registerFactory("agent", "simple", SimpleDistributionAgentFactory.class);
 
         registerFactory("exporter", "local", LocalDistributionPackageExporterFactory.class);
@@ -113,11 +113,11 @@ public class DistributionComponentUtils {
         registerFactory("importer", "local", LocalDistributionPackageImporterFactory.class);
         registerFactory("importer", "remote", RemoteDistributionPackageImporterFactory.class);
 
-        registerFactory("packager", "vlt", FileVaultDistributionPackageBuilderFactory.class);
+        registerFactory("packageBuilder", "vlt", FileVaultDistributionPackageBuilderFactory.class);
 
         registerFactory("requestAuthorization", "privilege", PrivilegeDistributionRequestAuthorizationStrategy.class);
 
-        registerFactory("distributionTransportSecretProvider", "user", UserCredentialsDistributionTransportSecretProvider.class);
+        registerFactory("transportSecretProvider", "user", UserCredentialsDistributionTransportSecretProvider.class);
 
         registerFactory("trigger", "resourceEvent", LocalDistributionTriggerFactory.class);
         registerFactory("trigger", "scheduledEvent", LocalDistributionTriggerFactory.class);
