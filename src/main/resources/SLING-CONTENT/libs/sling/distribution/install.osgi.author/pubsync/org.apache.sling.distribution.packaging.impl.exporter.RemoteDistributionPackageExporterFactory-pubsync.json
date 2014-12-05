@@ -13,7 +13,7 @@
     "endpoints.strategy": "All",
 
     "packageBuilder.target" : "(name=vlt)",
-    "transportAuthenticationProvider.target" : "(name=publishAdmin)"
+    "distributionTransportSecretProvider.target" : "(name=publishAdmin)"
 
 
 }

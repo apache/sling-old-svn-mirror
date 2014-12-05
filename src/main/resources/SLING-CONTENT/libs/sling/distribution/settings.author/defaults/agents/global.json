@@ -21,7 +21,7 @@
             "name" : "vlt"
         },
 
-        "transportAuthenticationProvider" : {
+        "distributionTransportSecretProvider" : {
             "kind" : "transportAuthenticator",
             "type" : "service",
             "name" : "publishAdmin"
@@ -39,7 +39,7 @@
             "name" : "vlt"
         },
 
-        "transportAuthenticationProvider" : {
+        "distributionTransportSecretProvider" : {
             "kind" : "transportAuthenticator",
             "type" : "service",
             "name" : "publishAdmin"
