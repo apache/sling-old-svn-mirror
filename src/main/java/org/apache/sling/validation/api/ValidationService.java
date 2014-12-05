@@ -34,16 +34,19 @@ public interface ValidationService {
      * @param validatedResourceType the type of {@code Resources} the model validates
      * @param applicablePath        the model's applicable path (the path of the validated resource)
      * @return a {@code ValidationModel} if one is found, {@code null} otherwise
+     * @throws IllegalStateException in case an invalid validation model was found
+     * @throws IllegalArgumentException in case validatedResourceType was blank or {@code null}
      */
-    ValidationModel getValidationModel(String validatedResourceType, String applicablePath);
+    ValidationModel getValidationModel(String validatedResourceType, String applicablePath) throws IllegalStateException, IllegalArgumentException;
 
     /**
      * Tries to obtain a {@link ValidationModel} that is able to validate the given {@code resource}.
      *
      * @param resource the resource for which to obtain a validation model
      * @return a {@code ValidationModel} if one is found, {@code null} otherwise
+     * @throws IllegalStateException in case an invalid validation model was found
      */
-    ValidationModel getValidationModel(Resource resource);
+    ValidationModel getValidationModel(Resource resource) throws IllegalStateException;
 
     /**
      * Validates a {@link Resource} using a specific {@link ValidationModel}. If the {@code model} describes a resource tree,
