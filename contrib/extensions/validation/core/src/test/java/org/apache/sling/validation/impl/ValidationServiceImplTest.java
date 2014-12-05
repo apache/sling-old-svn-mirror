@@ -192,6 +192,56 @@ public class ValidationServiceImplTest {
         }
     }
 
+    @Test(expected=IllegalStateException.class)
+    public void testGetValidationModelWithInvalidValidator() throws Exception {
+        validationService.validators.put("org.apache.sling.validation.impl.validators.RegexValidator", new RegexValidator());
+
+        TestProperty field = new TestProperty("field1");
+        // invalid validator name
+        field.addValidator("org.apache.sling.validation.impl.validators1.RegexValidator");
+        ResourceResolver rr = rrf.getAdministrativeResourceResolver(null);
+        Resource model = null;
+        try {
+            if (rr != null) {
+                model = createValidationModelResource(rr, appsValidatorsRoot.getPath(), "testValidationModel1", "sling/validation/test",
+                        new String[]{"/apps/validation/1",
+                                "/apps/validation/2"}, field);
+            }
+
+            ValidationModel vm = validationService.getValidationModel("sling/validation/test", "/apps/validation/1/resource");
+        } finally {
+            if (rr != null) {
+                if (model != null) {
+                    rr.delete(model);
+                }
+                rr.commit();
+                rr.close();
+            }
+        }
+    }
+
+    @Test(expected=IllegalStateException.class)
+    public void testGetValidationModelWithMissingChildrenAndProperties() throws Exception {
+        ResourceResolver rr = rrf.getAdministrativeResourceResolver(null);
+        Resource model = null;
+        try {
+            if (rr != null) {
+                model = createValidationModelResource(rr, appsValidatorsRoot.getPath(), "testValidationModel1", "sling/validation/test",
+                        new String[]{"/apps/validation/1",
+                                "/apps/validation/2"});
+            }
+            ValidationModel vm = validationService.getValidationModel("sling/validation/test", "/apps/validation/1/resource");
+        } finally {
+            if (rr != null) {
+                if (model != null) {
+                    rr.delete(model);
+                }
+                rr.commit();
+                rr.close();
+            }
+        }
+    }
+
     @Test()
     public void testValueMapWithWrongDataType() throws Exception {
         validationService.validators.put("org.apache.sling.validation.impl.validators.RegexValidator", new RegexValidator());
@@ -656,6 +706,9 @@ public class ValidationServiceImplTest {
     
     private void createValidationModelProperties(Resource model, TestProperty... properties) throws PersistenceException {
         ResourceResolver rr = model.getResourceResolver();
+        if (properties.length == 0) {
+            return;
+        }
         Resource propertiesResource = ResourceUtil.getOrCreateResource(rr, model.getPath() + "/" + Constants
                 .PROPERTIES, JcrConstants.NT_UNSTRUCTURED, null, true);
         if (propertiesResource != null) {
