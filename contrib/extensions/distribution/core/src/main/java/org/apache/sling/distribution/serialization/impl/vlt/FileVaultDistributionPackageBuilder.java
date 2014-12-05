@@ -28,6 +28,7 @@ import java.util.UUID;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
 import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
+import org.apache.jackrabbit.vault.fs.api.WorkspaceFilter;
 import org.apache.jackrabbit.vault.fs.config.DefaultMetaInf;
 import org.apache.jackrabbit.vault.fs.config.DefaultWorkspaceFilter;
 import org.apache.jackrabbit.vault.fs.io.AccessControlHandling;
@@ -89,27 +90,15 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
             // TODO : no tokens
 
             final String[] paths = request.getPaths();
+            final boolean deep = request.isDeep();
 
-            DefaultWorkspaceFilter filter = new DefaultWorkspaceFilter();
-            DefaultMetaInf inf = new DefaultMetaInf();
-            ExportOptions opts = new ExportOptions();
-            for (String path : paths) {
-                filter.add(new PathFilterSet(path));
-            }
-            inf.setFilter(filter);
-
-            Properties props = new Properties();
             String packageGroup = "sling/distribution";
-            props.setProperty(VaultPackage.NAME_GROUP, packageGroup);
             String packageName = PACKAGING_TYPE + "_" + System.currentTimeMillis() + "_" +  UUID.randomUUID();
-            props.setProperty(VaultPackage.NAME_NAME, packageName);
-            props.setProperty(VaultPackage.NAME_VERSION, VERSION);
-            inf.setProperties(props);
+
+            WorkspaceFilter filter = VltUtils.createFilter(paths, deep);
+            ExportOptions opts = VltUtils.getExportOptions(filter, packageGroup, packageName, VERSION);
 
             log.debug("assembling package {}", packageGroup + '/' + packageName + "-" + VERSION);
-
-            opts.setMetaInf(inf);
-            opts.setRootPath("/");
             File tmpFile = File.createTempFile("rp-vlt-create-" + System.nanoTime(), ".zip");
             VaultPackage vaultPackage = packaging.getPackageManager().assemble(session, opts, tmpFile);
             return new FileVaultDistributionPackage(vaultPackage);
@@ -172,23 +161,9 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
             File file = new File(distributionPackage.getId());
             if (file.exists()) {
                 VaultPackage pkg = packaging.getPackageManager().open(file);
-                ImportOptions opts = new ImportOptions();
-                if (aclHandling != null) {
-                    opts.setAccessControlHandling(aclHandling);
-                    log.debug("using acl handling {}", aclHandling);
-                }
-                else {
-                    // default to overwrite
-                    opts.setAccessControlHandling(AccessControlHandling.OVERWRITE);
-                }
-                if (importMode != null) {
-                    opts.setImportMode(importMode);
-                    log.debug("using import mode {}", importMode);
-                }
-                else {
-                    // default to replace
-                    opts.setImportMode(ImportMode.REPLACE);
-                }
+                ImportOptions opts = VltUtils.getImportOptions(aclHandling, importMode);
+
+                log.debug("using import mode {} and acl {}", opts.getImportMode(), opts.getAccessControlHandling());
                 pkg.extract(session, opts);
                 return true;
             }

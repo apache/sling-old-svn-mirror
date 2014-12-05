@@ -105,14 +105,25 @@ public class DistributionUtils {
     public static void distribute(SlingInstance slingInstance, String agentName, DistributionRequestType action, String... paths) throws IOException {
         String agentResource = agentUrl(agentName);
 
-        executeDistributionRequest(slingInstance, 202, agentResource, action, paths);
+        executeDistributionRequest(slingInstance, 202, agentResource, action, false, paths);
     }
 
-    public static String executeDistributionRequest(SlingInstance slingInstance, int status, String resource, DistributionRequestType action, String... paths) throws IOException {
+    public static void distributeDeep(SlingInstance slingInstance, String agentName, DistributionRequestType action, String... paths) throws IOException {
+        String agentResource = agentUrl(agentName);
+
+        executeDistributionRequest(slingInstance, 202, agentResource, action, true, paths);
+    }
+
+    public static String executeDistributionRequest(SlingInstance slingInstance, int status, String resource, DistributionRequestType action, boolean deep, String... paths) throws IOException {
 
         List<String> args = new ArrayList<String>();
         args.add(DistributionParameter.ACTION.toString());
         args.add(action.toString());
+
+        if (deep) {
+            args.add(DistributionParameter.DEEP.toString());
+            args.add("true");
+        }
 
         if (paths != null) {
             for (String path : paths) {
@@ -125,9 +136,9 @@ public class DistributionUtils {
     }
 
     public static String doExport(SlingInstance slingInstance, String exporterName, DistributionRequestType action, String... paths) throws IOException {
-        String agentResource = exporterUrl(exporterName);
+        String exporterUrl = exporterUrl(exporterName);
 
-        return executeDistributionRequest(slingInstance, 200, agentResource, action, paths);
+        return executeDistributionRequest(slingInstance, 200, exporterUrl, action, false, paths);
     }
 
     public static String doImport(SlingInstance slingInstance, String importerName, byte[] bytes) throws IOException {
