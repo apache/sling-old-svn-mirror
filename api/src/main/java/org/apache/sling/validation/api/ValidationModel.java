@@ -29,30 +29,30 @@ public interface ValidationModel {
     /**
      * Returns the properties validated by this model.
      *
-     * @return the properties set
+     * @return the properties set (never {@code null}, but might be empty set)
      */
     Set<ResourceProperty> getResourceProperties();
 
     /**
      * Returns the type of resource this model validates.
      *
-     * @return the validated resource type
+     * @return the validated resource type, never {@code null}
      */
     String getValidatedResourceType();
 
     /**
      * Returns the paths under which resources will be validated by this model. 
-     * Is never null nor an empty array. Might return a single element array containing only the empty string, 
+     * Might return a single element array containing only the empty string, 
      * in which case the validation model has no path restriction.
      *
-     * @return a path array
+     * @return a path array. Is never {@code null} nor an empty array
      */
     String[] getApplicablePaths();
 
     /**
      * Returns the expected children for a resource validated by this model.
      *
-     * @return the children list (can be empty if there are no children)
+     * @return the children list (can be empty if there are no children), never {@code null}
      */
     List<ChildResource> getChildren();
 
