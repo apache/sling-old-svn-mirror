@@ -58,7 +58,7 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
 
     private static final String VERSION = "0.0.1";
 
-    public static final String PACKAGING_TYPE = "vlt";
+    public static final String PACKAGING_TYPE = "filevlt";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -68,16 +68,11 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
 
     private AccessControlHandling aclHandling;
 
-    public FileVaultDistributionPackageBuilder(Packaging packaging) {
+    public FileVaultDistributionPackageBuilder(Packaging packaging, ImportMode importMode, AccessControlHandling aclHandling) {
         super(PACKAGING_TYPE);
         this.packaging = packaging;
-    }
-
-    public FileVaultDistributionPackageBuilder(Packaging packaging, String importMode, String aclHandling) {
-        super(PACKAGING_TYPE);
-        this.packaging = packaging;
-        this.importMode = ImportMode.valueOf(importMode);
-        this.aclHandling = AccessControlHandling.valueOf(aclHandling);
+        this.importMode = importMode;
+        this.aclHandling = aclHandling;
     }
 
     @Override

@@ -35,7 +35,8 @@ import org.apache.sling.distribution.transport.DistributionTransportSecretProvid
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(label = "User Credentials based DistributionTransportSecretProvider",
+@Component(metatype = true,
+        label = "Sling Distribution - User Credentials based DistributionTransportSecretProvider",
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE)

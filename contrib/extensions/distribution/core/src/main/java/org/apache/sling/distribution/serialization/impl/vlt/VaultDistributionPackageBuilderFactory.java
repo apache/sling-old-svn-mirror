@@ -28,6 +28,8 @@ import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.jackrabbit.vault.fs.api.ImportMode;
+import org.apache.jackrabbit.vault.fs.io.AccessControlHandling;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
@@ -41,14 +43,21 @@ import org.apache.sling.distribution.serialization.DistributionPackageReadingExc
 import org.apache.sling.distribution.serialization.impl.ResourceSharedDistributionPackageBuilder;
 
 @Component(metatype = true,
-        label = "Sling Distribution - File Vault Package Builder Factory",
-        description = "OSGi configuration for file vault package builders",
+        label = "Sling Distribution - Vault Package Builder Factory",
+        description = "OSGi configuration for vault package builders",
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE
 )
 @Service(DistributionPackageBuilder.class)
-public class FileVaultDistributionPackageBuilderFactory implements DistributionPackageBuilder {
+public class VaultDistributionPackageBuilderFactory implements DistributionPackageBuilder {
+
+
+    /**
+     * type of this component.
+     */
+    @Property
+    public static final String TYPE = DistributionComponentUtils.PN_TYPE;
 
     /**
      * name of this component.
@@ -77,12 +86,23 @@ public class FileVaultDistributionPackageBuilderFactory implements DistributionP
     @Activate
     public void activate(Map<String, Object> config) {
 
-        String importMode = PropertiesUtil.toString(config.get(PACKAGE_BUILDER_FILEVLT_IMPORT_MODE), null);
-        String aclHandling = PropertiesUtil.toString(config.get(PACKAGE_BUILDER_FILEVLT_ACLHANDLING), null);
-        if (importMode != null && aclHandling != null) {
+        String type = PropertiesUtil.toString(config.get(TYPE), null);
+        String importModeString = PropertiesUtil.toString(config.get(PACKAGE_BUILDER_FILEVLT_IMPORT_MODE), null);
+        String aclHandlingString = PropertiesUtil.toString(config.get(PACKAGE_BUILDER_FILEVLT_ACLHANDLING), null);
+
+        ImportMode importMode = null;
+        if (importMode != null) {
+            importMode = ImportMode.valueOf(importModeString);
+        }
+
+        AccessControlHandling aclHandling = null;
+        if (aclHandlingString != null) {
+            aclHandling= AccessControlHandling.valueOf(aclHandlingString);
+        }
+        if (FileVaultDistributionPackageBuilder.PACKAGING_TYPE.equals(type)) {
             packageBuilder = new ResourceSharedDistributionPackageBuilder(new FileVaultDistributionPackageBuilder(packaging, importMode, aclHandling));
-        } else {
-            packageBuilder = new ResourceSharedDistributionPackageBuilder(new FileVaultDistributionPackageBuilder(packaging));
+        } else  {
+            packageBuilder = new ResourceSharedDistributionPackageBuilder(new JcrVaultDistributionPackageBuilder(packaging, importMode, aclHandling));
         }
     }
 
