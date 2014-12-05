@@ -1,4 +1,5 @@
 {
     "jcr:primaryType": "sling:OsgiConfig",
-    "name": "vlt"
+    "name": "vlt",
+    "type": "jcrvlt"
 }
