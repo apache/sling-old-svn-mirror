@@ -42,10 +42,10 @@
     <feature version="${project.version}">infrastructure-sling</feature>
     <feature version="${project.version}">commons-sling</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.api/2.8.0</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.auth.core/1.3.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.auth.core/1.3.4</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.engine/2.3.10</bundle>
     <!-- org.apache.sling.resourceresolver requires jcr -->
-    <bundle>mvn:org.apache.sling/org.apache.sling.resourceresolver/1.1.6</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.resourceresolver/1.1.8</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.serviceusermapper/1.0.4</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.settings/1.3.2</bundle>
     <!-- Apache Sling Commons -->
