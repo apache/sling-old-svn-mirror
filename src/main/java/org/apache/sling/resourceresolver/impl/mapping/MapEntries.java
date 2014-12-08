@@ -27,6 +27,7 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -893,7 +894,7 @@ public class MapEntries implements EventHandler {
                             alias, parentPath);
                 } else {
                     if (parentMap == null) {
-                        parentMap = new HashMap<String, String>();
+                        parentMap = new LinkedHashMap<String, String>();
                         map.put(parentPath, parentMap);
                     }
                     parentMap.put(alias, resourceName);
