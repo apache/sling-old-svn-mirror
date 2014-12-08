@@ -76,7 +76,7 @@
                             org.apache.sling.distribution.queue,
                             org.apache.sling.distribution.trigger,
                             org.apache.sling.distribution.packaging,
-                            org.apache.sling.distribution.transport.authentication
+                            org.apache.sling.distribution.transport
                         </Export-Package>
                     </instructions>
                 </configuration>
