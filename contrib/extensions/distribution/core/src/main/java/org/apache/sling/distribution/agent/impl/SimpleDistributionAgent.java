@@ -47,7 +47,7 @@ import org.apache.sling.distribution.packaging.DistributionPackageImportExceptio
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.packaging.SharedDistributionPackage;
 import org.apache.sling.distribution.queue.DistributionQueue;
-import org.apache.sling.distribution.queue.DistributionQueueDispatchingStrategy;
+import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemState;
@@ -86,6 +86,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
     private final ResourceResolverFactory resourceResolverFactory;
     private final String subServiceName;
     private AgentBasedRequestHandler agentBasedRequestHandler;
+    private boolean active = false;
 
     public SimpleDistributionAgent(String name,
                                    boolean passive,
@@ -101,7 +102,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
         // check configuration is valid
         if (name == null
-                || distributionPackageImporter == null
+                || (!passive && distributionPackageImporter == null)
                 || distributionPackageExporter == null
                 || subServiceName == null
                 || distributionRequestAuthorizationStrategy == null
@@ -150,7 +151,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
             return scheduleImport(distributionPackages);
         } catch (Exception e) {
-            log.error("[{}] Error executing distribution request {}", name, distributionRequest);
+            log.error("Error executing distribution request {} in agent " + name, distributionRequest, e);
             throw new DistributionAgentException(e);
         } finally {
             ungetAgentResourceResolver(agentResourceResolver);
@@ -256,6 +257,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
     public void enable() {
         log.info("enabling agent");
 
+
         // register triggers if any
         agentBasedRequestHandler = new AgentBasedRequestHandler(this);
 
@@ -276,9 +278,15 @@ public class SimpleDistributionAgent implements DistributionAgent {
                 log.error("cannot enable queue processing", e);
             }
         }
+
+        active = true;
     }
 
     public void enableTrigger(DistributionTrigger trigger) {
+        if (!active) {
+            return;
+        }
+
         try {
             trigger.register(agentBasedRequestHandler);
         } catch (DistributionTriggerException e) {
@@ -288,6 +296,10 @@ public class SimpleDistributionAgent implements DistributionAgent {
     }
 
     public void disableTrigger(DistributionTrigger trigger) {
+        if (!active) {
+            return;
+        }
+
         try {
             trigger.register(agentBasedRequestHandler);
         } catch (DistributionTriggerException e) {
@@ -297,6 +309,8 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
     public void disable() {
         log.info("disabling agent");
+        active = false;
+
 
         for (DistributionTrigger trigger : triggers) {
             try {
@@ -308,6 +322,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
         agentBasedRequestHandler = null;
 
+
         if (!isPassive()) {
 
             try {
@@ -316,6 +331,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
                 log.error("cannot disable queue processing", e);
             }
         }
+
     }
 
     private boolean processQueue(String queueName, DistributionQueueItem queueItem) {
@@ -396,6 +412,12 @@ public class SimpleDistributionAgent implements DistributionAgent {
         }
 
         public void handle(@Nonnull DistributionRequest request) {
+
+            if (!active) {
+                log.warn("handler is active when agent is disabled");
+                return;
+            }
+
             ResourceResolver agentResourceResolver = null;
             try {
                 agentResourceResolver = getAgentResourceResolver();

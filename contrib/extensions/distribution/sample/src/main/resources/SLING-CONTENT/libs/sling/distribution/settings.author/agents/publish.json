@@ -1,4 +1,6 @@
 {
+    "type" : "simple",
+
     "serviceName" : "distributionService",
 
     "packageExporter":  {

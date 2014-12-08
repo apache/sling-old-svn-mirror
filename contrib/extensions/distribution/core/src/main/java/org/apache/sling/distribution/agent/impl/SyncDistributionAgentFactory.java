@@ -18,12 +18,6 @@
  */
 package org.apache.sling.distribution.agent.impl;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -32,6 +26,9 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.jackrabbit.vault.fs.api.ImportMode;
+import org.apache.jackrabbit.vault.fs.io.AccessControlHandling;
+import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
@@ -39,12 +36,20 @@ import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
+import org.apache.sling.distribution.packaging.impl.exporter.RemoteDistributionPackageExporter;
+import org.apache.sling.distribution.packaging.impl.importer.RemoteDistributionPackageImporter;
 import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.SingleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
 import org.apache.sling.distribution.resources.DistributionConstants;
 import org.apache.sling.distribution.resources.impl.OsgiUtils;
+import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
+import org.apache.sling.distribution.serialization.impl.ResourceSharedDistributionPackageBuilder;
+import org.apache.sling.distribution.serialization.impl.vlt.FileVaultDistributionPackageBuilder;
+import org.apache.sling.distribution.serialization.impl.vlt.JcrVaultDistributionPackageBuilder;
+import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
+import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.settings.SlingSettingsService;
@@ -54,12 +59,18 @@ import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 /**
  * An OSGi service factory for {@link org.apache.sling.distribution.agent.DistributionAgent}s which references already existing OSGi services.
  */
 @Component(metatype = true,
-        label = "Sling Distribution - Simple Agents Factory",
-        description = "OSGi configuration factory for agents",
+        label = "Sling Distribution - Sync Agents Factory",
+        description = "OSGi configuration factory for syncing agents",
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE
@@ -67,7 +78,7 @@ import org.slf4j.LoggerFactory;
 @Reference(name = "triggers", referenceInterface = DistributionTrigger.class,
         policy = ReferencePolicy.DYNAMIC, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
         bind = "bindDistributionTrigger", unbind = "unbindDistributionTrigger")
-public class SimpleDistributionAgentFactory {
+public class SyncDistributionAgentFactory {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Property(label = "Name")
@@ -77,25 +88,37 @@ public class SimpleDistributionAgentFactory {
     private static final String ENABLED = "enabled";
 
 
-    @Property(boolValue = false, label = "Use this agent as a passive one (only queueing)")
-    public static final String IS_PASSIVE = "isPassive";
-
-
     @Property(label = "Service Name")
     public static final String SERVICE_NAME = "serviceName";
 
-    @Property(name = "packageExporter.target")
-    @Reference(name = "packageExporter")
-    private DistributionPackageExporter packageExporter;
+    /**
+     * endpoints property
+     */
+    @Property(cardinality = -1)
+    public static final String EXPORTER_ENDPOINTS = "packageExporter.endpoints";
 
+    /**
+     * endpoints property
+     */
+    @Property(cardinality = -1)
+    public static final String IMPORTER_ENDPOINTS = "packageImporter.endpoints";
 
-    @Property(name = "packageImporter.target")
-    @Reference(name = "packageImporter")
-    private DistributionPackageImporter packageImporter;
+    @Reference
+    private Packaging packaging;
 
     @Property(name = "requestAuthorizationStrategy.target")
     @Reference(name = "requestAuthorizationStrategy")
     private DistributionRequestAuthorizationStrategy requestAuthorizationStrategy;
+
+
+    @Property(name = "transportSecretProvider.target")
+    @Reference(name = "transportSecretProvider")
+    DistributionTransportSecretProvider transportSecretProvider;
+
+
+    @Property(name = "packageBuilder.target")
+    @Reference(name = "packageBuilder")
+    private DistributionPackageBuilder packageBuilder;
 
     @Reference
     private DistributionEventFactory distributionEventFactory;
@@ -113,7 +136,7 @@ public class SimpleDistributionAgentFactory {
     private BundleContext savedContext;
     private Map<String, Object> savedConfig;
     private String agentName;
-    List<DistributionTrigger> triggers = new CopyOnWriteArrayList<DistributionTrigger>();
+    private final List<DistributionTrigger> triggers = new CopyOnWriteArrayList<DistributionTrigger>();
 
     private SimpleDistributionAgent agent;
 
@@ -141,13 +164,20 @@ public class SimpleDistributionAgentFactory {
 
                 String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
 
-                boolean isPassive = PropertiesUtil.toBoolean(config.get(IS_PASSIVE), false);
+
 
                 try {
 
+
+                    String[] exporterEndpoints = PropertiesUtil.toStringArray(config.get(EXPORTER_ENDPOINTS), new String[0]);
+                    String[] importerEndpoints = PropertiesUtil.toStringArray(config.get(IMPORTER_ENDPOINTS), new String[0]);
+
+                    DistributionPackageExporter packageExporter = new RemoteDistributionPackageExporter(packageBuilder, transportSecretProvider, exporterEndpoints, TransportEndpointStrategyType.All, 1);
+                    DistributionPackageImporter packageImporter = new RemoteDistributionPackageImporter(transportSecretProvider, importerEndpoints, TransportEndpointStrategyType.All);
                     DistributionQueueProvider queueProvider =  new JobHandlingDistributionQueueProvider(agentName, jobManager, savedContext);
                     DistributionQueueDispatchingStrategy dispatchingStrategy = new SingleQueueDispatchingStrategy();
-                    agent = new SimpleDistributionAgent(agentName, isPassive, serviceName,
+
+                    agent = new SimpleDistributionAgent(agentName, false, serviceName,
                             packageImporter, packageExporter, requestAuthorizationStrategy,
                             queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory, triggers);
                 }
@@ -155,6 +185,7 @@ public class SimpleDistributionAgentFactory {
                     log.warn("cannot create agent", e);
                 }
 
+                log.debug("activated agent {}", agentName);
 
                 if (agent != null) {
 
@@ -162,9 +193,6 @@ public class SimpleDistributionAgentFactory {
                     componentReg = context.registerService(DistributionAgent.class.getName(), agent, props);
                     agent.enable();
                 }
-
-                log.info("activated agent {}", agentName);
-
             }
         }
     }
@@ -192,16 +220,12 @@ public class SimpleDistributionAgentFactory {
             Object service = context.getService(reference);
             if (service instanceof SimpleDistributionAgent) {
                 ((SimpleDistributionAgent) service).disable();
-
             }
 
             componentReg.unregister();
             componentReg = null;
             agent = null;
         }
-
-        log.info("deactivated agent {}", agentName);
-
 
     }
 }

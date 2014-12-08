@@ -175,11 +175,13 @@ public class DefaultDistributionComponentManager implements DistributionComponen
 
     private void deleteOsgiConfigs(List<Configuration> configurations) {
         for (Configuration configuration : configurations) {
+            String pid = configuration.getPid();
+
             try {
                 configuration.delete();
-                log.info("Deleted configuration {}", configuration.getPid());
+                log.info("Deleted configuration {}", pid);
             } catch (IOException e) {
-                log.error("Cannot delete configuration {}", configuration.getPid(), e);
+                log.warn("Cannot delete configuration {}", pid, e);
             }
         }
     }

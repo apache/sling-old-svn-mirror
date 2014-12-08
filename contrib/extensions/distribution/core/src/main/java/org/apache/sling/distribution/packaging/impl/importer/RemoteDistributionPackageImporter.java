@@ -49,14 +49,12 @@ public class RemoteDistributionPackageImporter implements DistributionPackageImp
 
     public RemoteDistributionPackageImporter(DistributionTransportSecretProvider distributionTransportSecretProvider,
                                              String[] endpoints,
-                                             String transportEndpointStrategyName) {
+                                             TransportEndpointStrategyType transportEndpointStrategyType) {
         this.distributionTransportSecretProvider = distributionTransportSecretProvider;
 
         if (distributionTransportSecretProvider == null) {
             throw new IllegalArgumentException("distributionTransportSecretProvider is required");
         }
-
-        TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(transportEndpointStrategyName);
 
 
         List<DistributionTransport> transportHandlers = new ArrayList<DistributionTransport>();

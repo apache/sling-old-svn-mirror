@@ -37,7 +37,7 @@ public class RemoteDistributionPackageImporterTest {
         String[] endpoints = new String[0];
         for (TransportEndpointStrategyType strategy : TransportEndpointStrategyType.values()) {
             RemoteDistributionPackageImporter remotedistributionPackageImporter = new RemoteDistributionPackageImporter(
-                    distributionTransportSecretProvider, endpoints, strategy.name());
+                    distributionTransportSecretProvider, endpoints, strategy);
             ResourceResolver resourceResolver = mock(ResourceResolver.class);
             DistributionPackage distributionPackage = mock(DistributionPackage.class);
             remotedistributionPackageImporter.importPackage(resourceResolver, distributionPackage);

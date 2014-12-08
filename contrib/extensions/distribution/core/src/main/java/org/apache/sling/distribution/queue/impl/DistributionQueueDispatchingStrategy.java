@@ -16,13 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.queue;
+package org.apache.sling.distribution.queue.impl;
 
 import javax.annotation.Nonnull;
 import java.util.List;
 
 import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.queue.DistributionQueueException;
+import org.apache.sling.distribution.queue.DistributionQueueItemState;
+import org.apache.sling.distribution.queue.DistributionQueueProvider;
 
 /**
  * a {@link DistributionQueueDispatchingStrategy} implements an algorithm for dispatching
@@ -38,13 +41,13 @@ public interface DistributionQueueDispatchingStrategy {
 
     /**
      * synchronously distribute a {@link org.apache.sling.distribution.packaging.DistributionPackage}
-     * to one or more {@link DistributionQueue}s provided by the given {@link DistributionQueueProvider}
+     * to one or more {@link org.apache.sling.distribution.queue.DistributionQueue}s provided by the given {@link org.apache.sling.distribution.queue.DistributionQueueProvider}
      *
      * @param distributionPackage a {@link org.apache.sling.distribution.packaging.DistributionPackage} to distribute
-     * @param queueProvider       the {@link DistributionQueueProvider} used to provide the queues to be used for the given package
+     * @param queueProvider       the {@link org.apache.sling.distribution.queue.DistributionQueueProvider} used to provide the queues to be used for the given package
      * @return an {@link java.lang.Iterable} of {@link org.apache.sling.distribution.queue.DistributionQueueItemState}s representing
      * the states of the {@link org.apache.sling.distribution.queue.DistributionQueueItem}s added to one or more {@link org.apache.sling.distribution.queue.DistributionQueue}s
-     * @throws DistributionQueueException if any internal error happens during distribution
+     * @throws org.apache.sling.distribution.queue.DistributionQueueException if any internal error happens during distribution
      */
     Iterable<DistributionQueueItemState> add(@Nonnull DistributionPackage distributionPackage, @Nonnull DistributionQueueProvider queueProvider) throws DistributionQueueException;
 
