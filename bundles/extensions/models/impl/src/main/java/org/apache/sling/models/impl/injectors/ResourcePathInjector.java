@@ -42,12 +42,16 @@ import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProc
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor2;
 import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 import org.osgi.framework.Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 2500)
 public class ResourcePathInjector extends AbstractInjector implements Injector, AcceptsNullName,
         StaticInjectAnnotationProcessorFactory {
+    
+    private static final Logger LOG= LoggerFactory.getLogger(ResourcePathInjector.class);
 
     @Override
     public String getName() {
@@ -89,9 +93,13 @@ public class ResourcePathInjector extends AbstractInjector implements Injector, 
         // unwrap if necessary
         if (isDeclaredTypeCollection(declaredType)) {
             return resources;
-        } else {
-            // TODO: maybe thrown an exception is size>1 ?
+        } else if(resources.size()==1) {
+          
             return resources.get(0);
+        }else{
+            //multiple resources to inject, but field is not a list
+            LOG.warn("Cannot inject multiple resources into field {} since it is not declared as a list", name);
+            return null;
         }
 
     }
