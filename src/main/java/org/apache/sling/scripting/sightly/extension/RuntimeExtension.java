@@ -28,7 +28,13 @@ import aQute.bnd.annotation.ConsumerType;
 @ConsumerType
 public interface RuntimeExtension {
 
-    String SCR_PROP_NAME = "org.apache.sling.scripting.sightly.extension.name";
+    /**
+     * The name of the service registration property indicating the
+     * {@code RuntimeExtension} name. This service registration property is
+     * mandatory to register runtime extensions to the Sightly Engine and is of
+     * type String.
+     */
+    String NAME = "org.apache.sling.scripting.sightly.extension.name";
 
     /**
      * Provide an instance of this extension

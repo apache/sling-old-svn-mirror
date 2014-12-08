@@ -52,7 +52,7 @@ import org.osgi.framework.ServiceReference;
 @Component
 @Service(RuntimeExtension.class)
 @Properties(
-        @Property(name = RuntimeExtension.SCR_PROP_NAME, value = UsePlugin.FUNCTION_NAME)
+        @Property(name = RuntimeExtension.NAME, value = UsePlugin.FUNCTION_NAME)
 )
 @Reference(
         policy = ReferencePolicy.DYNAMIC,
