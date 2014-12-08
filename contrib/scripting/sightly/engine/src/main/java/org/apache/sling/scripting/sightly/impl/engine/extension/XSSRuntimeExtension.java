@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service(RuntimeExtension.class)
 @Properties(
-        @Property(name = RuntimeExtension.SCR_PROP_NAME, value = XSSFilter.FUNCTION_NAME)
+        @Property(name = RuntimeExtension.NAME, value = XSSFilter.FUNCTION_NAME)
 )
 public class XSSRuntimeExtension implements RuntimeExtension {
 

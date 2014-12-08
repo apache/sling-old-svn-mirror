@@ -40,7 +40,7 @@ import org.apache.sling.scripting.sightly.render.RenderContext;
 @Component
 @Service({Filter.class, RuntimeExtension.class})
 @Properties({
-        @Property(name = RuntimeExtension.SCR_PROP_NAME, value = FormatFilter.FORMAT_FUNCTION)
+        @Property(name = RuntimeExtension.NAME, value = FormatFilter.FORMAT_FUNCTION)
 })
 public class FormatFilter extends FilterComponent implements RuntimeExtension {
 
