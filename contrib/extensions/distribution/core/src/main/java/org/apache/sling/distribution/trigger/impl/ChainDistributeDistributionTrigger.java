@@ -62,7 +62,7 @@ public class ChainDistributeDistributionTrigger implements DistributionTrigger {
         Dictionary<String, Object> properties = new Hashtable<String, Object>();
 
         // TODO : make it possible to configure the type of event handled here, currently 'package-installed' is hardcoded
-        properties.put(EventConstants.EVENT_TOPIC, DistributionEventType.PACKAGE_INSTALLED.getTopic());
+        properties.put(EventConstants.EVENT_TOPIC, DistributionEventType.AGENT_PACKAGE_DISTRIBUTED.getTopic());
         log.info("handler {} will chain distribute on path '{}'", requestHandler, pathPrefix);
 
 //            properties.put(EventConstants.EVENT_FILTER, "(path=" + path + "/*)");

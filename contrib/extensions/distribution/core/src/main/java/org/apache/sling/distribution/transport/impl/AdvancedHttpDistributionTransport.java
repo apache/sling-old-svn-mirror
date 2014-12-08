@@ -36,22 +36,20 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportException;
-import org.apache.sling.distribution.transport.authentication.TransportAuthenticationContext;
-import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.distribution.transport.DistributionTransportSecret;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Advanced HTTP {@link org.apache.sling.distribution.transport.DistributionTransportHandler} supporting custom HTTP headers
+ * Advanced HTTP {@link org.apache.sling.distribution.transport.DistributionTransport} supporting custom HTTP headers
  * and body.
  */
-public class AdvancedHttpDistributionTransportHandler extends SimpleHttpDistributionTransportHandler {
+public class AdvancedHttpDistributionTransport extends SimpleHttpDistributionTransport {
 
     private static final String PATH_VARIABLE_NAME = "{path}";
 
-    private static final Logger log = LoggerFactory.getLogger(AdvancedHttpDistributionTransportHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(AdvancedHttpDistributionTransport.class);
 
-    private final TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider;
     private final DistributionEndpoint distributionEndpoint;
 
     private final boolean useCustomHeaders;
@@ -62,37 +60,33 @@ public class AdvancedHttpDistributionTransportHandler extends SimpleHttpDistribu
 
     private final String customBody;
 
-    public AdvancedHttpDistributionTransportHandler(boolean useCustomHeaders,
-                                                    String[] customHeaders,
-                                                    boolean useCustomBody,
-                                                    String customBody,
-                                                    TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider,
-                                                    DistributionEndpoint distributionEndpoint,
-                                                    DistributionPackageBuilder packageBuilder,
-                                                    int maxNoOfPackages) {
+    public AdvancedHttpDistributionTransport(boolean useCustomHeaders,
+                                             String[] customHeaders,
+                                             boolean useCustomBody,
+                                             String customBody,
+                                             DistributionEndpoint distributionEndpoint,
+                                             DistributionPackageBuilder packageBuilder,
+                                             int maxNoOfPackages) {
 
 
-        super(transportAuthenticationProvider, distributionEndpoint, packageBuilder, maxNoOfPackages);
+        super(distributionEndpoint, packageBuilder, maxNoOfPackages);
         this.useCustomHeaders = useCustomHeaders;
         this.customHeaders = customHeaders;
         this.useCustomBody = useCustomBody;
         this.customBody = customBody;
-        this.transportAuthenticationProvider = transportAuthenticationProvider;
 
         this.distributionEndpoint = distributionEndpoint;
     }
 
     @Override
-    public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionTransportException {
+    public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage,
+                               @Nonnull DistributionTransportSecret secret) throws DistributionTransportException {
         log.info("delivering package {} to {} using auth {}",
                 new Object[]{distributionPackage.getId(),
-                        distributionEndpoint.getUri(), transportAuthenticationProvider});
+                        distributionEndpoint.getUri(), secret});
 
         try {
-            Executor executor = Executor.newInstance();
-            TransportAuthenticationContext context = new TransportAuthenticationContext();
-            context.addAttribute("endpoint", distributionEndpoint);
-            executor = transportAuthenticationProvider.authenticate(executor, context);
+            Executor executor = authenticate(secret, Executor.newInstance());
 
             deliverPackage(executor, distributionPackage, distributionEndpoint);
 
@@ -141,7 +135,7 @@ public class AdvancedHttpDistributionTransportHandler extends SimpleHttpDistribu
     }
 
     private void deliverPackage(Executor executor, DistributionPackage distributionPackage,
-                                DistributionEndpoint distributionEndpoint) throws IOException {
+                                                       DistributionEndpoint distributionEndpoint) throws IOException {
         String type = distributionPackage.getType();
 
         Request req = Request.Post(distributionEndpoint.getUri()).useExpectContinue();
@@ -171,13 +165,9 @@ public class AdvancedHttpDistributionTransportHandler extends SimpleHttpDistribu
             IOUtils.closeQuietly(inputStream);
         }
 
-        if (response != null) {
-            Content content = response.returnContent();
-            log.info("Distribution content of type {} for {} delivered: {}", new Object[]{
-                    type, Arrays.toString(distributionPackage.getInfo().getPaths()), content});
-        } else {
-            throw new IOException("response is empty");
-        }
+        Content content = response.returnContent();
+        log.info("Distribution content of type {} for {} delivered: {}", new Object[]{
+                type, Arrays.toString(distributionPackage.getInfo().getPaths()), content});
     }
 
     private static void addHeader(Request req, String header) {

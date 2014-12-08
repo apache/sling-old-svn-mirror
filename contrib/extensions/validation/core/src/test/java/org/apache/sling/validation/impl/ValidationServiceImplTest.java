@@ -192,6 +192,56 @@ public class ValidationServiceImplTest {
         }
     }
 
+    @Test(expected=IllegalStateException.class)
+    public void testGetValidationModelWithInvalidValidator() throws Exception {
+        validationService.validators.put("org.apache.sling.validation.impl.validators.RegexValidator", new RegexValidator());
+
+        TestProperty field = new TestProperty("field1");
+        // invalid validator name
+        field.addValidator("org.apache.sling.validation.impl.validators1.RegexValidator");
+        ResourceResolver rr = rrf.getAdministrativeResourceResolver(null);
+        Resource model = null;
+        try {
+            if (rr != null) {
+                model = createValidationModelResource(rr, appsValidatorsRoot.getPath(), "testValidationModel1", "sling/validation/test",
+                        new String[]{"/apps/validation/1",
+                                "/apps/validation/2"}, field);
+            }
+
+            ValidationModel vm = validationService.getValidationModel("sling/validation/test", "/apps/validation/1/resource");
+        } finally {
+            if (rr != null) {
+                if (model != null) {
+                    rr.delete(model);
+                }
+                rr.commit();
+                rr.close();
+            }
+        }
+    }
+
+    @Test(expected=IllegalStateException.class)
+    public void testGetValidationModelWithMissingChildrenAndProperties() throws Exception {
+        ResourceResolver rr = rrf.getAdministrativeResourceResolver(null);
+        Resource model = null;
+        try {
+            if (rr != null) {
+                model = createValidationModelResource(rr, appsValidatorsRoot.getPath(), "testValidationModel1", "sling/validation/test",
+                        new String[]{"/apps/validation/1",
+                                "/apps/validation/2"});
+            }
+            ValidationModel vm = validationService.getValidationModel("sling/validation/test", "/apps/validation/1/resource");
+        } finally {
+            if (rr != null) {
+                if (model != null) {
+                    rr.delete(model);
+                }
+                rr.commit();
+                rr.close();
+            }
+        }
+    }
+
     @Test()
     public void testValueMapWithWrongDataType() throws Exception {
         validationService.validators.put("org.apache.sling.validation.impl.validators.RegexValidator", new RegexValidator());
@@ -215,6 +265,48 @@ public class ValidationServiceImplTest {
             
             Map<String, List<String>> expectedFailureMessages = new HashMap<String, List<String>>();
             expectedFailureMessages.put("field1", Arrays.asList("Property was expected to be of type 'class java.util.Date' but cannot be converted to that type."));
+            Assert.assertThat(vr.getFailureMessages().entrySet(), Matchers.equalTo(expectedFailureMessages.entrySet()));
+        } finally {
+            if (model1 != null) {
+                rr.delete(model1);
+            }
+            if (rr != null) {
+                rr.commit();
+                rr.close();
+            }
+        }
+    }
+    
+    @Test()
+    public void testValueMapWithMissingField() throws Exception {
+        validationService.validators.put("org.apache.sling.validation.impl.validators.RegexValidator", new RegexValidator());
+
+        TestProperty property = new TestProperty("field1");
+        property.addValidator("org.apache.sling.validation.impl.validators.RegexValidator", "regex=.*");
+        TestProperty property2 = new TestProperty("field2");
+        property2.addValidator("org.apache.sling.validation.impl.validators.RegexValidator", "regex=.*");
+        TestProperty property3 = new TestProperty("field3");
+        property3.addValidator("org.apache.sling.validation.impl.validators.RegexValidator", "regex=.*");
+        TestProperty property4 = new TestProperty("field4");
+        property3.addValidator("org.apache.sling.validation.impl.validators.RegexValidator", "regex=.*");
+        ResourceResolver rr = rrf.getAdministrativeResourceResolver(null);
+        Resource model1 = null;
+        try {
+            if (rr != null) {
+                model1 = createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1", "sling/validation/test",
+                        new String[]{"/apps/validation"}, property, property2, property3, property4);
+            }
+            ValidationModel vm = validationService.getValidationModel("sling/validation/test", "/apps/validation/1/resource");
+            // this should not be detected as missing property
+            HashMap<String, Object> hashMap = new HashMap<String, Object>() {{
+                put("field1", new String[]{});
+                put("field2", new String[]{"null"});
+                put("field3", "");
+            }};
+            ValueMap map = new ValueMapDecorator(hashMap);
+            ValidationResult vr = validationService.validate(map, vm);
+            Map<String, List<String>> expectedFailureMessages = new HashMap<String, List<String>>();
+            expectedFailureMessages.put("field4", Arrays.asList("Missing required property."));
             Assert.assertThat(vr.getFailureMessages().entrySet(), Matchers.equalTo(expectedFailureMessages.entrySet()));
         } finally {
             if (model1 != null) {
@@ -284,7 +376,7 @@ public class ValidationServiceImplTest {
             Assert.assertFalse(vr.isValid());
             // check for correct error message
             Map<String, List<String>> expectedFailureMessages = new HashMap<String, List<String>>();
-            expectedFailureMessages.put("field2", Arrays.asList("Property does not match the pattern abc"));
+            expectedFailureMessages.put("field1", Arrays.asList("Property does not match the pattern abc"));
             Assert.assertThat(vr.getFailureMessages().entrySet(), Matchers.equalTo(expectedFailureMessages.entrySet()));
         } finally {
             if (model1 != null) {
@@ -656,6 +748,9 @@ public class ValidationServiceImplTest {
     
     private void createValidationModelProperties(Resource model, TestProperty... properties) throws PersistenceException {
         ResourceResolver rr = model.getResourceResolver();
+        if (properties.length == 0) {
+            return;
+        }
         Resource propertiesResource = ResourceUtil.getOrCreateResource(rr, model.getPath() + "/" + Constants
                 .PROPERTIES, JcrConstants.NT_UNSTRUCTURED, null, true);
         if (propertiesResource != null) {

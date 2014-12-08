@@ -74,10 +74,8 @@ public class FileVaultDistributionPackageBuilderTest {
         when(session.getWorkspace()).thenReturn(workspace);
         when(resourceResolver.adaptTo(Session.class)).thenReturn(session);
 
-        DistributionEventFactory eventFactory = mock(DistributionEventFactory.class);
 
-        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder(
-                packaging, eventFactory);
+        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder(packaging, null, null);
         DistributionRequest request = new DistributionRequest(DistributionRequestType.ADD, new String[]{"/"});
         DistributionPackage distributionPackage = fileVaultdistributionPackageBuilder.createPackageForAdd(resourceResolver, request);
         assertNotNull(distributionPackage);
@@ -89,10 +87,7 @@ public class FileVaultDistributionPackageBuilderTest {
         PackageManager packageManager = mock(PackageManager.class);
         when(packaging.getPackageManager()).thenReturn(packageManager);
 
-        DistributionEventFactory eventFactory = mock(DistributionEventFactory.class);
-
-        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder(
-                packaging, eventFactory);
+        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder(packaging, null, null);
 
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         InputStream stream = new ByteArrayInputStream("some binary".getBytes("UTF-8"));
@@ -105,10 +100,8 @@ public class FileVaultDistributionPackageBuilderTest {
         Packaging packaging = mock(Packaging.class);
         PackageManager packageManager = mock(PackageManager.class);
         when(packaging.getPackageManager()).thenReturn(packageManager);
-        DistributionEventFactory eventFactory = mock(DistributionEventFactory.class);
 
-        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder(
-                packaging, eventFactory);
+        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder(packaging, null, null);
 
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         String id = "some-id";
@@ -124,10 +117,8 @@ public class FileVaultDistributionPackageBuilderTest {
         VaultPackage vaultPackage = mock(VaultPackage.class);
         when(packageManager.open(tempFile)).thenReturn(vaultPackage);
         when(packaging.getPackageManager()).thenReturn(packageManager);
-        DistributionEventFactory eventFactory = mock(DistributionEventFactory.class);
 
-        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder(
-                packaging, eventFactory);
+        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder(packaging, null, null);
 
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         Session session = mock(Session.class);
@@ -155,10 +146,9 @@ public class FileVaultDistributionPackageBuilderTest {
         VaultPackage vaultPackage = mock(VaultPackage.class);
         when(packageManager.open(tempFile)).thenReturn(vaultPackage);
         when(packaging.getPackageManager()).thenReturn(packageManager);
-        DistributionEventFactory eventFactory = mock(DistributionEventFactory.class);
 
-        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder(
-                packaging, eventFactory, ImportMode.MERGE.name(), AccessControlHandling.MERGE.name());
+        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder(packaging,
+                ImportMode.MERGE, AccessControlHandling.MERGE);
 
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         Session session = mock(Session.class);

@@ -8,8 +8,8 @@
         "type=remoteEvent",
         "endpoint=http://localhost:4503/libs/sling/distribution/services/triggers/content-changed.event",
 
-        "transportAuthenticationProvider/type=service",
-        "transportAuthenticationProvider/name=publishAdmin"
+        "distributionTransportSecretProvider/type=service",
+        "distributionTransportSecretProvider/name=publishAdmin"
     ]
 
 }

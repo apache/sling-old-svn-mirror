@@ -37,9 +37,9 @@ import org.apache.sling.distribution.packaging.impl.exporter.RemoteDistributionP
 import org.apache.sling.distribution.packaging.impl.importer.LocalDistributionPackageImporterFactory;
 import org.apache.sling.distribution.packaging.impl.importer.RemoteDistributionPackageImporterFactory;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.serialization.impl.vlt.FileVaultDistributionPackageBuilderFactory;
-import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
-import org.apache.sling.distribution.transport.authentication.impl.UserCredentialsTransportAuthenticationProviderFactory;
+import org.apache.sling.distribution.serialization.impl.vlt.VaultDistributionPackageBuilderFactory;
+import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
+import org.apache.sling.distribution.transport.impl.UserCredentialsDistributionTransportSecretProvider;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.distribution.trigger.impl.LocalDistributionTriggerFactory;
 
@@ -93,17 +93,17 @@ public class DistributionComponentUtils {
         osgiConfigFactoryMap = new HashMap<String, String>();
         osgiServiceMap = new HashMap<String, String>();
 
-        // register "core" services
+        // register "core" services kind -> ComponentClass
         registerService("agent", DistributionAgent.class);
         registerService("exporter", DistributionPackageExporter.class);
         registerService("importer", DistributionPackageImporter.class);
-        registerService("packager", DistributionPackageBuilder.class);
+        registerService("packageBuilder", DistributionPackageBuilder.class);
         registerService("requestAuthorization", DistributionRequestAuthorizationStrategy.class);
-        registerService("transportAuthenticator", TransportAuthenticationProvider.class);
+        registerService("transportSecretProvider", DistributionTransportSecretProvider.class);
         registerService("trigger", DistributionTrigger.class);
 
 
-        // register "core" factoreis
+        // register "core" factories kind, type -> ComponentFactoryClass
         registerFactory("agent", "simple", SimpleDistributionAgentFactory.class);
 
         registerFactory("exporter", "local", LocalDistributionPackageExporterFactory.class);
@@ -113,11 +113,13 @@ public class DistributionComponentUtils {
         registerFactory("importer", "local", LocalDistributionPackageImporterFactory.class);
         registerFactory("importer", "remote", RemoteDistributionPackageImporterFactory.class);
 
-        registerFactory("packager", "vlt", FileVaultDistributionPackageBuilderFactory.class);
+        registerFactory("packageBuilder", "filevlt", VaultDistributionPackageBuilderFactory.class);
+        registerFactory("packageBuilder", "jcrvlt", VaultDistributionPackageBuilderFactory.class);
+
 
         registerFactory("requestAuthorization", "privilege", PrivilegeDistributionRequestAuthorizationStrategy.class);
 
-        registerFactory("transportAuthenticator", "user", UserCredentialsTransportAuthenticationProviderFactory.class);
+        registerFactory("transportSecretProvider", "user", UserCredentialsDistributionTransportSecretProvider.class);
 
         registerFactory("trigger", "resourceEvent", LocalDistributionTriggerFactory.class);
         registerFactory("trigger", "scheduledEvent", LocalDistributionTriggerFactory.class);

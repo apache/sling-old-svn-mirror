@@ -338,6 +338,27 @@ public class XSSAPIImplTest {
     }
 
     @Test
+    public void TestEncodeForCSSString() {
+        String[][] testData = {
+                // Source   Expected result
+                {"test"   , "test"},
+                {"\\"     , "\\5c"},
+                {"'"      , "\\27"},
+                {"\""     , "\\22"}
+        };
+
+        for (String[] aTestData : testData) {
+            String source = aTestData[0];
+            String expected = aTestData[1];
+
+            String result = xssAPI.encodeForCSSString(source);
+            if (!result.equals(expected)) {
+                fail("Encoding '" + source + "', expecting '" + expected + "', but got '" + result + "'");
+            }
+        }
+    }
+
+    @Test
     public void TestGetValidStyleToken() {
         String[][] testData = {
                 // Source                           Expected result

@@ -331,35 +331,35 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
                         String[] applicablePaths = PropertiesUtil.toStringArray(validationModelProperties.get(Constants.APPLICABLE_PATHS,
                                 String[].class));
                         Resource r = model.getChild(Constants.PROPERTIES);
-                        if (r != null) {
-                            Set<ResourceProperty> resourceProperties = JCRBuilder.buildProperties(validators, r);
-                            if (!resourceProperties.isEmpty()) {
-                                List<ChildResource> children = JCRBuilder.buildChildren(model, model, validators);
-                                vm = new JCRValidationModel(jcrPath, resourceProperties, validatedResourceType, applicablePaths, children);
-                                modelsForResourceType = validationModelsCache.get(validatedResourceType);
-                                /**
-                                 * if the modelsForResourceType is null the canAcceptModel will return true: performance optimisation so that
-                                 * the Trie is created only if the model is accepted
-                                 */
-    
-                                if (canAcceptModel(vm, searchPath, searchPaths, modelsForResourceType)) {
-                                    if (modelsForResourceType == null) {
-                                        modelsForResourceType = new Trie<JCRValidationModel>();
-                                        validationModelsCache.put(validatedResourceType, modelsForResourceType);
-                                    }
-                                    for (String applicablePath : vm.getApplicablePaths()) {
-                                        modelsForResourceType.insert(applicablePath, vm);
-                                    }
+                        Set<ResourceProperty> resourceProperties = JCRBuilder.buildProperties(validators, r);
+                        List<ChildResource> children = JCRBuilder.buildChildren(model, model, validators);
+                        if (resourceProperties.isEmpty() && children.isEmpty()) {
+                            throw new IllegalArgumentException("Neither children nor properties set.");
+                        } else {
+                            vm = new JCRValidationModel(jcrPath, resourceProperties, validatedResourceType, applicablePaths, children);
+                            modelsForResourceType = validationModelsCache.get(validatedResourceType);
+                            /**
+                             * if the modelsForResourceType is null the canAcceptModel will return true: performance
+                             * optimisation so that the Trie is created only if the model is accepted
+                             */
+
+                            if (canAcceptModel(vm, searchPath, searchPaths, modelsForResourceType)) {
+                                if (modelsForResourceType == null) {
+                                    modelsForResourceType = new Trie<JCRValidationModel>();
+                                    validationModelsCache.put(validatedResourceType, modelsForResourceType);
+                                }
+                                for (String applicablePath : vm.getApplicablePaths()) {
+                                    modelsForResourceType.insert(applicablePath, vm);
                                 }
                             }
                         }
                     } catch (IllegalArgumentException e) {
-                        LOG.error("Found invalid validation model in '{}': {}", jcrPath, e.getMessage());
+                        throw new IllegalStateException("Found invalid validation model in '" + jcrPath +"': " + e.getMessage(), e);
                     }
                 }
             }
         } catch (LoginException e) {
-            LOG.error("Unable to obtain a resource resolver.", e);
+            throw new IllegalStateException("Unable to obtain a resource resolver.", e);
         } finally {
             if (rr != null) {
                 rr.close();
@@ -417,7 +417,7 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
             
             Object[] typedValue = (Object[])valueMap.get(property, type);
             // see https://issues.apache.org/jira/browse/SLING-4178 for why the second check is necessary
-            if (typedValue == null || typedValue[0] == null) {
+            if (typedValue == null || (typedValue.length > 0 && typedValue[0] == null)) {
                 // here the missing required property case was already treated in validateValueMap
                 result.addFailureMessage(property, "Property was expected to be of type '" + validator.getType() + "' but cannot be converted to that type." );
                 return;

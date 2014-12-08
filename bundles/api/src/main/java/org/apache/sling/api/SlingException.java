@@ -67,11 +67,6 @@ public class SlingException extends RuntimeException {
      */
     public SlingException(String text, Throwable cause) {
         super(text, cause);
-        
-        // ensure proper JDK 1.4 exception chaining
-        if (getCause() == null) {
-            initCause(cause); 
-        }
     }
 
     /**
@@ -83,10 +78,5 @@ public class SlingException extends RuntimeException {
      */
     protected SlingException(Throwable cause) {
         super(cause);
-
-        // ensure proper JDK 1.4 exception chaining
-        if (getCause() == null) {
-            initCause(cause); 
-        }
     }
 }

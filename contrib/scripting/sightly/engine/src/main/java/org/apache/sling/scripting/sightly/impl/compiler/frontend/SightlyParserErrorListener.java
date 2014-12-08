@@ -28,25 +28,22 @@ import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.apache.sling.scripting.sightly.impl.compiler.SightlyParsingException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The {@code SightlyParserErrorListener} handles parsing error reporting by sending offending input to a logger.
  */
 public class SightlyParserErrorListener extends BaseErrorListener {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SightlyParserErrorListener.class);
-
     @Override
-    public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
+    public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg,
+                            RecognitionException e) {
         List<String> stack = ((Parser) recognizer).getRuleInvocationStack();
         Collections.reverse(stack);
-        StringBuilder errorMessage = new StringBuilder();
-        errorMessage.append("Sightly syntax error detected.\n");
-        errorMessage.append("rule stack: ").append(stack).append("\n");
-        errorMessage.append("error starts at column: ").append(charPositionInLine).append("\n");
-        errorMessage.append(msg);
-        throw new SightlyParsingException("Sightly syntax error detected", ((CommonTokenStream) recognizer.getInputStream()).getTokenSource().getInputStream().toString(), e);
+        if (e != null) {
+            throw new SightlyParsingException(msg,
+                    ((CommonTokenStream) recognizer.getInputStream()).getTokenSource().getInputStream().toString(), e);
+        }
+        throw new SightlyParsingException(msg,
+                ((CommonTokenStream) recognizer.getInputStream()).getTokenSource().getInputStream().toString());
     }
 }

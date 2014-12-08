@@ -267,7 +267,6 @@
                         All bundles must be listed as dependencies in this pom, or they won't be installed.
                         -->
 
-
                         <sling.additional.bundle.1>httpcore-osgi</sling.additional.bundle.1>
                         <sling.additional.bundle.2>httpclient-osgi</sling.additional.bundle.2>
                         <sling.additional.bundle.3>org.apache.sling.discovery.impl</sling.additional.bundle.3>
@@ -314,7 +313,7 @@
         <dependency>
             <groupId>org.apache.jackrabbit.vault</groupId>
             <artifactId>org.apache.jackrabbit.vault</artifactId>
-            <version>3.0.0</version>
+            <version>3.1.0</version>
             <scope>provided</scope>
         </dependency>
         <!-- HTTP -->

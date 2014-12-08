@@ -158,6 +158,16 @@ public interface XSSAPI {
      */
     public String encodeForJSString(String source);
 
+    /**
+     * Encodes a souce string for writing to CSS string content.
+     * DO NOT USE FOR WRITING OUT ARBITRARY CSS TOKENS; YOU MUST USE A VALIDATOR FOR THAT!
+     * (Encoding only ensures the source string cannot break out of its context.)
+     *
+     * @param source the input to encode
+     * @return an encoded version of the source
+     */
+    public String encodeForCSSString(String source);
+
 
     // =============================================================================================
     // FILTERS

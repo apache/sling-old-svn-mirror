@@ -16,25 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.transport.authentication;
 
-import java.util.HashMap;
-import java.util.Map;
+@Version("0.1.0")
+package org.apache.sling.distribution.transport;
 
-public class TransportAuthenticationContext {
-    private final Map<String, Object> attributes = new HashMap<String, Object>();
+import aQute.bnd.annotation.Version;
 
-    @SuppressWarnings("unchecked")
-    public <T> T getAttribute(String name, Class<? extends T> klass) {
-        T result = null;
-        Object object = attributes.get(name);
-        if (klass.isInstance(object)) {
-            result = (T) object;
-        }
-        return result;
-    }
-
-    public <T> void addAttribute(String name, T object) {
-        attributes.put(name, object);
-    }
-}

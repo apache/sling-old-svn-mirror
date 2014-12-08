@@ -18,10 +18,9 @@
  */
 package org.apache.sling.distribution.trigger.impl;
 
-import org.apache.http.client.CredentialsProvider;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
-import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.junit.Test;
 
@@ -37,25 +36,23 @@ public class RemoteEventDistributionTriggerTest {
     public void testRegister() throws Exception {
         DistributionRequestHandler handler = mock(DistributionRequestHandler.class);
         String endpoint = "";
-        TransportAuthenticationProvider<CredentialsProvider, CredentialsProvider> authProvider = mock(TransportAuthenticationProvider.class);
-        when(authProvider.canAuthenticate(CredentialsProvider.class)).thenReturn(true);
+        DistributionTransportSecretProvider distributionTransportSecretProvider = mock(DistributionTransportSecretProvider.class);
         Scheduler scheduler = mock(Scheduler.class);
         ScheduleOptions options = mock(ScheduleOptions.class);
         when(options.name(handler.toString())).thenReturn(options);
         when(scheduler.NOW()).thenReturn(options);
         RemoteEventDistributionTrigger remoteEventdistributionTrigger = new RemoteEventDistributionTrigger(
-                endpoint, authProvider, scheduler);
+                endpoint, distributionTransportSecretProvider, scheduler);
         remoteEventdistributionTrigger.register(handler);
     }
 
     @Test
     public void testUnregister() throws Exception {
         String endpoint = "";
-        TransportAuthenticationProvider<CredentialsProvider, CredentialsProvider> authProvider = mock(TransportAuthenticationProvider.class);
-        when(authProvider.canAuthenticate(CredentialsProvider.class)).thenReturn(true);
+        DistributionTransportSecretProvider distributionTransportSecretProvider = mock(DistributionTransportSecretProvider.class);
         Scheduler scheduler = mock(Scheduler.class);
         RemoteEventDistributionTrigger remoteEventdistributionTrigger = new RemoteEventDistributionTrigger(
-                endpoint, authProvider, scheduler);
+                endpoint, distributionTransportSecretProvider, scheduler);
         DistributionRequestHandler handler = mock(DistributionRequestHandler.class);
         remoteEventdistributionTrigger.unregister(handler);
     }

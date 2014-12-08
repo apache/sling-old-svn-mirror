@@ -11,7 +11,7 @@ by:
 
  - "pushing" from Sling instance A to Sling instance B
  - "pulling" from Sling instance B to Sling instance A
- - "synchronizing" Sling instances A and B via a third coordinating instance C
+ - "synchronizing" Sling instances A and B via a (third) coordinating instance C
 
 ### Bundles
 

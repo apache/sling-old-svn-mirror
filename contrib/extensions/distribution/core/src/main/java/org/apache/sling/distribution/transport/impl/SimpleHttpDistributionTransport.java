@@ -19,15 +19,16 @@
 package org.apache.sling.distribution.transport.impl;
 
 import javax.annotation.Nonnull;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Executor;
@@ -39,95 +40,78 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
+import org.apache.sling.distribution.transport.DistributionTransport;
 import org.apache.sling.distribution.transport.DistributionTransportException;
-import org.apache.sling.distribution.transport.DistributionTransportHandler;
-import org.apache.sling.distribution.transport.authentication.TransportAuthenticationContext;
-import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.distribution.transport.DistributionTransportSecret;
 import org.apache.sling.distribution.util.RequestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SimpleHttpDistributionTransportHandler implements DistributionTransportHandler {
+public class SimpleHttpDistributionTransport implements DistributionTransport {
 
-    private static final Logger log = LoggerFactory.getLogger(SimpleHttpDistributionTransportHandler.class);
-    private final TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider;
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private final DistributionEndpoint distributionEndpoint;
     private final DistributionPackageBuilder packageBuilder;
     private final int maxNumberOfPackages;
 
-    public SimpleHttpDistributionTransportHandler(TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider,
-                                                  DistributionEndpoint distributionEndpoint,
-                                                  DistributionPackageBuilder packageBuilder,
-                                                  int maxNumberOfPackages) {
+    public SimpleHttpDistributionTransport(DistributionEndpoint distributionEndpoint,
+                                           DistributionPackageBuilder packageBuilder,
+                                           int maxNumberOfPackages) {
 
-        if (transportAuthenticationProvider == null) {
-            throw new IllegalArgumentException("The authentication provider is required");
-        }
-
-        if (!transportAuthenticationProvider.canAuthenticate(Executor.class)) {
-            throw new IllegalArgumentException("Authentication provider cannot authenticate Executor");
-        }
-
-        this.transportAuthenticationProvider = transportAuthenticationProvider;
         this.distributionEndpoint = distributionEndpoint;
         this.packageBuilder = packageBuilder;
         this.maxNumberOfPackages = maxNumberOfPackages;
     }
 
-    public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionTransportException {
+    public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage,
+                               @Nonnull DistributionTransportSecret secret) throws DistributionTransportException {
         String hostAndPort = getHostAndPort(distributionEndpoint.getUri());
 
         URI packageOrigin = distributionPackage.getInfo().getOrigin();
         if (packageOrigin != null && hostAndPort.equals(getHostAndPort(packageOrigin))) {
             log.info("skipping distribution of package {} to same origin {}", distributionPackage.getId(), hostAndPort);
-            return;
-        }
+        } else {
+            log.info("delivering package {} to {} using secret {}", new Object[]{
+                    distributionPackage.getId(),
+                    distributionEndpoint.getUri(),
+                    secret
+            });
 
-        log.info("delivering package {} to {} using auth {}", new Object[]{
-                        distributionPackage.getId(),
-                        distributionEndpoint.getUri(),
-                        transportAuthenticationProvider
-        });
-
-        try {
-            Executor executor = Executor.newInstance();
-
-            TransportAuthenticationContext context = new TransportAuthenticationContext();
-            context.addAttribute("endpoint", distributionEndpoint);
-            executor = transportAuthenticationProvider.authenticate(executor, context);
-
-            Request req = Request.Post(distributionEndpoint.getUri()).useExpectContinue();
-
-            InputStream inputStream = null;
-            Response response = null;
             try {
+                Executor executor = Executor.newInstance();
 
-                inputStream = distributionPackage.createInputStream();
+                executor = authenticate(secret, executor);
 
-                req = req.bodyStream(inputStream, ContentType.APPLICATION_OCTET_STREAM);
-                response = executor.execute(req);
-            } finally {
-                IOUtils.closeQuietly(inputStream);
-            }
+                Request req = Request.Post(distributionEndpoint.getUri()).useExpectContinue();
 
-            if (response != null) {
+                InputStream inputStream = null;
+                Response response = null;
+                try {
+                    inputStream = distributionPackage.createInputStream();
+
+                    req = req.bodyStream(inputStream, ContentType.APPLICATION_OCTET_STREAM);
+                    response = executor.execute(req);
+                } finally {
+                    IOUtils.closeQuietly(inputStream);
+                }
+
                 Content content = response.returnContent();
                 log.info("distribution content of type {} for {} delivered: {}", new Object[]{
                         distributionPackage.getType(),
                         Arrays.toString(distributionPackage.getInfo().getPaths()),
                         content
                 });
-            } else {
-                throw new IOException("response is empty");
+            } catch (Exception ex) {
+                throw new DistributionTransportException(ex);
             }
-        } catch (Exception ex) {
-            throw new DistributionTransportException(ex);
         }
 
     }
 
     @Nonnull
-    public List<DistributionPackage> retrievePackages(@Nonnull final ResourceResolver resourceResolver, @Nonnull final DistributionRequest distributionRequest) throws DistributionTransportException {
+    public List<DistributionPackage> retrievePackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest
+            distributionRequest, @Nonnull DistributionTransportSecret secret) throws DistributionTransportException {
         log.debug("pulling from {}", distributionEndpoint.getUri());
 
         try {
@@ -137,9 +121,8 @@ public class SimpleHttpDistributionTransportHandler implements DistributionTrans
             // TODO : executor should be cached and reused
 
             Executor executor = Executor.newInstance();
-            TransportAuthenticationContext context = new TransportAuthenticationContext();
-            context.addAttribute("endpoint", distributionEndpoint);
-            executor = transportAuthenticationProvider.authenticate(executor, context);
+
+            executor = authenticate(secret, executor);
 
             Request req = Request.Post(distributionURI).useExpectContinue();
 
@@ -159,8 +142,7 @@ public class SimpleHttpDistributionTransportHandler implements DistributionTrans
                         if (responsePackage != null) {
                             responsePackage.getInfo().setOrigin(distributionURI);
                             result.add(responsePackage);
-                        }
-                        else {
+                        } else {
                             log.warn("responsePackage is null");
                         }
 
@@ -183,6 +165,17 @@ public class SimpleHttpDistributionTransportHandler implements DistributionTrans
             throw new DistributionTransportException(ex);
         }
 
+    }
+
+    protected Executor authenticate(DistributionTransportSecret secret, Executor executor) {
+        Map<String, String> credentialsMap = secret.asCredentialsMap();
+        if (credentialsMap != null) {
+            executor = executor.auth(new HttpHost(distributionEndpoint.getUri().getHost(), distributionEndpoint.getUri().getPort()),
+                    credentialsMap.get("username"), credentialsMap.get("password")).authPreemptive(
+                    new HttpHost(distributionEndpoint.getUri().getHost(), distributionEndpoint.getUri().getPort()));
+            log.debug("authenticated executor HTTP client with user and password");
+        }
+        return executor;
     }
 
     private String getHostAndPort(URI uri) {

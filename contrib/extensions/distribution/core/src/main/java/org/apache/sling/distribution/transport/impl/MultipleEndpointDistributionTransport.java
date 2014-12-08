@@ -25,26 +25,28 @@ import java.util.List;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.transport.DistributionTransport;
 import org.apache.sling.distribution.transport.DistributionTransportException;
-import org.apache.sling.distribution.transport.DistributionTransportHandler;
+import org.apache.sling.distribution.transport.DistributionTransportSecret;
 
 /**
- * {@link org.apache.sling.distribution.transport.DistributionTransportHandler} supporting delivery / retrieval from multiple
+ * {@link org.apache.sling.distribution.transport.DistributionTransport} supporting delivery / retrieval from multiple
  * endpoints.
  */
-public class MultipleEndpointDistributionTransportHandler implements DistributionTransportHandler {
+public class MultipleEndpointDistributionTransport implements DistributionTransport {
 
-    private final List<DistributionTransportHandler> transportHelpers;
+    private final List<DistributionTransport> transportHelpers;
     private final TransportEndpointStrategyType endpointStrategyType;
     private int lastSuccessfulEndpointId = 0;
 
-    public MultipleEndpointDistributionTransportHandler(List<DistributionTransportHandler> transportHelpers,
-                                                        TransportEndpointStrategyType endpointStrategyType) {
+    public MultipleEndpointDistributionTransport(List<DistributionTransport> transportHelpers,
+                                                 TransportEndpointStrategyType endpointStrategyType) {
         this.transportHelpers = transportHelpers;
         this.endpointStrategyType = endpointStrategyType;
     }
 
-    private List<DistributionPackage> doTransport(ResourceResolver resourceResolver, DistributionRequest distributionRequest, DistributionPackage distributionPackage) throws DistributionTransportException {
+    private List<DistributionPackage> doTransport(ResourceResolver resourceResolver, DistributionRequest distributionRequest,
+                                                  DistributionPackage distributionPackage, DistributionTransportSecret secret) throws DistributionTransportException {
 
         int offset = 0;
         if (endpointStrategyType.equals(TransportEndpointStrategyType.One)) {
@@ -57,11 +59,14 @@ public class MultipleEndpointDistributionTransportHandler implements Distributio
         for (int i = 0; i < length; i++) {
             int currentId = (offset + i) % length;
 
-            DistributionTransportHandler transportHelper = transportHelpers.get(currentId);
+            DistributionTransport transportHelper = transportHelpers.get(currentId);
             if (distributionPackage != null) {
-                transportHelper.deliverPackage(resourceResolver, distributionPackage);
+                transportHelper.deliverPackage(resourceResolver, distributionPackage, secret);
             } else if (distributionRequest != null) {
-                result.addAll(transportHelper.retrievePackages(resourceResolver, distributionRequest));
+                Iterable<DistributionPackage> distributionPackages = transportHelper.retrievePackages(resourceResolver, distributionRequest, secret);
+                for (DistributionPackage retrievedPackage : distributionPackages) {
+                    result.add(retrievedPackage);
+                }
             }
 
             lastSuccessfulEndpointId = currentId;
@@ -72,13 +77,15 @@ public class MultipleEndpointDistributionTransportHandler implements Distributio
         return result;
     }
 
-    public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionTransportException {
-        doTransport(resourceResolver, null, distributionPackage);
+    public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage,
+                                                      @Nonnull DistributionTransportSecret secret) throws DistributionTransportException {
+        doTransport(resourceResolver, null, distributionPackage, secret);
     }
 
     @Nonnull
-    public List<DistributionPackage> retrievePackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionTransportException {
-        return doTransport(resourceResolver, distributionRequest, null);
+    public List<DistributionPackage> retrievePackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest,
+                                                      @Nonnull DistributionTransportSecret secret) throws DistributionTransportException {
+        return doTransport(resourceResolver, distributionRequest, null, secret);
     }
 
 

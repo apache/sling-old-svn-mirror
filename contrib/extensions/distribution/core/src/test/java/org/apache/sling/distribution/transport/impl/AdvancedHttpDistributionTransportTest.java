@@ -27,10 +27,10 @@ import org.junit.runners.Parameterized;
 import static org.junit.Assert.assertArrayEquals;
 
 /**
- * Testcase for {@link AdvancedHttpDistributionTransportHandler}
+ * Testcase for {@link AdvancedHttpDistributionTransport}
  */
 @RunWith(Parameterized.class)
-public class AdvancedHttpDistributionTransportHandlerTest {
+public class AdvancedHttpDistributionTransportTest {
 
     private final String[] inputTransportProperties;
     private final String inputSelector;
@@ -62,8 +62,8 @@ public class AdvancedHttpDistributionTransportHandlerTest {
 
     }
 
-    public AdvancedHttpDistributionTransportHandlerTest(String[] inputTransportProperties, String inputSelector, String[] inputPaths,
-                                                        String[] outputHeaders) {
+    public AdvancedHttpDistributionTransportTest(String[] inputTransportProperties, String inputSelector, String[] inputPaths,
+                                                 String[] outputHeaders) {
         this.inputTransportProperties = inputTransportProperties;
         this.inputSelector = inputSelector;
         this.outputHeaders = outputHeaders;
@@ -72,7 +72,7 @@ public class AdvancedHttpDistributionTransportHandlerTest {
 
     @Test
     public void testHttpTransportProperties() {
-        String[] headers = AdvancedHttpDistributionTransportHandler.getCustomizedHeaders(inputTransportProperties, inputSelector, inputPaths);
+        String[] headers = AdvancedHttpDistributionTransport.getCustomizedHeaders(inputTransportProperties, inputSelector, inputPaths);
 
         assertArrayEquals(outputHeaders, headers);
     }

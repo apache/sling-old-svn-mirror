@@ -16,8 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.transport.authentication.impl;
+package org.apache.sling.distribution.transport.impl;
 
+import java.io.InputStream;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -27,20 +30,19 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
-import org.apache.sling.distribution.transport.authentication.TransportAuthenticationContext;
-import org.apache.sling.distribution.transport.authentication.TransportAuthenticationException;
-import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.distribution.transport.DistributionTransportSecret;
+import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(label = "User Credentials based Transport Authentication Provider Factory",
+@Component(metatype = true,
+        label = "Sling Distribution - User Credentials based DistributionTransportSecretProvider",
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE)
-@Service(value = TransportAuthenticationProvider.class)
-public class UserCredentialsTransportAuthenticationProviderFactory implements
-        TransportAuthenticationProvider {
-
+@Service(value = DistributionTransportSecretProvider.class)
+public class UserCredentialsDistributionTransportSecretProvider implements
+        DistributionTransportSecretProvider {
 
     /**
      * name of this component.
@@ -56,24 +58,31 @@ public class UserCredentialsTransportAuthenticationProviderFactory implements
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-
-    private TransportAuthenticationProvider transportAuthenticationProvider;
-
+    private String username;
+    private String password;
 
     @Activate
-    public void activate(Map<String, Object> config) {
-        String username = PropertiesUtil.toString(config.get(USERNAME), "").trim();
-        String password = PropertiesUtil.toString(config.get(PASSWORD), "").trim();
-        transportAuthenticationProvider = new UserCredentialsTransportAuthenticationProvider(username, password);
+    protected void activate(Map<String, Object> config) {
+        username = PropertiesUtil.toString(config.get(USERNAME), "").trim();
+        password = PropertiesUtil.toString(config.get(PASSWORD), "").trim();
     }
 
-    public Object authenticate(Object authenticable, TransportAuthenticationContext context)
-            throws TransportAuthenticationException {
-        return transportAuthenticationProvider.authenticate(authenticable, context);
-    }
+    public DistributionTransportSecret getSecret() {
+        return new DistributionTransportSecret() {
+            public String asToken() {
+                return null;
+            }
 
-    public boolean canAuthenticate(Class authenticable) {
-        return transportAuthenticationProvider.canAuthenticate(authenticable);
-    }
+            public InputStream asStream() {
+                return null;
+            }
 
+            public Map<String, String> asCredentialsMap() {
+                Map<String, String> map = new HashMap<String, String>();
+                map.put(USERNAME, username);
+                map.put(PASSWORD, password);
+                return Collections.unmodifiableMap(map);
+            }
+        };
+    }
 }

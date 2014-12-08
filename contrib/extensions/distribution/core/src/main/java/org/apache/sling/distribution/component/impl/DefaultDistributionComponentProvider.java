@@ -35,7 +35,7 @@ import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.queue.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
-import org.apache.sling.distribution.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
         @Reference(name = "distributionPackageExporter", referenceInterface = DistributionPackageExporter.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
         @Reference(name = "distributionQueueProvider", referenceInterface = DistributionQueueProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
         @Reference(name = "distributionQueueDistributionStrategy", referenceInterface = DistributionQueueDispatchingStrategy.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
-        @Reference(name = "transportAuthenticationProvider", referenceInterface = TransportAuthenticationProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
+        @Reference(name = "distributionTransportSecretProvider", referenceInterface = DistributionTransportSecretProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
 })
 public class DefaultDistributionComponentProvider {
 
@@ -60,7 +60,7 @@ public class DefaultDistributionComponentProvider {
     private Map<String, DistributionAgent> distributionAgentMap = new ConcurrentHashMap<String, DistributionAgent>();
     private Map<String, DistributionQueueProvider> distributionQueueProviderMap = new ConcurrentHashMap<String, DistributionQueueProvider>();
     private Map<String, DistributionQueueDispatchingStrategy> distributionQueueDistributionStrategyMap = new ConcurrentHashMap<String, DistributionQueueDispatchingStrategy>();
-    private Map<String, TransportAuthenticationProvider> transportAuthenticationProviderMap = new ConcurrentHashMap<String, TransportAuthenticationProvider>();
+    private Map<String, DistributionTransportSecretProvider> distributionTransportSecretProviderMap = new ConcurrentHashMap<String, DistributionTransportSecretProvider>();
     private Map<String, DistributionPackageImporter> distributionPackageImporterMap = new ConcurrentHashMap<String, DistributionPackageImporter>();
     private Map<String, DistributionPackageExporter> distributionPackageExporterMap = new ConcurrentHashMap<String, DistributionPackageExporter>();
     private BundleContext bundleContext;
@@ -75,8 +75,8 @@ public class DefaultDistributionComponentProvider {
             return (ComponentType) distributionQueueProviderMap.get(componentName);
         } else if (type.isAssignableFrom(DistributionQueueDispatchingStrategy.class)) {
             return (ComponentType) distributionQueueDistributionStrategyMap.get(componentName);
-        } else if (type.isAssignableFrom(TransportAuthenticationProvider.class)) {
-            return (ComponentType) transportAuthenticationProviderMap.get(componentName);
+        } else if (type.isAssignableFrom(DistributionTransportSecretProvider.class)) {
+            return (ComponentType) distributionTransportSecretProviderMap.get(componentName);
         }
 
         return null;
@@ -114,21 +114,21 @@ public class DefaultDistributionComponentProvider {
         }
     }
 
-    private void bindTransportAuthenticationProvider(TransportAuthenticationProvider transportAuthenticationProvider, Map<String, Object> config) {
+    private void bindDistributionTransportSecretProvider(DistributionTransportSecretProvider distributionTransportSecretProvider, Map<String, Object> config) {
 
         String name = PropertiesUtil.toString(config.get(NAME), null);
         if (name != null) {
-            transportAuthenticationProviderMap.put(name, transportAuthenticationProvider);
+            distributionTransportSecretProviderMap.put(name, distributionTransportSecretProvider);
 
         }
 
     }
 
-    private void unbindTransportAuthenticationProvider(TransportAuthenticationProvider transportAuthenticationProvider, Map<String, Object> config) {
+    private void unbindDistributionTransportSecretProvider(DistributionTransportSecretProvider distributionTransportSecretProvider, Map<String, Object> config) {
 
         String name = PropertiesUtil.toString(config.get(NAME), null);
         if (name != null) {
-            transportAuthenticationProviderMap.remove(name);
+            distributionTransportSecretProviderMap.remove(name);
 
         }
     }

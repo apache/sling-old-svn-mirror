@@ -26,7 +26,8 @@ public enum DistributionParameter {
     QUEUE("queue"),
     TYPE("type"),
     ACTION("action"),
-    PATH("path");
+    PATH("path"),
+    DEEP("deep");
 
     private final String name;
 
