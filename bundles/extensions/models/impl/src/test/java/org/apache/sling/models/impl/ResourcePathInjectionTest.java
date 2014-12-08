@@ -57,6 +57,9 @@ public class ResourcePathInjectionTest {
 
     @Mock
     private Resource adaptable;
+    
+    @Mock
+    SlingHttpServletRequest nonResourceAdaptable;
 
     @Mock
     private Resource byPathResource;
@@ -116,7 +119,6 @@ public class ResourcePathInjectionTest {
 
     @Test
     public void testPathInjectionWithNonResourceAdaptable() {
-        SlingHttpServletRequest nonResourceAdaptable = mock(SlingHttpServletRequest.class);
         ResourcePathModel model = factory.getAdapter(nonResourceAdaptable, ResourcePathModel.class);
         // should be null because mandatory fields could not be injected
         assertNull(model);
@@ -124,7 +126,6 @@ public class ResourcePathInjectionTest {
 
     @Test
     public void testOptionalPathInjectionWithNonResourceAdaptable() {
-        SlingHttpServletRequest nonResourceAdaptable = mock(SlingHttpServletRequest.class);
         ResourcePathAllOptionalModel model = factory.getAdapter(nonResourceAdaptable, ResourcePathAllOptionalModel.class);
         // should not be null because resource paths fields are optional
         assertNotNull(model);
@@ -143,7 +144,16 @@ public class ResourcePathInjectionTest {
     assertEquals(2,resources.size());
     assertEquals(byPropertyValueResource, resources.get(0));
     assertEquals(byPropertyValueResource2, resources.get(1));
-   
+    List<Resource> resourcesFromPathAnnotation= model.getManyFromPath();
+    assertNotNull(resourcesFromPathAnnotation);
+    assertEquals(byPathResource, resourcesFromPathAnnotation.get(0));
+    assertEquals(byPathResource2, resourcesFromPathAnnotation.get(1));
+    
+    List<Resource> resourcesFromResourcePathAnnotation= model.getManyFromPath2();
+    assertNotNull(resourcesFromResourcePathAnnotation);
+    assertEquals(byPathResource2, resourcesFromResourcePathAnnotation.get(0));
+    assertEquals(byPathResource, resourcesFromResourcePathAnnotation.get(1));
+    
     	
     }
 }

@@ -18,13 +18,14 @@
  */
 package org.apache.sling.models.impl.injectors;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
@@ -56,68 +57,83 @@ public class ResourcePathInjector extends AbstractInjector implements Injector, 
     @Override
     public Object getValue(Object adaptable, String name, Type declaredType, AnnotatedElement element,
             DisposalCallbackRegistry callbackRegistry) {
-        String resourcePath = null;
+        String[] resourcePaths = null;
         Path pathAnnotation = element.getAnnotation(Path.class);
+        ResourcePath resourcePathAnnotation = element.getAnnotation(ResourcePath.class);
         if (pathAnnotation != null) {
-            resourcePath = pathAnnotation.value();
-        } else {
-            ResourcePath resourcePathAnnotation = element.getAnnotation(ResourcePath.class);
-            if (resourcePathAnnotation != null) {
-                resourcePath = resourcePathAnnotation.path();
-                if (resourcePath.isEmpty()) {
-                    resourcePath = null;
-                }
+            resourcePaths = getPathsFromAnnotation(pathAnnotation);
+        } else if (resourcePathAnnotation != null) {
+            resourcePaths = getPathsFromAnnotation(resourcePathAnnotation);
+            // try the valuemap
+        }
+        if (ArrayUtils.isEmpty(resourcePaths)) {
+            ValueMap map = getValueMap(adaptable);
+            if (map != null) {
+                resourcePaths = map.get(name, String[].class);
             }
         }
-        if (resourcePath != null) {
-            ResourceResolver resolver = getResourceResolver(adaptable);
-            if (resolver != null) {
-                return resolver.getResource(resourcePath);
-            }
-        } else if (name != null) {
-            // try to get from value map
-
-            if (isDeclaredTypeCollection(declaredType)) {
-                return getResourceList(name, adaptable);
-            } else {
-                return getSingleResource(name, adaptable);
-
-            }
-
+        if(ArrayUtils.isEmpty(resourcePaths)){
+            //could not find a path to inject
+            return null;
         }
-
-        return null;
-    }
-
-    private List<Resource> getResourceList(String name, Object adaptable) {
-        List<Resource> result = new ArrayList<Resource>();
-        ValueMap map = getValueMap(adaptable);
-        String[] resourcePaths = map.get(name, String[].class);
+        
         ResourceResolver resolver = getResourceResolver(adaptable);
-        if (resolver == null) {
+        if(resolver==null){
             return null;
         }
-        for (String resourcePath : resourcePaths) {
-            result.add(resolver.getResource(resourcePath));
+        List<Resource> resources = getResources(resolver, resourcePaths);
+
+        if (resources.isEmpty()) {
+            return null;
         }
-        return result;
+        // unwrap if necessary
+        if (isDeclaredTypeCollection(declaredType)) {
+            return resources;
+        } else {
+            // TODO: maybe thrown an exception is size>1 ?
+            return resources.get(0);
+        }
 
     }
 
-    private Resource getSingleResource(String name, Object adaptable) {
-        ValueMap map = getValueMap(adaptable);
-        if (map == null) {
-            return null;
-        }
-        String resourcePath = map.get(name, String.class);
-        if (resourcePath != null) {
-            ResourceResolver resolver = getResourceResolver(adaptable);
-            if (resolver != null) {
-                return resolver.getResource(resourcePath);
+    private List<Resource> getResources(ResourceResolver resolver, String[] paths) {
+        List<Resource> resources = new ArrayList<Resource>();
+        for (String path : paths) {
+            Resource resource = resolver.getResource(path);
+            if (resource != null) {
+                resources.add(resource);
             }
         }
+        return resources;
+    }
 
-        return null;
+    /**
+     * obtains the paths from any of the two possible annotations
+     * 
+     * @param annotation
+     * @return
+     */
+    private String[] getPathsFromAnnotation(Annotation annotation) {
+        String[] resourcePaths = null;
+
+        if (annotation instanceof Path) {
+            Path pathAnnotation = (Path) annotation;
+            if (StringUtils.isNotEmpty(pathAnnotation.value())) {
+                resourcePaths = new String[] { pathAnnotation.value() };
+            } else {
+                resourcePaths = pathAnnotation.paths();
+            }
+        } else if (annotation instanceof ResourcePath) {
+            ResourcePath resourcePathAnnotation = (ResourcePath) annotation;
+            if (StringUtils.isNotEmpty(resourcePathAnnotation.path())) {
+                resourcePaths = new String[] { resourcePathAnnotation.path() };
+            } else {
+                resourcePaths = resourcePathAnnotation.paths();
+            }
+
+        }
+
+        return resourcePaths;
     }
 
     @Override
@@ -140,7 +156,8 @@ public class ResourcePathInjector extends AbstractInjector implements Injector, 
 
         @Override
         public String getName() {
-            // since null is not allowed as default value in annotations, the empty string means, the default should be
+            // since null is not allowed as default value in annotations, the
+            // empty string means, the default should be
             // used!
             if (annotation.name().isEmpty()) {
                 return null;

@@ -39,6 +39,13 @@ public class ResourcePathModel {
     @Inject
     @Named("propertyContainingAPath")
     private Resource derefProperty;
+    
+    @Inject
+    @Path(paths={"/some/path", "/some/path2"})
+    private List<Resource> manyFromPath;
+    
+    @ResourcePath(paths={"/some/path2","/some/path"})
+    private List<Resource> manyFromPath2;
 
     @ResourcePath(path = "/some/path2")
     private Resource fromPath2;
@@ -67,6 +74,14 @@ public class ResourcePathModel {
     
     public List<Resource> getMultipleResources(){
     	return this.multipleResources;
+    }
+    
+    public List<Resource> getManyFromPath(){
+        return this.manyFromPath;
+    }
+    
+    public List<Resource> getManyFromPath2(){
+        return this.manyFromPath2;
     }
 
 }
