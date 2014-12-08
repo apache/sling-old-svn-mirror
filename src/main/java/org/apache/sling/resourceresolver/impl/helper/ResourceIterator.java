@@ -19,9 +19,9 @@
 package org.apache.sling.resourceresolver.impl.helper;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -146,7 +146,7 @@ public class ResourceIterator implements Iterator<Resource> {
         this.iteratorPath = path;
         providers = providersSet.iterator();
         baseEntryValues = (atPath != null) ? atPath.values().iterator() : null;
-        delayed = new HashMap<String, Resource>();
+        delayed = new LinkedHashMap<String, Resource>();
         visited = new HashSet<String>();
         nextResource = seek();
     }
