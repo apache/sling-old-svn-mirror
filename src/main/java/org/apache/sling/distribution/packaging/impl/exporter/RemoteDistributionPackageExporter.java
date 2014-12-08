@@ -34,11 +34,15 @@ import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
 import org.apache.sling.distribution.transport.impl.MultipleEndpointDistributionTransport;
 import org.apache.sling.distribution.transport.impl.SimpleHttpDistributionTransport;
 import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Default implementation of {@link org.apache.sling.distribution.packaging.DistributionPackageExporter}
  */
 public class RemoteDistributionPackageExporter implements DistributionPackageExporter {
+
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final DistributionPackageBuilder packageBuilder;
     private final DistributionTransportSecretProvider secretProvider;
@@ -48,7 +52,7 @@ public class RemoteDistributionPackageExporter implements DistributionPackageExp
     public RemoteDistributionPackageExporter(DistributionPackageBuilder packageBuilder,
                                              DistributionTransportSecretProvider secretProvider,
                                              String[] endpoints,
-                                             String transportEndpointStrategyName,
+                                             TransportEndpointStrategyType transportEndpointStrategyType,
                                              int pullItems) {
         if (packageBuilder == null) {
             throw new IllegalArgumentException("packageBuilder is required");
@@ -61,8 +65,6 @@ public class RemoteDistributionPackageExporter implements DistributionPackageExp
 
         this.packageBuilder = packageBuilder;
         this.secretProvider = secretProvider;
-
-        TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(transportEndpointStrategyName);
 
         List<DistributionTransport> transportHandlers = new ArrayList<DistributionTransport>();
 
@@ -84,6 +86,7 @@ public class RemoteDistributionPackageExporter implements DistributionPackageExp
             }
             return packages;
         } catch (Exception e) {
+            log.error("cannot export packages", e);
             throw new DistributionPackageExportException(e);
         }
     }

@@ -39,6 +39,7 @@ import org.apache.sling.distribution.packaging.DistributionPackageExportExceptio
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
+import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,7 +108,9 @@ public class RemoteDistributionPackageExporterFactory implements DistributionPac
         String endpointStrategyName = PropertiesUtil.toString(config.get(ENDPOINTS_STRATEGY), "One");
         int pollItems = PropertiesUtil.toInteger(config.get(PULL_ITEMS), Integer.MAX_VALUE);
 
-        exporter = new RemoteDistributionPackageExporter(packageBuilder, distributionTransportSecretProvider, endpoints, endpointStrategyName, pollItems);
+        TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(endpointStrategyName);
+        exporter = new RemoteDistributionPackageExporter(packageBuilder, distributionTransportSecretProvider, endpoints,
+                transportEndpointStrategyType, pollItems);
     }
 
 

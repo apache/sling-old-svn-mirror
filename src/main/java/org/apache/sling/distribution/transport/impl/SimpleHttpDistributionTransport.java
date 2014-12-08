@@ -162,6 +162,8 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
             return result;
 
         } catch (Exception ex) {
+            log.error("cannot retrieve packages", ex);
+
             throw new DistributionTransportException(ex);
         }
 

@@ -93,17 +93,17 @@ public class DistributionPackageExporterServlet extends SlingAllMethodsServlet {
                         log.warn("fetched a null package");
                     }
                 }
+
+                long end = System.currentTimeMillis();
+                log.info("Processed distribution export request in {} ms: : consumed {} of {}", new Object[]{end - start, consumed, fetched});
             } else {
                 response.setStatus(204);
-                log.info("nothing to fetch");
+                log.debug("nothing to fetch");
             }
 
         } catch (Exception e) {
             response.setStatus(503);
             log.error("error while exporting from {}", request.getRequestURL(), e);
-        } finally {
-            long end = System.currentTimeMillis();
-            log.info("Processed distribution export request in {} ms: : consumed {} of {}", new Object[]{end - start, consumed, fetched});
         }
     }
 

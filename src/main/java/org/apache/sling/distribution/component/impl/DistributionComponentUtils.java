@@ -28,7 +28,9 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.agent.impl.DistributionRequestAuthorizationStrategy;
 import org.apache.sling.distribution.agent.impl.PrivilegeDistributionRequestAuthorizationStrategy;
+import org.apache.sling.distribution.agent.impl.QueueDistributionAgentFactory;
 import org.apache.sling.distribution.agent.impl.SimpleDistributionAgentFactory;
+import org.apache.sling.distribution.agent.impl.SyncDistributionAgentFactory;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.packaging.impl.exporter.AgentDistributionPackageExporterFactory;
@@ -105,6 +107,8 @@ public class DistributionComponentUtils {
 
         // register "core" factories kind, type -> ComponentFactoryClass
         registerFactory("agent", "simple", SimpleDistributionAgentFactory.class);
+        registerFactory("agent", "sync", SyncDistributionAgentFactory.class);
+        registerFactory("agent", "queue", QueueDistributionAgentFactory.class);
 
         registerFactory("exporter", "local", LocalDistributionPackageExporterFactory.class);
         registerFactory("exporter", "remote", RemoteDistributionPackageExporterFactory.class);

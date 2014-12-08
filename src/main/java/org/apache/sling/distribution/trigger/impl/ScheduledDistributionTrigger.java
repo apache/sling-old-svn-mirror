@@ -30,6 +30,12 @@ import org.apache.sling.distribution.trigger.DistributionTriggerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 /**
  * {@link org.apache.sling.distribution.trigger.DistributionTrigger} to schedule distributions on a certain
  * {@link org.apache.sling.distribution.agent.DistributionAgent}
@@ -46,6 +52,9 @@ public class ScheduledDistributionTrigger implements DistributionTrigger {
 
     private final Scheduler scheduler;
 
+    private Set<String> registeredJobs = Collections.synchronizedSet(new HashSet<String>());
+
+
 
     public ScheduledDistributionTrigger(String distributionActionName, String path, int secondsInterval, Scheduler scheduler) {
         this.distributionAction = DistributionRequestType.fromName(distributionActionName);
@@ -57,15 +66,41 @@ public class ScheduledDistributionTrigger implements DistributionTrigger {
     public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
         try {
             ScheduleOptions options = scheduler.NOW(-1, secondsInterval);
-            options.name(getJobName(requestHandler));
-            scheduler.schedule(new ScheduledDistribution(requestHandler), options);
+            String jobName = getJobName(requestHandler);
+
+            options.name(jobName);
+            boolean success = scheduler.schedule(new ScheduledDistribution(requestHandler), options);
+
+            if (success) {
+                registeredJobs.add(jobName);
+
+            }
+            log.info("handler registered {} {}", jobName, success);
+
         } catch (Exception e) {
             throw new DistributionTriggerException("unable to register handler " + requestHandler, e);
         }
     }
 
     public void unregister(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
-        scheduler.unschedule(getJobName(requestHandler));
+        String jobName = getJobName(requestHandler);
+
+        boolean success = scheduler.unschedule(jobName);
+
+        if (success) {
+            registeredJobs.remove(jobName);
+        }
+        log.info("handler unregistered {} {}", jobName, success);
+
+
+    }
+
+    public void unregisterAll() {
+        for (String jobName : registeredJobs) {
+            boolean result = scheduler.unschedule(jobName);
+            log.info("handler unregistered {} {}", jobName, result);
+
+        }
     }
 
     private class ScheduledDistribution implements Runnable {

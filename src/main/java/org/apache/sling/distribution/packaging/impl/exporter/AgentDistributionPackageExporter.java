@@ -56,7 +56,7 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
 
         List<DistributionPackage> result = new ArrayList<DistributionPackage>();
         try {
-            log.info("getting packages from queue {}", queueName);
+            log.debug("getting packages from queue {}", queueName);
 
             DistributionQueue queue = agent.getQueue(queueName);
             DistributionQueueItem info = queue.getHead();

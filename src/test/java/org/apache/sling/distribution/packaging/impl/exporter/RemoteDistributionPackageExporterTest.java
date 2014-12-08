@@ -45,7 +45,7 @@ public class RemoteDistributionPackageExporterTest {
         String[] endpoints = new String[0];
         for (TransportEndpointStrategyType strategy : TransportEndpointStrategyType.values()) {
             RemoteDistributionPackageExporter remotedistributionPackageExporter = new RemoteDistributionPackageExporter(
-                    packageBuilder, distributionTransportSecretProvider, endpoints, strategy.name(), 1);
+                    packageBuilder, distributionTransportSecretProvider, endpoints, strategy, 1);
             ResourceResolver resourceResolver = mock(ResourceResolver.class);
             DistributionRequest distributionRequest = new DistributionRequest(DistributionRequestType.ADD, "/");
             List<DistributionPackage> distributionPackages = remotedistributionPackageExporter.exportPackages(resourceResolver, distributionRequest);

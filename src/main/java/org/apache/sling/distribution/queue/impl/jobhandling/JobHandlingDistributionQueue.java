@@ -110,7 +110,7 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
     }
 
     private Job getFirstJob() {
-        log.info("getting first item in the queue");
+        log.debug("getting first item in the queue");
 
         List<Job> jobs = getJobs(0, 1);
         if (jobs.size() > 0) {
