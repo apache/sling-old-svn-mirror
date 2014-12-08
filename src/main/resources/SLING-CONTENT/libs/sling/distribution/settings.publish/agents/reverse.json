@@ -1,4 +1,6 @@
 {
+    "type" : "queue",
+
     "serviceName" : "distributionService",
 
     "isPassive" : true,

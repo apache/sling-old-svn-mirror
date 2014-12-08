@@ -2,7 +2,6 @@
     "jcr:primaryType" : "nt:unstructured",
 
     "kind" : "agent",
-    "type" : "simple",
 
     "isResource" : "true",
 
@@ -19,18 +18,30 @@
             "kind" : "packageBuilder",
             "type" : "service",
             "name" : "vlt"
+        },
+
+        "transportSecretProvider" : {
+            "kind" : "transportSecretProvider",
+            "type" : "service",
+            "name" : "publishAdmin"
         }
+
     },
 
     "packageImporter": {
         "kind" : "importer",
-
 
         "packageBuilder" : {
             "kind" : "packageBuilder",
 
             "type" : "service",
             "name" : "vlt"
+        },
+
+        "transportSecretProvider" : {
+            "kind" : "transportSecretProvider",
+            "type" : "service",
+            "name" : "publishAdmin"
         }
     },
 
