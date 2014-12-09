@@ -22,7 +22,7 @@ import static org.mockito.Mockito.*;
 import java.util.Hashtable;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.models.factory.InvalidModelException;
+import org.apache.sling.models.factory.ModelClassException;
 import org.apache.sling.models.testmodels.classes.FailingPostConstuctModel;
 import org.apache.sling.models.testmodels.classes.SubClass;
 import org.apache.sling.models.testmodels.classes.SubClassOverriddenPostConstruct;
@@ -81,7 +81,7 @@ public class PostConstructTest {
         boolean thrown = false;
         try {
             factory.createModel(resource, FailingPostConstuctModel.class);
-        } catch (InvalidModelException e) {
+        } catch (ModelClassException e) {
             assertTrue(e.getMessage().contains("post-construct"));
             assertEquals("FAIL", e.getCause().getMessage());
             thrown = true;
