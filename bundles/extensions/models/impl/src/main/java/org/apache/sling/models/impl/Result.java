@@ -24,13 +24,13 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.sling.models.factory.InvalidAdaptableException;
-import org.apache.sling.models.factory.InvalidModelException;
+import org.apache.sling.models.factory.ModelClassException;
 import org.apache.sling.models.factory.MissingElementsException;
 import org.slf4j.Logger;
 
 public class Result<ModelType> {
 
-    enum FailureType {
+    public enum FailureType {
         ADAPTABLE_DOES_NOT_MATCH("Adaptable is not acceptable for the model class"),
         FAILED_CALLING_POST_CONSTRUCT("Failure calling post-construct method"),
         NO_MODEL_ANNOTATION("Provided Adapter class does not have a Model annotation"),
@@ -38,7 +38,12 @@ public class Result<ModelType> {
         OTHER("Unclassified problem"),
         MISSING_METHODS("Required methods %s on model %s were not able to be injected."),
         MISSING_FIELDS("Required fields %s on model %s were not able to be injected."),
-        MISSING_CONSTRUCTOR_PARAMS("Required constructor parameters %s on model %s were not able to be injected.");
+        MISSING_CONSTRUCTOR_PARAMS("Required constructor parameters %s on model %s were not able to be injected."), 
+        ADAPTABLE_NOT_USABLE_FOR_VALIDATION("Can not call Sling Validation in case the adaptable is neiter SlingHttpServletRequest or Resource (adaptable is'%s')"),
+        VALIDATION_NOT_AVAILABLE("Sling Validation Bundle is not there, therefore no validation can be performed."),
+        VALIDATION_MODEL_NOT_FOUND("Sling Validation model could not be found"),
+        VALIDATION_MODEL_INVALID("Sling Validation model is invalid"),
+        VALIDATION_RESULT_RESOURCE_INVALID("Model is invalid according to Sling Validation");
 
         private String message;
 
@@ -95,13 +100,19 @@ public class Result<ModelType> {
                 case FAILED_CALLING_POST_CONSTRUCT:
                 case NO_MODEL_ANNOTATION:
                 case NO_USABLE_CONSTRUCTOR:
-                    e = new InvalidModelException(msg);
+                case VALIDATION_NOT_AVAILABLE:
+                case ADAPTABLE_NOT_USABLE_FOR_VALIDATION:
+                    e = new ModelClassException(msg);
                     break;
                 case MISSING_CONSTRUCTOR_PARAMS:
                 case MISSING_FIELDS:
                 case MISSING_METHODS:
                     e = new MissingElementsException(failureType.message, missingElements, clazz);
                     break;
+                case VALIDATION_MODEL_NOT_FOUND:
+                case VALIDATION_RESULT_RESOURCE_INVALID:
+                case VALIDATION_MODEL_INVALID:
+                    throw (RuntimeException)failureException;
                 default:
                     e = new RuntimeException(msg);
                     break;
@@ -130,6 +141,12 @@ public class Result<ModelType> {
             failure.log(log);
         }
     }
+    
+    public void addFailure(FailureType type) {
+        Failure f = new Failure();
+        f.failureType = type;
+        failures.add(f);
+    }
 
     public void addFailure(FailureType type, Class<?> clazz) {
         Failure f = new Failure();
@@ -150,6 +167,13 @@ public class Result<ModelType> {
         f.failureType = type;
         f.missingElements = requiredElements;
         f.clazz = clazz;
+        failures.add(f);
+    }
+    
+    public void addFailureWithParameters(FailureType type, Object... parameters) {
+        Failure f = new Failure();
+        f.failureType = type;
+        f.failureMessage = String.format(type.message, parameters);
         failures.add(f);
     }
 

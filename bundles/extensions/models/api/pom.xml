@@ -49,6 +49,7 @@
                 <configuration>
                    <instructions>
                         <Export-Package>org.apache.sling.models.*,javax.inject;version=0</Export-Package>
+                        <DynamicImport-Package>org.apache.sling.validation.api.*</DynamicImport-Package>
                    </instructions>
                 </configuration>
             </plugin>
@@ -59,6 +60,19 @@
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
             <version>1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.validation.api</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.5</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

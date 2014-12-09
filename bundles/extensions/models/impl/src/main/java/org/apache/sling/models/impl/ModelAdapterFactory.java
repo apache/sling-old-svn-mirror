@@ -52,15 +52,21 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.ReferencePolicyOption;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.adapter.AdapterFactory;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.osgi.ServiceUtil;
 import org.apache.sling.models.annotations.Model;
+import org.apache.sling.models.annotations.ValidationStrategy;
 import org.apache.sling.models.factory.InvalidAdaptableException;
-import org.apache.sling.models.factory.InvalidModelException;
+import org.apache.sling.models.factory.InvalidResourceException;
+import org.apache.sling.models.factory.InvalidValidationModelException;
 import org.apache.sling.models.factory.MissingElementsException;
+import org.apache.sling.models.factory.ModelClassException;
 import org.apache.sling.models.factory.ModelFactory;
 import org.apache.sling.models.impl.Result.FailureType;
 import org.apache.sling.models.impl.model.ConstructorParameter;
@@ -69,6 +75,7 @@ import org.apache.sling.models.impl.model.InjectableField;
 import org.apache.sling.models.impl.model.InjectableMethod;
 import org.apache.sling.models.impl.model.ModelClass;
 import org.apache.sling.models.impl.model.ModelClassConstructor;
+import org.apache.sling.models.impl.validation.ModelValidation;
 import org.apache.sling.models.spi.AcceptsNullName;
 import org.apache.sling.models.spi.DisposalCallback;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
@@ -157,6 +164,9 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     @Reference(name = "implementationPicker", referenceInterface = ImplementationPicker.class,
             cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
     private final Map<Object, ImplementationPicker> implementationPickers = new TreeMap<Object, ImplementationPicker>();
+    
+    @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policyOption=ReferencePolicyOption.GREEDY)
+    private ModelValidation modelValidation;
 
     ModelPackageBundleListener listener;
 
@@ -177,21 +187,21 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
     @Override
     public <ModelType> ModelType createModel(Object adaptable, Class<ModelType> type) throws MissingElementsException,
-            InvalidAdaptableException, InvalidModelException {
+            InvalidAdaptableException, InvalidValidationModelException, InvalidResourceException {
         Result<ModelType> result = internalCreateModel(adaptable, type);
         result.throwException(log);
         return result.getModel();
     }
 
     @Override
-    public boolean canCreateFromAdaptable(Object adaptable, Class<?> modelClass) throws InvalidModelException {
+    public boolean canCreateFromAdaptable(Object adaptable, Class<?> modelClass) throws ModelClassException {
         return innerCanCreateFromAdaptable(adaptable, modelClass);
     }
 
-    private boolean innerCanCreateFromAdaptable(Object adaptable, Class<?> requestedType) throws InvalidModelException {
+    private boolean innerCanCreateFromAdaptable(Object adaptable, Class<?> requestedType) throws ModelClassException {
         ModelClass<?> modelClass = getImplementationTypeForAdapterType(requestedType, adaptable);
         if (!modelClass.hasModelAnnotation()) {
-            throw new InvalidModelException(String.format("Model class '%s' does not have a model annotation", modelClass));
+            throw new ModelClassException(String.format("Model class '%s' does not have a model annotation", modelClass));
         }
 
         Class<?>[] declaredAdaptable = modelClass.getModelAnnotation().adaptables();
@@ -261,25 +271,54 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
             }
             if (!isAdaptable) {
                 result.addFailure(FailureType.ADAPTABLE_DOES_NOT_MATCH, modelClass.getType());
-            } else if (modelClass.getType().isInterface()) {
-                InvocationHandler handler = createInvocationHandler(adaptable, modelClass, result);
-                if (handler != null) {
-                    ModelType model = (ModelType) Proxy.newProxyInstance(modelClass.getType().getClassLoader(), new Class<?>[] { modelClass.getType() }, handler);
-                    result.setModel(model);
-                }
             } else {
-                try {
-                    ModelType model = createObject(adaptable, modelClass, result);
-                    result.setModel(model);
+                if (!validateModel(modelAnnotation, adaptable, result)) {
                     return result;
-                } catch (Exception e) {
-                    result.addFailure(FailureType.OTHER, "Unable to create object", e);
+                }
+                if (modelClass.getType().isInterface()) {
+                    InvocationHandler handler = createInvocationHandler(adaptable, modelClass, result);
+                    if (handler != null) {
+                        ModelType model = (ModelType) Proxy.newProxyInstance(modelClass.getType().getClassLoader(), new Class<?>[] { modelClass.getType() }, handler);
+                        result.setModel(model);
+                    }
+                } else {
+                    try {
+                        ModelType model = createObject(adaptable, modelClass, result);
+                        result.setModel(model);
+                        return result;
+                    } catch (Exception e) {
+                        result.addFailure(FailureType.OTHER, "Unable to create object", e);
+                    }
                 }
             }
             return result;
         } finally {
             threadInvocationCounter.decrease();
         }
+    }
+    
+    private <ModelType> boolean validateModel(Model modelAnnotation, Object adaptable, Result<ModelType> result) {
+        if (modelAnnotation.validation() != ValidationStrategy.DISABLED) {
+            if (modelValidation == null) {
+                result.addFailure(FailureType.VALIDATION_NOT_AVAILABLE);
+                return false;
+            }
+            Resource resource = null;
+            if (adaptable instanceof SlingHttpServletRequest) {
+                resource = ((SlingHttpServletRequest)adaptable).getResource();
+            } else if (adaptable instanceof Resource) {
+                resource = (Resource)adaptable;
+            }
+            if (resource != null) {
+                if (!modelValidation.validate(resource, modelAnnotation.validation() == ValidationStrategy.REQUIRED, result)) {
+                    return false;
+                }
+            } else {
+                result.addFailureWithParameters(FailureType.ADAPTABLE_NOT_USABLE_FOR_VALIDATION, adaptable.getClass().getName());
+                return false;
+            }
+        }
+        return true;
     }
 
     private static interface InjectCallback {

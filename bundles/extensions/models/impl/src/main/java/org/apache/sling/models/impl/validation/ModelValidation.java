@@ -14,7 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Version("1.2.0")
-package org.apache.sling.models.annotations;
+package org.apache.sling.models.impl.validation;
 
-import aQute.bnd.annotation.Version;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.models.impl.Result;
+
+public interface ModelValidation {
+
+    /**
+     * Calls the Sling Validation for the given resource.
+     * @param resource
+     * @param required if {@code true} validation fails even if no appropriate validation model could be found.
+     * @return {@code true} if validation was successful, otherwise {@code false}
+     */
+    public abstract <ModelType> boolean validate(Resource resource, boolean required, Result<ModelType> result);
+
+}

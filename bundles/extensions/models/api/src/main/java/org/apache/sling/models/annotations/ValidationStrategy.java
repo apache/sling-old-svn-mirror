@@ -14,7 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Version("1.2.0")
 package org.apache.sling.models.annotations;
 
-import aQute.bnd.annotation.Version;
+/** 
+ * Used by the {@link Model} annotation.
+ */
+public enum ValidationStrategy {
+    DISABLED, REQUIRED, OPTIONAL
+}

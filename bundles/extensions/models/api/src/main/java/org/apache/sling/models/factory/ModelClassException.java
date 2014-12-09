@@ -19,17 +19,17 @@
 package org.apache.sling.models.factory;
 
 /**
- * Exception which is triggered when the Model could not be instantiated due to
- * model class is not having a model annotation, some reflection error, invalid constructors or 
- * some exception within the post construct method was triggered.
+ * Exception which is triggered when the Model class could not be instantiated due to
+ * not having a model annotation, some reflection error, invalid constructors or 
+ * because some exception within the post construct method was triggered.
  * 
  * @see ModelFactory
  */
-public final class InvalidModelException extends RuntimeException {
+public final class ModelClassException extends RuntimeException {
 
     private static final long serialVersionUID = 4323592065808565135L;
 
-    public InvalidModelException(String message) {
+    public ModelClassException(String message) {
         super(message);
     }
 }
