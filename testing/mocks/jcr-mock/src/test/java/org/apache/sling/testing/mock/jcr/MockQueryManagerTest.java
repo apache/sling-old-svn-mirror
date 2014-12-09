@@ -132,7 +132,7 @@ public class MockQueryManagerTest {
     @Test
     public void testQueryResults_MultipleResultHandlers() throws RepositoryException {
         final List<Node> sampleNodes2 = ImmutableList.of(sampleNodes.get(0));
-        MockJcr.addQueryResultHandler(queryManager, new MockQueryResultHandler() {
+        MockJcr.addQueryResultHandler(session, new MockQueryResultHandler() {
             @Override
             public MockQueryResult executeQuery(MockQuery query) {
                 if (StringUtils.equals(query.getStatement(), "query2")) {
@@ -142,7 +142,7 @@ public class MockQueryManagerTest {
             }
         });
         
-        MockJcr.addQueryResultHandler(queryManager, new MockQueryResultHandler() {
+        MockJcr.addQueryResultHandler(session, new MockQueryResultHandler() {
             @Override
             public MockQueryResult executeQuery(MockQuery query) {
                 if (StringUtils.equals(query.getStatement(), "query1")) {

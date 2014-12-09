@@ -91,6 +91,15 @@ public final class MockJcr {
     
     /**
      * Sets the expected result list for all queries executed with the given query manager.
+     * @param session JCR session
+     * @param resultList Result list
+     */
+    public static void setQueryResult(final Session session, final List<Node> resultList) {
+        setQueryResult(getQueryManager(session), resultList);
+    }
+    
+    /**
+     * Sets the expected result list for all queries executed with the given query manager.
      * @param queryManager Mocked query manager
      * @param resultList Result list
      */
@@ -103,6 +112,16 @@ public final class MockJcr {
         });
     }
 
+    /**
+     * Sets the expected result list for all queries with the given statement executed with the given query manager.
+     * @param session JCR session
+     * @param statement Query statement
+     * @param resultList Result list
+     */
+    public static void setQueryResult(final Session session, final String statement, final List<Node> resultList) {
+        setQueryResult(getQueryManager(session), statement, resultList);
+    }
+    
     /**
      * Sets the expected result list for all queries with the given statement executed with the given query manager.
      * @param queryManager Mocked query manager
@@ -125,11 +144,29 @@ public final class MockJcr {
 
     /**
      * Adds a query result handler for the given query manager which may return query results for certain queries that are executed.
+     * @param session JCR session
+     * @param resultHandler Mock query result handler
+     */
+    public static void addQueryResultHandler(final Session session, final MockQueryResultHandler resultHandler) {
+        addQueryResultHandler(getQueryManager(session), resultHandler);
+    }
+    
+    /**
+     * Adds a query result handler for the given query manager which may return query results for certain queries that are executed.
      * @param queryManager Mocked query manager
      * @param resultHandler Mock query result handler
      */
     public static void addQueryResultHandler(final QueryManager queryManager, final MockQueryResultHandler resultHandler) {
         ((MockQueryManager)queryManager).addResultHandler(resultHandler);
+    }
+    
+    private static QueryManager getQueryManager(Session session) {
+        try {
+            return session.getWorkspace().getQueryManager();
+        }
+        catch (RepositoryException ex) {
+            throw new RuntimeException("Unable to access query manager.", ex);
+        }
     }
 
 }
