@@ -116,23 +116,26 @@ public final class MockJcr {
      * Sets the expected result list for all queries with the given statement executed with the given query manager.
      * @param session JCR session
      * @param statement Query statement
+     * @param language Query language
      * @param resultList Result list
      */
-    public static void setQueryResult(final Session session, final String statement, final List<Node> resultList) {
-        setQueryResult(getQueryManager(session), statement, resultList);
+    public static void setQueryResult(final Session session, final String statement, final String language, final List<Node> resultList) {
+        setQueryResult(getQueryManager(session), statement, language, resultList);
     }
     
     /**
      * Sets the expected result list for all queries with the given statement executed with the given query manager.
      * @param queryManager Mocked query manager
      * @param statement Query statement
+     * @param language Query language
      * @param resultList Result list
      */
-    public static void setQueryResult(final QueryManager queryManager, final String statement, final List<Node> resultList) {
+    public static void setQueryResult(final QueryManager queryManager, final String statement, final String language, final List<Node> resultList) {
         addQueryResultHandler(queryManager, new MockQueryResultHandler() {
             @Override
             public MockQueryResult executeQuery(MockQuery query) {
-                if (StringUtils.equals(query.getStatement(), statement)) {
+                if (StringUtils.equals(query.getStatement(), statement)
+                        && StringUtils.equals(query.getLanguage(), language)) {
                     return new MockQueryResult(resultList);
                 }
                 else {

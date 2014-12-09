@@ -95,7 +95,7 @@ public class MockQueryManagerTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testQueryResults_SpecificQuery() throws RepositoryException {
-        MockJcr.setQueryResult(queryManager, "query1", sampleNodes);
+        MockJcr.setQueryResult(queryManager, "query1", Query.JCR_SQL2, sampleNodes);
         
         Query query = queryManager.createQuery("query1", Query.JCR_SQL2);
         QueryResult result = query.execute();
