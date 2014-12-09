@@ -28,6 +28,8 @@ import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.ISO8601;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 
 /**
@@ -40,17 +42,32 @@ import org.apache.sling.api.wrappers.ValueMapDecorator;
  */
 public class MockValueMap extends ValueMapDecorator {
     
-    public MockValueMap() {
-        this(new HashMap<String, Object>());
+    private final Resource resource;
+    
+    public MockValueMap(Resource resource) {
+        this(resource, new HashMap<String, Object>());
     }
 
-    public MockValueMap(Map<String,Object> map) {
+    public MockValueMap(Resource resource, Map<String,Object> map) {
         super(convertForWrite(map));
+        this.resource = resource;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public <T> T get(String name, Class<T> type) {
+        
+        // check for deep path access
+        int slashPos = name.lastIndexOf('/');
+        if (slashPos >= 0) {
+            String resourcePath = "./" + name.substring(0, slashPos);
+            String propertyName = name.substring(slashPos + 1);
+            Resource childResource = resource.getChild(resourcePath);
+            if (childResource!=null) {
+                return ResourceUtil.getValueMap(childResource).get(propertyName, type);
+            }
+        }
+        
         if (type == Calendar.class) {
             // Support conversion of String to Calendar if value conforms to ISO8601 date format
             Object value = get(name);
@@ -80,7 +97,7 @@ public class MockValueMap extends ValueMapDecorator {
         }
         return super.get(name, type);
     }
-
+    
     @Override
     public Object put(String key, Object value) {
         return super.put(key, convertForWrite(value));
