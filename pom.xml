@@ -62,7 +62,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.adapter;version=2.0.6
+                            org.apache.sling.adapter;version=2.1.0
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.adapter.internal
