@@ -20,12 +20,12 @@ package org.apache.sling.distribution.queue;
 
 import javax.annotation.Nonnull;
 
-import aQute.bnd.annotation.ConsumerType;
+import aQute.bnd.annotation.ProviderType;
 
 /**
  * A provider for {@link DistributionQueue}s
  */
-@ConsumerType
+@ProviderType
 public interface DistributionQueueProvider {
 
     /**
