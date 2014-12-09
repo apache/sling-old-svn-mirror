@@ -58,7 +58,6 @@ public final class OsgiContext extends OsgiContextImpl implements TestRule {
      * @param tearDownCallback Allows the application to register an own
      *            callback function that is called before the built-in teardown
      *            rules are executed.
-     * @param resourceResolverType Resource resolver type.
      */
     public OsgiContext(final OsgiContextCallback setUpCallback, final OsgiContextCallback tearDownCallback) {
 

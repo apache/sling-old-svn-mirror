@@ -55,6 +55,7 @@ public class MockResourceResolverFactory implements ResourceResolverFactory {
 
     /**
      * Create a new resource resolver factory.
+     * @param options Options
      */
     public MockResourceResolverFactory(final MockResourceResolverFactoryOptions options) {
         this.options = options;
@@ -111,11 +112,12 @@ public class MockResourceResolverFactory implements ResourceResolverFactory {
     /**
      * Inform about a closed resource resolver.
      * Make sure to remove it from the current thread context.
+     * @param resolver Resource resolver
      */
-    public void closed(final ResourceResolver resourceResolverImpl) {
+    public void closed(final ResourceResolver resolver) {
         final Stack<ResourceResolver> resolverStack = resolverStackHolder.get();
         if ( resolverStack != null ) {
-            resolverStack.remove(resourceResolverImpl);
+            resolverStack.remove(resolver);
         }
     }
 }

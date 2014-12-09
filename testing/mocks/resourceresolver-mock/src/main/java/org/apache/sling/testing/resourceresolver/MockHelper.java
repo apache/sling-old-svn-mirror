@@ -49,16 +49,19 @@ public class MockHelper {
 
     /**
      * Create a new helper
+     * @param resolver Resource resolver
+     * @return this
      */
     public static MockHelper create(final ResourceResolver resolver) {
         return new MockHelper(resolver);
     }
 
     /**
-     * Add a new resource
+     * Add a new resource.
      * If the path is relative, this resource is added as a child to the previous resource.
-     * If the path is relative and starts with a dot, this resource is added as a peer to
-     * the previous resource.
+     * If the path is relative and starts with a dot, this resource is added as a peer to the previous resource.
+     * @param path Resource path
+     * @return this
      */
     public MockHelper resource(final String path) {
         final String fullPath;
@@ -80,6 +83,9 @@ public class MockHelper {
 
     /**
      * Add a property to the current resource
+     * @param name Property name
+     * @param value Property value
+     * @return this
      */
     public MockHelper p(final String name, final Object value) {
         final Description d = this.stack.peek();
@@ -90,6 +96,7 @@ public class MockHelper {
 
     /**
      * Finish building and add all resources to the resource tree.
+     * @throws PersistenceException Persistence exception
      */
     public void add() throws PersistenceException {
         for(int i=0; i<this.stack.size(); i++) {
@@ -100,9 +107,8 @@ public class MockHelper {
     }
 
     /**
-     * Finish building, add all resources to the resource tree and commit
-     * changes.
-     * @throws PersistenceException
+     * Finish building, add all resources to the resource tree and commit changes.
+     * @throws PersistenceException Persistence exception
      */
     public void commit() throws PersistenceException {
         this.add();
