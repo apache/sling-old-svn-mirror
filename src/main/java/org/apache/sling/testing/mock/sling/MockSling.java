@@ -109,7 +109,7 @@ public final class MockSling {
     public static ResourceResolver newResourceResolver(final ResourceResolverType type) {
         ResourceResolverFactory factory = newResourceResolverFactory(type);
         try {
-            return factory.getResourceResolver(null);
+            return factory.getAdministrativeResourceResolver(null);
         } catch (LoginException ex) {
             throw new RuntimeException("Mock resource resolver factory implementation seems to require login.", ex);
         }
