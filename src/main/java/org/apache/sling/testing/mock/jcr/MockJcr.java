@@ -18,16 +18,23 @@
  */
 package org.apache.sling.testing.mock.jcr;
 
+import java.util.List;
+
+import javax.jcr.Node;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.query.QueryManager;
 
 import org.apache.commons.lang3.StringUtils;
+
+import aQute.bnd.annotation.ConsumerType;
 
 /**
  * Factory for mock JCR objects.
  */
+@ConsumerType
 public final class MockJcr {
 
     /**
@@ -80,6 +87,49 @@ public final class MockJcr {
         } catch (RepositoryException ex) {
             throw new RuntimeException("Creating mocked JCR session failed.", ex);
         }
+    }
+    
+    /**
+     * Sets the expected result list for all queries executed with the given query manager.
+     * @param queryManager Mocked query manager
+     * @param resultList Result list
+     */
+    public static void setQueryResult(final QueryManager queryManager, final List<Node> resultList) {
+        addQueryResultHandler(queryManager, new MockQueryResultHandler() {
+            @Override
+            public MockQueryResult executeQuery(MockQuery query) {
+                return new MockQueryResult(resultList);
+            }
+        });
+    }
+
+    /**
+     * Sets the expected result list for all queries with the given statement executed with the given query manager.
+     * @param queryManager Mocked query manager
+     * @param statement Query statement
+     * @param resultList Result list
+     */
+    public static void setQueryResult(final QueryManager queryManager, final String statement, final List<Node> resultList) {
+        addQueryResultHandler(queryManager, new MockQueryResultHandler() {
+            @Override
+            public MockQueryResult executeQuery(MockQuery query) {
+                if (StringUtils.equals(query.getStatement(), statement)) {
+                    return new MockQueryResult(resultList);
+                }
+                else {
+                    return null;
+                }
+            }
+        });
+    }
+
+    /**
+     * Adds a query result handler for the given query manager which may return query results for certain queries that are executed.
+     * @param queryManager Mocked query manager
+     * @param resultHandler Mock query result handler
+     */
+    public static void addQueryResultHandler(final QueryManager queryManager, final MockQueryResultHandler resultHandler) {
+        ((MockQueryManager)queryManager).addResultHandler(resultHandler);
     }
 
 }

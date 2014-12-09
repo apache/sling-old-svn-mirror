@@ -42,6 +42,7 @@ class MockWorkspace implements Workspace {
     private final NamespaceRegistry namespaceRegistry = new MockNamespaceRegistry();
     private final ObservationManager observationManager = new MockObservationManager();
     private final NodeTypeManager nodeTypeManager = new MockNodeTypeManager();
+    private final QueryManager queryManager = new MockQueryManager();
 
     /**
      * @param session JCR session
@@ -76,6 +77,11 @@ class MockWorkspace implements Workspace {
         return this.nodeTypeManager;
     }
 
+    @Override
+    public QueryManager getQueryManager() {
+        return this.queryManager;
+    }
+    
     // --- unsupported operations ---
     @Override
     public void copy(final String srcAbsPath, final String destAbsPath) {
@@ -105,11 +111,6 @@ class MockWorkspace implements Workspace {
 
     @Override
     public LockManager getLockManager() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public QueryManager getQueryManager() {
         throw new UnsupportedOperationException();
     }
 
