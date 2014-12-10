@@ -77,7 +77,7 @@ public class SimpleDistributionQueue implements DistributionQueue {
     }
 
     @Nonnull
-    public DistributionQueueItemState getStatus(@Nonnull DistributionQueueItem queueItem) {
+    public DistributionQueueItemState getState(@Nonnull DistributionQueueItem queueItem) {
         DistributionQueueItemState itemStatus = statusMap.get(queueItem);
 
         if (queue.contains(queueItem)) {

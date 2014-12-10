@@ -106,7 +106,7 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
                 builder.append('{');
                 builder.append(toJSoN(item));
                 builder.append(',');
-                builder.append(toJSoN(queue.getStatus(item)));
+                builder.append(toJSoN(queue.getState(item)));
                 builder.append("},");
             }
             builder.deleteCharAt(builder.length() - 1);

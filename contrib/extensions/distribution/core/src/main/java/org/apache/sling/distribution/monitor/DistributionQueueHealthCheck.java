@@ -112,7 +112,7 @@ public class DistributionQueueHealthCheck implements HealthCheck {
 
                         DistributionQueueItem item = q.getHead();
                         if (item != null) {
-                            DistributionQueueItemState status = q.getStatus(item);
+                            DistributionQueueItemState status = q.getState(item);
                             if (status.getAttempts() <= numberOfRetriesAllowed) {
                                 resultLog.debug("Queue: [{}], first item: [{}], number of retries: {}", q.getName(), item.getId(), status.getAttempts());
                             } else {

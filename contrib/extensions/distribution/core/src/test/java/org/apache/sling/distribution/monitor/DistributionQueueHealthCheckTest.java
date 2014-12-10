@@ -79,7 +79,7 @@ public class DistributionQueueHealthCheckTest {
         DistributionQueueItem item = mock(DistributionQueueItem.class);
         DistributionQueueItemState status = mock(DistributionQueueItemState.class);
         when(status.getAttempts()).thenReturn(1);
-        when(queue.getStatus(item)).thenReturn(status);
+        when(queue.getState(item)).thenReturn(status);
         when(queue.getHead()).thenReturn(item);
         DistributionAgent distributionAgent = mock(DistributionAgent.class);
 
@@ -104,7 +104,7 @@ public class DistributionQueueHealthCheckTest {
         DistributionQueueItem item = mock(DistributionQueueItem.class);
         DistributionQueueItemState status = mock(DistributionQueueItemState.class);
         when(status.getAttempts()).thenReturn(10);
-        when(queue.getStatus(item)).thenReturn(status);
+        when(queue.getState(item)).thenReturn(status);
         when(queue.getHead()).thenReturn(item);
         DistributionAgent distributionAgent = mock(DistributionAgent.class);
 
