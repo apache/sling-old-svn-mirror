@@ -19,6 +19,8 @@
 
 package org.apache.sling.scripting.sightly.impl.engine.extension.use;
 
+import java.util.regex.Pattern;
+
 import javax.script.Bindings;
 
 import org.apache.felix.scr.annotations.Component;
@@ -64,11 +66,18 @@ public class PojoUseProvider implements UseProvider {
 
     private final Logger LOG = LoggerFactory.getLogger(PojoUseProvider.class);
 
+    private static final Pattern javaPattern = Pattern.compile("([[\\p{L}&&[^\\p{Lu}]]_$][\\p{L}\\p{N}_$]*\\.)*[\\p{Lu}_$][\\p{L}\\p{N}_$]*");
+
     @Reference
     private SightlyJavaCompilerService sightlyJavaCompilerService = null;
 
     @Override
     public ProviderOutcome provide(String identifier, RenderContext renderContext, Bindings arguments) {
+        if (!javaPattern.matcher(identifier).matches()) {
+            LOG.debug("Identifier {} does not match a Java class name pattern.", identifier);
+            return ProviderOutcome.failure();
+        }
+
         Bindings globalBindings = renderContext.getBindings();
         Bindings bindings = UseProviderUtils.merge(globalBindings, arguments);
         SlingScriptHelper sling = UseProviderUtils.getHelper(bindings);
