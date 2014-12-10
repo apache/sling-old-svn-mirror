@@ -29,7 +29,6 @@ import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.queue.DistributionQueue;
-import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemState;
@@ -85,7 +84,7 @@ public class ErrorAwareQueueDispatchingStrategy implements DistributionQueueDisp
         DistributionQueueItem queueItem = getItem(distributionPackage);
         DistributionQueue queue = queueProvider.getQueue(DEFAULT_QUEUE_NAME);
         if (queue.add(queueItem)) {
-            return Arrays.asList(queue.getStatus(queueItem));
+            return Arrays.asList(queue.getState(queueItem));
         } else {
             return Arrays.asList(new DistributionQueueItemState(DistributionQueueItemState.ItemState.ERROR, queue.getName()));
         }
@@ -101,7 +100,7 @@ public class ErrorAwareQueueDispatchingStrategy implements DistributionQueueDisp
         // get first item in the queue with its status
         DistributionQueueItem firstItem = defaultQueue.getHead();
         if (firstItem != null) {
-            DistributionQueueItemState status = defaultQueue.getStatus(firstItem);
+            DistributionQueueItemState status = defaultQueue.getState(firstItem);
             // if item is still in the queue after a max no. of attempts, move it to the error queue
             int attempts = status.getAttempts();
             Calendar entered = status.getEntered();

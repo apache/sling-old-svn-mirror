@@ -77,7 +77,7 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
     }
 
     @Nonnull
-    public DistributionQueueItemState getStatus(@Nonnull DistributionQueueItem distributionPackage)
+    public DistributionQueueItemState getState(@Nonnull DistributionQueueItem distributionPackage)
             throws DistributionQueueException {
         try {
             Map<String, Object> properties = JobHandlingUtils.createIdProperties(distributionPackage.getId());

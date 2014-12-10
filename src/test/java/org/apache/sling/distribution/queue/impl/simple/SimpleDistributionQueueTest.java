@@ -52,7 +52,7 @@ public class SimpleDistributionQueueTest {
         assertFalse(queue.isEmpty());
         assertNotNull(queue.remove(pkg.getId()));
         assertTrue(queue.isEmpty());
-        DistributionQueueItemState status = queue.getStatus(pkg);
+        DistributionQueueItemState status = queue.getState(pkg);
         assertNotNull(status);
         assertTrue(status.isSuccessful());
     }
@@ -68,7 +68,7 @@ public class SimpleDistributionQueueTest {
         assertFalse(queue.isEmpty());
         assertNotNull(queue.remove(pkg.getId()));
         assertTrue(queue.isEmpty());
-        DistributionQueueItemState status = queue.getStatus(pkg);
+        DistributionQueueItemState status = queue.getState(pkg);
         assertNotNull(status);
         assertTrue(status.isSuccessful());
         assertEquals(1, status.getAttempts());

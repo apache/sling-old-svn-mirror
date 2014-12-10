@@ -87,7 +87,7 @@ public class JobHandlingDistributionQueueTest {
         packageInfo.setRequestType(DistributionRequestType.ADD);
         when(distributionQueueItem.getPackageInfo()).thenReturn(packageInfo);
         assertTrue(queue.add(distributionQueueItem));
-        DistributionQueueItemState status = queue.getStatus(distributionQueueItem);
+        DistributionQueueItemState status = queue.getState(distributionQueueItem);
         assertNotNull(status);
         assertFalse(status.isSuccessful());
         assertEquals(ItemState.DROPPED, status.getItemState());

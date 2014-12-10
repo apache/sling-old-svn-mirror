@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.queue.DistributionQueue;
-import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemState;
@@ -81,7 +80,7 @@ public class PriorityPathQueueDispatchingStrategy implements DistributionQueueDi
         DistributionQueueItem queueItem = getItem(distributionPackage);
         DistributionQueue queue = getQueue(queueItem, queueProvider);
         if (queue.add(queueItem)) {
-            return Arrays.asList(queue.getStatus(queueItem));
+            return Arrays.asList(queue.getState(queueItem));
         } else {
             return Arrays.asList(new DistributionQueueItemState(DistributionQueueItemState.ItemState.ERROR, queue.getName()));
         }
