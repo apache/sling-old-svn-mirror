@@ -22,11 +22,17 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import aQute.bnd.annotation.ConsumerType;
 import aQute.bnd.annotation.ProviderType;
 
 /**
- * a queue for handling {@link org.apache.sling.distribution.agent.DistributionAgent}s' requests
+ * A queue is responsible for collecting the {@link org.apache.sling.distribution.packaging.DistributionPackage}s
+ * exported by a {@link org.apache.sling.distribution.agent.DistributionAgent} in
+ * order to be able to process them also when there are multiple (concurrent)
+ * {@link org.apache.sling.distribution.communication.DistributionRequest}s executed
+ * on that same agent.
+ * <p/>
+ * The items (packages) in the queue can then get processed according to a FIFO
+ * strategy or in parallel, or some other way, via {@link org.apache.sling.distribution.queue.DistributionQueueProcessor}s.
  */
 @ProviderType
 public interface DistributionQueue {
@@ -42,25 +48,26 @@ public interface DistributionQueue {
     /**
      * add a distribution item to this queue
      *
-     * @param item a distribution item representing the package to distribute
+     * @param item a distribution item representing a {@link org.apache.sling.distribution.packaging.DistributionPackage}
+     *             to distribute
      * @return {@code true} if the distribution item was added correctly to the queue,
      * {@code false} otherwise
      */
     boolean add(@Nonnull DistributionQueueItem item);
 
     /**
-     * get the status of a certain item in the queue
+     * get the state of a certain item in the queue
      *
      * @param item the distribution item to get the status for
      * @return the item status in the queue
      * @throws DistributionQueueException if any error occurs while getting the status
      */
     @Nonnull
-    DistributionQueueItemState getStatus(@Nonnull DistributionQueueItem item)
+    DistributionQueueItemState getState(@Nonnull DistributionQueueItem item)
             throws DistributionQueueException;
 
     /**
-     * get the first item (FIFO wise, the next to be processed) into the queue
+     * get the first item (in a FIFO strategy, the next to be processed) from the queue
      *
      * @return the first item into the queue or {@code null} if the queue is empty
      */
@@ -75,7 +82,7 @@ public interface DistributionQueue {
     boolean isEmpty();
 
     /**
-     * get the items in the queue
+     * get all the items in the queue
      *
      * @param queueItemSelector represents the criteria to filter queue items.
      *                          if null is passed then all items are returned.
@@ -88,7 +95,8 @@ public interface DistributionQueue {
      * remove an item from the queue by specifying its id
      *
      * @param id an item's identifier
-     * @return the removed item, or {@code null} if no item could be removed
+     * @return the removed item, or {@code null} if the item with the given id
+     * doesn't exist
      */
     DistributionQueueItem remove(@Nonnull String id);
 }
