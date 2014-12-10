@@ -187,6 +187,7 @@ public class XSSRuntimeExtension implements RuntimeExtension {
         elementNameWhiteList.add("p");
         elementNameWhiteList.add("pre");
         elementNameWhiteList.add("blockquote");
+        elementNameWhiteList.add("ul");
         elementNameWhiteList.add("ol");
         elementNameWhiteList.add("li");
         elementNameWhiteList.add("dl");
