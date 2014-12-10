@@ -24,6 +24,7 @@ import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServlet;
@@ -58,6 +59,12 @@ public class WebConsolePlugin extends HttpServlet {
 
     /** tenant description parameter */
     private static final String REQ_PRM_TENANT_DESC = "tenantDesc";
+
+    /** command parameter for tenant changing actions */
+    private static final String REQ_PRM_CMD = "action";
+
+    /** status message for the commands */
+    private static final String REQ_PRM_MESSAGE = "message";
 
     private TenantProviderImpl tenantProvider;
 
@@ -94,16 +101,39 @@ public class WebConsolePlugin extends HttpServlet {
     @Override
     protected void doPost(final HttpServletRequest req, final HttpServletResponse resp) throws IOException {
         String msg = null;
-        final String cmd = req.getParameter("action");
+
+        final String cmd = req.getParameter(REQ_PRM_CMD);
+        final String tenantId = req.getParameter(REQ_PRM_TENANT_ID);
+
+        // Check required parameters
+        if (tenantId == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    String.format("Missing parameter %s", REQ_PRM_TENANT_ID));
+            return;
+        }
+
         if ("create".equals(cmd)) {
-            Tenant t = this.createTenant(req);
+
+            final Map<String, Object> properties = new HashMap<String, Object>(2);
+            properties.put(Tenant.PROP_NAME, req.getParameter(REQ_PRM_TENANT_NAME));
+            properties.put(Tenant.PROP_DESCRIPTION, req.getParameter(REQ_PRM_TENANT_DESC));
+            final Tenant t = tenantProvider.create(tenantId, properties);
+
+            // null checks matches the current implementation of TenantManagerImpl.
+            // It may require to be changed according to the outcome of SLING-4234.
             if (t != null) {
-                msg = String.format("Created Tenant %s (%s)", t.getName(), t.getDescription());
+                msg = String.format("Created tenant %s", tenantId);
             } else {
-                msg = "Cannot create tenant";
+                msg = String.format("Cannot create tenant %s", tenantId);
             }
         } else if ("remove".equals(cmd)) {
-            this.removeTenant(req);
+            final Tenant tenant = this.tenantProvider.getTenant(tenantId);
+            if (tenant != null) {
+                this.tenantProvider.remove(tenant);
+                msg = String.format("Removed tenant %s", tenantId);
+            } else {
+                msg = String.format("Tenant %s already removed", tenantId);
+            }
         } else {
             msg = "Unknown command";
         }
@@ -113,19 +143,10 @@ public class WebConsolePlugin extends HttpServlet {
         if (msg == null) {
             redirectTo = path;
         } else {
-            redirectTo = path + "?message=" + msg;
+            redirectTo = String.format("%s?%s=%s", path, REQ_PRM_MESSAGE, msg);
         }
 
         resp.sendRedirect(redirectTo);
-    }
-
-    private void removeTenant(HttpServletRequest request) {
-        final String tenantId = request.getParameter(REQ_PRM_TENANT_ID);
-        final Tenant tenant = this.tenantProvider.getTenant(tenantId);
-
-        if (tenant != null) {
-            this.tenantProvider.remove(tenant);
-        }
     }
 
     private void printForm(final PrintWriter pw, final Tenant t, final String buttonLabel, final String cmd) {
@@ -133,23 +154,11 @@ public class WebConsolePlugin extends HttpServlet {
             + "%s</button>", cmd, (t != null ? t.getId() : ""), buttonLabel);
     }
 
-    @SuppressWarnings("serial")
-    private Tenant createTenant(HttpServletRequest request) {
-        final String tenantName = request.getParameter(REQ_PRM_TENANT_NAME);
-        final String tenantId = request.getParameter(REQ_PRM_TENANT_ID);
-        final String tenantDesc = request.getParameter(REQ_PRM_TENANT_DESC);
-
-        return tenantProvider.create(tenantId, new HashMap<String, Object>() {
-            {
-                put(Tenant.PROP_NAME, tenantName);
-                put(Tenant.PROP_DESCRIPTION, tenantDesc);
-            }
-        });
-    }
-
     @Override
     protected void doGet(final HttpServletRequest req, final HttpServletResponse res) throws IOException {
         final PrintWriter pw = res.getWriter();
+
+        final String msg = req.getParameter(REQ_PRM_MESSAGE);
 
         pw.println("<form method='POST' name='cmd'>" + "<input type='hidden' name='action' value=''/>"
             + "<input type='hidden' name='tenantId' value=''/>" + "</form>");
@@ -158,6 +167,11 @@ public class WebConsolePlugin extends HttpServlet {
             + " document.forms['cmd'].tenantId.value = tenantId;" + " document.forms['cmd'].submit();" + "} "
             + "function createsubmit() {" + " document.forms['editorForm'].submit();" + "} " + "</script>");
         pw.printf("<p class='statline ui-state-highlight'>Apache Sling Tenant Support</p>");
+
+        if (msg != null) {
+            pw.printf("<p class='statline ui-state-highlight'><span class='ui-icon ui-icon-info' " +
+                    "style='float: left; margin-right: .3em;'></span> " + msg + "</p>");
+        }
 
         pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>");
         pw.println("<span style='float: left; margin-left: 1em'>Add New Tenant </span>");
