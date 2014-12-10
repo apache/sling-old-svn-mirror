@@ -23,11 +23,12 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import aQute.bnd.annotation.ConsumerType;
+import aQute.bnd.annotation.ProviderType;
 
 /**
  * a queue for handling {@link org.apache.sling.distribution.agent.DistributionAgent}s' requests
  */
-@ConsumerType
+@ProviderType
 public interface DistributionQueue {
 
     /**
