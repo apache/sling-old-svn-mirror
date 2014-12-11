@@ -20,7 +20,7 @@ package org.apache.sling.distribution.queue.impl.simple;
 
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
-import org.apache.sling.distribution.queue.DistributionQueueItemState;
+import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -52,7 +52,7 @@ public class SimpleDistributionQueueTest {
         assertFalse(queue.isEmpty());
         assertNotNull(queue.remove(pkg.getId()));
         assertTrue(queue.isEmpty());
-        DistributionQueueItemState status = queue.getState(pkg);
+        DistributionQueueItemStatus status = queue.getStatus(pkg);
         assertNotNull(status);
         assertTrue(status.isSuccessful());
     }
@@ -68,7 +68,7 @@ public class SimpleDistributionQueueTest {
         assertFalse(queue.isEmpty());
         assertNotNull(queue.remove(pkg.getId()));
         assertTrue(queue.isEmpty());
-        DistributionQueueItemState status = queue.getState(pkg);
+        DistributionQueueItemStatus status = queue.getStatus(pkg);
         assertNotNull(status);
         assertTrue(status.isSuccessful());
         assertEquals(1, status.getAttempts());

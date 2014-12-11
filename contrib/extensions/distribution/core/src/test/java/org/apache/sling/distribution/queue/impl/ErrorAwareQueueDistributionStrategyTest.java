@@ -24,7 +24,7 @@ import java.util.Iterator;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
-import org.apache.sling.distribution.queue.DistributionQueueItemState;
+import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.junit.Test;
 import org.osgi.service.component.ComponentContext;
@@ -48,12 +48,12 @@ public class ErrorAwareQueueDistributionStrategyTest {
         DistributionQueue queue = mock(DistributionQueue.class);
         when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(DistributionQueueItem.class))).thenReturn(true);
-        DistributionQueueItemState state = mock(DistributionQueueItemState.class);
-        when(queue.getState(any(DistributionQueueItem.class))).thenReturn(state);
+        DistributionQueueItemStatus state = mock(DistributionQueueItemStatus.class);
+        when(queue.getStatus(any(DistributionQueueItem.class))).thenReturn(state);
 
-        Iterable<DistributionQueueItemState> returnedStates = errorAwareDistributionStrategy.add(distributionPackage, queueProvider);
+        Iterable<DistributionQueueItemStatus> returnedStates = errorAwareDistributionStrategy.add(distributionPackage, queueProvider);
         assertNotNull(returnedStates);
-        Iterator<DistributionQueueItemState> iterator = returnedStates.iterator();
+        Iterator<DistributionQueueItemStatus> iterator = returnedStates.iterator();
         assertNotNull(iterator);
         assertTrue(iterator.hasNext());
         assertNotNull(iterator.next());
@@ -69,13 +69,13 @@ public class ErrorAwareQueueDistributionStrategyTest {
 
         when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(queueItem)).thenReturn(true);
-        DistributionQueueItemState state = mock(DistributionQueueItemState.class);
+        DistributionQueueItemStatus state = mock(DistributionQueueItemStatus.class);
         when(state.isSuccessful()).thenReturn(false);
-        when(queue.getState(queueItem)).thenReturn(state);
+        when(queue.getStatus(queueItem)).thenReturn(state);
 
-        Iterable<DistributionQueueItemState> returnedStates = errorAwareDistributionStrategy.add(distributionPackage, queueProvider);
+        Iterable<DistributionQueueItemStatus> returnedStates = errorAwareDistributionStrategy.add(distributionPackage, queueProvider);
         assertNotNull(returnedStates);
-        Iterator<DistributionQueueItemState> iterator = returnedStates.iterator();
+        Iterator<DistributionQueueItemStatus> iterator = returnedStates.iterator();
         assertNotNull(iterator);
         assertTrue(iterator.hasNext());
         assertNotNull(iterator.next());
@@ -101,14 +101,14 @@ public class ErrorAwareQueueDistributionStrategyTest {
         DistributionQueue errorQueue = mock(DistributionQueue.class);
         when(errorQueue.add(queueItem)).thenReturn(true);
         when(queueProvider.getQueue(ErrorAwareQueueDispatchingStrategy.ERROR_QUEUE_NAME)).thenReturn(errorQueue);
-        DistributionQueueItemState state = mock(DistributionQueueItemState.class);
+        DistributionQueueItemStatus state = mock(DistributionQueueItemStatus.class);
         when(state.isSuccessful()).thenReturn(false);
         when(state.getAttempts()).thenReturn(2);
-        when(queue.getState(any(DistributionQueueItem.class))).thenReturn(state);
+        when(queue.getStatus(any(DistributionQueueItem.class))).thenReturn(state);
 
-        Iterable<DistributionQueueItemState> returnedStates = errorAwareDistributionStrategy.add(distributionPackage, queueProvider);
+        Iterable<DistributionQueueItemStatus> returnedStates = errorAwareDistributionStrategy.add(distributionPackage, queueProvider);
         assertNotNull(returnedStates);
-        Iterator<DistributionQueueItemState> iterator = returnedStates.iterator();
+        Iterator<DistributionQueueItemStatus> iterator = returnedStates.iterator();
         assertNotNull(iterator);
         assertTrue(iterator.hasNext());
         assertNotNull(iterator.next());
@@ -130,11 +130,11 @@ public class ErrorAwareQueueDistributionStrategyTest {
         when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(DistributionQueueItem.class))).thenReturn(true);
         when(queue.getHead()).thenReturn(mock(DistributionQueueItem.class));
-        DistributionQueueItemState state = mock(DistributionQueueItemState.class);
+        DistributionQueueItemStatus state = mock(DistributionQueueItemStatus.class);
         when(state.isSuccessful()).thenReturn(false);
         when(state.getAttempts()).thenReturn(2);
-        when(queue.getState(any(DistributionQueueItem.class))).thenReturn(state);
-        Iterable<DistributionQueueItemState> returnedState = errorAwareDistributionStrategy.add(distributionPackage, queueProvider);
+        when(queue.getStatus(any(DistributionQueueItem.class))).thenReturn(state);
+        Iterable<DistributionQueueItemStatus> returnedState = errorAwareDistributionStrategy.add(distributionPackage, queueProvider);
         assertNotNull(returnedState);
     }
 
@@ -146,12 +146,12 @@ public class ErrorAwareQueueDistributionStrategyTest {
         DistributionQueue queue = mock(DistributionQueue.class);
         when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME)).thenReturn(queue);
         when(queue.add(any(DistributionQueueItem.class))).thenReturn(true);
-        DistributionQueueItemState state = mock(DistributionQueueItemState.class);
-        when(queue.getState(any(DistributionQueueItem.class))).thenReturn(state);
+        DistributionQueueItemStatus state = mock(DistributionQueueItemStatus.class);
+        when(queue.getStatus(any(DistributionQueueItem.class))).thenReturn(state);
 
-        Iterable<DistributionQueueItemState> returnedStates = errorAwareDistributionStrategy.add(distributionPackage, queueProvider);
+        Iterable<DistributionQueueItemStatus> returnedStates = errorAwareDistributionStrategy.add(distributionPackage, queueProvider);
         assertNotNull(returnedStates);
-        Iterator<DistributionQueueItemState> iterator = returnedStates.iterator();
+        Iterator<DistributionQueueItemStatus> iterator = returnedStates.iterator();
         assertNotNull(iterator);
         assertTrue(iterator.hasNext());
         assertNotNull(iterator.next());

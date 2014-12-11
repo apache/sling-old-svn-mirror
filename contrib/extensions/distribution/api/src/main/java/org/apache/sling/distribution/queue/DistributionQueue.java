@@ -56,14 +56,14 @@ public interface DistributionQueue {
     boolean add(@Nonnull DistributionQueueItem item);
 
     /**
-     * get the state of a certain item in the queue
+     * get the status of a certain item in the queue
      *
      * @param item the distribution item to get the status for
      * @return the item status in the queue
      * @throws DistributionQueueException if any error occurs while getting the status
      */
     @Nonnull
-    DistributionQueueItemState getState(@Nonnull DistributionQueueItem item)
+    DistributionQueueItemStatus getStatus(@Nonnull DistributionQueueItem item)
             throws DistributionQueueException;
 
     /**

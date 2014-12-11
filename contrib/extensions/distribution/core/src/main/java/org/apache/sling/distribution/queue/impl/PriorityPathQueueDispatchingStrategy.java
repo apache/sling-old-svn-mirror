@@ -26,7 +26,7 @@ import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
-import org.apache.sling.distribution.queue.DistributionQueueItemState;
+import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,13 +76,13 @@ public class PriorityPathQueueDispatchingStrategy implements DistributionQueueDi
         return queue;
     }
 
-    public Iterable<DistributionQueueItemState> add(@Nonnull DistributionPackage distributionPackage, @Nonnull DistributionQueueProvider queueProvider) throws DistributionQueueException {
+    public Iterable<DistributionQueueItemStatus> add(@Nonnull DistributionPackage distributionPackage, @Nonnull DistributionQueueProvider queueProvider) throws DistributionQueueException {
         DistributionQueueItem queueItem = getItem(distributionPackage);
         DistributionQueue queue = getQueue(queueItem, queueProvider);
         if (queue.add(queueItem)) {
-            return Arrays.asList(queue.getState(queueItem));
+            return Arrays.asList(queue.getStatus(queueItem));
         } else {
-            return Arrays.asList(new DistributionQueueItemState(DistributionQueueItemState.ItemState.ERROR, queue.getName()));
+            return Arrays.asList(new DistributionQueueItemStatus(DistributionQueueItemStatus.ItemState.ERROR, queue.getName()));
         }
     }
 

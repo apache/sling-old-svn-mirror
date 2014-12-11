@@ -22,12 +22,11 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
+
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -50,7 +49,7 @@ import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
-import org.apache.sling.distribution.queue.DistributionQueueItemState;
+import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueProcessor;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
@@ -59,7 +58,7 @@ import org.apache.sling.distribution.trigger.DistributionTriggerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.sling.distribution.queue.DistributionQueueItemState.ItemState;
+import static org.apache.sling.distribution.queue.DistributionQueueItemStatus.ItemState;
 
 /**
  * Basic implementation of a {@link org.apache.sling.distribution.agent.DistributionAgent}
@@ -187,8 +186,8 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
         // dispatch the distribution package to the queue distribution handler
         try {
-            Iterable<DistributionQueueItemState> states = queueDistributionStrategy.add(distributionPackage, queueProvider);
-            for (DistributionQueueItemState state : states) {
+            Iterable<DistributionQueueItemStatus> states = queueDistributionStrategy.add(distributionPackage, queueProvider);
+            for (DistributionQueueItemStatus state : states) {
                 DistributionRequestState requestState = getRequestStateFromQueueState(state.getItemState());
                 distributionResponses.add(new DistributionResponse(requestState, state.getItemState().toString()));
             }

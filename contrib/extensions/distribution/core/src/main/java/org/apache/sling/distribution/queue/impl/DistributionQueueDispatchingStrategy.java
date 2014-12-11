@@ -24,7 +24,7 @@ import java.util.List;
 import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.queue.DistributionQueueException;
-import org.apache.sling.distribution.queue.DistributionQueueItemState;
+import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 
 /**
@@ -45,11 +45,11 @@ public interface DistributionQueueDispatchingStrategy {
      *
      * @param distributionPackage a {@link org.apache.sling.distribution.packaging.DistributionPackage} to distribute
      * @param queueProvider       the {@link org.apache.sling.distribution.queue.DistributionQueueProvider} used to provide the queues to be used for the given package
-     * @return an {@link java.lang.Iterable} of {@link org.apache.sling.distribution.queue.DistributionQueueItemState}s representing
+     * @return an {@link java.lang.Iterable} of {@link org.apache.sling.distribution.queue.DistributionQueueItemStatus}s representing
      * the states of the {@link org.apache.sling.distribution.queue.DistributionQueueItem}s added to one or more {@link org.apache.sling.distribution.queue.DistributionQueue}s
      * @throws org.apache.sling.distribution.queue.DistributionQueueException if any internal error happens during distribution
      */
-    Iterable<DistributionQueueItemState> add(@Nonnull DistributionPackage distributionPackage, @Nonnull DistributionQueueProvider queueProvider) throws DistributionQueueException;
+    Iterable<DistributionQueueItemStatus> add(@Nonnull DistributionPackage distributionPackage, @Nonnull DistributionQueueProvider queueProvider) throws DistributionQueueException;
 
 
     /**
