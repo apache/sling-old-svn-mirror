@@ -71,7 +71,7 @@ class MockSession implements Session {
 
     @Override
     public Item getItem(final String absPath) throws RepositoryException {
-        ItemData itemData = this.items.get(absPath);
+        final ItemData itemData = getItemData(absPath);
         if (itemData != null) {
             if (itemData.isNode()) {
                 return new MockNode(itemData, this);
@@ -116,22 +116,12 @@ class MockSession implements Session {
 
     @Override
     public boolean nodeExists(final String absPath) throws RepositoryException {
-        try {
-            getNode(absPath);
-            return true;
-        } catch (PathNotFoundException ex) {
-            return false;
-        }
+        return itemExists(absPath) && getItemData(absPath).isNode();
     }
 
     @Override
     public boolean propertyExists(final String absPath) throws RepositoryException {
-        try {
-            getProperty(absPath);
-            return true;
-        } catch (PathNotFoundException ex) {
-            return false;
-        }
+        return itemExists(absPath) && getItemData(absPath).isProperty();
     }
 
     @Override
@@ -141,7 +131,7 @@ class MockSession implements Session {
 
     @Override
     public Node getRootNode() throws RepositoryException {
-        return (Node)this.items.get("/").getItem(this);
+        return getNode("/");
     }
 
     @Override
@@ -152,24 +142,32 @@ class MockSession implements Session {
     /**
      * Add item
      * @param itemData item data
-     * @throws RepositoryException
      */
-    void addItem(final ItemData itemData) throws RepositoryException {
+    void addItem(final ItemData itemData) {
         this.items.put(itemData.getPath(), itemData);
+    }
+
+    private ItemData getItemData(final String absPath) {
+        final String normalizedPath = ResourceUtil.normalize(absPath);
+        return this.items.get(normalizedPath);
     }
 
     /**
      * Remove item incl. children
-     * @param path Item path
+     * @param absPath Item path
      */
-    void removeItemWithChildren(final String path) {
-        List<String> pathsToRemove = new ArrayList<String>();
+    private void removeItemWithChildren(final String absPath) throws RepositoryException {
+        if (!itemExists(absPath)) {
+            return;
+        }
 
-        // build regex pattern for node and all its children
-        Pattern pattern = Pattern.compile("^" + Pattern.quote(path) + "(/.+)?$");
+        final ItemData parent = getItemData(absPath);
+        final String descendantPrefix = parent.getPath() + "/";
 
+        final List<String> pathsToRemove = new ArrayList<String>();
+        pathsToRemove.add(parent.getPath());
         for (String itemPath : this.items.keySet()) {
-            if (pattern.matcher(itemPath).matches()) {
+            if (itemPath.startsWith(descendantPrefix)) {
                 pathsToRemove.add(itemPath);
             }
         }
@@ -201,7 +199,7 @@ class MockSession implements Session {
 
     @Override
     public boolean itemExists(final String absPath) throws RepositoryException {
-        return this.items.get(absPath) != null;
+        return getItemData(absPath) != null;
     }
 
     @Override

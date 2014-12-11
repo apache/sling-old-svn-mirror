@@ -53,12 +53,15 @@ public class MockNodeTest {
 
     @Test
     public void testGetNodes() throws RepositoryException {
+        final Node node111 = this.node11.addNode("node111");
+
         NodeIterator nodes = this.node1.getNodes();
         assertEquals(1, nodes.getSize());
         assertEquals(this.node11, nodes.nextNode());
 
         assertTrue(this.node1.hasNodes());
-        assertFalse(this.node11.hasNodes());
+        assertTrue(this.node11.hasNodes());
+        assertFalse(node111.hasNodes());
 
         nodes = this.node1.getNodes("^node.*$");
         assertEquals(1, nodes.getSize());
