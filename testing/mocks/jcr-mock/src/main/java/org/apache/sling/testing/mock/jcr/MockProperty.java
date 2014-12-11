@@ -51,7 +51,7 @@ class MockProperty extends AbstractItem implements Property {
         }
     }
 
-    private Value internalGetValue() throws ValueFormatException {
+    private Value internalGetValue() throws RepositoryException {
         if (this.itemData.getValues().length > 1) {
             throw new ValueFormatException(this
                     + " is a multi-valued property, so it's values can only be retrieved as an array");
@@ -61,12 +61,12 @@ class MockProperty extends AbstractItem implements Property {
     }
 
     @Override
-    public Value getValue() throws ValueFormatException {
+    public Value getValue() throws RepositoryException {
         return internalGetValue();
     }
 
     @Override
-    public Value[] getValues() {
+    public Value[] getValues() throws RepositoryException {
         Value[] valuesCopy = new Value[this.itemData.getValues().length];
         for (int i = 0; i < this.itemData.getValues().length; i++) {
             valuesCopy[i] = this.itemData.getValues()[i];
@@ -75,13 +75,13 @@ class MockProperty extends AbstractItem implements Property {
     }
 
     @Override
-    public void setValue(final Value newValue) {
+    public void setValue(final Value newValue) throws RepositoryException {
         this.itemData.setValues(new Value[] { newValue });
         this.itemData.setMultiple(false);
     }
 
     @Override
-    public void setValue(final Value[] newValues) {
+    public void setValue(final Value[] newValues) throws RepositoryException {
         Value[] values = new Value[newValues.length];
         for (int i = 0; i < newValues.length; i++) {
             values[i] = newValues[i];
@@ -220,12 +220,12 @@ class MockProperty extends AbstractItem implements Property {
     }
 
     @Override
-    public boolean isMultiple() {
+    public boolean isMultiple() throws RepositoryException {
         return this.itemData.isMultiple();
     }
 
     @Override
-    public PropertyDefinition getDefinition() {
+    public PropertyDefinition getDefinition() throws RepositoryException {
         return new MockPropertyDefinition();
     }
 
@@ -244,12 +244,12 @@ class MockProperty extends AbstractItem implements Property {
     
     // --- unsupported operations ---
     @Override
-    public Node getNode() {
+    public Node getNode() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Property getProperty() {
+    public Property getProperty() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
@@ -257,7 +257,7 @@ class MockProperty extends AbstractItem implements Property {
 
         @Override
         public boolean isMultiple() {
-            return MockProperty.this.isMultiple();
+            return MockProperty.this.itemData.isMultiple();
         }
 
         // --- unsupported operations ---

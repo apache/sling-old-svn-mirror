@@ -77,7 +77,7 @@ class MockNode extends AbstractItem implements Node {
     public NodeIterator getNodes() throws RepositoryException {
         RangeIterator items = getMockedSession().listChildren(getPath(), new ItemFilter() {
             @Override
-            public boolean accept(final ItemData item) {
+            public boolean accept(final ItemData item) throws RepositoryException {
                 return item.isNode();
             }
         });
@@ -100,7 +100,7 @@ class MockNode extends AbstractItem implements Node {
     public PropertyIterator getProperties() throws RepositoryException {
         RangeIterator items = getMockedSession().listChildren(getPath(), new ItemFilter() {
             @Override
-            public boolean accept(final ItemData item) {
+            public boolean accept(final ItemData item) throws RepositoryException {
                 return item.isProperty();
             }
         });
@@ -126,12 +126,12 @@ class MockNode extends AbstractItem implements Node {
     }
 
     @Override
-    public String getIdentifier() {
+    public String getIdentifier() throws RepositoryException {
         return this.itemData.getUuid();
     }
 
     @Override
-    public String getUUID() {
+    public String getUUID() throws RepositoryException {
         return getIdentifier();
     }
 
@@ -277,7 +277,7 @@ class MockNode extends AbstractItem implements Node {
     }
 
     @Override
-    public NodeType getPrimaryNodeType() {
+    public NodeType getPrimaryNodeType() throws RepositoryException {
         return this.itemData.getNodeType();
     }
 
@@ -308,212 +308,212 @@ class MockNode extends AbstractItem implements Node {
 
     // --- unsupported operations ---
     @Override
-    public Property setProperty(final String name, final Value value, final int type) {
+    public Property setProperty(final String name, final Value value, final int type) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Property setProperty(final String name, final Value[] values, final int type) {
+    public Property setProperty(final String name, final Value[] values, final int type) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Property setProperty(final String name, final String[] values, final int type) {
+    public Property setProperty(final String name, final String[] values, final int type) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Property setProperty(final String name, final String value, final int type) {
+    public Property setProperty(final String name, final String value, final int type) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void addMixin(final String pMixinName) {
+    public void addMixin(final String pMixinName) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean canAddMixin(final String pMixinName) {
+    public boolean canAddMixin(final String pMixinName) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void cancelMerge(final Version pVersion) {
+    public void cancelMerge(final Version pVersion) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Version checkin() {
+    public Version checkin() throws RepositoryException  {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void checkout() {
+    public void checkout() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void doneMerge(final Version pVersion) {
+    public void doneMerge(final Version pVersion) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Version getBaseVersion() {
+    public Version getBaseVersion() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public String getCorrespondingNodePath(final String workspaceName) {
+    public String getCorrespondingNodePath(final String workspaceName) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public NodeDefinition getDefinition() {
+    public NodeDefinition getDefinition() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public int getIndex() {
+    public int getIndex() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Lock getLock() {
+    public Lock getLock() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public NodeType[] getMixinNodeTypes() {
+    public NodeType[] getMixinNodeTypes() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public PropertyIterator getReferences() {
+    public PropertyIterator getReferences() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public VersionHistory getVersionHistory() {
+    public VersionHistory getVersionHistory() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean holdsLock() {
+    public boolean holdsLock() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean isCheckedOut() {
+    public boolean isCheckedOut() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean isLocked() {
+    public boolean isLocked() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Lock lock(final boolean isDeep, final boolean isSessionScoped) {
+    public Lock lock(final boolean isDeep, final boolean isSessionScoped) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public NodeIterator merge(final String srcWorkspace, final boolean bestEffort) {
+    public NodeIterator merge(final String srcWorkspace, final boolean bestEffort) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void orderBefore(final String srcChildRelPath, final String destChildRelPath) {
+    public void orderBefore(final String srcChildRelPath, final String destChildRelPath) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void removeMixin(final String mixinName) {
+    public void removeMixin(final String mixinName) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void restore(final String versionName, final boolean removeExisting) {
+    public void restore(final String versionName, final boolean removeExisting) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void restore(final Version version, final boolean removeExisting) {
+    public void restore(final Version version, final boolean removeExisting) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void restore(final Version version, final String relPath, final boolean removeExisting) {
+    public void restore(final Version version, final String relPath, final boolean removeExisting) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void restoreByLabel(final String versionLabel, final boolean removeExisting) {
+    public void restoreByLabel(final String versionLabel, final boolean removeExisting) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void unlock() {
+    public void unlock() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void update(final String srcWorkspaceName) {
+    public void update(final String srcWorkspaceName) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void followLifecycleTransition(final String transition) {
+    public void followLifecycleTransition(final String transition) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public String[] getAllowedLifecycleTransistions() {
+    public String[] getAllowedLifecycleTransistions() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public NodeIterator getNodes(final String[] nameGlobs) {
+    public NodeIterator getNodes(final String[] nameGlobs) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public PropertyIterator getProperties(final String[] nameGlobs) {
+    public PropertyIterator getProperties(final String[] nameGlobs) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public PropertyIterator getReferences(final String name) {
+    public PropertyIterator getReferences(final String name) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public NodeIterator getSharedSet() {
+    public NodeIterator getSharedSet() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public PropertyIterator getWeakReferences() {
+    public PropertyIterator getWeakReferences() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public PropertyIterator getWeakReferences(final String name) {
+    public PropertyIterator getWeakReferences(final String name) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void removeShare() {
+    public void removeShare() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void removeSharedSet() {
+    public void removeSharedSet() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void setPrimaryType(final String pNodeTypeName) {
+    public void setPrimaryType(final String pNodeTypeName) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 

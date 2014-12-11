@@ -21,6 +21,7 @@ package org.apache.sling.testing.mock.jcr;
 import java.io.InputStream;
 
 import javax.jcr.NamespaceRegistry;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.lock.LockManager;
@@ -63,89 +64,90 @@ class MockWorkspace implements Workspace {
     }
 
     @Override
-    public NamespaceRegistry getNamespaceRegistry() {
+    public NamespaceRegistry getNamespaceRegistry() throws RepositoryException {
         return this.namespaceRegistry;
     }
 
     @Override
-    public ObservationManager getObservationManager() {
+    public ObservationManager getObservationManager() throws RepositoryException {
         return this.observationManager;
     }
 
     @Override
-    public NodeTypeManager getNodeTypeManager() {
+    public NodeTypeManager getNodeTypeManager() throws RepositoryException {
         return this.nodeTypeManager;
     }
 
     @Override
-    public QueryManager getQueryManager() {
+    public QueryManager getQueryManager() throws RepositoryException {
         return this.queryManager;
     }
     
     // --- unsupported operations ---
     @Override
-    public void copy(final String srcAbsPath, final String destAbsPath) {
+    public void copy(final String srcAbsPath, final String destAbsPath) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void copy(final String srcWorkspace, final String srcAbsPath, final String destAbsPath) {
+    public void copy(final String srcWorkspace, final String srcAbsPath, final String destAbsPath)
+            throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public void clone(final String srcWorkspace, final String srcAbsPath, final String destAbsPath,
-            final boolean removeExisting) {
+            final boolean removeExisting) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void move(final String srcAbsPath, final String destAbsPath) {
+    public void move(final String srcAbsPath, final String destAbsPath) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void restore(final Version[] versions, final boolean removeExisting) {
+    public void restore(final Version[] versions, final boolean removeExisting) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public LockManager getLockManager() {
+    public LockManager getLockManager() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public VersionManager getVersionManager() {
+    public VersionManager getVersionManager() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public String[] getAccessibleWorkspaceNames() {
+    public String[] getAccessibleWorkspaceNames() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public ContentHandler getImportContentHandler(final String parentAbsPath, final int uuidBehavior) {
+    public ContentHandler getImportContentHandler(final String parentAbsPath, final int uuidBehavior) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void importXML(final String parentAbsPath, final InputStream in, final int uuidBehavior) {
+    public void importXML(final String parentAbsPath, final InputStream in, final int uuidBehavior) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void createWorkspace(final String name) {
+    public void createWorkspace(final String name) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void createWorkspace(final String name, final String srcWorkspace) {
+    public void createWorkspace(final String name, final String srcWorkspace) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void deleteWorkspace(final String name) {
+    public void deleteWorkspace(final String name) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
