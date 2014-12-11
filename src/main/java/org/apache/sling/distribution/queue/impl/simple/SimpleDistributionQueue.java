@@ -29,8 +29,8 @@ import java.util.concurrent.TimeUnit;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemSelector;
-import org.apache.sling.distribution.queue.DistributionQueueItemState;
-import org.apache.sling.distribution.queue.DistributionQueueItemState.ItemState;
+import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
+import org.apache.sling.distribution.queue.DistributionQueueItemStatus.ItemState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,13 +48,13 @@ public class SimpleDistributionQueue implements DistributionQueue {
 
     private final BlockingQueue<DistributionQueueItem> queue;
 
-    private final Map<DistributionQueueItem, DistributionQueueItemState> statusMap;
+    private final Map<DistributionQueueItem, DistributionQueueItemStatus> statusMap;
 
     public SimpleDistributionQueue(String agentName, String name) {
         log.info("starting a simple queue for agent {}", agentName);
         this.name = name;
         this.queue = new LinkedBlockingQueue<DistributionQueueItem>();
-        this.statusMap = new WeakHashMap<DistributionQueueItem, DistributionQueueItemState>(10);
+        this.statusMap = new WeakHashMap<DistributionQueueItem, DistributionQueueItemStatus>(10);
     }
 
     @Nonnull
@@ -71,27 +71,27 @@ public class SimpleDistributionQueue implements DistributionQueue {
         } catch (InterruptedException e) {
             log.error("cannot add an item to the queue", e);
         } finally {
-            statusMap.put(item, new DistributionQueueItemState(Calendar.getInstance(), itemState, 0, name));
+            statusMap.put(item, new DistributionQueueItemStatus(Calendar.getInstance(), itemState, 0, name));
         }
         return result;
     }
 
     @Nonnull
-    public DistributionQueueItemState getState(@Nonnull DistributionQueueItem queueItem) {
-        DistributionQueueItemState itemStatus = statusMap.get(queueItem);
+    public DistributionQueueItemStatus getStatus(@Nonnull DistributionQueueItem queueItem) {
+        DistributionQueueItemStatus itemStatus = statusMap.get(queueItem);
 
         if (queue.contains(queueItem)) {
             return itemStatus;
         } else {
-            return new DistributionQueueItemState(itemStatus.getEntered(), ItemState.SUCCEEDED, itemStatus.getAttempts(), name);
+            return new DistributionQueueItemStatus(itemStatus.getEntered(), ItemState.SUCCEEDED, itemStatus.getAttempts(), name);
         }
     }
 
     public DistributionQueueItem getHead() {
         DistributionQueueItem element = queue.peek();
         if (element != null) {
-            DistributionQueueItemState itemState = statusMap.get(element);
-            statusMap.put(element, new DistributionQueueItemState(itemState.getEntered(),
+            DistributionQueueItemStatus itemState = statusMap.get(element);
+            statusMap.put(element, new DistributionQueueItemStatus(itemState.getEntered(),
                     itemState.getItemState(),
                     itemState.getAttempts() + 1, name));
         }

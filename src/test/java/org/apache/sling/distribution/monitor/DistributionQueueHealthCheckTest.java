@@ -25,7 +25,7 @@ import java.util.List;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
-import org.apache.sling.distribution.queue.DistributionQueueItemState;
+import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.hc.api.Result;
 import org.junit.Test;
 
@@ -77,9 +77,9 @@ public class DistributionQueueHealthCheckTest {
         distributionQueueHealthCheck.activate(Collections.<String, Object>emptyMap());
         DistributionQueue queue = mock(DistributionQueue.class);
         DistributionQueueItem item = mock(DistributionQueueItem.class);
-        DistributionQueueItemState status = mock(DistributionQueueItemState.class);
+        DistributionQueueItemStatus status = mock(DistributionQueueItemStatus.class);
         when(status.getAttempts()).thenReturn(1);
-        when(queue.getState(item)).thenReturn(status);
+        when(queue.getStatus(item)).thenReturn(status);
         when(queue.getHead()).thenReturn(item);
         DistributionAgent distributionAgent = mock(DistributionAgent.class);
 
@@ -102,9 +102,9 @@ public class DistributionQueueHealthCheckTest {
         distributionQueueHealthCheck.activate(Collections.<String, Object>emptyMap());
         DistributionQueue queue = mock(DistributionQueue.class);
         DistributionQueueItem item = mock(DistributionQueueItem.class);
-        DistributionQueueItemState status = mock(DistributionQueueItemState.class);
+        DistributionQueueItemStatus status = mock(DistributionQueueItemStatus.class);
         when(status.getAttempts()).thenReturn(10);
-        when(queue.getState(item)).thenReturn(status);
+        when(queue.getStatus(item)).thenReturn(status);
         when(queue.getHead()).thenReturn(item);
         DistributionAgent distributionAgent = mock(DistributionAgent.class);
 
