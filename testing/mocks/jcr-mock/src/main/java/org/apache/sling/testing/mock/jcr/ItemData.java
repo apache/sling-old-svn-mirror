@@ -21,7 +21,6 @@ package org.apache.sling.testing.mock.jcr;
 import java.util.UUID;
 
 import javax.jcr.Item;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.nodetype.NodeType;

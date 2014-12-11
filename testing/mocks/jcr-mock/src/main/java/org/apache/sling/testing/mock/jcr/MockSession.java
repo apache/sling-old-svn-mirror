@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
 import javax.jcr.Item;
 import javax.jcr.ItemNotFoundException;
@@ -36,14 +35,10 @@ import javax.jcr.RangeIterator;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.retention.RetentionManager;
 import javax.jcr.security.AccessControlManager;
-import javax.jcr.version.VersionException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
