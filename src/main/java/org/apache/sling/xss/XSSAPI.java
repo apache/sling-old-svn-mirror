@@ -17,6 +17,9 @@
 package org.apache.sling.xss;
 
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceResolver;
 
@@ -42,33 +45,36 @@ public interface XSSAPI {
 
     /**
      * Validate a string which should contain an integer, returning a default value if the source is
-     * empty, can't be parsed, or contains XSS risks.
+     * {@code null}, empty, can't be parsed, or contains XSS risks.
      *
      * @param integer      the source integer
-     * @param defaultValue a default value if the source can't be used
+     * @param defaultValue a default value if the source can't be used, is {@code null} or an empty string
      * @return a sanitized integer
      */
-    public Integer getValidInteger(String integer, int defaultValue);
+    @Nullable
+    public Integer getValidInteger(@Nullable String integer, @Nullable int defaultValue);
 
     /**
      * Validate a string which should contain a long, returning a default value if the source is
-     * empty, can't be parsed, or contains XSS risks.
+     * {@code null}, empty, can't be parsed, or contains XSS risks.
      *
      * @param source       the source long
-     * @param defaultValue a default value if the source can't be used
+     * @param defaultValue a default value if the source can't be used, is {@code null} or an empty string
      * @return a sanitized integer
      */
-    public Long getValidLong(String source, long defaultValue);
+    @Nullable
+    public Long getValidLong(@Nullable String source, @Nullable long defaultValue);
 
     /**
      * Validate a string which should contain a dimension, returning a default value if the source is
      * empty, can't be parsed, or contains XSS risks.  Allows integer dimensions and the keyword "auto".
      *
      * @param dimension    the source dimension
-     * @param defaultValue a default value if the source can't be used
+     * @param defaultValue a default value if the source can't be used, is {@code null} or an empty string
      * @return a sanitized dimension
      */
-    public String getValidDimension(String dimension, String defaultValue);
+    @Nullable
+    public String getValidDimension(@Nullable String dimension, @Nullable String defaultValue);
 
     /**
      * Sanitizes a URL for writing as an HTML href or src attribute value.
@@ -76,27 +82,30 @@ public interface XSSAPI {
      * @param url the source URL
      * @return a sanitized URL (possibly empty)
      */
-    public String getValidHref(String url);
+    @Nonnull
+    public String getValidHref(@Nullable String url);
 
     /**
      * Validate a Javascript token.  The value must be either a single identifier, a literal number,
      * or a literal string.
      *
      * @param token        the source token
-     * @param defaultValue a default value to use if the source doesn't meet validity constraints.
+     * @param defaultValue a default value to use if the source is {@code null}, an empty string, or doesn't meet validity constraints.
      * @return a string containing a single identifier, a literal number, or a literal string token
      */
-    public String getValidJSToken(String token, String defaultValue);
+    @Nullable
+    public String getValidJSToken(@Nullable String token, @Nullable String defaultValue);
 
     /**
      * Validate a style/CSS token. Valid CSS tokens are specified at http://www.w3.org/TR/css3-syntax/
      *
      * @param token        the source token
-     * @param defaultValue a default value to use if the source doesn't meet validity constraints.
+     * @param defaultValue a default value to use if the source is {@code null}, an empty string, or doesn't meet validity constraints.
      *
      * @return a string containing sanitized style token
      */
-    public String getValidStyleToken(String token, String defaultValue);
+    @Nullable
+    public String getValidStyleToken(@Nullable String token, @Nullable String defaultValue);
 
     /**
      * Validate a CSS color value. Color values as specified at http://www.w3.org/TR/css3-color/#colorunits
@@ -104,10 +113,11 @@ public interface XSSAPI {
      * vulnerable constructs include url(...), expression(...), and anything with a semicolon.
      *
      * @param color        the color value to be used.
-     * @param defaultColor a default value to use if the input color value doesn't meet validity constraints.
+     * @param defaultColor a default value to use if the input color value is {@code null}, an empty string, doesn't meet validity constraints.
      * @return a string a css color value.
      */
-    public String getValidCSSColor(String color, String defaultColor);
+    @Nullable
+    public String getValidCSSColor(@Nullable String color, @Nullable String defaultColor);
 
     // =============================================================================================
     // ENCODERS
@@ -120,7 +130,8 @@ public interface XSSAPI {
      * @param source the input to encode
      * @return an encoded version of the source
      */
-    public String encodeForHTML(String source);
+    @Nullable
+    public String encodeForHTML(@Nullable String source);
 
     /**
      * Encodes a source string for writing to an HTML attribute value.
@@ -129,7 +140,8 @@ public interface XSSAPI {
      * @param source the input to encode
      * @return an encoded version of the source
      */
-    public String encodeForHTMLAttr(String source);
+    @Nullable
+    public String encodeForHTMLAttr(@Nullable String source);
 
     /**
      * Encodes a source string for XML element content.
@@ -138,7 +150,8 @@ public interface XSSAPI {
      * @param source the input to encode
      * @return an encoded version of the source
      */
-    public String encodeForXML(String source);
+    @Nullable
+    public String encodeForXML(@Nullable String source);
 
     /**
      * Encodes a source string for writing to an XML attribute value.
@@ -146,7 +159,8 @@ public interface XSSAPI {
      * @param source the input to encode
      * @return an encoded version of the source
      */
-    public String encodeForXMLAttr(String source);
+    @Nullable
+    public String encodeForXMLAttr(@Nullable String source);
 
     /**
      * Encodes a source string for writing to JavaScript string content.
@@ -156,17 +170,19 @@ public interface XSSAPI {
      * @param source the input to encode
      * @return an encoded version of the source
      */
-    public String encodeForJSString(String source);
+    @Nullable
+    public String encodeForJSString(@Nullable String source);
 
     /**
-     * Encodes a souce string for writing to CSS string content.
+     * Encodes a source string for writing to CSS string content.
      * DO NOT USE FOR WRITING OUT ARBITRARY CSS TOKENS; YOU MUST USE A VALIDATOR FOR THAT!
      * (Encoding only ensures the source string cannot break out of its context.)
      *
      * @param source the input to encode
      * @return an encoded version of the source
      */
-    public String encodeForCSSString(String source);
+    @Nullable
+    public String encodeForCSSString(@Nullable String source);
 
 
     // =============================================================================================
@@ -178,9 +194,10 @@ public interface XSSAPI {
      * effect for HTML output (see the XSSFilter service for details).
      *
      * @param source a string containing the source HTML
-     * @return a string containing the sanitized HTML
+     * @return a string containing the sanitized HTML which may be an empty string if {@code source} is {@code null} or empty
      */
-    public String filterHTML(String source);
+    @Nonnull
+    public String filterHTML(@Nullable String source);
 
 
     // =============================================================================================

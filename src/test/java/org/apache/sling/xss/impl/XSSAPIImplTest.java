@@ -26,6 +26,8 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.Map;
 
+import junit.framework.TestCase;
+
 import org.apache.sling.xss.XSSAPI;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -87,6 +89,7 @@ public class XSSAPIImplTest {
         String[][] testData = {
                 //         Source                            Expected Result
                 //
+                {null, null},
                 {"simple", "simple"},
 
                 {"<script>", "&lt;script&gt;"},
@@ -100,10 +103,29 @@ public class XSSAPIImplTest {
             String source = aTestData[0];
             String expected = aTestData[1];
 
-            String result = xssAPI.encodeForHTML(source);
-            if (!result.equals(expected)) {
-                fail("HTML Encoding '" + source + "', expecting '" + expected + "', but got '" + result + "'");
-            }
+            TestCase.assertEquals("HTML Encoding '" + source + "'", expected, xssAPI.encodeForHTML(source));
+        }
+    }
+
+    @Test
+    public void TestEncodeForHTMLAttr() {
+        String[][] testData = {
+                //         Source                            Expected Result
+                //
+                {null, null},
+                {"simple", "simple"},
+
+                {"<script>", "&lt;script>"},
+                {"\" <script>alert('pwned');</script>", "&#34; &lt;script>alert(&#39;pwned&#39;);&lt;/script>"},
+                {"günter", "günter"},
+                {"\u30e9\u30c9\u30af\u30ea\u30d5\u3001\u30de\u30e9\u30bd\u30f3\u4e94\u8f2a\u4ee3\u8868\u306b1\u4e07m\u51fa\u5834\u306b\u3082\u542b\u307f", "\u30e9\u30c9\u30af\u30ea\u30d5\u3001\u30de\u30e9\u30bd\u30f3\u4e94\u8f2a\u4ee3\u8868\u306b1\u4e07m\u51fa\u5834\u306b\u3082\u542b\u307f"}
+        };
+
+        for (String[] aTestData : testData) {
+            String source = aTestData[0];
+            String expected = aTestData[1];
+
+            TestCase.assertEquals("HTML Encoding '" + source + "'", expected, xssAPI.encodeForHTMLAttr(source));
         }
     }
 
@@ -112,6 +134,7 @@ public class XSSAPIImplTest {
         String[][] testData = {
                 //         Source                            Expected Result
                 //
+                {null, null},
                 {"simple", "simple"},
 
                 {"<script>", "&lt;script&gt;"},
@@ -124,10 +147,30 @@ public class XSSAPIImplTest {
             String source = aTestData[0];
             String expected = aTestData[1];
 
-            String result = xssAPI.encodeForXML(source);
-            if (!result.equals(expected)) {
-                fail("XML Encoding '" + source + "', expecting '" + expected + "', but got '" + result + "'");
-            }
+            TestCase.assertEquals("XML Encoding '" + source + "'", expected, xssAPI.encodeForXML(source));
+        }
+    }
+
+    @Test
+    public void TestEncodeForXMLAttr() {
+        String[][] testData = {
+                //         Source                            Expected Result
+                //
+                {null, null},
+                {"simple", "simple"},
+
+                {"<script>", "&lt;script>"},
+                {"<b>", "&lt;b>"},
+
+                {"günter", "günter"},
+                {"\"xss:expression(alert('XSS'))", "&#34;xss:expression(alert(&#39;XSS&#39;))"}
+        };
+
+        for (String[] aTestData : testData) {
+            String source = aTestData[0];
+            String expected = aTestData[1];
+
+            TestCase.assertEquals("XML Encoding '" + source + "'", expected, xssAPI.encodeForXMLAttr(source));
         }
     }
 
@@ -135,6 +178,8 @@ public class XSSAPIImplTest {
     public void TestFilterHTML() {
         String[][] testData = {
                 //         Source                            Expected Result
+                {null, ""},
+                {"", ""},
                 {"simple", "simple"},
 
                 {"<script>ugly</script>", ""},
@@ -160,10 +205,7 @@ public class XSSAPIImplTest {
             String source = aTestData[0];
             String expected = aTestData[1];
 
-            String result = xssAPI.filterHTML(source);
-            if (!result.equals(expected)) {
-                fail("Filtering '" + source + "', expecting '" + expected + "', but got '" + result + "'");
-            }
+            TestCase.assertEquals("Filtering '" + source + "'", expected, xssAPI.filterHTML(source));
         }
     }
 
@@ -172,6 +214,8 @@ public class XSSAPIImplTest {
         String[][] testData = {
                 //         Href                                        Expected Result
                 //
+                {null, ""},
+                {"", ""},
                 {"simple", "simple"},
 
                 {"../parent", "../parent"},
@@ -217,10 +261,7 @@ public class XSSAPIImplTest {
             String href = aTestData[0];
             String expected = aTestData[1];
 
-            String result = xssAPI.getValidHref(href);
-            if (!result.equals(expected)) {
-                fail("Requested '" + href + "', expecting '" + expected + "', but got '" + result + "'");
-            }
+            TestCase.assertEquals("Requested '" + href + "'", expected, xssAPI.getValidHref(href));
         }
     }
 
@@ -229,6 +270,7 @@ public class XSSAPIImplTest {
         String[][] testData = {
                 //         Source                                        Expected Result
                 //
+                {null, "123"},
                 {"100", "100"},
                 {"0", "0"},
 
@@ -240,12 +282,32 @@ public class XSSAPIImplTest {
 
         for (String[] aTestData : testData) {
             String source = aTestData[0];
-            int expected = new Integer(aTestData[1]);
+            Integer expected = (aTestData[1] != null) ? new Integer(aTestData[1]) : null;
 
-            int result = xssAPI.getValidInteger(source, 123);
-            if (result != expected) {
-                fail("Validating integer '" + source + "', expecting '" + expected + "', but got '" + result + "'");
-            }
+            TestCase.assertEquals("Validating integer '" + source + "'", expected, xssAPI.getValidInteger(source, 123));
+        }
+    }
+
+    @Test
+    public void TestGetValidLong() {
+        String[][] testData = {
+                //         Source                                        Expected Result
+                //
+                {null, "123"},
+                {"100", "100"},
+                {"0", "0"},
+
+                {"junk", "123"},
+                {"100.5", "123"},
+                {"", "123"},
+                {"null", "123"}
+        };
+
+        for (String[] aTestData : testData) {
+            String source = aTestData[0];
+            Long expected = (aTestData[1] != null) ? new Long(aTestData[1]) : null;
+
+            TestCase.assertEquals("Validating long '" + source + "'", expected, xssAPI.getValidLong(source, 123));
         }
     }
 
@@ -254,6 +316,8 @@ public class XSSAPIImplTest {
         String[][] testData = {
                 //         Source                                        Expected Result
                 //
+                {null, "123"},
+                {"", "123"},
                 {"100", "100"},
                 {"0", "0"},
 
@@ -273,10 +337,7 @@ public class XSSAPIImplTest {
             String source = aTestData[0];
             String expected = aTestData[1];
 
-            String result = xssAPI.getValidDimension(source, "123");
-            if (!result.equals(expected)) {
-                fail("Validating dimension '" + source + "', expecting '" + expected + "', but got '" + result + "'");
-            }
+            TestCase.assertEquals("Validating dimension '" + source + "'", expected, xssAPI.getValidDimension(source, "123"));
         }
     }
 
@@ -285,6 +346,7 @@ public class XSSAPIImplTest {
         String[][] testData = {
                 //         Source                            Expected Result
                 //
+                {null, null},
                 {"simple", "simple"},
 
                 {"break\"out", "break\\x22out"},
@@ -297,10 +359,7 @@ public class XSSAPIImplTest {
             String source = aTestData[0];
             String expected = aTestData[1];
 
-            String result = xssAPI.encodeForJSString(source);
-            if (!result.equals(expected)) {
-                fail("Encoding '" + source + "', expecting '" + expected + "', but got '" + result + "'");
-            }
+            TestCase.assertEquals("Encoding '" + source + "'", expected, xssAPI.encodeForJSString(source));
         }
     }
 
@@ -309,6 +368,8 @@ public class XSSAPIImplTest {
         String[][] testData = {
                 //         Source                            Expected Result
                 //
+                {null, RUBBISH},
+                {"", RUBBISH},
                 {"simple", "simple"},
                 {"clickstreamcloud.thingy", "clickstreamcloud.thingy"},
 
@@ -330,10 +391,7 @@ public class XSSAPIImplTest {
             String source = aTestData[0];
             String expected = aTestData[1];
 
-            String result = xssAPI.getValidJSToken(source, RUBBISH);
-            if (!result.equals(expected)) {
-                fail("Validating Javascript token '" + source + "', expecting '" + expected + "', but got '" + result + "'");
-            }
+            TestCase.assertEquals("Validating Javascript token '" + source + "'", expected, xssAPI.getValidJSToken(source, RUBBISH));
         }
     }
 
@@ -341,6 +399,7 @@ public class XSSAPIImplTest {
     public void TestEncodeForCSSString() {
         String[][] testData = {
                 // Source   Expected result
+                {null, null},
                 {"test"   , "test"},
                 {"\\"     , "\\5c"},
                 {"'"      , "\\27"},
@@ -352,9 +411,7 @@ public class XSSAPIImplTest {
             String expected = aTestData[1];
 
             String result = xssAPI.encodeForCSSString(source);
-            if (!result.equals(expected)) {
-                fail("Encoding '" + source + "', expecting '" + expected + "', but got '" + result + "'");
-            }
+            TestCase.assertEquals("Encoding '" + source + "'", expected, result);
         }
     }
 
@@ -362,6 +419,8 @@ public class XSSAPIImplTest {
     public void TestGetValidStyleToken() {
         String[][] testData = {
                 // Source                           Expected result
+                {null                               , RUBBISH},
+                {""                                 , RUBBISH},
 
                 // CSS close
                 {"}"                                , RUBBISH},
@@ -429,6 +488,9 @@ public class XSSAPIImplTest {
         String[][] testData = {
                 //      Source                          Expected Result
                 //
+                {null, RUBBISH},
+                {"", RUBBISH},
+
                 {"rgb(0,+0,-0)", "rgb(0,+0,-0)"},
                 {"rgba ( 0\f%, 0%,\t0%,\n100%\r)", "rgba ( 0\f%, 0%,\t0%,\n100%\r)",},
 
