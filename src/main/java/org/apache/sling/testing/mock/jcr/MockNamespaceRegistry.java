@@ -38,22 +38,22 @@ class MockNamespaceRegistry implements NamespaceRegistry {
     }
 
     @Override
-    public String getURI(final String prefix) {
+    public String getURI(final String prefix) throws RepositoryException {
         return this.namespacePrefixMapping.get(prefix);
     }
 
     @Override
-    public String getPrefix(final String uri) {
+    public String getPrefix(final String uri) throws RepositoryException {
         return this.namespacePrefixMapping.inverse().get(uri);
     }
 
     @Override
-    public void registerNamespace(final String prefix, final String uri) {
+    public void registerNamespace(final String prefix, final String uri) throws RepositoryException {
         this.namespacePrefixMapping.put(prefix, uri);
     }
 
     @Override
-    public void unregisterNamespace(final String prefix) {
+    public void unregisterNamespace(final String prefix) throws RepositoryException {
         this.namespacePrefixMapping.remove(prefix);
     }
 

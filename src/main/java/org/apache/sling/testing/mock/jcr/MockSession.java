@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
 import javax.jcr.Item;
 import javax.jcr.ItemNotFoundException;
@@ -35,10 +36,14 @@ import javax.jcr.RangeIterator;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.retention.RetentionManager;
 import javax.jcr.security.AccessControlManager;
+import javax.jcr.version.VersionException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
@@ -65,7 +70,7 @@ class MockSession implements Session {
     }
 
     @Override
-    public ValueFactory getValueFactory() {
+    public ValueFactory getValueFactory() throws RepositoryException {
         return ValueFactoryImpl.getInstance();
     }
 
@@ -135,12 +140,12 @@ class MockSession implements Session {
     }
 
     @Override
-    public void removeItem(final String absPath) {
+    public void removeItem(final String absPath) throws RepositoryException {
         removeItemWithChildren(absPath);
     }
 
     @Override
-    public Node getRootNode() {
+    public Node getRootNode() throws RepositoryException {
         return (Node)this.items.get("/").getItem(this);
     }
 
@@ -151,7 +156,7 @@ class MockSession implements Session {
 
     /**
      * Add item
-     * @param item item
+     * @param itemData item data
      * @throws RepositoryException
      */
     void addItem(final ItemData itemData) throws RepositoryException {
@@ -195,12 +200,12 @@ class MockSession implements Session {
     }
 
     @Override
-    public boolean hasPendingChanges() {
+    public boolean hasPendingChanges() throws RepositoryException {
         return false;
     }
 
     @Override
-    public boolean itemExists(final String absPath) {
+    public boolean itemExists(final String absPath) throws RepositoryException {
         return this.items.get(absPath) != null;
     }
 
@@ -240,7 +245,7 @@ class MockSession implements Session {
     }
 
     @Override
-    public void save() {
+    public void save() throws RepositoryException {
         // do nothing
     }
 
@@ -250,7 +255,7 @@ class MockSession implements Session {
     }
 
     @Override
-    public void checkPermission(final String absPath, final String actions) {
+    public void checkPermission(final String absPath, final String actions) throws RepositoryException {
         // always grant permission
     }
 
@@ -262,25 +267,25 @@ class MockSession implements Session {
 
     @Override
     public void exportDocumentView(final String absPath, final ContentHandler contentHandler, final boolean skipBinary,
-            final boolean noRecurse) {
+            final boolean noRecurse) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public void exportDocumentView(final String absPath, final OutputStream out, final boolean skipBinary,
-            final boolean noRecurse) {
+            final boolean noRecurse) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public void exportSystemView(final String absPath, final ContentHandler contentHandler, final boolean skipBinary,
-            final boolean noRecurse) {
+            final boolean noRecurse) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public void exportSystemView(final String absPath, final OutputStream out, final boolean skipBinary,
-            final boolean noRecurse) {
+            final boolean noRecurse) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
@@ -295,7 +300,7 @@ class MockSession implements Session {
     }
 
     @Override
-    public ContentHandler getImportContentHandler(final String parentAbsPath, final int uuidBehavior) {
+    public ContentHandler getImportContentHandler(final String parentAbsPath, final int uuidBehavior) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
@@ -305,12 +310,12 @@ class MockSession implements Session {
     }
 
     @Override
-    public Session impersonate(final Credentials credentials) {
+    public Session impersonate(final Credentials credentials) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void importXML(final String parentAbsPath, final InputStream in, final int uuidBehavior) {
+    public void importXML(final String parentAbsPath, final InputStream in, final int uuidBehavior) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
@@ -325,7 +330,7 @@ class MockSession implements Session {
     }
 
     @Override
-    public void move(final String srcAbsPath, final String destAbsPath) {
+    public void move(final String srcAbsPath, final String destAbsPath) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
@@ -335,22 +340,22 @@ class MockSession implements Session {
     }
 
     @Override
-    public AccessControlManager getAccessControlManager() {
+    public AccessControlManager getAccessControlManager() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public RetentionManager getRetentionManager() {
+    public RetentionManager getRetentionManager() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean hasCapability(final String methodName, final Object target, final Object[] arguments) {
+    public boolean hasCapability(final String methodName, final Object target, final Object[] arguments) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean hasPermission(final String absPath, final String actions) {
+    public boolean hasPermission(final String absPath, final String actions) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 

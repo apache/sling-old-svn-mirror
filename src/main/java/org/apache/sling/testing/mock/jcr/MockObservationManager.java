@@ -31,23 +31,24 @@ class MockObservationManager implements ObservationManager {
 
     @Override
     public void addEventListener(final EventListener listener, final int eventTypes, final String absPath,
-            final boolean isDeep, final String[] uuid, final String[] nodeTypeName, final boolean noLocal) {
+            final boolean isDeep, final String[] uuid, final String[] nodeTypeName, final boolean noLocal)
+            throws RepositoryException {
         // do nothing
     }
 
     @Override
-    public void removeEventListener(final EventListener listener) {
+    public void removeEventListener(final EventListener listener) throws RepositoryException {
         // do nothing
     }
 
     // --- unsupported operations ---
     @Override
-    public EventListenerIterator getRegisteredEventListeners() {
+    public EventListenerIterator getRegisteredEventListeners() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void setUserData(final String userData) {
+    public void setUserData(final String userData) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
@@ -58,7 +59,7 @@ class MockObservationManager implements ObservationManager {
 
     @Override
     public EventJournal getEventJournal(final int eventTypes, final String absPath, final boolean isDeep,
-            final String[] uuid, final String[] nodeTypeName) {
+            final String[] uuid, final String[] nodeTypeName) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
