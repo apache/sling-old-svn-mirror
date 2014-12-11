@@ -24,7 +24,7 @@ import java.util.Calendar;
  * the current status of a certain item in a {@link DistributionQueue}
  */
 
-public class DistributionQueueItemState {
+public class DistributionQueueItemStatus {
 
     private final int attempts;
 
@@ -34,14 +34,14 @@ public class DistributionQueueItemState {
 
     private final String queueName;
 
-    public DistributionQueueItemState(Calendar entered, ItemState state, int attempts, String queueName) {
+    public DistributionQueueItemStatus(Calendar entered, ItemState state, int attempts, String queueName) {
         this.entered = entered;
         this.state = state;
         this.attempts = attempts;
         this.queueName = queueName;
     }
 
-    public DistributionQueueItemState(ItemState state, String queueName) {
+    public DistributionQueueItemStatus(ItemState state, String queueName) {
         this(Calendar.getInstance(), state, 0, queueName);
     }
 
