@@ -38,6 +38,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableSet;
+import org.mockito.Mockito;
 
 public class MockSessionTest {
 
@@ -231,4 +232,20 @@ public class MockSessionTest {
         this.session.checkPermission("/any/path", "anyActions");
     }
 
+    @Test
+    public void testPathsAreNormalized() throws RepositoryException {
+        // 3.4.6 Passing Paths
+        // When a JCR path is passed as an argument to a JCR method it may be normalized
+        // or non-normalized and in standard or non-standard form.
+
+        this.session.getRootNode().addNode("foo");
+        assertTrue("Requesting node /foo/ should succeed", this.session.nodeExists("/foo/"));
+        assertTrue("Requesting item /foo/ should succeed", this.session.itemExists("/foo/"));
+
+        this.session.getRootNode().addNode("bar/");
+        assertTrue("Creating /bar/ should succeed", this.session.nodeExists("/bar"));
+
+        this.session.removeItem("/foo/");
+        assertFalse("Removing /foo/ should succeed", this.session.nodeExists("/foo"));
+    }
 }
