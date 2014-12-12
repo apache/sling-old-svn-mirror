@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
@@ -48,7 +49,7 @@ class MockQueryManager implements QueryManager {
     );
     
     @Override
-    public Query createQuery(String statement, String language) throws InvalidQueryException {
+    public Query createQuery(String statement, String language) throws RepositoryException {
         if (!SUPPORTED_QUERY_LANGUAGES.contains(StringUtils.defaultString(language))) {
             throw new InvalidQueryException("Unsupported query language: " + language);
         }
@@ -56,7 +57,7 @@ class MockQueryManager implements QueryManager {
     }
 
     @Override
-    public String[] getSupportedQueryLanguages() {
+    public String[] getSupportedQueryLanguages() throws RepositoryException {
         return SUPPORTED_QUERY_LANGUAGES.toArray(new String[SUPPORTED_QUERY_LANGUAGES.size()]);
     }
     
@@ -83,7 +84,7 @@ class MockQueryManager implements QueryManager {
     }
 
     @Override
-    public Query getQuery(Node node) {
+    public Query getQuery(Node node) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 

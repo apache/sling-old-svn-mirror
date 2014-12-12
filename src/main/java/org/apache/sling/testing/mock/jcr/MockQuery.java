@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
@@ -52,7 +53,7 @@ public final class MockQuery implements Query {
     }
 
     @Override
-    public QueryResult execute() {
+    public QueryResult execute() throws RepositoryException {
         return queryManager.executeQuery(this);
     }
 
@@ -61,7 +62,7 @@ public final class MockQuery implements Query {
         this.limit = limit;
     }
 
-    public long getLimit() {
+    public long getLimit() throws RepositoryException {
         return limit;
     }
 
@@ -70,7 +71,7 @@ public final class MockQuery implements Query {
         this.offset = offset;
     }
 
-    public long getOffset() {
+    public long getOffset() throws RepositoryException {
         return offset;
     }
 
@@ -85,17 +86,17 @@ public final class MockQuery implements Query {
     }
 
     @Override
-    public void bindValue(String varName, Value value) {
+    public void bindValue(String varName, Value value) throws RepositoryException {
         variables.put(varName,  value);
     }
 
     @Override
-    public String[] getBindVariableNames() {
+    public String[] getBindVariableNames() throws RepositoryException {
         Set<String> variableNames = variables.keySet();
         return variableNames.toArray(new String[variableNames.size()]);
     }
     
-    public Map<String, Value> getBindVariables() {
+    public Map<String, Value> getBindVariables() throws RepositoryException {
         return ImmutableMap.copyOf(variables);
     }
     
@@ -103,12 +104,12 @@ public final class MockQuery implements Query {
     // --- unsupported operations ---
 
     @Override
-    public String getStoredQueryPath() {
+    public String getStoredQueryPath() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Node storeAsNode(String absPath) {
+    public Node storeAsNode(String absPath) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
