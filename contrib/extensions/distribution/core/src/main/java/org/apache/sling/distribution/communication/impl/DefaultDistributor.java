@@ -51,18 +51,19 @@ public class DefaultDistributor implements Distributor {
     @Reference
     DefaultDistributionComponentProvider componentProvider;
 
+    @Nonnull
     public DistributionResponse distribute(@Nonnull String agentName, @Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) {
        DistributionAgent agent = componentProvider.getComponent(DistributionAgent.class, agentName);
 
-        if (agentName == null) {
-            return new SimpleDistributionResponse(DistributionRequestState.FAILED, "Agent is not available");
+        if (agent == null) {
+            return new SimpleDistributionResponse(DistributionRequestState.DROPPED, "Agent is not available");
         }
 
         try {
             return agent.execute(resourceResolver, distributionRequest);
         } catch (DistributionAgentException e) {
             log.error("cannot execute", e);
-            return new SimpleDistributionResponse(DistributionRequestState.FAILED, "Cannot execute request");
+            return new SimpleDistributionResponse(DistributionRequestState.DROPPED, "Cannot execute request");
         }
     }
 }

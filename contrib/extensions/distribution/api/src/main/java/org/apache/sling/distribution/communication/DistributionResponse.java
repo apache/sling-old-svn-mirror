@@ -53,7 +53,8 @@ public interface DistributionResponse {
 
     /**
      * returns a verbose message of the response
-     * @return
+     * @return a message associated with this response holding information about
+     * e.g. why distribution execution failed, etc.
      */
     @CheckForNull
     String getMessage();

@@ -43,13 +43,4 @@ public interface DistributionTransportSecret {
     @CheckForNull
     Map<String, String> asCredentialsMap();
 
-    /**
-     * Get the secrete as a raw {@link java.io.InputStream binary}.
-     * Note that each call to this method will create a new stream, so the caller will be responsible of closing it.
-     *
-     * @return the secret as an {@link java.io.InputStream}, or {@code null} if such a secret cannot represented as a stream.
-     */
-    @CheckForNull
-    InputStream asStream();
-
 }

@@ -58,6 +58,7 @@ public final class SimpleDistributionRequest implements DistributionRequest {
      *
      * @return the type of the request as a {@link DistributionRequestType}
      */
+    @Nonnull
     public DistributionRequestType getRequestType() {
         return requestType;
     }
@@ -76,7 +77,7 @@ public final class SimpleDistributionRequest implements DistributionRequest {
      * Returns whether the a path is covering the entire subtree (deep) or just the specified nodes (shallow)
      * @return <code>true</code> if the path is deep
      */
-    public boolean isDeep(String path) {
+    public boolean isDeep(@Nonnull String path) {
         return deep;
     }
 

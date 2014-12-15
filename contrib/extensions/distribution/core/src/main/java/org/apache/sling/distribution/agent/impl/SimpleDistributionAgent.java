@@ -196,7 +196,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
             distributionEventFactory.generateAgentPackageEvent(DistributionEventType.AGENT_PACKAGE_QUEUED, name, distributionPackage.getInfo());
         } catch (Exception e) {
             log.error("an error happened during dispatching items to the queue(s)", e);
-            distributionResponses.add(new SimpleDistributionResponse(DistributionRequestState.FAILED, e.toString()));
+            distributionResponses.add(new SimpleDistributionResponse(DistributionRequestState.DROPPED, e.toString()));
         }
 
         return distributionResponses;
@@ -213,22 +213,22 @@ public class SimpleDistributionAgent implements DistributionAgent {
                 requestState = DistributionRequestState.ACCEPTED;
                 break;
             case SUCCEEDED:
-                requestState = DistributionRequestState.SUCCEEDED;
+                requestState = DistributionRequestState.DISTRIBUTED;
                 break;
             case STOPPED:
-                requestState = DistributionRequestState.FAILED;
+                requestState = DistributionRequestState.DROPPED;
                 break;
             case GIVEN_UP:
-                requestState = DistributionRequestState.FAILED;
+                requestState = DistributionRequestState.DROPPED;
                 break;
             case ERROR:
-                requestState = DistributionRequestState.FAILED;
+                requestState = DistributionRequestState.DROPPED;
                 break;
             case DROPPED:
-                requestState = DistributionRequestState.FAILED;
+                requestState = DistributionRequestState.DROPPED;
                 break;
             default:
-                requestState = DistributionRequestState.FAILED;
+                requestState = DistributionRequestState.DROPPED;
                 break;
         }
         return requestState;
@@ -439,12 +439,12 @@ public class SimpleDistributionAgent implements DistributionAgent {
         private String message;
 
         public CompositeDistributionResponse(List<DistributionResponse> distributionResponses) {
-            super(DistributionRequestState.FAILED, null);
+            super(DistributionRequestState.DROPPED, null);
             if (distributionResponses.isEmpty()) {
-                state = DistributionRequestState.FAILED;
+                state = DistributionRequestState.DROPPED;
                 message = "empty response";
             } else {
-                state = DistributionRequestState.SUCCEEDED;
+                state = DistributionRequestState.DISTRIBUTED;
                 StringBuilder messageBuilder = new StringBuilder("[");
                 for (DistributionResponse response : distributionResponses) {
                     state = aggregatedState(state, response.getState());
@@ -458,9 +458,10 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
         @Override
         public boolean isSuccessful() {
-            return !DistributionRequestState.FAILED.equals(state);
+            return !DistributionRequestState.DROPPED.equals(state);
         }
 
+        @Nonnull
         @Override
         public DistributionRequestState getState() {
             return state;
@@ -476,21 +477,21 @@ public class SimpleDistributionAgent implements DistributionAgent {
     private DistributionRequestState aggregatedState(DistributionRequestState first, DistributionRequestState second) {
         DistributionRequestState aggregatedState;
         switch (second) {
-            case SUCCEEDED:
+            case DISTRIBUTED:
                 aggregatedState = first;
                 break;
-            case FAILED:
-                aggregatedState = DistributionRequestState.FAILED;
+            case DROPPED:
+                aggregatedState = DistributionRequestState.DISTRIBUTED;
                 break;
             case ACCEPTED:
-                if (first.equals(DistributionRequestState.SUCCEEDED)) {
+                if (first.equals(DistributionRequestState.DISTRIBUTED)) {
                     aggregatedState = DistributionRequestState.ACCEPTED;
                 } else {
                     aggregatedState = first;
                 }
                 break;
             default:
-                aggregatedState = DistributionRequestState.FAILED;
+                aggregatedState = DistributionRequestState.DROPPED;
         }
         return aggregatedState;
     }

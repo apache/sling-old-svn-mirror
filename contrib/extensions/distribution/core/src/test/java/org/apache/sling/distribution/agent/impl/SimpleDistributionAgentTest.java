@@ -23,6 +23,7 @@ import java.util.Arrays;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.distribution.communication.DistributionRequest;
+import org.apache.sling.distribution.communication.DistributionRequestState;
 import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.communication.DistributionResponse;
 import org.apache.sling.distribution.communication.SimpleDistributionRequest;
@@ -80,6 +81,7 @@ public class SimpleDistributionAgentTest {
         DistributionResponse response = agent.execute(resourceResolver, request);
         assertNotNull(response);
         assertEquals("ERROR", response.getMessage());
+        assertEquals(DistributionRequestState.DROPPED, response.getState());
     }
 
     @Test
@@ -112,6 +114,7 @@ public class SimpleDistributionAgentTest {
         DistributionResponse response = agent.execute(resourceResolver, request);
         assertNotNull(response);
         assertEquals("QUEUED", response.getMessage());
+        assertEquals(DistributionRequestState.ACCEPTED, response.getState());
     }
 
     @Test

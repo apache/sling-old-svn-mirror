@@ -73,10 +73,6 @@ public class UserCredentialsDistributionTransportSecretProvider implements
                 return null;
             }
 
-            public InputStream asStream() {
-                return null;
-            }
-
             public Map<String, String> asCredentialsMap() {
                 Map<String, String> map = new HashMap<String, String>();
                 map.put(USERNAME, username);
