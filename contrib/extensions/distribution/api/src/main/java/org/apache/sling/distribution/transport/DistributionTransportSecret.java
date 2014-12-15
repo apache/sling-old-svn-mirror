@@ -28,8 +28,7 @@ import aQute.bnd.annotation.ConsumerType;
  * The secret to be transported for authenticating transport layer connecting two instances.
  * <p/>
  * Secrets can take different forms, like e.g. username and password, tokens, public keys, etc. and are meant to be used
- * by transport implementations lying under {@link org.apache.sling.distribution.packaging.DistributionPackageImporter importers}
- * and / or {@link org.apache.sling.distribution.packaging.DistributionPackageExporter exporters}.
+ * by transport implementations used by distribution agents.
  */
 @ConsumerType
 public interface DistributionTransportSecret {

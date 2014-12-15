@@ -69,13 +69,8 @@
                     <instructions>
                         <Bundle-SymbolicName>org.apache.sling.distribution.api</Bundle-SymbolicName>
                         <Export-Package>
-                            org.apache.sling.distribution.component,
-                            org.apache.sling.distribution.agent,
                             org.apache.sling.distribution.communication,
                             org.apache.sling.distribution.event,
-                            org.apache.sling.distribution.queue,
-                            org.apache.sling.distribution.trigger,
-                            org.apache.sling.distribution.packaging,
                             org.apache.sling.distribution.transport
                         </Export-Package>
                     </instructions>

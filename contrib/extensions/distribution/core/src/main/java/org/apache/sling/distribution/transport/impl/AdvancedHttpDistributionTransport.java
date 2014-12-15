@@ -35,13 +35,13 @@ import org.apache.http.entity.ContentType;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.transport.DistributionTransportException;
+import org.apache.sling.distribution.transport.core.DistributionTransportException;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Advanced HTTP {@link org.apache.sling.distribution.transport.DistributionTransport} supporting custom HTTP headers
+ * Advanced HTTP {@link org.apache.sling.distribution.transport.core.DistributionTransport} supporting custom HTTP headers
  * and body.
  */
 public class AdvancedHttpDistributionTransport extends SimpleHttpDistributionTransport {

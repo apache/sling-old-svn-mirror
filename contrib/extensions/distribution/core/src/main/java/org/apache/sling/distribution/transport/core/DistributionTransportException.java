@@ -16,9 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.sling.distribution.transport.core;
 
-@Version("0.1.0")
-package org.apache.sling.distribution.trigger;
+/**
+ * Represents an error happened while a {@link DistributionTransportHandler} is delivering a distribution item to
+ * and endpoint.
+ */
+@SuppressWarnings("serial")
+public class DistributionTransportException extends Exception {
 
-import aQute.bnd.annotation.Version;
+    public DistributionTransportException(Exception e) {
+        super(e);
+    }
 
+    public DistributionTransportException(String string) {
+        super(string);
+    }
+}

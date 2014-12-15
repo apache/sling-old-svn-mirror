@@ -25,8 +25,7 @@ import aQute.bnd.annotation.ConsumerType;
 /**
  * A provider for {@link org.apache.sling.distribution.transport.DistributionTransportSecret}s
  * <p/>
- * Such providers can be used by {@link org.apache.sling.distribution.packaging.DistributionPackageExporter exporters} or
- * {@link org.apache.sling.distribution.packaging.DistributionPackageImporter importers} implementations in order to plug
+ * Such providers can be used by distribution agents implementations in order to plug
  * in different types of {@link org.apache.sling.distribution.transport.DistributionTransportSecret secrets} to be used
  * to authenticate the underlying Sling instances.
  */

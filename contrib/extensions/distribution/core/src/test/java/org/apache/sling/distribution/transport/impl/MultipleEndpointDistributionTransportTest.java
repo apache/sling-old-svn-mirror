@@ -27,8 +27,7 @@ import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.communication.SimpleDistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.transport.DistributionTransport;
-import org.apache.sling.distribution.transport.DistributionTransport;
+import org.apache.sling.distribution.transport.core.DistributionTransport;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
 import org.junit.Test;
 

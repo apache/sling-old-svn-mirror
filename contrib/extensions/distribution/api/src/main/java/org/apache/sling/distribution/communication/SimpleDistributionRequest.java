@@ -40,7 +40,7 @@ public final class SimpleDistributionRequest implements DistributionRequest {
      */
     public SimpleDistributionRequest(@Nonnull DistributionRequestType requestType, boolean isDeep, @Nonnull String... paths) {
         this.requestType = requestType;
-        deep = isDeep;
+        this.deep = isDeep;
         this.paths = paths;
     }
 
@@ -82,9 +82,10 @@ public final class SimpleDistributionRequest implements DistributionRequest {
 
     @Override
     public String toString() {
-        return "DistributionRequest{" +
+        return "SimpleDistributionRequest{" +
                 ", requestType=" + requestType +
                 ", paths=" + Arrays.toString(paths) +
+                ", deep=" + deep +
                 '}';
     }
 
