@@ -48,7 +48,8 @@ public interface Distributor {
      * @return a {@link org.apache.sling.distribution.communication.DistributionResponse}
      */
     @Nonnull
-    DistributionResponse distribute(@Nonnull String agentName, @Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest);
+    DistributionResponse distribute(@Nonnull String agentName, @Nonnull ResourceResolver resourceResolver,
+                                    @Nonnull DistributionRequest distributionRequest);
 
 
 }

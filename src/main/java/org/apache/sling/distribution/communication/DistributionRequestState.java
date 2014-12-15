@@ -22,33 +22,33 @@ package org.apache.sling.distribution.communication;
  * The different states a {@link org.apache.sling.distribution.communication.DistributionRequest} can have during its lifecycle.
  * Allowed transitions of {@link org.apache.sling.distribution.communication.DistributionRequestState} for a certain
  * {@link org.apache.sling.distribution.communication.DistributionRequest} are:
- * {@code #SUCCEEDED} -> ø
- * {@code #FAILED} -> ø
- * {@code #ACCEPTED} -> {@code #FAILED}
- * {@code #ACCEPTED} -> {@code #SUCCEEDED}
+ * {@code #DISTRIBUTED} -> ø
+ * {@code #DROPPED} -> ø
+ * {@code #ACCEPTED} -> {@code #DROPPED}
+ * {@code #ACCEPTED} -> {@code #DISTRIBUTED}
  * <p/>
- * {@link org.apache.sling.distribution.communication.DistributionRequest}s against synchronous {@link org.apache.sling.distribution.agent.DistributionAgent}s
- * will only results in {@code #SUCCEEDED} or {@code #FAILED} {@link org.apache.sling.distribution.communication.DistributionRequestState}s
- * while requests against asynchronous agents can result in any of {@code #SUCCEEDED}, {@code #FAILED} or {@code #ACCEPTED} states.
+ * {@link org.apache.sling.distribution.communication.DistributionRequest}s executed synchronously
+ * will only results in {@code #DISTRIBUTED} or {@code #DROPPED} {@link org.apache.sling.distribution.communication.DistributionRequestState}s
+ * while requests executed asynchronously can result in any of {@code #DISTRIBUTED}, {@code #DROPPED} or {@code #ACCEPTED} states.
  */
 public enum DistributionRequestState {
 
     /**
-     * A {@link org.apache.sling.distribution.communication.DistributionRequest} has succeeded when the content has been
-     * successfully distributed (created, transported and persisted) from the source instance to the target instance.
+     * The request has completed and the content has been successfully distributed
+     * (created, transported and persisted) from the source instance to the target instance.
      */
-    SUCCEEDED,
+    DISTRIBUTED,
 
     /**
-     * A {@link org.apache.sling.distribution.communication.DistributionRequest} has failed when the content cannot be
-     * successfully distributed from the source instance to target instance, this means the request execution failed during
-     * one of: creation, transport, persistence.
+     * The request has been dropped and the content could not be successfully
+     * distributed from the source to target instance, this means the request
+     * execution failed during one of: creation, queueing, transport, persistence.
      */
-    FAILED,
+    DROPPED,
 
     /**
-     * A {@link org.apache.sling.distribution.communication.DistributionRequest} has been accepted when the content to be
-     * distributed has been successfully created, but not yet either transported or persisted correctly to the target instance.
+     * The request has been accepted, as a consequence the content to be distributed
+     * has been created and queued (and it will be eventually processed asynchronously).
      */
     ACCEPTED
 
