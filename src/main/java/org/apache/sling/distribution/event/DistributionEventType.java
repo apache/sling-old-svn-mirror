@@ -56,7 +56,7 @@ public enum DistributionEventType {
     /**
      * common event topic base for distribution events
      */
-    public static final String EVENT_TOPIC = "org/apache/sling/distribution";
+    public static final String EVENT_TOPIC_BASE = "org/apache/sling/distribution";
 
     /**
      * get the event topic for this event type
@@ -64,7 +64,7 @@ public enum DistributionEventType {
      * @return the event topic
      */
     public String getTopic() {
-        return EVENT_TOPIC + "/" + name();
+        return EVENT_TOPIC_BASE + "/" + name().toLowerCase().replace('_', '/');
     }
 
 }
