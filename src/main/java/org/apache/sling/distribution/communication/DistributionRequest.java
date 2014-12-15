@@ -18,6 +18,9 @@
  */
 package org.apache.sling.distribution.communication;
 
+import aQute.bnd.annotation.ProviderType;
+
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.util.Arrays;
 
@@ -25,6 +28,7 @@ import java.util.Arrays;
  * A {@link org.apache.sling.distribution.communication.DistributionRequest} represents the need from the caller to have
  * some content being distributed from a source instance to a target instance.
  */
+@ProviderType
 public interface DistributionRequest {
 
 
@@ -33,6 +37,7 @@ public interface DistributionRequest {
      *
      * @return the type of the request as a {@link DistributionRequestType}
      */
+    @Nonnull
     public DistributionRequestType getRequestType();
 
     /**
@@ -40,6 +45,7 @@ public interface DistributionRequest {
      *
      * @return an array of paths
      */
+    @CheckForNull
     public String[] getPaths();
 
 
@@ -49,7 +55,7 @@ public interface DistributionRequest {
      * @param path the path to be checked
      * @return <code>true</code> if the paths are deep
      */
-    public boolean isDeep(String path);
+    public boolean isDeep(@Nonnull String path);
 
 
 }
