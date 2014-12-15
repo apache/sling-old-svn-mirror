@@ -25,7 +25,6 @@ import java.net.URL;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -36,26 +35,22 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.impl.compiled.CompilationOutput;
 import org.apache.sling.scripting.sightly.impl.compiled.JavaClassBackend;
+import org.apache.sling.scripting.sightly.impl.compiler.SightlyCompilerService;
 import org.apache.sling.scripting.sightly.impl.compiler.SightlyJavaCompilerService;
 import org.apache.sling.scripting.sightly.impl.compiler.SightlyParsingException;
-import org.apache.sling.scripting.sightly.impl.compiler.SightlyCompilerService;
 import org.apache.sling.scripting.sightly.impl.compiler.util.GlobalShadowCheckBackend;
 import org.apache.sling.scripting.sightly.impl.engine.compiled.JavaClassTemplate;
 import org.apache.sling.scripting.sightly.impl.engine.compiled.SourceIdentifier;
@@ -64,9 +59,6 @@ import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderUnit;
 import org.apache.sling.scripting.sightly.impl.engine.runtime.SightlyRenderException;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventConstants;
-import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,19 +66,8 @@ import org.slf4j.LoggerFactory;
  * Create rendering units from resources.
  */
 @Component
-@Service({UnitLoader.class, EventHandler.class})
-@Properties({
-        @Property(
-                name = EventConstants.EVENT_TOPIC,
-                value = {SlingConstants.TOPIC_RESOURCE_ADDED, SlingConstants.TOPIC_RESOURCE_CHANGED, SlingConstants.TOPIC_RESOURCE_REMOVED}
-        ),
-        @Property(
-                name = EventConstants.EVENT_FILTER,
-                value = "(|(" + SlingConstants.PROPERTY_PATH + "=/apps/**/*." + SightlyScriptEngineFactory.EXTENSION + ")(" +
-                        SlingConstants.PROPERTY_PATH + "=/libs/**/*." + SightlyScriptEngineFactory.EXTENSION + "))"
-        )
-})
-public class UnitLoader implements EventHandler {
+@Service(UnitLoader.class)
+public class UnitLoader {
 
     public static final String DEFAULT_REPO_BASE_PATH = "/var/classes";
     private static final Logger log = LoggerFactory.getLogger(UnitLoader.class);
@@ -101,11 +82,9 @@ public class UnitLoader implements EventHandler {
     private static final String JCR_CONTENT = "jcr:content";
     private static final String JCR_DATA = "jcr:data";
     private static final String JCR_LASTMODIFIED = "jcr:lastModified";
-    private static final String JCR_ENCODING = "jcr:encoding";
 
     private String mainTemplate;
     private String childTemplate;
-    private Map<String, Long> slyScriptsMap = new ConcurrentHashMap<String, Long>();
 
     private final Map<String, Lock> activeWrites = new HashMap<String, Lock>();
 
@@ -124,37 +103,8 @@ public class UnitLoader implements EventHandler {
     @Reference
     private SlingSettingsService slingSettings = null;
 
-    private static long getLastModifiedDate(ResourceResolver resolver, String path) {
-        try {
-            Resource ntResource = getNtResource(resolver, path);
-            if (ntResource != null) {
-                ValueMap ntResourceProperties = ntResource.adaptTo(ValueMap.class);
-                /**
-                 * make sure to use 0L for the default value; otherwise we get an Integer
-                 * overflow due to the long value stored in JCR
-                 */
-                return ntResourceProperties.get(JCR_LASTMODIFIED, 0L);
-            }
-        } catch (Exception e) {
-            log.error("Error while reading last modification date: ", e);
-        }
-        return 0L;
-    }
-
-    private static Resource getNtResource(ResourceResolver resolver, String path) {
-        Resource resource = resolver.getResource(path);
-        if (resource != null) {
-            if (path.endsWith(JCR_CONTENT) && resource.isResourceType(NT_RESOURCE)) {
-                return resource;
-            } else {
-                Resource ntResource = resource.getChild(JCR_CONTENT);
-                if (ntResource != null && ntResource.isResourceType(NT_RESOURCE)) {
-                    return ntResource;
-                }
-            }
-        }
-        return null;
-    }
+    @Reference
+    private UnitChangeMonitor unitChangeMonitor = null;
 
     /**
      * Create a render unit from the given resource
@@ -166,16 +116,18 @@ public class UnitLoader implements EventHandler {
      */
     public RenderUnit createUnit(Resource scriptResource, Bindings bindings, RenderContextImpl renderContext) {
         Lock lock = null;
-        ResourceResolver adminResolver = null;
         try {
             SourceIdentifier sourceIdentifier = obtainIdentifier(scriptResource);
-            adminResolver = rrf.getAdministrativeResourceResolver(null);
             Object obj;
-            ValueMap templateProperties = adminResolver.getResource(scriptResource.getPath()).getChild(JCR_CONTENT).adaptTo(ValueMap.class);
-            String encoding = templateProperties.get(JCR_ENCODING, sightlyEngineConfiguration.getEncoding());
+            ResourceMetadata resourceMetadata = scriptResource.getResourceMetadata();
+            String encoding = resourceMetadata.getCharacterEncoding();
+            if (encoding == null) {
+                encoding = sightlyEngineConfiguration.getEncoding();
+            }
             SlingHttpServletResponse response = (SlingHttpServletResponse) bindings.get(SlingBindings.RESPONSE);
             response.setCharacterEncoding(encoding);
-            if (needsUpdate(adminResolver, sourceIdentifier)) {
+            ResourceResolver adminResolver = renderContext.getScriptResourceResolver();
+            if (needsUpdate(sourceIdentifier)) {
                 synchronized (activeWrites) {
                     String sourceFullPath = sourceIdentifier.getSourceFullPath();
                     lock = activeWrites.get(sourceFullPath);
@@ -196,26 +148,10 @@ public class UnitLoader implements EventHandler {
                 throw new SightlyRenderException("Class is not a RenderUnit instance");
             }
             return (RenderUnit) obj;
-        } catch (LoginException e) {
-            throw new SightlyRenderException("Unable to create a RenderUnit.", e);
         } finally {
-            if (adminResolver != null) {
-                adminResolver.close();
-            }
             if (lock != null) {
                 lock.unlock();
             }
-        }
-    }
-
-    @Override
-    public void handleEvent(Event event) {
-        String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
-        String topic = event.getTopic();
-        if (SlingConstants.TOPIC_RESOURCE_ADDED.equals(topic) || SlingConstants.TOPIC_RESOURCE_CHANGED.equals(topic)) {
-            slyScriptsMap.put(path, Calendar.getInstance().getTimeInMillis());
-        } else if (SlingConstants.TOPIC_RESOURCE_REMOVED.equals(topic)) {
-            slyScriptsMap.remove(path);
         }
     }
 
@@ -372,26 +308,24 @@ public class UnitLoader implements EventHandler {
         return ++line;
     }
 
-    private boolean needsUpdate(ResourceResolver resolver, SourceIdentifier sourceIdentifier) {
+    private boolean needsUpdate(SourceIdentifier sourceIdentifier) {
         if (sightlyEngineConfiguration.isDevMode()) {
             return true;
         }
-        String javaPath = sourceIdentifier.getSourceFullPath();
         String slyPath = sourceIdentifier.getResource().getPath();
-        Long javaFileDate = getLastModifiedDate(resolver, javaPath);
+        long javaFileDate = unitChangeMonitor.getLastModifiedDateForJavaSourceFile(sourceIdentifier.getSourceFullPath());
         if (javaFileDate != 0) {
-
-            Long slyScriptChangeDate = slyScriptsMap.get(slyPath);
-            if (slyScriptChangeDate != null) {
+            long slyScriptChangeDate = unitChangeMonitor.getLastModifiedDateForScript(slyPath);
+            if (slyScriptChangeDate != 0) {
                 if (slyScriptChangeDate < javaFileDate) {
                     return false;
                 }
             } else {
-                slyScriptsMap.put(slyPath, Calendar.getInstance().getTimeInMillis());
+                unitChangeMonitor.touchScript(slyPath);
             }
             return true;
         }
-        slyScriptsMap.put(slyPath, Calendar.getInstance().getTimeInMillis());
+        unitChangeMonitor.touchScript(slyPath);
         return true;
     }
 

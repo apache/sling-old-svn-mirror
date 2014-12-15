@@ -38,8 +38,10 @@ import javax.script.Bindings;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.adapter.Adaptable;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.scripting.sightly.Record;
+import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.extension.ExtensionInstance;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.render.RenderContext;
@@ -57,14 +59,27 @@ public class RenderContextImpl implements RenderContext {
     public static final String STRING_COERCE = "toString";
     public static final String BOOLEAN_COERCE = "toBoolean";
 
-
     private final Bindings bindings;
     private final Map<String, RuntimeExtension> mapping;
+    private final ResourceResolver scriptResourceResolver;
     private final Map<String, ExtensionInstance> instanceCache = new HashMap<String, ExtensionInstance>();
 
-    public RenderContextImpl(Bindings bindings, Map<String, RuntimeExtension> mapping) {
+    public static ResourceResolver getScriptResourceResolver(RenderContext renderContext) {
+        if (renderContext instanceof RenderContextImpl) {
+            return ((RenderContextImpl) renderContext).getScriptResourceResolver();
+        }
+
+        throw new SightlyException("Cannot retrieve Script ResourceResovler from RenderContext " + renderContext);
+    }
+
+    public RenderContextImpl(Bindings bindings, Map<String, RuntimeExtension> mapping, ResourceResolver scriptResourceResolver) {
         this.bindings = bindings;
         this.mapping = mapping;
+        this.scriptResourceResolver = scriptResourceResolver;
+    }
+
+    public ResourceResolver getScriptResourceResolver() {
+        return scriptResourceResolver;
     }
 
     /**
@@ -308,25 +323,23 @@ public class RenderContextImpl implements RenderContext {
     }
 
     private Method findMethod(Class<?> cls, String baseName) {
-        Method method;
+        Method[] publicMethods = cls.getMethods();
         String capitalized = StringUtils.capitalize(baseName);
-        method = tryMethod(cls, "get" + capitalized);
-        if (method != null) return method;
-        method = tryMethod(cls, "is" + capitalized);
-        if (method != null) return method;
-        method = tryMethod(cls, baseName);
-        return method;
-    }
-
-
-    private Method tryMethod(Class<?> cls, String name) {
-        try {
-            Method m = cls.getMethod(name);
-            Class<?> declaringClass = m.getDeclaringClass();
-            return (isMethodAllowed(m)) ? m : null;
-        } catch (NoSuchMethodException e) {
-            return null;
+        for (Method m : publicMethods) {
+            if (m.getParameterTypes().length == 0) {
+                String methodName = m.getName();
+                if (baseName.equals(methodName)) {
+                    return (isMethodAllowed(m)) ? m : null;
+                }
+                if (("get" + capitalized).equals(methodName)) {
+                    return (isMethodAllowed(m)) ? m : null;
+                }
+                if (("is" + capitalized).equals(methodName)) {
+                    return (isMethodAllowed(m)) ? m : null;
+                }
+            }
         }
+        return null;
     }
 
     private boolean isMethodAllowed(Method method) {

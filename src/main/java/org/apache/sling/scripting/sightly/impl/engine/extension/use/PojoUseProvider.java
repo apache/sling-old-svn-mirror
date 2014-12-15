@@ -30,10 +30,11 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.sightly.ResourceResolution;
 import org.apache.sling.scripting.sightly.impl.compiler.SightlyJavaCompilerService;
+import org.apache.sling.scripting.sightly.impl.engine.SightlyScriptEngineFactory;
+import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.pojo.Use;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.use.ProviderOutcome;
@@ -81,10 +82,8 @@ public class PojoUseProvider implements UseProvider {
         Bindings globalBindings = renderContext.getBindings();
         Bindings bindings = UseProviderUtils.merge(globalBindings, arguments);
         SlingScriptHelper sling = UseProviderUtils.getHelper(bindings);
-        ResourceResolverFactory rrf = sling.getService(ResourceResolverFactory.class);
-        ResourceResolver adminResolver = null;
         try {
-            adminResolver = rrf.getAdministrativeResourceResolver(null);
+            ResourceResolver adminResolver = RenderContextImpl.getScriptResourceResolver(renderContext);
             Resource resource = ResourceResolution.resolveComponentForRequest(adminResolver, sling.getRequest());
             Object result = sightlyJavaCompilerService.getInstance(resource, identifier);
             if (result instanceof Use) {
@@ -94,10 +93,6 @@ public class PojoUseProvider implements UseProvider {
         } catch (Exception e) {
             LOG.error(String.format("Can't instantiate %s POJO.", identifier), e);
             return ProviderOutcome.failure();
-        } finally {
-            if (adminResolver != null) {
-                adminResolver.close();
-            }
         }
     }
 }
