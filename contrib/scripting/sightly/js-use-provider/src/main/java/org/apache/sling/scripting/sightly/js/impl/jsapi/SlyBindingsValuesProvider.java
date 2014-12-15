@@ -45,7 +45,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.scripting.api.BindingsValuesProvider;
 import org.apache.sling.scripting.sightly.js.impl.JsEnvironment;
 import org.apache.sling.scripting.sightly.js.impl.Variables;
 import org.apache.sling.scripting.sightly.js.impl.async.AsyncContainer;
@@ -65,16 +64,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Provides the {@code sly} and {@code aem} namespaces for usage in Sightly & JS scripts
+ * Provides the {@code sightly} namespace for usage in Sightly & JS scripts
  * called from Sightly
  */
 @Component(metatype = true, label = "Apache Sling Scripting Sightly JavaScript Bindings Provider",
         description = "The Apache Sling Scripting Sightly JavaScript Bindings Provider loads the JS Use-API and makes it available in the" +
                 " bindings map.")
-@Service(BindingsValuesProvider.class)
+@Service(SlyBindingsValuesProvider.class)
 @Properties({
-        @Property(name = "javax.script.name", value = "sightly", propertyPrivate = true),
-        @Property(name = "service.ranking", intValue = 100),
         @Property(
                 name = SlyBindingsValuesProvider.SCR_PROP_JS_BINDING_IMPLEMENTATIONS,
                 value = {
@@ -87,7 +84,7 @@ import org.slf4j.LoggerFactory;
         )
 })
 @SuppressWarnings("unused")
-public class SlyBindingsValuesProvider implements BindingsValuesProvider {
+public class SlyBindingsValuesProvider {
 
     public static final String SCR_PROP_JS_BINDING_IMPLEMENTATIONS = "org.apache.sling.scripting.sightly.js.bindings";
 
@@ -113,8 +110,7 @@ public class SlyBindingsValuesProvider implements BindingsValuesProvider {
     private Script qScript;
     private final ScriptableObject qScope = createQScope();
 
-    @Override
-    public void addBindings(Bindings bindings) {
+    public void processBindings(Bindings bindings) {
         if (needsInit()) {
             init(bindings);
         }
