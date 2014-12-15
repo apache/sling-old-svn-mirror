@@ -26,7 +26,7 @@ import javax.annotation.Nullable;
 
 /**
  * A {@link org.apache.sling.distribution.communication.DistributionResponse} represents the outcome of a
- * {@link org.apache.sling.distribution.communication.DistributionRequest} as handled by a certain {@link org.apache.sling.distribution.agent.DistributionAgent}.
+ * {@link org.apache.sling.distribution.communication.DistributionRequest} as handled by a certain distribution agent.
  * Such a response will include the {@link org.apache.sling.distribution.communication.DistributionRequestState state} of
  * the {@link org.apache.sling.distribution.communication.DistributionRequest request} and optionally a message for more
  * verbose information about the outcome of the request.
