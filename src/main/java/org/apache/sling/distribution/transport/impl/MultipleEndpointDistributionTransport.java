@@ -25,12 +25,12 @@ import java.util.List;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.transport.DistributionTransport;
-import org.apache.sling.distribution.transport.DistributionTransportException;
+import org.apache.sling.distribution.transport.core.DistributionTransport;
+import org.apache.sling.distribution.transport.core.DistributionTransportException;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
 
 /**
- * {@link org.apache.sling.distribution.transport.DistributionTransport} supporting delivery / retrieval from multiple
+ * {@link org.apache.sling.distribution.transport.core.DistributionTransport} supporting delivery / retrieval from multiple
  * endpoints.
  */
 public class MultipleEndpointDistributionTransport implements DistributionTransport {

@@ -16,13 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.transport;
+package org.apache.sling.distribution.transport.core;
 
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.transport.DistributionTransportSecret;
 
 /**
  * A transport layer implementation to transport data between two (or eventually more) Sling instances.

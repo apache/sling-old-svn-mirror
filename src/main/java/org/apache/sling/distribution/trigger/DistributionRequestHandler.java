@@ -16,20 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.transport;
+package org.apache.sling.distribution.trigger;
+
+import javax.annotation.Nonnull;
+
+import aQute.bnd.annotation.ConsumerType;
+import org.apache.sling.distribution.communication.DistributionRequest;
 
 /**
- * Represents an error happened while a {@link DistributionTransportHandler} is delivering a distribution item to
- * and endpoint.
+ * An handler for {@link org.apache.sling.distribution.communication.DistributionRequest}s passed to a
+ * {@link DistributionTrigger}
  */
-@SuppressWarnings("serial")
-public class DistributionTransportException extends Exception {
+@ConsumerType
+public interface DistributionRequestHandler {
 
-    public DistributionTransportException(Exception e) {
-        super(e);
-    }
+    /**
+     * handle the request according to the trigger implementation.
+     *
+     * @param request a distribution request
+     */
+    void handle(@Nonnull DistributionRequest request);
 
-    public DistributionTransportException(String string) {
-        super(string);
-    }
 }
