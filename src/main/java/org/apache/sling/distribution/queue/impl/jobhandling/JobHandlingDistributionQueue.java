@@ -27,7 +27,6 @@ import java.util.Map;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
-import org.apache.sling.distribution.queue.DistributionQueueItemSelector;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus.ItemState;
 import org.apache.sling.event.jobs.Job;
@@ -156,13 +155,11 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
     }
 
     @Nonnull
-    public List<DistributionQueueItem> getItems(DistributionQueueItemSelector selector) {
-        if (selector == null) {
-            selector = new DistributionQueueItemSelector(0, -1);
-        }
+    public List<DistributionQueueItem> getItems(int skip, int limit) {
+
 
         List<DistributionQueueItem> items = new ArrayList<DistributionQueueItem>();
-        Collection<Job> jobs = getJobs(selector.getSkip(), selector.getLimit());
+        Collection<Job> jobs = getJobs(skip, limit);
         for (Job job : jobs) {
             items.add(JobHandlingUtils.getItem(job));
         }

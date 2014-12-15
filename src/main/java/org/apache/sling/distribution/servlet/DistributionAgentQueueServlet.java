@@ -26,7 +26,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.distribution.agent.DistributionAgent;
-import org.apache.sling.distribution.communication.DistributionParameter;
+import org.apache.sling.distribution.communication.impl.DistributionParameter;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
@@ -102,7 +102,7 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
         StringBuilder builder = new StringBuilder("{\"name\":\"" + queue.getName() + "\",\"empty\":" + queue.isEmpty());
         if (!queue.isEmpty()) {
             builder.append(",\"items\":[");
-            for (DistributionQueueItem item : queue.getItems(null)) {
+            for (DistributionQueueItem item : queue.getItems(0, -1)) {
                 builder.append('{');
                 builder.append(toJSoN(item));
                 builder.append(',');

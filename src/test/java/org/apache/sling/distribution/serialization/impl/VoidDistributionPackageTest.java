@@ -24,6 +24,7 @@ import java.util.Arrays;
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.communication.DistributionRequestType;
+import org.apache.sling.distribution.communication.SimpleDistributionRequest;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -36,7 +37,7 @@ public class VoidDistributionPackageTest {
 
     @Test
     public void testCreatedAndReadPackagesEquality() throws Exception {
-        DistributionRequest request = new DistributionRequest(DistributionRequestType.DELETE, "/abc");
+        DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.DELETE, "/abc");
         VoidDistributionPackage createdPackage = new VoidDistributionPackage(request);
         VoidDistributionPackage readPackage = VoidDistributionPackage.fromStream(new ByteArrayInputStream(("DELETE:/abc:VOID").getBytes()));
         assertEquals(createdPackage.getType(), readPackage.getType());

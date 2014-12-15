@@ -61,13 +61,12 @@ public class JcrVaultDistributionPackageBuilder  extends AbstractDistributionPac
             JcrPackageManager packageManager = packaging.getPackageManager(session);
 
             final String[] paths = request.getPaths();
-            final boolean deep = request.isDeep();
 
             String packageGroup = PACKAGE_GROUP;
             String packageName = PACKAGING_TYPE + "_" + System.currentTimeMillis() + "_" +  UUID.randomUUID();
 
 
-            WorkspaceFilter filter = VltUtils.createFilter(paths, deep);
+            WorkspaceFilter filter = VltUtils.createFilter(request);
 
             final JcrPackage jcrPackage = packageManager.create(packageGroup, packageName, VERSION);
             final JcrPackageDefinition jcrPackageDefinition = jcrPackage.getDefinition();

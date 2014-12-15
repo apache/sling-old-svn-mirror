@@ -28,6 +28,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.vault.util.Text;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.communication.DistributionRequestType;
+import org.apache.sling.distribution.communication.SimpleDistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 
 /**
@@ -79,7 +80,7 @@ public class VoidDistributionPackage extends AbstractDistributionPackage impleme
             pathsString = Text.unescape(pathsString);
             String[] paths = pathsString.split(", ");
 
-            DistributionRequest request = new DistributionRequest(distributionRequestType, paths);
+            DistributionRequest request = new SimpleDistributionRequest(distributionRequestType, paths);
             distributionPackage = new VoidDistributionPackage(request, typeString);
         }
 

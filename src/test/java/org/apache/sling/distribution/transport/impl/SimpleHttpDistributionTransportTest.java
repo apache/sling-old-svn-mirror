@@ -33,6 +33,7 @@ import org.apache.http.client.fluent.Response;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.communication.DistributionRequestType;
+import org.apache.sling.distribution.communication.SimpleDistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
@@ -98,7 +99,7 @@ public class SimpleHttpDistributionTransportTest {
         SimpleHttpDistributionTransport simpleHttpDistributionTransport = new SimpleHttpDistributionTransport(
                 endpoint, packageBuilder, maxNoOfPackages);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
-        DistributionRequest distributionRequest = new DistributionRequest(DistributionRequestType.ADD, "/");
+        DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
         List<DistributionPackage> packages = simpleHttpDistributionTransport.retrievePackages(resourceResolver, distributionRequest, secret);
         assertNotNull(packages);
         assertTrue(packages.isEmpty());
@@ -132,7 +133,7 @@ public class SimpleHttpDistributionTransportTest {
         SimpleHttpDistributionTransport simpleHttpDistributionTransport = new SimpleHttpDistributionTransport(
                 endpoint, packageBuilder, maxNoOfPackages);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
-        DistributionRequest distributionRequest = new DistributionRequest(DistributionRequestType.ADD, "/");
+        DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
         List<DistributionPackage> packages = simpleHttpDistributionTransport.retrievePackages(resourceResolver, distributionRequest, secret);
         assertNotNull(packages);
         assertFalse(packages.isEmpty());
