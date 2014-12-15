@@ -37,6 +37,7 @@ import org.apache.sling.distribution.agent.DistributionAgentException;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.communication.DistributionRequestState;
 import org.apache.sling.distribution.communication.DistributionResponse;
+import org.apache.sling.distribution.communication.impl.SimpleDistributionResponse;
 import org.apache.sling.distribution.event.DistributionEventType;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.packaging.DistributionPackage;
@@ -189,13 +190,13 @@ public class SimpleDistributionAgent implements DistributionAgent {
             Iterable<DistributionQueueItemStatus> states = queueDistributionStrategy.add(distributionPackage, queueProvider);
             for (DistributionQueueItemStatus state : states) {
                 DistributionRequestState requestState = getRequestStateFromQueueState(state.getItemState());
-                distributionResponses.add(new DistributionResponse(requestState, state.getItemState().toString()));
+                distributionResponses.add(new SimpleDistributionResponse(requestState, state.getItemState().toString()));
             }
 
             distributionEventFactory.generateAgentPackageEvent(DistributionEventType.AGENT_PACKAGE_QUEUED, name, distributionPackage.getInfo());
         } catch (Exception e) {
             log.error("an error happened during dispatching items to the queue(s)", e);
-            distributionResponses.add(new DistributionResponse(DistributionRequestState.FAILED, e.toString()));
+            distributionResponses.add(new SimpleDistributionResponse(DistributionRequestState.FAILED, e.toString()));
         }
 
         return distributionResponses;
@@ -431,7 +432,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
         }
     }
 
-    private class CompositeDistributionResponse extends DistributionResponse {
+    private class CompositeDistributionResponse extends SimpleDistributionResponse {
 
         private DistributionRequestState state;
 
@@ -453,6 +454,11 @@ public class SimpleDistributionAgent implements DistributionAgent {
                 messageBuilder.replace(lof, lof + 2, "]");
                 message = messageBuilder.toString();
             }
+        }
+
+        @Override
+        public boolean isSuccessful() {
+            return !DistributionRequestState.FAILED.equals(state);
         }
 
         @Override
