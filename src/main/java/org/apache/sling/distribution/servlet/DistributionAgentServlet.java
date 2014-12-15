@@ -61,10 +61,10 @@ public class DistributionAgentServlet extends SlingAllMethodsServlet {
             try {
                 DistributionResponse distributionResponse = agent.execute(resourceResolver, distributionRequest);
                 switch (distributionResponse.getState()) {
-                    case SUCCEEDED:
+                    case DISTRIBUTED:
                         response.setStatus(200);
                         break;
-                    case FAILED:
+                    case DROPPED:
                         response.setStatus(400);
                         break;
                     case ACCEPTED:

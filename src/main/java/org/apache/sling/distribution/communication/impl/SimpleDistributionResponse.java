@@ -19,6 +19,8 @@
 
 package org.apache.sling.distribution.communication.impl;
 
+import javax.annotation.Nonnull;
+
 import org.apache.sling.distribution.communication.DistributionRequestState;
 import org.apache.sling.distribution.communication.DistributionResponse;
 
@@ -38,9 +40,10 @@ public class SimpleDistributionResponse implements DistributionResponse {
     }
 
     public boolean isSuccessful() {
-        return !DistributionRequestState.FAILED.equals(state);
+        return !DistributionRequestState.DROPPED.equals(state);
     }
 
+    @Nonnull
     public DistributionRequestState getState() {
         return state;
     }
