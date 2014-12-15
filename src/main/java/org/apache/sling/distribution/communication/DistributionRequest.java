@@ -25,69 +25,31 @@ import java.util.Arrays;
  * A {@link org.apache.sling.distribution.communication.DistributionRequest} represents the need from the caller to have
  * some content being distributed from a source instance to a target instance.
  */
-public final class DistributionRequest {
+public interface DistributionRequest {
 
-
-    private final DistributionRequestType requestType;
-
-    private final boolean deep;
-    private final String[] paths;
-
-    /**
-     * Creates distribution request with "deep" or "shallow" paths.
-     * @param requestType the request type
-     * @param isDeep is <code>true</code> if all paths are "deep" and is <code>false</code> if all paths are "shallow"
-     * @param paths the array of paths to be distributed
-     */
-    public DistributionRequest(@Nonnull DistributionRequestType requestType, boolean isDeep, @Nonnull String... paths) {
-        this.requestType = requestType;
-        deep = isDeep;
-        this.paths = paths;
-    }
-
-    /**
-     * Creates a distribution request with "shallow" paths.
-     * @param requestType the request type
-     * @param paths the array of paths to be distributed
-     */
-    public DistributionRequest(@Nonnull DistributionRequestType requestType, @Nonnull String... paths) {
-        this(requestType, false, paths);
-    }
 
     /**
      * get the {@link DistributionRequestType} associated with this request
      *
      * @return the type of the request as a {@link DistributionRequestType}
      */
-    public DistributionRequestType getRequestType() {
-        return requestType;
-    }
+    public DistributionRequestType getRequestType();
 
     /**
      * get the paths for this distribution request
      *
      * @return an array of paths
      */
-    public String[] getPaths() {
-        return paths;
-    }
+    public String[] getPaths();
 
 
     /**
      * Returns whether the paths are covering the entire subtree (deep) or just the specified nodes (shallow)
+     *
+     * @param path the path to be checked
      * @return <code>true</code> if the paths are deep
      */
-    public boolean isDeep() {
-        return deep;
-    }
-
-    @Override
-    public String toString() {
-        return "DistributionRequest{" +
-                ", requestType=" + requestType +
-                ", paths=" + Arrays.toString(paths) +
-                '}';
-    }
+    public boolean isDeep(String path);
 
 
 }

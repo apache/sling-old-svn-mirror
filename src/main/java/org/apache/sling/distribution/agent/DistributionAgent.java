@@ -62,12 +62,12 @@ public interface DistributionAgent {
      * The content to be sent will be assembled according to the information contained in the request.
      * A {@link org.apache.sling.distribution.communication.DistributionResponse} holding the {@link org.apache.sling.distribution.communication.DistributionRequestState}
      * of the provided request will be returned.
-     * Synchronous {@link org.apache.sling.distribution.agent.DistributionAgent}s will usally block until the execution has finished
+     * Synchronous {@link org.apache.sling.distribution.agent.DistributionAgent}s will usually block until the execution has finished
      * while asynchronous agents will usually return the response as soon as the content to be distributed has been assembled
      * and scheduled for distribution.
      *
      * @param distributionRequest the distribution request
-     * @param resourceResolver    the resource resolver used for authenticating the request,
+     * @param resourceResolver    the resource resolver used for authorizing the request,
      * @return a {@link org.apache.sling.distribution.communication.DistributionResponse}
      * @throws DistributionAgentException if any error happens during the execution of the request or if the authentication fails
      */
