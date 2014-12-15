@@ -249,7 +249,7 @@
             <version>1.0.8</version>
             <scope>provided</scope>
         </dependency>
-        <!-- use 1.0.9-SNAPSHOT due to https://issues.apache.org/jira/browse/SLING-3819 -->
+        <!-- use 1.0.9-SNAPSHOT due to SLING-3819, SLING-4249 -->
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.tools</artifactId>
@@ -316,12 +316,11 @@
             <artifactId>org.apache.sling.commons.json</artifactId>
             <version>2.0.6</version>
         </dependency>
-        <!-- use latest release version which does no itself include Sling Model due to issues with redeployment (see https://issues.apache.org/jira/browse/SLING-4226) -->
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad</artifactId>
             <classifier>standalone</classifier>
-            <version>7</version>
+            <version>8-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
