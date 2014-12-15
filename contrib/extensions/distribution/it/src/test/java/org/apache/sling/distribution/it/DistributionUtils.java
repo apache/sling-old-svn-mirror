@@ -28,7 +28,6 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.sling.distribution.communication.DistributionParameter;
 import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.testing.tools.http.Request;
 import org.apache.sling.testing.tools.sling.SlingClient;
@@ -117,17 +116,17 @@ public class DistributionUtils {
     public static String executeDistributionRequest(SlingInstance slingInstance, int status, String resource, DistributionRequestType action, boolean deep, String... paths) throws IOException {
 
         List<String> args = new ArrayList<String>();
-        args.add(DistributionParameter.ACTION.toString());
+        args.add("action");
         args.add(action.toString());
 
         if (deep) {
-            args.add(DistributionParameter.DEEP.toString());
+            args.add("deep");
             args.add("true");
         }
 
         if (paths != null) {
             for (String path : paths) {
-                args.add(DistributionParameter.PATH.toString());
+                args.add("path");
                 args.add(path);
             }
         }

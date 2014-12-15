@@ -84,19 +84,19 @@ public interface DistributionQueue {
     /**
      * get all the items in the queue
      *
-     * @param queueItemSelector represents the criteria to filter queue items.
-     *                          if null is passed then all items are returned.
+     * @param skip the number of items to skip
+     * @param limit the maximum number of items to return. use -1 to return all items.
      * @return a {@link java.lang.Iterable} of {@link DistributionQueueItem}s
      */
     @Nonnull
-    Iterable<DistributionQueueItem> getItems(@Nullable DistributionQueueItemSelector queueItemSelector);
+    Iterable<DistributionQueueItem> getItems(int skip, int limit);
 
     /**
      * remove an item from the queue by specifying its id
      *
-     * @param id an item's identifier
+     * @param packageId the id of the package represented by the item
      * @return the removed item, or {@code null} if the item with the given id
      * doesn't exist
      */
-    DistributionQueueItem remove(@Nonnull String id);
+    DistributionQueueItem remove(@Nonnull String packageId);
 }

@@ -25,6 +25,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.communication.DistributionRequestType;
 import org.apache.sling.distribution.communication.DistributionResponse;
+import org.apache.sling.distribution.communication.SimpleDistributionRequest;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
@@ -67,7 +68,7 @@ public class SimpleDistributionAgentTest {
                 packageExporter, packageExporterStrategy,
                 queueProvider, distributionHandler,
                 distributionEventFactory, resolverFactory,  null);
-        DistributionRequest request = new DistributionRequest(DistributionRequestType.ADD, "/");
+        DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
 
@@ -96,7 +97,7 @@ public class SimpleDistributionAgentTest {
                 packageExporter, packageExporterStrategy,
                 queueProvider,
                 distributionHandler, distributionEventFactory, resolverFactory, null);
-        DistributionRequest request = new DistributionRequest(DistributionRequestType.ADD, "/");
+        DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
 
@@ -129,7 +130,7 @@ public class SimpleDistributionAgentTest {
                 packageExporter, packageExporterStrategy,
                 queueProvider, distributionHandler,
                 distributionEventFactory, resolverFactory, null);
-        DistributionRequest request = new DistributionRequest(DistributionRequestType.ADD, "/");
+        DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         DistributionPackageInfo packageInfo = new DistributionPackageInfo();
         when(distributionPackage.getInfo()).thenReturn(packageInfo);

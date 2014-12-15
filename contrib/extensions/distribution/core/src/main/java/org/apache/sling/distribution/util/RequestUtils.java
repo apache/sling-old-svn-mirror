@@ -23,7 +23,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.sling.distribution.communication.DistributionParameter;
+import org.apache.sling.distribution.communication.SimpleDistributionRequest;
+import org.apache.sling.distribution.communication.impl.DistributionParameter;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.communication.DistributionRequestType;
 
@@ -43,18 +44,13 @@ public class RequestUtils {
         }
 
 
-        return new DistributionRequest(DistributionRequestType.fromName(action), deep, paths);
+        return new SimpleDistributionRequest(DistributionRequestType.fromName(action), deep, paths);
     }
 
     public static URI appendDistributionRequest(URI uri, DistributionRequest distributionRequest) throws URISyntaxException {
         URIBuilder uriBuilder = new URIBuilder(uri);
         uriBuilder.addParameter(DistributionParameter.ACTION.toString(), distributionRequest.getRequestType().name());
-        if (distributionRequest.isDeep()) {
-            uriBuilder.addParameter(DistributionParameter.DEEP.toString(), "true");
-        }
-        for (String path : distributionRequest.getPaths()) {
-            uriBuilder.addParameter(DistributionParameter.PATH.toString(), path);
-        }
+
 
         return uriBuilder.build();
     }

@@ -32,6 +32,7 @@ import org.apache.jackrabbit.vault.fs.io.AccessControlHandling;
 import org.apache.jackrabbit.vault.fs.io.ImportOptions;
 import org.apache.jackrabbit.vault.packaging.ExportOptions;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
+import org.apache.sling.distribution.communication.DistributionRequest;
 
 import java.util.List;
 import java.util.Properties;
@@ -41,10 +42,11 @@ import java.util.Properties;
  */
 public class VltUtils {
 
-    public static WorkspaceFilter createFilter(String[] paths, boolean deep) {
+    public static WorkspaceFilter createFilter(DistributionRequest distributionRequest) {
         DefaultWorkspaceFilter filter = new DefaultWorkspaceFilter();
 
-        for (String path : paths) {
+        for (String path : distributionRequest.getPaths()) {
+            boolean deep = distributionRequest.isDeep(path);
             PathFilterSet filterSet = createFilterSet(path, deep);
             filter.add(filterSet);
         }

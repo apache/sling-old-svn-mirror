@@ -30,6 +30,7 @@ import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.agent.DistributionAgentException;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.communication.DistributionRequestType;
+import org.apache.sling.distribution.communication.SimpleDistributionRequest;
 import org.apache.sling.distribution.resources.DistributionConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +59,7 @@ public class DistributionAgentRootServlet extends SlingAllMethodsServlet {
 
         DistributionRequestType action = DistributionRequestType.fromName(a);
 
-        DistributionRequest distributionRequest = new DistributionRequest(action, paths);
+        DistributionRequest distributionRequest = new SimpleDistributionRequest(action, paths);
 
         ResourceResolver resourceResolver = request.getResourceResolver();
 

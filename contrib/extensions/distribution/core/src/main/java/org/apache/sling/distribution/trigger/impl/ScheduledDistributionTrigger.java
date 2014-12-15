@@ -24,6 +24,7 @@ import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.communication.DistributionRequestType;
+import org.apache.sling.distribution.communication.SimpleDistributionRequest;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.distribution.trigger.DistributionTriggerException;
@@ -113,7 +114,7 @@ public class ScheduledDistributionTrigger implements DistributionTrigger {
         public void run() {
             log.debug("agent {}: scheduling {} distribution of {}", new Object[]{requestHandler, distributionAction, path});
 
-            requestHandler.handle(new DistributionRequest(distributionAction, path));
+            requestHandler.handle(new SimpleDistributionRequest(distributionAction, path));
         }
     }
 

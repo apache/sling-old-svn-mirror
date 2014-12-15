@@ -28,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
-import org.apache.sling.distribution.queue.DistributionQueueItemSelector;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus.ItemState;
 import org.slf4j.Logger;
@@ -103,7 +102,7 @@ public class SimpleDistributionQueue implements DistributionQueue {
     }
 
     @Nonnull
-    public Iterable<DistributionQueueItem> getItems(DistributionQueueItemSelector queueItemSelector) {
+    public Iterable<DistributionQueueItem> getItems(int skip, int limit) {
         return queue;
     }
 

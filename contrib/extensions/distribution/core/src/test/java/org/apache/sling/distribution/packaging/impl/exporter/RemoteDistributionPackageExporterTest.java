@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.communication.DistributionRequest;
 import org.apache.sling.distribution.communication.DistributionRequestType;
+import org.apache.sling.distribution.communication.SimpleDistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
@@ -47,7 +48,7 @@ public class RemoteDistributionPackageExporterTest {
             RemoteDistributionPackageExporter remotedistributionPackageExporter = new RemoteDistributionPackageExporter(
                     packageBuilder, distributionTransportSecretProvider, endpoints, strategy, 1);
             ResourceResolver resourceResolver = mock(ResourceResolver.class);
-            DistributionRequest distributionRequest = new DistributionRequest(DistributionRequestType.ADD, "/");
+            DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
             List<DistributionPackage> distributionPackages = remotedistributionPackageExporter.exportPackages(resourceResolver, distributionRequest);
             assertNotNull(distributionPackages);
             assertTrue(distributionPackages.isEmpty());
