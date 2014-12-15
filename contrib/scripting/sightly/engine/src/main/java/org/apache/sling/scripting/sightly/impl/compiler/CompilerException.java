@@ -20,19 +20,32 @@ package org.apache.sling.scripting.sightly.impl.compiler;
 
 public class CompilerException extends RuntimeException {
 
-    public CompilerException() {
-        super();
-    }
+    private CompilerExceptionCause cause;
 
     public CompilerException(String message) {
         super(message);
     }
 
-    public CompilerException(String message, Throwable throwable) {
-        super(message, throwable);
+    public CompilerException(CompilerExceptionCause cause) {
+        super();
+        this.cause = cause;
     }
 
-    public CompilerException(Throwable throwable) {
+    public CompilerException(CompilerExceptionCause cause, String message) {
+        super(message);
+    }
+
+    public CompilerException(CompilerExceptionCause cause, Throwable throwable) {
         super(throwable);
+        this.cause = cause;
+    }
+
+    public CompilerExceptionCause getFailureCause() {
+        return cause;
+    }
+
+    public enum CompilerExceptionCause {
+        MISSING_REPO_POJO,
+        COMPILER_ERRORS
     }
 }

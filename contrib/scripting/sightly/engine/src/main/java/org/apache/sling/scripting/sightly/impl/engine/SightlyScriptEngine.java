@@ -29,15 +29,12 @@ import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.scripting.SlingBindings;
+import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.api.scripting.SlingScriptHelper;
-import org.apache.sling.commons.classloader.DynamicClassLoader;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
-import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderUnit;
 import org.slf4j.Logger;
@@ -71,7 +68,6 @@ public class SightlyScriptEngine extends AbstractSlingScriptEngine {
         Bindings bindings = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE);
         SlingScriptHelper slingScriptHelper = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
         Resource scriptResource = slingScriptHelper.getScript().getScriptResource();
-
         final SlingBindings slingBindings = new SlingBindings();
         slingBindings.putAll(bindings);
 
@@ -79,9 +75,12 @@ public class SightlyScriptEngine extends AbstractSlingScriptEngine {
 
         final SlingHttpServletRequest request = slingBindings.getRequest();
         final Object oldValue = request.getAttribute(SlingBindings.class.getName());
+        final ResourceResolver scriptResourceResolver = (ResourceResolver) scriptContext.getAttribute(
+            SlingScriptConstants.ATTR_SCRIPT_RESOURCE_RESOLVER, SlingScriptConstants.SLING_SCOPE);
+
         try {
             request.setAttribute(SlingBindings.class.getName(), slingBindings);
-            evaluateScript(scriptResource, globalBindings);
+            evaluateScript(scriptResource, globalBindings, scriptResourceResolver);
         } finally {
             request.setAttribute(SlingBindings.class.getName(), oldValue);
             Thread.currentThread().setContextClassLoader(old);
@@ -90,51 +89,10 @@ public class SightlyScriptEngine extends AbstractSlingScriptEngine {
         return null;
     }
 
-    private void evaluateScript(Resource scriptResource, Bindings bindings) {
-        ResourceResolver resourceResolver = null;
-        RenderContextImpl renderContext = new RenderContextImpl(bindings, extensionRegistryService.extensions());
+    private void evaluateScript(Resource scriptResource, Bindings bindings, ResourceResolver scriptResourceResolver) {
+        RenderContextImpl renderContext = new RenderContextImpl(bindings, extensionRegistryService.extensions(), scriptResourceResolver);
         RenderUnit renderUnit = unitLoader.createUnit(scriptResource, bindings, renderContext);
-        try {
-            resourceResolver = getAdminResourceResolver(bindings);
-            renderUnit.render(renderContext, EMPTY_BINDINGS);
-        } catch (NoClassDefFoundError defFoundError) {
-            if (renderContext != null) {
-                ClassLoader dcl = renderUnit.getClass().getClassLoader().getParent();
-                if (dcl instanceof DynamicClassLoader && !((DynamicClassLoader) dcl).isLive()) {
-                    boolean defError = true;
-                    int retries = 0;
-                    while (defError) {
-                        try {
-                            renderUnit = unitLoader.createUnit(scriptResource, bindings, renderContext);
-                            renderUnit.render(renderContext, EMPTY_BINDINGS);
-                            defError = false;
-                        } catch (Throwable t) {
-                            if (!(t instanceof NoClassDefFoundError)) {
-                                // break immediately if there's a different error than a classloader one
-                                if (t instanceof Error) {
-                                    throw (Error) t;
-                                }
-                                throw (RuntimeException) t;
-                            }
-                            retries++;
-                            if (retries > MAX_CLASSLOADER_RETRIES) {
-                                LOG.error("Max number of retries (" + MAX_CLASSLOADER_RETRIES +
-                                        ") for obtaining a valid RenderUnit was exceeded.");
-                                throw defFoundError;
-                            }
-                        }
-                    }
-                } else {
-                    // if we can't recover from this just throw the original exception
-                    throw defFoundError;
-                }
-            }
-        }
-        finally {
-            if (resourceResolver != null) {
-                resourceResolver.close();
-            }
-        }
+        renderUnit.render(renderContext, EMPTY_BINDINGS);
     }
 
     private void checkArguments(Reader reader, ScriptContext scriptContext) {
@@ -143,16 +101,6 @@ public class SightlyScriptEngine extends AbstractSlingScriptEngine {
         }
         if (scriptContext == null) {
             throw new NullPointerException("ScriptContext cannot be null");
-        }
-    }
-
-    private ResourceResolver getAdminResourceResolver(Bindings bindings) {
-        SlingScriptHelper sling = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
-        ResourceResolverFactory rrf = sling.getService(ResourceResolverFactory.class);
-        try {
-            return rrf.getAdministrativeResourceResolver(null);
-        } catch (LoginException e) {
-            throw new SightlyException(e);
         }
     }
 }
