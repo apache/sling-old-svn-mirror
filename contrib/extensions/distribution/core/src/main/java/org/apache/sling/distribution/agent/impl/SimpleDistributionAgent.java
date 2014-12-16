@@ -22,12 +22,11 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
+
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -35,9 +34,10 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.agent.DistributionAgentException;
 
-import org.apache.sling.distribution.communication.DistributionRequest;
-import org.apache.sling.distribution.communication.DistributionRequestState;
-import org.apache.sling.distribution.communication.DistributionResponse;
+import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequestState;
+import org.apache.sling.distribution.DistributionResponse;
+import org.apache.sling.distribution.impl.SimpleDistributionResponse;
 import org.apache.sling.distribution.event.DistributionEventType;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.packaging.DistributionPackage;
@@ -47,10 +47,10 @@ import org.apache.sling.distribution.packaging.DistributionPackageImportExceptio
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.packaging.SharedDistributionPackage;
 import org.apache.sling.distribution.queue.DistributionQueue;
-import org.apache.sling.distribution.queue.DistributionQueueDispatchingStrategy;
+import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
-import org.apache.sling.distribution.queue.DistributionQueueItemState;
+import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueProcessor;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
@@ -59,7 +59,7 @@ import org.apache.sling.distribution.trigger.DistributionTriggerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.sling.distribution.queue.DistributionQueueItemState.ItemState;
+import static org.apache.sling.distribution.queue.DistributionQueueItemStatus.ItemState;
 
 /**
  * Basic implementation of a {@link org.apache.sling.distribution.agent.DistributionAgent}
@@ -86,6 +86,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
     private final ResourceResolverFactory resourceResolverFactory;
     private final String subServiceName;
     private AgentBasedRequestHandler agentBasedRequestHandler;
+    private boolean active = false;
 
     public SimpleDistributionAgent(String name,
                                    boolean passive,
@@ -101,7 +102,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
         // check configuration is valid
         if (name == null
-                || distributionPackageImporter == null
+                || (!passive && distributionPackageImporter == null)
                 || distributionPackageExporter == null
                 || subServiceName == null
                 || distributionRequestAuthorizationStrategy == null
@@ -150,7 +151,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
             return scheduleImport(distributionPackages);
         } catch (Exception e) {
-            log.error("[{}] Error executing distribution request {}", name, distributionRequest);
+            log.error("Error executing distribution request {} in agent " + name, distributionRequest, e);
             throw new DistributionAgentException(e);
         } finally {
             ungetAgentResourceResolver(agentResourceResolver);
@@ -186,16 +187,16 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
         // dispatch the distribution package to the queue distribution handler
         try {
-            Iterable<DistributionQueueItemState> states = queueDistributionStrategy.add(distributionPackage, queueProvider);
-            for (DistributionQueueItemState state : states) {
+            Iterable<DistributionQueueItemStatus> states = queueDistributionStrategy.add(distributionPackage, queueProvider);
+            for (DistributionQueueItemStatus state : states) {
                 DistributionRequestState requestState = getRequestStateFromQueueState(state.getItemState());
-                distributionResponses.add(new DistributionResponse(requestState, state.getItemState().toString()));
+                distributionResponses.add(new SimpleDistributionResponse(requestState, state.getItemState().toString()));
             }
 
             distributionEventFactory.generateAgentPackageEvent(DistributionEventType.AGENT_PACKAGE_QUEUED, name, distributionPackage.getInfo());
         } catch (Exception e) {
             log.error("an error happened during dispatching items to the queue(s)", e);
-            distributionResponses.add(new DistributionResponse(DistributionRequestState.FAILED, e.toString()));
+            distributionResponses.add(new SimpleDistributionResponse(DistributionRequestState.DROPPED, e.toString()));
         }
 
         return distributionResponses;
@@ -212,22 +213,22 @@ public class SimpleDistributionAgent implements DistributionAgent {
                 requestState = DistributionRequestState.ACCEPTED;
                 break;
             case SUCCEEDED:
-                requestState = DistributionRequestState.SUCCEEDED;
+                requestState = DistributionRequestState.DISTRIBUTED;
                 break;
             case STOPPED:
-                requestState = DistributionRequestState.FAILED;
+                requestState = DistributionRequestState.DROPPED;
                 break;
             case GIVEN_UP:
-                requestState = DistributionRequestState.FAILED;
+                requestState = DistributionRequestState.DROPPED;
                 break;
             case ERROR:
-                requestState = DistributionRequestState.FAILED;
+                requestState = DistributionRequestState.DROPPED;
                 break;
             case DROPPED:
-                requestState = DistributionRequestState.FAILED;
+                requestState = DistributionRequestState.DROPPED;
                 break;
             default:
-                requestState = DistributionRequestState.FAILED;
+                requestState = DistributionRequestState.DROPPED;
                 break;
         }
         return requestState;
@@ -256,6 +257,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
     public void enable() {
         log.info("enabling agent");
 
+
         // register triggers if any
         agentBasedRequestHandler = new AgentBasedRequestHandler(this);
 
@@ -276,9 +278,15 @@ public class SimpleDistributionAgent implements DistributionAgent {
                 log.error("cannot enable queue processing", e);
             }
         }
+
+        active = true;
     }
 
     public void enableTrigger(DistributionTrigger trigger) {
+        if (!active) {
+            return;
+        }
+
         try {
             trigger.register(agentBasedRequestHandler);
         } catch (DistributionTriggerException e) {
@@ -288,6 +296,10 @@ public class SimpleDistributionAgent implements DistributionAgent {
     }
 
     public void disableTrigger(DistributionTrigger trigger) {
+        if (!active) {
+            return;
+        }
+
         try {
             trigger.register(agentBasedRequestHandler);
         } catch (DistributionTriggerException e) {
@@ -297,6 +309,8 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
     public void disable() {
         log.info("disabling agent");
+        active = false;
+
 
         for (DistributionTrigger trigger : triggers) {
             try {
@@ -308,6 +322,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
         agentBasedRequestHandler = null;
 
+
         if (!isPassive()) {
 
             try {
@@ -316,6 +331,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
                 log.error("cannot disable queue processing", e);
             }
         }
+
     }
 
     private boolean processQueue(String queueName, DistributionQueueItem queueItem) {
@@ -396,6 +412,12 @@ public class SimpleDistributionAgent implements DistributionAgent {
         }
 
         public void handle(@Nonnull DistributionRequest request) {
+
+            if (!active) {
+                log.warn("handler is active when agent is disabled");
+                return;
+            }
+
             ResourceResolver agentResourceResolver = null;
             try {
                 agentResourceResolver = getAgentResourceResolver();
@@ -410,19 +432,19 @@ public class SimpleDistributionAgent implements DistributionAgent {
         }
     }
 
-    private class CompositeDistributionResponse extends DistributionResponse {
+    private class CompositeDistributionResponse extends SimpleDistributionResponse {
 
         private DistributionRequestState state;
 
         private String message;
 
         public CompositeDistributionResponse(List<DistributionResponse> distributionResponses) {
-            super(DistributionRequestState.FAILED, null);
+            super(DistributionRequestState.DROPPED, null);
             if (distributionResponses.isEmpty()) {
-                state = DistributionRequestState.FAILED;
+                state = DistributionRequestState.DROPPED;
                 message = "empty response";
             } else {
-                state = DistributionRequestState.SUCCEEDED;
+                state = DistributionRequestState.DISTRIBUTED;
                 StringBuilder messageBuilder = new StringBuilder("[");
                 for (DistributionResponse response : distributionResponses) {
                     state = aggregatedState(state, response.getState());
@@ -435,6 +457,12 @@ public class SimpleDistributionAgent implements DistributionAgent {
         }
 
         @Override
+        public boolean isSuccessful() {
+            return !DistributionRequestState.DROPPED.equals(state);
+        }
+
+        @Nonnull
+        @Override
         public DistributionRequestState getState() {
             return state;
         }
@@ -445,25 +473,25 @@ public class SimpleDistributionAgent implements DistributionAgent {
         }
     }
 
-    /* Provide the aggregated state of two {@link org.apache.sling.distribution.communication.DistributionRequestState}s */
+    /* Provide the aggregated state of two {@link org.apache.sling.distribution.DistributionRequestState}s */
     private DistributionRequestState aggregatedState(DistributionRequestState first, DistributionRequestState second) {
         DistributionRequestState aggregatedState;
         switch (second) {
-            case SUCCEEDED:
+            case DISTRIBUTED:
                 aggregatedState = first;
                 break;
-            case FAILED:
-                aggregatedState = DistributionRequestState.FAILED;
+            case DROPPED:
+                aggregatedState = DistributionRequestState.DISTRIBUTED;
                 break;
             case ACCEPTED:
-                if (first.equals(DistributionRequestState.SUCCEEDED)) {
+                if (first.equals(DistributionRequestState.DISTRIBUTED)) {
                     aggregatedState = DistributionRequestState.ACCEPTED;
                 } else {
                     aggregatedState = first;
                 }
                 break;
             default:
-                aggregatedState = DistributionRequestState.FAILED;
+                aggregatedState = DistributionRequestState.DROPPED;
         }
         return aggregatedState;
     }

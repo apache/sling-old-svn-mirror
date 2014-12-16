@@ -18,16 +18,23 @@
  */
 package org.apache.sling.testing.mock.jcr;
 
+import java.util.List;
+
+import javax.jcr.Node;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.query.QueryManager;
 
 import org.apache.commons.lang3.StringUtils;
+
+import aQute.bnd.annotation.ConsumerType;
 
 /**
  * Factory for mock JCR objects.
  */
+@ConsumerType
 public final class MockJcr {
 
     /**
@@ -79,6 +86,89 @@ public final class MockJcr {
             );
         } catch (RepositoryException ex) {
             throw new RuntimeException("Creating mocked JCR session failed.", ex);
+        }
+    }
+    
+    /**
+     * Sets the expected result list for all queries executed with the given query manager.
+     * @param session JCR session
+     * @param resultList Result list
+     */
+    public static void setQueryResult(final Session session, final List<Node> resultList) {
+        setQueryResult(getQueryManager(session), resultList);
+    }
+    
+    /**
+     * Sets the expected result list for all queries executed with the given query manager.
+     * @param queryManager Mocked query manager
+     * @param resultList Result list
+     */
+    public static void setQueryResult(final QueryManager queryManager, final List<Node> resultList) {
+        addQueryResultHandler(queryManager, new MockQueryResultHandler() {
+            @Override
+            public MockQueryResult executeQuery(MockQuery query) {
+                return new MockQueryResult(resultList);
+            }
+        });
+    }
+
+    /**
+     * Sets the expected result list for all queries with the given statement executed with the given query manager.
+     * @param session JCR session
+     * @param statement Query statement
+     * @param language Query language
+     * @param resultList Result list
+     */
+    public static void setQueryResult(final Session session, final String statement, final String language, final List<Node> resultList) {
+        setQueryResult(getQueryManager(session), statement, language, resultList);
+    }
+    
+    /**
+     * Sets the expected result list for all queries with the given statement executed with the given query manager.
+     * @param queryManager Mocked query manager
+     * @param statement Query statement
+     * @param language Query language
+     * @param resultList Result list
+     */
+    public static void setQueryResult(final QueryManager queryManager, final String statement, final String language, final List<Node> resultList) {
+        addQueryResultHandler(queryManager, new MockQueryResultHandler() {
+            @Override
+            public MockQueryResult executeQuery(MockQuery query) {
+                if (StringUtils.equals(query.getStatement(), statement)
+                        && StringUtils.equals(query.getLanguage(), language)) {
+                    return new MockQueryResult(resultList);
+                }
+                else {
+                    return null;
+                }
+            }
+        });
+    }
+
+    /**
+     * Adds a query result handler for the given query manager which may return query results for certain queries that are executed.
+     * @param session JCR session
+     * @param resultHandler Mock query result handler
+     */
+    public static void addQueryResultHandler(final Session session, final MockQueryResultHandler resultHandler) {
+        addQueryResultHandler(getQueryManager(session), resultHandler);
+    }
+    
+    /**
+     * Adds a query result handler for the given query manager which may return query results for certain queries that are executed.
+     * @param queryManager Mocked query manager
+     * @param resultHandler Mock query result handler
+     */
+    public static void addQueryResultHandler(final QueryManager queryManager, final MockQueryResultHandler resultHandler) {
+        ((MockQueryManager)queryManager).addResultHandler(resultHandler);
+    }
+    
+    private static QueryManager getQueryManager(Session session) {
+        try {
+            return session.getWorkspace().getQueryManager();
+        }
+        catch (RepositoryException ex) {
+            throw new RuntimeException("Unable to access query manager.", ex);
         }
     }
 

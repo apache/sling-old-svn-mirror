@@ -22,7 +22,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.distribution.communication.DistributionRequestType;
+import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.event.jobs.Job;

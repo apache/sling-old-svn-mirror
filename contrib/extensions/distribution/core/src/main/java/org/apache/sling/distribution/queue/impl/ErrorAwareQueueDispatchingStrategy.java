@@ -29,10 +29,9 @@ import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.queue.DistributionQueue;
-import org.apache.sling.distribution.queue.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
-import org.apache.sling.distribution.queue.DistributionQueueItemState;
+import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -79,7 +78,7 @@ public class ErrorAwareQueueDispatchingStrategy implements DistributionQueueDisp
         timeThreshold = PropertiesUtil.toInteger(ctx.getProperties().get(TIME_THRESHOLD), 600000);
     }
 
-    public Iterable<DistributionQueueItemState> add(@Nonnull DistributionPackage distributionPackage,
+    public Iterable<DistributionQueueItemStatus> add(@Nonnull DistributionPackage distributionPackage,
                                                     @Nonnull DistributionQueueProvider queueProvider) throws DistributionQueueException {
         checkAndRemoveStuckItems(queueProvider);
         DistributionQueueItem queueItem = getItem(distributionPackage);
@@ -87,7 +86,7 @@ public class ErrorAwareQueueDispatchingStrategy implements DistributionQueueDisp
         if (queue.add(queueItem)) {
             return Arrays.asList(queue.getStatus(queueItem));
         } else {
-            return Arrays.asList(new DistributionQueueItemState(DistributionQueueItemState.ItemState.ERROR, queue.getName()));
+            return Arrays.asList(new DistributionQueueItemStatus(DistributionQueueItemStatus.ItemState.ERROR, queue.getName()));
         }
     }
 
@@ -101,7 +100,7 @@ public class ErrorAwareQueueDispatchingStrategy implements DistributionQueueDisp
         // get first item in the queue with its status
         DistributionQueueItem firstItem = defaultQueue.getHead();
         if (firstItem != null) {
-            DistributionQueueItemState status = defaultQueue.getStatus(firstItem);
+            DistributionQueueItemStatus status = defaultQueue.getStatus(firstItem);
             // if item is still in the queue after a max no. of attempts, move it to the error queue
             int attempts = status.getAttempts();
             Calendar entered = status.getEntered();

@@ -21,12 +21,12 @@ package org.apache.sling.distribution.queue.impl.jobhandling;
 import java.util.Collections;
 import java.util.Map;
 
-import org.apache.sling.distribution.communication.DistributionRequestType;
+import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
-import org.apache.sling.distribution.queue.DistributionQueueItemState;
-import org.apache.sling.distribution.queue.DistributionQueueItemState.ItemState;
+import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
+import org.apache.sling.distribution.queue.DistributionQueueItemStatus.ItemState;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobBuilder;
 import org.apache.sling.event.jobs.JobManager;
@@ -87,7 +87,7 @@ public class JobHandlingDistributionQueueTest {
         packageInfo.setRequestType(DistributionRequestType.ADD);
         when(distributionQueueItem.getPackageInfo()).thenReturn(packageInfo);
         assertTrue(queue.add(distributionQueueItem));
-        DistributionQueueItemState status = queue.getStatus(distributionQueueItem);
+        DistributionQueueItemStatus status = queue.getStatus(distributionQueueItem);
         assertNotNull(status);
         assertFalse(status.isSuccessful());
         assertEquals(ItemState.DROPPED, status.getItemState());

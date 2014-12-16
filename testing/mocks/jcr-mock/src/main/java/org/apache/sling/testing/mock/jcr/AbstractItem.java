@@ -41,12 +41,12 @@ abstract class AbstractItem implements Item {
     }
 
     @Override
-    public String getName() {
+    public String getName() throws RepositoryException {
         return this.itemData.getName();
     }
 
     @Override
-    public String getPath() {
+    public String getPath() throws RepositoryException {
         return this.itemData.getPath();
     }
 
@@ -56,7 +56,7 @@ abstract class AbstractItem implements Item {
     }
 
     @Override
-    public Session getSession() {
+    public Session getSession()throws RepositoryException {
         return this.session;
     }
 
@@ -78,7 +78,7 @@ abstract class AbstractItem implements Item {
         return this.session.getItem(ResourceUtil.getParent(getPath(), depth));
     }
 
-    protected String makeAbsolutePath(final String relativePath) {
+    protected String makeAbsolutePath(final String relativePath) throws RepositoryException {
         String absolutePath = relativePath;
         // ensure the path is absolute and normalized
         if (!StringUtils.startsWith(absolutePath, "/")) {
@@ -107,22 +107,22 @@ abstract class AbstractItem implements Item {
 
     // --- unsupported operations ---
     @Override
-    public void accept(final ItemVisitor visitor) {
+    public void accept(final ItemVisitor visitor) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean isSame(final Item otherItem) {
+    public boolean isSame(final Item otherItem) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void refresh(final boolean keepChanges) {
+    public void refresh(final boolean keepChanges) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void save() {
+    public void save() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 

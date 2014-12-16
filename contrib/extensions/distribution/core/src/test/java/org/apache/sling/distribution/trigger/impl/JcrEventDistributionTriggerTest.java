@@ -20,7 +20,7 @@ package org.apache.sling.distribution.trigger.impl;
 
 import javax.jcr.observation.Event;
 
-import org.apache.sling.distribution.communication.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.Test;
 

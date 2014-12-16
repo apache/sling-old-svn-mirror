@@ -27,8 +27,9 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.sling.distribution.communication.DistributionRequest;
-import org.apache.sling.distribution.communication.DistributionRequestType;
+import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.slf4j.Logger;
@@ -86,7 +87,7 @@ public class PersistingJcrEventDistributionTrigger extends AbstractJcrEventTrigg
                     createdNode.setProperty("info", values.toArray(new String[values.size()]));
                     session.save();
                     log.info("event persisted at {}", path);
-                    distributionRequest = new DistributionRequest(DistributionRequestType.ADD, path);
+                    distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, path);
                 } else {
                     log.warn("could not create node {}", nuggetsPath + "/" + nodeName);
                 }

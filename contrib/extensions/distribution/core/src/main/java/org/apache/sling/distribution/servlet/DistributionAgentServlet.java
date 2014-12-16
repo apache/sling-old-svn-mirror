@@ -28,8 +28,8 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.agent.DistributionAgentException;
-import org.apache.sling.distribution.communication.DistributionRequest;
-import org.apache.sling.distribution.communication.DistributionResponse;
+import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.DistributionResponse;
 import org.apache.sling.distribution.resources.DistributionConstants;
 import org.apache.sling.distribution.util.RequestUtils;
 import org.slf4j.Logger;
@@ -61,10 +61,10 @@ public class DistributionAgentServlet extends SlingAllMethodsServlet {
             try {
                 DistributionResponse distributionResponse = agent.execute(resourceResolver, distributionRequest);
                 switch (distributionResponse.getState()) {
-                    case SUCCEEDED:
+                    case DISTRIBUTED:
                         response.setStatus(200);
                         break;
-                    case FAILED:
+                    case DROPPED:
                         response.setStatus(400);
                         break;
                     case ACCEPTED:

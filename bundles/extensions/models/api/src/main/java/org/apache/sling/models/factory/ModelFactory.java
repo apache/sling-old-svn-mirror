@@ -18,6 +18,7 @@
  */
 package org.apache.sling.models.factory;
 
+
 /**
  * The ModelFactory instantiates Sling Model classes similar to adaptTo but is allowed to throw an exception in case
  * instantiation fails for some reason.
@@ -31,19 +32,21 @@ public interface ModelFactory {
      * @return a new instance for the required model (never null)
      * @throws MissingElementsException in case no injector was able to inject some required values with the given types
      * @throws InvalidAdaptableException in case the given class cannot be instantiated from the given adaptable (different adaptable on the model annotation)
-     * @throws InvalidModelException in case the model could not be instanciated because model annotation was missing, reflection failed, no valid constructor was found or post-construct has thrown an error
+     * @throws ModelClassException in case the model could not be instanciated because model annotation was missing, reflection failed, no valid constructor was found or post-construct has thrown an error
+     * @throws InvalidValidationModelException in case an invalid validation model was found
+     * @throws InvalidResourceException in case the resource (for the Sling Model) could not be validated through Sling Validation
      */
     public <ModelType> ModelType createModel(Object adaptable, Class<ModelType> type) throws MissingElementsException,
-            InvalidAdaptableException, InvalidModelException;
+            InvalidAdaptableException, ModelClassException, InvalidValidationModelException, InvalidResourceException;
 
     /**
      * 
      * @param adaptable the adaptable to check
      * @param type the class to check
      * @return false in case the given class can not be created from the given adaptable
-     * @throws InvalidModelException in case no class with the Model annotation adapts to the requested type
+     * @throws ModelClassException in case no class with the Model annotation adapts to the requested type
      */
-    public boolean canCreateFromAdaptable(Object adaptable, Class<?> type) throws InvalidModelException;
+    public boolean canCreateFromAdaptable(Object adaptable, Class<?> type) throws ModelClassException;
 
     /**
      * 

@@ -31,8 +31,8 @@ public interface SlingContextCallback {
     /**
      * Execute callback action
      * @param context Sling context
-     * @throws IOException
-     * @throws PersistenceException
+     * @throws IOException I/O exception
+     * @throws PersistenceException Persistence exception
      */
     void execute(SlingContext context) throws IOException, PersistenceException;
 

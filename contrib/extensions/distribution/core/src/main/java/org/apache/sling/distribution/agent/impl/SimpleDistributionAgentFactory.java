@@ -39,7 +39,7 @@ import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
-import org.apache.sling.distribution.queue.DistributionQueueDispatchingStrategy;
+import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.SingleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
@@ -155,7 +155,6 @@ public class SimpleDistributionAgentFactory {
                     log.warn("cannot create agent", e);
                 }
 
-                log.debug("activated agent {}", agentName);
 
                 if (agent != null) {
 
@@ -163,6 +162,9 @@ public class SimpleDistributionAgentFactory {
                     componentReg = context.registerService(DistributionAgent.class.getName(), agent, props);
                     agent.enable();
                 }
+
+                log.info("activated agent {}", agentName);
+
             }
         }
     }
@@ -190,12 +192,16 @@ public class SimpleDistributionAgentFactory {
             Object service = context.getService(reference);
             if (service instanceof SimpleDistributionAgent) {
                 ((SimpleDistributionAgent) service).disable();
+
             }
 
             componentReg.unregister();
             componentReg = null;
             agent = null;
         }
+
+        log.info("deactivated agent {}", agentName);
+
 
     }
 }

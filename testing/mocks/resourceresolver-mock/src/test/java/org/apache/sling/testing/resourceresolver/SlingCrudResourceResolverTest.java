@@ -84,7 +84,9 @@ public class SlingCrudResourceResolverTest {
                 .put("binaryProp", new ByteArrayInputStream(BINARY_VALUE))
                 .build());
 
-        resourceResolver.create(node1, "node11", ValueMap.EMPTY);
+        resourceResolver.create(node1, "node11", ImmutableMap.<String, Object>builder()
+                .put("stringProp11", STRING_VALUE)
+                .build());
         resourceResolver.create(node1, "node12", ValueMap.EMPTY);
 
         resourceResolver.commit();
@@ -102,6 +104,21 @@ public class SlingCrudResourceResolverTest {
         assertEquals((Integer) INTEGER_VALUE, props.get("integerProp", Integer.class));
         assertEquals(DOUBLE_VALUE, props.get("doubleProp", Double.class), 0.0001);
         assertEquals(BOOLEAN_VALUE, props.get("booleanProp", Boolean.class));
+    }
+
+    @Test
+    public void testSimpleProperties_DeepPathAccess() throws IOException {
+        Resource resource1 = resourceResolver.getResource(testRoot.getPath());
+        assertNotNull(resource1);
+        assertEquals(testRoot.getName(), resource1.getName());
+
+        ValueMap props = ResourceUtil.getValueMap(resource1);
+        assertEquals(STRING_VALUE, props.get("node1/stringProp", String.class));
+        assertArrayEquals(STRING_ARRAY_VALUE, props.get("node1/stringArrayProp", String[].class));
+        assertEquals((Integer) INTEGER_VALUE, props.get("node1/integerProp", Integer.class));
+        assertEquals(DOUBLE_VALUE, props.get("node1/doubleProp", Double.class), 0.0001);
+        assertEquals(BOOLEAN_VALUE, props.get("node1/booleanProp", Boolean.class));
+        assertEquals(STRING_VALUE, props.get("node1/node11/stringProp11", String.class));
     }
 
     @Test

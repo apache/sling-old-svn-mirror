@@ -29,7 +29,7 @@ import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.injectorspecific.Self;
 import org.apache.sling.models.factory.InvalidAdaptableException;
-import org.apache.sling.models.factory.InvalidModelException;
+import org.apache.sling.models.factory.ModelClassException;
 import org.apache.sling.models.factory.MissingElementsException;
 import org.apache.sling.models.impl.injectors.SelfInjector;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
@@ -85,12 +85,12 @@ public class AdapterFactoryTest {
         Assert.assertFalse(factory.canCreateFromAdaptable(request, DefaultStringModel.class));
     }
 
-    @Test(expected = InvalidModelException.class)
+    @Test(expected = ModelClassException.class)
     public void testCanCreateFromAdaptableWithInvalidModel() {
         factory.canCreateFromAdaptable(resource, InvalidModelWithMissingAnnotation.class);
     }
 
-    @Test(expected = InvalidModelException.class)
+    @Test(expected = ModelClassException.class)
     public void testCreateFromNonModelClass() {
         factory.createModel(resource, InvalidModelWithMissingAnnotation.class);
     }

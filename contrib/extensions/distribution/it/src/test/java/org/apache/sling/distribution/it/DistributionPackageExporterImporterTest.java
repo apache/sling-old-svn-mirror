@@ -19,7 +19,7 @@
 package org.apache.sling.distribution.it;
 
 import org.apache.http.protocol.HTTP;
-import org.apache.sling.distribution.communication.DistributionRequestType;
+import org.apache.sling.distribution.DistributionRequestType;
 import org.junit.Test;
 
 import static org.apache.sling.distribution.it.DistributionUtils.assertExists;

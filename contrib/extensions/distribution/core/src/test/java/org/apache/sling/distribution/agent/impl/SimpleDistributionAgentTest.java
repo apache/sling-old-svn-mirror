@@ -22,17 +22,19 @@ import java.util.Arrays;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.distribution.communication.DistributionRequest;
-import org.apache.sling.distribution.communication.DistributionRequestType;
-import org.apache.sling.distribution.communication.DistributionResponse;
+import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequestState;
+import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.DistributionResponse;
+import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.queue.DistributionQueue;
-import org.apache.sling.distribution.queue.DistributionQueueDispatchingStrategy;
-import org.apache.sling.distribution.queue.DistributionQueueItemState;
+import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
+import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.simple.SimpleDistributionQueue;
 import org.junit.Test;
@@ -57,7 +59,7 @@ public class SimpleDistributionAgentTest {
         DistributionRequestAuthorizationStrategy packageExporterStrategy = mock(DistributionRequestAuthorizationStrategy.class);
         DistributionQueueProvider queueProvider = mock(DistributionQueueProvider.class);
         DistributionQueueDispatchingStrategy distributionHandler = mock(DistributionQueueDispatchingStrategy.class);
-        Iterable<DistributionQueueItemState> states = Arrays.asList(new DistributionQueueItemState(DistributionQueueItemState.ItemState.ERROR, DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME));
+        Iterable<DistributionQueueItemStatus> states = Arrays.asList(new DistributionQueueItemStatus(DistributionQueueItemStatus.ItemState.ERROR, DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME));
         when(distributionHandler.add(any(DistributionPackage.class), any(DistributionQueueProvider.class))).thenReturn(states);
         DistributionEventFactory distributionEventFactory = mock(DistributionEventFactory.class);
         ResourceResolverFactory resolverFactory = mock(ResourceResolverFactory.class);
@@ -67,7 +69,7 @@ public class SimpleDistributionAgentTest {
                 packageExporter, packageExporterStrategy,
                 queueProvider, distributionHandler,
                 distributionEventFactory, resolverFactory,  null);
-        DistributionRequest request = new DistributionRequest(DistributionRequestType.ADD, "/");
+        DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
 
@@ -79,6 +81,7 @@ public class SimpleDistributionAgentTest {
         DistributionResponse response = agent.execute(resourceResolver, request);
         assertNotNull(response);
         assertEquals("ERROR", response.getMessage());
+        assertEquals(DistributionRequestState.DROPPED, response.getState());
     }
 
     @Test
@@ -96,12 +99,12 @@ public class SimpleDistributionAgentTest {
                 packageExporter, packageExporterStrategy,
                 queueProvider,
                 distributionHandler, distributionEventFactory, resolverFactory, null);
-        DistributionRequest request = new DistributionRequest(DistributionRequestType.ADD, "/");
+        DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
 
         when(distributionPackage.getInfo()).thenReturn(new DistributionPackageInfo());
-        Iterable<DistributionQueueItemState> states = Arrays.asList(new DistributionQueueItemState(DistributionQueueItemState.ItemState.QUEUED,
+        Iterable<DistributionQueueItemStatus> states = Arrays.asList(new DistributionQueueItemStatus(DistributionQueueItemStatus.ItemState.QUEUED,
                 DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME));
         when(distributionHandler.add(any(DistributionPackage.class), any(DistributionQueueProvider.class))).thenReturn(states);
         when(packageExporter.exportPackages(any(ResourceResolver.class), any(DistributionRequest.class)))
@@ -111,6 +114,7 @@ public class SimpleDistributionAgentTest {
         DistributionResponse response = agent.execute(resourceResolver, request);
         assertNotNull(response);
         assertEquals("QUEUED", response.getMessage());
+        assertEquals(DistributionRequestState.ACCEPTED, response.getState());
     }
 
     @Test
@@ -129,7 +133,7 @@ public class SimpleDistributionAgentTest {
                 packageExporter, packageExporterStrategy,
                 queueProvider, distributionHandler,
                 distributionEventFactory, resolverFactory, null);
-        DistributionRequest request = new DistributionRequest(DistributionRequestType.ADD, "/");
+        DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         DistributionPackageInfo packageInfo = new DistributionPackageInfo();
         when(distributionPackage.getInfo()).thenReturn(packageInfo);

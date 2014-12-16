@@ -45,6 +45,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Implements simple write and read resource and values test. Sling CRUD API is
@@ -90,7 +91,9 @@ public abstract class AbstractSlingCrudResourceResolverTest {
         props.put("binaryProp", new ByteArrayInputStream(BINARY_VALUE));
         Resource node1 = this.resourceResolver.create(rootNode, "node1", props);
 
-        this.resourceResolver.create(node1, "node11", ValueMap.EMPTY);
+        resourceResolver.create(node1, "node11", ImmutableMap.<String, Object>builder()
+                .put("stringProp11", STRING_VALUE)
+                .build());
         this.resourceResolver.create(node1, "node12", ValueMap.EMPTY);
 
         this.resourceResolver.commit();
@@ -135,6 +138,21 @@ public abstract class AbstractSlingCrudResourceResolverTest {
         assertEquals(BOOLEAN_VALUE, props.get("booleanProp", Boolean.class));
     }
 
+    @Test
+    public void testSimpleProperties_DeepPathAccess() throws IOException {
+        Resource resource1 = resourceResolver.getResource(testRoot.getPath());
+        assertNotNull(resource1);
+        assertEquals(testRoot.getName(), resource1.getName());
+
+        ValueMap props = ResourceUtil.getValueMap(resource1);
+        assertEquals(STRING_VALUE, props.get("node1/stringProp", String.class));
+        assertArrayEquals(STRING_ARRAY_VALUE, props.get("node1/stringArrayProp", String[].class));
+        assertEquals((Integer) INTEGER_VALUE, props.get("node1/integerProp", Integer.class));
+        assertEquals(DOUBLE_VALUE, props.get("node1/doubleProp", Double.class), 0.0001);
+        assertEquals(BOOLEAN_VALUE, props.get("node1/booleanProp", Boolean.class));
+        assertEquals(STRING_VALUE, props.get("node1/node11/stringProp11", String.class));
+    }
+    
     @Test
     public void testDateProperty() throws IOException {
         Resource resource1 = this.resourceResolver.getResource(getTestRootResource().getPath() + "/node1");

@@ -34,6 +34,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.sightly.js.impl.async.AsyncContainer;
 import org.apache.sling.scripting.sightly.js.impl.async.AsyncExtractor;
+import org.apache.sling.scripting.sightly.js.impl.jsapi.SlyBindingsValuesProvider;
 import org.apache.sling.scripting.sightly.js.impl.rhino.JsValueAdapter;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.use.ProviderOutcome;
@@ -74,9 +75,13 @@ public class JsUseProvider implements UseProvider {
     @Reference
     private ResourceResolverFactory rrf = null;
 
+    @Reference
+    private SlyBindingsValuesProvider slyBindingsValuesProvider = null;
+
     @Override
     public ProviderOutcome provide(String identifier, RenderContext renderContext, Bindings arguments) {
         Bindings globalBindings = renderContext.getBindings();
+        slyBindingsValuesProvider.processBindings(globalBindings);
         if (!Utils.isJsScript(identifier)) {
             return ProviderOutcome.failure();
         }

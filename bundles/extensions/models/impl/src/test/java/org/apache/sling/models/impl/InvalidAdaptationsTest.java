@@ -29,7 +29,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.factory.InvalidAdaptableException;
-import org.apache.sling.models.factory.InvalidModelException;
+import org.apache.sling.models.factory.ModelClassException;
 import org.apache.sling.models.impl.injectors.ChildResourceInjector;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
 import org.junit.Before;
@@ -72,7 +72,7 @@ public class InvalidAdaptationsTest {
         assertNull(factory.getAdapter(res, NonModel.class));
     }
 
-    @Test(expected = InvalidModelException.class)
+    @Test(expected = ModelClassException.class)
     public void testNonModelClassException() {
         Map<String, Object> emptyMap = Collections.<String, Object> emptyMap();
 

@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service(RuntimeExtension.class)
 @Properties({
-        @Property(name = RuntimeExtension.SCR_PROP_NAME, value = I18nFilter.FUNCTION)
+        @Property(name = RuntimeExtension.NAME, value = I18nFilter.FUNCTION)
 })
 public class I18nRuntimeExtension implements RuntimeExtension {
 

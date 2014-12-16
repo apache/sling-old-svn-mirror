@@ -65,13 +65,13 @@ class MockSession implements Session {
     }
 
     @Override
-    public ValueFactory getValueFactory() {
+    public ValueFactory getValueFactory() throws RepositoryException {
         return ValueFactoryImpl.getInstance();
     }
 
     @Override
     public Item getItem(final String absPath) throws RepositoryException {
-        ItemData itemData = this.items.get(absPath);
+        final ItemData itemData = getItemData(absPath);
         if (itemData != null) {
             if (itemData.isNode()) {
                 return new MockNode(itemData, this);
@@ -116,32 +116,22 @@ class MockSession implements Session {
 
     @Override
     public boolean nodeExists(final String absPath) throws RepositoryException {
-        try {
-            getNode(absPath);
-            return true;
-        } catch (PathNotFoundException ex) {
-            return false;
-        }
+        return itemExists(absPath) && getItemData(absPath).isNode();
     }
 
     @Override
     public boolean propertyExists(final String absPath) throws RepositoryException {
-        try {
-            getProperty(absPath);
-            return true;
-        } catch (PathNotFoundException ex) {
-            return false;
-        }
+        return itemExists(absPath) && getItemData(absPath).isProperty();
     }
 
     @Override
-    public void removeItem(final String absPath) {
+    public void removeItem(final String absPath) throws RepositoryException {
         removeItemWithChildren(absPath);
     }
 
     @Override
-    public Node getRootNode() {
-        return (Node)this.items.get("/").getItem(this);
+    public Node getRootNode() throws RepositoryException {
+        return getNode("/");
     }
 
     @Override
@@ -151,25 +141,33 @@ class MockSession implements Session {
 
     /**
      * Add item
-     * @param item item
-     * @throws RepositoryException
+     * @param itemData item data
      */
-    void addItem(final ItemData itemData) throws RepositoryException {
+    void addItem(final ItemData itemData) {
         this.items.put(itemData.getPath(), itemData);
+    }
+
+    private ItemData getItemData(final String absPath) {
+        final String normalizedPath = ResourceUtil.normalize(absPath);
+        return this.items.get(normalizedPath);
     }
 
     /**
      * Remove item incl. children
-     * @param path Item path
+     * @param absPath Item path
      */
-    void removeItemWithChildren(final String path) {
-        List<String> pathsToRemove = new ArrayList<String>();
+    private void removeItemWithChildren(final String absPath) throws RepositoryException {
+        if (!itemExists(absPath)) {
+            return;
+        }
 
-        // build regex pattern for node and all its children
-        Pattern pattern = Pattern.compile("^" + Pattern.quote(path) + "(/.+)?$");
+        final ItemData parent = getItemData(absPath);
+        final String descendantPrefix = parent.getPath() + "/";
 
+        final List<String> pathsToRemove = new ArrayList<String>();
+        pathsToRemove.add(parent.getPath());
         for (String itemPath : this.items.keySet()) {
-            if (pattern.matcher(itemPath).matches()) {
+            if (itemPath.startsWith(descendantPrefix)) {
                 pathsToRemove.add(itemPath);
             }
         }
@@ -195,13 +193,13 @@ class MockSession implements Session {
     }
 
     @Override
-    public boolean hasPendingChanges() {
+    public boolean hasPendingChanges() throws RepositoryException {
         return false;
     }
 
     @Override
-    public boolean itemExists(final String absPath) {
-        return this.items.get(absPath) != null;
+    public boolean itemExists(final String absPath) throws RepositoryException {
+        return getItemData(absPath) != null;
     }
 
     @Override
@@ -240,7 +238,7 @@ class MockSession implements Session {
     }
 
     @Override
-    public void save() {
+    public void save() throws RepositoryException {
         // do nothing
     }
 
@@ -250,7 +248,7 @@ class MockSession implements Session {
     }
 
     @Override
-    public void checkPermission(final String absPath, final String actions) {
+    public void checkPermission(final String absPath, final String actions) throws RepositoryException {
         // always grant permission
     }
 
@@ -262,25 +260,25 @@ class MockSession implements Session {
 
     @Override
     public void exportDocumentView(final String absPath, final ContentHandler contentHandler, final boolean skipBinary,
-            final boolean noRecurse) {
+            final boolean noRecurse) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public void exportDocumentView(final String absPath, final OutputStream out, final boolean skipBinary,
-            final boolean noRecurse) {
+            final boolean noRecurse) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public void exportSystemView(final String absPath, final ContentHandler contentHandler, final boolean skipBinary,
-            final boolean noRecurse) {
+            final boolean noRecurse) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public void exportSystemView(final String absPath, final OutputStream out, final boolean skipBinary,
-            final boolean noRecurse) {
+            final boolean noRecurse) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
@@ -295,7 +293,7 @@ class MockSession implements Session {
     }
 
     @Override
-    public ContentHandler getImportContentHandler(final String parentAbsPath, final int uuidBehavior) {
+    public ContentHandler getImportContentHandler(final String parentAbsPath, final int uuidBehavior) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
@@ -305,12 +303,12 @@ class MockSession implements Session {
     }
 
     @Override
-    public Session impersonate(final Credentials credentials) {
+    public Session impersonate(final Credentials credentials) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void importXML(final String parentAbsPath, final InputStream in, final int uuidBehavior) {
+    public void importXML(final String parentAbsPath, final InputStream in, final int uuidBehavior) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
@@ -325,7 +323,7 @@ class MockSession implements Session {
     }
 
     @Override
-    public void move(final String srcAbsPath, final String destAbsPath) {
+    public void move(final String srcAbsPath, final String destAbsPath) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
@@ -335,22 +333,22 @@ class MockSession implements Session {
     }
 
     @Override
-    public AccessControlManager getAccessControlManager() {
+    public AccessControlManager getAccessControlManager() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public RetentionManager getRetentionManager() {
+    public RetentionManager getRetentionManager() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean hasCapability(final String methodName, final Object target, final Object[] arguments) {
+    public boolean hasCapability(final String methodName, final Object target, final Object[] arguments) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean hasPermission(final String absPath, final String actions) {
+    public boolean hasPermission(final String absPath, final String actions) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 

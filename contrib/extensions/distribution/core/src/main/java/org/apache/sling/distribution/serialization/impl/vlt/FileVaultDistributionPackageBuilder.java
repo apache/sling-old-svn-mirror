@@ -37,7 +37,7 @@ import org.apache.jackrabbit.vault.packaging.ExportOptions;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.communication.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
@@ -85,12 +85,11 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
             // TODO : no tokens
 
             final String[] paths = request.getPaths();
-            final boolean deep = request.isDeep();
 
             String packageGroup = "sling/distribution";
             String packageName = PACKAGING_TYPE + "_" + System.currentTimeMillis() + "_" +  UUID.randomUUID();
 
-            WorkspaceFilter filter = VltUtils.createFilter(paths, deep);
+            WorkspaceFilter filter = VltUtils.createFilter(request);
             ExportOptions opts = VltUtils.getExportOptions(filter, packageGroup, packageName, VERSION);
 
             log.debug("assembling package {}", packageGroup + '/' + packageName + "-" + VERSION);

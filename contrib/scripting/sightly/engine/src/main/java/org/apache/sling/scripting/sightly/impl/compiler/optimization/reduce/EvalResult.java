@@ -59,7 +59,8 @@ public final class EvalResult {
 
     public Object getValue() {
         if (!isConstant()) {
-            throw new CompilerException(new UnsupportedOperationException("Cannot get constant value from non-constant result"));
+            throw new CompilerException(CompilerException.CompilerExceptionCause.COMPILER_ERRORS, new UnsupportedOperationException
+                    ("Cannot get constant value from non-constant result."));
         }
         return value;
     }
@@ -89,7 +90,8 @@ public final class EvalResult {
         if (value == null) {
             return NullLiteral.INSTANCE;
         }
-        throw new CompilerException(new UnsupportedOperationException("Cannot transform to literal: " + value));
+        throw new CompilerException(CompilerException.CompilerExceptionCause.COMPILER_ERRORS, new UnsupportedOperationException("Cannot " +
+                "transform to literal: " + value));
     }
 
     private static MapLiteral asMapLiteral(Map<String, Object> map) {

@@ -53,7 +53,7 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service(RuntimeExtension.class)
 @Properties(
-        @Property(name = RuntimeExtension.SCR_PROP_NAME, value = ResourcePlugin.FUNCTION)
+        @Property(name = RuntimeExtension.NAME, value = ResourcePlugin.FUNCTION)
 )
 @SuppressWarnings("unused")
 public class ResourceRuntimeExtension implements RuntimeExtension {

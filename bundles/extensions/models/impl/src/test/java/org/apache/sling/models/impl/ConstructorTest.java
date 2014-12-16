@@ -22,7 +22,7 @@ import static org.mockito.Mockito.*;
 import java.util.Hashtable;
 
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.models.factory.InvalidModelException;
+import org.apache.sling.models.factory.ModelClassException;
 import org.apache.sling.models.impl.injectors.RequestAttributeInjector;
 import org.apache.sling.models.impl.injectors.SelfInjector;
 import org.apache.sling.models.testmodels.classes.InvalidConstructorModel;
@@ -110,7 +110,7 @@ public class ConstructorTest {
         assertNull(model);
     }
 
-    @Test(expected = InvalidModelException.class)
+    @Test(expected = ModelClassException.class)
     public void testInvalidConstructorInjectorException() {
         factory.createModel(request, InvalidConstructorModel.class);
     }

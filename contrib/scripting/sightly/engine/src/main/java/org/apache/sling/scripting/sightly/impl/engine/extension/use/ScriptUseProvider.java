@@ -25,19 +25,16 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyScriptEngineFactory;
+import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.use.ProviderOutcome;
-import org.apache.sling.scripting.sightly.use.SightlyUseException;
 import org.apache.sling.scripting.sightly.use.UseProvider;
 import org.osgi.framework.Constants;
 import org.slf4j.Logger;
@@ -71,9 +68,6 @@ public class ScriptUseProvider implements UseProvider {
 
     private static final Logger log = LoggerFactory.getLogger(ScriptUseProvider.class);
 
-    @Reference
-    private ResourceResolverFactory rrf = null;
-
     @Override
     public ProviderOutcome provide(String scriptName, RenderContext renderContext, Bindings arguments) {
         Bindings globalBindings = renderContext.getBindings();
@@ -83,27 +77,17 @@ public class ScriptUseProvider implements UseProvider {
             return ProviderOutcome.failure();
         }
         SlingScriptHelper sling = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
-        ResourceResolver adminResolver = null;
-        try {
-            adminResolver = rrf.getAdministrativeResourceResolver(null);
-            if (adminResolver == null) {
-                log.warn("Cannot obtain administrative resource resolver for " + scriptName);
-                return ProviderOutcome.failure();
-            }
-            Resource scriptResource = UseProviderUtils.locateScriptResource(adminResolver, sling, scriptName);
-            if (scriptResource == null) {
-                log.debug("Path does not match an existing resource: {}", scriptName);
-                return ProviderOutcome.failure();
-            }
-            return evalScript(scriptResource, bindings);
-        } catch (LoginException e) {
-            throw new SightlyUseException(e);
-        } finally {
-            if (adminResolver != null) {
-                adminResolver.close();
-            }
+        ResourceResolver adminResolver = RenderContextImpl.getScriptResourceResolver(renderContext);
+        if (adminResolver == null) {
+            log.warn("Cannot obtain administrative resource resolver for " + scriptName);
+            return ProviderOutcome.failure();
         }
-
+        Resource scriptResource = UseProviderUtils.locateScriptResource(adminResolver, sling, scriptName);
+        if (scriptResource == null) {
+            log.debug("Path does not match an existing resource: {}", scriptName);
+            return ProviderOutcome.failure();
+        }
+        return evalScript(scriptResource, bindings);
     }
 
     private ProviderOutcome evalScript(Resource scriptResource, Bindings bindings) {

@@ -27,9 +27,8 @@ import java.util.Map;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
-import org.apache.sling.distribution.queue.DistributionQueueItemSelector;
-import org.apache.sling.distribution.queue.DistributionQueueItemState;
-import org.apache.sling.distribution.queue.DistributionQueueItemState.ItemState;
+import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
+import org.apache.sling.distribution.queue.DistributionQueueItemStatus.ItemState;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.JobManager.QueryType;
@@ -77,14 +76,14 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
     }
 
     @Nonnull
-    public DistributionQueueItemState getStatus(@Nonnull DistributionQueueItem distributionPackage)
+    public DistributionQueueItemStatus getStatus(@Nonnull DistributionQueueItem distributionPackage)
             throws DistributionQueueException {
         try {
             Map<String, Object> properties = JobHandlingUtils.createIdProperties(distributionPackage.getId());
             Job job = jobManager.getJob(topic, properties);
             if (job != null) {
 
-                DistributionQueueItemState itemState = new DistributionQueueItemState(job.getCreated(),
+                DistributionQueueItemStatus itemState = new DistributionQueueItemStatus(job.getCreated(),
                         ItemState.valueOf(job.getJobState().toString()),
                         job.getRetryCount(), name);
 
@@ -92,7 +91,7 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
 
                 return itemState;
             } else {
-                DistributionQueueItemState itemState = new DistributionQueueItemState(ItemState.DROPPED, name);
+                DistributionQueueItemStatus itemState = new DistributionQueueItemStatus(ItemState.DROPPED, name);
                 return itemState;
             }
         } catch (Exception e) {
@@ -110,7 +109,7 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
     }
 
     private Job getFirstJob() {
-        log.info("getting first item in the queue");
+        log.debug("getting first item in the queue");
 
         List<Job> jobs = getJobs(0, 1);
         if (jobs.size() > 0) {
@@ -156,13 +155,11 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
     }
 
     @Nonnull
-    public List<DistributionQueueItem> getItems(DistributionQueueItemSelector selector) {
-        if (selector == null) {
-            selector = new DistributionQueueItemSelector(0, -1);
-        }
+    public List<DistributionQueueItem> getItems(int skip, int limit) {
+
 
         List<DistributionQueueItem> items = new ArrayList<DistributionQueueItem>();
-        Collection<Job> jobs = getJobs(selector.getSkip(), selector.getLimit());
+        Collection<Job> jobs = getJobs(skip, limit);
         for (Job job : jobs) {
             items.add(JobHandlingUtils.getItem(job));
         }

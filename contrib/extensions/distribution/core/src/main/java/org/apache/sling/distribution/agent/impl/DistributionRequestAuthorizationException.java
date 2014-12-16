@@ -19,7 +19,7 @@
 package org.apache.sling.distribution.agent.impl;
 
 /**
- * An {@link Exception} representing failed authorization in execution of a certain {@link org.apache.sling.distribution.communication.DistributionRequest}
+ * An {@link Exception} representing failed authorization in execution of a certain {@link org.apache.sling.distribution.DistributionRequest}
  */
 public class DistributionRequestAuthorizationException extends Exception {
     public DistributionRequestAuthorizationException(String message) {

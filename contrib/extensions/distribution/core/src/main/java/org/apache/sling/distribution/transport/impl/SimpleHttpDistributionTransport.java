@@ -37,11 +37,11 @@ import org.apache.http.client.fluent.Response;
 import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.entity.ContentType;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.communication.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.transport.DistributionTransport;
-import org.apache.sling.distribution.transport.DistributionTransportException;
+import org.apache.sling.distribution.transport.core.DistributionTransport;
+import org.apache.sling.distribution.transport.core.DistributionTransportException;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
 import org.apache.sling.distribution.util.RequestUtils;
 import org.slf4j.Logger;
@@ -162,6 +162,8 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
             return result;
 
         } catch (Exception ex) {
+            log.error("cannot retrieve packages", ex);
+
             throw new DistributionTransportException(ex);
         }
 

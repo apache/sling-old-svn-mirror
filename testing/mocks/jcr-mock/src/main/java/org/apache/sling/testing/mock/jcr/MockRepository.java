@@ -23,6 +23,7 @@ import java.util.Map;
 
 import javax.jcr.Credentials;
 import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import javax.jcr.Value;
@@ -45,22 +46,22 @@ class MockRepository implements Repository {
     }
     
     @Override
-    public Session login() {
+    public Session login() throws RepositoryException {
         return login(null, null);
     }
 
     @Override
-    public Session login(final String workspaceName) {
+    public Session login(final String workspaceName) throws RepositoryException {
         return login(null, workspaceName);
     }
 
     @Override
-    public Session login(final Credentials credentials) {
+    public Session login(final Credentials credentials) throws RepositoryException {
         return login(credentials, null);
     }
 
     @Override
-    public Session login(final Credentials credentials, final String workspaceName) {
+    public Session login(final Credentials credentials, final String workspaceName) throws RepositoryException {
         String userId = null;
         if (credentials instanceof SimpleCredentials) {
             userId = ((SimpleCredentials)credentials).getUserID();

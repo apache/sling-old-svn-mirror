@@ -30,10 +30,8 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.compiler.CompilationResult;
 import org.apache.sling.commons.compiler.CompilationUnit;
@@ -41,6 +39,7 @@ import org.apache.sling.commons.compiler.CompilerMessage;
 import org.apache.sling.commons.compiler.Options;
 import org.apache.sling.jcr.compiler.JcrJavaCompiler;
 import org.apache.sling.scripting.sightly.ResourceResolution;
+import org.apache.sling.scripting.sightly.impl.engine.UnitChangeMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +62,7 @@ public class SightlyJavaCompilerService {
     private JcrJavaCompiler jcrJavaCompiler = null;
 
     @Reference
-    private ResourceResolverFactory rrf = null;
+    private UnitChangeMonitor unitChangeMonitor = null;
 
     private Options options;
 
@@ -87,45 +86,28 @@ public class SightlyJavaCompilerService {
 
         // assume fully qualified class name
         if (className.contains(".")) {
-            Resource pojoResource = checkIfPojoIsInRepo(className);
-            if (pojoResource != null) {
-                return compileSource(pojoResource, className);
-            } else {
-                LOG.debug("fully qualified classname provided, loading object directly");
-                return loadObject(className);
-            }
-        }
-
-        LOG.debug("trying to find Java source based on resource: {}", resource.getPath());
-
-        // try to find Java source in JCR
-        // use the servlet resolver to do all the magic lookup (resource type hierarchy and search path) for us
-
-        Resource scriptResource = ResourceResolution
-                .resolveComponentRelative(resource.getResourceResolver(), resource, className + ".java");
-        if (scriptResource != null) {
-            LOG.debug("found Java bean script resource: " + scriptResource.getPath());
             try {
-                return compileJavaResource(new SlingResourceCompilationUnit(scriptResource), scriptResource.getPath());
-            } catch (Exception e) {
-                throw new CompilerException(e);
+                String pojoPath = getPathFromJavaName(className);
+                return loadPOJOFromRepo(resource.getResourceResolver(), className, pojoPath);
+            } catch (CompilerException e1) {
+                if (e1.getFailureCause() == CompilerException.CompilerExceptionCause.MISSING_REPO_POJO) {
+                    // the POJO might have been loaded once and come from a bundle
+                    return loadObject(className);
+                }
+                throw e1;
             }
         } else {
-            // not found in JCR, try to load from bundle using current resource type package
-            // /apps/project/components/foo => apps.project.components.foo.<scriptName>
-            Resource resourceType = resource.getResourceResolver().getResource(resource.getResourceType());
-
-            if (resourceType == null) {
-                resourceType = resource;
+            LOG.debug("trying to find Java source based on resource: {}", resource.getPath());
+            // try to find Java source in JCR from a non-fully qualified class name
+            Resource scriptResource = ResourceResolution
+                    .resolveComponentRelative(resource.getResourceResolver(), resource, className + ".java");
+            if (scriptResource != null) {
+                String pojoPath = scriptResource.getPath();
+                LOG.debug("found Java bean script resource: " + scriptResource.getPath());
+                return loadPOJOFromRepo(resource.getResourceResolver(), getJavaNameFromPath(pojoPath), pojoPath);
+            } else {
+                return loadPOJOFromBundle(resource, className);
             }
-
-            String resourceTypeDir = resourceType.getPath();
-            className = getJavaNameFromPath(resourceTypeDir) + "." + className;
-
-            LOG.debug("Java bean source not found, trying to locate using" + " component directory as packagename: {}", resourceTypeDir);
-
-            LOG.debug("loading Java class: " + className);
-            return loadObject(className);
         }
     }
 
@@ -143,8 +125,46 @@ public class SightlyJavaCompilerService {
             CompilationUnit compilationUnit = new SightlyCompilationUnit(javaResource, fqcn);
             return compileJavaResource(compilationUnit, javaResource.getPath());
         } catch (Exception e) {
-            throw new CompilerException(e);
+            throw new CompilerException(CompilerException.CompilerExceptionCause.COMPILER_ERRORS, e);
         }
+    }
+
+    private Object loadPOJOFromRepo(ResourceResolver resolver, String className, String pojoPath) {
+        if (unitChangeMonitor.getLastModifiedDateForJavaUseObject(pojoPath) > 0) {
+            Resource pojoResource = resolver.getResource(pojoPath);
+            if (pojoResource != null) {
+                // remove it from the monitor so that next time we load it from the classloader's cache
+                unitChangeMonitor.clearJavaUseObject(pojoPath);
+                return compileSource(pojoResource, className);
+            } else {
+                throw new CompilerException(CompilerException.CompilerExceptionCause.MISSING_REPO_POJO, String.format("Resource %s " +
+                        "identifying class %s has been removed.", pojoPath, className));
+            }
+        } else {
+            try {
+                // the POJO was compiled but not cached by the unitChangeMonitor
+                return loadObject(className);
+            } catch (CompilerException e) {
+                // the POJO was never compiled, nor cached by unitChangeMonitor
+                Resource pojoResource = resolver.getResource(pojoPath);
+                if (pojoResource != null) {
+                    return compileSource(pojoResource, className);
+                }
+                throw new CompilerException(CompilerException.CompilerExceptionCause.MISSING_REPO_POJO);
+            }
+        }
+    }
+
+    private Object loadPOJOFromBundle(Resource resource, String className) {
+        Resource resourceType = resource.getResourceResolver().getResource(resource.getResourceType());
+        if (resourceType == null) {
+            resourceType = resource;
+        }
+        String resourceTypeDir = resourceType.getPath();
+        String  fullyQualifiedClassName = getJavaNameFromPath(resourceTypeDir) + "." + className;
+        LOG.debug("Java bean source not found, trying to locate using" + " component directory as packagename: {}", resourceTypeDir);
+        LOG.debug("loading Java class: " + fullyQualifiedClassName);
+        return loadObject(fullyQualifiedClassName);
     }
 
     /**
@@ -155,29 +175,18 @@ public class SightlyJavaCompilerService {
      */
     private Object loadObject(String className) {
         try {
-            return loadClass(className).newInstance();
-        } catch (Exception e) {
-            throw new CompilerException(e);
-        }
-    }
-
-    /**
-     * Retrieve a class from the ClassLoaderWriter service.
-     *
-     * @param name name of class to load
-     * @return Class
-     * @throws ClassNotFoundException
-     */
-    private Class loadClass(String name) throws ClassNotFoundException {
-        readLock.lock();
-        try {
-            if (classLoaderWriter != null) {
-                return classLoaderWriter.getClassLoader().loadClass(name);
+            readLock.lock();
+            try {
+                if (classLoaderWriter != null) {
+                    return classLoaderWriter.getClassLoader().loadClass(className).newInstance();
+                }
+            } finally {
+                readLock.unlock();
             }
-        } finally {
-            readLock.unlock();
+            return Class.forName(className).newInstance();
+        } catch (Exception e) {
+            throw new CompilerException(CompilerException.CompilerExceptionCause.COMPILER_ERRORS, e);
         }
-        return Class.forName(name);
     }
 
     /**
@@ -196,7 +205,7 @@ public class SightlyJavaCompilerService {
             long end = System.currentTimeMillis();
             List<CompilerMessage> errors = compilationResult.getErrors();
             if (errors != null && errors.size() > 0) {
-                throw new CompilerException(createErrorMsg(errors));
+                throw new CompilerException(CompilerException.CompilerExceptionCause.COMPILER_ERRORS, createErrorMsg(errors));
             }
             if (LOG.isDebugEnabled()) {
                 LOG.debug("script compiled: {}", compilationResult.didCompile());
@@ -222,42 +231,15 @@ public class SightlyJavaCompilerService {
     }
 
     //---------------------------------- private -----------------------------------
-
-    /**
-     * Checks is a POJO class name is represented by a resource from the repository.
-     *
-     * @param className the class name
-     * @return the Resource in which the class is defined, {@code null} if the POJO was not found in the repository
-     */
-    private Resource checkIfPojoIsInRepo(String className) {
-        // POJOs will always be loaded through the compiler (prevents stale class loader issues)
-        String pojoPath = "/" + className.replaceAll("\\.", "/") + ".java";
-        ResourceResolver rr = null;
-        try {
-            rr = rrf.getAdministrativeResourceResolver(null);
-            Resource pojoResource = rr.getResource(pojoPath);
-            if (pojoResource != null) {
-                for (String s : rr.getSearchPath()) {
-                    if (pojoPath.startsWith(s)) {
-                        return pojoResource;
-                    }
-                }
-            }
-        } catch (LoginException le) {
-            LOG.error("Cannot search repository for POJO.", le);
-        } finally {
-            if (rr != null) {
-                rr.close();
-            }
-        }
-        return null;
-    }
-
     private String getJavaNameFromPath(String path) {
         if (path.endsWith(".java")) {
             path = path.substring(0, path.length() - 5);
         }
         return path.substring(1).replace("/", ".").replace("-", "_");
+    }
+
+    private String getPathFromJavaName(String className) {
+        return "/" + className.replaceAll("\\.", "/") + ".java";
     }
 
     private String createErrorMsg(List<CompilerMessage> errors) {

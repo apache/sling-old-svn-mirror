@@ -29,8 +29,7 @@ public interface OsgiContextCallback {
     /**
      * Execute callback action
      * @param context OSGi context
-     * @throws IOException
-     * @throws PersistenceException
+     * @throws IOException I/O exception
      */
     void execute(OsgiContext context) throws IOException;
 

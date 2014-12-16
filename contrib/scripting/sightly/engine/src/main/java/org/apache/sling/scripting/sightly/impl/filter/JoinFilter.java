@@ -40,7 +40,7 @@ import org.apache.sling.scripting.sightly.render.RenderContext;
 @Component
 @Service({Filter.class, RuntimeExtension.class})
 @Properties({
-        @Property(name = RuntimeExtension.SCR_PROP_NAME, value = JoinFilter.JOIN_FUNCTION)
+        @Property(name = RuntimeExtension.NAME, value = JoinFilter.JOIN_FUNCTION)
 })
 public class JoinFilter extends FilterComponent implements RuntimeExtension {
 

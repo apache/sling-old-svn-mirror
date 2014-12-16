@@ -27,7 +27,7 @@ import javax.jcr.observation.EventListener;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.sling.distribution.communication.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.distribution.trigger.DistributionTriggerException;
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Abstract implementation of a {@link org.apache.sling.distribution.trigger.DistributionTrigger} that listens for 'safe'
- * events and triggers a {@link org.apache.sling.distribution.communication.DistributionRequest} from that.
+ * events and triggers a {@link org.apache.sling.distribution.DistributionRequest} from that.
  */
 public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
 
@@ -125,7 +125,7 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
      * process the received event and generates a distribution request
      *
      * @param event an {@link javax.jcr.observation.Event} to be processed
-     * @return the {@link org.apache.sling.distribution.communication.DistributionRequest} originated by processing the event,
+     * @return the {@link org.apache.sling.distribution.DistributionRequest} originated by processing the event,
      * or <code>null</code> if no request could be generated
      * @throws RepositoryException
      */

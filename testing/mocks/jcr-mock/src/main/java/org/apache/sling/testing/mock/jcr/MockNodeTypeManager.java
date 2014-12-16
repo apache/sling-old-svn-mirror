@@ -18,6 +18,7 @@
  */
 package org.apache.sling.testing.mock.jcr;
 
+import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeDefinitionTemplate;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeDefinition;
@@ -32,13 +33,13 @@ import javax.jcr.nodetype.PropertyDefinitionTemplate;
 class MockNodeTypeManager implements NodeTypeManager {
 
     @Override
-    public NodeType getNodeType(String nodeTypeName) {
+    public NodeType getNodeType(String nodeTypeName) throws RepositoryException {
         // accept all node types and return a mock
         return new MockNodeType(nodeTypeName);
     }
 
     @Override
-    public boolean hasNodeType(String name) {
+    public boolean hasNodeType(String name) throws RepositoryException {
         // accept all node types
         return true;
     }
@@ -46,57 +47,57 @@ class MockNodeTypeManager implements NodeTypeManager {
     // --- unsupported operations ---
 
     @Override
-    public NodeTypeIterator getAllNodeTypes() {
+    public NodeTypeIterator getAllNodeTypes() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public NodeTypeIterator getPrimaryNodeTypes() {
+    public NodeTypeIterator getPrimaryNodeTypes() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public NodeTypeIterator getMixinNodeTypes() {
+    public NodeTypeIterator getMixinNodeTypes() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public NodeTypeTemplate createNodeTypeTemplate() {
+    public NodeTypeTemplate createNodeTypeTemplate() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public NodeTypeTemplate createNodeTypeTemplate(NodeTypeDefinition ntd) {
+    public NodeTypeTemplate createNodeTypeTemplate(NodeTypeDefinition ntd) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public NodeDefinitionTemplate createNodeDefinitionTemplate() {
+    public NodeDefinitionTemplate createNodeDefinitionTemplate() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public PropertyDefinitionTemplate createPropertyDefinitionTemplate() {
+    public PropertyDefinitionTemplate createPropertyDefinitionTemplate() throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public NodeType registerNodeType(NodeTypeDefinition ntd, boolean allowUpdate) {
+    public NodeType registerNodeType(NodeTypeDefinition ntd, boolean allowUpdate) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public NodeTypeIterator registerNodeTypes(NodeTypeDefinition[] ntds, boolean allowUpdate) {
+    public NodeTypeIterator registerNodeTypes(NodeTypeDefinition[] ntds, boolean allowUpdate) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void unregisterNodeType(String name) {
+    public void unregisterNodeType(String name) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void unregisterNodeTypes(String[] names) {
+    public void unregisterNodeTypes(String[] names) throws RepositoryException {
         throw new UnsupportedOperationException();
     }
 

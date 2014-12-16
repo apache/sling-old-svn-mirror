@@ -82,12 +82,6 @@ public class ResourceBasedDistributionComponentFactory implements Runnable {
      */
     private static final String DEFAULTS_FOLDER = "defaults";
 
-    /**
-     * The name of the file that contains defaults
-     * (e.g. .../settings/defaults/agents/global)
-     */
-    private static final String DEFAULT_FILE = "global";
-
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -286,9 +280,14 @@ public class ResourceBasedDistributionComponentFactory implements Runnable {
             }
 
 
+            String kind = getComponentKind(componentPath);
+            String name = getComponentName(componentPath);
+            Map<String, Object> componentConfig = extractMap(0, resource);
+            String type = PropertiesUtil.toString(componentConfig.get(DistributionComponentUtils.PN_TYPE), null);
+
             Map<String, Object> config = new HashMap<String, Object>();
 
-            String defaultsPath = getGlobalDefaultsPath(componentPath);
+            String defaultsPath = getGlobalDefaultsPath(kind, type);
 
             if (defaultsPath != null) {
                 Resource defaultsResource = resourceResolver.getResource(defaultsPath);
@@ -296,12 +295,14 @@ public class ResourceBasedDistributionComponentFactory implements Runnable {
                     config = extractMap(0, defaultsResource);
                 }
             }
-            Map<String, Object> componentConfig = extractMap(0, resource);
 
-            putMap(0, componentConfig, config);
+            mergeMap(0, componentConfig, config);
 
-            String kind = getComponentKind(componentPath);
-            String name = getComponentName(componentPath);
+
+            config.put(DistributionComponentUtils.PN_KIND, kind);
+            config.put(DistributionComponentUtils.PN_TYPE, type);
+            config.put(DistributionComponentUtils.PN_NAME, name);
+
             componentManager.createComponent(kind, name,  config);
 
         } catch (Throwable e) {
@@ -351,7 +352,7 @@ public class ResourceBasedDistributionComponentFactory implements Runnable {
         return result;
     }
 
-    private void putMap(int level, Map<String, Object> source, Map<String, Object> target) {
+    private void mergeMap(int level, Map<String, Object> source, Map<String, Object> target) {
         if (level > MAX_DEPTH_LEVEL)
             return;
 
@@ -360,17 +361,13 @@ public class ResourceBasedDistributionComponentFactory implements Runnable {
             if (target.containsKey(entry.getKey())
                     && entry.getValue() instanceof Map
                     && target.get(entry.getKey()) instanceof Map) {
-                putMap(level, (Map) entry.getValue(), (Map) target.get(entry.getKey()));
+                mergeMap(level, (Map) entry.getValue(), (Map) target.get(entry.getKey()));
 
             }
             else  {
                 target.put(entry.getKey(), entry.getValue());
             }
         }
-
-
-
-
     }
 
     public void run() {
@@ -430,11 +427,10 @@ public class ResourceBasedDistributionComponentFactory implements Runnable {
         return result.get("componentPath");
     }
 
-    String getGlobalDefaultsPath(String path) {
-        String kind = getComponentKind(path);
-        if (kind != null) {
+    String getGlobalDefaultsPath(String kind, String type) {
+        if (kind != null && type != null) {
             String kindFolder = kindFolders.get(kind);
-            return rootPath + "/" + DEFAULTS_FOLDER + "/" + kindFolder + "/" + DEFAULT_FILE;
+            return rootPath + "/" + DEFAULTS_FOLDER + "/" + kindFolder + "/" + type;
         }
         return null;
 

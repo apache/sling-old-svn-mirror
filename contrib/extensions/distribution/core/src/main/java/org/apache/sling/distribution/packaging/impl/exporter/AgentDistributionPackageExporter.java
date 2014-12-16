@@ -24,7 +24,7 @@ import java.util.List;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.agent.DistributionAgent;
-import org.apache.sling.distribution.communication.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.queue.DistributionQueue;
@@ -56,7 +56,7 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
 
         List<DistributionPackage> result = new ArrayList<DistributionPackage>();
         try {
-            log.info("getting packages from queue {}", queueName);
+            log.debug("getting packages from queue {}", queueName);
 
             DistributionQueue queue = agent.getQueue(queueName);
             DistributionQueueItem info = queue.getHead();

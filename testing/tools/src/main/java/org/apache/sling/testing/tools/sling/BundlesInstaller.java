@@ -88,6 +88,10 @@ public class BundlesInstaller {
             }
             webconsoleClient.installBundle(f, startBundles);
         }
+        
+        // ensure that bundles are re-wired esp. if an existing bundle was updated
+        webconsoleClient.refreshPackages();
+        
         log.info("{} additional bundles installed from {}", toInstall.size(), toInstall.get(0).getAbsolutePath());
     }
     
