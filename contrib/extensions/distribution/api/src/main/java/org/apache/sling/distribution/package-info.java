@@ -18,7 +18,7 @@
  */
 
 @Version("0.1.0")
-package org.apache.sling.distribution.communication;
+package org.apache.sling.distribution;
 
 import aQute.bnd.annotation.Version;
 
