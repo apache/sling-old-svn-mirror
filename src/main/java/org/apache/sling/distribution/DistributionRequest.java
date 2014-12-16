@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.communication;
+package org.apache.sling.distribution;
 
 import aQute.bnd.annotation.ProviderType;
 
@@ -25,7 +25,7 @@ import javax.annotation.Nonnull;
 import java.util.Arrays;
 
 /**
- * A {@link org.apache.sling.distribution.communication.DistributionRequest} represents the need from the caller to have
+ * A {@link org.apache.sling.distribution.DistributionRequest} represents the need from the caller to have
  * some content being distributed from a source instance to a target instance.
  */
 @ProviderType

@@ -16,12 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.communication;
+package org.apache.sling.distribution;
 
 import javax.annotation.CheckForNull;
 
 /**
- * The request type tied to a specific {@link org.apache.sling.distribution.communication.DistributionRequest}, used to decide how
+ * The request type tied to a specific {@link org.apache.sling.distribution.DistributionRequest}, used to decide how
  * the distribution content should be aggregated.
  * <p/>
  * {@code ADD} requests can for example lead to the creation of a package of resources to be persisted on the target instance.

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.communication;
+package org.apache.sling.distribution;
 
 import aQute.bnd.annotation.ProviderType;
 
@@ -25,10 +25,10 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
- * A {@link org.apache.sling.distribution.communication.DistributionResponse} represents the outcome of a
- * {@link org.apache.sling.distribution.communication.DistributionRequest} as handled by a certain distribution agent.
- * Such a response will include the {@link org.apache.sling.distribution.communication.DistributionRequestState state} of
- * the {@link org.apache.sling.distribution.communication.DistributionRequest request} and optionally a message for more
+ * A {@link org.apache.sling.distribution.DistributionResponse} represents the outcome of a
+ * {@link org.apache.sling.distribution.DistributionRequest} as handled by a certain distribution agent.
+ * Such a response will include the {@link org.apache.sling.distribution.DistributionRequestState state} of
+ * the {@link org.apache.sling.distribution.DistributionRequest request} and optionally a message for more
  * verbose information about the outcome of the request.
  */
 @ProviderType
