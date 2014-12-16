@@ -28,7 +28,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.sling.distribution.communication.DistributionRequestType;
+import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.testing.tools.http.Request;
 import org.apache.sling.testing.tools.sling.SlingClient;
 import org.apache.sling.testing.tools.sling.SlingInstance;
