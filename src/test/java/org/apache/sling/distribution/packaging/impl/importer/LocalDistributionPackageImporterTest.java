@@ -34,8 +34,7 @@ public class LocalDistributionPackageImporterTest {
     @Test
     public void testDummyImport() throws Exception {
         DistributionPackageBuilder packageBuilder = mock(DistributionPackageBuilder.class);
-        DistributionEventFactory eventFactory = mock(DistributionEventFactory.class);
-        LocalDistributionPackageImporter localdistributionPackageImporter = new LocalDistributionPackageImporter(packageBuilder, eventFactory);
+        LocalDistributionPackageImporter localdistributionPackageImporter = new LocalDistributionPackageImporter(packageBuilder);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         localdistributionPackageImporter.importPackage(resourceResolver, distributionPackage);

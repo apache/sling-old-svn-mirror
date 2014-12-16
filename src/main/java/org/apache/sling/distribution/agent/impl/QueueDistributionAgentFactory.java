@@ -148,8 +148,6 @@ public class QueueDistributionAgentFactory {
 
                 String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
 
-
-
                 try {
                     DistributionQueueProvider queueProvider =  new JobHandlingDistributionQueueProvider(agentName, jobManager, savedContext);
                     DistributionQueueDispatchingStrategy dispatchingStrategy = new SingleQueueDispatchingStrategy();
