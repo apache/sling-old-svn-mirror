@@ -16,19 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.communication;
+package org.apache.sling.distribution;
 
 /**
- * The different states a {@link org.apache.sling.distribution.communication.DistributionRequest} can have during its lifecycle.
- * Allowed transitions of {@link org.apache.sling.distribution.communication.DistributionRequestState} for a certain
- * {@link org.apache.sling.distribution.communication.DistributionRequest} are:
+ * The different states a {@link org.apache.sling.distribution.DistributionRequest} can have during its lifecycle.
+ * Allowed transitions of {@link org.apache.sling.distribution.DistributionRequestState} for a certain
+ * {@link org.apache.sling.distribution.DistributionRequest} are:
  * {@code #DISTRIBUTED} -> ø
  * {@code #DROPPED} -> ø
  * {@code #ACCEPTED} -> {@code #DROPPED}
  * {@code #ACCEPTED} -> {@code #DISTRIBUTED}
  * <p/>
- * {@link org.apache.sling.distribution.communication.DistributionRequest}s executed synchronously
- * will only results in {@code #DISTRIBUTED} or {@code #DROPPED} {@link org.apache.sling.distribution.communication.DistributionRequestState}s
+ * {@link org.apache.sling.distribution.DistributionRequest}s executed synchronously
+ * will only results in {@code #DISTRIBUTED} or {@code #DROPPED} {@link org.apache.sling.distribution.DistributionRequestState}s
  * while requests executed asynchronously can result in any of {@code #DISTRIBUTED}, {@code #DROPPED} or {@code #ACCEPTED} states.
  */
 public enum DistributionRequestState {

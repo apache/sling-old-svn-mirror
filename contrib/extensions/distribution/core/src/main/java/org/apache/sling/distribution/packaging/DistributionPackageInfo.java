@@ -22,7 +22,7 @@ import javax.annotation.CheckForNull;
 import java.net.URI;
 import java.util.Arrays;
 
-import org.apache.sling.distribution.communication.DistributionRequestType;
+import org.apache.sling.distribution.DistributionRequestType;
 
 /**
  * Additional information about a package.

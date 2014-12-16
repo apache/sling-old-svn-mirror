@@ -21,10 +21,10 @@ package org.apache.sling.distribution.trigger;
 import javax.annotation.Nonnull;
 
 import aQute.bnd.annotation.ConsumerType;
-import org.apache.sling.distribution.communication.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequest;
 
 /**
- * An handler for {@link org.apache.sling.distribution.communication.DistributionRequest}s passed to a
+ * An handler for {@link org.apache.sling.distribution.DistributionRequest}s passed to a
  * {@link DistributionTrigger}
  */
 @ConsumerType

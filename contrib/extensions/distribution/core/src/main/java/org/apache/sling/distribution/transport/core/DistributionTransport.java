@@ -21,7 +21,7 @@ package org.apache.sling.distribution.transport.core;
 import javax.annotation.Nonnull;
 
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.communication.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
 
@@ -49,10 +49,10 @@ public interface DistributionTransport {
 
     /**
      * Retrieve {@link org.apache.sling.distribution.packaging.DistributionPackage}s from a target Sling instance, which
-     * will create them according to {@link org.apache.sling.distribution.communication.DistributionRequest}.
+     * will create them according to {@link org.apache.sling.distribution.DistributionRequest}.
      *
      * @param resourceResolver a resolver used to eventually access local resources needed by the transport algorithm
-     * @param request          a {@link org.apache.sling.distribution.communication.DistributionRequest} to be forwarded to the target
+     * @param request          a {@link org.apache.sling.distribution.DistributionRequest} to be forwarded to the target
      *                         instance
      * @param secret           the {@link org.apache.sling.distribution.transport.DistributionTransportSecret} used to authenticate
      *                         against the target instance according to an authentication algorithm implemented by the transport.

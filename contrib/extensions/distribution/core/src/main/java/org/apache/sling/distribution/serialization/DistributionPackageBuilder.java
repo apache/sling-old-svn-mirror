@@ -23,7 +23,7 @@ import javax.annotation.Nonnull;
 import java.io.InputStream;
 
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.communication.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 
 /**
@@ -32,10 +32,10 @@ import org.apache.sling.distribution.packaging.DistributionPackage;
 public interface DistributionPackageBuilder {
 
     /**
-     * creates a {@link org.apache.sling.distribution.packaging.DistributionPackage} for a specific {@link org.apache.sling.distribution.communication.DistributionRequest}
+     * creates a {@link org.apache.sling.distribution.packaging.DistributionPackage} for a specific {@link org.apache.sling.distribution.DistributionRequest}
      *
      * @param resourceResolver the resource resolver used to access the resources to be packaged
-     * @param request          the {@link org.apache.sling.distribution.communication.DistributionRequest} to create the package for
+     * @param request          the {@link org.apache.sling.distribution.DistributionRequest} to create the package for
      * @return a {@link org.apache.sling.distribution.packaging.DistributionPackage} or <code>null</code> if it could not be created
      * @throws DistributionPackageBuildingException if any error occurs while creating the package, or if the resource resolver is not authorized to do that
      */

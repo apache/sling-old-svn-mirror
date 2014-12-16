@@ -24,7 +24,7 @@ import aQute.bnd.annotation.ConsumerType;
 
 /**
  * A {@link DistributionTrigger} is responsible to trigger
- * {@link org.apache.sling.distribution.communication.DistributionRequest}s upon certain 'events' (e.g. Sling / Jcr events,
+ * {@link org.apache.sling.distribution.DistributionRequest}s upon certain 'events' (e.g. Sling / Jcr events,
  * periodic pulling, etc.).
  * A {@link DistributionTrigger} is meant to be stateless so that more than one
  * {@link DistributionRequestHandler} can be registered into the same trigger.

@@ -22,7 +22,7 @@ import javax.annotation.Nonnull;
 
 import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.communication.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequest;
 
 /**
  * Strategy for authorizing requests
@@ -35,7 +35,7 @@ public interface DistributionRequestAuthorizationStrategy {
      * @param distributionRequest a request bringing metadata for getting {@link org.apache.sling.distribution.packaging.DistributionPackage}s
      *                           to be exported
      * @throws DistributionRequestAuthorizationException if the {@link org.apache.sling.api.resource.ResourceResolver} is
-     *                                                  not authorized to execute the given {@link org.apache.sling.distribution.communication.DistributionRequest}
+     *                                                  not authorized to execute the given {@link org.apache.sling.distribution.DistributionRequest}
      */
     void checkPermission(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionRequestAuthorizationException;
 

@@ -34,10 +34,10 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.agent.DistributionAgentException;
 
-import org.apache.sling.distribution.communication.DistributionRequest;
-import org.apache.sling.distribution.communication.DistributionRequestState;
-import org.apache.sling.distribution.communication.DistributionResponse;
-import org.apache.sling.distribution.communication.impl.SimpleDistributionResponse;
+import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequestState;
+import org.apache.sling.distribution.DistributionResponse;
+import org.apache.sling.distribution.impl.SimpleDistributionResponse;
 import org.apache.sling.distribution.event.DistributionEventType;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.packaging.DistributionPackage;
@@ -473,7 +473,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
         }
     }
 
-    /* Provide the aggregated state of two {@link org.apache.sling.distribution.communication.DistributionRequestState}s */
+    /* Provide the aggregated state of two {@link org.apache.sling.distribution.DistributionRequestState}s */
     private DistributionRequestState aggregatedState(DistributionRequestState first, DistributionRequestState second) {
         DistributionRequestState aggregatedState;
         switch (second) {

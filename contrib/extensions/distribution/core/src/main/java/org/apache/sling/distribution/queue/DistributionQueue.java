@@ -28,7 +28,7 @@ import aQute.bnd.annotation.ProviderType;
  * A queue is responsible for collecting the {@link org.apache.sling.distribution.packaging.DistributionPackage}s
  * exported by a {@link org.apache.sling.distribution.agent.DistributionAgent} in
  * order to be able to process them also when there are multiple (concurrent)
- * {@link org.apache.sling.distribution.communication.DistributionRequest}s executed
+ * {@link org.apache.sling.distribution.DistributionRequest}s executed
  * on that same agent.
  * <p/>
  * The items (packages) in the queue can then get processed according to a FIFO
