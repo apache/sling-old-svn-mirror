@@ -18,9 +18,9 @@
  */
 package org.apache.sling.distribution.packaging.impl.importer;
 
-import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.util.Map;
+import javax.annotation.Nonnull;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -29,52 +29,63 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
-import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
-import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * {@link org.apache.sling.distribution.packaging.DistributionPackageImporter} implementation which imports a FileVault
- * based {@link org.apache.sling.distribution.packaging.DistributionPackage} locally.
+ * Factory for {@link org.apache.sling.distribution.packaging.impl.importer.RepositoryDistributionPackageImporter}s
  */
-@Component(label = "Sling Distribution - Local Package Importer Factory",
+@Component(label = "Sling Distribution - Repository Package Importer Factory",
         metatype = true,
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE)
-@Service(value = DistributionPackageImporter.class)
-public class LocalDistributionPackageImporterFactory implements DistributionPackageImporter {
+@Service(DistributionPackageImporter.class)
+public class RepositoryDistributionPackageImporterFactory implements DistributionPackageImporter {
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
      * name of this component.
      */
     @Property
-    public static final String NAME = DistributionComponentUtils.PN_NAME;
+    private static final String NAME = DistributionComponentUtils.PN_NAME;
 
-    @Property(name = "packageBuilder.target")
-    @Reference(name = "packageBuilder")
-    private DistributionPackageBuilder packageBuilder;
+    @Property(name = "service.name")
+    private static String SERVICE_NAME;
 
-    private DistributionPackageImporter importer;
+    @Property(name = "path")
+    private static String PATH;
+
+    @Property(name = "privilege.name")
+    private static String PRIVILEGE_NAME;
+
+    @Reference
+    private SlingRepository repository;
+
+    private RepositoryDistributionPackageImporter importer;
 
     @Activate
-    public void activate() {
-        importer = new LocalDistributionPackageImporter(packageBuilder);
-    }
+    protected void activate(Map<String, Object> config) {
 
+        importer = new RepositoryDistributionPackageImporter(repository,
+                PropertiesUtil.toString(config.get(SERVICE_NAME), "admin"),
+                PropertiesUtil.toString(config.get(PATH), "/var/distribution/import"),
+                PropertiesUtil.toString(config.get(PRIVILEGE_NAME), "jcr:read"));
+    }
 
     public void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageImportException {
         importer.importPackage(resourceResolver, distributionPackage);
+
     }
 
     public DistributionPackage importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException {
         return importer.importStream(resourceResolver, stream);
     }
-
 }

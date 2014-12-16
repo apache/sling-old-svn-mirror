@@ -46,20 +46,12 @@ public class LocalDistributionPackageImporter implements DistributionPackageImpo
 
     private final DistributionPackageBuilder packageBuilder;
 
-    private final DistributionEventFactory distributionEventFactory;
-
-
-    public LocalDistributionPackageImporter(DistributionPackageBuilder packageBuilder,
-                                            DistributionEventFactory distributionEventFactory) {
+    public LocalDistributionPackageImporter(DistributionPackageBuilder packageBuilder) {
 
         if (packageBuilder == null) {
             throw new IllegalArgumentException("A package builder is required");
         }
 
-        if (distributionEventFactory == null) {
-            throw new IllegalArgumentException("An event factory is required");
-        }
-        this.distributionEventFactory = distributionEventFactory;
         this.packageBuilder = packageBuilder;
     }
 

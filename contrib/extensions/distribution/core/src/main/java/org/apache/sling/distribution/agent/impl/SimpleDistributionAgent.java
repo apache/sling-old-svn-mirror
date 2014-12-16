@@ -378,7 +378,6 @@ public class SimpleDistributionAgent implements DistributionAgent {
         authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, subServiceName);
         resourceResolver = resourceResolverFactory.getServiceResourceResolver(authenticationInfo);
 
-
         return resourceResolver;
     }
 

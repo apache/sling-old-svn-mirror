@@ -18,25 +18,21 @@
  */
 package org.apache.sling.distribution.packaging.impl.importer;
 
+import java.io.InputStream;
 import javax.annotation.Nonnull;
 import javax.jcr.Node;
 import javax.jcr.Session;
 import javax.jcr.nodetype.NodeType;
-import java.io.InputStream;
-import java.util.Dictionary;
-import java.util.Properties;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.Privilege;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.event.DistributionEventType;
-import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
-import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
-import org.apache.sling.distribution.transport.impl.DistributionEndpoint;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,32 +43,30 @@ import org.slf4j.LoggerFactory;
  */
 public class RepositoryDistributionPackageImporter implements DistributionPackageImporter {
 
-    static final String NAME = "repository";
-
-    private static final String REPO_SCHEME = "repo";
-
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private SlingRepository repository;
+    private final SlingRepository repository;
+    private final String serviceName;
+    private final String path;
+    private final String privilegeName;
 
-    private DistributionEventFactory distributionEventFactory;
+    public RepositoryDistributionPackageImporter(SlingRepository repository,
+                                                 String serviceName, String path,
+                                                 String privilegeName) {
+        this.repository = repository;
+        this.serviceName = serviceName;
+        this.path = path;
+        this.privilegeName = privilegeName;
+    }
 
-    private DistributionTransportSecretProvider distributionTransportSecretProvider;
-
-    private String serviceName;
-    private String path;
-    private String privilege;
-
-    public void deliverPackageToEndpoint(DistributionPackage distributionPackage, DistributionEndpoint distributionEndpoint)
-            throws Exception {
+    public void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageImportException {
 
         Session session = null;
         try {
-            String path = distributionEndpoint.getUri().toString().replace("repo:/", "");
             session = authenticate();
             int lastSlash = distributionPackage.getId().lastIndexOf('/');
             String nodeName = Text.escape(lastSlash < 0 ? distributionPackage.getId() : distributionPackage.getId().substring(lastSlash + 1));
-            log.info("creating node {} in {}", distributionPackage.getId(), nodeName);
+            log.debug("importing package {} in {}", distributionPackage.getId(), nodeName);
 
             if (session != null) {
                 Node addedNode = session.getNode(path).addNode(nodeName,
@@ -95,6 +89,8 @@ public class RepositoryDistributionPackageImporter implements DistributionPackag
             } else {
                 throw new Exception("could not get a Session to deliver package to the repository");
             }
+        } catch (Exception e) {
+            throw new DistributionPackageImportException(e);
         } finally {
             if (session != null) {
                 session.logout();
@@ -102,24 +98,24 @@ public class RepositoryDistributionPackageImporter implements DistributionPackag
         }
     }
 
-    public void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageImportException {
-        // do nothing
-    }
-
     public DistributionPackage importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException {
         throw new DistributionPackageImportException("not supported");
     }
 
-
     private Session authenticate() throws Exception {
         Session session = repository.loginService(serviceName, null);
 
-        if (!session.hasPermission(path, privilege)) {
-            session.logout();
-            throw new Exception("failed to access path " + path + " with privilege " + privilege);
+        if (session != null) {
+            AccessControlManager accessControlManager = session.getAccessControlManager();
+            Privilege privilege = accessControlManager.privilegeFromName(privilegeName);
+
+            if (!accessControlManager.hasPrivileges(path, new Privilege[]{privilege})) {
+                session.logout();
+                throw new Exception("failed to access path " + path + " with privilege " + privilege);
+            }
         }
 
-        log.info("authenticated path {} with privilege {}", path, privilege);
+        log.debug("authenticated path {} with privilege {}", path, privilegeName);
         return session;
     }
 }
