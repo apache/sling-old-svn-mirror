@@ -17,21 +17,18 @@
  * under the License.
  */
 
-package org.apache.sling.distribution.communication.impl;
+package org.apache.sling.distribution.impl;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequestState;
+import org.apache.sling.distribution.DistributionResponse;
+import org.apache.sling.distribution.Distributor;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.agent.DistributionAgentException;
-import org.apache.sling.distribution.communication.DistributionRequest;
-import org.apache.sling.distribution.communication.DistributionRequestState;
-import org.apache.sling.distribution.communication.DistributionResponse;
-import org.apache.sling.distribution.communication.Distributor;
 import org.apache.sling.distribution.component.impl.DefaultDistributionComponentProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

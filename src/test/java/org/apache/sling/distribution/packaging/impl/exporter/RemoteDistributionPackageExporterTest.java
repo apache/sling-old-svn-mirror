@@ -21,9 +21,9 @@ package org.apache.sling.distribution.packaging.impl.exporter;
 import java.util.List;
 
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.communication.DistributionRequest;
-import org.apache.sling.distribution.communication.DistributionRequestType;
-import org.apache.sling.distribution.communication.SimpleDistributionRequest;
+import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;

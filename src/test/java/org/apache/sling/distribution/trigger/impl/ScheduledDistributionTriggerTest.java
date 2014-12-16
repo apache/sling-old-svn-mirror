@@ -20,7 +20,7 @@ package org.apache.sling.distribution.trigger.impl;
 
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
-import org.apache.sling.distribution.communication.DistributionRequestType;
+import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.junit.Test;
 

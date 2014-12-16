@@ -23,10 +23,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.sling.distribution.communication.SimpleDistributionRequest;
-import org.apache.sling.distribution.communication.impl.DistributionParameter;
-import org.apache.sling.distribution.communication.DistributionRequest;
-import org.apache.sling.distribution.communication.DistributionRequestType;
+import org.apache.sling.distribution.SimpleDistributionRequest;
+import org.apache.sling.distribution.impl.DistributionParameter;
+import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequestType;
 
 /**
  * Utility class for HTTP / distribution request related operations.

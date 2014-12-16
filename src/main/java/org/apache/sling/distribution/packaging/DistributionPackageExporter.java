@@ -25,7 +25,7 @@ import java.util.List;
 
 import aQute.bnd.annotation.ConsumerType;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.communication.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequest;
 
 /**
  * A {@link DistributionPackageExporter ) is responsible of exporting
@@ -41,7 +41,7 @@ public interface DistributionPackageExporter {
 
     /**
      * Exports the {@link DistributionPackage}s built from the
-     * passed {@link org.apache.sling.distribution.communication.DistributionRequest}.
+     * passed {@link org.apache.sling.distribution.DistributionRequest}.
      *
      * @param resourceResolver    - the resource resolver used to export the packages, for example a 'local' exporter
      *                            will use the resource resolver to read the content and assemble the binary in a certain

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.communication.impl;
+package org.apache.sling.distribution.impl;
 
 /**
  * HTTP Parameters for distribution

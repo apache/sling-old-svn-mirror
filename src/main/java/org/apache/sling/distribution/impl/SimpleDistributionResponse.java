@@ -17,12 +17,12 @@
  * under the License.
  */
 
-package org.apache.sling.distribution.communication.impl;
+package org.apache.sling.distribution.impl;
 
 import javax.annotation.Nonnull;
 
-import org.apache.sling.distribution.communication.DistributionRequestState;
-import org.apache.sling.distribution.communication.DistributionResponse;
+import org.apache.sling.distribution.DistributionRequestState;
+import org.apache.sling.distribution.DistributionResponse;
 
 /**
  * Simple implementation of {@link DistributionResponse} where success is given by not being in FAILED state.

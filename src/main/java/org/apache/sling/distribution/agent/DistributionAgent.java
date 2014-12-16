@@ -23,14 +23,14 @@ import javax.annotation.Nonnull;
 
 import aQute.bnd.annotation.ProviderType;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.distribution.communication.DistributionRequest;
-import org.apache.sling.distribution.communication.DistributionResponse;
+import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.DistributionResponse;
 import org.apache.sling.distribution.queue.DistributionQueue;
 
 /**
- * A distribution agent is responsible for handling {@link org.apache.sling.distribution.communication.DistributionRequest}s.
+ * A distribution agent is responsible for handling {@link org.apache.sling.distribution.DistributionRequest}s.
  * <p/>
- * This means executing actions of e.g.: a specific {@link org.apache.sling.distribution.communication.DistributionRequestType}s on
+ * This means executing actions of e.g.: a specific {@link org.apache.sling.distribution.DistributionRequestType}s on
  * specific path(s) which will resume pulling resources from a certain Sling instance and / or pushing resources to
  * other instances.
  */
@@ -57,10 +57,10 @@ public interface DistributionAgent {
     DistributionQueue getQueue(@Nonnull String name) throws DistributionAgentException;
 
     /**
-     * Perform a {@link org.apache.sling.distribution.communication.DistributionRequest} to distribute content from a source
+     * Perform a {@link org.apache.sling.distribution.DistributionRequest} to distribute content from a source
      * instance to a target instance.
      * The content to be sent will be assembled according to the information contained in the request.
-     * A {@link org.apache.sling.distribution.communication.DistributionResponse} holding the {@link org.apache.sling.distribution.communication.DistributionRequestState}
+     * A {@link org.apache.sling.distribution.DistributionResponse} holding the {@link org.apache.sling.distribution.DistributionRequestState}
      * of the provided request will be returned.
      * Synchronous {@link org.apache.sling.distribution.agent.DistributionAgent}s will usually block until the execution has finished
      * while asynchronous agents will usually return the response as soon as the content to be distributed has been assembled
@@ -68,7 +68,7 @@ public interface DistributionAgent {
      *
      * @param distributionRequest the distribution request
      * @param resourceResolver    the resource resolver used for authorizing the request,
-     * @return a {@link org.apache.sling.distribution.communication.DistributionResponse}
+     * @return a {@link org.apache.sling.distribution.DistributionResponse}
      * @throws DistributionAgentException if any error happens during the execution of the request or if the authentication fails
      */
     @Nonnull

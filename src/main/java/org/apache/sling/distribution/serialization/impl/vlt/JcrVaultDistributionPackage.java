@@ -1,7 +1,7 @@
 package org.apache.sling.distribution.serialization.impl.vlt;
 
 import org.apache.jackrabbit.vault.packaging.JcrPackage;
-import org.apache.sling.distribution.communication.DistributionRequestType;
+import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.impl.AbstractDistributionPackage;
 import org.slf4j.Logger;
