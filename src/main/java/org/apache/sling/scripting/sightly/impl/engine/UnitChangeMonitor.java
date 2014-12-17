@@ -137,25 +137,21 @@ public class UnitChangeMonitor {
             if (path.startsWith(UnitLoader.DEFAULT_REPO_BASE_PATH)) {
                 slySourcesMap.put(path, System.currentTimeMillis());
             } else {
-                for (String searchPath :searchPaths) {
-                    if (path.startsWith(searchPath)) {
-                        slyJavaUseMap.put(path, System.currentTimeMillis());
-                        return;
-                    }
+                if (path.endsWith(".java")) {
+                    slyJavaUseMap.put(path, System.currentTimeMillis());
+                } else if (path.endsWith(SightlyScriptEngineFactory.EXTENSION)) {
+                    slyScriptsMap.put(path, System.currentTimeMillis());
                 }
-                slyScriptsMap.put(path, System.currentTimeMillis());
             }
         } else if (SlingConstants.TOPIC_RESOURCE_REMOVED.equals(topic)) {
             if (path.startsWith(UnitLoader.DEFAULT_REPO_BASE_PATH)) {
                 slySourcesMap.remove(path);
             } else {
-                for (String searchPath : searchPaths) {
-                    if (path.startsWith(searchPath)) {
-                        slyJavaUseMap.remove(path);
-                        return;
-                    }
+                if (path.endsWith(".java")) {
+                    slyJavaUseMap.remove(path);
+                } else if (path.endsWith(SightlyScriptEngineFactory.EXTENSION)) {
+                    slyScriptsMap.remove(path);
                 }
-                slyScriptsMap.remove(path);
             }
         }
     }
