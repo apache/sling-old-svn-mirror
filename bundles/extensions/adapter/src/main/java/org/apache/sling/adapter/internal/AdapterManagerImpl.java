@@ -307,6 +307,10 @@ public class AdapterManagerImpl implements AdapterManager {
                     props));
         }
     }
+    
+    static String getPackageName(String clazz) {
+        return clazz.substring(0, clazz.lastIndexOf('.'));
+    }
 
     /**
      * Check that the package containing the class is exported or is a java.*
@@ -317,7 +321,7 @@ public class AdapterManagerImpl implements AdapterManager {
      * @return true if the package is exported
      */
     static boolean checkPackage(PackageAdmin packageAdmin, String clazz) {
-        String packageName = clazz.substring(0, clazz.lastIndexOf('.'));
+        final String packageName = getPackageName(clazz); 
         if (packageName.startsWith("java.")) {
             return true;
         }
