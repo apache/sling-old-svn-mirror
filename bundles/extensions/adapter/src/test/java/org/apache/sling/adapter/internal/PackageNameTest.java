@@ -35,8 +35,8 @@ public class PackageNameTest {
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {   
                 { "java.lang.Foo", "java.lang" },
-                //{ "noPackageName", "" },
-                //{ "", "" }
+                { "noPackageName", "" },
+                { "", "" }
         });
     }
     

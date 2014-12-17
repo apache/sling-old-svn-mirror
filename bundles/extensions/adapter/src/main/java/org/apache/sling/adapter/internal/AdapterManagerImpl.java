@@ -309,7 +309,8 @@ public class AdapterManagerImpl implements AdapterManager {
     }
     
     static String getPackageName(String clazz) {
-        return clazz.substring(0, clazz.lastIndexOf('.'));
+        final int lastDot = clazz.lastIndexOf('.');
+        return lastDot <= 0 ? "" : clazz.substring(0, lastDot);
     }
 
     /**
