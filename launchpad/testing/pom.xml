@@ -165,11 +165,6 @@
                     <defaultBundleList>
                         <version>8-SNAPSHOT</version>
                     </defaultBundleList>
-                    <jarWebSupport>
-                        <groupId>org.apache.felix</groupId>
-                        <artifactId>org.apache.felix.http.jetty</artifactId>
-                        <version>2.2.2</version>
-                    </jarWebSupport>
                 </configuration>
                 <dependencies>
                     <dependency>
