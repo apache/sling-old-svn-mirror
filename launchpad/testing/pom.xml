@@ -165,6 +165,28 @@
                     <defaultBundleList>
                         <version>8-SNAPSHOT</version>
                     </defaultBundleList>
+                    <jarWebSupport>
+                        <bundles>
+                          <bundle>
+                                <groupId>org.apache.felix</groupId>
+                                <artifactId>org.apache.felix.http.api</artifactId>
+                                <version>2.3.2</version>
+                                <startLevel>5</startLevel>
+                            </bundle>
+                            <bundle>
+                                <groupId>org.apache.felix</groupId>
+                                <artifactId>org.apache.felix.http.servlet-api</artifactId>
+                                <version>1.0.1</version>
+                                <startLevel>5</startLevel>
+                            </bundle>
+                            <bundle>
+                                <groupId>org.apache.felix</groupId>
+                                <artifactId>org.apache.felix.http.jetty</artifactId>
+                                <version>2.3.2</version>
+                                <startLevel>5</startLevel>
+                            </bundle>
+                        </bundles>
+                    </jarWebSupport>
                 </configuration>
                 <dependencies>
                     <dependency>
