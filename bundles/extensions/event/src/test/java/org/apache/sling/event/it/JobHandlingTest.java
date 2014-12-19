@@ -467,7 +467,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
 
                 jobManager.addJob(jobTopic, null);
             }
-            while ( count.get() < COUNT / 2) {
+            while ( jobManager.getStatistics().getNumberOfFinishedJobs() < COUNT / 2) {
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException ie) {
