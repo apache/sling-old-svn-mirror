@@ -26,6 +26,8 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -87,6 +89,8 @@ public class MapEntriesTest {
         configs.add(new VanityPathConfig("/vanityPathOnJcrContent", false));
 
         Collections.sort(configs);
+        
+        when(bundleContext.getDataFile("vanityBloomFilter.txt")).thenReturn(new File("vanityBloomFilter.txt"));
         when(resourceResolverFactory.getAdministrativeResourceResolver(null)).thenReturn(resourceResolver);
         when(resourceResolverFactory.isVanityPathEnabled()).thenReturn(true);
         when(resourceResolverFactory.getVanityPathConfig()).thenReturn(configs);
@@ -98,6 +102,11 @@ public class MapEntriesTest {
         Field field0 = MapEntries.class.getDeclaredField("mapRoot");
         field0.setAccessible(true);  
         field0.set(mapEntries, MapEntries.DEFAULT_MAP_ROOT);
+        
+        Field field1 = MapEntries.class.getDeclaredField("maxCachedVanityPathEntries");
+        field1.setAccessible(true);  
+        field1.set(mapEntries, -1);
+        
     }
 
     @Test
@@ -224,6 +233,7 @@ public class MapEntriesTest {
         });
 
         mapEntries.doInit();
+        mapEntries.initializeVanityPaths();
 
         List<MapEntry> entries = mapEntries.getResolveMaps();
         assertEquals(8, entries.size());
@@ -267,7 +277,7 @@ public class MapEntriesTest {
     }
 
     @Test
-    public void test_vanity_path_registration_include_exclude() {
+    public void test_vanity_path_registration_include_exclude() throws IOException {
         final String[] validPaths = {"/libs/somewhere", "/libs/a/b", "/foo/a", "/baa/a"};
         final String[] invalidPaths = {"/libs/denied/a", "/libs/denied/b/c", "/nowhere"};
 
@@ -292,6 +302,7 @@ public class MapEntriesTest {
         });
 
         mapEntries.doInit();
+        mapEntries.initializeVanityPaths();
 
         List<MapEntry> entries = mapEntries.getResolveMaps();
         // each valid resource results in 2 entries
