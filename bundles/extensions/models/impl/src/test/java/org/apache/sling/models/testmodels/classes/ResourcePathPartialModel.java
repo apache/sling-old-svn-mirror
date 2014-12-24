@@ -26,68 +26,71 @@ import javax.inject.Named;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.Model;
+import org.apache.sling.models.annotations.Optional;
 import org.apache.sling.models.annotations.Path;
+import org.apache.sling.models.annotations.Required;
+import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 import org.apache.sling.models.annotations.injectorspecific.ResourcePath;
 
 @Model(adaptables = {Resource.class, SlingHttpServletRequest.class})
-public class ResourcePathModel {
+public class ResourcePathPartialModel {
 
-    @Inject
-    @Path("/some/path")
-    private Resource fromPath;
-
-    @Inject
-    @Named("propertyContainingAPath")
-    private Resource derefProperty;
     
-    @Inject
-    @Path(paths={"/some/path", "/some/path2"})
-    private List<Resource> manyFromPath;
+   
     
-    @ResourcePath(paths={"/some/path2","/some/path"})
-    private List<Resource> manyFromPath2;
-
-    @ResourcePath(path = "/some/path2")
-    private Resource fromPath2;
+    @ResourcePath(name="propertyWithSeveralPaths", injectionStrategy=InjectionStrategy.REQUIRED)
+    private List<Resource> requiredResources;
     
     @ResourcePath(name="propertyWithSeveralPaths")
-    private List<Resource> multipleResources;
+    @Required
+    private List<Resource> requiredResources2;
     
-    @ResourcePath
-    private List<Resource> propertyWithSeveralPaths;
+    
+    @ResourcePath(name="propertyWithMissingPaths", injectionStrategy=InjectionStrategy.OPTIONAL)
+    private List<Resource> optionalResources;
+    
+    @Optional
+    @ResourcePath(name="propertyWithMissingPaths")
+    private List<Resource> optionalResources2;
+    
+    
 
-    @ResourcePath(name = "anotherPropertyContainingAPath")
-    private Resource derefProperty2;
+    @ResourcePath(name="propertyWithMissingPaths",optional=true)
+    private List<Resource> optionalResources3;
 
-    public Resource getFromPath() {
-        return fromPath;
+
+
+    public List<Resource> getRequiredResources() {
+        return requiredResources;
     }
 
-    public Resource getByDerefProperty() {
-        return derefProperty;
+
+
+    public List<Resource> getRequiredResources2() {
+        return requiredResources2;
     }
 
-    public Resource getFromPath2() {
-        return fromPath2;
+
+
+    public List<Resource> getOptionalResources() {
+        return optionalResources;
     }
 
-    public Resource getByDerefProperty2() {
-        return derefProperty2;
+
+
+    public List<Resource> getOptionalResources2() {
+        return optionalResources2;
+    }
+
+
+
+    public List<Resource> getOptionalResources3() {
+        return optionalResources3;
     }
     
-    public List<Resource> getMultipleResources(){
-    	return this.multipleResources;
-    }
-    
-    public List<Resource> getManyFromPath(){
-        return this.manyFromPath;
-    }
-    
-    public List<Resource> getManyFromPath2(){
-        return this.manyFromPath2;
-    }
 
-    public List<Resource> getPropertyWithSeveralPaths(){
-        return this.propertyWithSeveralPaths;
-    }
+
+    
+   
+
 }

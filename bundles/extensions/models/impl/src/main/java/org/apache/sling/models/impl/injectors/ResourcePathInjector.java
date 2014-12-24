@@ -32,7 +32,10 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.models.annotations.DefaultInjectionStrategy;
+import org.apache.sling.models.annotations.Optional;
 import org.apache.sling.models.annotations.Path;
+import org.apache.sling.models.annotations.Required;
 import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 import org.apache.sling.models.annotations.injectorspecific.ResourcePath;
 import org.apache.sling.models.spi.AcceptsNullName;
@@ -50,8 +53,8 @@ import org.slf4j.LoggerFactory;
 @Property(name = Constants.SERVICE_RANKING, intValue = 2500)
 public class ResourcePathInjector extends AbstractInjector implements Injector, AcceptsNullName,
         StaticInjectAnnotationProcessorFactory {
-    
-    private static final Logger LOG= LoggerFactory.getLogger(ResourcePathInjector.class);
+
+    private static final Logger LOG = LoggerFactory.getLogger(ResourcePathInjector.class);
 
     @Override
     public String getName() {
@@ -64,53 +67,88 @@ public class ResourcePathInjector extends AbstractInjector implements Injector, 
         String[] resourcePaths = null;
         Path pathAnnotation = element.getAnnotation(Path.class);
         ResourcePath resourcePathAnnotation = element.getAnnotation(ResourcePath.class);
+        boolean required = isRequired(element);
         if (pathAnnotation != null) {
             resourcePaths = getPathsFromAnnotation(pathAnnotation);
         } else if (resourcePathAnnotation != null) {
             resourcePaths = getPathsFromAnnotation(resourcePathAnnotation);
             // try the valuemap
         }
-        if (ArrayUtils.isEmpty(resourcePaths)) {
+        if (ArrayUtils.isEmpty(resourcePaths) && name!=null) {
             ValueMap map = getValueMap(adaptable);
             if (map != null) {
                 resourcePaths = map.get(name, String[].class);
             }
         }
-        if(ArrayUtils.isEmpty(resourcePaths)){
-            //could not find a path to inject
+        if (ArrayUtils.isEmpty(resourcePaths)) {
+            // could not find a path to inject
             return null;
         }
-        
-        ResourceResolver resolver = getResourceResolver(adaptable);
-        if(resolver==null){
-            return null;
-        }
-        List<Resource> resources = getResources(resolver, resourcePaths);
 
-        if (resources.isEmpty()) {
+        ResourceResolver resolver = getResourceResolver(adaptable);
+        if (resolver == null) {
+            return null;
+        }
+        List<Resource> resources = getResources(resolver, resourcePaths, required, name);
+
+        if (resources == null || resources.isEmpty()) {
             return null;
         }
         // unwrap if necessary
         if (isDeclaredTypeCollection(declaredType)) {
             return resources;
-        } else if(resources.size()==1) {
-          
+        } else if (resources.size() == 1) {
+
             return resources.get(0);
-        }else{
-            //multiple resources to inject, but field is not a list
+        } else {
+            // multiple resources to inject, but field is not a list
             LOG.warn("Cannot inject multiple resources into field {} since it is not declared as a list", name);
             return null;
         }
 
     }
 
-    private List<Resource> getResources(ResourceResolver resolver, String[] paths) {
+    private boolean isRequired(AnnotatedElement element) {
+        ResourcePath resourcePathAnnotation = element.getAnnotation(ResourcePath.class);
+        if (resourcePathAnnotation != null) {
+            InjectionStrategy strategy = resourcePathAnnotation.injectionStrategy();
+            if (strategy.equals(InjectionStrategy.REQUIRED)) {
+                return true;
+            }
+            if (strategy.equals(InjectionStrategy.OPTIONAL)) {
+                return false;
+            }
+            if(strategy.equals(InjectionStrategy.DEFAULT)){
+                boolean optional = resourcePathAnnotation.optional();
+                boolean hasOptional = element.getAnnotation(Optional.class) != null;
+                return (!optional && !hasOptional);
+            }
+
+        }
+        //using @inject
+        return element.getAnnotation(Optional.class) != null;
+        
+       
+
+
+    }
+
+    private List<Resource> getResources(ResourceResolver resolver, String[] paths, boolean required, String fieldName) {
         List<Resource> resources = new ArrayList<Resource>();
         for (String path : paths) {
             Resource resource = resolver.getResource(path);
             if (resource != null) {
                 resources.add(resource);
+            } else if (required) {
+                LOG.warn(
+                        "Could not retrieve resource at path {} for field {}. Since it is required it wont be injected",
+                        path, fieldName);
+                // all resources should've been injected. we stop
+                return null;
+            } else {
+                LOG.warn("Could not retrieve resource at path {} for field {}", path, fieldName);
             }
+
         }
         return resources;
     }
