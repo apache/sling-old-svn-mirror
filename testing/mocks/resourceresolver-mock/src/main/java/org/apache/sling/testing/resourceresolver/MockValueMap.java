@@ -95,6 +95,9 @@ public class MockValueMap extends ValueMapDecorator {
                 return null;
             }
         }
+        else if ( type == null ) {
+            return (T) super.get(name);
+        }
         return super.get(name, type);
     }
     
