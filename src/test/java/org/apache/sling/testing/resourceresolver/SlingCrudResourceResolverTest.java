@@ -214,4 +214,12 @@ public class SlingCrudResourceResolverTest {
         assertNull(resource);
     }
 
+    @Test
+    public void testGetConvertedToNullType() {
+        Resource resource1 = resourceResolver.getResource(testRoot.getPath() + "/node1");
+        Object propValue = ResourceUtil.getValueMap(resource1).get("stringProp", null);
+
+        assertEquals(STRING_VALUE, propValue);
+    }
+
 }
