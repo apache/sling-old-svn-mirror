@@ -104,7 +104,7 @@ public final class SlingContext extends SlingContextImpl implements TestRule {
         this.tearDownCallback = tearDownCallback;
 
         // set resource resolver type in parent context
-        setResourceResolverType(this.resourceResolverType);
+        setResourceResolverType(resourceResolverType);
 
         // wrap {@link ExternalResource} rule executes each test method once
         this.delegate = new ExternalResource() {
