@@ -241,6 +241,14 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     public boolean isVanityPathEnabled() {
         return this.activator.isVanityPathEnabled();
     }
+    
+    public long getMaxCachedVanityPathEntries() {
+        return this.activator.getMaxCachedVanityPathEntries();
+    }
+    
+    public int getVanityBloomFilterMaxBytes() {
+        return this.activator.getVanityBloomFilterMaxBytes();
+    }
 
     public boolean isOptimizeAliasResolutionEnabled() {
         return this.activator.isOptimizeAliasResolutionEnabled();

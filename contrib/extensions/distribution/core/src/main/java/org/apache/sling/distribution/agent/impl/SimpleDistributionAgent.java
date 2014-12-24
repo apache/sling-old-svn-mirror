@@ -257,10 +257,8 @@ public class SimpleDistributionAgent implements DistributionAgent {
     public void enable() {
         log.info("enabling agent");
 
-
         // register triggers if any
         agentBasedRequestHandler = new AgentBasedRequestHandler(this);
-
 
         for (DistributionTrigger trigger : triggers) {
             try {
@@ -269,7 +267,6 @@ public class SimpleDistributionAgent implements DistributionAgent {
                 log.error("could not register handler {} from trigger {}", agentBasedRequestHandler, trigger);
             }
         }
-
 
         if (!isPassive()) {
             try {
@@ -378,7 +375,6 @@ public class SimpleDistributionAgent implements DistributionAgent {
         authenticationInfo.put(ResourceResolverFactory.SUBSERVICE, subServiceName);
         resourceResolver = resourceResolverFactory.getServiceResourceResolver(authenticationInfo);
 
-
         return resourceResolver;
     }
 
@@ -414,7 +410,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
         public void handle(@Nonnull DistributionRequest request) {
 
             if (!active) {
-                log.warn("handler is active when agent is disabled");
+                log.debug("skipping agent handler as agent {} is disabled", name);
                 return;
             }
 

@@ -320,7 +320,7 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad</artifactId>
             <classifier>standalone</classifier>
-            <version>8-SNAPSHOT</version>
+            <version>7</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
