@@ -185,7 +185,7 @@ public class SlingContextImpl extends OsgiContextImpl {
     public final ResourceResolver resourceResolver() {
         if (this.resourceResolver == null) {
             try {
-                this.resourceResolver = this.resourceResolverFactory.getResourceResolver(null);
+                this.resourceResolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
             } catch (LoginException ex) {
                 throw new RuntimeException("Creating resource resolver failed.", ex);
             }
