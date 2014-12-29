@@ -51,12 +51,6 @@
                         <Bundle-Activator>
                             org.apache.sling.installer.factories.configuration.impl.Activator
                         </Bundle-Activator>
-                        <Export-Package>
-                            org.apache.sling.installer.factories.configuration;version=1.0.0
-                        </Export-Package>
-                        <Private-Package>
-                            org.apache.sling.installer.factories.configuration.impl.*
-                        </Private-Package>
                     </instructions>
                 </configuration>
             </plugin>
@@ -81,6 +75,10 @@
             <artifactId>org.apache.sling.installer.api</artifactId>
             <version>1.0.0</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
         </dependency>
     </dependencies>
 </project>

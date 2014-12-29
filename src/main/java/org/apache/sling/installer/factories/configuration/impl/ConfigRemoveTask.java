@@ -42,13 +42,12 @@ public class ConfigRemoveTask extends AbstractConfigTask {
     /**
      * @see org.apache.sling.installer.api.tasks.InstallTask#execute(org.apache.sling.installer.api.tasks.InstallationContext)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public void execute(final InstallationContext ctx) {
         synchronized ( ConfigTaskCreator.getLock() ) {
-            final ConfigurationAdmin ca = this.getConfigurationAdmin();
-
             try {
-                final Configuration cfg = getConfiguration(ca, false);
+                final Configuration cfg = getConfiguration();
                 if (cfg == null) {
                     this.getLogger().debug("Cannot delete config , pid={} not found, ignored ({})", getCompositePid(), getResource());
                 } else {

@@ -19,7 +19,6 @@
 package org.apache.sling.installer.factories.configuration.impl;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -35,6 +34,11 @@ import org.osgi.service.cm.ConfigurationAdmin;
  * Utilities for configuration handling
  */
 abstract class ConfigUtil {
+
+    /**
+     * This property marks the configuration as being deleted.
+     */
+    public static final String PROPERTY_DELETE_MARKER = "org.apache.sling.installer.configuration.deleted";
 
     /**
      * This property has been used in older versions to keep track where the
@@ -76,29 +80,32 @@ abstract class ConfigUtil {
             final Set<String> keysA = collectKeys(a);
             final Set<String> keysB = collectKeys(b);
             if ( keysA.size() == keysB.size() && keysA.containsAll(keysB) ) {
+                result = true;
                 for(final String key : keysA ) {
                     final Object valA = a.get(key);
                     final Object valB = b.get(key);
                     if ( valA.getClass().isArray() ) {
-                        if ( !Arrays.equals((Object[])valA, (Object[])valB) ) {
-                            return result;
+                        final Object[] arrA = (Object[])valA;
+                        final Object[] arrB = (Object[])valB;
+
+                        if ( arrA.length != arrB.length ) {
+                            result = false;
+                            break;
                         }
-                    } else if ( valA instanceof Number ) {
-                        // JCR only supports Long but not Integer
-                        // therefore we have to add a special case here!
-                        if ( ! (valB instanceof Number) ) {
-                            return result;
-                        }
-                        if ( !(String.valueOf(valA).equals(String.valueOf(valB))) ) {
-                            return result;
+                        for(int i=0; i<arrA.length; i++) {
+                            if ( !(String.valueOf(arrA[i]).equals(String.valueOf(arrB[i]))) ) {
+                                result = false;
+                                break;
+                            }
                         }
                     } else {
-                        if ( !a.get(key).equals(b.get(key)) ) {
-                            return result;
+                        // we always do a string comparison
+                        if ( !(String.valueOf(valA).equals(String.valueOf(valB))) ) {
+                            result = false;
+                            break;
                         }
                     }
                 }
-                result = true;
             }
         }
         return result;
@@ -132,14 +139,30 @@ abstract class ConfigUtil {
 
     public static Configuration getConfiguration(final ConfigurationAdmin ca,
             final String factoryPid,
+            final String configPid)
+    throws IOException, InvalidSyntaxException {
+        return getOrCreateConfiguration(ca, factoryPid, configPid, null, false);
+    }
+
+    public static Configuration createConfiguration(final ConfigurationAdmin ca,
+            final String factoryPid,
             final String configPid,
+            final String location)
+    throws IOException, InvalidSyntaxException {
+        return getOrCreateConfiguration(ca, factoryPid, configPid, location, true);
+    }
+
+    private static Configuration getOrCreateConfiguration(final ConfigurationAdmin ca,
+            final String factoryPid,
+            final String configPid,
+            final String location,
             final boolean createIfNeeded)
-                    throws IOException, InvalidSyntaxException {
+    throws IOException, InvalidSyntaxException {
         Configuration result = null;
 
         if (factoryPid == null) {
             if (createIfNeeded) {
-                result = ca.getConfiguration(configPid, null);
+                result = ca.getConfiguration(configPid, location);
             } else {
                 String filter = "(" + Constants.SERVICE_PID + "=" + encode(configPid)
                         + ")";
@@ -165,7 +188,7 @@ abstract class ConfigUtil {
 
                 if (configs == null || configs.length == 0) {
                     if (createIfNeeded) {
-                        result = ca.createFactoryConfiguration(factoryPid, null);
+                        result = ca.createFactoryConfiguration(factoryPid, location);
                     }
                 } else {
                     result = configs[0];
@@ -175,6 +198,18 @@ abstract class ConfigUtil {
             }
         }
 
+        return result;
+    }
+
+    public static boolean toBoolean(final Object obj, final boolean defaultValue) {
+        boolean result = defaultValue;
+        if ( obj != null ) {
+            if (obj instanceof Boolean) {
+                result = ((Boolean) obj).booleanValue();
+            } else {
+                result = Boolean.valueOf(String.valueOf(obj));
+            }
+        }
         return result;
     }
 }
