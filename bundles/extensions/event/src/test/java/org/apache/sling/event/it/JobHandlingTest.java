@@ -209,24 +209,31 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
                     }
                 });
         try {
+            final Map<String, Object> jobProperties = Collections.singletonMap("id", (Object)"cancelJobId");
+            @SuppressWarnings("unchecked")
+            final Map<String, Object>[] jobPropertiesAsArray = new Map[1];
+            jobPropertiesAsArray[0] = jobProperties;
+
+            // create job
             final JobManager jobManager = this.getJobManager();
-            jobManager.addJob(TOPIC, Collections.singletonMap("id", (Object)"myid2"));
+            jobManager.addJob(TOPIC, jobProperties);
             cb.block();
 
-            assertEquals(1, jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1, (Map<String, Object>[])null).size());
+            assertEquals(1, jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1, jobPropertiesAsArray).size());
             // job is currently waiting, therefore cancel fails
-            final Job e1 = jobManager.getJob(TOPIC, Collections.singletonMap("id", (Object)"myid2"));
+            final Job e1 = jobManager.getJob(TOPIC, jobProperties);
             assertNotNull(e1);
             cb2.block(); // and continue job
 
             sleep(200);
 
             // the job is now in the queue again
-            final Job e2 = jobManager.getJob(TOPIC, Collections.singletonMap("id", (Object)"myid2"));
+            final Job e2 = jobManager.getJob(TOPIC, jobProperties);
             assertNotNull(e2);
             assertTrue(jobManager.removeJobById(e2.getId()));
-            assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1, (Map<String, Object>[])null).size());
-            final Collection<Job> col = jobManager.findJobs(JobManager.QueryType.HISTORY, TOPIC, -1, Collections.singletonMap("id", (Object)"myid2"));
+            assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1, jobPropertiesAsArray).size());
+            final Collection<Job> col = jobManager.findJobs(JobManager.QueryType.HISTORY, TOPIC, -1,
+                    jobPropertiesAsArray);
             try {
                 assertEquals(1, col.size());
             } finally {
