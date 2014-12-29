@@ -151,11 +151,6 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
 
                     @Override
                     public JobResult process(final Job job) {
-                        try {
-                            Thread.sleep(10);
-                        } catch (InterruptedException ie) {
-                            // ignore
-                        }
                         return JobResult.OK;
                     }
 
@@ -164,7 +159,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
         final ServiceRegistration reg2 = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
                 new EventHandler() {
                     @Override
-                    public void handleEvent(Event event) {
+                    public void handleEvent(final Event event) {
                         count.incrementAndGet();
                     }
                  });
@@ -176,11 +171,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
                 this.getJobManager().addJob(TOPIC, null);
             }
             while ( count.get() < COUNT ) {
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException ie) {
-                    // ignore
-                }
+                this.sleep(50);
             }
             assertEquals("Finished count", COUNT, count.get());
             assertEquals("Finished count", COUNT, this.getJobManager().getStatistics().getNumberOfFinishedJobs());
@@ -475,11 +466,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
                 jobManager.addJob(jobTopic, null);
             }
             while ( jobManager.getStatistics().getNumberOfFinishedJobs() < COUNT / 2) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException ie) {
-                    // ignore
-                }
+                this.sleep(50);
             }
 
             assertEquals("Finished count", COUNT / 2, count.get());
