@@ -226,7 +226,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
             assertNotNull(e2);
             assertTrue(jobManager.removeJobById(e2.getId()));
             assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1, (Map<String, Object>[])null).size());
-            final Collection<Job> col = jobManager.findJobs(JobManager.QueryType.HISTORY, TOPIC, -1, (Map<String, Object>[])null);
+            final Collection<Job> col = jobManager.findJobs(JobManager.QueryType.HISTORY, TOPIC, -1, Collections.singletonMap("id", (Object)"myid2"));
             try {
                 assertEquals(1, col.size());
             } finally {
