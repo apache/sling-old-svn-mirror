@@ -21,6 +21,7 @@ package org.apache.sling.installer.factories.configuration.impl;
 import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
+import org.apache.sling.installer.factories.configuration.ConfigurationConstants;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
@@ -44,28 +45,33 @@ public class ConfigInstallTask extends AbstractConfigTask {
 	@Override
     public void execute(final InstallationContext ctx) {
         synchronized ( ConfigTaskCreator.getLock() ) {
-            final ConfigurationAdmin ca = this.getConfigurationAdmin();
-
             // Get or create configuration, but do not
             // update if the new one has the same values.
             boolean created = false;
             try {
-                Configuration config = getConfiguration(ca, false);
+                String location = (String)this.getResource().getDictionary().get(ConfigurationConstants.PROPERTY_BUNDLE_LOCATION);
+                if ( location == null ) {
+                    location = "?"; // default
+                } else if ( location.length() == 0 ) {
+                    location = null;
+                }
+
+                Configuration config = getConfiguration();
                 if (config == null) {
                     created = true;
-                    config = getConfiguration(ca, true);
+
+                    config = createConfiguration(location);
                 } else {
         			if (ConfigUtil.isSameData(config.getProperties(), getResource().getDictionary())) {
         			    this.getLogger().debug("Configuration {} already installed with same data, update request ignored: {}",
         	                        config.getPid(), getResource());
         				config = null;
+        			} else {
+                        config.setBundleLocation(location);
         			}
                 }
 
                 if (config != null) {
-                    if (config.getBundleLocation() != null) {
-                        config.setBundleLocation(null);
-                    }
                     config.update(getDictionary());
                     ctx.log("Installed configuration {} from resource {}", config.getPid(), getResource());
                     if ( this.factoryPid != null ) {
