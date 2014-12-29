@@ -236,6 +236,7 @@ public class JobManagerConfiguration implements TopologyEventListener, Configura
      */
     @Deactivate
     protected void deactivate() {
+        this.stopProcessing(true);
         this.queueConfigManager.removeListener();
     }
 
