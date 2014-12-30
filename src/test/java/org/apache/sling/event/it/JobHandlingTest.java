@@ -179,6 +179,8 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
             reg1.unregister();
             reg2.unregister();
         }
+        // we put an extra sleep to see whether this fixes the test problems on Java 8
+        this.sleep(5000);
     }
 
     /**
