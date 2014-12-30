@@ -57,10 +57,13 @@ import org.apache.sling.installer.api.tasks.RetryHandler;
 import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.api.tasks.TransformationResult;
+import org.apache.sling.installer.core.impl.tasks.BundleUpdateTask;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
+import org.osgi.service.startlevel.StartLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,6 +78,11 @@ import org.slf4j.LoggerFactory;
  */
 public class OsgiInstallerImpl
 implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Runnable {
+
+    /**
+     * The name of the bundle context property defining handling of bundle updates
+     */
+    private static final String START_LEVEL_HANDLING = "sling.installer.switchstartlevel";
 
     /** The logger */
     private final Logger logger =  LoggerFactory.getLogger(this.getClass());
@@ -121,6 +129,8 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
     private final InstallListener listener;
     private final AtomicLong backgroundTaskCounter = new AtomicLong();
 
+    /** Switch start level on bundle update? */
+    private final boolean switchStartLevel;
 
     /**
      *  Constructor
@@ -134,6 +144,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
         final File f = FileDataStore.SHARED.getDataFile("RegisteredResourceList.ser");
         this.listener = new InstallListener(ctx, logger);
         this.persistentList = new PersistentResourceList(f, listener);
+        this.switchStartLevel = PropertiesUtil.toBoolean(ctx.getProperty(START_LEVEL_HANDLING), false);
     }
 
     /**
@@ -627,8 +638,101 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
 
     /**
      * Execute all tasks
+     * @param tasks The tasks to executed.
+     * @return The action to perform after the execution.
      */
     private ACTION executeTasks(final SortedSet<InstallTask> tasks) {
+        if (this.switchStartLevel && this.hasBundleUpdateTask(tasks)) {
+            // StartLevel service is always available
+            final ServiceReference ref = ctx.getServiceReference(StartLevel.class.getName());
+            final StartLevel startLevel = (StartLevel) ctx.getService(ref);
+            try {
+                final int targetStartLevel = this.getLowestStartLevel(tasks, startLevel);
+                final int currentStartLevel = startLevel.getStartLevel();
+                if (targetStartLevel < currentStartLevel) {
+                    auditLogger.info("Switching to start level {}", targetStartLevel);
+                    try {
+                        startLevel.setStartLevel(targetStartLevel);
+                        // now we have to wait until the start level is reached
+                        while (startLevel.getStartLevel() > targetStartLevel) {
+                            try {
+                                Thread.sleep(300);
+                            } catch (final InterruptedException ie) {
+                                Thread.currentThread().interrupt();
+                            }
+
+                        }
+
+                        return doExecuteTasks(tasks);
+
+                    } finally {
+                        // restore old start level in any case
+                        startLevel.setStartLevel(currentStartLevel);
+                        auditLogger.info("Switching back to start level {} after performing the required " +
+                                "installation tasks", currentStartLevel);
+
+                    }
+                }
+
+            } finally {
+                ctx.ungetService(ref);
+            }
+        }
+        return doExecuteTasks(tasks);
+    }
+
+    /**
+     * Get the lowest start level for the update operation
+     */
+    private int getLowestStartLevel(final SortedSet<InstallTask> tasks, final StartLevel startLevel) {
+        final int currentStartLevel = startLevel.getStartLevel();
+        int startLevelToTarget = currentStartLevel;
+        for(final InstallTask task : tasks) {
+            if (task instanceof BundleUpdateTask){
+                final Bundle b = ((BundleUpdateTask) task).getBundle();
+                if (b != null) {
+                    try {
+                        final int bundleStartLevel = startLevel.getBundleStartLevel(b) - 1;
+                        if (bundleStartLevel < startLevelToTarget){
+                            startLevelToTarget = bundleStartLevel;
+                        }
+                    } catch ( final IllegalArgumentException iae) {
+                        // ignore - bundle is uninstalled
+                    }
+                }
+            }
+        }
+        // check installer start level
+        final int ownStartLevel = startLevel.getBundleStartLevel(ctx.getBundle());
+        if ( ownStartLevel > startLevelToTarget ) {
+            // we don't want to disable ourselves
+            startLevelToTarget = ownStartLevel;
+        }
+        return startLevelToTarget;
+    }
+
+    /**
+     * Check if a bundle update task will be executed.
+     */
+    private boolean hasBundleUpdateTask(final SortedSet<InstallTask> tasks) {
+        boolean result = false;
+        for(final InstallTask task : tasks){
+            if ( task.isAsynchronousTask() ) {
+                result = false; // async task is executed immediately#
+                break;
+            } else if (task instanceof BundleUpdateTask){
+                result = true;
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Execute all tasks
+     * @param tasks The tasks to executed.
+     * @return The action to perform after the execution.
+     */
+    private ACTION doExecuteTasks(final SortedSet<InstallTask> tasks) {
         if ( !tasks.isEmpty() ) {
 
             final InstallationContext ctx = new InstallationContext() {

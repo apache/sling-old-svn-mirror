@@ -139,4 +139,9 @@ public class BundleUpdateTask extends AbstractBundleTask {
         return BUNDLE_UPDATE_ORDER + getSortableStartLevel() + "-" + getResource().getEntityId();
     }
 
+    public Bundle getBundle(){
+        final String symbolicName = (String)getResource().getAttribute(Constants.BUNDLE_SYMBOLICNAME);
+        return BundleInfo.getMatchingBundle(this.getBundleContext(), symbolicName, null);
+    }
+
 }
