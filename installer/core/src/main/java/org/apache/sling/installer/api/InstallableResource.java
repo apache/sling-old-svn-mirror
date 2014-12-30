@@ -112,9 +112,28 @@ public class InstallableResource {
      * This property might also be set for an {@link UpdateHandler} in order
      * to give a hint for the (file) name the resource or dictionary should
      * have.
-     * @since 3.2.2
+     * @since 3.1.2
      */
     public static final String RESOURCE_URI_HINT = "resource.uri.hint";
+
+    /**
+     * Optional parameter to be passed in the dictionary.
+     * If this property is set (the value is ignored), this artifact acts like a template:
+     * If the artifact is changed into a new artifact and later this new artifact is deleted,
+     * the installer will not revert to the template. Without this property, the installer
+     * would install the original artifact again.
+     * For example: if a configuration is installed and then changed through configuration
+     * admin, a new artifact for the new configuration is created and managed.
+     * If now this configuration is deleted through configuration admin and the original
+     * configuration is not marked as a template, the original configuration is applied:
+     * the delete through config admin is not a remove of the configuration but a revert
+     * to the initial version.
+     * If the initial configuration is marked as template with this property, the removal
+     * of the changed configuration results in a real removal.
+     *
+     * @since 3.2.0
+     */
+    public static final String RESOURCE_IS_TEMPLATE = "org.apache.sling.installer.api.template";
 
     /** Default resource priority */
     public static final int DEFAULT_PRIORITY = 100;

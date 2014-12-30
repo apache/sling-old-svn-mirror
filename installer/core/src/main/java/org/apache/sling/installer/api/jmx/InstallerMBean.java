@@ -19,6 +19,9 @@
 
 package org.apache.sling.installer.api.jmx;
 
+import aQute.bnd.annotation.ProviderType;
+
+@ProviderType
 public interface InstallerMBean {
 
     /**

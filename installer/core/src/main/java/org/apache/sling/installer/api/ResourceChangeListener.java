@@ -22,6 +22,8 @@ import java.io.InputStream;
 import java.util.Dictionary;
 import java.util.Map;
 
+import aQute.bnd.annotation.ProviderType;
+
 
 /**
  * OSGi Service listening for changes of resources.
@@ -32,6 +34,7 @@ import java.util.Map;
  *
  * @since 3.1
  */
+@ProviderType
 public interface ResourceChangeListener {
 
     /**

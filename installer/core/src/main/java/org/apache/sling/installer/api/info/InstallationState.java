@@ -22,11 +22,14 @@ import java.util.List;
 
 import org.apache.sling.installer.api.tasks.RegisteredResource;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The state of the OSGi installer at a given time.
  *
  * @since 1.0
  */
+@ProviderType
 public interface InstallationState {
 
     /**

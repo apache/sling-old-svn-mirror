@@ -22,6 +22,8 @@ import java.io.InputStream;
 import java.util.Dictionary;
 import java.util.Map;
 
+import aQute.bnd.annotation.ConsumerType;
+
 
 /**
  * An update handler is a service handling updates of resources through other ways
@@ -30,6 +32,7 @@ import java.util.Map;
  *
  * @since 3.1
  */
+@ConsumerType
 public interface UpdateHandler {
 
     /**

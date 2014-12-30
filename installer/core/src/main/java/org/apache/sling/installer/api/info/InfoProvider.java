@@ -18,6 +18,8 @@
  */
 package org.apache.sling.installer.api.info;
 
+import aQute.bnd.annotation.ProviderType;
+
 
 /**
  * The info provider delivers information about the current state of the
@@ -25,6 +27,7 @@ package org.apache.sling.installer.api.info;
  *
  * @since 1.0
  */
+@ProviderType
 public interface InfoProvider {
 
     /**

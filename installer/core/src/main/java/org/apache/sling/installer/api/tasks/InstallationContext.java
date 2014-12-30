@@ -18,6 +18,8 @@
  */
 package org.apache.sling.installer.api.tasks;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Context for the installation tasks.
  *
@@ -30,6 +32,7 @@ package org.apache.sling.installer.api.tasks;
  * succeeded like something has been installed, updated or
  * deleted.
  */
+@ProviderType
 public interface InstallationContext {
 
 	/**
