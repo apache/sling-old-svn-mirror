@@ -70,9 +70,7 @@ public class InstallableResource {
      * return additional information.
      * This type should only be used if the client really knows that the
      * provided data is a bundle.
-     * @deprecated {@link #TYPE_FILE} should be used.
      */
-    @Deprecated
     public static final String TYPE_BUNDLE = "bundle";
 
     /**
@@ -80,9 +78,7 @@ public class InstallableResource {
      * must return a dictionary with the configuration.
      * This type should only be used if the client really knows that the
      * provided data is an OSGi configuration.
-     * @deprecated {@link #TYPE_PROPERTIES} should be used.
      */
-    @Deprecated
     public static final String TYPE_CONFIG = "config";
 
     /**
