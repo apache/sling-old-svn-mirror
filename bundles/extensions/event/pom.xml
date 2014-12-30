@@ -45,8 +45,8 @@
     <properties>
         <site.jira.version.id>12315369</site.jira.version.id>
         <sling.java.version>6</sling.java.version>
-        <exam.version>4.3.0</exam.version>
-        <url.version>2.2.0</url.version>
+        <exam.version>4.4.0</exam.version>
+        <url.version>2.3.0</url.version>
         <bundle.build.name>${basedir}/target</bundle.build.name>
         <bundle.file.name>${bundle.build.name}/${project.build.finalName}.jar</bundle.file.name>
         <min.port>35000</min.port>
@@ -292,6 +292,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <version>4.12</version>
         </dependency>
         <dependency>
             <groupId>junit-addons</groupId>
@@ -302,6 +303,7 @@
         <dependency>
             <groupId>org.jmock</groupId>
             <artifactId>jmock-junit4</artifactId>
+            <version>2.6.0</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
