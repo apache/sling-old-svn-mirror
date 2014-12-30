@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.event.InstallationEvent;
 import org.apache.sling.installer.api.event.InstallationListener;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
@@ -203,10 +204,15 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
         final TaskResource toActivate = getActiveResource();
         if ( toActivate != null ) {
             if ( toActivate.getState() == ResourceState.UNINSTALL
-                    && this.resources.size() > 1 ) {
+                 && this.resources.size() > 1 ) {
 
                 final TaskResource second = this.getNextActiveResource();
-                if ( state == ResourceState.UNINSTALLED ) {
+                // check for template
+                if ( second.getDictionary() != null
+                     && second.getDictionary().get(InstallableResource.RESOURCE_IS_TEMPLATE) != null ) {
+                    // second resource is a template! Do not install
+                    ((RegisteredResourceImpl)second).setState(ResourceState.IGNORED);
+                } else if ( state == ResourceState.UNINSTALLED ) {
                     // first resource got uninstalled, go back to second
                     if (second.getState() == ResourceState.IGNORED || second.getState() == ResourceState.INSTALLED) {
                         LOGGER.debug("Reactivating for next cycle: {}", second);

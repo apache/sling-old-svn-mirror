@@ -16,27 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
+@Version("1.3.2")
 package org.apache.sling.installer.api.tasks;
 
-import aQute.bnd.annotation.ConsumerType;
+import aQute.bnd.annotation.Version;
 
-/**
- * The install task factory creates a task for a given
- * resource.
- * An install task factory is a plugin service that
- * checks a resource if it is installable by this plugin
- * and creates an appropriate task.
- */
-@ConsumerType
-public interface InstallTaskFactory {
-
-    /**
-     * Creates an {@link InstallTask} for the resource or
-     * <code>null</code> if the factory does not support the resource.
-     *
-     * The factory should not alter the state of the resources,
-     * therefore it's not allowed to call one of the setState methods
-     * on the task resource group!
-     */
-    InstallTask createTask(final TaskResourceGroup toActivate);
-}

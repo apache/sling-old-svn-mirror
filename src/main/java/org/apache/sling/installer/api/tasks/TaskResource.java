@@ -20,12 +20,15 @@ package org.apache.sling.installer.api.tasks;
 
 import org.osgi.framework.Version;
 
+import aQute.bnd.annotation.ProviderType;
+
 
 /**
  * A task resource is a registered resource which has been
  * processed by a {@link ResourceTransformer} and is now
  * about to be processed by an {@link InstallTask}.
  */
+@ProviderType
 public interface TaskResource extends RegisteredResource {
 
     /** Additional installation information in human readable format. */

@@ -24,6 +24,8 @@ import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.ResourceTransformer;
 import org.osgi.framework.Version;
 
+import aQute.bnd.annotation.ProviderType;
+
 
 /**
  * A resource provides all relevant information about a registered
@@ -31,6 +33,7 @@ import org.osgi.framework.Version;
  *
  * @since 1.0
  */
+@ProviderType
 public interface Resource extends RegisteredResource {
 
     /**

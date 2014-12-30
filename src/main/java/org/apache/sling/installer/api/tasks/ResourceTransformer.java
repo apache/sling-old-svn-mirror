@@ -18,6 +18,8 @@
  */
 package org.apache.sling.installer.api.tasks;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * A resource transformer transform a registered resource
  * before it can be installed.
@@ -25,6 +27,7 @@ package org.apache.sling.installer.api.tasks;
  * one or more {@link TaskResource}s from the registered
  * resources and passes them on to the {@link InstallTaskFactory}.
  */
+@ConsumerType
 public interface ResourceTransformer {
 
     /**
