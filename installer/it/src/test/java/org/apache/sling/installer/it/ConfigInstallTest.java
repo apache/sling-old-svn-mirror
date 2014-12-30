@@ -16,6 +16,10 @@
  */
 package org.apache.sling.installer.it;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -39,10 +43,6 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.ConfigurationListener;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
 @RunWith(PaxExam.class)
 
 public class ConfigInstallTest extends OsgiInstallerTestBase implements ConfigurationListener {
@@ -57,7 +57,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
     public Option[] config() {
         return defaultConfiguration();
     }
-    
+
     @Before
     public void setUp() {
         installationEvents = 0;
@@ -65,7 +65,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         events.clear();
         serviceRegistrations.clear();
         serviceRegistrations.add(bundleContext.registerService(ConfigurationListener.class.getName(), this, null));
-        
+
         final InstallationListener il = new InstallationListener() {
             public void onEvent(InstallationEvent event) {
                 installationEvents++;
@@ -83,11 +83,11 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         }
         serviceRegistrations.clear();
     }
-    
+
     private String uniqueID() {
         return counter.incrementAndGet() + "_" + System.currentTimeMillis();
     }
-    
+
     /**
      * @see org.osgi.service.cm.ConfigurationListener#configurationEvent(org.osgi.service.cm.ConfigurationEvent)
      */
@@ -151,6 +151,83 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
     }
 
     @Test
+    public void testInstallUpdateRemoveConfig() throws Exception {
+        final Dictionary<String, Object> cfgData = new Hashtable<String, Object>();
+        cfgData.put("foo", "bar");
+        final String cfgPid = getClass().getSimpleName() + "." + uniqueID();
+        assertNull("Config " + cfgPid + " must not be found before test", findConfiguration(cfgPid));
+
+        // install config
+        final InstallableResource rsrc = new InstallableResource("/configA/" + cfgPid,
+                null, cfgData, null, InstallableResource.TYPE_PROPERTIES, 10);
+        installer.updateResources(URL_SCHEME, new InstallableResource[] {rsrc}, null);
+
+        // get config
+        final Configuration cfg = waitForConfiguration("After installing", cfgPid, TIMEOUT, true);
+        assertEquals("Config value must match", "bar", cfg.getProperties().get("foo"));
+
+        // create second configuration
+        final Dictionary<String, Object> secondData = new Hashtable<String, Object>();
+        secondData.put("foo", "bla");
+        final InstallableResource rsrc2 = new InstallableResource("/configB/" + cfgPid,
+                null, secondData, null, InstallableResource.TYPE_PROPERTIES, 20);
+        installer.updateResources(URL_SCHEME, new InstallableResource[] {rsrc2}, null);
+
+        sleep(200);
+
+        // get updated config
+        final Configuration secondCfg = waitForConfiguration("After updating", cfgPid, TIMEOUT, true);
+        assertEquals("Config value must match", "bla", secondCfg.getProperties().get("foo"));
+
+        // remove config
+        installer.updateResources(URL_SCHEME, null, new String[] {"/configB/" + cfgPid});
+
+        sleep(200);
+
+        final Configuration origCfg = waitForConfiguration("After deleting", cfgPid, TIMEOUT, true);
+        assertEquals("Config value must match", "bar", origCfg.getProperties().get("foo"));
+    }
+
+    @Test
+    public void testInstallUpdateRemoveTemplateConfig() throws Exception {
+        final Dictionary<String, Object> cfgData = new Hashtable<String, Object>();
+        cfgData.put("foo", "bar");
+        cfgData.put(InstallableResource.RESOURCE_IS_TEMPLATE, "true");
+        final String cfgPid = getClass().getSimpleName() + "." + uniqueID();
+        assertNull("Config " + cfgPid + " must not be found before test", findConfiguration(cfgPid));
+
+        // install config
+        final InstallableResource rsrc = new InstallableResource("/configA/" + cfgPid,
+                null, cfgData, null, InstallableResource.TYPE_PROPERTIES, 10);
+        installer.updateResources(URL_SCHEME, new InstallableResource[] {rsrc}, null);
+
+        // get config
+        final Configuration cfg = waitForConfiguration("After installing", cfgPid, TIMEOUT, true);
+        assertEquals("Config value must match", "bar", cfg.getProperties().get("foo"));
+
+        // create second configuration
+        final Dictionary<String, Object> secondData = new Hashtable<String, Object>();
+        secondData.put("foo", "bla");
+        final InstallableResource rsrc2 = new InstallableResource("/configB/" + cfgPid,
+                null, secondData, null, InstallableResource.TYPE_PROPERTIES, 20);
+        installer.updateResources(URL_SCHEME, new InstallableResource[] {rsrc2}, null);
+
+        sleep(200);
+
+        // get updated config
+        final Configuration secondCfg = waitForConfiguration("After updating", cfgPid, TIMEOUT, true);
+        assertEquals("Config value must match", "bla", secondCfg.getProperties().get("foo"));
+
+        // remove config
+        installer.updateResources(URL_SCHEME, null, new String[] {"/configB/" + cfgPid});
+
+        sleep(200);
+
+        final Configuration noCfg = waitForConfiguration("After deleting", cfgPid, TIMEOUT, false);
+        assertNull("Configuration should be removed", noCfg);
+    }
+
+    @Test
     public void testDeferredConfigInstall() throws Exception {
         // get config admin bundle and wait for service
     	final Bundle configAdmin = this.getConfigAdminBundle();
@@ -167,7 +244,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
     	// Configuration installs must be deferred if ConfigAdmin service is stopped
         configAdmin.stop();
     	waitForConfigAdmin(false);
-    	
+
     	// add new configuration
         final InstallableResource[] rsrc = getInstallableResource(cfgPid, cfgData);
         installationEvents = 0;
@@ -194,7 +271,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         // check that configuration is not available
         final String cfgPid = getClass().getSimpleName() + ".deferred." + uniqueID();
         assertNull("Config " + cfgPid + " must not be found before test", findConfiguration(cfgPid));
-        
+
         // create and install new configuration object, verify
         final Dictionary<String, Object> cfgData = new Hashtable<String, Object>();
         cfgData.put("foo", "bar");
@@ -208,7 +285,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         // Configuration uninstalls must be deferred if ConfigAdmin service is stopped
         configAdmin.stop();
         waitForConfigAdmin(false);
-        
+
         // remove configuration
         installationEvents = 0;
         installer.updateResources(URL_SCHEME, null, new String[] {rsrc[0].getId()});
@@ -289,7 +366,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
             return sb.toString();
         }
     }
-    
+
     private void waitForInstallationEvents(final int howMany) throws Exception {
         final Condition c = new Condition() {
             @Override

@@ -73,8 +73,9 @@ public class ConfigTaskCreator
             // if this is an uninstall, check if we have to install an older version
             // in this case we should do an update instead of uninstall/install (!)
             final TaskResource second = group.getNextActiveResource();
-            if ( second != null &&
-                ( second.getState() == ResourceState.IGNORED || second.getState() == ResourceState.INSTALLED || second.getState() == ResourceState.INSTALL ) ) {
+            if ( second != null
+                && ( second.getState() == ResourceState.IGNORED || second.getState() == ResourceState.INSTALLED || second.getState() == ResourceState.INSTALL )
+                && ( second.getDictionary() == null || second.getDictionary().get(InstallableResource.RESOURCE_IS_TEMPLATE) == null)) {
                 result = new ChangeStateTask(group, ResourceState.UNINSTALLED);
             } else {
                 result = new ConfigRemoveTask(group, this.configAdmin);
