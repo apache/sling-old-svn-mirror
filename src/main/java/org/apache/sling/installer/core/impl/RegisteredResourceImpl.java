@@ -351,7 +351,7 @@ public class RegisteredResourceImpl
     /**
      * Set the state for the resource.
      */
-    public void setState(ResourceState s) {
+    public void setState(final ResourceState s) {
         this.lastChange = System.currentTimeMillis();
         this.state = s;
     }

@@ -599,7 +599,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
             for(final String entityId : this.persistentList.getEntityIds()) {
                 final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
                 // Check the first resource in each group
-                final RegisteredResource toActivate = group.getActiveResource();
+                final TaskResource toActivate = group.getActiveResource();
                 if ( toActivate != null ) {
                     final InstallTask task = getTask(services, group);
                     if ( task != null ) {
