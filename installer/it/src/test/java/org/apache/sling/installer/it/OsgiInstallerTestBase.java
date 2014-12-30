@@ -395,6 +395,7 @@ public class OsgiInstallerTestBase implements FrameworkListener {
     	String localRepo = System.getProperty("maven.repo.local", "");
 
     	return options(
+
                 junitBundles(),
                 when( localRepo.length() > 0 ).useOptions(
                         systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
@@ -411,8 +412,8 @@ public class OsgiInstallerTestBase implements FrameworkListener {
         	            mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.8.0"),
         	            mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.2.8"),
                         mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.0.2"),
-        	        	mavenBundle("org.apache.sling", "org.apache.sling.installer.core", POM_VERSION),
-                        mavenBundle("org.apache.sling", "org.apache.sling.installer.factory.configuration", CONFIG_VERSION)
+        	        	mavenBundle("org.apache.sling", "org.apache.sling.installer.core", POM_VERSION).startLevel(5),
+                        mavenBundle("org.apache.sling", "org.apache.sling.installer.factory.configuration", CONFIG_VERSION).startLevel(5)
         		)
         );
     }
