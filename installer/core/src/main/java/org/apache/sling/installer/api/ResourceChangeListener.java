@@ -38,6 +38,17 @@ import aQute.bnd.annotation.ProviderType;
 public interface ResourceChangeListener {
 
     /**
+     * This attribute defines if a change of the resource should be persisted by the
+     * installer. This property is a boolean value defaulting to true.
+     *
+     * The property should be used, if a resource should not be updated/deleted if
+     * the resource is modified/deleted outside of the installer, e.g. if a configuration
+     * is changed or deleted through configuration admin.
+     * @since 3.2.0
+     */
+    public static final String RESOURCE_PERSIST = "org.apache.sling.installer.api.persist";
+
+    /**
      * Inform the installer about an added or updated
      * resource
      * @param resourceType The resource type

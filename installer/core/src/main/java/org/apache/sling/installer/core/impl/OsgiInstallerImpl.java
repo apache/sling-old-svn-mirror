@@ -938,6 +938,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
     private final List<UpdateInfo> updateInfos = new ArrayList<OsgiInstallerImpl.UpdateInfo>();
 
     /**
+     * Store the changes in an internal queue, the queue is processed in {@link #processUpdateInfos()}.
      * @see org.apache.sling.installer.api.ResourceChangeListener#resourceAddedOrUpdated(java.lang.String, java.lang.String, java.io.InputStream, java.util.Dictionary, Map)
      */
     public void resourceAddedOrUpdated(final String resourceType,
@@ -971,7 +972,26 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
         }
     }
 
+    /**
+     * Store the changes in an internal queue, the queue is processed in {@link #processUpdateInfos()}.
+     * @see org.apache.sling.installer.api.ResourceChangeListener#resourceRemoved(java.lang.String, java.lang.String)
+     */
+    public void resourceRemoved(final String resourceType, String resourceId) {
+        final UpdateInfo ui = new UpdateInfo();
+        ui.resourceType = resourceType;
+        ui.entityId = resourceId;
 
+        synchronized ( this.resourcesLock ) {
+            updateInfos.add(ui);
+            this.wakeUp();
+        }
+    }
+
+    /**
+     * Process the internal queue of updates
+     * @see org.apache.sling.installer.api.ResourceChangeListener#resourceAddedOrUpdated(java.lang.String, java.lang.String, java.io.InputStream, java.util.Dictionary, Map)
+     * @see org.apache.sling.installer.api.ResourceChangeListener#resourceRemoved(java.lang.String, java.lang.String)
+     */
     private void processUpdateInfos() {
         final List<UpdateInfo> infos = new ArrayList<OsgiInstallerImpl.UpdateInfo>();
         synchronized ( this.resourcesLock ) {
@@ -986,33 +1006,77 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
             }
         }
     }
+
+    private boolean handleExternalUpdateWithoutWriteBack(final EntityResourceList erl) {
+        final TaskResource tr = erl.getFirstResource();
+
+        // if this is an update but the change should not be persisted, we have to change
+        // the state to IGNORED
+        // or to UNINSTALLED if state is UNINSTALL
+        if ( tr.getState() == ResourceState.UNINSTALLED || tr.getState() == ResourceState.IGNORED ) {
+            // ignore
+            return false;
+        } else if ( tr.getState() == ResourceState.UNINSTALL ) {
+            erl.setFinishState(ResourceState.UNINSTALLED);
+            return true;
+        } else {
+            erl.setForceFinishState(ResourceState.IGNORED);
+            return true;
+        }
+    }
+    /**
+     * Handle external addition or update of a resource
+     * @see org.apache.sling.installer.api.ResourceChangeListener#resourceAddedOrUpdated(java.lang.String, java.lang.String, java.io.InputStream, java.util.Dictionary, Map)
+     */
     private void internalResourceAddedOrUpdated(final String resourceType,
             final String entityId,
             final ResourceData data,
             final Dictionary<String, Object> dict,
             final Map<String, Object> attributes) {
         final String key = resourceType + ':' + entityId;
+        final boolean persistChange = (attributes != null ? PropertiesUtil.toBoolean(attributes.get(ResourceChangeListener.RESOURCE_PERSIST), true) : true);
         try {
+            boolean compactAndSave = false;
+            boolean done = false;
+
             synchronized ( this.resourcesLock ) {
                 final EntityResourceList erl = this.persistentList.getEntityResourceList(key);
                 logger.debug("Added or updated {} : {}", key, erl);
 
                 // we first check for update
-                boolean updated = false;
                 if ( erl != null && erl.getFirstResource() != null ) {
                     // check digest for dictionaries
                     final TaskResource tr = erl.getFirstResource();
                     if ( dict != null ) {
                         final String digest = FileDataStore.computeDigest(dict);
-                        if ( tr.getState() == ResourceState.INSTALLED && tr.getDigest().equals(digest) ) {
-                            logger.debug("Resource did not change {}", key);
-                            return;
+                        if ( tr.getDigest().equals(digest) ) {
+                            if ( tr.getState() == ResourceState.INSTALLED  ) {
+                                logger.debug("Resource did not change {}", key);
+                            } else if ( tr.getState() == ResourceState.INSTALL
+                                || tr.getState() == ResourceState.IGNORED ) {
+                                erl.setForceFinishState(ResourceState.INSTALLED);
+                                compactAndSave = true;
+                            }
+                            done = true;
                         }
                     }
-                    final UpdateHandler handler = this.findHandler(tr.getScheme());
-                    if ( handler == null ) {
-                        logger.debug("No handler found to handle update of resource with scheme {}", tr.getScheme());
+
+                    final UpdateHandler handler;
+                    if ( !done && persistChange ) {
+                        handler = this.findHandler(tr.getScheme());
+                        if ( handler == null ) {
+                            logger.debug("No handler found to handle update of resource with scheme {}", tr.getScheme());
+                        }
                     } else {
+                        handler = null;
+                    }
+
+                    if ( !done && handler == null ) {
+                        compactAndSave = this.handleExternalUpdateWithoutWriteBack(erl);
+                        done = true;
+                    }
+
+                    if ( !done ) {
                         final InputStream localIS = data.getInputStream();
                         try {
                             final UpdateResult result = (localIS == null ? handler.handleUpdate(resourceType, entityId, tr.getURL(), data.getDictionary(), attributes)
@@ -1051,29 +1115,26 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                                             data.getDigest(result.getURL(), result.getDigest()),
                                             result.getPriority(),
                                             result.getURL());
-                                    // We first set the state of the resource to install to make setFinishState work in all cases
-                                    ((RegisteredResourceImpl)tr).setState(ResourceState.INSTALL);
-                                    erl.setFinishState(ResourceState.INSTALLED);
-                                    erl.compact();
+                                    erl.setForceFinishState(ResourceState.INSTALLED);
                                 }
-                                updated = true;
+                                compactAndSave = true;
+                            } else {
+                                // handler does not persist
+                                compactAndSave = this.handleExternalUpdateWithoutWriteBack(erl);
                             }
                         } finally {
                             if ( localIS != null ) {
                                 // always close the input stream!
-                                try {
-                                    localIS.close();
-                                } catch (final IOException ignore) {
+                                try {  localIS.close(); } catch (final IOException ignore) {
                                     // ignore
                                 }
                             }
                         }
+                        done = true;
                     }
-
                 }
 
-                boolean created = false;
-                if ( !updated ) {
+                if ( !done ) {
                     // create
                     final List<UpdateHandler> handlerList = this.updateHandlerTracker.getSortedServices();
                     for(final UpdateHandler handler : handlerList) {
@@ -1104,7 +1165,8 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                                 final EntityResourceList newGroup = this.persistentList.getEntityResourceList(key);
                                 newGroup.setFinishState(ResourceState.INSTALLED);
                                 newGroup.compact();
-                                created = true;
+                                compactAndSave = true;
+                                done = true;
                                 break;
                             }
                         } finally {
@@ -1118,14 +1180,14 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                             }
                         }
                     }
-                    if ( !created ) {
+                    if ( !done ) {
                         logger.debug("No handler found to handle creation of resource {}", key);
                     }
                 }
-                if ( updated || created ) {
+                if ( compactAndSave ) {
+                    erl.compact();
                     this.persistentList.save();
                 }
-
             }
         } catch (final IOException ioe) {
             logger.error("Unable to handle resource add or update of " + key, ioe);
@@ -1133,35 +1195,29 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
     }
 
     /**
+     * Handle external removal a resource
      * @see org.apache.sling.installer.api.ResourceChangeListener#resourceRemoved(java.lang.String, java.lang.String)
      */
-    public void resourceRemoved(final String resourceType, String resourceId) {
-        final UpdateInfo ui = new UpdateInfo();
-        ui.resourceType = resourceType;
-        ui.entityId = resourceId;
+    private void internalResourceRemoved(final String resourceType, final String entityId) {
 
-        synchronized ( this.resourcesLock ) {
-            updateInfos.add(ui);
-            this.wakeUp();
-        }
-    }
-
-    private void internalResourceRemoved(final String resourceType, String resourceId) {
-
-        String key = resourceType + ':' + resourceId;
+        String key = resourceType + ':' + entityId;
         synchronized ( this.resourcesLock ) {
             final EntityResourceList erl = this.persistentList.getEntityResourceList(key);
             logger.debug("Removed {} : {}", key, erl);
             // if this is not registered at all, we can simply ignore this
             if ( erl != null ) {
-                resourceId = erl.getResourceId();
+                final String resourceId = erl.getResourceId();
                 key = resourceType + ':' + resourceId;
                 final TaskResource tr = erl.getFirstResource();
                 if ( tr != null ) {
                     if ( tr.getState() == ResourceState.IGNORED ) {
                         // if it has been ignored before, we activate it now again!
-                        ((RegisteredResourceImpl)tr).setState(ResourceState.INSTALL);
-                        this.persistentList.save();
+                        // but only if it is not a template
+                        if ( tr.getDictionary() == null
+                             || tr.getDictionary().get(InstallableResource.RESOURCE_IS_TEMPLATE) == null ) {
+                            ((RegisteredResourceImpl)tr).setState(ResourceState.INSTALL);
+                            this.persistentList.save();
+                        }
                     } else if ( tr.getState() == ResourceState.UNINSTALLED ) {
                         // it has already been removed - nothing do to
                     } else {
@@ -1173,9 +1229,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                         } else {
                             // we don't need to check the result, we just check if a result is returned
                             if ( handler.handleRemoval(resourceType, resourceId, tr.getURL()) != null ) {
-                                // We first set the state of the resource to uninstall to make setFinishState work in all cases
-                                ((RegisteredResourceImpl)tr).setState(ResourceState.UNINSTALL);
-                                erl.setFinishState(ResourceState.UNINSTALLED);
+                                erl.setForceFinishState(ResourceState.UNINSTALLED);
                                 erl.compact();
                             } else {
                                 // set to ignored

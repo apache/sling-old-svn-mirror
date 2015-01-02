@@ -198,6 +198,15 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
     }
 
     /**
+     * Force the state to be set
+     */
+    public void setForceFinishState(final ResourceState state) {
+        // We first set the state of the resource to install to make setFinishState work in all cases
+        ((RegisteredResourceImpl)this.getFirstResource()).setState(ResourceState.INSTALL);
+        this.setFinishState(state);
+    }
+
+    /**
      * @see org.apache.sling.installer.api.tasks.TaskResourceGroup#setFinishState(org.apache.sling.installer.api.tasks.ResourceState)
      */
     public void setFinishState(ResourceState state) {
