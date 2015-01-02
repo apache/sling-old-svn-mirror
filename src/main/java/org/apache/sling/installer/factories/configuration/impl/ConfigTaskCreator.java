@@ -122,24 +122,27 @@ public class ConfigTaskCreator
                     final Coordinator.Operation op = Coordinator.SHARED.get(event.getPid(), event.getFactoryPid(), false);
                     if ( config != null && op == null ) {
                         final boolean persist = ConfigUtil.toBoolean(config.getProperties().get(ConfigurationConstants.PROPERTY_PERSISTENCE), true);
-                        if ( persist ) {
-                            final Dictionary<String, Object> dict = ConfigUtil.cleanConfiguration(config.getProperties());
-                            final Map<String, Object> attrs = new HashMap<String, Object>();
-                            attrs.put(Constants.SERVICE_PID, event.getPid());
-                            if ( event.getFactoryPid() == null ) {
-                                attrs.put(InstallableResource.RESOURCE_URI_HINT, pid);
-                            } else {
-                                attrs.put(InstallableResource.RESOURCE_URI_HINT, event.getFactoryPid() + '-' + pid);
-                            }
-                            if ( config.getBundleLocation() != null ) {
-                                attrs.put(InstallableResource.INSTALLATION_HINT, config.getBundleLocation());
-                            }
-                            // Factory?
-                            if (event.getFactoryPid() != null) {
-                                attrs.put(ConfigurationAdmin.SERVICE_FACTORYPID, event.getFactoryPid());
-                            }
-                            this.changeListener.resourceAddedOrUpdated(InstallableResource.TYPE_CONFIG, id, null, dict, attrs);
+
+                        final Dictionary<String, Object> dict = ConfigUtil.cleanConfiguration(config.getProperties());
+                        final Map<String, Object> attrs = new HashMap<String, Object>();
+                        if ( !persist ) {
+                            attrs.put(ResourceChangeListener.RESOURCE_PERSIST, Boolean.FALSE);
                         }
+                        attrs.put(Constants.SERVICE_PID, event.getPid());
+                        if ( event.getFactoryPid() == null ) {
+                            attrs.put(InstallableResource.RESOURCE_URI_HINT, pid);
+                        } else {
+                            attrs.put(InstallableResource.RESOURCE_URI_HINT, event.getFactoryPid() + '-' + pid);
+                        }
+                        if ( config.getBundleLocation() != null ) {
+                            attrs.put(InstallableResource.INSTALLATION_HINT, config.getBundleLocation());
+                        }
+                        // Factory?
+                        if (event.getFactoryPid() != null) {
+                            attrs.put(ConfigurationAdmin.SERVICE_FACTORYPID, event.getFactoryPid());
+                        }
+                        this.changeListener.resourceAddedOrUpdated(InstallableResource.TYPE_CONFIG, id, null, dict, attrs);
+
                     } else {
                         this.logger.debug("Ignoring configuration event for {}:{}", event.getPid(), event.getFactoryPid());
                     }
