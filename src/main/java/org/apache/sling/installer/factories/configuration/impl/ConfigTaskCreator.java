@@ -39,12 +39,17 @@ import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.ConfigurationListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Task creator for configurations.
  */
 public class ConfigTaskCreator
     implements InstallTaskFactory, ConfigurationListener, ResourceTransformer {
+
+    /** Logger. */
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /** Configuration admin. */
     private final ConfigurationAdmin configAdmin;
@@ -91,7 +96,7 @@ public class ConfigTaskCreator
      */
     @SuppressWarnings("unchecked")
     public void configurationEvent(final ConfigurationEvent event) {
-        synchronized ( ConfigTaskCreator.getLock() ) {
+        synchronized ( Coordinator.SHARED ) {
             final String id;
             final String pid;
             if (event.getFactoryPid() == null ) {
@@ -103,13 +108,19 @@ public class ConfigTaskCreator
                 id = event.getFactoryPid() + '.' + event.getPid();
             }
             if ( event.getType() == ConfigurationEvent.CM_DELETED ) {
-                this.changeListener.resourceRemoved(InstallableResource.TYPE_CONFIG, id);
+                final Coordinator.Operation op = Coordinator.SHARED.get(event.getPid(), event.getFactoryPid(), true);
+                if ( op == null ) {
+                    this.changeListener.resourceRemoved(InstallableResource.TYPE_CONFIG, id);
+                } else {
+                    this.logger.debug("Ignoring configuration event for {}:{}", event.getPid(), event.getFactoryPid());
+                }
             } else if ( event.getType() == ConfigurationEvent.CM_UPDATED ) {
                 try {
                     final Configuration config = ConfigUtil.getConfiguration(configAdmin,
                             event.getFactoryPid(),
                             event.getPid());
-                    if ( config != null ) {
+                    final Coordinator.Operation op = Coordinator.SHARED.get(event.getPid(), event.getFactoryPid(), false);
+                    if ( config != null && op == null ) {
                         final boolean persist = ConfigUtil.toBoolean(config.getProperties().get(ConfigurationConstants.PROPERTY_PERSISTENCE), true);
                         if ( persist ) {
                             final Dictionary<String, Object> dict = ConfigUtil.cleanConfiguration(config.getProperties());
@@ -129,6 +140,8 @@ public class ConfigTaskCreator
                             }
                             this.changeListener.resourceAddedOrUpdated(InstallableResource.TYPE_CONFIG, id, null, dict, attrs);
                         }
+                    } else {
+                        this.logger.debug("Ignoring configuration event for {}:{}", event.getPid(), event.getFactoryPid());
                     }
                 } catch ( final Exception ignore) {
                     // ignore for now
@@ -241,11 +254,5 @@ public class ConfigTaskCreator
             return path;
         }
         return path.replace('\\', '/');
-    }
-
-    private static final Object LOCK = new Object();
-
-    public static Object getLock() {
-        return LOCK;
     }
 }

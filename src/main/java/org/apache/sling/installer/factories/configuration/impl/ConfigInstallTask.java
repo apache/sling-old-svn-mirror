@@ -22,6 +22,7 @@ import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.factories.configuration.ConfigurationConstants;
+import org.apache.sling.installer.factories.configuration.impl.Coordinator.Operation;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
@@ -44,7 +45,7 @@ public class ConfigInstallTask extends AbstractConfigTask {
     @SuppressWarnings("unchecked")
 	@Override
     public void execute(final InstallationContext ctx) {
-        synchronized ( ConfigTaskCreator.getLock() ) {
+        synchronized ( Coordinator.SHARED ) {
             // Get or create configuration, but do not
             // update if the new one has the same values.
             boolean created = false;
@@ -81,6 +82,8 @@ public class ConfigInstallTask extends AbstractConfigTask {
                     this.getLogger().debug("Configuration " + config.getPid()
                                 + " " + (created ? "created" : "updated")
                                 + " from " + getResource());
+                    final Operation op = new Coordinator.Operation(config.getPid(), config.getFactoryPid(), false);
+                    Coordinator.SHARED.add(op);
                 } else {
                     this.setFinishedState(ResourceState.IGNORED, this.getCompositeAliasPid());
                 }
