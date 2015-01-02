@@ -211,7 +211,7 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
                 if ( second.getDictionary() != null
                      && second.getDictionary().get(InstallableResource.RESOURCE_IS_TEMPLATE) != null ) {
                     // second resource is a template! Do not install
-                    ((RegisteredResourceImpl)second).setState(ResourceState.INSTALLED);
+                    ((RegisteredResourceImpl)second).setState(ResourceState.IGNORED);
                 } else if ( state == ResourceState.UNINSTALLED ) {
                     // first resource got uninstalled, go back to second
                     if (second.getState() == ResourceState.IGNORED || second.getState() == ResourceState.INSTALLED) {

@@ -187,21 +187,49 @@ public class OsgiInstallerTestBase implements FrameworkListener {
         }
     }
 
-    protected Configuration findConfiguration(String pid) throws Exception {
+    /**
+     * Encode the value for the ldap filter: \, *, (, and ) should be escaped.
+     */
+    private static String encode(final String value) {
+        return value.replace("\\", "\\\\")
+                .replace("*", "\\*")
+                .replace("(", "\\(")
+                .replace(")", "\\)");
+    }
+
+    /**
+     * Find the configuration with the given pid.
+     */
+    protected Configuration findConfiguration(final String pid) throws Exception {
     	final ConfigurationAdmin ca = this.waitForConfigAdmin(true);
     	if (ca != null) {
-	    	final Configuration[] cfgs = ca.listConfigurations(null);
-	    	if (cfgs != null) {
-		    	for(Configuration cfg : cfgs) {
-		    	    try {
-    		    		if(cfg.getPid().equals(pid)) {
-    		    			return cfg;
-    		    		}
-		    	    } catch (IllegalStateException e) {}
-		    	}
+	    	final Configuration[] cfgs = ca.listConfigurations("(" + Constants.SERVICE_PID + "=" + encode(pid) + ")");
+	    	if (cfgs != null && cfgs.length > 0 ) {
+                if ( cfgs.length == 1 ) {
+                    return cfgs[0];
+                }
+                throw new IllegalStateException("More than one configuration for " + pid);
 	    	}
     	}
     	return null;
+    }
+
+    /**
+     * Find the configuration with the given factory pid.
+     */
+    protected Configuration findFactoryConfiguration(final String factoryPid) throws Exception {
+        final ConfigurationAdmin ca = this.waitForConfigAdmin(true);
+        if (ca != null) {
+            final Configuration[] cfgs = ca.listConfigurations("("
+                    + ConfigurationAdmin.SERVICE_FACTORYPID + "=" + encode(factoryPid) + ")");
+            if (cfgs != null && cfgs.length > 0 ) {
+                if ( cfgs.length == 1 ) {
+                    return cfgs[0];
+                }
+                throw new IllegalStateException("More than one factory configuration for " + factoryPid);
+            }
+        }
+        return null;
     }
 
     protected void waitForCondition(String info, long timeoutMsec, Condition c) throws Exception {
@@ -258,6 +286,40 @@ public class OsgiInstallerTestBase implements FrameworkListener {
             fail(info + "Configuration not found (" + pid + ")");
         } else if (!shouldBePresent && result != null) {
             fail(info + "Configuration is still present (" + pid + ")");
+        }
+        return result;
+    }
+
+    protected Configuration waitForFactoryConfiguration(final String info,
+            final String factoryPid,
+            final long timeoutMsec,
+            final boolean shouldBePresent)
+    throws Exception {
+        String msg;
+        if (info == null) {
+            msg = "";
+        } else {
+            msg = info + ": ";
+        }
+
+        Configuration result = null;
+        final long start = System.currentTimeMillis();
+        final long end = start + timeoutMsec;
+        log(LogService.LOG_DEBUG, "Starting factory config check at " + start + "; ending by " + end);
+        do {
+            result = findFactoryConfiguration(factoryPid);
+            if ((shouldBePresent && result != null) ||
+                    (!shouldBePresent && result == null)) {
+                break;
+            }
+            log(LogService.LOG_DEBUG, "Config check failed at " + System.currentTimeMillis() + "; sleeping");
+            sleep(25);
+        } while(System.currentTimeMillis() < end);
+
+        if (shouldBePresent && result == null) {
+            fail(msg + "Factory Configuration not found (" + factoryPid + ")");
+        } else if (!shouldBePresent && result != null) {
+            fail(msg + "Factory Configuration is still present (" + factoryPid + ")");
         }
         return result;
     }

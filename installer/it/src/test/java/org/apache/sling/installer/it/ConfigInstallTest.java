@@ -151,7 +151,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
     }
 
     @Test
-    public void testInstallUpdateRemoveConfig() throws Exception {
+    public void testInstallUpdateRemoveConfigResource() throws Exception {
         final Dictionary<String, Object> cfgData = new Hashtable<String, Object>();
         cfgData.put("foo", "bar");
         final String cfgPid = getClass().getSimpleName() + "." + uniqueID();
@@ -189,7 +189,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
     }
 
     @Test
-    public void testInstallUpdateRemoveTemplateConfig() throws Exception {
+    public void testInstallUpdateRemoveTemplateConfigResource() throws Exception {
         final Dictionary<String, Object> cfgData = new Hashtable<String, Object>();
         cfgData.put("foo", "bar");
         cfgData.put(InstallableResource.RESOURCE_IS_TEMPLATE, "true");
@@ -225,6 +225,85 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
 
         final Configuration noCfg = waitForConfiguration("After deleting", cfgPid, TIMEOUT, false);
         assertNull("Configuration should be removed", noCfg);
+    }
+
+    @Test
+    public void testInstallUpdateRemoveConfigFactoryResource() throws Exception {
+        final Dictionary<String, Object> cfgData = new Hashtable<String, Object>();
+        cfgData.put("foo", "bar");
+        final String cfgFactoryPid = getClass().getSimpleName() + "." + uniqueID();
+        final String alias = "alias" + uniqueID();
+        assertNull("Factory config " + cfgFactoryPid + " must not be found before test", findFactoryConfiguration(cfgFactoryPid));
+
+        // install factory config
+        final InstallableResource rsrc = new InstallableResource("/configA/" + cfgFactoryPid + "-" + alias,
+                null, cfgData, null, InstallableResource.TYPE_PROPERTIES, 10);
+        installer.updateResources(URL_SCHEME, new InstallableResource[] {rsrc}, null);
+
+        // get factory config
+        final Configuration cfg = waitForFactoryConfiguration("After installing", cfgFactoryPid, TIMEOUT, true);
+        assertEquals("Config value must match", "bar", cfg.getProperties().get("foo"));
+
+        // create second factory configuration with same alias
+        final Dictionary<String, Object> secondData = new Hashtable<String, Object>();
+        secondData.put("foo", "bla");
+        final InstallableResource rsrc2 = new InstallableResource("/configB/" + cfgFactoryPid + "-" + alias,
+                null, secondData, null, InstallableResource.TYPE_PROPERTIES, 20);
+        installer.updateResources(URL_SCHEME, new InstallableResource[] {rsrc2}, null);
+
+        sleep(200);
+
+        // get updated factory config
+        final Configuration secondCfg = waitForFactoryConfiguration("After updating", cfgFactoryPid, TIMEOUT, true);
+        assertEquals("Config value must match", "bla", secondCfg.getProperties().get("foo"));
+
+        // remove factory config
+        installer.updateResources(URL_SCHEME, null, new String[] {"/configB/" + cfgFactoryPid + "-" + alias});
+
+        sleep(200);
+
+        final Configuration origCfg = waitForFactoryConfiguration("After deleting", cfgFactoryPid, TIMEOUT, true);
+        assertEquals("Config value must match", "bar", origCfg.getProperties().get("foo"));
+    }
+
+    @Test
+    public void testInstallUpdateRemoveTemplateConfigFactoryResource() throws Exception {
+        final Dictionary<String, Object> cfgData = new Hashtable<String, Object>();
+        cfgData.put("foo", "bar");
+        cfgData.put(InstallableResource.RESOURCE_IS_TEMPLATE, "true");
+        final String cfgFactoryPid = getClass().getSimpleName() + "." + uniqueID();
+        final String alias = "alias" + uniqueID();
+        assertNull("Factory config " + cfgFactoryPid + " must not be found before test", findFactoryConfiguration(cfgFactoryPid));
+
+        // install factory config
+        final InstallableResource rsrc = new InstallableResource("/configA/" + cfgFactoryPid + "-" + alias,
+                null, cfgData, null, InstallableResource.TYPE_PROPERTIES, 10);
+        installer.updateResources(URL_SCHEME, new InstallableResource[] {rsrc}, null);
+
+        // get factory config
+        final Configuration cfg = waitForFactoryConfiguration("After installing", cfgFactoryPid, TIMEOUT, true);
+        assertEquals("Config value must match", "bar", cfg.getProperties().get("foo"));
+
+        // create second factory configuration
+        final Dictionary<String, Object> secondData = new Hashtable<String, Object>();
+        secondData.put("foo", "bla");
+        final InstallableResource rsrc2 = new InstallableResource("/configB/" + cfgFactoryPid + "-" + alias,
+                null, secondData, null, InstallableResource.TYPE_PROPERTIES, 20);
+        installer.updateResources(URL_SCHEME, new InstallableResource[] {rsrc2}, null);
+
+        sleep(200);
+
+        // get updated factory config
+        final Configuration secondCfg = waitForFactoryConfiguration("After updating", cfgFactoryPid, TIMEOUT, true);
+        assertEquals("Config value must match", "bla", secondCfg.getProperties().get("foo"));
+
+        // remove config
+        installer.updateResources(URL_SCHEME, null, new String[] {"/configB/" + cfgFactoryPid + "-" + alias});
+
+        sleep(200);
+
+        final Configuration noCfg = waitForFactoryConfiguration("After deleting", cfgFactoryPid, TIMEOUT, false);
+        assertNull("Factory configuration should be removed", noCfg);
     }
 
     @Test
