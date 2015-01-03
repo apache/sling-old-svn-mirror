@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.thymeleaf.impl;
+package org.apache.sling.scripting.thymeleaf.internal;
 
 import java.text.MessageFormat;
 import java.util.Dictionary;
@@ -63,7 +63,7 @@ public class ResourceBundleMessageResolver implements IMessageResolver {
     public static final int DEFAULT_ORDER = 0;
 
     @Property(intValue = DEFAULT_ORDER)
-    public static final String ORDER_PARAMETER = "org.apache.sling.scripting.thymeleaf.impl.ResourceBundleMessageResolver.order";
+    public static final String ORDER_PARAMETER = "org.apache.sling.scripting.thymeleaf.internal.ResourceBundleMessageResolver.order";
 
     public static final Object[] EMPTY_MESSAGE_PARAMETERS = new Object[0];
 

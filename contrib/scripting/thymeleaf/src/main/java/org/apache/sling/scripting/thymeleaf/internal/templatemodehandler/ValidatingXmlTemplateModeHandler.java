@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.thymeleaf.impl.templatemodehandler;
+package org.apache.sling.scripting.thymeleaf.internal.templatemodehandler;
 
 import java.util.Dictionary;
 
@@ -49,7 +49,7 @@ public class ValidatingXmlTemplateModeHandler extends AbstractTemplateModeHandle
     public static final String DEFAULT_PATTERN = "*.xml";
 
     @Property(value = {DEFAULT_PATTERN}, unbounded = PropertyUnbounded.ARRAY)
-    public static final String PATTERNS_PARAMETER = "org.apache.sling.scripting.thymeleaf.impl.templatemodehandler.ValidatingXmlTemplateModeHandler.patterns";
+    public static final String PATTERNS_PARAMETER = "org.apache.sling.scripting.thymeleaf.internal.templatemodehandler.ValidatingXmlTemplateModeHandler.patterns";
 
     public ValidatingXmlTemplateModeHandler() {
         super(TEMPLATE_MODE_NAME, new XmlValidatingSAXTemplateParser(poolSize()), new XmlTemplateWriter());

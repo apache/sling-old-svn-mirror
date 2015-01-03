@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.thymeleaf.impl.templatemodehandler;
+package org.apache.sling.scripting.thymeleaf.internal.templatemodehandler;
 
 import java.util.Collections;
 import java.util.HashSet;
