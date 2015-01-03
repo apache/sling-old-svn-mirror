@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.thymeleaf.impl.templatemodehandler;
+package org.apache.sling.scripting.thymeleaf.internal.templatemodehandler;
 
 import java.util.Dictionary;
 
@@ -28,31 +28,31 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
-import org.thymeleaf.templateparser.xmlsax.XhtmlAndHtml5NonValidatingSAXTemplateParser;
-import org.thymeleaf.templatewriter.XhtmlHtml5TemplateWriter;
+import org.thymeleaf.templateparser.html.LegacyHtml5TemplateParser;
+import org.thymeleaf.templatewriter.XmlTemplateWriter;
 
 @Component(
-    label = "Apache Sling Scripting Thymeleaf “HTML5 Template Mode Handler”",
-    description = "HTML5 template mode handler for Sling Scripting Thymeleaf",
+    label = "Apache Sling Scripting Thymeleaf “Legacy HTML5 Template Mode Handler”",
+    description = "legacy HTML5 template mode handler for Sling Scripting Thymeleaf",
     immediate = true,
     metatype = true
 )
 @Service
 @Properties({
     @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
-    @Property(name = Constants.SERVICE_DESCRIPTION, value = "HTML5 template mode handler for Sling Scripting Thymeleaf")
+    @Property(name = Constants.SERVICE_DESCRIPTION, value = "legacy HTML5 template mode handler for Sling Scripting Thymeleaf")
 })
-public class Html5TemplateModeHandler extends AbstractTemplateModeHandler {
+public class LegacyHtml5TemplateModeHandler extends AbstractTemplateModeHandler {
 
-    public static final String TEMPLATE_MODE_NAME = "HTML5";
+    public static final String TEMPLATE_MODE_NAME = "LEGACYHTML5";
 
     public static final String DEFAULT_PATTERN = "*.html";
 
     @Property(value = {DEFAULT_PATTERN}, unbounded = PropertyUnbounded.ARRAY)
-    public static final String PATTERNS_PARAMETER = "org.apache.sling.scripting.thymeleaf.impl.templatemodehandler.Html5TemplateModeHandler.patterns";
+    public static final String PATTERNS_PARAMETER = "org.apache.sling.scripting.thymeleaf.internal.templatemodehandler.LegacyHtml5TemplateModeHandler.patterns";
 
-    public Html5TemplateModeHandler() {
-        super(TEMPLATE_MODE_NAME, new XhtmlAndHtml5NonValidatingSAXTemplateParser(poolSize()), new XhtmlHtml5TemplateWriter());
+    public LegacyHtml5TemplateModeHandler() {
+        super(TEMPLATE_MODE_NAME, new LegacyHtml5TemplateParser(TEMPLATE_MODE_NAME, poolSize()), new XmlTemplateWriter());
     }
 
     protected synchronized void configure(final ComponentContext componentContext) {

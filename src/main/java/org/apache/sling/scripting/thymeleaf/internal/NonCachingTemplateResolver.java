@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.thymeleaf.impl;
+package org.apache.sling.scripting.thymeleaf.internal;
 
 import java.util.Dictionary;
 import java.util.LinkedHashSet;
@@ -69,14 +69,14 @@ public class NonCachingTemplateResolver implements ITemplateResolver {
     public static final int DEFAULT_ORDER = 0;
 
     @Property(intValue = DEFAULT_ORDER)
-    public static final String ORDER_PARAMETER = "org.apache.sling.scripting.thymeleaf.impl.NonCachingTemplateResolver.order";
+    public static final String ORDER_PARAMETER = "org.apache.sling.scripting.thymeleaf.internal.NonCachingTemplateResolver.order";
 
     private String encoding;
 
     public static final String DEFAULT_ENCODING = "UTF-8";
 
     @Property(value = DEFAULT_ENCODING)
-    public static final String ENCODING_PARAMETER = "org.apache.sling.scripting.thymeleaf.impl.NonCachingTemplateResolver.encoding";
+    public static final String ENCODING_PARAMETER = "org.apache.sling.scripting.thymeleaf.internal.NonCachingTemplateResolver.encoding";
 
     private final Logger logger = LoggerFactory.getLogger(NonCachingTemplateResolver.class);
 

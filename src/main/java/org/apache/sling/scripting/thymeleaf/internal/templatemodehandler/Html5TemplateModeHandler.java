@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.scripting.thymeleaf.impl.templatemodehandler;
+package org.apache.sling.scripting.thymeleaf.internal.templatemodehandler;
 
 import java.util.Dictionary;
 
@@ -32,26 +32,26 @@ import org.thymeleaf.templateparser.xmlsax.XhtmlAndHtml5NonValidatingSAXTemplate
 import org.thymeleaf.templatewriter.XhtmlHtml5TemplateWriter;
 
 @Component(
-    label = "Apache Sling Scripting Thymeleaf “Validating XHTML Template Mode Handler”",
-    description = "validating XHTML template mode handler for Sling Scripting Thymeleaf",
+    label = "Apache Sling Scripting Thymeleaf “HTML5 Template Mode Handler”",
+    description = "HTML5 template mode handler for Sling Scripting Thymeleaf",
     immediate = true,
     metatype = true
 )
 @Service
 @Properties({
     @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
-    @Property(name = Constants.SERVICE_DESCRIPTION, value = "validating XHTML template mode handler for Sling Scripting Thymeleaf")
+    @Property(name = Constants.SERVICE_DESCRIPTION, value = "HTML5 template mode handler for Sling Scripting Thymeleaf")
 })
-public class ValidatingXhtmlTemplateModeHandler extends AbstractTemplateModeHandler {
+public class Html5TemplateModeHandler extends AbstractTemplateModeHandler {
 
-    public static final String TEMPLATE_MODE_NAME = "VALIDXHTML";
+    public static final String TEMPLATE_MODE_NAME = "HTML5";
 
-    public static final String DEFAULT_PATTERN = "*.xhtml";
+    public static final String DEFAULT_PATTERN = "*.html";
 
     @Property(value = {DEFAULT_PATTERN}, unbounded = PropertyUnbounded.ARRAY)
-    public static final String PATTERNS_PARAMETER = "org.apache.sling.scripting.thymeleaf.impl.templatemodehandler.ValidatingXhtmlTemplateModeHandler.patterns";
+    public static final String PATTERNS_PARAMETER = "org.apache.sling.scripting.thymeleaf.internal.templatemodehandler.Html5TemplateModeHandler.patterns";
 
-    public ValidatingXhtmlTemplateModeHandler() {
+    public Html5TemplateModeHandler() {
         super(TEMPLATE_MODE_NAME, new XhtmlAndHtml5NonValidatingSAXTemplateParser(poolSize()), new XhtmlHtml5TemplateWriter());
     }
 
