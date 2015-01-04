@@ -204,6 +204,8 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
     @Reference(policy = STATIC, policyOption = GREEDY)
     private SecurityProvider securityProvider = null;
 
+    private ServiceRegistration nodeAggregator;
+
     @Override
     protected Repository acquireRepository() {
         this.adminUserName = securityProvider.getConfiguration(UserConfiguration.class).getParameters().getConfigValue(
@@ -238,15 +240,6 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         // index stuff
         .with(indexProvider)
         .with(indexEditorProvider)
-//        .with(new PropertyIndexEditorProvider())
-
-//        .with(new PropertyIndexProvider())
-//        .with(new NodeTypeIndexProvider())
-
-//        .with(new LuceneIndexEditorProvider())
-        .with(AggregateIndexProvider.wrap(new LuceneIndexProvider()
-                .with(getNodeAggregator())))
-
         .with(getDefaultWorkspace())
         .withAsyncIndexing()
         .with(whiteboard)
@@ -337,6 +330,9 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         this.observationQueueLength = getObservationQueueLength(componentContext);
         this.commitRateLimiter = getCommitRateLimiter(componentContext);
         this.threadPool = threadPoolManager.get("oak-observation");
+        this.nodeAggregator = componentContext.getBundleContext()
+                .registerService(NodeAggregator.class.getName(), getNodeAggregator(), null);
+
         super.start(componentContext.getBundleContext(), defaultWorkspace, disableLoginAdministrative);
     }
 
@@ -348,6 +344,7 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         this.namespaceMappers = null;
         this.threadPoolManager.release(this.threadPool);
         this.threadPool = null;
+        this.nodeAggregator.unregister();
         this.tearDown();
     }
 
