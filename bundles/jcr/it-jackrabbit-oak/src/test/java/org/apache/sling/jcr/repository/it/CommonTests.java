@@ -565,11 +565,11 @@ public abstract class CommonTests {
         while(System.currentTimeMillis() < timeoutAt) {
             ref = bundleContext.getServiceReference(ResourceResolverFactory.class.getName());
             if(ref != null) {
-                return;
+                break;
             }
         }
         
-        assertNotNull("Expecting ResourceResolverFactory within " + timeout + " seconds");
+        assertNotNull("Expecting ResourceResolverFactory within " + timeout + " seconds", ref);
         ResourceResolver rr = null;
         try {
             final ResourceResolverFactory f = (ResourceResolverFactory)bundleContext.getService(ref);
