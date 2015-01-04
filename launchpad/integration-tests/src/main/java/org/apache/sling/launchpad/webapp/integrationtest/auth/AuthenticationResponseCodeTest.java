@@ -62,8 +62,6 @@ public class AuthenticationResponseCodeTest {
     }
 
     @Test
-    @Category(JackrabbitOnly.class)
-    // TODO: fails on Oak
     public void testValidatingCorrectFormCredentials() throws Exception {
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new NameValuePair("j_username", "admin"));
