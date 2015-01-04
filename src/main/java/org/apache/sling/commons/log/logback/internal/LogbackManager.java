@@ -74,6 +74,11 @@ public class LogbackManager extends LoggerContextAwareBase {
 
     private static final String RESET_EVENT_TOPIC = "org/apache/sling/commons/log/RESET";
 
+    /**
+     * Framework property specifying the root location used to resolve relative paths
+     */
+    private static final String SLING_LOG_ROOT = "sling.log.root";
+
     private final BundleContext bundleContext;
 
     private final String rootDir;
@@ -357,9 +362,12 @@ public class LogbackManager extends LoggerContextAwareBase {
     }
 
     private String getRootDir(BundleContext bundleContext) {
-        String rootDir = bundleContext.getProperty("sling.home");
+        String rootDir = bundleContext.getProperty(SLING_LOG_ROOT);
         if (rootDir == null) {
-            rootDir = new File(".").getAbsolutePath();
+            rootDir = bundleContext.getProperty("sling.home");
+            if (rootDir == null) {
+                rootDir = new File(".").getAbsolutePath();
+            }
         }
         addInfo("Using rootDir as " + rootDir);
         return rootDir;
