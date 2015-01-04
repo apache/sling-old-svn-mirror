@@ -451,6 +451,12 @@
             <artifactId>tika-bundle</artifactId>
             <version>1.2</version>
         </bundle>
+        <bundle>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.jaas</artifactId>
+            <version>0.0.2</version>
+            <runModes>oak</runModes>
+        </bundle>
     </startLevel>
 
     <startLevel level="15">
