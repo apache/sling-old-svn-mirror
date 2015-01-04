@@ -36,6 +36,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.felix.jaas.LoginModuleFactory;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
@@ -56,6 +57,8 @@ import org.apache.sling.auth.core.spi.AuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationInfo;
 import org.apache.sling.auth.core.spi.DefaultAuthenticationFeedbackHandler;
 import org.apache.sling.auth.form.FormReason;
+import org.apache.sling.auth.form.impl.jaas.FormCredentials;
+import org.apache.sling.auth.form.impl.jaas.JaasHelper;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -73,7 +76,12 @@ import org.slf4j.LoggerFactory;
     @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling Form Based Authentication Handler"),
     @Property(name = AuthenticationHandler.PATH_PROPERTY, value = "/", cardinality = 100),
     @Property(name = AuthenticationHandler.TYPE_PROPERTY, value = HttpServletRequest.FORM_AUTH, propertyPrivate = true),
-    @Property(name = Constants.SERVICE_RANKING, intValue = 0, propertyPrivate = false) })
+    @Property(name = Constants.SERVICE_RANKING, intValue = 0, propertyPrivate = false),
+
+    @Property(name = LoginModuleFactory.JAAS_CONTROL_FLAG, value = "sufficient"),
+    @Property(name = LoginModuleFactory.JAAS_REALM_NAME, value = "jackrabbit.oak"),
+    @Property(name = LoginModuleFactory.JAAS_RANKING, intValue = 1000)
+})
 @Service
 public class FormAuthenticationHandler extends DefaultAuthenticationFeedbackHandler implements AuthenticationHandler {
 
@@ -294,6 +302,8 @@ public class FormAuthenticationHandler extends DefaultAuthenticationFeedbackHand
      * If true the login form will be presented when the token expires.
      */
     private boolean loginAfterExpire;
+
+    private JaasHelper jaasHelper;
 
     /**
      * Extracts cookie/session based credentials from the request. Returns
@@ -622,7 +632,13 @@ public class FormAuthenticationHandler extends DefaultAuthenticationFeedbackHand
 
         final AuthenticationInfo info = new AuthenticationInfo(
             HttpServletRequest.FORM_AUTH, userId);
-        info.put(attrCookieAuthData, authData);
+
+        if (jaasHelper.enabled()) {
+            //JcrResourceConstants.AUTHENTICATION_INFO_CREDENTIALS
+            info.put("user.jcr.credentials", new FormCredentials(userId, authData));
+        } else {
+            info.put(attrCookieAuthData, authData);
+        }
 
         return info;
     }
@@ -643,6 +659,8 @@ public class FormAuthenticationHandler extends DefaultAuthenticationFeedbackHand
             if (data instanceof String) {
                 return (String) data;
             }
+        } else if (credentials instanceof FormCredentials){
+            return ((FormCredentials) credentials).getAuthData();
         }
 
         // no SimpleCredentials or no valid attribute
@@ -653,7 +671,7 @@ public class FormAuthenticationHandler extends DefaultAuthenticationFeedbackHand
         return getCookieAuthData(credentials) != null;
     }
 
-    boolean isValid(final Credentials credentials) {
+    public boolean isValid(final Credentials credentials) {
         String authData = getCookieAuthData(credentials);
         if (authData != null) {
             return tokenStore.isValid(authData);
@@ -679,6 +697,7 @@ public class FormAuthenticationHandler extends DefaultAuthenticationFeedbackHand
 
         Dictionary<?, ?> properties = componentContext.getProperties();
 
+        this.jaasHelper = new JaasHelper(this, componentContext.getBundleContext(), properties);
         this.loginForm = OsgiUtil.toString(properties.get(PAR_LOGIN_FORM),
             AuthenticationFormServlet.SERVLET_PATH);
         log.info("Login Form URL {}", loginForm);
@@ -730,12 +749,14 @@ public class FormAuthenticationHandler extends DefaultAuthenticationFeedbackHand
         this.tokenStore = new TokenStore(tokenFile, sessionTimeout, fastSeed);
 
         this.loginModule = null;
-        try {
-            this.loginModule = FormLoginModulePlugin.register(this,
-                componentContext.getBundleContext());
-        } catch (Throwable t) {
-            log.info("Cannot register FormLoginModulePlugin. This is expected if Sling LoginModulePlugin services are not supported");
-            log.debug("dump", t);
+        if (!jaasHelper.enabled()) {
+            try {
+                this.loginModule = FormLoginModulePlugin.register(this,
+                        componentContext.getBundleContext());
+            } catch (Throwable t) {
+                log.info("Cannot register FormLoginModulePlugin. This is expected if Sling LoginModulePlugin services are not supported");
+                log.debug("dump", t);
+            }
         }
 
         this.includeLoginForm = OsgiUtil.toBoolean(properties.get(PAR_INCLUDE_FORM), DEFAULT_INCLUDE_FORM);
@@ -745,6 +766,11 @@ public class FormAuthenticationHandler extends DefaultAuthenticationFeedbackHand
 
     @Deactivate
     protected void deactivate() {
+        if (jaasHelper != null){
+            jaasHelper.close();
+            jaasHelper = null;
+        }
+
         if (loginModule != null) {
             loginModule.unregister();
             loginModule = null;
