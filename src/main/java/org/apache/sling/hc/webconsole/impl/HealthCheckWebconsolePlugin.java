@@ -228,7 +228,7 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         c.closeTr();
 
         c.tr();
-        c.tdLabel("Combine tags with logical 'or'");
+        c.tdLabel("Combine tags with logical 'OR' instead of the default 'AND'");
         c.tdContent();
         c.writer().print("<input type='checkbox' name='" + PARAM_COMBINE_TAGS_WITH_OR + "' class='input' value='true'");
         if (combineTagsWithOr) {
