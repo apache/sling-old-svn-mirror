@@ -7,9 +7,5 @@
 
     "packageExporter":  {
         "type": "local"
-    },
-
-    "packageImporter": {
-        "type" : "local"
     }
 }
