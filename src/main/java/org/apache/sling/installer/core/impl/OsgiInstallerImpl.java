@@ -102,6 +102,9 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
     /** Removed resources from clients. */
     private final Set<String> urlsToRemove = new HashSet<String>();
 
+    /** Update infos to process. */
+    private final List<UpdateInfo> updateInfos = new ArrayList<OsgiInstallerImpl.UpdateInfo>();
+
     /** Are we still activate? */
     private volatile boolean active = true;
 
@@ -310,7 +313,10 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
      * This method should only be invoked from within a synchronized (newResources) block!
      */
     private boolean hasNewResources() {
-        return !this.newResources.isEmpty() || !this.newResourcesSchemes.isEmpty() || !this.urlsToRemove.isEmpty();
+        return !this.newResources.isEmpty()
+            || !this.newResourcesSchemes.isEmpty()
+            || !this.urlsToRemove.isEmpty()
+            || !this.updateInfos.isEmpty();
     }
 
     /**
@@ -934,8 +940,6 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
         public String entityId;
         public Map<String, Object> attributes;
     }
-
-    private final List<UpdateInfo> updateInfos = new ArrayList<OsgiInstallerImpl.UpdateInfo>();
 
     /**
      * Store the changes in an internal queue, the queue is processed in {@link #processUpdateInfos()}.
