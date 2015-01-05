@@ -19,6 +19,7 @@ package org.apache.sling.scripting.java.impl;
 import java.util.Dictionary;
 
 import org.apache.sling.commons.compiler.Options;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 
 public class CompilerOptions extends Options {
 
@@ -34,22 +35,26 @@ public class CompilerOptions extends Options {
         final String currentVersion = System.getProperty("java.specification.version");
         final CompilerOptions opts = new CompilerOptions();
 
-        final Boolean classDebugInfo = (Boolean)props.get(JavaScriptEngineFactory.PROPERTY_CLASSDEBUGINFO);
-        opts.put(Options.KEY_GENERATE_DEBUG_INFO, classDebugInfo != null ? classDebugInfo : true);
+        final Boolean classDebugInfo = PropertiesUtil.toBoolean(
+                props.get(JavaScriptEngineFactory.PROPERTY_CLASSDEBUGINFO), true);
+        opts.put(Options.KEY_GENERATE_DEBUG_INFO, classDebugInfo);
 
-        final String sourceVM = (String) props.get(JavaScriptEngineFactory.PROPERTY_COMPILER_SOURCE_V_M);
+        final String sourceVM = PropertiesUtil.toString(
+                props.get(JavaScriptEngineFactory.PROPERTY_COMPILER_SOURCE_V_M), null);
         opts.put(Options.KEY_SOURCE_VERSION, sourceVM != null && sourceVM.trim().length() > 0 ? sourceVM.trim() : JavaScriptEngineFactory.VERSION_AUTO);
         if ( JavaScriptEngineFactory.VERSION_AUTO.equalsIgnoreCase((String)opts.get(Options.KEY_SOURCE_VERSION)) ) {
             opts.put(Options.KEY_SOURCE_VERSION, currentVersion);
         }
 
-        final String targetVM = (String) props.get(JavaScriptEngineFactory.PROPERTY_COMPILER_TARGET_V_M);
+        final String targetVM = PropertiesUtil.toString(
+                props.get(JavaScriptEngineFactory.PROPERTY_COMPILER_TARGET_V_M), null);
         opts.put(Options.KEY_TARGET_VERSION, targetVM != null && targetVM.trim().length() > 0 ? targetVM.trim() : JavaScriptEngineFactory.VERSION_AUTO);
         if ( JavaScriptEngineFactory.VERSION_AUTO.equalsIgnoreCase((String)opts.get(Options.KEY_TARGET_VERSION)) ) {
             opts.put(Options.KEY_TARGET_VERSION, currentVersion);
         }
 
-        final String encoding = (String) props.get(JavaScriptEngineFactory.PROPERTY_ENCODING);
+        final String encoding = PropertiesUtil.toString(
+                props.get(JavaScriptEngineFactory.PROPERTY_ENCODING), null);
         opts.encoding = encoding != null && encoding.length() > 0 ? encoding : "UTF-8";
 
         opts.put(Options.KEY_IGNORE_WARNINGS, true);
