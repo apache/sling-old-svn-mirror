@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.event.InstallationEvent;
 import org.apache.sling.installer.api.event.InstallationListener;
+import org.apache.sling.installer.api.tasks.ResourceState;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -147,7 +148,6 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         // remove again
         installer.updateResources(URL_SCHEME, null, new String[] {rsrc[0].getId()});
         waitForConfiguration("After removing for the second time", cfgPid, TIMEOUT, false);
-
     }
 
     @Test
@@ -155,7 +155,6 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         final Dictionary<String, Object> cfgData = new Hashtable<String, Object>();
         cfgData.put("foo", "bar");
         final String cfgPid = getClass().getSimpleName() + "." + uniqueID();
-        assertNull("Config " + cfgPid + " must not be found before test", findConfiguration(cfgPid));
 
         // install config
         final InstallableResource rsrc = new InstallableResource("/configA/" + cfgPid,
@@ -163,8 +162,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         installer.updateResources(URL_SCHEME, new InstallableResource[] {rsrc}, null);
 
         // get config
-        final Configuration cfg = waitForConfiguration("After installing", cfgPid, TIMEOUT, true);
-        assertEquals("Config value must match", "bar", cfg.getProperties().get("foo"));
+        waitForConfigValue("After installing", cfgPid, TIMEOUT, "foo", "bar");
 
         // create second configuration
         final Dictionary<String, Object> secondData = new Hashtable<String, Object>();
@@ -173,19 +171,13 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
                 null, secondData, null, InstallableResource.TYPE_PROPERTIES, 20);
         installer.updateResources(URL_SCHEME, new InstallableResource[] {rsrc2}, null);
 
-        sleep(200); // TODO replace with wait condition
-
         // get updated config
-        final Configuration secondCfg = waitForConfiguration("After updating", cfgPid, TIMEOUT, true);
-        assertEquals("Config value must match", "bla", secondCfg.getProperties().get("foo"));
+        waitForConfigValue("After updating", cfgPid, TIMEOUT, "foo", "bla");
 
         // remove config
         installer.updateResources(URL_SCHEME, null, new String[] {"/configB/" + cfgPid});
 
-        sleep(200); // TODO replace with wait condition
-
-        final Configuration origCfg = waitForConfiguration("After deleting", cfgPid, TIMEOUT, true);
-        assertEquals("Config value must match", "bar", origCfg.getProperties().get("foo"));
+        waitForConfigValue("After deleting", cfgPid, TIMEOUT, "foo", "bar");
     }
 
     @Test
@@ -194,7 +186,6 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         cfgData.put("foo", "bar");
         cfgData.put(InstallableResource.RESOURCE_IS_TEMPLATE, "true");
         final String cfgPid = getClass().getSimpleName() + "." + uniqueID();
-        assertNull("Config " + cfgPid + " must not be found before test", findConfiguration(cfgPid));
 
         // install config
         final InstallableResource rsrc = new InstallableResource("/configA/" + cfgPid,
@@ -202,8 +193,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         installer.updateResources(URL_SCHEME, new InstallableResource[] {rsrc}, null);
 
         // get config
-        final Configuration cfg = waitForConfiguration("After installing", cfgPid, TIMEOUT, true);
-        assertEquals("Config value must match", "bar", cfg.getProperties().get("foo"));
+        waitForConfigValue("After installing", cfgPid, TIMEOUT, "foo", "bar");
 
         // create second configuration
         final Dictionary<String, Object> secondData = new Hashtable<String, Object>();
@@ -212,19 +202,13 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
                 null, secondData, null, InstallableResource.TYPE_PROPERTIES, 20);
         installer.updateResources(URL_SCHEME, new InstallableResource[] {rsrc2}, null);
 
-        sleep(200); // TODO replace with wait condition
-
         // get updated config
-        final Configuration secondCfg = waitForConfiguration("After updating", cfgPid, TIMEOUT, true);
-        assertEquals("Config value must match", "bla", secondCfg.getProperties().get("foo"));
+        waitForConfigValue("After updating", cfgPid, TIMEOUT, "foo", "bla");
 
         // remove config
         installer.updateResources(URL_SCHEME, null, new String[] {"/configB/" + cfgPid});
 
-        sleep(200); // TODO replace with wait condition
-
-        final Configuration noCfg = waitForConfiguration("After deleting", cfgPid, TIMEOUT, false);
-        assertNull("Configuration should be removed", noCfg);
+        waitForConfiguration("After deleting", cfgPid, TIMEOUT, false);
     }
 
     @Test
@@ -233,7 +217,6 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         cfgData.put("foo", "bar");
         final String cfgFactoryPid = getClass().getSimpleName() + "." + uniqueID();
         final String alias = "alias" + uniqueID();
-        assertNull("Factory config " + cfgFactoryPid + " must not be found before test", findFactoryConfiguration(cfgFactoryPid));
 
         // install factory config
         final InstallableResource rsrc = new InstallableResource("/configA/" + cfgFactoryPid + "-" + alias,
@@ -241,8 +224,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         installer.updateResources(URL_SCHEME, new InstallableResource[] {rsrc}, null);
 
         // get factory config
-        final Configuration cfg = waitForFactoryConfiguration("After installing", cfgFactoryPid, TIMEOUT, true);
-        assertEquals("Config value must match", "bar", cfg.getProperties().get("foo"));
+        waitForFactoryConfigValue("After installing", cfgFactoryPid, TIMEOUT, "foo", "bar");
 
         // create second factory configuration with same alias
         final Dictionary<String, Object> secondData = new Hashtable<String, Object>();
@@ -251,19 +233,13 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
                 null, secondData, null, InstallableResource.TYPE_PROPERTIES, 20);
         installer.updateResources(URL_SCHEME, new InstallableResource[] {rsrc2}, null);
 
-        sleep(200); // TODO replace with wait condition
-
         // get updated factory config
-        final Configuration secondCfg = waitForFactoryConfiguration("After updating", cfgFactoryPid, TIMEOUT, true);
-        assertEquals("Config value must match", "bla", secondCfg.getProperties().get("foo"));
+        waitForFactoryConfigValue("After updating", cfgFactoryPid, TIMEOUT, "foo", "bla");
 
         // remove factory config
         installer.updateResources(URL_SCHEME, null, new String[] {"/configB/" + cfgFactoryPid + "-" + alias});
 
-        sleep(200); // TODO replace with wait condition
-
-        final Configuration origCfg = waitForFactoryConfiguration("After deleting", cfgFactoryPid, TIMEOUT, true);
-        assertEquals("Config value must match", "bar", origCfg.getProperties().get("foo"));
+        waitForFactoryConfigValue("After updating", cfgFactoryPid, TIMEOUT, "foo", "bar");
     }
 
     @Test
@@ -273,7 +249,6 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         cfgData.put(InstallableResource.RESOURCE_IS_TEMPLATE, "true");
         final String cfgFactoryPid = getClass().getSimpleName() + "." + uniqueID();
         final String alias = "alias" + uniqueID();
-        assertNull("Factory config " + cfgFactoryPid + " must not be found before test", findFactoryConfiguration(cfgFactoryPid));
 
         // install factory config
         final InstallableResource rsrc = new InstallableResource("/configA/" + cfgFactoryPid + "-" + alias,
@@ -281,8 +256,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         installer.updateResources(URL_SCHEME, new InstallableResource[] {rsrc}, null);
 
         // get factory config
-        final Configuration cfg = waitForFactoryConfiguration("After installing", cfgFactoryPid, TIMEOUT, true);
-        assertEquals("Config value must match", "bar", cfg.getProperties().get("foo"));
+        waitForFactoryConfigValue("After installing", cfgFactoryPid, TIMEOUT, "foo", "bar");
 
         // create second factory configuration
         final Dictionary<String, Object> secondData = new Hashtable<String, Object>();
@@ -291,19 +265,13 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
                 null, secondData, null, InstallableResource.TYPE_PROPERTIES, 20);
         installer.updateResources(URL_SCHEME, new InstallableResource[] {rsrc2}, null);
 
-        sleep(200); // TODO replace with wait condition
-
         // get updated factory config
-        final Configuration secondCfg = waitForFactoryConfiguration("After updating", cfgFactoryPid, TIMEOUT, true);
-        assertEquals("Config value must match", "bla", secondCfg.getProperties().get("foo"));
+        waitForFactoryConfigValue("After updating", cfgFactoryPid, TIMEOUT, "foo", "bla");
 
         // remove config
         installer.updateResources(URL_SCHEME, null, new String[] {"/configB/" + cfgFactoryPid + "-" + alias});
 
-        sleep(200); // TODO replace with wait condition
-
-        final Configuration noCfg = waitForFactoryConfiguration("After deleting", cfgFactoryPid, TIMEOUT, false);
-        assertNull("Factory configuration should be removed", noCfg);
+        waitForFactoryConfiguration("After deleting", cfgFactoryPid, TIMEOUT, false);
     }
 
     @Test
@@ -311,7 +279,6 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         final Dictionary<String, Object> cfgData = new Hashtable<String, Object>();
         cfgData.put("foo", "bar");
         final String cfgPid = getClass().getSimpleName() + "." + uniqueID();
-        assertNull("Config " + cfgPid + " must not be found before test", findConfiguration(cfgPid));
 
         // install config
         final InstallableResource rsrc = new InstallableResource("/configA/" + cfgPid,
@@ -319,27 +286,24 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         installer.updateResources(URL_SCHEME, new InstallableResource[] {rsrc}, null);
 
         // get config
-        final Configuration cfg = waitForConfiguration("After installing", cfgPid, TIMEOUT, true);
-        assertEquals("Config value must match", "bar", cfg.getProperties().get("foo"));
+        final Configuration cfg = waitForConfigValue("After installing", cfgPid, TIMEOUT, "foo", "bar");
 
         // update configuration
         final Dictionary<String, Object> secondData = new Hashtable<String, Object>();
         secondData.put("foo", "bla");
         cfg.update(secondData);
 
-        sleep(200); // TODO replace with wait condition
+        waitForResource(URL_SCHEME + ":/configA/" + cfgPid, ResourceState.IGNORED, TIMEOUT);
 
         // get updated config
-        final Configuration secondCfg = waitForConfiguration("After updating", cfgPid, TIMEOUT, true);
-        assertEquals("Config value must match", "bla", secondCfg.getProperties().get("foo"));
+        final Configuration secondCfg = waitForConfigValue("After updating", cfgPid, TIMEOUT, "foo", "bla");
 
         // remove config
         secondCfg.delete();
 
-        sleep(200); // TODO replace with wait condition
+        waitForResource(URL_SCHEME + ":/configA/" + cfgPid, ResourceState.INSTALLED, TIMEOUT);
 
-        final Configuration origCfg = waitForConfiguration("After deleting", cfgPid, TIMEOUT, true);
-        assertEquals("Config value must match", "bar", origCfg.getProperties().get("foo"));
+        waitForConfigValue("After deleting", cfgPid, TIMEOUT, "foo", "bar");
     }
 
     @Test
@@ -348,7 +312,6 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         cfgData.put("foo", "bar");
         cfgData.put(InstallableResource.RESOURCE_IS_TEMPLATE, "true");
         final String cfgPid = getClass().getSimpleName() + "." + uniqueID();
-        assertNull("Config " + cfgPid + " must not be found before test", findConfiguration(cfgPid));
 
         // install config
         final InstallableResource rsrc = new InstallableResource("/configA/" + cfgPid,
@@ -356,27 +319,25 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         installer.updateResources(URL_SCHEME, new InstallableResource[] {rsrc}, null);
 
         // get config
-        final Configuration cfg = waitForConfiguration("After installing", cfgPid, TIMEOUT, true);
-        assertEquals("Config value must match", "bar", cfg.getProperties().get("foo"));
+        final Configuration cfg = waitForConfigValue("After installing", cfgPid, TIMEOUT, "foo", "bar");
 
         // update configuration
         final Dictionary<String, Object> secondData = new Hashtable<String, Object>();
         secondData.put("foo", "bla");
         cfg.update(secondData);
 
-        sleep(200); // TODO replace with wait condition
+        waitForResource(URL_SCHEME + ":/configA/" + cfgPid, ResourceState.IGNORED, TIMEOUT);
 
         // get updated config
-        final Configuration secondCfg = waitForConfiguration("After updating", cfgPid, TIMEOUT, true);
-        assertEquals("Config value must match", "bla", secondCfg.getProperties().get("foo"));
+        final Configuration secondCfg = waitForConfigValue("After updating", cfgPid, TIMEOUT, "foo", "bla");
 
         // remove config
         secondCfg.delete();
 
-        sleep(200); // TODO replace with wait condition
+        sleep(200); // we have to wait here as no state change is happening
+        waitForResource(URL_SCHEME + ":/configA/" + cfgPid, ResourceState.IGNORED, TIMEOUT);
 
-        final Configuration noCfg = waitForConfiguration("After deleting", cfgPid, TIMEOUT, false);
-        assertNull("Configuration should be removed", noCfg);
+        waitForConfiguration("After deleting", cfgPid, TIMEOUT, false);
     }
 
     @Test
@@ -385,7 +346,6 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         cfgData.put("foo", "bar");
         final String cfgFactoryPid = getClass().getSimpleName() + "." + uniqueID();
         final String alias = "alias" + uniqueID();
-        assertNull("Factory config " + cfgFactoryPid + " must not be found before test", findFactoryConfiguration(cfgFactoryPid));
 
         // install factory config
         final InstallableResource rsrc = new InstallableResource("/configA/" + cfgFactoryPid + "-" + alias,
@@ -393,26 +353,23 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         installer.updateResources(URL_SCHEME, new InstallableResource[] {rsrc}, null);
 
         // get factory config
-        final Configuration cfg = waitForFactoryConfiguration("After installing", cfgFactoryPid, TIMEOUT, true);
-        assertEquals("Config value must match", "bar", cfg.getProperties().get("foo"));
+        final Configuration cfg = waitForFactoryConfigValue("After installing", cfgFactoryPid, TIMEOUT, "foo", "bar");
 
         // update configuration
         final Dictionary<String, Object> secondData = new Hashtable<String, Object>();
         secondData.put("foo", "bla");
         cfg.update(secondData);
 
-        sleep(200); // TODO replace with wait condition
+        waitForResource(URL_SCHEME + ":/configA/" + cfgFactoryPid + "-" + alias, ResourceState.IGNORED, TIMEOUT);
 
         // get updated factory config
-        final Configuration secondCfg = waitForFactoryConfiguration("After updating", cfgFactoryPid, TIMEOUT, true);
-        assertEquals("Config value must match", "bla", secondCfg.getProperties().get("foo"));
+        final Configuration secondCfg = waitForFactoryConfigValue("After updating", cfgFactoryPid, TIMEOUT, "foo", "bla");
 
         // remove factory config
         secondCfg.delete();
-        sleep(200); // TODO replace with wait condition
+        waitForResource(URL_SCHEME + ":/configA/" + cfgFactoryPid + "-" + alias, ResourceState.INSTALLED, TIMEOUT);
 
-        final Configuration origCfg = waitForFactoryConfiguration("After deleting", cfgFactoryPid, TIMEOUT, true);
-        assertEquals("Config value must match", "bar", origCfg.getProperties().get("foo"));
+        waitForFactoryConfigValue("After deleting", cfgFactoryPid, TIMEOUT, "foo", "bar");
     }
 
     @Test
@@ -422,7 +379,6 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         cfgData.put(InstallableResource.RESOURCE_IS_TEMPLATE, "true");
         final String cfgFactoryPid = getClass().getSimpleName() + "." + uniqueID();
         final String alias = "alias" + uniqueID();
-        assertNull("Factory config " + cfgFactoryPid + " must not be found before test", findFactoryConfiguration(cfgFactoryPid));
 
         // install factory config
         final InstallableResource rsrc = new InstallableResource("/configA/" + cfgFactoryPid + "-" + alias,
@@ -430,26 +386,24 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         installer.updateResources(URL_SCHEME, new InstallableResource[] {rsrc}, null);
 
         // get factory config
-        final Configuration cfg = waitForFactoryConfiguration("After installing", cfgFactoryPid, TIMEOUT, true);
-        assertEquals("Config value must match", "bar", cfg.getProperties().get("foo"));
+        final Configuration cfg = waitForFactoryConfigValue("After installing", cfgFactoryPid, TIMEOUT, "foo", "bar");
 
         // update configuration
         final Dictionary<String, Object> secondData = new Hashtable<String, Object>();
         secondData.put("foo", "bla");
         cfg.update(secondData);
 
-        sleep(200); // TODO replace with wait condition
+        waitForResource(URL_SCHEME + ":/configA/" + cfgFactoryPid + "-" + alias, ResourceState.IGNORED, TIMEOUT);
 
         // get updated factory config
-        final Configuration secondCfg = waitForFactoryConfiguration("After updating", cfgFactoryPid, TIMEOUT, true);
-        assertEquals("Config value must match", "bla", secondCfg.getProperties().get("foo"));
+        final Configuration secondCfg = waitForFactoryConfigValue("After updating", cfgFactoryPid, TIMEOUT, "foo", "bla");
 
         // remove config
         secondCfg.delete();
-        sleep(200); // TODO replace with wait condition
+        sleep(200); // we have to wait here as no state change is happening
 
-        final Configuration noCfg = waitForFactoryConfiguration("After deleting", cfgFactoryPid, TIMEOUT, false);
-        assertNull("Factory configuration should be removed", noCfg);
+        waitForResource(URL_SCHEME + ":/configA/" + cfgFactoryPid + "-" + alias, ResourceState.IGNORED, TIMEOUT);
+        waitForFactoryConfiguration("After deleting", cfgFactoryPid, TIMEOUT, false);
     }
 
     @Test

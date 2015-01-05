@@ -32,7 +32,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.sling.installer.api.InstallableResource;
-import org.apache.sling.installer.api.ResourceChangeListener;
 import org.apache.sling.installer.api.UpdateHandler;
 import org.apache.sling.installer.api.UpdateResult;
 import org.apache.sling.installer.api.event.InstallationEvent;
@@ -206,17 +205,15 @@ public class UpdateHandlerTest extends OsgiInstallerTestBase {
 
         assertNotNull("Resource should be installed: " + installed, installed.get(TYPE) + ":a");
 
-        final ResourceChangeListener rcl = (ResourceChangeListener)this.installer;
-
         final Dictionary<String, Object> newData = new Hashtable<String, Object>();
         data.put("bar", "foo");
-        rcl.resourceAddedOrUpdated(TYPE, "a", null, newData, null);
+        this.resourceChangeListener.resourceAddedOrUpdated(TYPE, "a", null, newData, null);
 
         final UpdateResult ur = up.waitForUpdate();
         assertNotNull(ur);
         assertEquals(TYPE + ":/resource/b/a." + TYPE, ur.getURL());
 
-        rcl.resourceRemoved(TYPE, "a");
+        this.resourceChangeListener.resourceRemoved(TYPE, "a");
         final UpdateResult r2 = up.waitForUpdate();
         assertNotNull(r2);
         assertEquals(TYPE + ":/resource/b/a." + TYPE, r2.getURL());
