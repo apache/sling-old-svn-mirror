@@ -30,8 +30,6 @@ import org.ops4j.pax.exam.junit.PaxExam;
 @RunWith(PaxExam.class)
 public class ConfigPrioritiesTest extends OsgiInstallerTestBase {
 
-    private final static long TIMEOUT = 5000L;
-
     @org.ops4j.pax.exam.Configuration
     public Option[] config() {
         return defaultConfiguration();
@@ -62,24 +60,24 @@ public class ConfigPrioritiesTest extends OsgiInstallerTestBase {
 
         // c has more priority than b which has more than a
         installer.updateResources(URL_SCHEME, new InstallableResource[] {b}, null);
-        waitForConfigValue(null, pid, TIMEOUT, "foo", "b");
+        waitForConfigValue(null, pid, "foo", "b");
         installer.updateResources(URL_SCHEME, new InstallableResource[] {c}, null);
-        waitForConfigValue(null, pid, TIMEOUT, "foo", "c");
+        waitForConfigValue(null, pid, "foo", "c");
         installer.updateResources(URL_SCHEME, new InstallableResource[] {a}, null);
 
         // highest prio should be active (c)
-        waitForConfigValue(null, pid, TIMEOUT, "foo", "c");
+        waitForConfigValue(null, pid, "foo", "c");
 
         // removing c, second highest prio should be active (b)
         installer.updateResources(URL_SCHEME, null, new String[] {c.getId()});
-        waitForConfigValue(null, pid, TIMEOUT, "foo", "b");
+        waitForConfigValue(null, pid, "foo", "b");
 
         // removing b, a should be active
         installer.updateResources(URL_SCHEME, null, new String[] {b.getId()});
-        waitForConfigValue(null, pid, TIMEOUT, "foo", "a");
+        waitForConfigValue(null, pid, "foo", "a");
 
         // and config should be gone only after removing everything
         installer.updateResources(URL_SCHEME, null, new String[] {a.getId()});
-        waitForConfiguration("After removing all resources", pid, TIMEOUT, false);
+        waitForConfiguration("After removing all resources", pid, false);
     }
 }

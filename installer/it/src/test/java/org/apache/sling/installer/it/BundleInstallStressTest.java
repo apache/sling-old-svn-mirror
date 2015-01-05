@@ -74,7 +74,7 @@ public class BundleInstallStressTest extends OsgiInstallerTestBase {
     public Option[] config() {
         return defaultConfiguration();
     }
-    
+
     @Before
     public void setUp() {
         setupInstaller();
@@ -124,6 +124,7 @@ public class BundleInstallStressTest extends OsgiInstallerTestBase {
         eventsDetector = new EventsDetector(bundleContext);
     }
 
+    @Override
     @After
     public void tearDown() {
         super.tearDown();
@@ -217,7 +218,8 @@ public class BundleInstallStressTest extends OsgiInstallerTestBase {
     	log(LogService.LOG_INFO,"Expecting " + nBundles + " bundles to be installed");
     	final Condition c = new Condition() {
     		int actualCount = 0;
-			public boolean isTrue() throws Exception {
+			@Override
+            public boolean isTrue() throws Exception {
 				actualCount = bundleContext.getBundles().length;
 				return actualCount == nBundles;
 			}
@@ -238,7 +240,7 @@ public class BundleInstallStressTest extends OsgiInstallerTestBase {
 				return 1000L;
 			}
     	};
-    	waitForCondition(info, expectBundlesTimeoutMsec, c);
+    	waitForCondition(info, c, expectBundlesTimeoutMsec);
     }
 
     private List<File> selectRandomBundles() {

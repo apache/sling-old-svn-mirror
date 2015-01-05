@@ -81,6 +81,8 @@ public class OsgiInstallerTestBase implements FrameworkListener {
 
     protected volatile InfoProvider infoProvider;
 
+    private final static long WAIT_FOR_CHANGE_TIMEOUT = 5000L;
+
     public static final long WAIT_FOR_ACTION_TIMEOUT_MSEC = 6000;
     public static final String BUNDLE_BASE_NAME = "org.apache.sling.installer.it-" + POM_VERSION;
 
@@ -244,17 +246,21 @@ public class OsgiInstallerTestBase implements FrameworkListener {
         return null;
     }
 
-    protected void waitForCondition(String info, long timeoutMsec, Condition c) throws Exception {
-        final long end = System.currentTimeMillis() + timeoutMsec;
+    protected void waitForCondition(String info, Condition c) throws Exception {
+        this.waitForCondition(info, c, WAIT_FOR_CHANGE_TIMEOUT);
+    }
+
+    protected void waitForCondition(String info, Condition c, final long timeOut) throws Exception {
+        final long end = System.currentTimeMillis() + timeOut;
         do {
-        	if(c.isTrue()) {
-        		return;
-        	}
-        	sleep(c.getMsecBetweenEvaluations());
+            if(c.isTrue()) {
+                return;
+            }
+            sleep(c.getMsecBetweenEvaluations());
         } while(System.currentTimeMillis() < end);
 
         if(c.additionalInfo() != null) {
-        	info += " " + c.additionalInfo();
+            info += " " + c.additionalInfo();
         }
 
         c.onFailure();
@@ -263,13 +269,12 @@ public class OsgiInstallerTestBase implements FrameworkListener {
 
     protected Configuration waitForFactoryConfigValue(final String info,
             final String factoryPid,
-            final long timeoutMsec,
             final String key,
             final String value)
     throws Exception {
-        final long end = System.currentTimeMillis() + timeoutMsec;
+        final long end = System.currentTimeMillis() + WAIT_FOR_CHANGE_TIMEOUT;
         do {
-            final Configuration c = waitForFactoryConfiguration(info, factoryPid, timeoutMsec, true);
+            final Configuration c = waitForFactoryConfiguration(info, factoryPid, true);
             if (value.equals(c.getProperties().get(key))) {
                 return c;
             }
@@ -281,13 +286,12 @@ public class OsgiInstallerTestBase implements FrameworkListener {
 
     protected Configuration waitForConfigValue(final String info,
             final String pid,
-            final long timeoutMsec,
             final String key,
             final String value)
     throws Exception {
-        final long end = System.currentTimeMillis() + timeoutMsec;
+        final long end = System.currentTimeMillis() + WAIT_FOR_CHANGE_TIMEOUT;
         do {
-        	final Configuration c = waitForConfiguration(info, pid, timeoutMsec, true);
+        	final Configuration c = waitForConfiguration(info, pid, true);
         	if (value.equals(c.getProperties().get(key))) {
         		return c;
         	}
@@ -302,10 +306,9 @@ public class OsgiInstallerTestBase implements FrameworkListener {
      */
     protected Configuration waitForConfiguration(final String info,
             final String pid,
-            final long timeoutMsec,
             final boolean shouldBePresent)
     throws Exception {
-        return this.waitForConfiguration(info, pid,  null, timeoutMsec, shouldBePresent);
+        return this.waitForConfiguration(info, pid,  null, shouldBePresent);
     }
 
     /**
@@ -313,10 +316,9 @@ public class OsgiInstallerTestBase implements FrameworkListener {
      */
     protected Configuration waitForFactoryConfiguration(final String info,
             final String factoryPid,
-            final long timeoutMsec,
             final boolean shouldBePresent)
     throws Exception {
-        return this.waitForConfiguration(info, null,  factoryPid, timeoutMsec, shouldBePresent);
+        return this.waitForConfiguration(info, null,  factoryPid, shouldBePresent);
     }
 
     /**
@@ -325,7 +327,6 @@ public class OsgiInstallerTestBase implements FrameworkListener {
     private Configuration waitForConfiguration(final String info,
             final String pid,
             final String factoryPid,
-            final long timeoutMsec,
             final boolean shouldBePresent)
     throws Exception {
         final String logKey = factoryPid == null ? "config" : "factory config";
@@ -338,7 +339,7 @@ public class OsgiInstallerTestBase implements FrameworkListener {
 
         Configuration result = null;
         final long start = System.currentTimeMillis();
-        final long end = start + timeoutMsec;
+        final long end = start + WAIT_FOR_CHANGE_TIMEOUT;
         log(LogService.LOG_DEBUG, "Starting " + logKey + " check at " + start + "; ending by " + end);
         do {
             if ( factoryPid != null ) {
@@ -592,10 +593,9 @@ public class OsgiInstallerTestBase implements FrameworkListener {
     }
 
     protected Resource waitForResource(final String url,
-            final ResourceState state,
-            final long timeout) {
+            final ResourceState state) {
         final long start = System.currentTimeMillis();
-        final long end = start + timeout;
+        final long end = start + WAIT_FOR_CHANGE_TIMEOUT;
 
         do {
             final InstallationState is = this.infoProvider.getInstallationState();
