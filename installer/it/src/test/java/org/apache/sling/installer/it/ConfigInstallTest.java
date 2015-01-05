@@ -49,8 +49,8 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
 
     private final static long TIMEOUT = 5000L;
     private final List<ConfigurationEvent> events = new LinkedList<ConfigurationEvent>();
-    private List<ServiceRegistration<?>> serviceRegistrations = new ArrayList<ServiceRegistration<?>>();
-    private int installationEvents = 0;
+    private final List<ServiceRegistration<?>> serviceRegistrations = new ArrayList<ServiceRegistration<?>>();
+    private volatile int installationEvents = 0;
     private static final AtomicInteger counter = new AtomicInteger();
 
     @org.ops4j.pax.exam.Configuration
