@@ -16,8 +16,6 @@
  */
 package org.apache.sling.installer.it;
 
-import static org.junit.Assert.fail;
-
 import java.util.Dictionary;
 import java.util.Hashtable;
 
@@ -28,7 +26,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.osgi.service.cm.Configuration;
 
 @RunWith(PaxExam.class)
 public class ConfigPrioritiesTest extends OsgiInstallerTestBase {
@@ -51,24 +48,7 @@ public class ConfigPrioritiesTest extends OsgiInstallerTestBase {
         super.tearDown();
     }
 
-    void assertConfigValue(String pid, String key, String value, long timeoutMsec) throws Exception {
-        boolean found = false;
-        final String info = pid + ": waiting for " + key + "=" + value;
-        final long end = System.currentTimeMillis() + timeoutMsec;
-        do {
-            final Configuration cfg = waitForConfiguration(info, pid, timeoutMsec, true);
-            if(value.equals(cfg.getProperties().get(key))) {
-                found = true;
-                break;
-            }
-        } while(System.currentTimeMillis() < end);
-
-        if(!found) {
-            fail("Did not get expected value: " + info);
-        }
-    }
-
-    @Test
+   @Test
     public void testOverrideConfig() throws Exception {
         final String pid = getClass().getSimpleName() + "." + System.currentTimeMillis();
 
@@ -82,21 +62,21 @@ public class ConfigPrioritiesTest extends OsgiInstallerTestBase {
 
         // c has more priority than b which has more than a
         installer.updateResources(URL_SCHEME, new InstallableResource[] {b}, null);
-        assertConfigValue(pid, "foo", "b", TIMEOUT);
+        waitForConfigValue(null, pid, TIMEOUT, "foo", "b");
         installer.updateResources(URL_SCHEME, new InstallableResource[] {c}, null);
-        assertConfigValue(pid, "foo", "c", TIMEOUT);
+        waitForConfigValue(null, pid, TIMEOUT, "foo", "c");
         installer.updateResources(URL_SCHEME, new InstallableResource[] {a}, null);
 
         // highest prio should be active (c)
-        assertConfigValue(pid, "foo", "c", TIMEOUT);
+        waitForConfigValue(null, pid, TIMEOUT, "foo", "c");
 
         // removing c, second highest prio should be active (b)
         installer.updateResources(URL_SCHEME, null, new String[] {c.getId()});
-        assertConfigValue(pid, "foo", "b", TIMEOUT);
+        waitForConfigValue(null, pid, TIMEOUT, "foo", "b");
 
         // removing b, a should be active
         installer.updateResources(URL_SCHEME, null, new String[] {b.getId()});
-        assertConfigValue(pid, "foo", "a", TIMEOUT);
+        waitForConfigValue(null, pid, TIMEOUT, "foo", "a");
 
         // and config should be gone only after removing everything
         installer.updateResources(URL_SCHEME, null, new String[] {a.getId()});
