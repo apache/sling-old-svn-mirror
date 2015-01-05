@@ -143,6 +143,7 @@ public class UpdateHandlerTest extends OsgiInstallerTestBase {
                 final Map<String, Object> attributes) {
             if ( resourceType.equals(TYPE)) {
                 final UpdateResult ur = new UpdateResult(TYPE + ":/resource/b/" + id + "." + resourceType);
+                ur.setPriority(InstallableResource.DEFAULT_PRIORITY * 2);
                 this.result = ur;
                 this.barrier.block();
 
@@ -151,9 +152,14 @@ public class UpdateHandlerTest extends OsgiInstallerTestBase {
             return null;
         }
 
-        public UpdateResult handleRemoval(String resourceType, String id, String url) {
-            // TODO Auto-generated method stub
-            return null;
+        public UpdateResult handleRemoval(final String resourceType,
+                final String id,
+                final String url) {
+            final UpdateResult ur = new UpdateResult(url);
+            this.result = ur;
+            this.barrier.block();
+
+            return ur;
         }
 
         public UpdateResult waitForUpdate() {
@@ -209,6 +215,11 @@ public class UpdateHandlerTest extends OsgiInstallerTestBase {
         final UpdateResult ur = up.waitForUpdate();
         assertNotNull(ur);
         assertEquals(TYPE + ":/resource/b/a." + TYPE, ur.getURL());
+
+        rcl.resourceRemoved(TYPE, "a");
+        final UpdateResult r2 = up.waitForUpdate();
+        assertNotNull(r2);
+        assertEquals(TYPE + ":/resource/b/a." + TYPE, r2.getURL());
     }
 
     /** Simplified version of the cyclic barrier class for testing. */
