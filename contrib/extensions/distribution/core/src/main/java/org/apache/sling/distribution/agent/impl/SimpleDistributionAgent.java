@@ -343,6 +343,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
             if (distributionPackage != null) {
                 distributionPackage.getInfo().fillInfo(queueItem.getPackageInfo());
+                distributionPackage.getInfo().setQueue(queueName);
 
                 distributionPackageImporter.importPackage(agentResourceResolver, distributionPackage);
                 distributionEventFactory.generateAgentPackageEvent(DistributionEventType.AGENT_PACKAGE_DISTRIBUTED, name, distributionPackage.getInfo());

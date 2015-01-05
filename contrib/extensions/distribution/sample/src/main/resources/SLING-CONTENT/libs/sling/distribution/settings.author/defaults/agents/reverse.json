@@ -1,0 +1,31 @@
+{
+    "jcr:primaryType" : "nt:unstructured",
+
+    "kind" : "agent",
+
+    "isResource" : "true",
+
+    "requestAuthorizationStrategy" : {
+        "kind" : "requestAuthorization",
+        "type" : "service",
+        "name" : "privilegeRead"
+    },
+
+    "packageBuilder" : {
+        "kind" : "packageBuilder",
+
+        "type" : "service",
+        "name" : "vlt"
+    },
+
+    "transportSecretProvider" : {
+        "kind" : "transportSecretProvider",
+        "type" : "service",
+        "name" : "publishAdmin"
+    },
+
+    "triggers" : {
+      "kind" : "trigger",
+      "type" : "list"
+    }
+}

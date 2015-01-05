@@ -27,8 +27,10 @@ import java.util.Map;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.agent.impl.DistributionRequestAuthorizationStrategy;
+import org.apache.sling.distribution.agent.impl.ForwardDistributionAgentFactory;
 import org.apache.sling.distribution.agent.impl.PrivilegeDistributionRequestAuthorizationStrategy;
 import org.apache.sling.distribution.agent.impl.QueueDistributionAgentFactory;
+import org.apache.sling.distribution.agent.impl.ReverseDistributionAgentFactory;
 import org.apache.sling.distribution.agent.impl.SimpleDistributionAgentFactory;
 import org.apache.sling.distribution.agent.impl.SyncDistributionAgentFactory;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
@@ -108,6 +110,8 @@ public class DistributionComponentUtils {
         // register "core" factories kind, type -> ComponentFactoryClass
         registerFactory("agent", "simple", SimpleDistributionAgentFactory.class);
         registerFactory("agent", "sync", SyncDistributionAgentFactory.class);
+        registerFactory("agent", "forward", ForwardDistributionAgentFactory.class);
+        registerFactory("agent", "reverse", ReverseDistributionAgentFactory.class);
         registerFactory("agent", "queue", QueueDistributionAgentFactory.class);
 
         registerFactory("exporter", "local", LocalDistributionPackageExporterFactory.class);

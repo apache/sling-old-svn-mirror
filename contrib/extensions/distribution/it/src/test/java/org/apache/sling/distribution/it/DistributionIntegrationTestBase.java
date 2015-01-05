@@ -31,6 +31,7 @@ import static org.apache.sling.distribution.it.DistributionUtils.assertPostResou
 import static org.apache.sling.distribution.it.DistributionUtils.authorAgentConfigUrl;
 import static org.apache.sling.distribution.it.DistributionUtils.exporterUrl;
 import static org.apache.sling.distribution.it.DistributionUtils.importerUrl;
+import static org.apache.sling.distribution.it.DistributionUtils.setArrayProperties;
 
 /**
  * Integration test base class for distribution
@@ -59,20 +60,27 @@ public abstract class DistributionIntegrationTestBase {
             String remoteImporterUrl = publish.getServerBaseUrl() + importerUrl("default");
 
 
-            authorClient.setProperties(authorAgentConfigUrl("publish") + "/packageImporter",
-                    "endpoints", remoteImporterUrl);
+            authorClient.setProperties(authorAgentConfigUrl("publish"),
+                    "packageImporter.endpoints", remoteImporterUrl);
 
 
             Thread.sleep(3000);
 
             assertExists(authorClient, agentUrl("publish"));
 
+
+            assertExists(authorClient, authorAgentConfigUrl("publish-multiple"));
+            setArrayProperties(author, authorAgentConfigUrl("publish-multiple"),
+                    "packageImporter.endpoints", remoteImporterUrl, remoteImporterUrl + "badaddress");
+            assertExists(authorClient, agentUrl("publish-multiple"));
+
+
+
             assertExists(authorClient, authorAgentConfigUrl("publish-reverse"));
 
             String remoteExporterUrl = publish.getServerBaseUrl() + exporterUrl("reverse");
 
-            authorClient.setProperties(authorAgentConfigUrl("publish-reverse") + "/packageExporter",
-                    "endpoints", remoteExporterUrl);
+            authorClient.setProperties(authorAgentConfigUrl("publish-reverse"), "packageExporter.endpoints", remoteExporterUrl);
 
             Thread.sleep(3000);
             assertExists(authorClient, agentUrl("publish-reverse"));

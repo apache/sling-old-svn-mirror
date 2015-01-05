@@ -24,6 +24,9 @@ import org.apache.sling.distribution.transport.DistributionTransportSecretProvid
 import org.apache.sling.distribution.transport.impl.TransportEndpointStrategyType;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.mockito.Mockito.mock;
 
 /**
@@ -34,7 +37,7 @@ public class RemoteDistributionPackageImporterTest {
     @Test
     public void testDummyImport() throws Exception {
         DistributionTransportSecretProvider distributionTransportSecretProvider = mock(DistributionTransportSecretProvider.class);
-        String[] endpoints = new String[0];
+        Map<String, String> endpoints = new HashMap<String, String>();
         for (TransportEndpointStrategyType strategy : TransportEndpointStrategyType.values()) {
             RemoteDistributionPackageImporter remotedistributionPackageImporter = new RemoteDistributionPackageImporter(
                     distributionTransportSecretProvider, endpoints, strategy);

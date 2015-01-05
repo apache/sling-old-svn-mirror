@@ -31,6 +31,7 @@ import org.apache.sling.distribution.DistributionRequestType;
 public final class DistributionPackageInfo {
 
     private URI origin;
+    private String queue;
     private DistributionRequestType requestType;
     private String[] paths;
 
@@ -111,5 +112,13 @@ public final class DistributionPackageInfo {
                 ", requestType=" + requestType +
                 ", paths=" + Arrays.toString(paths) +
                 '}';
+    }
+
+    public String getQueue() {
+        return queue;
+    }
+
+    public void setQueue(String queue) {
+        this.queue = queue;
     }
 }

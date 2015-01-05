@@ -19,11 +19,14 @@
 package org.apache.sling.distribution.component.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.distribution.transport.core.DistributionTransport;
 
 //TODO: Consider removing it
 /**
@@ -154,5 +157,26 @@ public class SettingsUtils {
         catch (NumberFormatException e) {
             return false;
         }
+    }
+
+
+    public static <AType> Map<String, AType> toMap(List<AType> aList, String prefix) {
+        Map<String, AType> result = new TreeMap<String, AType>();
+        for (int i=0; i<aList.size(); i++) {
+            result.put(prefix+i, aList.get(i));
+        }
+
+        return result;
+    }
+
+
+    public static Map<String, String> toUriMap(Object obj) {
+        Map<String, String> uriMap = PropertiesUtil.toMap(obj, new String[0]);
+
+        if (uriMap.size() == 0) {
+            String[] endpoints = PropertiesUtil.toStringArray(obj, new String[0]);
+            uriMap = toMap(Arrays.asList(endpoints), "endpoint");
+        }
+        return uriMap;
     }
 }

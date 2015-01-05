@@ -80,7 +80,16 @@ public class DistributionUtils {
         ).assertStatus(status).getContent();
     }
 
+    public static void setArrayProperties(SlingInstance slingInstance, String resource, String property, String... values) throws IOException {
+        List<String> parameters = new ArrayList<String>();
+        for (String value : values) {
+            parameters.add(property);
+            parameters.add(value);
+        }
 
+        assertPostResourceWithParameters(slingInstance, 200, resource, parameters.toArray(new String[0]));
+
+    }
 
     public static void assertResponseContains(SlingInstance slingInstance,
                                               String resource, String... parameters) throws IOException {

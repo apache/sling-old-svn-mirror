@@ -35,32 +35,10 @@ import org.slf4j.LoggerFactory;
  * The default strategy for delivering packages to queues. Each agent just manages a single queue,
  * no failure / stuck handling where each package is put regardless of anything.
  */
-public class SingleQueueDispatchingStrategy implements DistributionQueueDispatchingStrategy {
+public class SingleQueueDispatchingStrategy extends MultipleQueueDispatchingStrategy {
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
-    public Iterable<DistributionQueueItemStatus> add(@Nonnull DistributionPackage distributionPackage, @Nonnull DistributionQueueProvider queueProvider) throws DistributionQueueException {
-        DistributionQueueItem queueItem = getItem(distributionPackage);
-        DistributionQueue queue = queueProvider.getQueue(DEFAULT_QUEUE_NAME);
-        if (queue.add(queueItem)) {
-            return Arrays.asList(queue.getStatus(queueItem));
-        } else {
-            return Arrays.asList(new DistributionQueueItemStatus(DistributionQueueItemStatus.ItemState.ERROR, queue.getName()));
-        }
-    }
-
-    @Nonnull
-    public List<String> getQueueNames() {
-        return Arrays.asList(DEFAULT_QUEUE_NAME);
-    }
-
-
-    private DistributionQueueItem getItem(DistributionPackage distributionPackage) {
-        DistributionQueueItem distributionQueueItem = new DistributionQueueItem(distributionPackage.getId(),
-                distributionPackage.getType(),
-                distributionPackage.getInfo());
-
-        return distributionQueueItem;
+    public SingleQueueDispatchingStrategy() {
+        super(new String[] { DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME });
     }
 
 }
