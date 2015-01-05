@@ -69,7 +69,9 @@ public class DefaultDistributionComponentProvider {
 
     public <ComponentType> ComponentType getComponent(@Nonnull Class<ComponentType> type,
                                                                                    @Nullable String componentName) {
-        if (type.isAssignableFrom(DistributionPackageExporter.class)) {
+        if (type.isAssignableFrom(DistributionAgent.class)) {
+            return (ComponentType) distributionAgentMap.get(componentName);
+        } else if (type.isAssignableFrom(DistributionPackageExporter.class)) {
             return (ComponentType) distributionPackageExporterMap.get(componentName);
         } else if (type.isAssignableFrom(DistributionPackageImporter.class)) {
             return (ComponentType) distributionPackageImporterMap.get(componentName);
