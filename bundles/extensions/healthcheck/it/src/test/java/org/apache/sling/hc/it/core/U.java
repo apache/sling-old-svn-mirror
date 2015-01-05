@@ -28,6 +28,7 @@ import static org.ops4j.pax.exam.CoreOptions.when;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.sling.hc.api.execution.HealthCheckExecutionOptions;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.api.execution.HealthCheckExecutor;
 import org.ops4j.pax.exam.Option;
@@ -37,10 +38,15 @@ public class U {
 
     /** Wait until the specified number of health checks are seen by supplied executor */
     static void expectHealthChecks(int howMany, HealthCheckExecutor executor, String ... tags) {
+        expectHealthChecks(howMany, executor, new HealthCheckExecutionOptions(), tags);
+    }
+    
+    /** Wait until the specified number of health checks are seen by supplied executor */
+    static void expectHealthChecks(int howMany, HealthCheckExecutor executor, HealthCheckExecutionOptions options, String ... tags) {
         final long timeout = System.currentTimeMillis() + 10000L;
         int count = 0;
         while(System.currentTimeMillis() < timeout) {
-            final List<HealthCheckExecutionResult> results = executor.execute(tags);
+            final List<HealthCheckExecutionResult> results = executor.execute(options, tags);
             count = results.size();
             if(count== howMany) {
                 return;
