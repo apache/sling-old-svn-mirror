@@ -173,7 +173,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
                 null, secondData, null, InstallableResource.TYPE_PROPERTIES, 20);
         installer.updateResources(URL_SCHEME, new InstallableResource[] {rsrc2}, null);
 
-        sleep(200);
+        sleep(200); // TODO replace with wait condition
 
         // get updated config
         final Configuration secondCfg = waitForConfiguration("After updating", cfgPid, TIMEOUT, true);
@@ -182,7 +182,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         // remove config
         installer.updateResources(URL_SCHEME, null, new String[] {"/configB/" + cfgPid});
 
-        sleep(200);
+        sleep(200); // TODO replace with wait condition
 
         final Configuration origCfg = waitForConfiguration("After deleting", cfgPid, TIMEOUT, true);
         assertEquals("Config value must match", "bar", origCfg.getProperties().get("foo"));
@@ -212,7 +212,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
                 null, secondData, null, InstallableResource.TYPE_PROPERTIES, 20);
         installer.updateResources(URL_SCHEME, new InstallableResource[] {rsrc2}, null);
 
-        sleep(200);
+        sleep(200); // TODO replace with wait condition
 
         // get updated config
         final Configuration secondCfg = waitForConfiguration("After updating", cfgPid, TIMEOUT, true);
@@ -221,7 +221,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         // remove config
         installer.updateResources(URL_SCHEME, null, new String[] {"/configB/" + cfgPid});
 
-        sleep(200);
+        sleep(200); // TODO replace with wait condition
 
         final Configuration noCfg = waitForConfiguration("After deleting", cfgPid, TIMEOUT, false);
         assertNull("Configuration should be removed", noCfg);
@@ -251,7 +251,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
                 null, secondData, null, InstallableResource.TYPE_PROPERTIES, 20);
         installer.updateResources(URL_SCHEME, new InstallableResource[] {rsrc2}, null);
 
-        sleep(200);
+        sleep(200); // TODO replace with wait condition
 
         // get updated factory config
         final Configuration secondCfg = waitForFactoryConfiguration("After updating", cfgFactoryPid, TIMEOUT, true);
@@ -260,7 +260,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         // remove factory config
         installer.updateResources(URL_SCHEME, null, new String[] {"/configB/" + cfgFactoryPid + "-" + alias});
 
-        sleep(200);
+        sleep(200); // TODO replace with wait condition
 
         final Configuration origCfg = waitForFactoryConfiguration("After deleting", cfgFactoryPid, TIMEOUT, true);
         assertEquals("Config value must match", "bar", origCfg.getProperties().get("foo"));
@@ -291,7 +291,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
                 null, secondData, null, InstallableResource.TYPE_PROPERTIES, 20);
         installer.updateResources(URL_SCHEME, new InstallableResource[] {rsrc2}, null);
 
-        sleep(200);
+        sleep(200); // TODO replace with wait condition
 
         // get updated factory config
         final Configuration secondCfg = waitForFactoryConfiguration("After updating", cfgFactoryPid, TIMEOUT, true);
@@ -300,7 +300,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         // remove config
         installer.updateResources(URL_SCHEME, null, new String[] {"/configB/" + cfgFactoryPid + "-" + alias});
 
-        sleep(200);
+        sleep(200); // TODO replace with wait condition
 
         final Configuration noCfg = waitForFactoryConfiguration("After deleting", cfgFactoryPid, TIMEOUT, false);
         assertNull("Factory configuration should be removed", noCfg);
@@ -327,7 +327,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         secondData.put("foo", "bla");
         cfg.update(secondData);
 
-        sleep(200);
+        sleep(200); // TODO replace with wait condition
 
         // get updated config
         final Configuration secondCfg = waitForConfiguration("After updating", cfgPid, TIMEOUT, true);
@@ -336,7 +336,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         // remove config
         secondCfg.delete();
 
-        sleep(200);
+        sleep(200); // TODO replace with wait condition
 
         final Configuration origCfg = waitForConfiguration("After deleting", cfgPid, TIMEOUT, true);
         assertEquals("Config value must match", "bar", origCfg.getProperties().get("foo"));
@@ -364,7 +364,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         secondData.put("foo", "bla");
         cfg.update(secondData);
 
-        sleep(200);
+        sleep(200); // TODO replace with wait condition
 
         // get updated config
         final Configuration secondCfg = waitForConfiguration("After updating", cfgPid, TIMEOUT, true);
@@ -373,7 +373,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         // remove config
         secondCfg.delete();
 
-        sleep(200);
+        sleep(200); // TODO replace with wait condition
 
         final Configuration noCfg = waitForConfiguration("After deleting", cfgPid, TIMEOUT, false);
         assertNull("Configuration should be removed", noCfg);
@@ -401,7 +401,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         secondData.put("foo", "bla");
         cfg.update(secondData);
 
-        sleep(200);
+        sleep(200); // TODO replace with wait condition
 
         // get updated factory config
         final Configuration secondCfg = waitForFactoryConfiguration("After updating", cfgFactoryPid, TIMEOUT, true);
@@ -409,7 +409,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
 
         // remove factory config
         secondCfg.delete();
-        sleep(200);
+        sleep(200); // TODO replace with wait condition
 
         final Configuration origCfg = waitForFactoryConfiguration("After deleting", cfgFactoryPid, TIMEOUT, true);
         assertEquals("Config value must match", "bar", origCfg.getProperties().get("foo"));
@@ -438,7 +438,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         secondData.put("foo", "bla");
         cfg.update(secondData);
 
-        sleep(200);
+        sleep(200); // TODO replace with wait condition
 
         // get updated factory config
         final Configuration secondCfg = waitForFactoryConfiguration("After updating", cfgFactoryPid, TIMEOUT, true);
@@ -446,7 +446,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
 
         // remove config
         secondCfg.delete();
-        sleep(200);
+        sleep(200); // TODO replace with wait condition
 
         final Configuration noCfg = waitForFactoryConfiguration("After deleting", cfgFactoryPid, TIMEOUT, false);
         assertNull("Factory configuration should be removed", noCfg);
