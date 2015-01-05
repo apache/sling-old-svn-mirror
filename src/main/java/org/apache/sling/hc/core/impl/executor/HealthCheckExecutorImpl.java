@@ -17,7 +17,8 @@
  */
 package org.apache.sling.hc.core.impl.executor;
 
-import java.text.NumberFormat;
+import static org.apache.sling.hc.util.FormattingResultLog.msHumanReadable;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -28,7 +29,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -46,6 +46,7 @@ import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
+import org.apache.sling.hc.api.execution.HealthCheckExecutionOptions;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.api.execution.HealthCheckExecutor;
 import org.apache.sling.hc.util.HealthCheckFilter;
@@ -171,13 +172,21 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
      */
     @Override
     public List<HealthCheckExecutionResult> execute(final String... tags) {
-        logger.debug("Starting executing checks for {}", tags == null ? "*" : tags);
+        return execute(/*default options*/new HealthCheckExecutionOptions(), tags);
+    }
+
+    /**
+     * @see org.apache.sling.hc.api.execution.HealthCheckExecutor#execute(HealthCheckExecutionOptions, String...)
+     */
+    @Override
+    public List<HealthCheckExecutionResult> execute(HealthCheckExecutionOptions options, final String... tags) {
+        logger.debug("Starting executing checks for tags {} and execution options {}", tags == null ? "*" : tags, options);
 
         final HealthCheckFilter filter = new HealthCheckFilter(this.bundleContext);
         try {
-            final ServiceReference[] healthCheckReferences = filter.getTaggedHealthCheckServiceReferences(tags);
+            final ServiceReference[] healthCheckReferences = filter.getTaggedHealthCheckServiceReferences(options.isCombineTagsWithOr(), tags);
 
-            return this.execute(healthCheckReferences);
+            return this.execute(healthCheckReferences, options);
         } finally {
             filter.dispose();
         }
@@ -192,10 +201,14 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         return createResultsForDescriptor(metadata);
     }
 
+    private List<HealthCheckExecutionResult> execute(final ServiceReference[] healthCheckReferences) {
+        return execute(healthCheckReferences, new HealthCheckExecutionOptions());
+    }
+
     /**
      * Execute a set of health checks
      */
-    private List<HealthCheckExecutionResult> execute(final ServiceReference[] healthCheckReferences) {
+    private List<HealthCheckExecutionResult> execute(final ServiceReference[] healthCheckReferences, HealthCheckExecutionOptions options) {
         final StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
@@ -203,7 +216,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         final List<HealthCheckMetadata> healthCheckDescriptors = getHealthCheckMetadata(healthCheckReferences);
 
         
-        createResultsForDescriptors(healthCheckDescriptors, results);
+        createResultsForDescriptors(healthCheckDescriptors, results, options);
 
         stopWatch.stop();
         if ( logger.isDebugEnabled() ) {
@@ -223,21 +236,25 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
     }
 
     private void createResultsForDescriptors(final List<HealthCheckMetadata> healthCheckDescriptors,
-            final Collection<HealthCheckExecutionResult> results) {
+            final Collection<HealthCheckExecutionResult> results, HealthCheckExecutionOptions options) {
         // -- All methods below check if they can transform a healthCheckDescriptor into a result
         // -- if yes the descriptor is removed from the list and the result added
 
         // get async results
-        asyncHealthCheckExecutor.collectAsyncResults(healthCheckDescriptors, results);
+        if (!options.isForceInstantExecution()) {
+            asyncHealthCheckExecutor.collectAsyncResults(healthCheckDescriptors, results);
+        }
         
         // reuse cached results where possible
-        healthCheckResultCache.useValidCacheResults(healthCheckDescriptors, results, resultCacheTtlInMs);
+        if (!options.isForceInstantExecution()) {
+            healthCheckResultCache.useValidCacheResults(healthCheckDescriptors, results, resultCacheTtlInMs);
+        }
 
         // everything else is executed in parallel via futures
         List<HealthCheckFuture> futures = createOrReuseFutures(healthCheckDescriptors);
 
         // wait for futures at most until timeout (but will return earlier if all futures are finished)
-        waitForFuturesRespectingTimeout(futures);
+        waitForFuturesRespectingTimeout(futures, options);
         collectResultsFromFutures(futures, results);
     }
 
@@ -257,7 +274,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
             }
 
             // wait for futures at most until timeout (but will return earlier if all futures are finished)
-            waitForFuturesRespectingTimeout(Collections.singletonList(future));
+            waitForFuturesRespectingTimeout(Collections.singletonList(future), null);
             result = collectResultFromFuture(future);
         }
 
@@ -317,6 +334,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
                 @Override
                 public void finished(final HealthCheckExecutionResult result) {
                     healthCheckResultCache.updateWith(result);
+                    asyncHealthCheckExecutor.updateWith(result);
                     synchronized ( stillRunningFutures ) {
                         stillRunningFutures.remove(metadata);
                     }
@@ -333,10 +351,16 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
     /**
      * Wait for the futures until the timeout is reached
      */
-    private void waitForFuturesRespectingTimeout(final List<HealthCheckFuture> futuresForResultOfThisCall) {
+    private void waitForFuturesRespectingTimeout(final List<HealthCheckFuture> futuresForResultOfThisCall, HealthCheckExecutionOptions options) {
         final StopWatch callExcutionTimeStopWatch = new StopWatch();
         callExcutionTimeStopWatch.start();
         boolean allFuturesDone;
+
+        long effectiveTimeout = this.timeoutInMs;
+        if (options != null && options.getOverrideGlobalTimeout() > 0) {
+            effectiveTimeout = options.getOverrideGlobalTimeout();
+        }
+
         do {
             try {
                 Thread.sleep(50);
@@ -348,7 +372,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
             for (final HealthCheckFuture healthCheckFuture : futuresForResultOfThisCall) {
                 allFuturesDone &= healthCheckFuture.isDone();
             }
-        } while (!allFuturesDone && callExcutionTimeStopWatch.getTime() < this.timeoutInMs);
+        } while (!allFuturesDone && callExcutionTimeStopWatch.getTime() < effectiveTimeout);
     }
 
     /**
@@ -415,27 +439,6 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         return result;
     }
 
-    public static String msHumanReadable(final long millis) {
-
-        double number = millis;
-        final String[] units = new String[] { "ms", "sec", "min", "h", "days" };
-        final double[] divisors = new double[] { 1000, 60, 60, 24 };
-
-        int magnitude = 0;
-        do {
-            double currentDivisor = divisors[Math.min(magnitude, divisors.length - 1)];
-            if (number < currentDivisor) {
-                break;
-            }
-            number /= currentDivisor;
-            magnitude++;
-        } while (magnitude < units.length - 1);
-        NumberFormat format = NumberFormat.getNumberInstance(Locale.UK);
-        format.setMinimumFractionDigits(0);
-        format.setMaximumFractionDigits(1);
-        String result = format.format(number) + units[magnitude];
-        return result;
-    }
 
     public void setTimeoutInMs(final long timeoutInMs) {
         this.timeoutInMs = timeoutInMs;

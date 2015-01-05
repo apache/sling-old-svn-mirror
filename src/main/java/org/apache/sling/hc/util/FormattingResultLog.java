@@ -16,6 +16,10 @@
  * specific language governing permissions and limitations under the License.
  */
 package org.apache.sling.hc.util;
+
+import java.text.NumberFormat;
+import java.util.Locale;
+
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
 import org.slf4j.helpers.MessageFormatter;
@@ -45,5 +49,32 @@ public class FormattingResultLog extends ResultLog {
 
     public void healthCheckError(String format, Object ... args) {
         add(createEntry(Result.Status.HEALTH_CHECK_ERROR, format, args));
+    }
+
+    /** Utility method to return any magnitude of milliseconds in a human readable format using the appropriate time unit (ms, sec, min) depending on the
+     * magnitude of the input.
+     * 
+     * @param millis milliseconds
+     * @return a string with a number and a unit */
+    public static String msHumanReadable(final long millis) {
+
+        double number = millis;
+        final String[] units = new String[] { "ms", "sec", "min", "h", "days" };
+        final double[] divisors = new double[] { 1000, 60, 60, 24 };
+
+        int magnitude = 0;
+        do {
+            double currentDivisor = divisors[Math.min(magnitude, divisors.length - 1)];
+            if (number < currentDivisor) {
+                break;
+            }
+            number /= currentDivisor;
+            magnitude++;
+        } while (magnitude < units.length - 1);
+        NumberFormat format = NumberFormat.getNumberInstance(Locale.UK);
+        format.setMinimumFractionDigits(0);
+        format.setMaximumFractionDigits(1);
+        String result = format.format(number) + units[magnitude];
+        return result;
     }
 }

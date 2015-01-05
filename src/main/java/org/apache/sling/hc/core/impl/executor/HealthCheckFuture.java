@@ -17,6 +17,8 @@
  */
 package org.apache.sling.hc.core.impl.executor;
 
+import static org.apache.sling.hc.util.FormattingResultLog.msHumanReadable;
+
 import java.util.Date;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
@@ -79,7 +81,7 @@ class HealthCheckFuture extends FutureTask<ExecutionResult> {
                         // wrap the result in an execution result
                         executionResult = new ExecutionResult(metadata, resultFromHealthCheck, elapsedTime);
                     }
-                    LOG.debug("Time consumed for {}: {}", metadata, HealthCheckExecutorImpl.msHumanReadable(elapsedTime));
+                    LOG.debug("Time consumed for {}: {}", metadata, msHumanReadable(elapsedTime));
                 }
 
                 callback.finished(executionResult);
