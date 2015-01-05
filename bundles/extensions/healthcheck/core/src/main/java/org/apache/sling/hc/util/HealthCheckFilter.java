@@ -84,26 +84,51 @@ public class HealthCheckFilter {
     }
 
     /**
-     * Get all service references for health check services with one of the supplied tags.
+     * Get all service references for health check services with one of the supplied tags. Uses logical "and" to combine tags.
      * @return An array of service references - might be an empty error if none matches
      */
     public ServiceReference[] getTaggedHealthCheckServiceReferences(final String... tags) {
+        return getTaggedHealthCheckServiceReferences(false, tags);
+    }
+
+    /**
+     * Get all service references for health check services with one of the supplied tags.
+     * 
+     * @param combineWithOr If true will return all health checks that have at least one of the tags set. 
+     *        If false will return only health checks that have all given tags assigned.
+     * @param tags the tags to look for
+     * @return An array of service references - might be an empty error if none matches
+     */
+    public ServiceReference[] getTaggedHealthCheckServiceReferences(boolean combineWithOr, final String... tags) {
         // Build service filter
         final StringBuilder filterBuilder = new StringBuilder();
         filterBuilder.append("(&(objectClass=").append(HealthCheck.class.getName()).append(")");
         final int prefixLen = OMIT_PREFIX.length();
+        final StringBuilder filterBuilderForOrOperator = new StringBuilder(); // or filters
         for(String tag : tags) {
             tag = tag.trim();
             if(tag.length() == 0) {
                 continue;
             }
             if(tag.startsWith(OMIT_PREFIX)) {
+                // ommit tags always have to be added as and-clause
                 filterBuilder.append("(!(").append(HealthCheck.TAGS).append("=").append(tag.substring(prefixLen)).append("))");
             } else {
-                filterBuilder.append("(").append(HealthCheck.TAGS).append("=").append(tag).append(")");
+                // add regular tags in the list either to outer and-clause or inner or-clause 
+                if (combineWithOr) {
+                    filterBuilderForOrOperator.append("(").append(HealthCheck.TAGS).append("=").append(tag).append(")");
+                } else {
+                    filterBuilder.append("(").append(HealthCheck.TAGS).append("=").append(tag).append(")");
+                }
             }
         }
+        // add "or" clause if we have accumulated any 
+        if (filterBuilderForOrOperator.length() > 0) {
+            filterBuilder.append("(|").append(filterBuilderForOrOperator).append(")");
+        }
         filterBuilder.append(")");
+
+        log.debug("OSGi service filter in getTaggedHealthCheckServiceReferences(): {}", filterBuilder);
 
         try {
             final String filterString = filterBuilder.length() == 0 ? null : filterBuilder.toString();

@@ -38,4 +38,16 @@ public interface HealthCheckExecutor {
      * @return List of results. The list might be empty.
      */
     List<HealthCheckExecutionResult> execute(String... tags);
+
+    /**
+     * Executes all health checks with the supplied list of tags.
+     * If no tags are supplied, all health checks are executed.
+     * 
+     * @param options options for controlling execution behavior
+     * @param tags tags to be executed
+     *
+     * @return List of results. The list might be empty.
+     */
+    List<HealthCheckExecutionResult> execute(HealthCheckExecutionOptions options, String... tags);
+
 }
