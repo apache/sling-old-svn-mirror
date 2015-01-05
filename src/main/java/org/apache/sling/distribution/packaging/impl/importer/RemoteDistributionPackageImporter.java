@@ -21,7 +21,9 @@ package org.apache.sling.distribution.packaging.impl.importer;
 import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.packaging.DistributionPackage;
@@ -48,7 +50,7 @@ public class RemoteDistributionPackageImporter implements DistributionPackageImp
 
 
     public RemoteDistributionPackageImporter(DistributionTransportSecretProvider distributionTransportSecretProvider,
-                                             String[] endpoints,
+                                             Map<String, String> endpointsMap,
                                              TransportEndpointStrategyType transportEndpointStrategyType) {
         this.distributionTransportSecretProvider = distributionTransportSecretProvider;
 
@@ -57,11 +59,13 @@ public class RemoteDistributionPackageImporter implements DistributionPackageImp
         }
 
 
-        List<DistributionTransport> transportHandlers = new ArrayList<DistributionTransport>();
+        Map<String, DistributionTransport> transportHandlers = new HashMap<String, DistributionTransport>();
 
-        for (String endpoint : endpoints) {
+        for (Map.Entry<String, String> entry : endpointsMap.entrySet()) {
+            String endpointKey = entry.getKey();
+            String endpoint = entry.getValue();
             if (endpoint != null && endpoint.length() > 0) {
-                transportHandlers.add(new SimpleHttpDistributionTransport(new DistributionEndpoint(endpoint), null, -1));
+                transportHandlers.put(endpointKey, new SimpleHttpDistributionTransport(new DistributionEndpoint(endpoint), null, -1));
             }
         }
         transportHandler = new MultipleEndpointDistributionTransport(transportHandlers,

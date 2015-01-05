@@ -20,14 +20,20 @@ package org.apache.sling.distribution.transport.impl;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.transport.core.DistributionTransport;
 import org.apache.sling.distribution.transport.core.DistributionTransportException;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
+import org.apache.sling.distribution.trigger.impl.PersistingJcrEventDistributionTrigger;
 
 /**
  * {@link org.apache.sling.distribution.transport.core.DistributionTransport} supporting delivery / retrieval from multiple
@@ -35,58 +41,93 @@ import org.apache.sling.distribution.transport.DistributionTransportSecret;
  */
 public class MultipleEndpointDistributionTransport implements DistributionTransport {
 
-    private final List<DistributionTransport> transportHelpers;
+    private final Map<String, DistributionTransport> transportHelpers;
     private final TransportEndpointStrategyType endpointStrategyType;
-    private int lastSuccessfulEndpointId = 0;
 
-    public MultipleEndpointDistributionTransport(List<DistributionTransport> transportHelpers,
+
+    public MultipleEndpointDistributionTransport(Map<String, DistributionTransport> transportHelpers,
                                                  TransportEndpointStrategyType endpointStrategyType) {
-        this.transportHelpers = transportHelpers;
+        this.transportHelpers = new TreeMap<String, DistributionTransport>();
+        this.transportHelpers.putAll(transportHelpers);
         this.endpointStrategyType = endpointStrategyType;
     }
 
-    private List<DistributionPackage> doTransport(ResourceResolver resourceResolver, DistributionRequest distributionRequest,
-                                                  DistributionPackage distributionPackage, DistributionTransportSecret secret) throws DistributionTransportException {
-
-        int offset = 0;
-        if (endpointStrategyType.equals(TransportEndpointStrategyType.One)) {
-            offset = lastSuccessfulEndpointId;
-        }
-
-        int length = transportHelpers.size();
-        List<DistributionPackage> result = new ArrayList<DistributionPackage>();
-
-        for (int i = 0; i < length; i++) {
-            int currentId = (offset + i) % length;
-
-            DistributionTransport transportHelper = transportHelpers.get(currentId);
-            if (distributionPackage != null) {
-                transportHelper.deliverPackage(resourceResolver, distributionPackage, secret);
-            } else if (distributionRequest != null) {
-                Iterable<DistributionPackage> distributionPackages = transportHelper.retrievePackages(resourceResolver, distributionRequest, secret);
-                for (DistributionPackage retrievedPackage : distributionPackages) {
-                    result.add(retrievedPackage);
-                }
-            }
-
-            lastSuccessfulEndpointId = currentId;
-            if (endpointStrategyType.equals(TransportEndpointStrategyType.One))
-                break;
-        }
-
-        return result;
+    public MultipleEndpointDistributionTransport(List<DistributionTransport> transportHelpers,
+                                                 TransportEndpointStrategyType endpointStrategyType) {
+        this(SettingsUtils.toMap(transportHelpers, "endpoint"), endpointStrategyType);
     }
 
     public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage,
                                                       @Nonnull DistributionTransportSecret secret) throws DistributionTransportException {
-        doTransport(resourceResolver, null, distributionPackage, secret);
+
+        if (endpointStrategyType.equals(TransportEndpointStrategyType.One)) {
+            DistributionPackageInfo info = distributionPackage.getInfo();
+            String queueName = info == null ? null : info.getQueue();
+
+
+            DistributionTransport distributionTransport = getDefaultTransport();
+            if (queueName != null) {
+                distributionTransport = transportHelpers.get(queueName);
+            }
+
+            if (distributionTransport != null) {
+                distributionTransport.deliverPackage(resourceResolver, distributionPackage, secret);
+            }
+
+
+        } else if  (endpointStrategyType.equals(TransportEndpointStrategyType.All)) {
+            for (DistributionTransport distributionTransport: transportHelpers.values()) {
+                distributionTransport.deliverPackage(resourceResolver, distributionPackage, secret);
+
+            }
+
+        }
     }
 
     @Nonnull
     public List<DistributionPackage> retrievePackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest,
                                                       @Nonnull DistributionTransportSecret secret) throws DistributionTransportException {
-        return doTransport(resourceResolver, distributionRequest, null, secret);
+        List<DistributionPackage> result = new ArrayList<DistributionPackage>();
+
+
+        if (endpointStrategyType.equals(TransportEndpointStrategyType.One)) {
+
+            DistributionTransport distributionTransport = getDefaultTransport();
+
+            if (distributionTransport != null) {
+                Iterable<DistributionPackage> retrievedPackages = distributionTransport.retrievePackages(resourceResolver, distributionRequest, secret);
+
+                for (DistributionPackage retrievedPackage : retrievedPackages) {
+                    result.add(retrievedPackage);
+                }
+            }
+
+
+        } else if  (endpointStrategyType.equals(TransportEndpointStrategyType.All)) {
+            for (DistributionTransport distributionTransport: transportHelpers.values()) {
+                Iterable<DistributionPackage> retrievedPackages = distributionTransport.retrievePackages(resourceResolver, distributionRequest, secret);
+
+                for (DistributionPackage retrievedPackage : retrievedPackages) {
+                    result.add(retrievedPackage);
+                }
+
+            }
+        }
+
+        return result;
     }
+
+    DistributionTransport getDefaultTransport() {
+        DistributionTransport[] handlers = transportHelpers.values().toArray(new DistributionTransport[0]);
+
+        if (handlers != null && handlers.length > 0) {
+            return handlers[0];
+        }
+
+        return null;
+    }
+
+
 
 
 }
