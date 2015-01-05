@@ -38,9 +38,11 @@ public class U {
     /** Wait until the specified number of health checks are seen by supplied executor */
     static void expectHealthChecks(int howMany, HealthCheckExecutor executor, String ... tags) {
         final long timeout = System.currentTimeMillis() + 10000L;
+        int count = 0;
         while(System.currentTimeMillis() < timeout) {
             final List<HealthCheckExecutionResult> results = executor.execute(tags);
-            if(results.size() == howMany) {
+            count = results.size();
+            if(count== howMany) {
                 return;
             }
             try {
@@ -49,7 +51,7 @@ public class U {
                 throw new RuntimeException("Unexpected InterruptedException");
             }
         }
-        fail("Did not get " + howMany + " health checks with tags " + Arrays.asList(tags) + " after " + timeout + " msec");
+        fail("Did not get " + howMany + " health checks with tags " + Arrays.asList(tags) + " after " + timeout + " msec (last count=" + count + ")");
     }
     
     static Option[] config() {
