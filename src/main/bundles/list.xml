@@ -500,7 +500,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.jackrabbit.usermanager</artifactId>
-            <version>2.2.2</version>
+            <version>2.2.3-SNAPSHOT</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
