@@ -53,38 +53,26 @@ public class MergedValueMap extends ValueMapDecorator {
         super(new HashMap<String, Object>());
         // Iterate over value maps
         for (final ValueMap vm : valueMaps) {
-            if (this.isEmpty()) {
-                // Add all properties
-                this.putAll(vm);
-            } else {
-                // Get properties to add or override
-                for (final String key : vm.keySet()) {
-                    if (!isExcludedProperty(key)) {
-                        this.put(key, vm.get(key));
-                    }
-                }
+            // Add all properties
+            this.putAll(vm);
 
-                // Get properties to hide
-                final String[] propertiesToHide = vm.get(MergedResourceConstants.PN_HIDE_PROPERTIES, String[].class);
-                if ( propertiesToHide != null ) {
-                    for (final String propName : propertiesToHide) {
-                        if (propName.equals("*")) {
-                            this.clear();
-                            break;
-                        } else {
-                            this.remove(propName);
-                        }
+            // Get properties to hide
+            final String[] propertiesToHide = vm.get(MergedResourceConstants.PN_HIDE_PROPERTIES, String[].class);
+            if ( propertiesToHide != null ) {
+                for (final String propName : propertiesToHide) {
+                    if (propName.equals("*")) {
+                        this.clear();
+                        break;
+                    } else {
+                        this.remove(propName);
                     }
                 }
             }
         }
+
         // Hide excluded properties
         for (final String excludedProperty : EXCLUDED_PROPERTIES) {
             this.remove(excludedProperty);
         }
-    }
-
-    private boolean isExcludedProperty(String key) {
-        return EXCLUDED_PROPERTIES.contains(key);
     }
 }
