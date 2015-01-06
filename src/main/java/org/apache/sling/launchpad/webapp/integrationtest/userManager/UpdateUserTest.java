@@ -88,7 +88,6 @@ public class UpdateUserTest {
 	}
 	
 	@Test 
-    @Category(JackrabbitOnly.class) // TODO: fails on Oak
 	public void testChangeUserPassword() throws IOException {
 		testUserId = H.createTestUser();
 		
