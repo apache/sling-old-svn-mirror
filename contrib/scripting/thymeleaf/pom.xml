@@ -178,7 +178,7 @@
               *
             </DynamicImport-Package>
             <Embed-Dependency>
-              *;scope=compile;inline=true
+              *;scope=compile;inline=true;inline=!**/AbstractHtmlTemplateParser*.class
             </Embed-Dependency>
             <ScriptEngine-Name>${project.name}</ScriptEngine-Name>
             <ScriptEngine-Version>${project.version}</ScriptEngine-Version>
