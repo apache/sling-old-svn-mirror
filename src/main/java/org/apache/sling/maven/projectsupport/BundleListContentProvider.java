@@ -33,6 +33,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
@@ -71,18 +72,11 @@ abstract class BundleListContentProvider implements LaunchpadContentProvider {
     
     private Iterator<String> handleConfigPath() {
         if (getConfigDirectory().exists() && getConfigDirectory().isDirectory()) {
-            File[] configFiles = getConfigDirectory().listFiles(new FileFilter() {
-
-                public boolean accept(File file) {
-                    return file.isFile();
-                }
-            });
+            File[] configFiles = getConfigDirectory().listFiles();
 
             List<String> fileNames = new ArrayList<String>();
             for (File cfgFile : configFiles) {
-                if (cfgFile.isFile()) {
                     fileNames.add(CONFIG_PATH_PREFIX + "/" + cfgFile.getName());
-                }
             }
 
             return fileNames.iterator();
@@ -223,18 +217,27 @@ abstract class BundleListContentProvider implements LaunchpadContentProvider {
     }
     
     private Iterator<String> handleConfigSubpath(String path) {
-        // We don't handle config subpaths for now, but do not 
-        // warn if we're asked for the children of a file, just
-        // return empty in that case
         final File f = getConfigFile(path);
         if(!f.exists()) {
             getLog().warn("BundleListContentProvider cannot get children of config path: " + path);
+            return EMPTY_STRING_LIST.iterator();
         }
-        return EMPTY_STRING_LIST.iterator();
+
+        if (f.isFile()){
+            return EMPTY_STRING_LIST.iterator();
+        }
+
+        File[] configFiles = f.listFiles();
+        List<String> fileNames = new ArrayList<String>();
+        for (File cfgFile : configFiles) {
+            fileNames.add(path + "/" + cfgFile.getName());
+        }
+
+        return fileNames.iterator();
     }
     
     private File getConfigFile(String path) {
-        return new File(getConfigDirectory(), path.substring(CONFIG_PATH_PREFIX.length() + 1));
+        return new File(FilenameUtils.concat(getConfigDirectory().getAbsolutePath(), path.substring(CONFIG_PATH_PREFIX.length() + 1)));
     }
 
     public Iterator<String> getChildren(String path) {
