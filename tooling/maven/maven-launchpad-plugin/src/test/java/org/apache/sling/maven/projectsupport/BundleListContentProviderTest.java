@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
@@ -68,7 +69,9 @@ public class BundleListContentProviderTest {
     private static final String [] CONFIG_FILES = {
         "file1.txt",
         "file2.cfg",
-        "someFile.properties"
+        "someFile.properties",
+        "dir1/file1.txt",
+        "dir1/dir2/file1.txt",
     };
     
     @BeforeClass
@@ -85,12 +88,14 @@ public class BundleListContentProviderTest {
     
     @Before
     public void setupTemporaryFiles() throws IOException {
+        TemporaryFolder configRoot = new TemporaryFolder(tempFolder.getRoot());
+        configRoot.create();
         for(String filename: CONFIG_FILES) {
-            final File f = getConfigFile(filename);
+            final File f = getConfigFile(configRoot, filename);
             f.createNewFile();
             assertTrue("Expecting temporary config file to have been created: " + f.getAbsolutePath(), f.exists());
         }
-        configDirectory = tempFolder.getRoot();
+        configDirectory = configRoot.getRoot();
 
         resourceProviderRoot = new File(tempFolder.getRoot(), "RESOURCE_PROVIDER_ROOT");
         resourceProviderRoot.mkdirs();
@@ -98,9 +103,19 @@ public class BundleListContentProviderTest {
         resourceProviderFile.createNewFile();
         fakeBundlePath = getFakeBundlePath();
     }
+
+    private File getConfigFile(File configRoot, String name) throws IOException {
+        return new File(FilenameUtils.concat(configRoot.getAbsolutePath(), name));
+    }
     
-    private File getConfigFile(String name) {
-        return new File(tempFolder.getRoot(), name);
+    private File getConfigFile(TemporaryFolder configRoot, String name) throws IOException {
+        File parentFolder = configRoot.getRoot();
+        if (name.contains("/")){
+            String parentPath = name.substring(0, name.lastIndexOf('/'));
+            name = name.substring(name.lastIndexOf('/') + 1);
+            parentFolder = configRoot.newFolder(parentPath.split("/"));
+        }
+        return new File(parentFolder, name);
     }
 
     private String getFakeBundlePath() {
@@ -252,12 +267,26 @@ public class BundleListContentProviderTest {
         assertChildren("resources/config", 
                 "resources/config/file1.txt", 
                 "resources/config/file2.cfg", 
-                "resources/config/someFile.properties"); 
+                "resources/config/someFile.properties",
+                "resources/config/dir1");
     }
-    
+
+    @Test
+    public void testNestedConfig() {
+        assertChildren("resources/config/dir1",
+                "resources/config/dir1/file1.txt",
+                "resources/config/dir1/dir2");
+    }
+
     @Test
     public void testConfigFile() {
         assertChildren("resources/config/file1.txt");
+        assertEquals("Expecting no warnings", 0, logWarningsCount);
+    }
+
+    @Test
+    public void testNestedConfigFile() {
+        assertChildren("resources/config/dir1/file1.txt");
         assertEquals("Expecting no warnings", 0, logWarningsCount);
     }
     
@@ -342,7 +371,14 @@ public class BundleListContentProviderTest {
     public void testConfigResource() throws Exception {
         final URL url = provider.getResource("resources/config/file1.txt");
         assertNotNull("Expecting config resource to be found", url);
-        assertEquals(getConfigFile("file1.txt").toURI().toURL().toExternalForm(), url.toExternalForm());
+        assertEquals(getConfigFile(configDirectory, "file1.txt").toURI().toURL().toExternalForm(), url.toExternalForm());
+    }
+
+    @Test
+    public void testNestedConfigResource() throws Exception {
+        final URL url = provider.getResource("resources/config/dir1/file1.txt");
+        assertNotNull("Expecting config resource to be found", url);
+        assertEquals(getConfigFile(configDirectory, "dir1/file1.txt").toURI().toURL().toExternalForm(), url.toExternalForm());
     }
     
     @Test
