@@ -311,6 +311,13 @@ public class XSSAPIImpl implements XSSAPI {
         return source == null ? null : Encode.forCssString(source);
     }
 
+    /**
+     * @see org.apache.sling.xss.XSSAPI#encodeForCSSString(String)
+     */
+    public String encodeForCSSString(String source) {
+        return Encode.forCssString(source);
+    }
+
     // =============================================================================================
     // FILTERS
     //
