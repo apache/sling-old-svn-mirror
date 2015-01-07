@@ -16,18 +16,30 @@
  */
 package org.apache.sling.commons.json;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import junit.framework.TestCase;
+
+import org.junit.Test;
 
 /**
  * @since Apr 17, 2009 6:04:00 PM
  */
-public class JSONObjectTest extends TestCase {
+public class JSONObjectTest {
+
     private static final String KEY = "key";
 
     /**
      * See <a href="https://issues.apache.org/jira/browse/SLING-929">SLING-929</a>
      */
-    public void testAppend() throws JSONException {
+    @Test public void testAppend() throws JSONException {
         JSONObject obj = new JSONObject();
         obj.append(KEY, "value1");
         obj.append(KEY, "value2");
@@ -38,7 +50,7 @@ public class JSONObjectTest extends TestCase {
     /**
      * See <a href="https://issues.apache.org/jira/browse/SLING-929">SLING-929</a>
      */
-    public void testFailAppend() throws JSONException {
+    @Test public void testFailAppend() throws JSONException {
         JSONObject obj = new JSONObject();
         obj.put(KEY, "value1");
         try {
@@ -49,7 +61,7 @@ public class JSONObjectTest extends TestCase {
         }
     }
 
-    public void testNull() throws JSONException {
+    @Test public void testNull() throws JSONException {
         JSONObject obj = new JSONObject();
         obj.put(KEY, JSONObject.NULL);
 
@@ -57,10 +69,24 @@ public class JSONObjectTest extends TestCase {
         TestCase.assertTrue(obj.get(KEY).equals(null));
         TestCase.assertEquals("{\"" + KEY + "\":null}", obj.toString());
     }
-    
-    public void testParseLong() throws JSONException {
+
+    @Test public void testParseLong() throws JSONException {
         String jsonStr = "{\"longvalue\":\"13857270119014401\"}";
         JSONObject obj = new JSONObject(jsonStr);
         TestCase.assertEquals(13857270119014401L, obj.getLong("longvalue"));
+    }
+
+    @Test public void testSample() throws JSONException {
+          Map<String,Object> map=new HashMap<String,Object>();
+          map.put("abc", "123456");
+          List<String> list = new ArrayList<String>();
+          list.add("Admin");
+          list.add("password");
+          map.put("groups", list);
+          JSONObject response=new JSONObject();
+          response.put("key", map);
+          assertNotNull(response.get("key"));
+          assertEquals("123456", response.getJSONObject("key").get("abc"));
+          assertEquals(list, response.getJSONObject("key").get("groups"));
     }
 }
