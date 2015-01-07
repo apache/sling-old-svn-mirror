@@ -197,11 +197,11 @@ public class DistributionUtils {
     }
 
     public static String authorAgentConfigUrl(String agentName) {
-        return DISTRIBUTION_ROOT_PATH + "/settings.author/agents/" + agentName;
+        return DISTRIBUTION_ROOT_PATH + "/settings/agents/" + agentName;
     }
 
     public static String publishAgentConfigUrl(String agentName) {
-        return DISTRIBUTION_ROOT_PATH + "/settings.publish/agents/" + agentName;
+        return DISTRIBUTION_ROOT_PATH + "/settings/agents/" + agentName;
     }
 
 
