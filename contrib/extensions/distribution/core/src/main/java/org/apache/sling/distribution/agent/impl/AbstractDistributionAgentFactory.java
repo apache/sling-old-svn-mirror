@@ -65,6 +65,8 @@ public abstract class AbstractDistributionAgentFactory {
 
     private static final String ENABLED = "enabled";
 
+    protected static final String DEFAULT_TRIGGER_TARGET = "(name=)";
+
     private ServiceRegistration componentReg;
     private BundleContext savedContext;
     private Map<String, Object> savedConfig;
