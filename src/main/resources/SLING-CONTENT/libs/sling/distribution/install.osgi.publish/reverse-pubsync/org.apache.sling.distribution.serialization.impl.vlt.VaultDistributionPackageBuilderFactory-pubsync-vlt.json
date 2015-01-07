@@ -1,5 +1,0 @@
-{
-    "jcr:primaryType": "sling:OsgiConfig",
-    "name": "pubsync-vlt",
-    "type": "jcrvlt"
-}

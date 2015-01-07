@@ -1,7 +1,6 @@
 {
     "jcr:primaryType": "sling:OsgiConfig",
-    "name": "publish/exporter",
-    "parent.name": "publish",
-    "type": "local",
+    "name": "default",
+
     "packageBuilder.target" : "(name=vlt)"
 }

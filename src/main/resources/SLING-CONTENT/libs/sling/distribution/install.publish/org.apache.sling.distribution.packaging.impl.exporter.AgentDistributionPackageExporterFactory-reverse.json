@@ -2,8 +2,6 @@
     "jcr:primaryType": "sling:OsgiConfig",
     "name": "reverse",
 
-    "isResource" : true,
-
     "packageBuilder.target" : "(name=vlt)",
 
     "agent.target": "(name=reverse)"

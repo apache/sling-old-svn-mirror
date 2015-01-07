@@ -1,12 +1,9 @@
 {
     "jcr:primaryType": "sling:OsgiConfig",
-    "name": "distributionExporters",
     "provider.roots": [ "/libs/sling/distribution/services/exporters" ],
-    "serviceType": "org.apache.sling.distribution.packaging.DistributionPackageExporter",
+    "kind" : "exporter",
     "resourceProperties": [
         "sling:resourceType=sling/distribution/service/exporter",
-        "sling:resourceSuperType=sling/distribution/service",
-
-        "name={name}"
+        "sling:resourceSuperType=sling/distribution/service"
     ]
 }

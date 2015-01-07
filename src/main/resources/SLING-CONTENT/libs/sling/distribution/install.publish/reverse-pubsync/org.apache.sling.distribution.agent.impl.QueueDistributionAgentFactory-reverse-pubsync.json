@@ -1,15 +1,10 @@
 {
     "jcr:primaryType": "sling:OsgiConfig",
-
-    "name": "publish",
-
-    "enabled" : false,
+    "name": "reverse-pubsync",
 
     "serviceName" : "distributionService",
 
     "requestAuthorizationStrategy.target" : "(name=privilegeRead)",
 
-    "packageExporter.target": "(parent.name=publish)",
-
-    "packageImporter.target": "(parent.name=publish)"
+    "packageBuilder.target" : "(name=vlt)"
 }
