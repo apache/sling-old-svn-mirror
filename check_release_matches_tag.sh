@@ -40,5 +40,5 @@ do
        ZIP=${1}/${2}/${3}
        check $TAG $ZIP
 done
-md5 $(find . -name *.zip)
+openssl sha1 $(find . -name *.zip)
 cd $CURDIR
