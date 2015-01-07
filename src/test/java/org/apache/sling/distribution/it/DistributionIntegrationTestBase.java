@@ -44,8 +44,7 @@ public abstract class DistributionIntegrationTestBase {
     protected static SlingClient authorClient;
     protected static SlingClient publishClient;
 
-    @BeforeClass
-    public static void setUpBefore() {
+     static {
         SlingInstanceManager slingInstances = new SlingInstanceManager("author", "publish");
         author = slingInstances.getInstance("author");
         publish = slingInstances.getInstance("publish");
@@ -100,10 +99,5 @@ public abstract class DistributionIntegrationTestBase {
         }
 
     }
-
-    public static void setAuthorAgentProperties(String agentName, String... properties) throws IOException {
-        assertPostResourceWithParameters(author, 200, authorAgentConfigUrl(agentName),
-                properties);
-    }
-
+    
 }
