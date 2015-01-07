@@ -18,8 +18,8 @@
  */
 package org.apache.sling.distribution.component.impl;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -52,35 +52,61 @@ import org.slf4j.LoggerFactory;
         @Reference(name = "distributionQueueDistributionStrategy", referenceInterface = DistributionQueueDispatchingStrategy.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
         @Reference(name = "distributionTransportSecretProvider", referenceInterface = DistributionTransportSecretProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
 })
-@Service(DefaultDistributionComponentProvider.class)
-public class DefaultDistributionComponentProvider {
+@Service(DistributionComponentProvider.class)
+public class DefaultDistributionComponentProvider implements DistributionComponentProvider {
 
     public static final String NAME = DistributionComponentUtils.PN_NAME;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private Map<String, DistributionAgent> distributionAgentMap = new ConcurrentHashMap<String, DistributionAgent>();
-    private Map<String, DistributionQueueProvider> distributionQueueProviderMap = new ConcurrentHashMap<String, DistributionQueueProvider>();
-    private Map<String, DistributionQueueDispatchingStrategy> distributionQueueDistributionStrategyMap = new ConcurrentHashMap<String, DistributionQueueDispatchingStrategy>();
-    private Map<String, DistributionTransportSecretProvider> distributionTransportSecretProviderMap = new ConcurrentHashMap<String, DistributionTransportSecretProvider>();
-    private Map<String, DistributionPackageImporter> distributionPackageImporterMap = new ConcurrentHashMap<String, DistributionPackageImporter>();
-    private Map<String, DistributionPackageExporter> distributionPackageExporterMap = new ConcurrentHashMap<String, DistributionPackageExporter>();
+    private Map<String, DistributionComponent<DistributionAgent>> distributionAgentMap = new ConcurrentHashMap<String, DistributionComponent<DistributionAgent>>();
+    private Map<String, DistributionComponent<DistributionQueueProvider>> distributionQueueProviderMap = new ConcurrentHashMap<String, DistributionComponent<DistributionQueueProvider>>();
+    private Map<String, DistributionComponent<DistributionQueueDispatchingStrategy>> distributionQueueDistributionStrategyMap = new ConcurrentHashMap<String, DistributionComponent<DistributionQueueDispatchingStrategy>>();
+    private Map<String, DistributionComponent<DistributionTransportSecretProvider>> distributionTransportSecretProviderMap = new ConcurrentHashMap<String, DistributionComponent<DistributionTransportSecretProvider>>();
+    private Map<String, DistributionComponent<DistributionPackageImporter>> distributionPackageImporterMap = new ConcurrentHashMap<String, DistributionComponent<DistributionPackageImporter>>();
+    private Map<String, DistributionComponent<DistributionPackageExporter>> distributionPackageExporterMap = new ConcurrentHashMap<String, DistributionComponent<DistributionPackageExporter>>();
     private BundleContext bundleContext;
 
-    public <ComponentType> ComponentType getComponent(@Nonnull Class<ComponentType> type,
-                                                                                   @Nullable String componentName) {
+
+    public DistributionComponent getComponent(DistributionComponentKind kind, String componentName) {
+        Map<String, DistributionComponent> componentMap = getComponentMap(kind.asClass());
+        return componentMap.get(componentName);
+    }
+
+    public List<DistributionComponent> getComponents(DistributionComponentKind kind) {
+        Map<String, DistributionComponent> componentMap = getComponentMap(kind.asClass());
+
+        List<DistributionComponent> componentList = new ArrayList<DistributionComponent>();
+        componentList.addAll(componentMap.values());
+
+        return componentList;
+    }
+
+    public <ComponentType> ComponentType getService(Class<ComponentType> type, String componentName) {
+        Map<String, DistributionComponent<ComponentType>> componentMap = getComponentMap(type);
+        DistributionComponent<ComponentType> component = componentMap.get(componentName);
+
+        if (component == null) {
+            return null;
+        }
+
+        return component.getService();
+    }
+
+
+    private <ComponentType> Map<String, DistributionComponent<ComponentType>> getComponentMap(Class<ComponentType> type) {
         if (type.isAssignableFrom(DistributionAgent.class)) {
-            return (ComponentType) distributionAgentMap.get(componentName);
+            return (Map) distributionAgentMap;
         } else if (type.isAssignableFrom(DistributionPackageExporter.class)) {
-            return (ComponentType) distributionPackageExporterMap.get(componentName);
+            return (Map) distributionPackageExporterMap;
         } else if (type.isAssignableFrom(DistributionPackageImporter.class)) {
-            return (ComponentType) distributionPackageImporterMap.get(componentName);
+            return (Map) distributionPackageImporterMap;
         } else if (type.isAssignableFrom(DistributionQueueProvider.class)) {
-            return (ComponentType) distributionQueueProviderMap.get(componentName);
+            return (Map) distributionQueueProviderMap;
         } else if (type.isAssignableFrom(DistributionQueueDispatchingStrategy.class)) {
-            return (ComponentType) distributionQueueDistributionStrategyMap.get(componentName);
+            return (Map) distributionQueueDistributionStrategyMap;
         } else if (type.isAssignableFrom(DistributionTransportSecretProvider.class)) {
-            return (ComponentType) distributionTransportSecretProviderMap.get(componentName);
+            return (Map) distributionTransportSecretProviderMap;
         }
 
         return null;
@@ -88,103 +114,88 @@ public class DefaultDistributionComponentProvider {
 
     private void bindDistributionQueueProvider(DistributionQueueProvider distributionQueueProvider, Map<String, Object> config) {
 
-        String name = PropertiesUtil.toString(config.get(NAME), null);
-        if (name != null) {
-            distributionQueueProviderMap.put(name, distributionQueueProvider);
-        }
+       put(DistributionQueueProvider.class, distributionQueueProvider, config);
     }
 
     private void unbindDistributionQueueProvider(DistributionQueueProvider distributionQueueProvider, Map<String, Object> config) {
 
-        String name = PropertiesUtil.toString(config.get(NAME), null);
-        if (name != null) {
-            distributionQueueProviderMap.remove(name);
-        }
+        remove(DistributionQueueProvider.class, distributionQueueProvider, config);
     }
 
     private void bindDistributionQueueDistributionStrategy(DistributionQueueDispatchingStrategy distributionQueueDispatchingStrategy, Map<String, Object> config) {
 
-        String name = PropertiesUtil.toString(config.get(NAME), null);
-        if (name != null) {
-            distributionQueueDistributionStrategyMap.put(name, distributionQueueDispatchingStrategy);
-        }
+        put(DistributionQueueDispatchingStrategy.class, distributionQueueDispatchingStrategy, config);
     }
 
     private void unbindDistributionQueueDistributionStrategy(DistributionQueueDispatchingStrategy distributionQueueDispatchingStrategy, Map<String, Object> config) {
 
-        String name = PropertiesUtil.toString(config.get(NAME), null);
-        if (name != null) {
-            distributionQueueDistributionStrategyMap.remove(name);
-        }
+        remove(DistributionQueueDispatchingStrategy.class, distributionQueueDispatchingStrategy, config);
     }
 
     private void bindDistributionTransportSecretProvider(DistributionTransportSecretProvider distributionTransportSecretProvider, Map<String, Object> config) {
 
-        String name = PropertiesUtil.toString(config.get(NAME), null);
-        if (name != null) {
-            distributionTransportSecretProviderMap.put(name, distributionTransportSecretProvider);
-
-        }
+        put(DistributionTransportSecretProvider.class, distributionTransportSecretProvider, config);
 
     }
 
     private void unbindDistributionTransportSecretProvider(DistributionTransportSecretProvider distributionTransportSecretProvider, Map<String, Object> config) {
 
-        String name = PropertiesUtil.toString(config.get(NAME), null);
-        if (name != null) {
-            distributionTransportSecretProviderMap.remove(name);
-
-        }
+       remove(DistributionTransportSecretProvider.class, distributionTransportSecretProvider, config);
     }
 
     private void bindDistributionPackageImporter(DistributionPackageImporter distributionPackageImporter, Map<String, Object> config) {
 
-        String name = PropertiesUtil.toString(config.get(NAME), null);
-        if (name != null) {
-            distributionPackageImporterMap.put(name, distributionPackageImporter);
-
-        }
+       put(DistributionPackageImporter.class, distributionPackageImporter, config);
     }
 
     private void unbindDistributionPackageImporter(DistributionPackageImporter distributionPackageImporter, Map<String, Object> config) {
 
-        String name = PropertiesUtil.toString(config.get(NAME), null);
-        if (name != null) {
-            distributionPackageImporterMap.remove(name);
-        }
+       remove(DistributionPackageImporter.class, distributionPackageImporter, config);
     }
 
     private void bindDistributionPackageExporter(DistributionPackageExporter distributionPackageExporter, Map<String, Object> config) {
 
-        String name = PropertiesUtil.toString(config.get(NAME), null);
-        if (name != null) {
-            distributionPackageExporterMap.put(name, distributionPackageExporter);
-        }
+        put(DistributionPackageExporter.class, distributionPackageExporter, config);
     }
 
     private void unbindDistributionPackageExporter(DistributionPackageExporter distributionPackageExporter, Map<String, Object> config) {
 
-        String name = PropertiesUtil.toString(config.get(NAME), null);
-        if (name != null) {
-            distributionPackageExporterMap.remove(name);
-        }
+        remove(DistributionPackageExporter.class, distributionPackageExporter, config);
 
     }
 
     private void bindDistributionAgent(DistributionAgent distributionAgent, Map<String, Object> config) {
 
-        String name = PropertiesUtil.toString(config.get(NAME), null);
-        if (name != null) {
-            distributionAgentMap.put(name, distributionAgent);
-        }
+       put(DistributionAgent.class, distributionAgent, config);
     }
 
     private void unbindDistributionAgent(DistributionAgent distributionAgent, Map<String, Object> config) {
 
+        remove(DistributionAgent.class, distributionAgent, config);
+
+    }
+
+    private <ComponentType> void put(Class<ComponentType> typeClass, ComponentType service, Map<String, Object> config) {
+        Map<String, DistributionComponent<ComponentType>> componentMap = getComponentMap(typeClass);
+
         String name = PropertiesUtil.toString(config.get(NAME), null);
-        if (name != null) {
-            distributionAgentMap.remove(name);
+        DistributionComponentKind kind = DistributionComponentKind.fromClass(typeClass);
+        if (name != null && kind!=null) {
+            componentMap.put(name, new DistributionComponent<ComponentType>(kind, name, service, config));
         }
 
     }
+
+    private <ComponentType> void remove(Class<ComponentType> typeClass, ComponentType service, Map<String, Object> config) {
+
+        Map<String, DistributionComponent<ComponentType>> componentMap = getComponentMap(typeClass);
+
+        String name = PropertiesUtil.toString(config.get(NAME), null);
+        if (name != null) {
+            componentMap.remove(name);
+        }
+
+    }
+
+
 }

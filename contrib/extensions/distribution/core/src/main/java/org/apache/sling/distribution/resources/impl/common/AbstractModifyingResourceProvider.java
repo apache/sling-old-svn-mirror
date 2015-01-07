@@ -131,8 +131,6 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
             properties.putAll(existingResource);
         }
 
-        newProperties = unbindMainResourceProperties(newProperties);
-
         if (newProperties != null) {
             properties.putAll(newProperties);
         }

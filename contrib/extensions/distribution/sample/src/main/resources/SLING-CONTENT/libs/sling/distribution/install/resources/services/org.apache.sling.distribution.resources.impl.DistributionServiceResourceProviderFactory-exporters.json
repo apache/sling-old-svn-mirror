@@ -1,0 +1,9 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "provider.roots": [ "/libs/sling/distribution/services/exporters" ],
+    "kind" : "exporter",
+    "resourceProperties": [
+        "sling:resourceType=sling/distribution/service/exporter",
+        "sling:resourceSuperType=sling/distribution/service"
+    ]
+}

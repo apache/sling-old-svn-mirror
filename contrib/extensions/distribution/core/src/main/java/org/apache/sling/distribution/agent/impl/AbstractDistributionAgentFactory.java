@@ -90,7 +90,9 @@ public abstract class AbstractDistributionAgentFactory {
 
             agentName = PropertiesUtil.toString(config.get(NAME), null);
             props.put(NAME, agentName);
-            props.put(DistributionConstants.PN_IS_RESOURCE, config.get(DistributionConstants.PN_IS_RESOURCE));
+
+            boolean isResource = PropertiesUtil.toBoolean(config.get(DistributionConstants.PN_IS_RESOURCE), false);
+            props.put(DistributionConstants.PN_IS_RESOURCE, isResource);
 
             if (componentReg == null) {
 

@@ -18,6 +18,7 @@
  */
 package org.apache.sling.distribution.resources.impl;
 
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -142,15 +143,23 @@ public class OsgiUtils {
             }
 
             Class valueClass = entry.getValue().getClass();
+            Object value = entry.getValue();
             if (valueClass.isArray()) {
                 valueClass = valueClass.getComponentType();
+
+                // fix string arrays that come as Object[]
+                if (valueClass.equals(Object.class)) {
+                    Object[] array = (Object[]) value;
+                    value = Arrays.asList(array).toArray(new String[array.length]);
+                    valueClass = String.class;
+                }
             }
 
             if (valueClass.isPrimitive()
                     || valueClass.equals(String.class)
                     || valueClass.equals(Boolean.class)
                     || valueClass.equals(Integer.class)) {
-                result.put(entry.getKey(), entry.getValue());
+                result.put(entry.getKey(), value);
             }
         }
 

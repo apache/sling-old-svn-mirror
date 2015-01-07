@@ -1,9 +1,0 @@
-{
-    "jcr:primaryType": "sling:OsgiConfig",
-    "name": "default",
-    "type": "local",
-
-    "isResource" : true,
-
-    "packageBuilder.target" : "(name=vlt)"
-}
