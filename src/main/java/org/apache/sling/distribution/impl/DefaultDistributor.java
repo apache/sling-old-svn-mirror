@@ -29,7 +29,7 @@ import org.apache.sling.distribution.DistributionResponse;
 import org.apache.sling.distribution.Distributor;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.agent.DistributionAgentException;
-import org.apache.sling.distribution.component.impl.DefaultDistributionComponentProvider;
+import org.apache.sling.distribution.component.impl.DistributionComponentProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,11 +46,11 @@ public class DefaultDistributor implements Distributor {
 
 
     @Reference
-    DefaultDistributionComponentProvider componentProvider;
+    DistributionComponentProvider componentProvider;
 
     @Nonnull
     public DistributionResponse distribute(@Nonnull String agentName, @Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) {
-       DistributionAgent agent = componentProvider.getComponent(DistributionAgent.class, agentName);
+        DistributionAgent agent = componentProvider.getService(DistributionAgent.class, agentName);
 
         if (agent == null) {
             return new SimpleDistributionResponse(DistributionRequestState.DROPPED, "Agent is not available");

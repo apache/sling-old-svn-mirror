@@ -104,10 +104,13 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
         } else if (pathInfo.isMain()) {
             Map<String, Object> properties = getMainResourceProperties(pathInfo.getMainResourceName());
 
+            Map<String, String> additionalProperties = additionalResourcePropertiesMap.get(MAIN_RESOURCE_PREFIX);
+            if (!properties.containsKey("sling:resourceType") && additionalProperties.containsKey("sling:resourceType")) {
+                properties.put("sling:resourceType", additionalProperties.get("sling:resourceType"));
+            }
+
             if (properties != null) {
                 Object adaptable = properties.remove(ADAPTABLE_PROPERTY_NAME);
-
-                properties = bindMainResourceProperties(properties);
 
                 resource = buildMainResource(resourceResolver, pathInfo, properties, adaptable);
             }
@@ -129,68 +132,6 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
 
     Map<String, Object> getMainResourceProperties(String resourceName) {
         return getResourceProperties(resourceName);
-    }
-
-    /**
-     * Binds the variables in the resource property templates to the properties.
-     * Template: resourcePropertyName = "{osgiPropertyName}"
-     * Property: osgiPropertyName = osgiPropertyValue
-     * Result: resourcePropertyName = osgiPropertyValue
-     *
-     * @param properties the properties to bind
-     * @return
-     */
-    Map<String, Object> bindMainResourceProperties(Map<String, Object> properties) {
-        Map<String, Object> result = new HashMap<String, Object>();
-
-        Map<String, String> resourcePropertyTemplates = additionalResourcePropertiesMap.get(MAIN_RESOURCE_PREFIX);
-
-        for (Map.Entry<String, String> propertyTemplateEntry : resourcePropertyTemplates.entrySet()) {
-            String templateName = propertyTemplateEntry.getKey();
-            String templateValue = propertyTemplateEntry.getValue();
-
-            Object propertyValue = templateValue;
-            if (templateValue.startsWith("{") && templateValue.endsWith("}")) {
-                String propertyName = templateValue.substring(1, templateValue.length() - 1);
-                propertyValue = properties.get(propertyName);
-            }
-
-            if (propertyValue != null) {
-                result.put(templateName, propertyValue);
-            }
-
-
-        }
-        return fixMap(result);
-    }
-
-    /**
-     * Unbinds the variables in the resource property templates to the properties.
-     * Template: resourcePropertyName = "{osgiPropertyName}"
-     * Property: resourcePropertyName = osgiPropertyValue
-     * Result: osgiPropertyName = osgiPropertyValue
-     *
-     * @param properties the properties to unbind
-     * @return
-     */
-    Map<String, Object> unbindMainResourceProperties(Map<String, Object> properties) {
-        Map<String, Object> result = new HashMap<String, Object>();
-
-        Map<String, String> resourcePropertyTemplates = additionalResourcePropertiesMap.get(MAIN_RESOURCE_PREFIX);
-
-        for (Map.Entry<String, String> propertyTemplateEntry : resourcePropertyTemplates.entrySet()) {
-            String templateName = propertyTemplateEntry.getKey();
-            String templateValue = propertyTemplateEntry.getValue();
-
-            if (templateValue.startsWith("{") && templateValue.endsWith("}")) {
-                String propertyName = templateValue.substring(1, templateValue.length() - 1);
-                Object propertyValue = properties.get(templateName);
-                if (propertyValue != null) {
-                    result.put(propertyName, propertyValue);
-                }
-            }
-        }
-        return fixMap(result);
     }
 
     Resource buildMainResource(ResourceResolver resourceResolver,
@@ -218,45 +159,6 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
         }
 
         return hasPermission;
-    }
-
-
-    private static <K, V> Map<String, Object> fixMap(Map<K, V> map) {
-        Map<String, Object> result = new HashMap<String, Object>();
-        for (Map.Entry<K, V> entry : map.entrySet()) {
-            K key = entry.getKey();
-            V value = entry.getValue();
-
-            if (!(key instanceof String)) continue;
-            if (!isAcceptedType(value.getClass())) continue;
-
-            String fixedKey = (String) key;
-            Object fixedValue = value;
-            if (fixedValue.getClass().isArray()) {
-                Class componentType = fixedValue.getClass().getComponentType();
-
-                if (!isAcceptedType(componentType)) {
-                    Object[] array = (Object[]) value;
-                    if (array == null || array.length == 0) {
-                        continue;
-                    }
-                    fixedValue = Arrays.asList(array).toArray(new String[array.length]);
-                }
-            }
-
-            if (fixedKey == null || fixedValue == null) {
-                continue;
-            }
-
-
-            result.put(fixedKey, fixedValue);
-        }
-
-        return result;
-    }
-
-    private static <T> boolean isAcceptedType(Class<T> clazz) {
-        return clazz.isPrimitive() || clazz == String.class || clazz.isArray();
     }
 
 

@@ -33,48 +33,31 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.distribution.component.impl.DistributionComponentProvider;
+import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-@Component(label = "Osgi Service Properties Resource Provider Factory",
-        description = "Osgi Service Properties Resource Provider Factory",
+@Component(label = "Distribution Service Resource Provider Factory",
+        description = "Distribution Service Resource Provider Factory",
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE,
-        name = OsgiPropertiesResourceProviderFactory.SERVICE_PID,
         metatype = true)
 @Service(value = ResourceProviderFactory.class)
 @Properties({
         @Property(name = ResourceProvider.ROOTS),
         @Property(name = ResourceProvider.OWNS_ROOTS, boolValue = true, propertyPrivate = true)
 })
-public class OsgiPropertiesResourceProviderFactory implements ResourceProviderFactory {
+public class DistributionServiceResourceProviderFactory implements ResourceProviderFactory {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public final static String SERVICE_PID = "org.apache.sling.distribution.resources.impl.OsgiPropertiesResourceProviderFactory";
 
-    /**
-     * The name of the class that is used for resource resolution.
-     * For Osgi configuration this is the factoryPid.
-     * For Osgi services this is the service interface.
-     */
     @Property
-    public final static String SERVICE_INTERFACE = "serviceType";
-
-    public final static String DEFAULT_FRIENDLY_NAME_PROPERTY = "name";
-    /**
-     * nameProperty contains the name of the property that will be used to expose
-     * the underlying resources.
-     * <p/>
-     * resourceRoot/resourceName/childResourceName
-     */
-    @Property(value = DEFAULT_FRIENDLY_NAME_PROPERTY)
-    public final static String FRIENDLY_NAME_PROPERTY = "nameProperty";
+    public final static String KIND = DistributionComponentUtils.PN_KIND;
 
     /**
      * resourceProperties contains the list of properties returned by this provider.
@@ -92,22 +75,9 @@ public class OsgiPropertiesResourceProviderFactory implements ResourceProviderFa
     @Property(cardinality = Integer.MAX_VALUE)
     public final static String RESOURCE_PROPERTIES = "resourceProperties";
 
-    public final static String DEFAULT_PROVIDER_TYPE = "osgiService";
-    /**
-     * The providerType can be osgiService or osgiConfig.
-     * A provider of type osgiService will allow read only access to osgi service properties of a specific interface.
-     * The resource can be adapted to the underlying service instance.
-     * <p/>
-     * A provider of type osgiConfig will allow CRUD access to osgi configurations registered for a particular factory.     *
-     */
-    @Property(value = DEFAULT_PROVIDER_TYPE)
-    public final static String PROVIDER_TYPE = "providerType";
-
-
     @Reference
-    public ConfigurationAdmin configurationAdmin;
+    DistributionComponentProvider componentProvider;
 
-    private ServiceTracker serviceTracker;
     private ResourceProvider resourceProvider;
 
     @Activate
@@ -115,43 +85,23 @@ public class OsgiPropertiesResourceProviderFactory implements ResourceProviderFa
 
         log.debug("activating resource provider with config {}", properties);
 
-        String friendlyNameProperty = PropertiesUtil.toString(properties.get(FRIENDLY_NAME_PROPERTY), DEFAULT_FRIENDLY_NAME_PROPERTY);
-        String type = PropertiesUtil.toString(properties.get(SERVICE_INTERFACE), null);
+        String kind = PropertiesUtil.toString(properties.get(KIND), null);
         String resourceRoot = PropertiesUtil.toString(properties.get(ResourceProvider.ROOTS), null);
 
 
-        Map<String, String> additionalResourceProperties = PropertiesUtil.toMap(properties.get(RESOURCE_PROPERTIES),
-                new String[]{friendlyNameProperty + "=" + friendlyNameProperty});
-        boolean isConfig = !DEFAULT_PROVIDER_TYPE.equalsIgnoreCase(PropertiesUtil.toString(properties.get(PROVIDER_TYPE), DEFAULT_PROVIDER_TYPE));
+        Map<String, String> additionalResourceProperties = PropertiesUtil.toMap(properties.get(RESOURCE_PROPERTIES), new String[0]);
 
+        resourceProvider = new DistributionServiceResourceProvider(kind,
+                componentProvider,
+                resourceRoot,
+                additionalResourceProperties);
 
-        if (isConfig) {
-            resourceProvider = new OsgiConfigurationResourceProvider(configurationAdmin,
-                    type,
-                    friendlyNameProperty,
-                    resourceRoot,
-                    additionalResourceProperties);
-
-        } else {
-            OsgiServicePropertiesResourceProvider servicePropertiesResourceProvider;
-            resourceProvider = servicePropertiesResourceProvider = new OsgiServicePropertiesResourceProvider(context,
-                    type,
-                    friendlyNameProperty,
-                    resourceRoot,
-                    additionalResourceProperties);
-
-            serviceTracker = new ServiceTracker(context, type, servicePropertiesResourceProvider);
-            serviceTracker.open();
-        }
         log.debug("created resource provider {}", resourceProvider);
     }
 
     @Deactivate
     public void deactivate(BundleContext context) {
-        if (serviceTracker != null) {
-            serviceTracker.close();
-            serviceTracker = null;
-        }
+
     }
 
     public ResourceProvider getResourceProvider(Map<String, Object> authenticationInfo) throws LoginException {
