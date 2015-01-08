@@ -39,6 +39,7 @@ import org.apache.sling.distribution.packaging.impl.importer.RemoteDistributionP
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.MultipleQueueDispatchingStrategy;
+import org.apache.sling.distribution.queue.impl.SingleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
@@ -83,6 +84,9 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
      */
     @Property(cardinality = -1)
     public static final String IMPORTER_ENDPOINTS = "packageImporter.endpoints";
+
+    @Property(label = "Use multiple queues", boolValue = false)
+    public static final String USE_MULTIPLE_QUEUES = "useMultipleQueues";
 
     @Reference
     private Packaging packaging;
@@ -140,15 +144,24 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
     protected SimpleDistributionAgent createAgent(String agentName, BundleContext context, Map<String, Object> config) {
         String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
 
-        Map<String, String> importerEndpointsMap = SettingsUtils.toUriMap(config.get(IMPORTER_ENDPOINTS));
-
 
         DistributionPackageExporter packageExporter = new LocalDistributionPackageExporter(packageBuilder);
-        DistributionPackageImporter packageImporter = new RemoteDistributionPackageImporter(transportSecretProvider, importerEndpointsMap, TransportEndpointStrategyType.One);
         DistributionQueueProvider queueProvider =  new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
 
-        String[] queueNames = importerEndpointsMap.keySet().toArray(new String[0]);
-        DistributionQueueDispatchingStrategy dispatchingStrategy = new MultipleQueueDispatchingStrategy(queueNames);
+        DistributionQueueDispatchingStrategy dispatchingStrategy = null;
+        DistributionPackageImporter packageImporter = null;
+        Map<String, String> importerEndpointsMap = SettingsUtils.toUriMap(config.get(IMPORTER_ENDPOINTS));
+        boolean useMultipleQueues = PropertiesUtil.toBoolean(config.get(USE_MULTIPLE_QUEUES), false);
+
+        if (useMultipleQueues) {
+            String[] queueNames = importerEndpointsMap.keySet().toArray(new String[0]);
+            dispatchingStrategy = new MultipleQueueDispatchingStrategy(queueNames);
+            packageImporter = new RemoteDistributionPackageImporter(transportSecretProvider, importerEndpointsMap, TransportEndpointStrategyType.One);
+        } else {
+            dispatchingStrategy = new SingleQueueDispatchingStrategy();
+            packageImporter = new RemoteDistributionPackageImporter(transportSecretProvider, importerEndpointsMap, TransportEndpointStrategyType.All);
+        }
+
 
         return new SimpleDistributionAgent(agentName, false, serviceName,
                 packageImporter, packageExporter, requestAuthorizationStrategy,
