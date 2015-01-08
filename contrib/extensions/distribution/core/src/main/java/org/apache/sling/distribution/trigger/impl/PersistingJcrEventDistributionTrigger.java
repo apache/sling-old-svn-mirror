@@ -54,7 +54,7 @@ public class PersistingJcrEventDistributionTrigger extends AbstractJcrEventTrigg
 
     @Override
     protected DistributionRequest processEvent(Event event) throws RepositoryException {
-        log.info("processing event {}", event);
+        log.debug("processing event {}", event);
 
         DistributionRequest distributionRequest = null;
 
@@ -65,7 +65,7 @@ public class PersistingJcrEventDistributionTrigger extends AbstractJcrEventTrigg
         }
 
         if (session.hasPermission(nuggetsPath, Session.ACTION_ADD_NODE)) {
-            log.info("persisting event under {}", nuggetsPath);
+            log.debug("persisting event under {}", nuggetsPath);
             Node nuggetsNode = session.getNode(nuggetsPath);
             if (nuggetsNode != null) {
                 String nodeName = String.valueOf(System.nanoTime());
@@ -86,7 +86,7 @@ public class PersistingJcrEventDistributionTrigger extends AbstractJcrEventTrigg
                     }
                     createdNode.setProperty("info", values.toArray(new String[values.size()]));
                     session.save();
-                    log.info("event persisted at {}", path);
+                    log.info("event {} persisted at {}", event, path);
                     distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, path);
                 } else {
                     log.warn("could not create node {}", nuggetsPath + "/" + nodeName);
@@ -109,10 +109,10 @@ public class PersistingJcrEventDistributionTrigger extends AbstractJcrEventTrigg
                 for (String nodeName : nuggetsPath.split("/")) {
                     if (nodeName.length() > 0) {
                         if (!parent.hasNode(nodeName)) {
-                            log.info("adding {}", nodeName);
+                            log.info("creating {}", nodeName);
                             parent = parent.addNode(nodeName, "sling:Folder");
                         } else {
-                            log.info("{} exists", nodeName);
+                            log.debug("{} exists", nodeName);
                             parent = parent.getNode(nodeName);
                         }
                     }
@@ -123,7 +123,7 @@ public class PersistingJcrEventDistributionTrigger extends AbstractJcrEventTrigg
     }
 
     public void enable() {
-        log.info("enabling persisting jcr event listener");
+        log.debug("enabling persisting jcr event listener");
         Session session;
         try {
             session = getSession();
@@ -136,6 +136,6 @@ public class PersistingJcrEventDistributionTrigger extends AbstractJcrEventTrigg
     }
 
     public void disable() {
-        log.info("disabling persisting jcr event listener");
+        log.debug("disabling persisting jcr event listener");
     }
 }

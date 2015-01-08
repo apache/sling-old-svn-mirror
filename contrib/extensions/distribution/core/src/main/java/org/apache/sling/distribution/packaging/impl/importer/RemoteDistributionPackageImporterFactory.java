@@ -31,7 +31,6 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.distribution.component.impl.DistributionComponentManager;
 import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.packaging.DistributionPackage;

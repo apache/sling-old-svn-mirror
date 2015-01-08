@@ -23,7 +23,6 @@ package org.apache.sling.distribution.resources.impl.common;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 

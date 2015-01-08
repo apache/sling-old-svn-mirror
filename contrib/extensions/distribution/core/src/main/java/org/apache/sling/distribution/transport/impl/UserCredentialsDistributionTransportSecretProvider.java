@@ -18,7 +18,6 @@
  */
 package org.apache.sling.distribution.transport.impl;
 
-import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;

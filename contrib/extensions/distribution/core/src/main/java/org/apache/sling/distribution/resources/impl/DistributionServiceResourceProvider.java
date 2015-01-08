@@ -21,28 +21,18 @@ package org.apache.sling.distribution.resources.impl;
 
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
-import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.distribution.component.impl.DefaultDistributionComponentProvider;
 import org.apache.sling.distribution.component.impl.DistributionComponent;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.component.impl.DistributionComponentProvider;
 import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
-import org.apache.sling.distribution.component.impl.DistributionConfiguration;
-import org.apache.sling.distribution.resources.DistributionConstants;
 import org.apache.sling.distribution.resources.impl.common.AbstractReadableResourceProvider;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * {@link ResourceProvider} for Osgi services for a specific service interface.

@@ -18,19 +18,6 @@
  */
 package org.apache.sling.distribution.queue.impl;
 
-import javax.annotation.Nonnull;
-import java.util.Arrays;
-import java.util.List;
-
-import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.queue.DistributionQueue;
-import org.apache.sling.distribution.queue.DistributionQueueException;
-import org.apache.sling.distribution.queue.DistributionQueueItem;
-import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
-import org.apache.sling.distribution.queue.DistributionQueueProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * The default strategy for delivering packages to queues. Each agent just manages a single queue,
  * no failure / stuck handling where each package is put regardless of anything.

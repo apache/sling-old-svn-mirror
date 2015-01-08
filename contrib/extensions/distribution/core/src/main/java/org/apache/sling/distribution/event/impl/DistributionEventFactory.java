@@ -19,10 +19,8 @@
 package org.apache.sling.distribution.event.impl;
 
 import javax.annotation.Nonnull;
-import java.util.Dictionary;
 
 import org.apache.sling.distribution.event.DistributionEventType;
-import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 
 /**

@@ -20,9 +20,7 @@ package org.apache.sling.distribution.packaging.impl.importer;
 
 import javax.annotation.Nonnull;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.api.resource.ResourceResolver;

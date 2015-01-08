@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.distribution.transport.core.DistributionTransport;
 
 //TODO: Consider removing it
 /**
@@ -61,7 +60,8 @@ public class SettingsUtils {
 
         for (Map.Entry<String, List<String>> entry : linesMap.entrySet()) {
             String componentName = entry.getKey();
-            String[] componentLines = entry.getValue().toArray(new String[0]);
+            List<String> var = entry.getValue();
+            String[] componentLines = var.toArray(new String[var.size()]);
 
             if (COMPONENT_ROOT.equals(componentName)) {
                 Map<String, String> map = PropertiesUtil.toMap(componentLines, new String [0]);
