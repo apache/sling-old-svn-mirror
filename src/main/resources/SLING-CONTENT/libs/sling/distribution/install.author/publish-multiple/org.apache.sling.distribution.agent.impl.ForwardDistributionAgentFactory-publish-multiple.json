@@ -11,6 +11,8 @@
 
     "transportSecretProvider.target" : "(name=publishAdmin)",
 
+    "useMultipleQueues" : true,
+
     "packageImporter.endpoints" : [
         "endpoint1=http://localhost:4503/libs/sling/distribution/services/importers/default",
         "endpoint2=http://localhost:4503/libs/sling/distribution/services/importers/defaultbadaddress"
