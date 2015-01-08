@@ -18,6 +18,8 @@
  */
 package org.apache.sling.models.testmodels.classes;
 
+import java.util.List;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -26,46 +28,69 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.Optional;
 import org.apache.sling.models.annotations.Path;
+import org.apache.sling.models.annotations.Required;
+import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 import org.apache.sling.models.annotations.injectorspecific.ResourcePath;
 
 @Model(adaptables = {Resource.class, SlingHttpServletRequest.class})
-public class ResourcePathAllOptionalModel {
+public class ResourcePathPartialModel {
 
-    @Inject
-    @Path("/some/path")
-    @Optional
-    private Resource fromPath;
-
-    @Inject
-    @Named("propertyContainingAPath")
-    @Optional
-    private Resource derefProperty;
     
-    @Inject
-    @Path(paths={"/some/path", "/some/path2"})
+   
+    
+    @ResourcePath(name="propertyWithSeveralPaths", injectionStrategy=InjectionStrategy.REQUIRED)
+    private List<Resource> requiredResources;
+    
+    @ResourcePath(name="propertyWithSeveralPaths")
+    @Required
+    private List<Resource> requiredResources2;
+    
+    
+    @ResourcePath(name="propertyWithMissingPaths", injectionStrategy=InjectionStrategy.OPTIONAL)
+    private List<Resource> optionalResources;
+    
     @Optional
-    private Resource manyFromPathNonList;
+    @ResourcePath(name="propertyWithMissingPaths")
+    private List<Resource> optionalResources2;
+    
+    
 
-    @ResourcePath(path = "/some/path2", optional=true)
-    private Resource fromPath2;
+    @ResourcePath(name="propertyWithMissingPaths",optional=true)
+    private List<Resource> optionalResources3;
 
-    @ResourcePath(name = "anotherPropertyContainingAPath", optional=true)
-    private Resource derefProperty2;
 
-    public Resource getFromPath() {
-        return fromPath;
+
+    public List<Resource> getRequiredResources() {
+        return requiredResources;
     }
 
-    public Resource getByDerefProperty() {
-        return derefProperty;
+
+
+    public List<Resource> getRequiredResources2() {
+        return requiredResources2;
     }
 
-    public Resource getFromPath2() {
-        return fromPath2;
+
+
+    public List<Resource> getOptionalResources() {
+        return optionalResources;
     }
 
-    public Resource getByDerefProperty2() {
-        return derefProperty2;
+
+
+    public List<Resource> getOptionalResources2() {
+        return optionalResources2;
     }
+
+
+
+    public List<Resource> getOptionalResources3() {
+        return optionalResources3;
+    }
+    
+
+
+    
+   
 
 }

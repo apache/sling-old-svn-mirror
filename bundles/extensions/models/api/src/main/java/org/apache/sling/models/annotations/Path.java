@@ -32,6 +32,7 @@ import javax.inject.Qualifier;
 @Qualifier
 public @interface Path {
 
-    public String value();
+    public String value() default "";
+    public String[] paths() default {};
 
 }

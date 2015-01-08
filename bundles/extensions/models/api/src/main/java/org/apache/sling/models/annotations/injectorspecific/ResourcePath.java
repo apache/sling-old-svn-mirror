@@ -41,6 +41,12 @@ public @interface ResourcePath {
      * Specifies the path of the resource. If not provided, the path is derived from the property name.
      */
     public String path() default "";
+    
+    /**
+     * specifices more than one path for the resource. If not provided, a single path is derived from the property name.
+     * @return
+     */
+    public String[] paths() default {};
 
     /**
      * Specifies the name of the property containing the resource path. If empty or not set, then the name

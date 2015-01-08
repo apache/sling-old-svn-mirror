@@ -23,6 +23,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -35,6 +36,7 @@ import org.apache.sling.models.impl.injectors.SelfInjector;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
 import org.apache.sling.models.testmodels.classes.ResourcePathAllOptionalModel;
 import org.apache.sling.models.testmodels.classes.ResourcePathModel;
+import org.apache.sling.models.testmodels.classes.ResourcePathPartialModel;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -56,6 +58,9 @@ public class ResourcePathInjectionTest {
 
     @Mock
     private Resource adaptable;
+    
+    @Mock
+    SlingHttpServletRequest nonResourceAdaptable;
 
     @Mock
     private Resource byPathResource;
@@ -77,6 +82,16 @@ public class ResourcePathInjectionTest {
         Map<String, Object> map = new HashMap<String, Object>();
         map.put("propertyContainingAPath", "/some/other/path");
         map.put("anotherPropertyContainingAPath", "/some/other/path2");
+        String[] paths= new String[2];
+        paths[0]="/some/other/path";
+        paths[1]="/some/other/path2";
+       
+        String[] invalidPaths= new String[3];
+        invalidPaths[0]="/does/not/exist";
+        invalidPaths[1]="/does/not/exist2";
+        invalidPaths[2]="/some/other/path";
+        map.put("propertyWithSeveralPaths",paths);
+        map.put("propertyWithMissingPaths", invalidPaths);
 
         ValueMap properties = new ValueMapDecorator(map);
 
@@ -111,7 +126,6 @@ public class ResourcePathInjectionTest {
 
     @Test
     public void testPathInjectionWithNonResourceAdaptable() {
-        SlingHttpServletRequest nonResourceAdaptable = mock(SlingHttpServletRequest.class);
         ResourcePathModel model = factory.getAdapter(nonResourceAdaptable, ResourcePathModel.class);
         // should be null because mandatory fields could not be injected
         assertNull(model);
@@ -119,7 +133,6 @@ public class ResourcePathInjectionTest {
 
     @Test
     public void testOptionalPathInjectionWithNonResourceAdaptable() {
-        SlingHttpServletRequest nonResourceAdaptable = mock(SlingHttpServletRequest.class);
         ResourcePathAllOptionalModel model = factory.getAdapter(nonResourceAdaptable, ResourcePathAllOptionalModel.class);
         // should not be null because resource paths fields are optional
         assertNotNull(model);
@@ -129,5 +142,53 @@ public class ResourcePathInjectionTest {
         assertNull(model.getFromPath2());
         assertNull(model.getByDerefProperty2());
    }
-
+    @Test
+    public void testMultiplePathInjection(){
+    ResourcePathModel model = factory.getAdapter(adaptable, ResourcePathModel.class);
+    assertNotNull(model);
+    List<Resource> resources=model.getMultipleResources();
+    assertNotNull(resources);
+    assertEquals(2,resources.size());
+    assertEquals(byPropertyValueResource, resources.get(0));
+    assertEquals(byPropertyValueResource2, resources.get(1));
+    List<Resource> resourcesFromPathAnnotation= model.getManyFromPath();
+    assertNotNull(resourcesFromPathAnnotation);
+    assertEquals(byPathResource, resourcesFromPathAnnotation.get(0));
+    assertEquals(byPathResource2, resourcesFromPathAnnotation.get(1));
+    
+    List<Resource> resourcesFromResourcePathAnnotation= model.getManyFromPath2();
+    assertNotNull(resourcesFromResourcePathAnnotation);
+    assertEquals(byPathResource2, resourcesFromResourcePathAnnotation.get(0));
+    assertEquals(byPathResource, resourcesFromResourcePathAnnotation.get(1));
+    
+    assertNotNull(model.getPropertyWithSeveralPaths());
+    assertEquals(byPropertyValueResource, model.getPropertyWithSeveralPaths().get(0));
+    assertEquals(byPropertyValueResource2, model.getPropertyWithSeveralPaths().get(1));
+    
+    	
+    }
+    @Test
+    public void testPartialInjection(){
+        ResourcePathPartialModel model = factory.getAdapter(adaptable, ResourcePathPartialModel.class);
+        
+        assertNotNull(model);
+        assertNotNull(model.getOptionalResources());
+        assertNotNull(model.getOptionalResources2());
+        assertNotNull(model.getOptionalResources3());
+        assertEquals(1,model.getOptionalResources().size());
+        assertEquals(1,model.getOptionalResources2().size());
+        assertEquals(1,model.getOptionalResources3().size());
+ 
+    }
+    @Test
+    public void testPartialInjectionFailure(){
+        
+        when(resourceResolver.getResource("/some/other/path")).thenReturn(null);
+        when(resourceResolver.getResource("/some/other/path2")).thenReturn(null);
+        
+        ResourcePathPartialModel model = factory.getAdapter(adaptable, ResourcePathPartialModel.class);
+        assertNull(model);
+       
+ 
+    }
 }
