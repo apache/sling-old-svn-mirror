@@ -73,7 +73,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.installer.core</artifactId>
-            <version>3.5.5-SNAPSHOT</version>
+            <version>3.6.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
