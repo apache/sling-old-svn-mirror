@@ -154,7 +154,8 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
         boolean useMultipleQueues = PropertiesUtil.toBoolean(config.get(USE_MULTIPLE_QUEUES), false);
 
         if (useMultipleQueues) {
-            String[] queueNames = importerEndpointsMap.keySet().toArray(new String[0]);
+            java.util.Set<String> var = importerEndpointsMap.keySet();
+            String[] queueNames = var.toArray(new String[var.size()]);
             dispatchingStrategy = new MultipleQueueDispatchingStrategy(queueNames);
             packageImporter = new RemoteDistributionPackageImporter(transportSecretProvider, importerEndpointsMap, TransportEndpointStrategyType.One);
         } else {

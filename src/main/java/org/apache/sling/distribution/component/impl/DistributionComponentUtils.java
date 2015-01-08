@@ -25,27 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.distribution.agent.DistributionAgent;
-import org.apache.sling.distribution.agent.impl.DistributionRequestAuthorizationStrategy;
-import org.apache.sling.distribution.agent.impl.ForwardDistributionAgentFactory;
-import org.apache.sling.distribution.agent.impl.PrivilegeDistributionRequestAuthorizationStrategy;
-import org.apache.sling.distribution.agent.impl.QueueDistributionAgentFactory;
-import org.apache.sling.distribution.agent.impl.ReverseDistributionAgentFactory;
-import org.apache.sling.distribution.agent.impl.SimpleDistributionAgentFactory;
-import org.apache.sling.distribution.agent.impl.SyncDistributionAgentFactory;
-import org.apache.sling.distribution.packaging.DistributionPackageExporter;
-import org.apache.sling.distribution.packaging.DistributionPackageImporter;
-import org.apache.sling.distribution.packaging.impl.exporter.AgentDistributionPackageExporterFactory;
-import org.apache.sling.distribution.packaging.impl.exporter.LocalDistributionPackageExporterFactory;
-import org.apache.sling.distribution.packaging.impl.exporter.RemoteDistributionPackageExporterFactory;
-import org.apache.sling.distribution.packaging.impl.importer.LocalDistributionPackageImporterFactory;
-import org.apache.sling.distribution.packaging.impl.importer.RemoteDistributionPackageImporterFactory;
-import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
-import org.apache.sling.distribution.serialization.impl.vlt.VaultDistributionPackageBuilderFactory;
-import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
-import org.apache.sling.distribution.transport.impl.UserCredentialsDistributionTransportSecretProvider;
-import org.apache.sling.distribution.trigger.DistributionTrigger;
-import org.apache.sling.distribution.trigger.impl.LocalDistributionTriggerFactory;
 
 /**
  * Helper class that facilitates the transformation of "json" like properties into OSGI configs.

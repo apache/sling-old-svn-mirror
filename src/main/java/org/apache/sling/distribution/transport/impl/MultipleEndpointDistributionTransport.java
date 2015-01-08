@@ -20,7 +20,6 @@ package org.apache.sling.distribution.transport.impl;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -33,7 +32,6 @@ import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.transport.core.DistributionTransport;
 import org.apache.sling.distribution.transport.core.DistributionTransportException;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
-import org.apache.sling.distribution.trigger.impl.PersistingJcrEventDistributionTrigger;
 
 /**
  * {@link org.apache.sling.distribution.transport.core.DistributionTransport} supporting delivery / retrieval from multiple
@@ -118,7 +116,8 @@ public class MultipleEndpointDistributionTransport implements DistributionTransp
     }
 
     DistributionTransport getDefaultTransport() {
-        DistributionTransport[] handlers = transportHelpers.values().toArray(new DistributionTransport[0]);
+        java.util.Collection<DistributionTransport> var = transportHelpers.values();
+        DistributionTransport[] handlers = var.toArray(new DistributionTransport[var.size()]);
 
         if (handlers != null && handlers.length > 0) {
             return handlers[0];

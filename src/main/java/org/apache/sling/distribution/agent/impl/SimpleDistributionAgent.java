@@ -362,7 +362,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
         } catch (DistributionPackageImportException e) {
             log.error("could not process transport queue", e);
         } catch (LoginException e) {
-            log.error("cannot obtain resource resolver", e);
+            log.info("cannot obtain resource resolver", e);
         } finally {
             ungetAgentResourceResolver(agentResourceResolver);
         }
@@ -422,7 +422,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
             } catch (DistributionAgentException e) {
                 log.error("Error executing handler", e);
             } catch (LoginException e) {
-                log.error("Cannot obtain resource resolver");
+                log.info("Cannot obtain resource resolver", e);
             } finally {
                 ungetAgentResourceResolver(agentResourceResolver);
             }

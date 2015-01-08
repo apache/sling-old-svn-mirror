@@ -19,7 +19,7 @@
 package org.apache.sling.distribution.transport.core;
 
 /**
- * Represents an error happened while a {@link DistributionTransportHandler} is delivering a distribution item to
+ * Represents an error happened while a {@link DistributionTransport} is delivering a distribution item to
  * and endpoint.
  */
 @SuppressWarnings("serial")

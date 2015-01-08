@@ -20,7 +20,6 @@ package org.apache.sling.distribution.queue;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 import aQute.bnd.annotation.ProviderType;
 
