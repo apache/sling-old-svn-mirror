@@ -30,10 +30,6 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.query.Query;
-
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
@@ -78,7 +74,7 @@ public class JcrResourceBundle extends ResourceBundle {
         this.locale = locale;
 
         long start = System.currentTimeMillis();
-        refreshSession(resourceResolver, true);
+        refreshSession(resourceResolver);
         Set<String> roots = loadPotentialLanguageRoots(resourceResolver, locale, baseName);
         this.resources = loadFully(resourceResolver, roots, this.languageRoots);
         long end = System.currentTimeMillis();
@@ -91,17 +87,8 @@ public class JcrResourceBundle extends ResourceBundle {
         }
     }
 
-    static void refreshSession(ResourceResolver resolver, boolean keepChanges) {
-        final Session s = resolver.adaptTo(Session.class);
-        if(s == null) {
-            log.warn("ResourceResolver {} does not adapt to Session, cannot refresh", resolver);
-        } else {
-            try {
-                s.refresh(keepChanges);
-            } catch(RepositoryException re) {
-                throw new RuntimeException("RepositoryException in session.refresh", re);
-            }
-        }
+    static void refreshSession(final ResourceResolver resolver) {
+        resolver.refresh();
     }
 
     protected Set<String> getLanguageRootPaths() {
@@ -175,7 +162,7 @@ public class JcrResourceBundle extends ResourceBundle {
             // (2011/04/04) is the fastest query language ...
             Iterator<Map<String, Object>> bundles = null;
             try {
-                bundles = resourceResolver.queryResources(fullLoadQuery, Query.XPATH);
+                bundles = resourceResolver.queryResources(fullLoadQuery, "xpath");
             } catch (final SlingException se) {
                 log.error("Exception during resource query " + fullLoadQuery, se);
             }
@@ -233,7 +220,7 @@ public class JcrResourceBundle extends ResourceBundle {
 
         Set<String> paths = new HashSet<String>();
         @SuppressWarnings("deprecation")
-        Iterator<Resource> bundles = resourceResolver.findResources(QUERY_LANGUAGE_ROOTS, Query.XPATH);
+        Iterator<Resource> bundles = resourceResolver.findResources(QUERY_LANGUAGE_ROOTS, "xpath");
         while (bundles.hasNext()) {
             Resource bundle = bundles.next();
             ValueMap properties = bundle.adaptTo(ValueMap.class);

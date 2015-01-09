@@ -35,12 +35,15 @@ import javax.jcr.query.RowIterator;
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.sling.api.resource.AbstractResource;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.commons.testing.jcr.RepositoryUtil;
-import org.apache.sling.jcr.resource.JcrResourceUtil;
-import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +56,7 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
 
     protected ResourceResolver resolver;
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
 
@@ -65,6 +69,7 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
 
         resolver = new ResourceResolver() {
 
+            @Override
             public Iterator<Resource> findResources(String query,
                     String language) {
                 try {
@@ -72,19 +77,73 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
                     final QueryResult result = q.execute();
                     final NodeIterator nodes = result.getNodes();
                     return new Iterator<Resource>() {
+                        @Override
                         public boolean hasNext() {
                             return nodes.hasNext();
                         }
 
+                        @Override
                         public Resource next() {
-                            Node node = nodes.nextNode();
-                            try {
-                                return new JcrNodeResource(resolver, node, null ,null);
-                            } catch (RepositoryException e) {
-                                throw new IllegalStateException(e);
-                            }
+                            final Node node = nodes.nextNode();
+                            final Resource rsrc = new AbstractResource() {
+
+                                @Override
+                                public String getResourceType() {
+                                    // TODO Auto-generated method stub
+                                    return null;
+                                }
+
+                                @Override
+                                public String getResourceSuperType() {
+                                    // TODO Auto-generated method stub
+                                    return null;
+                                }
+
+                                @Override
+                                public ResourceResolver getResourceResolver() {
+                                    // TODO Auto-generated method stub
+                                    return null;
+                                }
+
+                                @Override
+                                public ResourceMetadata getResourceMetadata() {
+                                    // TODO Auto-generated method stub
+                                    return null;
+                                }
+
+                                @Override
+                                public String getPath() {
+                                    try {
+                                        return node.getPath();
+                                    } catch ( final RepositoryException re ) {
+                                        throw new RuntimeException(re);
+                                    }
+                                }
+
+                                @Override
+                                public <AdapterType> AdapterType adaptTo(
+                                        Class<AdapterType> type) {
+                                    if ( type == ValueMap.class) {
+                                        try {
+                                            final Map<String, Object> props = new HashMap<String, Object>();
+                                            if ( node.hasProperty(JcrResourceBundle.PROP_LANGUAGE) ) {
+                                                props.put(JcrResourceBundle.PROP_LANGUAGE, node.getProperty(JcrResourceBundle.PROP_LANGUAGE).getString());
+                                            }
+                                            if ( node.hasProperty(JcrResourceBundle.PROP_BASENAME) ) {
+                                                props.put(JcrResourceBundle.PROP_BASENAME, node.getProperty(JcrResourceBundle.PROP_BASENAME).getString());
+                                            }
+                                            return (AdapterType)new ValueMapDecorator(props);
+                                        } catch ( final RepositoryException re ) {
+                                            throw new RuntimeException(re);
+                                        }
+                                    }
+                                    return super.adaptTo(type);
+                                }
+                            };
+                            return rsrc;
                         }
 
+                        @Override
                         public void remove() {
                             throw new UnsupportedOperationException("remove");
                         }
@@ -96,35 +155,42 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
                 }
             }
 
+            @Override
             public Resource getResource(Resource base, String path) {
                 // TODO Auto-generated method stub
                 return null;
             }
 
+            @Override
             public Resource getResource(String path) {
                 // TODO Auto-generated method stub
                 return null;
             }
 
+            @Override
             public String[] getSearchPath() {
                 return new String[] {"/apps/", "/libs/"};
             }
 
+            @Override
             public Iterator<Resource> listChildren(Resource parent) {
                 // TODO Auto-generated method stub
                 return null;
             }
 
+            @Override
             public String map(HttpServletRequest request, String resourcePath) {
                 // TODO Auto-generated method stub
                 return null;
             }
 
+            @Override
             public String map(String resourcePath) {
                 // TODO Auto-generated method stub
                 return null;
             }
 
+            @Override
             public Iterator<Map<String, Object>> queryResources(String query,
                     String language) {
                 try {
@@ -133,10 +199,12 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
                     final String[] colNames = result.getColumnNames();
                     final RowIterator rows = result.getRows();
                     return new Iterator<Map<String, Object>>() {
+                        @Override
                         public boolean hasNext() {
                             return rows.hasNext();
                         }
 
+                        @Override
                         public Map<String, Object> next() {
                             Map<String, Object> row = new HashMap<String, Object>();
                             try {
@@ -144,8 +212,7 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
                                 for (int i = 0; i < values.length; i++) {
                                     Value v = values[i];
                                     if (v != null) {
-                                        row.put(colNames[i],
-                                            JcrResourceUtil.toJavaObject(values[i]));
+                                        row.put(colNames[i], values[i].getString());
                                     }
                                 }
                             } catch (RepositoryException re) {
@@ -154,6 +221,7 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
                             return row;
                         }
 
+                        @Override
                         public void remove() {
                             throw new UnsupportedOperationException("remove");
                         }
@@ -165,48 +233,119 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
                 }
             }
 
+            @Override
             public Resource resolve(HttpServletRequest request, String absPath) {
                 // TODO Auto-generated method stub
                 return null;
             }
 
+            @Override
             public Resource resolve(HttpServletRequest request) {
                 // TODO Auto-generated method stub
                 return null;
             }
 
+            @Override
             public Resource resolve(String absPath) {
                 // TODO Auto-generated method stub
                 return null;
             }
 
+            @Override
             public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
                 // TODO Auto-generated method stub
                 return null;
             }
 
+            @Override
             public void close() {
                 // nothing to do
             }
 
+            @Override
             public String getUserID() {
                 return null;
             }
 
+            @Override
             public boolean isLive() {
                 return true;
             }
 
+            @Override
             public ResourceResolver clone(Map<String, Object> authenticationInfo) {
                 return null;
             }
 
+            @Override
             public Iterator<String> getAttributeNames() {
                 return null;
             }
 
+            @Override
             public Object getAttribute(String name) {
                 return null;
+            }
+
+            @Override
+            public Iterable<Resource> getChildren(Resource parent) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public void delete(Resource resource) throws PersistenceException {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public Resource create(Resource parent, String name,
+                    Map<String, Object> properties) throws PersistenceException {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public void revert() {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void commit() throws PersistenceException {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public boolean hasChanges() {
+                // TODO Auto-generated method stub
+                return false;
+            }
+
+            @Override
+            public String getParentResourceType(Resource resource) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public String getParentResourceType(String resourceType) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public boolean isResourceType(Resource resource, String resourceType) {
+                // TODO Auto-generated method stub
+                return false;
+            }
+
+            @Override
+            public void refresh() {
+                // TODO Auto-generated method stub
+
             }
         };
 
@@ -329,17 +468,17 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
         for (Message msg : MESSAGES_DE.values()) {
             assertEquals(msg.message, bundle.getString(msg.key));
         }
-        
+
         bundle = new JcrResourceBundle(new Locale("en", "us"), null, resolver);
         for (Message msg : MESSAGES_EN_DASH_US.values()) {
             assertEquals(msg.message, bundle.getString(msg.key));
         }
-        
+
         bundle = new JcrResourceBundle(new Locale("en", "uk"), null, resolver);
         for (Message msg : MESSAGES_EN_UNDERSCORE_UK.values()) {
             assertEquals(msg.message, bundle.getString(msg.key));
         }
-        
+
         bundle = new JcrResourceBundle(new Locale("en", "au"), null, resolver);
         for (Message msg : MESSAGES_EN_UNDERSCORE_AU.values()) {
             assertEquals(msg.message, bundle.getString(msg.key));
