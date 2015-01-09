@@ -184,9 +184,12 @@
             <artifactId>servlet-api</artifactId>
         </dependency>
         
+        <!-- Version needs to be overwritten for SLING-3954 
+             Can be removed once we update to a new parent pom (>22) -->
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.annotations</artifactId>
+            <version>1.9.10</version>
         </dependency>
 
         <!-- Testing -->
