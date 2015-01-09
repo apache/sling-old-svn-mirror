@@ -43,7 +43,6 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
-import javax.jcr.query.Query;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
@@ -498,7 +497,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider {
         if (preloadBundles) {
             @SuppressWarnings("deprecation")
             Iterator<Map<String, Object>> bundles = getResourceResolver().queryResources(
-                    JcrResourceBundle.QUERY_LANGUAGE_ROOTS, Query.XPATH);
+                    JcrResourceBundle.QUERY_LANGUAGE_ROOTS, "xpath");
             Set<Key> usedKeys = new HashSet<Key>();
             while (bundles.hasNext()) {
                 Map<String,Object> bundle = bundles.next();
