@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.event.InstallationEvent;
 import org.apache.sling.installer.api.event.InstallationListener;
+import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.junit.After;
 import org.junit.Before;
@@ -38,11 +39,14 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.ConfigurationListener;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 @RunWith(PaxExam.class)
 
@@ -441,10 +445,44 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
 
     @Test
     public void testDeferredConfigRemove() throws Exception {
+        final AtomicInteger factoryCount = new AtomicInteger();
+
+        final ServiceTracker st = new ServiceTracker(bundleContext, InstallTaskFactory.class.getName(), new ServiceTrackerCustomizer() {
+
+            public void removedService(ServiceReference reference, Object service) {
+                bundleContext.ungetService(reference);
+                factoryCount.decrementAndGet();
+            }
+
+            public void modifiedService(ServiceReference reference, Object service) {
+            }
+
+            public Object addingService(ServiceReference reference) {
+                factoryCount.incrementAndGet();
+                return bundleContext.getService(reference);
+            }
+        });
+        st.open();
+
         // get config admin bundle and wait for service
         final Bundle configAdmin = this.getConfigAdminBundle();
         assertNotNull("ConfigAdmin bundle must be found", configAdmin);
         waitForConfigAdmin(true);
+
+        // when everything is up and running, we have two factories
+        waitForCondition("Task Factories should be 2", new Condition() {
+
+            @Override
+            boolean isTrue() throws Exception {
+                return factoryCount.get() == 2;
+            }
+
+            @Override
+            String additionalInfo() {
+                return "Task Factories is " + String.valueOf(factoryCount.get());
+            }
+
+        });
 
         // check that configuration is not available
         final String cfgPid = getClass().getSimpleName() + ".deferred." + uniqueID();
@@ -462,6 +500,21 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         configAdmin.stop();
         waitForConfigAdmin(false);
 
+        // only bundle task factory
+        waitForCondition("Task Factories should be 1", new Condition() {
+
+            @Override
+            boolean isTrue() throws Exception {
+                return factoryCount.get() == 1;
+            }
+
+            @Override
+            String additionalInfo() {
+                return "Task Factories is " + String.valueOf(factoryCount.get());
+            }
+
+        });
+
         // remove configuration
         installationEvents = 0;
         installer.updateResources(URL_SCHEME, null, new String[] {rsrc[0].getId()});
@@ -469,8 +522,26 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
 
         configAdmin.start();
         waitForConfigAdmin(true);
+
+        // when everything is up and running, we have two factories
+        waitForCondition("Task Factories should be 2", new Condition() {
+
+            @Override
+            boolean isTrue() throws Exception {
+                return factoryCount.get() == 2;
+            }
+
+            @Override
+            String additionalInfo() {
+                return "Task Factories is " + String.valueOf(factoryCount.get());
+            }
+
+        });
+
         waitForConfiguration("Config must be removed once ConfigurationAdmin restarts",
                 cfgPid, false);
+
+        st.close();
     }
 
     @Test
