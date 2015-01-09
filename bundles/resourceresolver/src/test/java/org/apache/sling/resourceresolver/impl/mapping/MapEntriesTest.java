@@ -47,6 +47,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.resourceresolver.impl.mapping.MapConfigurationProvider.VanityPathConfig;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -59,6 +60,8 @@ import org.osgi.service.event.EventAdmin;
 public class MapEntriesTest {
 
     private MapEntries mapEntries;
+    
+    File vanityBloomFilterFile;
 
     @Mock
     private MapConfigurationProvider resourceResolverFactory;
@@ -89,8 +92,8 @@ public class MapEntriesTest {
         configs.add(new VanityPathConfig("/vanityPathOnJcrContent", false));
 
         Collections.sort(configs);
-        
-        when(bundleContext.getDataFile("vanityBloomFilter.txt")).thenReturn(new File("vanityBloomFilter.txt"));
+        vanityBloomFilterFile = new File("src/main/resourcesvanityBloomFilter.txt");
+        when(bundleContext.getDataFile("vanityBloomFilter.txt")).thenReturn(vanityBloomFilterFile);
         when(resourceResolverFactory.getAdministrativeResourceResolver(null)).thenReturn(resourceResolver);
         when(resourceResolverFactory.isVanityPathEnabled()).thenReturn(true);
         when(resourceResolverFactory.getVanityPathConfig()).thenReturn(configs);
@@ -107,6 +110,11 @@ public class MapEntriesTest {
         field1.setAccessible(true);  
         field1.set(mapEntries, -1);
         
+    }
+    
+    @After
+    public void tearDown() throws Exception {
+        vanityBloomFilterFile.delete();
     }
 
     @Test
