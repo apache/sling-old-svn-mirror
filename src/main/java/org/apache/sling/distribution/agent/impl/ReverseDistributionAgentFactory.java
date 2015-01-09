@@ -80,9 +80,8 @@ public class ReverseDistributionAgentFactory extends AbstractDistributionAgentFa
     /**
      * endpoints property
      */
-    @Property(cardinality = -1)
+    @Property(cardinality = 100)
     public static final String EXPORTER_ENDPOINTS = "packageExporter.endpoints";
-
 
     /**
      * no. of items to poll property

@@ -82,13 +82,13 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
     /**
      * endpoints property
      */
-    @Property(cardinality = -1)
+    @Property(cardinality = 100)
     public static final String EXPORTER_ENDPOINTS = "packageExporter.endpoints";
 
     /**
      * endpoints property
      */
-    @Property(cardinality = -1)
+    @Property(cardinality = 100)
     public static final String IMPORTER_ENDPOINTS = "packageImporter.endpoints";
 
 
@@ -154,13 +154,16 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
         String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
 
 
-        String[] exporterEndpoints = PropertiesUtil.toStringArray(config.get(EXPORTER_ENDPOINTS), new String[0]);
+        Object exporterEndpointsValue = config.get(EXPORTER_ENDPOINTS);
+        Object importerEndpointsValue = config.get(IMPORTER_ENDPOINTS);
 
+        String[] exporterEndpoints = PropertiesUtil.toStringArray(exporterEndpointsValue, new String[0]);
+        Map<String, String> importerEndpointsMap = SettingsUtils.toUriMap(importerEndpointsValue);
 
-        DistributionQueueDispatchingStrategy dispatchingStrategy = null;
-        DistributionPackageImporter packageImporter = null;
-        Map<String, String> importerEndpointsMap = SettingsUtils.toUriMap(config.get(IMPORTER_ENDPOINTS));
         boolean useMultipleQueues = PropertiesUtil.toBoolean(config.get(USE_MULTIPLE_QUEUES), false);
+
+        DistributionQueueDispatchingStrategy dispatchingStrategy;
+        DistributionPackageImporter packageImporter;
 
         if (useMultipleQueues) {
             java.util.Set<String> var = importerEndpointsMap.keySet();
@@ -171,7 +174,6 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
             dispatchingStrategy = new SingleQueueDispatchingStrategy();
             packageImporter = new RemoteDistributionPackageImporter(transportSecretProvider, importerEndpointsMap, TransportEndpointStrategyType.All);
         }
-
 
         DistributionPackageExporter packageExporter = new RemoteDistributionPackageExporter(packageBuilder, transportSecretProvider, exporterEndpoints, TransportEndpointStrategyType.All, 1);
         DistributionQueueProvider queueProvider =  new JobHandlingDistributionQueueProvider(agentName, jobManager, context);

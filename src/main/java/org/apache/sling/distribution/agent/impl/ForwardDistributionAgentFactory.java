@@ -82,7 +82,7 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
     /**
      * endpoints property
      */
-    @Property(cardinality = -1)
+    @Property(cardinality = 100)
     public static final String IMPORTER_ENDPOINTS = "packageImporter.endpoints";
 
     @Property(label = "Use multiple queues", boolValue = false)
