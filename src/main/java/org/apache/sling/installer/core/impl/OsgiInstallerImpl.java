@@ -251,15 +251,17 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                 // merge potential new resources
                 this.mergeNewlyRegisteredResources();
 
+                synchronized ( this.resourcesLock ) {
+                    this.retryDuringTaskExecution = false;
+                }
+
                 // invoke transformers
                 this.transformResources();
 
                 // Compute tasks
                 final SortedSet<InstallTask> tasks = this.computeTasks();
+
                 // execute tasks and see if we have to stop processing
-                synchronized ( this.resourcesLock ) {
-                    this.retryDuringTaskExecution = false;
-                }
                 final ACTION action = this.executeTasks(tasks);
                 if ( action == ACTION.SLEEP ) {
                     synchronized ( this.resourcesLock ) {
