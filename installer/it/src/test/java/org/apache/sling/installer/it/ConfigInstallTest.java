@@ -454,9 +454,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         final Dictionary<String, Object> cfgData = new Hashtable<String, Object>();
         cfgData.put("foo", "bar");
         final InstallableResource[] rsrc = getInstallableResource(cfgPid, cfgData);
-        installationEvents = 0;
         installer.updateResources(URL_SCHEME, rsrc, null);
-        waitForInstallationEvents(2);
         waitForConfiguration("Config must be installed before stopping ConfigurationAdmin",
                 cfgPid, true);
 
@@ -468,6 +466,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         installationEvents = 0;
         installer.updateResources(URL_SCHEME, null, new String[] {rsrc[0].getId()});
         waitForInstallationEvents(2);
+
         configAdmin.start();
         waitForConfigAdmin(true);
         waitForConfiguration("Config must be removed once ConfigurationAdmin restarts",
