@@ -164,9 +164,9 @@ public class ServicesListener {
          * @see org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.ServiceEvent)
          */
         public void serviceChanged(ServiceEvent event) {
-            if (event.getType() == ServiceEvent.REGISTERED && this.service == null ) {
+            if (event.getType() == ServiceEvent.REGISTERED ) {
                 this.retainService();
-            } else if ( event.getType() == ServiceEvent.UNREGISTERING && this.service != null ) {
+            } else if ( event.getType() == ServiceEvent.UNREGISTERING ) {
                 this.releaseService();
             }
         }
