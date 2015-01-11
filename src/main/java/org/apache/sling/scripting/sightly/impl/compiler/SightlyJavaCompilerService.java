@@ -22,7 +22,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -142,15 +147,86 @@ public class SightlyJavaCompilerService {
             }
         } else {
             try {
-                // the POJO was compiled but not cached by the unitChangeMonitor
+                // the POJO might have been compiled before from the repo but not cached by the unitChangeMonitor
                 return loadObject(className);
             } catch (CompilerException e) {
                 // the POJO was never compiled, nor cached by unitChangeMonitor
-                Resource pojoResource = resolver.getResource(pojoPath);
-                if (pojoResource != null) {
-                    return compileSource(pojoResource, className);
+                Set<String> possiblePaths = getPossiblePojoPaths(pojoPath);
+                Resource pojoResource;
+                for (String possiblePath : possiblePaths) {
+                    pojoResource = resolver.getResource(possiblePath);
+                    if (pojoResource != null) {
+                        return compileSource(pojoResource, className);
+                    }
                 }
                 throw new CompilerException(CompilerException.CompilerExceptionCause.MISSING_REPO_POJO);
+            }
+        }
+    }
+
+    /**
+     * For a JCR path obtained from expanding a generated class name this method generates all the alternative path names that can be
+     * obtained by expanding the mentioned class' name.
+     *
+     * @param originalPath one of the possible paths
+     * @return a {@link Set} containing all the alternative paths if symbol replacement was needed; otherwise the set will contain just
+     * the {@code originalPath}
+     */
+    private Set<String> getPossiblePojoPaths(String originalPath) {
+        Set<String> possiblePaths = new LinkedHashSet<String>();
+        possiblePaths.add(originalPath);
+        Map<Integer, String> chars = new HashMap<Integer, String>();
+        AmbiguousPathSymbol[] symbols = AmbiguousPathSymbol.values();
+        for (AmbiguousPathSymbol symbol : symbols) {
+            String pathCopy = originalPath.substring(0, originalPath.lastIndexOf("/"));
+            int actualIndex = 0;
+            boolean firstPass = true;
+            while (pathCopy.indexOf(symbol.getSymbol()) != -1) {
+                int pos = pathCopy.indexOf(symbol.getSymbol());
+                actualIndex += pos;
+                if (!firstPass) {
+                    actualIndex += 1;
+                }
+                chars.put(actualIndex, symbol.getSymbol().toString());
+                pathCopy = pathCopy.substring(pos + 1);
+                firstPass = false;
+            }
+        }
+        if (chars.size() > 0) {
+            ArrayList<AmbiguousPathSymbol[]> possibleArrangements = new ArrayList<AmbiguousPathSymbol[]>();
+            populateArray(possibleArrangements, new AmbiguousPathSymbol[chars.size()], 0);
+            Integer[] indexes = chars.keySet().toArray(new Integer[chars.size()]);
+            for (AmbiguousPathSymbol[] arrangement : possibleArrangements) {
+                char[] possiblePath = originalPath.toCharArray();
+                for (int i = 0; i < arrangement.length; i++) {
+                    char currentSymbol = arrangement[i].getSymbol();
+                    int currentIndex = indexes[i];
+                    possiblePath[currentIndex] = currentSymbol;
+                }
+                possiblePaths.add(new String(possiblePath));
+            }
+        }
+        return possiblePaths;
+    }
+
+    /**
+     * Given an initial array with its size equal to the number of elements of a needed arrangement, this method will generate all
+     * the possible arrangements of values for this array in the provided {@code arrayCollection}. The values with which the array is
+     * populated are the {@link AmbiguousPathSymbol} constants.
+     *
+     * @param arrayCollection the collection that will store the arrays
+     * @param symbolsArrangementArray an initial array that will be used for collecting the results
+     * @param index the initial index of the array that will be populated (needed for recursion purposes; start with 0 for the initial call)
+     */
+    private void populateArray(ArrayList<AmbiguousPathSymbol[]> arrayCollection, AmbiguousPathSymbol[] symbolsArrangementArray, int index) {
+        if (symbolsArrangementArray.length > 0) {
+            if (index == symbolsArrangementArray.length) {
+                arrayCollection.add(symbolsArrangementArray.clone());
+            } else {
+                for (AmbiguousPathSymbol symbol : AmbiguousPathSymbol.values()) {
+                    symbolsArrangementArray[index] = symbol;
+                    populateArray(arrayCollection, symbolsArrangementArray, index + 1);
+                }
             }
         }
     }
@@ -239,7 +315,9 @@ public class SightlyJavaCompilerService {
     }
 
     private String getPathFromJavaName(String className) {
-        return "/" + className.replaceAll("\\.", "/") + ".java";
+        String packageName = className.substring(0, className.lastIndexOf('.'));
+        String shortClassName = className.substring(packageName.length() + 1);
+        return "/" + packageName.replace(".", "/").replace("_", "-") + "/" + shortClassName + ".java";
     }
 
     private String createErrorMsg(List<CompilerMessage> errors) {
@@ -298,6 +376,25 @@ public class SightlyJavaCompilerService {
 
         public String getMainClassName() {
             return fqcn;
+        }
+    }
+
+    /**
+     * The {@code AmbiguousPathSymbol} holds symbols that are valid for a JCR path but that will get transformed to a "_" to obey the
+     * Java naming conventions.
+     */
+    enum AmbiguousPathSymbol {
+        DASH('-'),
+        UNDERSCORE('_');
+
+        private Character symbol;
+
+        private AmbiguousPathSymbol(Character symbol) {
+            this.symbol = symbol;
+        }
+
+        public Character getSymbol() {
+            return symbol;
         }
     }
 
