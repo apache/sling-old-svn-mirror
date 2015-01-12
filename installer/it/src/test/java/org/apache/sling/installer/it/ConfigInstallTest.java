@@ -30,8 +30,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.event.InstallationEvent;
 import org.apache.sling.installer.api.event.InstallationListener;
-import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.ResourceState;
+import org.apache.sling.installer.api.tasks.ResourceTransformer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -95,9 +95,11 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
     /**
      * @see org.osgi.service.cm.ConfigurationListener#configurationEvent(org.osgi.service.cm.ConfigurationEvent)
      */
-    public void configurationEvent(ConfigurationEvent e) {
-        synchronized ( events ) {
-            events.add(e);
+    public void configurationEvent(final ConfigurationEvent e) {
+        if ( e.getType() == ConfigurationEvent.CM_DELETED || e.getType() == ConfigurationEvent.CM_UPDATED) {
+            synchronized ( events ) {
+                events.add(e);
+            }
         }
 	}
 
@@ -445,24 +447,41 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
 
     @Test
     public void testDeferredConfigRemove() throws Exception {
-        final AtomicInteger factoryCount = new AtomicInteger();
+        final AtomicInteger transformerCount = new AtomicInteger();
 
-        final ServiceTracker st = new ServiceTracker(bundleContext, InstallTaskFactory.class.getName(), new ServiceTrackerCustomizer() {
+        final ServiceTracker st = new ServiceTracker(bundleContext,
+                ResourceTransformer.class.getName(), new ServiceTrackerCustomizer() {
 
             public void removedService(ServiceReference reference, Object service) {
                 bundleContext.ungetService(reference);
-                factoryCount.decrementAndGet();
+                transformerCount.decrementAndGet();
             }
 
             public void modifiedService(ServiceReference reference, Object service) {
             }
 
             public Object addingService(ServiceReference reference) {
-                factoryCount.incrementAndGet();
+                transformerCount.incrementAndGet();
                 return bundleContext.getService(reference);
             }
         });
         st.open();
+
+        final AtomicInteger expectedCount = new AtomicInteger();
+        final Condition cond = new Condition() {
+
+            @Override
+            boolean isTrue() throws Exception {
+                return transformerCount.get() == expectedCount.get();
+            }
+
+            @Override
+            String additionalInfo() {
+                return "Resource transformer count is " + String.valueOf(transformerCount.get()) +
+                       ", should be " + String.valueOf(expectedCount.get());
+            }
+
+        };
 
         // get config admin bundle and wait for service
         final Bundle configAdmin = this.getConfigAdminBundle();
@@ -470,19 +489,8 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         waitForConfigAdmin(true);
 
         // when everything is up and running, we have two factories
-        waitForCondition("Task Factories should be 2", new Condition() {
-
-            @Override
-            boolean isTrue() throws Exception {
-                return factoryCount.get() == 2;
-            }
-
-            @Override
-            String additionalInfo() {
-                return "Task Factories is " + String.valueOf(factoryCount.get());
-            }
-
-        });
+        expectedCount.set(2);
+        waitForCondition(null, cond);
 
         // check that configuration is not available
         final String cfgPid = getClass().getSimpleName() + ".deferred." + uniqueID();
@@ -495,48 +503,28 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         installer.updateResources(URL_SCHEME, rsrc, null);
         waitForConfiguration("Config must be installed before stopping ConfigurationAdmin",
                 cfgPid, true);
+        this.waitForResource(URL_SCHEME + ":" + rsrc[0].getId(), ResourceState.INSTALLED);
 
         // Configuration uninstalls must be deferred if ConfigAdmin service is stopped
         configAdmin.stop();
         waitForConfigAdmin(false);
 
-        // only bundle task factory
-        waitForCondition("Task Factories should be 1", new Condition() {
-
-            @Override
-            boolean isTrue() throws Exception {
-                return factoryCount.get() == 1;
-            }
-
-            @Override
-            String additionalInfo() {
-                return "Task Factories is " + String.valueOf(factoryCount.get());
-            }
-
-        });
+        // only bundle transformer
+        expectedCount.set(1);
+        waitForCondition(null, cond);
 
         // remove configuration
         installationEvents = 0;
         installer.updateResources(URL_SCHEME, null, new String[] {rsrc[0].getId()});
         waitForInstallationEvents(2);
+        this.waitForResource(URL_SCHEME + ":" + rsrc[0].getId(), ResourceState.UNINSTALL);
 
         configAdmin.start();
         waitForConfigAdmin(true);
 
-        // when everything is up and running, we have two factories
-        waitForCondition("Task Factories should be 2", new Condition() {
-
-            @Override
-            boolean isTrue() throws Exception {
-                return factoryCount.get() == 2;
-            }
-
-            @Override
-            String additionalInfo() {
-                return "Task Factories is " + String.valueOf(factoryCount.get());
-            }
-
-        });
+        // when everything is up and running, we have two transformers again
+        expectedCount.set(2);
+        waitForCondition(null, cond);
 
         waitForConfiguration("Config must be removed once ConfigurationAdmin restarts",
                 cfgPid, false);
