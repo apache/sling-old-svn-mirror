@@ -22,8 +22,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -67,7 +67,7 @@ public class JcrResourceBundle extends ResourceBundle {
 
     private final Locale locale;
 
-    private final Set<String> languageRoots = new HashSet<String>();
+    private final Set<String> languageRoots = new LinkedHashSet<String>();
 
     JcrResourceBundle(Locale locale, String baseName,
             ResourceResolver resourceResolver) {
@@ -218,7 +218,7 @@ public class JcrResourceBundle extends ResourceBundle {
         final String localeRFC4646String = toRFC4646String(locale);
         final String localeRFC4646StringLower = localeRFC4646String.toLowerCase();
 
-        Set<String> paths = new HashSet<String>();
+        Set<String> paths = new LinkedHashSet<String>();
         @SuppressWarnings("deprecation")
         Iterator<Resource> bundles = resourceResolver.findResources(QUERY_LANGUAGE_ROOTS, "xpath");
         while (bundles.hasNext()) {
