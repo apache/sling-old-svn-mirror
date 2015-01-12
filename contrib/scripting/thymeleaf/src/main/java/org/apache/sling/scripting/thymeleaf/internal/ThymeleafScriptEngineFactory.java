@@ -42,7 +42,9 @@ import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.dialect.IDialect;
 import org.thymeleaf.messageresolver.IMessageResolver;
+import org.thymeleaf.standard.StandardDialect;
 import org.thymeleaf.templateresolver.ITemplateResolver;
 
 @Component(
@@ -64,6 +66,9 @@ public class ThymeleafScriptEngineFactory extends AbstractScriptEngineFactory {
 
     @Reference(referenceInterface = IMessageResolver.class, cardinality = ReferenceCardinality.MANDATORY_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
     final private Set<IMessageResolver> messageResolvers = new LinkedHashSet<IMessageResolver>();
+
+    @Reference(referenceInterface = IDialect.class, cardinality = ReferenceCardinality.MANDATORY_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
+    final private Set<IDialect> dialects = new LinkedHashSet<IDialect>();
 
     private TemplateEngine templateEngine;
 
@@ -131,6 +136,18 @@ public class ThymeleafScriptEngineFactory extends AbstractScriptEngineFactory {
         configureTemplateEngine();
     }
 
+    protected synchronized void bindDialects(final IDialect dialect) {
+        logger.debug("binding a dialect for prefix '{}'", dialect.getPrefix());
+        dialects.add(dialect);
+        configureTemplateEngine();
+    }
+
+    protected synchronized void unbindDialects(final IDialect dialect) {
+        logger.debug("unbinding a dialect for prefix '{}'", dialect.getPrefix());
+        dialects.remove(dialect);
+        configureTemplateEngine();
+    }
+
     private synchronized void configure(final ComponentContext componentContext) {
         final Dictionary properties = componentContext.getProperties();
 
@@ -155,6 +172,11 @@ public class ThymeleafScriptEngineFactory extends AbstractScriptEngineFactory {
         }
         if (messageResolvers.size() > 0) {
             templateEngine.setMessageResolvers(messageResolvers);
+        }
+        if (dialects.size() > 0) {
+            templateEngine.setDialects(dialects);
+            final IDialect standardDialect = new StandardDialect();
+            templateEngine.addDialect(standardDialect);
         }
     }
 
