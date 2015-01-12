@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -67,7 +68,7 @@ public class JcrResourceBundle extends ResourceBundle {
 
     private final Locale locale;
 
-    private final Set<String> languageRoots = new LinkedHashSet<String>();
+    private final Set<String> languageRoots = new HashSet<String>();
 
     JcrResourceBundle(Locale locale, String baseName,
             ResourceResolver resourceResolver) {
@@ -152,8 +153,11 @@ public class JcrResourceBundle extends ResourceBundle {
      */
     @SuppressWarnings("deprecation")
     private Map<String, Object> loadFully(final ResourceResolver resourceResolver, Set<String> roots, Set<String> languageRoots) {
-        final Map<String, Object> rest = new HashMap<String, Object>();
-        for (String root: roots) {
+        final List<List<Map<String, Object>>> allResources = new ArrayList<List<Map<String,Object>>>();
+
+        final String[] path = resourceResolver.getSearchPath();
+
+        for (final String root: roots) {
             String fullLoadQuery = String.format(QUERY_MESSAGES_FORMAT, ISO9075.encodePath(root));
 
             log.debug("Executing full load query {}", fullLoadQuery);
@@ -168,12 +172,15 @@ public class JcrResourceBundle extends ResourceBundle {
             }
 
             if ( bundles != null ) {
-                final String[] path = resourceResolver.getSearchPath();
 
+                final Map<String, Object> rest = new HashMap<String, Object>();
                 final List<Map<String, Object>> res0 = new ArrayList<Map<String, Object>>();
                 for (int i = 0; i < path.length; i++) {
                     res0.add(new HashMap<String, Object>());
                 }
+                res0.add(rest); // add global list at the end
+
+                allResources.add(res0);
 
                 while (bundles.hasNext()) {
                     final Map<String, Object> row = bundles.next();
@@ -200,16 +207,27 @@ public class JcrResourceBundle extends ResourceBundle {
                 for (int i = path.length - 1; i >= 0; i--) {
                     final Map<String, Object> resources = res0.get(i);
                     if (!resources.isEmpty()) {
-                        rest.putAll(resources);
                         // also remember root
                         languageRoots.add(root);
-
                     }
                 }
             }
         }
+        final Map<String, Object> result = new HashMap<String, Object>();
+        for(final List<Map<String, Object>> current : allResources) {
+            final Map<String, Object> rest = current.get(current.size() - 1);
+            result.putAll(rest);
+        }
 
-        return rest;
+        for (int i = path.length - 1; i >= 0; i--) {
+
+            for(final List<Map<String, Object>> current : allResources) {
+                final Map<String, Object> resources = current.get(i);
+                result.putAll(resources);
+            }
+        }
+
+        return result;
     }
 
     private Set<String> loadPotentialLanguageRoots(ResourceResolver resourceResolver, Locale locale, String baseName) {
