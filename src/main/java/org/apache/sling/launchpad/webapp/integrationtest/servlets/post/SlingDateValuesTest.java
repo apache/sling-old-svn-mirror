@@ -24,6 +24,8 @@ import java.util.Locale;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.commons.testing.integration.NameValuePairList;
 import org.apache.sling.servlets.post.SlingPostConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *  checks if the date parsing for non jcr-dates works.
@@ -32,9 +34,8 @@ import org.apache.sling.servlets.post.SlingPostConstants;
 public class SlingDateValuesTest extends HttpTestBase {
 
     public static final String TEST_BASE_PATH = "/sling-tests";
-
-    // TODO: the commented formats do not work beacuse of SLING-242
-    //       the + of the timezone offset is stripped by sling
+    
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final SimpleDateFormat[] testFormats = new SimpleDateFormat[]{
         new SimpleDateFormat("EEE MMM dd yyyy HH:mm:ss 'GMT'Z", Locale.US),
@@ -65,15 +66,19 @@ public class SlingDateValuesTest extends HttpTestBase {
         String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
 
         // default behaviour writes empty string
+        log.info("Expecting [{}] -> [{}] (single value)", input, expected);
         assertJavascript(expected, content, "out.println(data.someDate)");
+        
         assertJavascript(expected, content, "out.println(data.manyDates[0])");
+        
+        log.info("Expecting [{}] -> [{}] (multi-value)", input2, expected2);
         assertJavascript(expected2, content, "out.println(data.manyDates[1])");
     }
 
     public void testDateValues() throws IOException {
         SimpleDateFormat ecmaFmt = new SimpleDateFormat("EEE MMM dd yyyy HH:mm:ss 'GMT'Z", Locale.US);
         Date now = new Date();
-        Date date2 = new Date(1000);
+        Date date2 = new Date(10000042L);
         String nowStr = ecmaFmt.format(now);
         String date2Str = ecmaFmt.format(date2);
         for (SimpleDateFormat fmt: testFormats) {
@@ -82,5 +87,4 @@ public class SlingDateValuesTest extends HttpTestBase {
             doDateTest(nowStr, testStr, date2Str, test2Str);
         }
     }
-
 }
