@@ -55,12 +55,12 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad.installer</artifactId>
-            <version>1.2.3-SNAPSHOT</version>
+            <version>1.2.2</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.installer.core</artifactId>
-            <version>3.6.1-SNAPSHOT</version>
+            <version>3.6.0</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
@@ -319,7 +319,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.installer.factory.configuration</artifactId>
-            <version>1.1.1-SNAPSHOT</version>
+            <version>1.1.0</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
