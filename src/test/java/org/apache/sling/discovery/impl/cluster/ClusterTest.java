@@ -144,9 +144,10 @@ public class ClusterTest {
     	instance1.stopHeartbeats();
         instance2.stop();
         instance1.stop();
-        instance1 = Instance.newStandaloneInstance("/var/discovery/impl/", "firstInstance", true, 1, 1);
+	// SLING-4302 : first set the heartbeatTimeout to 100 sec - large enough to work on all CI instances
+        instance1 = Instance.newStandaloneInstance("/var/discovery/impl/", "firstInstance", true, 100, 1);
         instance2 = Instance.newClusterInstance("/var/discovery/impl/", "secondInstance", instance1,
-                false, 1, 1);
+                false, 100, 1);
         assertNotNull(instance1);
         assertNotNull(instance2);
 
@@ -185,6 +186,9 @@ public class ClusterTest {
         assertEquals(2, instance2.getClusterViewService().getClusterView().getInstances().size());
         
         // let instance2 'die' by now longer doing heartbeats
+	// SLING-4302 : then set the heartbeatTimeouts back to 1 sec to have them properly time out with the sleeps applied below
+        instance2.getConfig().setHeartbeatTimeout(1);
+        instance1.getConfig().setHeartbeatTimeout(1);
         instance2.stopHeartbeats(); // would actually not be necessary as it was never started.. this test only runs heartbeats manually
         instance1.runHeartbeatOnce();
         Thread.sleep(500);
