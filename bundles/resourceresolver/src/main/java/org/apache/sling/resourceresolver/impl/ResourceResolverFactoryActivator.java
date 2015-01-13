@@ -190,14 +190,14 @@ public class ResourceResolverFactoryActivator {
               label = "Maximum number of cached vanity path entries",
               description = "The maximum number of cached vanity path entries. " +
                             "Default is -1 (no limit)")
-    private static final String PROP_MAX_CACHED_VANITY_PATHS = "resource.resolver.max.vanityPath.entries";
+    private static final String PROP_MAX_CACHED_VANITY_PATHS = "resource.resolver.vanitypath.maxEntries";
 
     private static final int DEFAULT_VANITY_BLOOM_FILTER_MAX_BYTES = 1024000;
     @Property(longValue = DEFAULT_VANITY_BLOOM_FILTER_MAX_BYTES,
               label = "Maximum number of vanity bloom filter bytes",
               description = "The maximum number of vanity bloom filter bytes. " +
                             "Changing this value is subject to vanity bloom filter rebuild")
-    private static final String PROP_VANITY_BLOOM_FILTER_MAX_BYTES = "resource.resolver.vanity.bloom.filter.max.bytes";
+    private static final String PROP_VANITY_BLOOM_FILTER_MAX_BYTES = " resource.resolver.vanitypath.bloomfilter.maxBytes";
     
     private static final boolean DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION = true;
     @Property(boolValue = DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION ,
