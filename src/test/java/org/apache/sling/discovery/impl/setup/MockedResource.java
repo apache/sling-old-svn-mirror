@@ -37,8 +37,12 @@ import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MockedResource extends SyntheticResource {
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final MockedResourceResolver mockedResourceResolver;
     private Session session;
@@ -88,6 +92,7 @@ public class MockedResource extends SyntheticResource {
             try {
                 return (AdapterType) getSession().getNode(getPath());
             } catch (Exception e) {
+                logger.error("Exception occurred: "+e, e);
                 throw new RuntimeException("Exception occurred: " + e, e);
             }
         } else if (type.equals(ValueMap.class)) {
@@ -253,6 +258,9 @@ public class MockedResource extends SyntheticResource {
                         final Node node = session.getNode(getPath());
                         if (node==null) {
                         	return null;
+                        }
+                        if (!node.hasProperty(name)) {
+                            return null;
                         }
                         Property p = node.getProperty(name);
                         if (p==null) {
