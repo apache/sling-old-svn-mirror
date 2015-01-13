@@ -84,7 +84,7 @@ public final class SimpleDistributionRequest implements DistributionRequest {
     @Override
     public String toString() {
         return "SimpleDistributionRequest{" +
-                ", requestType=" + requestType +
+                "requestType=" + requestType +
                 ", paths=" + Arrays.toString(paths) +
                 ", deep=" + deep +
                 '}';
