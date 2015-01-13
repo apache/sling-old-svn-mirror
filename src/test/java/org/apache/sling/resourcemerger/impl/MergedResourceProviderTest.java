@@ -76,6 +76,9 @@ public class MergedResourceProviderTest {
                                             .resource(".4").p("a", "1").p("b", "2").p("c", "3")
                                             .resource(".Y")
                                             .resource(".Z")
+                                          .resource("/libs/a/Y/a")
+                                          .resource("/libs/a/Y/b")
+                                          .resource("/libs/a/Y/c")
                                         .commit();
 
         this.provider = new CRUDMergingResourceProvider("/merged", new MergingResourcePicker());
@@ -118,6 +121,21 @@ public class MergedResourceProviderTest {
         assertTrue(names.contains("4"));
         assertTrue(names.contains("Y"));
         assertTrue(names.contains("X"));
+    }
+
+    @Test public void testListSubChildren() {
+        final Resource rsrcY = this.provider.getResource(this.resolver, "/merged/a/Y");
+        assertNotNull(rsrcY);
+        final Iterator<Resource> i = this.provider.listChildren(rsrcY);
+        assertNotNull(i);
+        final List<String> names = new ArrayList<String>();
+        while ( i.hasNext() ) {
+            names.add(i.next().getName());
+        }
+        assertEquals(3, names.size());
+        assertTrue(names.contains("a"));
+        assertTrue(names.contains("b"));
+        assertTrue(names.contains("c"));
     }
 
     @Test public void testProperties() {
