@@ -45,7 +45,8 @@ public class MockedResourceResolver implements ResourceResolver {
 
     private static final Logger LOG = LoggerFactory.getLogger(MockedResourceResolver.class);
 
-    private static final String[] SEARCH_PATHS = new String[] {"/apps", "/libs"};
+    // must end with a slash according to ResourceResolver.getSearchPaths()
+    private static final String[] SEARCH_PATHS = new String[] {"/apps/", "/libs/"};
 
     public final RepositoryProvider repoProvider;
     private List<MockedResource> resources = new LinkedList<MockedResource>();

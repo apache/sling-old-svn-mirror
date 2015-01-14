@@ -68,7 +68,7 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(ValidationServiceImpl.class);
 
-    static final String MODEL_XPATH_QUERY = "/jcr:root%s//" + Constants.MODELS_HOME + "/*[@sling:resourceType=\"%s\" and @%s=\"%s\"]";
+    static final String MODEL_XPATH_QUERY = "/jcr:root%s/" + Constants.MODELS_HOME + "/*[@sling:resourceType=\"%s\" and @%s=\"%s\"]";
     static final String[] TOPICS = {SlingConstants.TOPIC_RESOURCE_REMOVED, SlingConstants.TOPIC_RESOURCE_CHANGED,
             SlingConstants.TOPIC_RESOURCE_ADDED};
 
@@ -93,6 +93,10 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
     // ValidationService ###################################################################################################################
     @Override
     public ValidationModel getValidationModel(String validatedResourceType, String resourcePath) {
+        if (validatedResourceType == null || resourcePath == null) {
+            throw new IllegalArgumentException("ValidationService.getValidationModel - cannot accept null parameters");
+        }
+        validatedResourceType = getRelativeResourceType(validatedResourceType);
         ValidationModel model = null;
         Trie<JCRValidationModel> modelsForResourceType = validationModelsCache.get(validatedResourceType);
         if (modelsForResourceType != null) {
@@ -115,7 +119,7 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
     @Override
     public ValidationResult validate(Resource resource, ValidationModel model) {
         if (resource == null || model == null) {
-            throw new IllegalArgumentException("ValidationResult.validate - cannot accept null parameters");
+            throw new IllegalArgumentException("ValidationService.validate - cannot accept null parameters");
         }
         ValidationResultImpl result = new ValidationResultImpl();
 
@@ -125,6 +129,39 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
         // validate children resources, if any
         validateChildren(resource, "", model.getChildren(), result);
         return result;
+    }
+
+    /**
+     * If the given resourceType is starting with a "/", it will strip out the leading search path from the given resource type.
+     * Otherwise it will just return the given resource type (as this is already relative).
+     * @param resourceType
+     * @return a relative resource type (without the leading search path)
+     * @throws IllegalArgumentException in case the resource type is starting with a "/" but not with any of the search paths.
+     */
+    protected String getRelativeResourceType(String resourceType) throws IllegalArgumentException {
+        if (resourceType.startsWith("/")) {
+            LOG.debug("try to strip the search path from the resource type");
+            ResourceResolver rr = null;
+            try {
+                rr = rrf.getAdministrativeResourceResolver(null);
+                for (String searchPath : rr.getSearchPath()) {
+                    if (resourceType.startsWith(searchPath)) {
+                        resourceType = resourceType.substring(searchPath.length());
+                        return resourceType;
+                    }
+                }
+                throw new IllegalArgumentException("Can only deal with resource types inside the resource resolver's search path (" + StringUtils.join(rr.getSearchPath()) 
+                        + ") but given resource type " + resourceType + " is outside!");
+            } catch (LoginException e) {
+                throw new IllegalStateException("Could not login as administrator to figure out search paths", e);
+            } finally {
+                if (rr != null) {
+                    rr.close();
+                }
+            }
+        }
+        return resourceType;
+        
     }
 
     /**
@@ -316,9 +353,6 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
             rr = rrf.getAdministrativeResourceResolver(null);
             String[] searchPaths = rr.getSearchPath();
             for (String searchPath : searchPaths) {
-                if (searchPath.endsWith("/")) {
-                    searchPath = searchPath.substring(0, searchPath.length() - 1);
-                }
                 final String queryString = String.format(MODEL_XPATH_QUERY, searchPath, Constants.VALIDATION_MODEL_RESOURCE_TYPE,
                         Constants.VALIDATED_RESOURCE_TYPE, validatedResourceType);
                 Iterator<Resource> models = rr.findResources(queryString, Query.XPATH);
