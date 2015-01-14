@@ -31,6 +31,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.sling.testing.tools.http.RequestBuilder;
 import org.apache.sling.testing.tools.http.RequestExecutor;
 import org.apache.sling.testing.tools.jarexec.JarExecutor;
+import org.apache.sling.testing.tools.junit.TestDescriptionInterceptor;
 import org.apache.sling.testing.tools.osgi.WebconsoleClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,6 +79,7 @@ public class SlingTestBase implements SlingInstance {
         this.slingTestState = slingTestState;
         this.systemProperties = systemProperties;
         this.keepJarRunning = "true".equals(systemProperties.getProperty(KEEP_JAR_RUNNING_PROP));
+        this.httpClient.addRequestInterceptor(new TestDescriptionInterceptor());
 
 
         final String configuredUrl = systemProperties.getProperty(TEST_SERVER_URL_PROP, systemProperties.getProperty("launchpad.http.server.url"));

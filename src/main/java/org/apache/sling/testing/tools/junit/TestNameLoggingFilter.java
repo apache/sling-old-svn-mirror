@@ -16,8 +16,8 @@
  */
 package org.apache.sling.testing.tools.junit;
 
-import static org.apache.sling.testing.tools.junit.TestDescriptionInterceptor.TEST_CLASS_HEADER;
-import static org.apache.sling.testing.tools.junit.TestDescriptionInterceptor.TEST_NAME_HEADER;
+import static org.apache.sling.testing.tools.junit.RemoteLogDumper.TEST_CLASS;
+import static org.apache.sling.testing.tools.junit.RemoteLogDumper.TEST_NAME;
 
 import java.io.IOException;
 
@@ -54,17 +54,17 @@ public class TestNameLoggingFilter implements Filter{
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
             throws IOException, ServletException {
         final HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
-        final String className = httpRequest.getHeader(TEST_CLASS_HEADER);
+        final String className = httpRequest.getHeader(TEST_CLASS);
         
         if(className == null) {
             filterChain.doFilter(servletRequest,servletResponse);
             return;
         }
         
-        final String testName = httpRequest.getHeader(TEST_NAME_HEADER);
+        final String testName = httpRequest.getHeader(TEST_NAME);
         try {
-            MDC.put(TEST_NAME_HEADER,testName);
-            MDC.put(TEST_CLASS_HEADER,className);
+            MDC.put(TEST_NAME,testName);
+            MDC.put(TEST_CLASS,className);
 
             log.info("Starting request as part of test ==== {}.{} ====",className,testName);
 
@@ -73,8 +73,8 @@ public class TestNameLoggingFilter implements Filter{
         } finally {
             log.info("Finishing request as part of test ==== {}.{} ====",className,testName);
 
-            MDC.remove(TEST_NAME_HEADER);
-            MDC.remove(TEST_CLASS_HEADER);
+            MDC.remove(TEST_NAME);
+            MDC.remove(TEST_CLASS);
         }
     }
 
