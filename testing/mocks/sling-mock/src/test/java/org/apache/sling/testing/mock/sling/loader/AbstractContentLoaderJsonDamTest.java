@@ -20,13 +20,17 @@ package org.apache.sling.testing.mock.sling.loader;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -83,14 +87,14 @@ public abstract class AbstractContentLoaderJsonDamTest {
         assertArrayEquals(new String[] { "stockphotography:business/business_people", "properties:style/color",
                 "properties:orientation/landscape" }, props.get("app:tags", String[].class));
 
-        /*
-         TODO: this is not working yet in the different resource resolver types - goal: validate binary is present, but empty.
+        // validate that a binary data node is present, but empty
         Resource binaryMetadata = this.resourceResolver
                 .getResource("/content/dam/sample/portraits/scott_reynolds.jpg/jcr:content/renditions/original/jcr:content");
         ValueMap binaryProps = ResourceUtil.getValueMap(binaryMetadata);
         InputStream is = binaryProps.get(JcrConstants.JCR_DATA, InputStream.class);
         assertNotNull(is);
-        */
+        byte[] binaryData = IOUtils.toByteArray(is);
+        assertEquals(0, binaryData.length);
     }
 
 }
