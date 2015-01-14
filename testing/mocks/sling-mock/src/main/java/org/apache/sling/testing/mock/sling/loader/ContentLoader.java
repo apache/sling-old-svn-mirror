@@ -18,6 +18,7 @@
  */
 package org.apache.sling.testing.mock.sling.loader;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
@@ -55,6 +56,7 @@ public final class ContentLoader {
     private static final String REFERENCE = "jcr:reference:";
     private static final String PATH = "jcr:path:";
     private static final String CONTENTTYPE_OCTET_STREAM = "application/octet-stream";
+    private static final String JCR_DATA_PLACEHOLDER = ":jcr:data";
 
     private static final Set<String> IGNORED_NAMES = ImmutableSet.of(
             JcrConstants.JCR_PRIMARYTYPE,
@@ -67,7 +69,6 @@ public final class ContentLoader {
             JcrConstants.JCR_VERSIONHISTORY,
             "jcr:checkedOut",
             "jcr:isCheckedOut",
-            ":jcr:data",
             "rep:policy");
 
     private final ResourceResolver resourceResolver;
@@ -204,7 +205,11 @@ public final class ContentLoader {
         JSONArray names = jsonObject.names();
         for (int i = 0; names != null && i < names.length(); i++) {
             final String name = names.getString(i);
-            if (!IGNORED_NAMES.contains(name)) {
+            if (StringUtils.equals(name, JCR_DATA_PLACEHOLDER)) {
+                // we cannot import binary data here - but to avoid complaints by JCR we create it with empty binary data
+                this.setProperty(props, JcrConstants.JCR_DATA, new ByteArrayInputStream(new byte[0]));
+            }
+            else if (!IGNORED_NAMES.contains(name)) {
                 Object obj = jsonObject.get(name);
                 if (!(obj instanceof JSONObject)) {
                     this.setProperty(props, name, obj);
