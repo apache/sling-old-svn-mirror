@@ -731,6 +731,20 @@ public class ValidationServiceImplTest {
             }
         }
     }
+    
+    @Test
+    public void testGetRelativeResourcePath() {
+        // return relative paths unmodified
+        Assert.assertThat(validationService.getRelativeResourceType("relative/path"), Matchers.equalTo("relative/path"));
+        Assert.assertThat(validationService.getRelativeResourceType("/apps/relative/path"), Matchers.equalTo("relative/path"));
+        Assert.assertThat(validationService.getRelativeResourceType("/libs/relative/path"), Matchers.equalTo("relative/path"));
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void testGetRelativeResourcePathWithAbsolutePathOutsideOfTheSearchPaths() {
+        // return relative paths unmodified
+        validationService.getRelativeResourceType("/apps2/relative/path");
+    }
 
     private Resource createValidationModelResource(ResourceResolver rr, String root, String name, String validatedResourceType,
                                                String[] applicableResourcePaths, TestProperty... properties) throws Exception {
