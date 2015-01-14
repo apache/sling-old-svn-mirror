@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -76,17 +76,19 @@ public class JSONObjectTest {
         TestCase.assertEquals(13857270119014401L, obj.getLong("longvalue"));
     }
 
-    @Test public void testSample() throws JSONException {
-          Map<String,Object> map=new HashMap<String,Object>();
+    @Test public void testNullValueInMap() throws JSONException {
+          Map<String,Object> map=new LinkedHashMap<String,Object>();
           map.put("abc", "123456");
           List<String> list = new ArrayList<String>();
           list.add("Admin");
           list.add("password");
           map.put("groups", list);
+          map.put("id", null);
           JSONObject response=new JSONObject();
           response.put("key", map);
           assertNotNull(response.get("key"));
+          assertEquals("{\"abc\":\"123456\",\"groups\":\"[Admin, password]\",\"id\":null}", response.get("key").toString());
           assertEquals("123456", response.getJSONObject("key").get("abc"));
           assertEquals(list, response.getJSONObject("key").get("groups"));
-    }
+      }
 }
