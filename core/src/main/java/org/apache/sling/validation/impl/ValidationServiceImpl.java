@@ -503,6 +503,8 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
     }
 
     protected void unbindValidator(Validator<?> validator, Map<?, ?> properties) {
+        // also remove references to all validators in the cache
+        validationModelsCache.clear();
         validators.remove(validator.getClass().getName());
     }
 }
