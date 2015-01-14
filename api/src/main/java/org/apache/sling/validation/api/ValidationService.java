@@ -31,11 +31,12 @@ public interface ValidationService {
     /**
      * Tries to obtain a {@link ValidationModel} that is able to validate a {@code Resource} of type {@code validatedResourceType}.
      *
-     * @param validatedResourceType the type of {@code Resources} the model validates
+     * @param validatedResourceType the type of {@code Resources} the model validates, should be either relative 
+     *                              (i.e. not start with a "/") or starting with one of the resource resolver's search paths
      * @param applicablePath        the model's applicable path (the path of the validated resource)
      * @return a {@code ValidationModel} if one is found, {@code null} otherwise
      * @throws IllegalStateException in case an invalid validation model was found
-     * @throws IllegalArgumentException in case validatedResourceType was blank or {@code null}
+     * @throws IllegalArgumentException in case validatedResourceType was blank, {@code null} or absolute but outside of the search paths.
      */
     ValidationModel getValidationModel(String validatedResourceType, String applicablePath) throws IllegalStateException, IllegalArgumentException;
 
