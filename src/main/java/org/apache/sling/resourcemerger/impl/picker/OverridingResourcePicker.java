@@ -30,6 +30,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.resourcemerger.impl.StubResource;
 import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
 
 @Component(name = "org.apache.sling.resourcemerger.picker.overriding",
@@ -55,39 +56,42 @@ public class OverridingResourcePicker implements MergedResourcePicker {
 
         Resource currentTarget = resolver.getResource(absPath);
 
-        if (currentTarget != null) {
-            resources.add(currentTarget);
+        if (currentTarget == null) {
+            currentTarget = new StubResource(resolver, absPath);
+        }
 
-            while (currentTarget != null) {
-                final Resource inheritanceRootResource = findInheritanceRoot(currentTarget);
-                if (inheritanceRootResource == null) {
+        resources.add(currentTarget);
+
+        while (currentTarget != null) {
+            final Resource inheritanceRootResource = findInheritanceRoot(currentTarget);
+            if (inheritanceRootResource == null) {
+                currentTarget = null;
+            } else {
+                final String relPath = currentTarget.getPath()
+                        .substring(inheritanceRootResource.getPath().length());
+                final String superType = inheritanceRootResource.getResourceSuperType();
+                if (superType == null) {
                     currentTarget = null;
                 } else {
-                    final String relPath = currentTarget.getPath()
-                            .substring(inheritanceRootResource.getPath().length());
-                    final String superType = inheritanceRootResource.getResourceSuperType();
-                    if (superType == null) {
-                        currentTarget = null;
+                    final String superTypeChildPath = superType + relPath;
+                    final Resource superTypeResource = resolver.getResource(superTypeChildPath);
+                    if (superTypeResource != null) {
+                        resources.add(superTypeResource);
+                        currentTarget = superTypeResource;
                     } else {
-                        final String superTypeChildPath = superType + relPath;
-                        final Resource superTypeResource = resolver.getResource(superTypeChildPath);
-                        if (superTypeResource != null) {
-                            resources.add(superTypeResource);
-                            currentTarget = superTypeResource;
-                        } else {
-                            resources.add(new NonExistingResource(resolver, superTypeChildPath));
-                            currentTarget = null;
-                        }
+                        resources.add(new NonExistingResource(resolver, superTypeChildPath));
+                        currentTarget = null;
                     }
                 }
             }
-
-            Collections.reverse(resources);
         }
+
+        Collections.reverse(resources);
+
         return resources;
     }
 
-    private Resource findInheritanceRoot(Resource target) {
+    private Resource findInheritanceRoot(final Resource target) {
         String superType = target.getResourceSuperType();
         if (superType != null) {
             return target;

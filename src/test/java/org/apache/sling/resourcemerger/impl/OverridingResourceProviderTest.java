@@ -52,8 +52,13 @@ public class OverridingResourceProviderTest {
      * /apps/a/1/a
      * /apps/a/1/b
      * /apps/a/1/b/1
+     * /apps/a/1/d
+     * /apps/a/1/d/1
+     * /apps/a/1/d/1/a
      * /apps/a/1/c
      * /apps/a/2/c
+     * 
+     * /apps/a/2 has the super type of /apps/a/1
      */
     @Before
     public void setup() throws Exception {
@@ -68,6 +73,9 @@ public class OverridingResourceProviderTest {
                     .resource("a").p("1", "a").p("2", "b")
                     .resource(".b").p("1", "a").p("2", "b")
                     .resource("1")
+                    .resource("/apps/a/1/d").p("a", "1").p("b", "2")
+                    .resource("1").p("1", "a").p("2", "b")
+                    .resource("a")
                     .resource("/apps/a/1/c").p("1", "a").p("2", "b")
                     .resource("/apps/a/2").p(SUPER_TYPE, "a/1").p("b", "2").p(MergedResourceConstants.PN_HIDE_CHILDREN, new String[] {"b"})
                     .resource("c").p("1", "c")
@@ -114,6 +122,33 @@ public class OverridingResourceProviderTest {
         assertNotNull(this.provider.getResource(this.resolver, "/override/apps/a/1/b/1"));
         assertNull(this.provider.getResource(this.resolver, "/override/apps/a/2/b"));
         assertNull(this.provider.getResource(this.resolver, "/override/apps/a/2/b/1"));
+    }
+
+    // doing it this way because the mock resource resolver doesn't
+    // access the resource provider
+    private Resource getChildResource(Resource parent, String name) {
+        final Iterator<Resource> children = this.provider.listChildren(parent);
+        while (children.hasNext()) {
+            final Resource candidate = children.next();
+            if (candidate.getName().equals(name)) {
+               return candidate;
+            }
+        }
+        return null;
+    }
+
+    @Test
+    public void testOverriddenIncludesChildFromSuper() {
+        final Resource rsrcA2 = this.provider.getResource(this.resolver, "/override/apps/a/2");
+
+        Resource d = getChildResource(rsrcA2, "d");
+        assertNotNull(d);
+
+        Resource d1 = getChildResource(d, "1");
+        assertNotNull(d1);
+
+        Resource d1a = getChildResource(d1, "a");
+        assertNotNull(d1a);
     }
 
 }
