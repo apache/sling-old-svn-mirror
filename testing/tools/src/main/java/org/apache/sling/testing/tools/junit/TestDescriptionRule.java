@@ -18,25 +18,21 @@ package org.apache.sling.testing.tools.junit;
 
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
+import org.slf4j.MDC;
 
 /**
  * Junit rule which exposes the current executing test's description as a thread local instance
  */
 public class TestDescriptionRule extends TestWatcher {
-
-    private static final ThreadLocal<Description> currentTestDescription = new ThreadLocal<Description>();
+    @Override
+    protected void starting(Description description) {
+        MDC.put(RemoteLogDumper.TEST_CLASS, description.getClassName());
+        MDC.put(RemoteLogDumper.TEST_NAME, description.getMethodName());
+    }
 
     @Override
     protected void finished(Description description) {
-        currentTestDescription.remove();
-    }
-
-    @Override
-    protected void starting(Description description) {
-        currentTestDescription.set(description);
-    }
-
-    public static Description getCurrentTestDescription(){
-        return currentTestDescription.get();
+        MDC.remove(RemoteLogDumper.TEST_CLASS);
+        MDC.remove(RemoteLogDumper.TEST_NAME);
     }
 }

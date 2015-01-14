@@ -109,7 +109,7 @@ public class HttpTestBase extends TestCase {
         public TestNode(String parentPath, Map<String, String> properties) throws IOException {
             super(testClient, parentPath, properties);
         }
-    };
+    }
 
     public static String removeEndingSlash(String str) {
         if(str != null && str.endsWith("/")) {
@@ -153,7 +153,7 @@ public class HttpTestBase extends TestCase {
         }
 
         // setup HTTP client, with authentication (using default Jackrabbit credentials)
-        httpClient = new HttpClient();
+        httpClient = new TestInfoPassingClient();
         httpClient.getParams().setAuthenticationPreemptive(true);
         Credentials defaultcreds = getDefaultCredentials();
         httpClient.getState().setCredentials(new AuthScope(url.getHost(), url.getPort(), AuthScope.ANY_REALM), defaultcreds);
