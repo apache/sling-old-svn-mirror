@@ -19,6 +19,7 @@
 
 package org.apache.sling.distribution.resources.impl;
 
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -29,15 +30,17 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
-import org.apache.sling.api.resource.ResourceProviderFactory;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.component.impl.DistributionComponentProvider;
 import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.servlet.http.HttpServletRequest;
 
 
 @Component(label = "Distribution Service Resource Provider Factory",
@@ -46,12 +49,12 @@ import org.slf4j.LoggerFactory;
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE,
         metatype = true)
-@Service(value = ResourceProviderFactory.class)
+@Service(value = ResourceProvider.class)
 @Properties({
         @Property(name = ResourceProvider.ROOTS),
         @Property(name = ResourceProvider.OWNS_ROOTS, boolValue = true, propertyPrivate = true)
 })
-public class DistributionServiceResourceProviderFactory implements ResourceProviderFactory {
+public class DistributionServiceResourceProviderFactory implements ResourceProvider {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -101,14 +104,19 @@ public class DistributionServiceResourceProviderFactory implements ResourceProvi
 
     @Deactivate
     public void deactivate(BundleContext context) {
-
+        resourceProvider = null;
     }
 
-    public ResourceProvider getResourceProvider(Map<String, Object> authenticationInfo) throws LoginException {
-        return resourceProvider;
+
+    public Resource getResource(ResourceResolver resourceResolver, HttpServletRequest request, String path) {
+        return getResource(resourceResolver, path);
     }
 
-    public ResourceProvider getAdministrativeResourceProvider(Map<String, Object> authenticationInfo) throws LoginException {
-        return getResourceProvider(authenticationInfo);
+    public Resource getResource(ResourceResolver resourceResolver, String path) {
+        return resourceProvider.getResource(resourceResolver, path);
+    }
+
+    public Iterator<Resource> listChildren(Resource parent) {
+        return resourceProvider.listChildren(parent);
     }
 }
