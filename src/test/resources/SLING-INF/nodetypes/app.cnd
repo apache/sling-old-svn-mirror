@@ -1,0 +1,8 @@
+<app='http://example.com/jcr/app/1.0'>
+<dam='http://example.com/jcr/dam/1.0'>
+
+[app:Page] > nt:unstructured
+[app:PageContent] > nt:unstructured
+
+[dam:Asset] > nt:unstructured
+[dam:AssetContent] > nt:unstructured
