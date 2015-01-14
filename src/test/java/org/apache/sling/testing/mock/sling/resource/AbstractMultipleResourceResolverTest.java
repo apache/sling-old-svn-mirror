@@ -18,6 +18,7 @@
  */
 package org.apache.sling.testing.mock.sling.resource;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -50,11 +51,8 @@ public abstract class AbstractMultipleResourceResolverTest {
                 ResourceResolverFactory.USER, "user2"));
         
         // validate user names
-        // TODO: enable this tests when updated to latest jcr-mock/resourceresolver-mock versions
-        /*
         assertEquals("user1", resolver1.getAttribute(ResourceResolverFactory.USER));
         assertEquals("user2", resolver2.getAttribute(ResourceResolverFactory.USER));
-        */
         
         // add a resource in resolver 1
         Resource root = resolver1.getResource("/");
