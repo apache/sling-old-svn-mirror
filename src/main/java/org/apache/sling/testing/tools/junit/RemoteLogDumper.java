@@ -30,6 +30,7 @@ import org.apache.sling.testing.tools.sling.SlingInstanceState;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.slf4j.MDC;
+import org.slf4j.spi.MDCAdapter;
 
 /**
  * The RemoteLogDumper Rule fetches logs which are generated due to execution of test from the
@@ -80,6 +81,7 @@ public class RemoteLogDumper extends TestWatcher {
 
         if (baseUrl != null) {
             try {
+                warnIfNopMDCAdapterBeingUsed();
                 DefaultHttpClient httpClient = new DefaultHttpClient();
                 RequestExecutor executor = new RequestExecutor(httpClient);
                 RequestBuilder rb = new RequestBuilder(baseUrl);
@@ -112,6 +114,27 @@ public class RemoteLogDumper extends TestWatcher {
             }
 
             System.err.print(sw.toString());
+        }
+    }
+
+    private static void warnIfNopMDCAdapterBeingUsed() {
+        try {
+            MDCAdapter adapter = MDC.getMDCAdapter();
+            String msg = null;
+            if (adapter == null) {
+                msg = "No MDC Adapter found.";
+            } else if ("org.slf4j.helpers.NOPMDCAdapter".equals(adapter.getClass().getName())) {
+                msg = "MDC adapter set to [org.slf4j.helpers.NOPMDCAdapter].";
+            }
+
+            if (msg != null) {
+                System.err.printf("%s Possibly running with slf4j-simple. " +
+                        "Use Logging implementation like Logback to enable proper MDC support so " +
+                        "as to make use of RemoteLogDumper feature.%n", msg);
+            }
+
+        } catch (Throwable ignore) {
+
         }
     }
 
