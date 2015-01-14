@@ -21,6 +21,8 @@ package org.apache.sling.testing.mock.sling.loader;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
+import java.io.IOException;
+
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -68,7 +70,7 @@ public abstract class AbstractContentLoaderJsonDamTest {
     }
 
     @Test
-    public void testDamAssetMetadata() {
+    public void testDamAssetMetadata() throws IOException {
         Resource assetMetadata = this.resourceResolver
                 .getResource("/content/dam/sample/portraits/scott_reynolds.jpg/jcr:content/metadata");
         ValueMap props = ResourceUtil.getValueMap(assetMetadata);
@@ -80,6 +82,15 @@ public abstract class AbstractContentLoaderJsonDamTest {
 
         assertArrayEquals(new String[] { "stockphotography:business/business_people", "properties:style/color",
                 "properties:orientation/landscape" }, props.get("app:tags", String[].class));
+
+        /*
+         TODO: this is not working yet in the different resource resolver types - goal: validate binary is present, but empty.
+        Resource binaryMetadata = this.resourceResolver
+                .getResource("/content/dam/sample/portraits/scott_reynolds.jpg/jcr:content/renditions/original/jcr:content");
+        ValueMap binaryProps = ResourceUtil.getValueMap(binaryMetadata);
+        InputStream is = binaryProps.get(JcrConstants.JCR_DATA, InputStream.class);
+        assertNotNull(is);
+        */
     }
 
 }
