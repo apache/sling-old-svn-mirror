@@ -172,7 +172,7 @@ public class RenderContextImpl implements RenderContext {
             return ((Map) obj).keySet();
         }
         if (obj instanceof Record) {
-            return ((Record) obj).properties();
+            return ((Record) obj).getPropertyNames();
         }
         if (obj instanceof Enumeration) {
             return Collections.list((Enumeration<Object>) obj);
@@ -245,7 +245,7 @@ public class RenderContextImpl implements RenderContext {
             result = getMapProperty((Map) target, property);
         }
         if (result == null && target instanceof Record) {
-            result = ((Record) target).get(property);
+            result = ((Record) target).getProperty(property);
         }
         if (result == null) {
             result = getObjectProperty(target, property);
