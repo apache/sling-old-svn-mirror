@@ -34,6 +34,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
+import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.junit.Before;
@@ -99,7 +100,12 @@ public class JsonObjectCreatorTest {
         final JSONObject j = JsonObjectCreator.create(resource, 1);
         
         final String getKey = data instanceof InputStream ? ":"  + key : key;
-        assertEquals(expected == SAME ? data : expected, j.get(getKey));
+        final Object toExpect = expected == SAME ? data : expected;
+        if(toExpect instanceof String) {
+            assertEquals(toExpect, j.get(getKey).toString());
+        } else {
+            assertEquals(toExpect, j.get(getKey));
+        }
     }
     
     @Test
@@ -126,6 +132,19 @@ public class JsonObjectCreatorTest {
         final JSONObject j = JsonObjectCreator.create(resource, 1);
         assertEquals("A", j.getJSONArray(RESOURCE_NAME).get(0));
         assertEquals("B", j.getJSONArray(RESOURCE_NAME).get(1));
+    }
+    
+    @Test
+    public void testArray() throws JSONException {
+        final String [] values = { "C", "D" };
+        final JSONArray a = new JSONArray().put("C").put("D");
+        assertGet(values, a.toString());
+    }
+    
+    @Test
+    public void testEmptyArray() throws JSONException {
+        final Long [] values = {};
+        assertGet(values, "[]");
     }
     
     @Test
