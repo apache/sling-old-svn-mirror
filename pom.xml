@@ -31,7 +31,7 @@
 
   <artifactId>org.apache.sling.datasource</artifactId>
   <packaging>bundle</packaging>
-  <version>1.0.1-SNAPSHOT</version>
+  <version>0.0.1-SNAPSHOT</version>
 
   <name>Apache Sling DataSource Provider</name>
   <description>
