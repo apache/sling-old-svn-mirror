@@ -23,7 +23,6 @@ import java.util.Set;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.Value;
 import javax.jcr.nodetype.NodeType;
 
 public abstract class NodeUtil {
@@ -37,12 +36,12 @@ public abstract class NodeUtil {
     /**
      * Update the mixin node types
      */
-    public static void handleMixinTypes(final Node node, final Value[] mixinTypes)
+    public static void handleMixinTypes(final Node node, final String[] mixinTypes)
     throws RepositoryException {
         final Set<String> newTypes = new HashSet<String>();
         if ( mixinTypes != null ) {
-            for(final Value value : mixinTypes ) {
-                newTypes.add(value.getString());
+            for(final String value : mixinTypes ) {
+                newTypes.add(value);
             }
         }
         final Set<String> oldTypes = new HashSet<String>();

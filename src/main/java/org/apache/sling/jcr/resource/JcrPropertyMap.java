@@ -18,36 +18,25 @@
  */
 package org.apache.sling.jcr.resource;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.lang.reflect.Array;
-import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
-import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
 
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * An implementation of the value map based on a JCR node.
@@ -55,9 +44,6 @@ import org.slf4j.LoggerFactory;
  */
 public class JcrPropertyMap
     implements ValueMap {
-
-    /** default logger */
-    private static Logger LOGGER = LoggerFactory.getLogger(JcrPropertyMap.class);
 
     /** The underlying node. */
     private final Node node;
@@ -74,10 +60,10 @@ public class JcrPropertyMap
     /** keep all prefixes for escaping */
     private String[] namespacePrefixes;
 
-    private final ClassLoader dynamicClassLoader;
+    final ClassLoader dynamicClassLoader;
 
     /**
-     * Constructor
+     * Create a new JCR property map based on a node.
      * @param node The underlying node.
      */
     public JcrPropertyMap(final Node node) {
@@ -85,7 +71,7 @@ public class JcrPropertyMap
     }
 
     /**
-     * Constructor
+     * Create a new JCR property map based on a node.
      * @param node The underlying node.
      * @param dynamicCL Dynamic class loader for loading serialized objects.
      * @since 2.0.8
@@ -131,7 +117,7 @@ public class JcrPropertyMap
         if ( entry == null ) {
             return null;
         }
-        return convertToType(entry, type);
+        return entry.convertToType(type, this.node, this.dynamicClassLoader);
     }
 
     /**
@@ -164,7 +150,7 @@ public class JcrPropertyMap
     public Object get(final Object aKey) {
         final String key = checkKey(aKey.toString());
         final JcrPropertyMapCacheEntry entry = this.read(key);
-        final Object value = (entry == null ? null : entry.getDefaultValueOrNull());
+        final Object value = (entry == null ? null : entry.getPropertyValueOrNull());
         return value;
     }
 
@@ -278,9 +264,9 @@ public class JcrPropertyMap
                 entry = new JcrPropertyMapCacheEntry(prop);
                 cache.put(key, entry);
 
-                final Object defaultValue = entry.getDefaultValue();
+                final Object defaultValue = entry.getPropertyValue();
                 if (defaultValue != null) {
-                    valueCache.put(key, entry.getDefaultValue());
+                    valueCache.put(key, entry.getPropertyValue());
                 }
             }
             return entry;
@@ -444,159 +430,6 @@ public class JcrPropertyMap
 
     // ---------- Implementation helper
 
-    @SuppressWarnings("unchecked")
-    private <T> T convertToType(final JcrPropertyMapCacheEntry entry, Class<T> type) {
-        T result = null;
-
-        try {
-            final boolean array = type.isArray();
-
-            if (entry.isMulti) {
-
-                if (array) {
-
-                    result = (T) convertToArray(entry,
-                        type.getComponentType());
-
-                } else if (entry.values.length > 0) {
-
-                    result = convertToType(entry, -1, entry.values[0], type);
-
-                }
-
-            } else {
-
-                if (array) {
-
-                    result = (T) convertToArray(entry,
-                            type.getComponentType());
-
-                } else {
-
-                    result = convertToType(entry, -1, entry.values[0], type);
-
-                }
-            }
-
-        } catch (ValueFormatException vfe) {
-            LOGGER.info("converToType: Cannot convert value of " + entry.getDefaultValueOrNull()
-                + " to " + type, vfe);
-        } catch (RepositoryException re) {
-            LOGGER.info("converToType: Cannot get value of " + entry.getDefaultValueOrNull(), re);
-        }
-
-        // fall back to nothing
-        return result;
-    }
-
-    private <T> T[] convertToArray(final JcrPropertyMapCacheEntry entry, Class<T> type)
-    throws ValueFormatException, RepositoryException {
-        List<T> values = new ArrayList<T>();
-        for (int i = 0; i < entry.values.length; i++) {
-            T value = convertToType(entry, i, entry.values[i], type);
-            if (value != null) {
-                values.add(value);
-            }
-        }
-
-        @SuppressWarnings("unchecked")
-        T[] result = (T[]) Array.newInstance(type, values.size());
-
-        return values.toArray(result);
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T> T convertToType(final JcrPropertyMapCacheEntry entry,
-                                final int index,
-                                final Value jcrValue,
-                                final Class<T> type)
-    throws ValueFormatException, RepositoryException {
-        Object defaultValue = entry.getDefaultValue();
-        if ( type.isInstance(defaultValue) ) {
-            return (T) defaultValue;
-        }
-
-        if (String.class == type) {
-            return (T) jcrValue.getString();
-
-        } else if (Byte.class == type) {
-            return (T) Byte.valueOf((byte) jcrValue.getLong());
-
-        } else if (Short.class == type) {
-            return (T) Short.valueOf((short) jcrValue.getLong());
-
-        } else if (Integer.class == type) {
-            return (T) Integer.valueOf((int) jcrValue.getLong());
-
-        } else if (Long.class == type) {
-            if (jcrValue.getType() == PropertyType.BINARY) {
-                if (index == -1) {
-                    return (T) Long.valueOf(entry.property.getLength());
-                }
-                return (T) Long.valueOf(entry.property.getLengths()[index]);
-            }
-            return (T) Long.valueOf(jcrValue.getLong());
-
-        } else if (Float.class == type) {
-            return (T) Float.valueOf((float) jcrValue.getDouble());
-
-        } else if (Double.class == type) {
-            return (T) Double.valueOf(jcrValue.getDouble());
-
-        } else if (BigDecimal.class == type) {
-            return (T) jcrValue.getDecimal();
-
-        } else if (Boolean.class == type) {
-            return (T) Boolean.valueOf(jcrValue.getBoolean());
-
-        } else if (Date.class == type) {
-            return (T) jcrValue.getDate().getTime();
-
-        } else if (Calendar.class == type) {
-            return (T) jcrValue.getDate();
-
-        } else if (Value.class == type) {
-            return (T) jcrValue;
-
-        } else if (Property.class == type) {
-            return (T) entry.property;
-
-        } else if (ObjectInputStream.class == type) {
-            if ( jcrValue.getType() == PropertyType.BINARY ) {
-                try {
-                    return (T) new ObjectInputStream(jcrValue.getBinary().getStream(), this.dynamicClassLoader);
-                } catch (IOException ioe) {
-                    // ignore and use fallback
-                }
-            }
-        } else if (Serializable.class.isAssignableFrom(type)
-                && jcrValue.getType() == PropertyType.BINARY) {
-            ObjectInputStream ois = null;
-            try {
-                ois = new ObjectInputStream(jcrValue.getBinary().getStream(), this.dynamicClassLoader);
-                final Object obj = ois.readObject();
-                if ( type.isInstance(obj) ) {
-                    return (T)obj;
-                }
-            } catch (ClassNotFoundException cnfe) {
-                 // ignore and use fallback
-            } catch (IOException ioe) {
-                // ignore and use fallback
-            } finally {
-                if ( ois != null ) {
-                    try {
-                        ois.close();
-                    } catch (IOException ignore) {
-                        // ignore
-                    }
-                }
-            }
-        }
-
-        // fallback in case of unsupported type
-        return null;
-    }
-
     private Class<?> normalizeClass(Class<?> type) {
         if (Calendar.class.isAssignableFrom(type)) {
             type = Calendar.class;
@@ -614,7 +447,7 @@ public class JcrPropertyMap
 
 		Map<String, Object> transformedEntries = new LinkedHashMap<String, Object>(map.size());
 		for ( Map.Entry<String, JcrPropertyMapCacheEntry> entry : map.entrySet() )
-			transformedEntries.put(entry.getKey(), entry.getValue().getDefaultValueOrNull());
+			transformedEntries.put(entry.getKey(), entry.getValue().getPropertyValueOrNull());
 
 		return transformedEntries;
 	}
@@ -640,31 +473,5 @@ public class JcrPropertyMap
         }
         sb.append("}]");
         return sb.toString();
-    }
-
-
-    /**
-     * This is an extended version of the object input stream which uses the
-     * thread context class loader.
-     */
-    private static class ObjectInputStream extends java.io.ObjectInputStream {
-
-        private ClassLoader classloader;
-
-        public ObjectInputStream(final InputStream in, final ClassLoader classLoader) throws IOException {
-            super(in);
-            this.classloader = classLoader;
-        }
-
-        /**
-         * @see java.io.ObjectInputStream#resolveClass(java.io.ObjectStreamClass)
-         */
-        @Override
-        protected Class<?> resolveClass(java.io.ObjectStreamClass classDesc) throws IOException, ClassNotFoundException {
-            if ( this.classloader != null ) {
-                return this.classloader.loadClass(classDesc.getName());
-            }
-            return super.resolveClass(classDesc);
-        }
     }
 }
