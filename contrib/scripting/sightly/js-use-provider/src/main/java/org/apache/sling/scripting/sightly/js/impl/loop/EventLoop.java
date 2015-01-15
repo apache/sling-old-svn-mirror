@@ -21,7 +21,7 @@ package org.apache.sling.scripting.sightly.js.impl.loop;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import org.apache.sling.scripting.sightly.use.SightlyUseException;
+import org.apache.sling.scripting.sightly.SightlyException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +68,7 @@ public class EventLoop {
                 }
             }
             if (thrownException != null) {
-                throw new SightlyUseException(thrownException);
+                throw new SightlyException(thrownException);
             }
         } finally {
             isRunning = false;

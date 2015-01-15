@@ -264,7 +264,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
             try {
                 trigger.register(agentBasedRequestHandler);
             } catch (DistributionTriggerException e) {
-                log.error("could not register handler {} from trigger {}", agentBasedRequestHandler, trigger);
+                log.error("could not register handler from trigger {} {}", trigger, e);
             }
         }
 
@@ -287,7 +287,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
         try {
             trigger.register(agentBasedRequestHandler);
         } catch (DistributionTriggerException e) {
-            log.error("could not register handler {} from trigger {}", agentBasedRequestHandler, trigger);
+            log.error("could not register handler from trigger {} {}", trigger, e);
         }
 
     }
@@ -298,9 +298,9 @@ public class SimpleDistributionAgent implements DistributionAgent {
         }
 
         try {
-            trigger.register(agentBasedRequestHandler);
+            trigger.unregister(agentBasedRequestHandler);
         } catch (DistributionTriggerException e) {
-            log.error("could not register handler {} from trigger {}", agentBasedRequestHandler, trigger);
+            log.error("could not unregister handler from trigger {} {}", trigger, e);
         }
     }
 
@@ -313,7 +313,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
             try {
                 trigger.unregister(agentBasedRequestHandler);
             } catch (DistributionTriggerException e) {
-                log.error("could not unregister handler {} from trigger {}", agentBasedRequestHandler, trigger);
+                log.error("could not unregister handler trigger {} {}", trigger, e);
             }
         }
 

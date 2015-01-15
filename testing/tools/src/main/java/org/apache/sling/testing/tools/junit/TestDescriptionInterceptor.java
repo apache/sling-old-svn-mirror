@@ -16,13 +16,14 @@
  */
 package org.apache.sling.testing.tools.junit;
 
+import java.io.IOException;
+import java.util.Map;
+
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.protocol.HttpContext;
-import org.junit.runner.Description;
-
-import java.io.IOException;
+import org.slf4j.MDC;
 
 /**
  * HttpClient interceptor that propagates the current test name as part HTTP request headers.
@@ -32,15 +33,28 @@ import java.io.IOException;
  *
  * @see MDC http://www.slf4j.org/manual.html
  */
-public class TestDescriptionInterceptor implements HttpRequestInterceptor{
-    public static final String TEST_NAME_HEADER = "sling.test.name";
-    public static final String TEST_CLASS_HEADER = "sling.test.class";
+public class TestDescriptionInterceptor implements HttpRequestInterceptor {
+    private static final String SLING_HEADER_PREFIX = "X-Sling-";
 
     public void process(HttpRequest httpRequest, HttpContext httpContext) throws HttpException, IOException {
-       final Description desc = TestDescriptionRule.getCurrentTestDescription();
-        if(desc != null){
-            httpRequest.addHeader(TEST_NAME_HEADER,desc.getMethodName());
-            httpRequest.addHeader(TEST_CLASS_HEADER,desc.getClassName());
+        addSlingHeaders(httpRequest);
+    }
+
+    /**
+     * Adds all MDC key-value pairs as HTTP header where the key starts
+     * with 'X-Sling-'
+     */
+    private static void addSlingHeaders(HttpRequest m){
+        Map<?,?> mdc = MDC.getCopyOfContextMap();
+        if (mdc != null) {
+            for (Map.Entry<?, ?> e : mdc.entrySet()) {
+                Object key = e.getKey();
+                if (key instanceof String
+                        && ((String)key).startsWith(SLING_HEADER_PREFIX)
+                        && e.getValue() instanceof String) {
+                    m.addHeader((String)key, (String)e.getValue());
+                }
+            }
         }
     }
 }

@@ -26,9 +26,9 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.extension.ExtensionInstance;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
-import org.apache.sling.scripting.sightly.extension.RuntimeExtensionException;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.Expression;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.ExpressionNode;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.node.RuntimeCall;
@@ -64,7 +64,7 @@ public class JoinFilter extends FilterComponent implements RuntimeExtension {
             @Override
             public Object call(Object... arguments) {
                 if (arguments.length != 2) {
-                    throw new RuntimeExtensionException("Join function must be called with two arguments.");
+                    throw new SightlyException("Join function must be called with two arguments.");
                 }
                 Collection<?> collection = renderContext.toCollection(arguments[0]);
                 String joinString = renderContext.toString(arguments[1]);

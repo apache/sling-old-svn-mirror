@@ -63,6 +63,7 @@ public class CrankstartInventoryPrinter implements InventoryPrinter {
 
     private BundleContext bundleContext;
     private static final String INDENT = "  ";
+    private static final String SEPARATOR = "# ----------------------------------------------------------------------------"; 
     
     @Reference
     private StartLevel startLevel;
@@ -81,7 +82,6 @@ public class CrankstartInventoryPrinter implements InventoryPrinter {
     public void print(PrintWriter out, Format fmt, boolean isZip) {
         try {
             includeResource(out, "/crankstart-header.txt");
-            header(out, "bundles");
             bundles(out);
             header(out, "configurations");
             configs(out);
@@ -187,6 +187,10 @@ public class CrankstartInventoryPrinter implements InventoryPrinter {
                 out.println();
                 out.print("# bundles for start level ");
                 out.println(level);
+                out.println(SEPARATOR);
+                out.print("defaults crankstart.bundle.start.level ");
+                out.println(level);
+                out.println();
             }
             count++;
             

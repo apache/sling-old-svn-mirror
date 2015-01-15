@@ -26,7 +26,7 @@
     </parent>
 
     <artifactId>org.apache.sling.installer.it</artifactId>
-    <version>3.6.1-SNAPSHOT</version>
+    <version>3.6.3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Apache Sling Installer Integration Tests</name>
@@ -483,7 +483,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
-            <version>4.2.1</version>
+            <version>4.4.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>

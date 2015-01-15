@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,29 +15,29 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
- ******************************************************************************/
-package org.apache.sling.scripting.sightly.extension;
-
-import org.apache.sling.scripting.sightly.SightlyException;
-
-/**
- * Exception thrown by runtime extensions
- * @see RuntimeExtension
  */
-public class RuntimeExtensionException extends SightlyException {
+package org.apache.sling.scripting.thymeleaf.internal.processor.attr;
 
-    public RuntimeExtensionException() {
+public class SlingPathAttrProcessor extends SlingNodePropertyAttrProcessor {
+
+    public static final int ATTR_PRECEDENCE = 99;
+
+    public static final String ATTR_NAME = "path";
+
+    public static final String NODE_PROPERTY_NAME = String.format("%s.%s", PREFIX, ATTR_NAME);
+
+    public SlingPathAttrProcessor() {
+        super(ATTR_NAME);
     }
 
-    public RuntimeExtensionException(String message) {
-        super(message);
+    @Override
+    public int getPrecedence() {
+        return ATTR_PRECEDENCE;
     }
 
-    public RuntimeExtensionException(String message, Throwable cause) {
-        super(message, cause);
+    @Override
+    protected String getNodePropertyName() {
+        return NODE_PROPERTY_NAME;
     }
 
-    public RuntimeExtensionException(Throwable cause) {
-        super(cause);
-    }
 }

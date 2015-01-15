@@ -28,10 +28,7 @@ import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
 import org.apache.sling.testing.mock.sling.loader.AbstractContentLoaderJsonTest;
-import org.junit.Ignore;
 
-// TEST IS DISABLED currently, it does not work with jackrabbit repository yet
-@Ignore
 public class ContentLoaderJsonTest extends AbstractContentLoaderJsonTest {
 
     @Override
@@ -43,9 +40,12 @@ public class ContentLoaderJsonTest extends AbstractContentLoaderJsonTest {
     protected ResourceResolver newResourceResolver() {
         ResourceResolver resolver = MockSling.newResourceResolver(getResourceResolverType());
 
-        // register sling node types
+        // register sling and app node types
         try {
-            RepositoryUtil.registerSlingNodeTypes(resolver.adaptTo(Session.class));
+            Session session = resolver.adaptTo(Session.class);
+            RepositoryUtil.registerSlingNodeTypes(session);
+            RepositoryUtil.registerNodeType(session,
+                    ContentLoaderJsonTest.class.getResourceAsStream("/SLING-INF/nodetypes/app.cnd"));
         } catch (IOException ex) {
             throw new RuntimeException("Unable to register sling node types.", ex);
         } catch (RepositoryException ex) {

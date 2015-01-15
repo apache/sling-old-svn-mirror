@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.sling.i18n</artifactId>
     <packaging>bundle</packaging>
-    <version>2.3.1-SNAPSHOT</version>
+    <version>2.3.3-SNAPSHOT</version>
 
     <name>Apache Sling Internationalization Support</name>
     <description>

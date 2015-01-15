@@ -90,7 +90,8 @@ public class TopologyTest {
                 instance2.getAnnouncementRegistry().listLocalAnnouncements();
         assertEquals(1, instance2LocalAnnouncements.size());
 
-        Thread.sleep(1500);
+        instance1.getConfig().setHeartbeatTimeout(3); // increasing heartbeat timeout from 2 to 3sec
+        Thread.sleep(1500); // heartbeat interval is 1 sec - so 1.5 sec ensures 1 heartbeat is actually being sent out!
         
         instance1LocalAnnouncements = 
                 instance1.getAnnouncementRegistry().listLocalAnnouncements();
@@ -98,6 +99,7 @@ public class TopologyTest {
         instance2LocalAnnouncements = 
                 instance2.getAnnouncementRegistry().listLocalAnnouncements();
         assertEquals(0, instance2LocalAnnouncements.size());
+        instance1.getConfig().setHeartbeatTimeout(2);
 
         TopologyTestHelper.assertTopologyConsistsOf(instance1.getDiscoveryService().getTopology(), instance1.getSlingId(), instance2.getSlingId());
         TopologyTestHelper.assertTopologyConsistsOf(instance2.getDiscoveryService().getTopology(), instance2.getSlingId());

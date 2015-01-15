@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.extensions.datasource;
+package org.apache.sling.datasource;
 
 import java.io.File;
 import java.io.IOException;

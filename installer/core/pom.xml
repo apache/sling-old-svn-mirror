@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.sling.installer.core</artifactId>
-    <version>3.6.1-SNAPSHOT</version>
+    <version>3.6.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Installer</name>

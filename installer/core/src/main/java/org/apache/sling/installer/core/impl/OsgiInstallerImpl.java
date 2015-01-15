@@ -1191,7 +1191,9 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                     }
                 }
                 if ( compactAndSave ) {
-                    erl.compact();
+                    if ( erl != null ) {
+                        erl.compact();
+                    }
                     this.persistentList.save();
                 }
             }

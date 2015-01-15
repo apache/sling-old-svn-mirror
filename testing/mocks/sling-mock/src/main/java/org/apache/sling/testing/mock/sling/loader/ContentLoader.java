@@ -18,6 +18,7 @@
  */
 package org.apache.sling.testing.mock.sling.loader;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.DateFormat;
@@ -32,6 +33,7 @@ import java.util.Set;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -55,10 +57,19 @@ public final class ContentLoader {
     private static final String REFERENCE = "jcr:reference:";
     private static final String PATH = "jcr:path:";
     private static final String CONTENTTYPE_OCTET_STREAM = "application/octet-stream";
+    private static final String JCR_DATA_PLACEHOLDER = ":jcr:data";
 
-    private static final Set<String> IGNORED_NAMES = ImmutableSet.of(JcrConstants.JCR_PRIMARYTYPE,
-            JcrConstants.JCR_MIXINTYPES, JcrConstants.JCR_UUID, JcrConstants.JCR_BASEVERSION,
-            JcrConstants.JCR_PREDECESSORS, JcrConstants.JCR_SUCCESSORS, JcrConstants.JCR_CREATED, "jcr:checkedOut",
+    private static final Set<String> IGNORED_NAMES = ImmutableSet.of(
+            JcrConstants.JCR_PRIMARYTYPE,
+            JcrConstants.JCR_MIXINTYPES,
+            JcrConstants.JCR_UUID,
+            JcrConstants.JCR_BASEVERSION,
+            JcrConstants.JCR_PREDECESSORS,
+            JcrConstants.JCR_SUCCESSORS,
+            JcrConstants.JCR_CREATED,
+            JcrConstants.JCR_VERSIONHISTORY,
+            "jcr:checkedOut",
+            "jcr:isCheckedOut",
             "rep:policy");
 
     private final ResourceResolver resourceResolver;
@@ -191,11 +202,15 @@ public final class ContentLoader {
             throws IOException, JSONException {
 
         // collect all properties first
+        boolean hasJcrData = false;
         Map<String, Object> props = new HashMap<String, Object>();
         JSONArray names = jsonObject.names();
         for (int i = 0; names != null && i < names.length(); i++) {
             final String name = names.getString(i);
-            if (!IGNORED_NAMES.contains(name)) {
+            if (StringUtils.equals(name, JCR_DATA_PLACEHOLDER)) {
+                hasJcrData = true;
+            }
+            else if (!IGNORED_NAMES.contains(name)) {
                 Object obj = jsonObject.get(name);
                 if (!(obj instanceof JSONObject)) {
                     this.setProperty(props, name, obj);
@@ -216,6 +231,12 @@ public final class ContentLoader {
 
         // create resource
         Resource resource = resourceResolver.create(parentResource, childName, props);
+        
+        if (hasJcrData) {
+            ModifiableValueMap valueMap = resource.adaptTo(ModifiableValueMap.class);
+            // we cannot import binary data here - but to avoid complaints by JCR we create it with empty binary data
+            valueMap.put(JcrConstants.JCR_DATA, new ByteArrayInputStream(new byte[0]));
+        }
 
         // add child resources
         for (int i = 0; names != null && i < names.length(); i++) {

@@ -510,9 +510,9 @@ public class OsgiInstallerTestBase implements FrameworkListener {
                         mavenBundle("org.slf4j", "jcl-over-slf4j", "1.6.4"),
                         mavenBundle("org.slf4j", "log4j-over-slf4j", "1.6.4"),
 
-        	            mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.8.0"),
-        	            mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.2.8"),
-                        mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.0.2"),
+        	            mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.8.2"),
+        	            mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.0"),
+                        mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.0.10"),
         	        	mavenBundle("org.apache.sling", "org.apache.sling.installer.core", POM_VERSION).startLevel(5),
                         mavenBundle("org.apache.sling", "org.apache.sling.installer.factory.configuration", CONFIG_VERSION).startLevel(5)
         		)
@@ -599,7 +599,7 @@ public class OsgiInstallerTestBase implements FrameworkListener {
 
         do {
             final InstallationState is = this.infoProvider.getInstallationState();
-            for(final ResourceGroup rg : is.getInstalledResources()) {
+            for(final ResourceGroup rg : (state == ResourceState.INSTALL || state == ResourceState.UNINSTALL ? is.getActiveResources() : is.getInstalledResources())) {
                 for(final Resource rsrc : rg.getResources()) {
                     if ( url.equals(rsrc.getURL()) ) {
                         if ( rsrc.getState() == state ) {
@@ -610,9 +610,10 @@ public class OsgiInstallerTestBase implements FrameworkListener {
             }
             sleep(50);
         } while ( System.currentTimeMillis() < end);
-        fail("Resource " + url + " not found with state " + state);
+        fail("Resource " + url + " not found with state " + state + " : " + this.infoProvider.getInstallationState());
         return null;
     }
+
     private final class BundleEventListener implements SynchronousBundleListener {
 
         private final List<BundleEvent> events = new ArrayList<BundleEvent>();

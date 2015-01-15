@@ -22,10 +22,10 @@ package org.apache.sling.scripting.sightly.js.impl.use;
 import javax.script.Bindings;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.js.impl.JsEnvironment;
 import org.apache.sling.scripting.sightly.js.impl.Utils;
 import org.apache.sling.scripting.sightly.js.impl.async.UnaryCallback;
-import org.apache.sling.scripting.sightly.use.SightlyUseException;
 
 /**
  * Resolves dependencies specified by the Use function
@@ -49,7 +49,7 @@ public class DependencyResolver {
      */
     public void resolve(String dependency, UnaryCallback callback) {
         if (!Utils.isJsScript(dependency)) {
-            throw new SightlyUseException("Only JS scripts are allowed as dependencies. Invalid dependency: " + dependency);
+            throw new SightlyException("Only JS scripts are allowed as dependencies. Invalid dependency: " + dependency);
         }
         jsEnvironment.run(caller, dependency, globalBindings, Utils.EMPTY_BINDINGS, callback);
     }

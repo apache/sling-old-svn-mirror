@@ -12,8 +12,8 @@ defaults felix.http.jetty.version 2.2.0
 
 # TODO adapt this: Bootstrap classpath (variables are not supported here)
 classpath mvn:org.apache.felix/org.apache.felix.framework/4.3.0-R1558704
-classpath mvn:org.apache.sling/org.apache.sling.crankstart.core/0.0.1-SNAPSHOT
-classpath mvn:org.apache.sling/org.apache.sling.crankstart.api/0.0.1-SNAPSHOT
+classpath mvn:org.apache.sling/org.apache.sling.crankstart.core/1.0.0
+classpath mvn:org.apache.sling/org.apache.sling.crankstart.api/1.0.0
 classpath mvn:org.slf4j/slf4j-api/1.7.6
 
 # TODO adapt this: OSGi properties

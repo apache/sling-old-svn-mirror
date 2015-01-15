@@ -36,11 +36,12 @@ import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.sling.commons.testing.integration.HttpTest;
-import org.apache.sling.commons.testing.junit.categories.JackrabbitOnly;
+import org.apache.sling.testing.tools.junit.RemoteLogDumper;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.rules.TestRule;
 
 /**
  * Test of the response code from an authentication request depending on various
@@ -48,8 +49,11 @@ import org.junit.experimental.categories.Category;
  * non-browser client detection.
  */
 public class AuthenticationResponseCodeTest {
-    
-    private final HttpTest H = new HttpTest(); 
+
+    @Rule
+    public TestRule logRule = new RemoteLogDumper();
+
+    private final HttpTest H = new HttpTest();
 
     @Before
     public void setup() throws Exception {

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,28 +15,20 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
- ******************************************************************************/
-
-package org.apache.sling.scripting.sightly.use;
-
-import org.apache.sling.scripting.sightly.SightlyException;
-
-/**
- * Exception raised by the use resolving mechanism
  */
-public class SightlyUseException extends SightlyException {
-    public SightlyUseException() {
+package org.apache.sling.scripting.thymeleaf.internal.dom;
+
+import org.thymeleaf.dom.Node;
+
+public class NodeUtil {
+
+    public static <T> T getNodeProperty(final Node node, final String name, final Class<T> clazz) {
+        final Object nodeProperty = node.getNodeProperty(name);
+        try {
+            return clazz.cast(nodeProperty);
+        } catch (ClassCastException e) {
+            return null;
+        }
     }
 
-    public SightlyUseException(String message) {
-        super(message);
-    }
-
-    public SightlyUseException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public SightlyUseException(Throwable cause) {
-        super(cause);
-    }
 }
