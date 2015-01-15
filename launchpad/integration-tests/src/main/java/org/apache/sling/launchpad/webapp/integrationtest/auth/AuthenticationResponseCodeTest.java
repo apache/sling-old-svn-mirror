@@ -80,7 +80,6 @@ public class AuthenticationResponseCodeTest {
         HttpMethod post2 = H.assertPostStatus(HttpTest.HTTP_BASE_URL + "/j_security_check", HttpServletResponse.SC_OK,
                 params2, null);
         assertTrue(post2.getResponseBodyAsString().length() == 0);
-        assertTrue(false);
     }
 
     @Test
