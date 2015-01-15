@@ -37,9 +37,10 @@ public interface RuntimeExtension {
     String NAME = "org.apache.sling.scripting.sightly.extension.name";
 
     /**
-     * Provide an instance of this extension
+     * Call the {@code RuntimeExtension}
      * @param renderContext - the runtime context
+     * @param arguments - the call arguments
      * @return an extension instance
      */
-    ExtensionInstance provide(RenderContext renderContext);
+    Object call(RenderContext renderContext, Object... arguments);
 }
