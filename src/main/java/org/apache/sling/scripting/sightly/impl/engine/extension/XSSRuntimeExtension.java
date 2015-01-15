@@ -30,9 +30,9 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.extension.ExtensionInstance;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
-import org.apache.sling.scripting.sightly.extension.RuntimeExtensionException;
 import org.apache.sling.scripting.sightly.impl.compiler.CompilerException;
 import org.apache.sling.scripting.sightly.impl.filter.XSSFilter;
 import org.apache.sling.scripting.sightly.impl.html.MarkupUtils;
@@ -65,7 +65,7 @@ public class XSSRuntimeExtension implements RuntimeExtension {
             @Override
             public Object call(Object... arguments) {
                 if (arguments.length < 2) {
-                    throw new RuntimeExtensionException(
+                    throw new SightlyException(
                             String.format("Extension %s requires at least %d arguments", XSSFilter.FUNCTION_NAME, 2));
                 }
                 Object original = arguments[0];

@@ -18,8 +18,8 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.impl.engine.extension;
 
+import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
-import org.apache.sling.scripting.sightly.extension.RuntimeExtensionException;
 
 /**
  * Helper class for {@link RuntimeExtension} implementations.
@@ -32,11 +32,11 @@ public class ExtensionUtils {
      * @param extensionName the name of the extension
      * @param arguments     the arguments array
      * @param count         the expected number or arguments
-     * @throws RuntimeExtensionException if the number of supplied arguments differs from what's expected
+     * @throws SightlyException if the number of supplied arguments differs from what's expected
      */
     public static void checkArgumentCount(String extensionName, Object[] arguments, int count) {
         if (arguments.length != count) {
-            throw new RuntimeExtensionException(String.format("Extension %s requires %d arguments", extensionName, count));
+            throw new SightlyException(String.format("Extension %s requires %d arguments", extensionName, count));
         }
     }
 
