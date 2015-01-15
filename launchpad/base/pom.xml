@@ -32,7 +32,7 @@
        This version is a concatenation of the framework version and a version for the launchpad base itself.
        For a release only the qualifier (launchpad base version) is increased.
      -->
-    <version>4.6.0-2.5.3-SNAPSHOT</version>
+    <version>4.6.0-2.5.4</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Launchpad Base</name>
@@ -47,9 +47,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/launchpad/base</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/launchpad/base</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/launchpad/base</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.launchpad.base-4.6.0-2.5.4</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.launchpad.base-4.6.0-2.5.4</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.launchpad.base-4.6.0-2.5.4</url>
     </scm>
 
     <build>
