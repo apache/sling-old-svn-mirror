@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -46,59 +47,59 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class JsonObjectCreatorTest {
-    
+
     @Mock
     private Resource resource;
-    
+
     @Mock
     private ResourceResolver resourceResolver;
-    
+
     @Mock
     private ResourceResolver childResourceResolver;
-    
+
     private Map<String, Object> props;
-    private static final String RESOURCE_NAME = "testResource";  
+    private static final String RESOURCE_NAME = "testResource";
     private static final String PATH = "/" + RESOURCE_NAME;
-    
+
     private static final Object SAME = new Object();
     private static final int NCHILDREN = 3;
-    
+
     @Before
     public void setup() {
         props = new HashMap<String, Object>();
         props.put("defaultProperty", "defaultValue");
-        
+
         final List<Resource> empty = new ArrayList<Resource>();
         when(childResourceResolver.listChildren(any(Resource.class))).thenReturn(empty.iterator());
-        
+
         final List<Resource> children = new ArrayList<Resource>();
         for(int i=0; i < NCHILDREN; i++) {
             final Map<String, Object> childProps = new HashMap<String, Object>();
             final String id = "child" + i;
             childProps.put("id", id);
-            final Resource r = Mockito.mock(Resource.class); 
+            final Resource r = Mockito.mock(Resource.class);
             when(r.adaptTo(ValueMap.class)).thenReturn(new ValueMapDecorator(childProps));
             when(r.getResourceResolver()).thenReturn(childResourceResolver);
             when(r.getPath()).thenReturn(PATH + "/" + id);
             children.add(r);
         }
-        
+
         when(resourceResolver.listChildren(any(Resource.class))).thenReturn(children.iterator());
         when(resource.getResourceResolver()).thenReturn(resourceResolver);
         when(resource.getPath()).thenReturn(PATH);
     }
-    
+
     private void assertGet(Object data) throws JSONException {
         assertGet(data, SAME);
     }
-    
+
     private void assertGet(Object data, Object expected) throws JSONException {
         final String key = UUID.randomUUID().toString();
         props.clear();
         props.put(key, data);
         when(resource.adaptTo(ValueMap.class)).thenReturn(new ValueMapDecorator(props));
         final JSONObject j = JsonObjectCreator.create(resource, 1);
-        
+
         final String getKey = data instanceof InputStream ? ":"  + key : key;
         final Object toExpect = expected == SAME ? data : expected;
         if(toExpect instanceof String) {
@@ -107,7 +108,7 @@ public class JsonObjectCreatorTest {
             assertEquals(toExpect, j.get(getKey));
         }
     }
-    
+
     @Test
     public void testSimpleTypes() throws JSONException {
         assertGet("bar");
@@ -116,7 +117,7 @@ public class JsonObjectCreatorTest {
         assertGet(456.78);
         assertGet(System.currentTimeMillis());
     }
-    
+
     @Test
     public void testStringValue() throws JSONException {
         final String value = "the string";
@@ -124,7 +125,7 @@ public class JsonObjectCreatorTest {
         final JSONObject j = JsonObjectCreator.create(resource, 1);
         assertEquals(value, j.get(RESOURCE_NAME));
     }
-    
+
     @Test
     public void testStringArray() throws JSONException {
         final String [] values = { "A", "B" };
@@ -133,28 +134,28 @@ public class JsonObjectCreatorTest {
         assertEquals("A", j.getJSONArray(RESOURCE_NAME).get(0));
         assertEquals("B", j.getJSONArray(RESOURCE_NAME).get(1));
     }
-    
+
     @Test
     public void testArray() throws JSONException {
         final String [] values = { "C", "D" };
         final JSONArray a = new JSONArray().put("C").put("D");
         assertGet(values, a.toString());
     }
-    
+
     @Test
     public void testEmptyArray() throws JSONException {
         final Long [] values = {};
         assertGet(values, "[]");
     }
-    
+
     @Test
     public void testCalendar() throws JSONException {
         final Calendar nowCalendar = Calendar.getInstance();
         final String ECMA_DATE_FORMAT = "EEE MMM dd yyyy HH:mm:ss 'GMT'Z";
-        final String nowString = new SimpleDateFormat(ECMA_DATE_FORMAT).format(nowCalendar.getTime());
+        final String nowString = new SimpleDateFormat(ECMA_DATE_FORMAT, Locale.ENGLISH).format(nowCalendar.getTime());
         assertGet(nowCalendar, nowString);
     }
-    
+
     @Test
     public void testStream() throws JSONException {
         final byte [] bytes = "Hello there".getBytes();
@@ -162,7 +163,7 @@ public class JsonObjectCreatorTest {
         // TODO not sure why we don't get the actual length here
         assertGet(stream, -1L);
     }
-    
+
     @Test
     public void testChildren() throws JSONException {
         when(resource.adaptTo(ValueMap.class)).thenReturn(new ValueMapDecorator(props));
@@ -172,5 +173,5 @@ public class JsonObjectCreatorTest {
             assertEquals(id, j.getJSONObject(id).get("id"));
         }
     }
-    
+
 }
