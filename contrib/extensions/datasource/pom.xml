@@ -18,8 +18,8 @@
  * from Adobe Systems Incorporated.
  **************************************************************************/
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
 
   <modelVersion>4.0.0</modelVersion>
 
@@ -49,6 +49,12 @@
       ${bundle.build.name}/${project.build.finalName}.jar
     </bundle.file.name>
   </properties>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/datasource</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/datasource</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/datasource</url>
+  </scm>
 
 
   <build>
