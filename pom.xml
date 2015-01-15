@@ -31,7 +31,7 @@
 
   <artifactId>org.apache.sling.datasource</artifactId>
   <packaging>bundle</packaging>
-  <version>1.0.0</version>
+  <version>1.0.1-SNAPSHOT</version>
 
   <name>Apache Sling DataSource Provider</name>
   <description>
@@ -51,9 +51,9 @@
   </properties>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.datasource-1.0.0</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.datasource-1.0.0</developerConnection>
-    <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.datasource-1.0.0</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/datasource</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/datasource</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/datasource</url>
   </scm>
 
 
