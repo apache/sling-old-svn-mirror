@@ -92,9 +92,9 @@
                             org.apache.jackrabbit.api.observation
                         </DynamicImport-Package>
 
-                        <!-- Include URL support from Jackrabbit -->
+                        <!-- Include utility classes from Jackrabbit JCR Commons -->
                         <Embed-Dependency>
-                            jackrabbit-jcr-commons;inline="org/apache/jackrabbit/util/ISO9075.*|org/apache/jackrabbit/name/QName.*|org/apache/jackrabbit/util/XMLChar.*|org/apache/jackrabbit/util/Text.*",
+                            jackrabbit-jcr-commons;inline="org/apache/jackrabbit/util/ISO8601.*|org/apache/jackrabbit/util/ISO9075.*|org/apache/jackrabbit/name/QName.*|org/apache/jackrabbit/util/XMLChar.*|org/apache/jackrabbit/util/Text.*",
                         </Embed-Dependency>
 
                         <Sling-Namespaces>

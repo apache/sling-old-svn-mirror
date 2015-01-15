@@ -130,8 +130,8 @@ public class JcrResourceUtil {
      * @return the value or null if not convertible to a valid PropertyType
      * @throws RepositoryException in case of error, accessing the Repository
      */
-    public static Value createValue(Object value, Session session)
-            throws RepositoryException {
+    public static Value createValue(final Object value, final Session session)
+    throws RepositoryException {
         Value val;
         ValueFactory fac = session.getValueFactory();
         if(value instanceof Calendar) {
@@ -152,7 +152,7 @@ public class JcrResourceUtil {
             val = fac.createValue(((Number)value).doubleValue());
         } else if (value instanceof Boolean) {
             val = fac.createValue((Boolean) value);
-        } else if ( value instanceof String ){
+        } else if ( value instanceof String ) {
             val = fac.createValue((String)value);
         } else {
             val = null;

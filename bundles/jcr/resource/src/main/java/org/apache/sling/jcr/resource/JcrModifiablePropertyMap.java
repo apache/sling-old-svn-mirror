@@ -25,6 +25,7 @@ import java.util.Set;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 
 import org.apache.sling.api.resource.PersistableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
@@ -91,7 +92,7 @@ public final class JcrModifiablePropertyMap
         readFully();
         final Object oldValue = this.get(key);
         try {
-            this.cache.put(key, new JcrPropertyMapCacheEntry(value, getNode().getSession()));
+            this.cache.put(key, new JcrPropertyMapCacheEntry(value, this.getNode()));
         } catch (final RepositoryException re) {
             throw new IllegalArgumentException("Value for key " + key + " can't be put into node: " + value, re);
         }
@@ -162,7 +163,7 @@ public final class JcrModifiablePropertyMap
             if ( this.changedProperties.contains(NodeUtil.MIXIN_TYPES) ) {
                 if ( cache.containsKey(NodeUtil.MIXIN_TYPES) ) {
                     final JcrPropertyMapCacheEntry entry = cache.get(NodeUtil.MIXIN_TYPES);
-                    NodeUtil.handleMixinTypes(node, entry.values);
+                    NodeUtil.handleMixinTypes(node, entry.convertToType(String[].class, node, dynamicClassLoader));
                 } else {
                     // remove all mixin types!
                     NodeUtil.handleMixinTypes(node, null);
@@ -174,10 +175,10 @@ public final class JcrModifiablePropertyMap
                 if ( !NodeUtil.MIXIN_TYPES.equals(name) ) {
                     if ( cache.containsKey(key) ) {
                         final JcrPropertyMapCacheEntry entry = cache.get(key);
-                        if ( entry.isMulti ) {
-                            node.setProperty(name, entry.values);
+                        if ( entry.isArray() ) {
+                            node.setProperty(name, entry.convertToType(Value[].class, node, dynamicClassLoader));
                         } else {
-                            node.setProperty(name, entry.values[0]);
+                            node.setProperty(name, entry.convertToType(Value.class, node, dynamicClassLoader));
                         }
                     } else {
                         if ( node.hasProperty(name) ) {
