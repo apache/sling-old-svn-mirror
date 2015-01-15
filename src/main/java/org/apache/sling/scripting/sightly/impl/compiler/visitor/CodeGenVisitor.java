@@ -82,7 +82,7 @@ public class CodeGenVisitor implements CommandVisitor {
             case DYNAMIC:
                 initSource.beginAssignment(descriptor.getAssignedName());
                 if (descriptor.isTemplateVariable()) {
-                    initSource.startCall(SourceGenConstants.OBJ_GET);
+                    initSource.startCall(SourceGenConstants.RECORD_GET_VALUE);
                 } else if (unitParameters.contains(descriptor.getOriginalName().toLowerCase())) {
                     initSource.startMethodCall(SourceGenConstants.ARGUMENTS_FIELD, SourceGenConstants.BINDINGS_GET_METHOD);
                 } else {

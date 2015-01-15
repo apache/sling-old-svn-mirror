@@ -53,12 +53,12 @@ public abstract class RenderUnit implements Record<RenderUnit> {
     }
 
     @Override
-    public RenderUnit get(String name) {
+    public RenderUnit getProperty(String name) {
         return subTemplates.get(name.toLowerCase());
     }
 
     @Override
-    public Set<String> properties() {
+    public Set<String> getPropertyNames() {
         return subTemplates.keySet();
     }
 
