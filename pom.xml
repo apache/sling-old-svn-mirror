@@ -29,7 +29,7 @@
     <version>22</version>
   </parent>
 
-  <artifactId>org.apache.sling.extensions.datasource</artifactId>
+  <artifactId>org.apache.sling.datasource</artifactId>
   <packaging>bundle</packaging>
   <version>1.0.1-SNAPSHOT</version>
 
@@ -268,7 +268,7 @@
                 <configuration>
                   <propertyName>coverage.command</propertyName>
                   <includes>
-                    <include>org.apache.sling.extensions.datasource.internal.*</include>
+                    <include>org.apache.sling.datasource.internal.*</include>
                   </includes>
                 </configuration>
               </execution>
