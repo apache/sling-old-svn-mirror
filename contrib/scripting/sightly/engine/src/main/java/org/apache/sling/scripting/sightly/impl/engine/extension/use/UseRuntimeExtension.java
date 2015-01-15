@@ -35,13 +35,12 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.extension.ExtensionInstance;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
-import org.apache.sling.scripting.sightly.extension.RuntimeExtensionException;
 import org.apache.sling.scripting.sightly.impl.plugin.UsePlugin;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.use.ProviderOutcome;
-import org.apache.sling.scripting.sightly.use.SightlyUseException;
 import org.apache.sling.scripting.sightly.use.UseProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -72,7 +71,7 @@ public class UseRuntimeExtension implements RuntimeExtension {
             @Override
             public Object call(Object... arguments) {
                 if (arguments.length != 2) {
-                    throw new RuntimeExtensionException("Use extension requires two arguments");
+                    throw new SightlyException("Use extension requires two arguments");
                 }
                 String identifier = renderContext.toString(arguments[0]);
                 if (StringUtils.isEmpty(identifier)) {
@@ -89,7 +88,7 @@ public class UseRuntimeExtension implements RuntimeExtension {
                         return outcome.getResult();
                     }
                 }
-                throw new SightlyUseException("No use provider could resolve identifier: " + identifier);
+                throw new SightlyException("No use provider could resolve identifier: " + identifier);
             }
         };
     }
