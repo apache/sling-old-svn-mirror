@@ -18,9 +18,12 @@ package org.apache.sling.launchpad.webapp.integrationtest.servlets.post;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
+import org.apache.jackrabbit.util.ISO8601;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.commons.testing.integration.NameValuePairList;
 import org.apache.sling.servlets.post.SlingPostConstants;
@@ -33,12 +36,14 @@ import org.slf4j.LoggerFactory;
 
 public class SlingDateValuesTest extends HttpTestBase {
 
+    private static final String ECMA_FORMAT = "EEE MMM dd yyyy HH:mm:ss 'GMT'Z";
+
     public static final String TEST_BASE_PATH = "/sling-tests";
     
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final SimpleDateFormat[] testFormats = new SimpleDateFormat[]{
-        new SimpleDateFormat("EEE MMM dd yyyy HH:mm:ss 'GMT'Z", Locale.US),
+        new SimpleDateFormat(ECMA_FORMAT, Locale.US),
         new SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.US),
         new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US),
         new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US)
@@ -76,7 +81,7 @@ public class SlingDateValuesTest extends HttpTestBase {
     }
 
     public void testDateValues() throws IOException {
-        SimpleDateFormat ecmaFmt = new SimpleDateFormat("EEE MMM dd yyyy HH:mm:ss 'GMT'Z", Locale.US);
+        SimpleDateFormat ecmaFmt = new SimpleDateFormat(ECMA_FORMAT, Locale.US);
         Date now = new Date();
         Date date2 = new Date(10000042L);
         String nowStr = ecmaFmt.format(now);
@@ -86,5 +91,26 @@ public class SlingDateValuesTest extends HttpTestBase {
             String test2Str = fmt.format(date2);
             doDateTest(nowStr, testStr, date2Str, test2Str);
         }
+    }
+    
+    public void testDateTimezone() throws IOException {
+        
+        TimeZone tzLosAngeles = TimeZone.getTimeZone("America/Los_Angeles");
+        Calendar calendar= Calendar.getInstance(tzLosAngeles);
+        SimpleDateFormat ecmaFmt = new SimpleDateFormat(ECMA_FORMAT, Locale.US);
+        ecmaFmt.setTimeZone(calendar.getTimeZone());
+        
+        calendar.set(Calendar.YEAR, 2000);
+        String date1ISO= ISO8601.format(calendar);
+        String date1Ecma=ecmaFmt.format(calendar.getTime());
+        
+        TimeZone tzMoscow= TimeZone.getTimeZone("Europe/Moscow");
+        Date now= new Date();
+        calendar.setTime(now);
+        calendar.setTimeZone(tzMoscow);
+        ecmaFmt.setTimeZone(tzMoscow);
+        String date2Ecma= ecmaFmt.format(now);
+        String date2ISO= ISO8601.format(calendar);
+        doDateTest(date1Ecma,date1ISO, date2Ecma,date2ISO);
     }
 }
