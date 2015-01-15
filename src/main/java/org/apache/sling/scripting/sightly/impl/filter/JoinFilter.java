@@ -27,7 +27,6 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.scripting.sightly.SightlyException;
-import org.apache.sling.scripting.sightly.extension.ExtensionInstance;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.Expression;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.ExpressionNode;
@@ -58,32 +57,25 @@ public class JoinFilter extends FilterComponent implements RuntimeExtension {
     }
 
     @Override
-    public ExtensionInstance provide(final RenderContext renderContext) {
+    public Object call(final RenderContext renderContext, Object... arguments) {
+        if (arguments.length != 2) {
+            throw new SightlyException("Join function must be called with two arguments.");
+        }
+        Collection<?> collection = renderContext.toCollection(arguments[0]);
+        String joinString = renderContext.toString(arguments[1]);
+        return join(renderContext, collection, joinString);
+    }
 
-        return new ExtensionInstance() {
-            @Override
-            public Object call(Object... arguments) {
-                if (arguments.length != 2) {
-                    throw new SightlyException("Join function must be called with two arguments.");
-                }
-                Collection<?> collection = renderContext.toCollection(arguments[0]);
-                String joinString = renderContext.toString(arguments[1]);
-                return join(collection, joinString);
+    private String join(final RenderContext renderContext, Collection<?> collection, String joinString) {
+        StringBuilder sb = new StringBuilder();
+        Iterator<?> iterator = collection.iterator();
+        while (iterator.hasNext()) {
+            String element = renderContext.toString(iterator.next());
+            sb.append(element);
+            if (iterator.hasNext()) {
+                sb.append(joinString);
             }
-
-            private String join(Collection<?> collection, String joinString) {
-                StringBuilder sb = new StringBuilder();
-                Iterator<?> iterator = collection.iterator();
-                while (iterator.hasNext()) {
-                    String element = renderContext.toString(iterator.next());
-                    sb.append(element);
-                    if (iterator.hasNext()) {
-                        sb.append(joinString);
-                    }
-                }
-                return sb.toString();
-            }
-        };
-
+        }
+        return sb.toString();
     }
 }

@@ -23,7 +23,6 @@ import java.util.Map;
 
 import javax.script.Bindings;
 
-import org.apache.sling.scripting.sightly.extension.ExtensionInstance;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderUnit;
 
@@ -47,7 +46,7 @@ public interface RenderContext {
      *
      * @param functionName the name under which the extension is registered
      * @param arguments    the extension's arguments
-     * @return the {@link ExtensionInstance}'s result
+     * @return the {@link RuntimeExtension}'s result
      */
     Object call(String functionName, Object... arguments);
 

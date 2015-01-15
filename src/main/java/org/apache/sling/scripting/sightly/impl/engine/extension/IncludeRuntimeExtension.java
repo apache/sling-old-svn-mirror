@@ -35,7 +35,6 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.api.servlets.ServletResolver;
-import org.apache.sling.scripting.sightly.extension.ExtensionInstance;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.impl.engine.runtime.SightlyRenderException;
 import org.apache.sling.scripting.sightly.impl.plugin.IncludePlugin;
@@ -48,7 +47,6 @@ import org.slf4j.LoggerFactory;
 @Properties({
         @Property(name = RuntimeExtension.NAME, value = IncludePlugin.FUNCTION)
 })
-@SuppressWarnings("unused")
 /**
  * Runtime support for including resources in a Sightly script through {@code data-sly-include}. For more details check the implementation
  * of the {@link org.apache.sling.scripting.sightly.impl.plugin.IncludePlugin}.
@@ -62,70 +60,62 @@ public class IncludeRuntimeExtension implements RuntimeExtension {
 
 
     @Override
-    public ExtensionInstance provide(final RenderContext renderContext) {
+    public Object call(final RenderContext renderContext, Object... arguments) {
+        ExtensionUtils.checkArgumentCount(IncludePlugin.FUNCTION, arguments, 2);
+        String originalPath = renderContext.toString(arguments[0]);
+        Map options = (Map) arguments[1];
+        String path = buildPath(originalPath, options);
+        if (path == null) {
+            throw new SightlyRenderException("Path for include is empty");
+        }
+        StringWriter output = new StringWriter();
+        final Bindings bindings = renderContext.getBindings();
+        includeScript(bindings, path, new PrintWriter(output));
+        return output.toString();
 
-        return new ExtensionInstance() {
+    }
 
-            private final Bindings bindings = renderContext.getBindings();
+    private String buildPath(String path, Map options) {
+        if (StringUtils.isEmpty(path)) {
+            path = (String) options.get(OPTION_FILE);
+        }
+        if (StringUtils.isEmpty(path)) {
+            return null;
+        }
+        String prependPath = (String) options.get(OPTION_PREPEND_PATH);
+        String appendPath = (String) options.get(OPTION_APPEND_PATH);
+        if (StringUtils.isNotEmpty(prependPath)) {
+            path = prependPath + path;
+        }
+        if (StringUtils.isNotEmpty(appendPath)) {
+            path = path + appendPath;
+        }
+        return path;
+    }
 
-            @Override
-            public Object call(Object... arguments) {
-                ExtensionUtils.checkArgumentCount(IncludePlugin.FUNCTION, arguments, 2);
-                String originalPath = renderContext.toString(arguments[0]);
-                Map options = (Map) arguments[1];
-                String path = buildPath(originalPath, options);
-                if (path == null) {
-                    throw new SightlyRenderException("Path for include is empty");
-                }
-                StringWriter output = new StringWriter();
-                includeScript(path, new PrintWriter(output));
-                return output.toString();
-
-            }
-
-            private String buildPath(String path, Map options) {
-                if (StringUtils.isEmpty(path)) {
-                    path = (String) options.get(OPTION_FILE);
-                }
-                if (StringUtils.isEmpty(path)) {
-                    return null;
-                }
-                String prependPath = (String) options.get(OPTION_PREPEND_PATH);
-                String appendPath = (String) options.get(OPTION_APPEND_PATH);
-                if (StringUtils.isNotEmpty(prependPath)) {
-                    path = prependPath + path;
-                }
-                if (StringUtils.isNotEmpty(appendPath)) {
-                    path = path + appendPath;
-                }
-                return path;
-            }
-
-            private void includeScript(String script, PrintWriter out) {
-                if (StringUtils.isEmpty(script)) {
-                    LOG.error("Script path cannot be empty");
-                } else {
-                    SlingScriptHelper slingScriptHelper = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
-                    ServletResolver servletResolver = slingScriptHelper.getService(ServletResolver.class);
-                    if (servletResolver != null) {
-                        SlingHttpServletRequest request = (SlingHttpServletRequest) bindings.get(SlingBindings.REQUEST);
-                        Servlet servlet = servletResolver.resolveServlet(request.getResource(), script);
-                        if (servlet != null) {
-                            try {
-                                SlingHttpServletResponse response = (SlingHttpServletResponse) bindings.get(SlingBindings.RESPONSE);
-                                PrintWriterResponseWrapper resWrapper = new PrintWriterResponseWrapper(out, response);
-                                servlet.service(request, resWrapper);
-                            } catch (Exception e) {
-                                LOG.error("Failed to include script {}", script, e);
-                            }
-                        } else {
-                            LOG.error("Failed to locate script {}", script);
-                        }
-                    } else {
-                        LOG.error("Sling ServletResolver service is unavailable, failed to include {}", script);
+    private void includeScript(final Bindings bindings, String script, PrintWriter out) {
+        if (StringUtils.isEmpty(script)) {
+            LOG.error("Script path cannot be empty");
+        } else {
+            SlingScriptHelper slingScriptHelper = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
+            ServletResolver servletResolver = slingScriptHelper.getService(ServletResolver.class);
+            if (servletResolver != null) {
+                SlingHttpServletRequest request = (SlingHttpServletRequest) bindings.get(SlingBindings.REQUEST);
+                Servlet servlet = servletResolver.resolveServlet(request.getResource(), script);
+                if (servlet != null) {
+                    try {
+                        SlingHttpServletResponse response = (SlingHttpServletResponse) bindings.get(SlingBindings.RESPONSE);
+                        PrintWriterResponseWrapper resWrapper = new PrintWriterResponseWrapper(out, response);
+                        servlet.service(request, resWrapper);
+                    } catch (Exception e) {
+                        LOG.error("Failed to include script {}", script, e);
                     }
+                } else {
+                    LOG.error("Failed to locate script {}", script);
                 }
+            } else {
+                LOG.error("Sling ServletResolver service is unavailable, failed to include {}", script);
             }
-        };
+        }
     }
 }
