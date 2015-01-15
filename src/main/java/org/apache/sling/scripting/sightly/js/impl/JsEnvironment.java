@@ -34,8 +34,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.sightly.ResourceResolution;
-import org.mozilla.javascript.Context;
-import org.slf4j.LoggerFactory;
+import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.js.impl.async.AsyncContainer;
 import org.apache.sling.scripting.sightly.js.impl.async.TimingBindingsValuesProvider;
 import org.apache.sling.scripting.sightly.js.impl.async.UnaryCallback;
@@ -45,7 +44,8 @@ import org.apache.sling.scripting.sightly.js.impl.loop.EventLoopInterop;
 import org.apache.sling.scripting.sightly.js.impl.loop.Task;
 import org.apache.sling.scripting.sightly.js.impl.use.DependencyResolver;
 import org.apache.sling.scripting.sightly.js.impl.use.UseFunction;
-import org.apache.sling.scripting.sightly.use.SightlyUseException;
+import org.mozilla.javascript.Context;
+import org.slf4j.LoggerFactory;
 
 /**
  * Environment for running JS scripts
@@ -95,7 +95,7 @@ public class JsEnvironment {
             scriptResource = ResourceResolution.resolveComponentRelative(caller.getResourceResolver(), caller, path);
         }
         if (scriptResource == null) {
-            throw new SightlyUseException("Required script resource could not be located: " + path);
+            throw new SightlyException("Required script resource could not be located: " + path);
         }
         runResource(scriptResource, globalBindings, arguments, callback);
     }
@@ -163,7 +163,7 @@ public class JsEnvironment {
                         callback.invoke(result);
                     }
                 } catch (ScriptException e) {
-                    throw new SightlyUseException(e);
+                    throw new SightlyException(e);
                 } finally {
                     IOUtils.closeQuietly(reader);
                 }

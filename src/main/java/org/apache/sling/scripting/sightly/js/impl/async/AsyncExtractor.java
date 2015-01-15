@@ -18,13 +18,13 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.js.impl.async;
 
+import org.apache.sling.scripting.sightly.SightlyException;
 import org.mozilla.javascript.BaseFunction;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.apache.sling.scripting.sightly.js.impl.loop.EventLoopInterop;
-import org.apache.sling.scripting.sightly.use.SightlyUseException;
 
 /**
  *
@@ -60,8 +60,7 @@ public class AsyncExtractor {
                 }
             });
             if (errorContainer.isCompleted()) {
-                throw new SightlyUseException("Promise has completed with failure: " +
-                        Context.toString(errorContainer.getResult()));
+                throw new SightlyException("Promise has completed with failure: " + Context.toString(errorContainer.getResult()));
             }
         } finally {
             Context.exit();
