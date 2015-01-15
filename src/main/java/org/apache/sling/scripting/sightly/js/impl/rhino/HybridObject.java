@@ -44,7 +44,7 @@ public class HybridObject implements Scriptable, Record<Object> {
     // Record implementation
 
     @Override
-    public Object get(String name) {
+    public Object getProperty(String name) {
         if (name == null) {
             return null;
         }
@@ -57,7 +57,7 @@ public class HybridObject implements Scriptable, Record<Object> {
     }
 
     @Override
-    public Set<String> properties() {
+    public Set<String> getPropertyNames() {
         Object[] properties = scriptable.getIds();
         Set<String> keys = new HashSet<String>();
         for (Object property: properties) {
