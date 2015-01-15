@@ -250,39 +250,5 @@
         </plugins>
       </build>
     </profile>
-    <profile>
-      <id>coverage</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.jacoco</groupId>
-            <artifactId>jacoco-maven-plugin</artifactId>
-            <executions>
-              <!-- Default to setup argLine required by surefire -->
-              <execution>
-                <id>prepare-agent-surefire</id>
-                <phase>test-compile</phase>
-                <goals>
-                  <goal>prepare-agent</goal>
-                </goals>
-                <configuration>
-                  <propertyName>coverage.command</propertyName>
-                  <includes>
-                    <include>org.apache.sling.datasource.internal.*</include>
-                  </includes>
-                </configuration>
-              </execution>
-              <execution>
-                <id>report</id>
-                <phase>post-integration-test</phase>
-                <goals>
-                  <goal>report</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
   </profiles>
 </project>
