@@ -121,7 +121,7 @@ public abstract class JsonObjectCreator {
     private static final Locale DATE_FORMAT_LOCALE = Locale.US;
 
 
-    private static synchronized String format(final Calendar date) {
+    private static String format(final Calendar date) {
         DateFormat formatter = new SimpleDateFormat(ECMA_DATE_FORMAT, DATE_FORMAT_LOCALE);
         formatter.setTimeZone(date.getTimeZone());
         return formatter.format(date.getTime());
