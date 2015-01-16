@@ -31,21 +31,21 @@ import org.apache.sling.scripting.sightly.impl.compiler.util.stream.EmitterVisit
 import org.apache.sling.scripting.sightly.impl.compiler.util.stream.PushStream;
 import org.apache.sling.scripting.sightly.impl.compiler.util.stream.Streams;
 import org.apache.sling.scripting.sightly.impl.compiler.visitor.TrackingVisitor;
-import org.apache.sling.scripting.sightly.render.RenderContext;
+import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 
 /**
  * Optimization which evaluates constant expressions during compilation-time
  */
 public final class ConstantFolding extends TrackingVisitor<EvalResult> implements EmitterVisitor {
 
-    private final RenderContext renderContext;
+    private final RenderContextImpl renderContext;
     private final PushStream outStream = new PushStream();
 
-    private ConstantFolding(RenderContext renderContext) {
+    private ConstantFolding(RenderContextImpl renderContext) {
         this.renderContext = renderContext;
     }
 
-    public static StreamTransformer transformer(final RenderContext renderContext) {
+    public static StreamTransformer transformer(final RenderContextImpl renderContext) {
         return new StreamTransformer() {
             @Override
             public CommandStream transform(CommandStream inStream) {
