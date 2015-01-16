@@ -30,7 +30,6 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingBindings;
-import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.sightly.ResourceResolution;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyScriptEngineFactory;
 import org.apache.sling.scripting.sightly.impl.engine.UnitLoader;
@@ -79,12 +78,7 @@ public class RenderUnitProvider implements UseProvider {
     private Resource locateResource(Bindings bindings, String script, RenderContext renderContext) {
         ResourceResolver adminResolver = RenderContextImpl.getScriptResourceResolver(renderContext);
         SlingHttpServletRequest request = (SlingHttpServletRequest) bindings.get(SlingBindings.REQUEST);
-        SlingScriptHelper ssh = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
-        Resource resource = ResourceResolution.resolveComponentForRequest(adminResolver, request);
-        if (resource != null) {
-            return ResourceResolution.resolveComponentRelative(adminResolver, resource, script);
-        } else {
-            return ResourceResolution.resolveComponentRelative(adminResolver, ssh.getScript().getScriptResource(), script);
-        }
+        Resource resource = ResourceResolution.getResourceForRequest(adminResolver, request);
+        return ResourceResolution.getResourceFromSearchPath(resource, script);
     }
 }
