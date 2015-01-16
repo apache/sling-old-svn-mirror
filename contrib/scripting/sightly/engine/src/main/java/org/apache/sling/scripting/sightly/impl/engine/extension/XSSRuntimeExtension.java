@@ -31,7 +31,6 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.scripting.sightly.SightlyException;
-import org.apache.sling.scripting.sightly.extension.ExtensionInstance;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.impl.compiler.CompilerException;
 import org.apache.sling.scripting.sightly.impl.filter.XSSFilter;
@@ -57,78 +56,71 @@ public class XSSRuntimeExtension implements RuntimeExtension {
     private static final Pattern VALID_ATTRIBUTE = Pattern.compile("^[a-zA-Z_:][\\-a-zA-Z0-9_:\\.]*$");
 
     @Override
-    public ExtensionInstance provide(final RenderContext renderContext) {
-
+    public Object call(final RenderContext renderContext, Object... arguments) {
+        if (arguments.length < 2) {
+            throw new SightlyException(
+                    String.format("Extension %s requires at least %d arguments", XSSFilter.FUNCTION_NAME, 2));
+        }
+        Object original = arguments[0];
+        Object option = arguments[1];
+        Object hint = null;
+        if (arguments.length >= 3) {
+            hint = arguments[2];
+        }
+        MarkupContext markupContext = null;
+        if (option != null && option instanceof String) {
+            String name = (String) option;
+            markupContext = MarkupContext.lookup(name);
+        }
+        if (markupContext == MarkupContext.UNSAFE) {
+            return original;
+        }
+        if (markupContext == null) {
+            LOG.warn("Expression context {} is invalid, expression will be replaced by the empty string", option);
+            return "";
+        }
+        String text = renderContext.toString(original);
         final XSSAPI xssapi = obtainAPI(renderContext.getBindings());
+        return applyXSSFilter(xssapi, text, hint, markupContext);
+    }
 
-        return new ExtensionInstance() {
-            @Override
-            public Object call(Object... arguments) {
-                if (arguments.length < 2) {
-                    throw new SightlyException(
-                            String.format("Extension %s requires at least %d arguments", XSSFilter.FUNCTION_NAME, 2));
-                }
-                Object original = arguments[0];
-                Object option = arguments[1];
-                Object hint = null;
-                if (arguments.length >= 3) {
-                    hint = arguments[2];
-                }
-                MarkupContext markupContext = null;
-                if (option != null && option instanceof String) {
-                    String name = (String) option;
-                    markupContext = MarkupContext.lookup(name);
-                }
-                if (markupContext == MarkupContext.UNSAFE) {
-                    return original;
-                }
-                if (markupContext == null) {
-                    LOG.warn("Expression context {} is invalid, expression will be replaced by the empty string", option);
-                    return "";
-                }
-                String text = renderContext.toString(original);
-                return applyXSSFilter(text, hint, markupContext);
-            }
+    private String applyXSSFilter(final XSSAPI xssapi, String text, Object hint, MarkupContext xssContext) {
+        if (xssContext.equals(MarkupContext.ATTRIBUTE) && hint instanceof String) {
+            String attributeName = (String) hint;
+            MarkupContext attrMarkupContext = getAttributeMarkupContext(attributeName);
+            return applyXSSFilter(xssapi, text, attrMarkupContext);
+        }
+        return applyXSSFilter(xssapi, text, xssContext);
+    }
 
-            private String applyXSSFilter(String text, Object hint, MarkupContext xssContext) {
-                if (xssContext.equals(MarkupContext.ATTRIBUTE) && hint instanceof String) {
-                    String attributeName = (String) hint;
-                    MarkupContext attrMarkupContext = getAttributeMarkupContext(attributeName);
-                    return applyXSSFilter(text, attrMarkupContext);
-                }
-                return applyXSSFilter(text, xssContext);
-            }
-
-            private String applyXSSFilter(String text, MarkupContext xssContext) {
-                switch (xssContext) {
-                    case ATTRIBUTE:
-                        return xssapi.encodeForHTMLAttr(text);
-                    case COMMENT:
-                    case TEXT:
-                        return xssapi.encodeForHTML(text);
-                    case ATTRIBUTE_NAME:
-                        return escapeAttributeName(text);
-                    case NUMBER:
-                        return xssapi.getValidLong(text, 0).toString();
-                    case URI:
-                        return xssapi.getValidHref(text);
-                    case SCRIPT_TOKEN:
-                    case SCRIPT_COMMENT:
-                        return xssapi.getValidJSToken(text, "");
-                    case STYLE_TOKEN:
-                        return xssapi.getValidStyleToken(text, "");
-                    case SCRIPT_STRING:
-                        return xssapi.encodeForJSString(text);
-                    case STYLE_STRING:
-                        return xssapi.encodeForCSSString(text);
-                    case ELEMENT_NAME:
-                        return escapeElementName(text);
-                    case HTML:
-                        return xssapi.filterHTML(text);
-                }
-                return text; //todo: apply the rest of XSS filters
-            }
-        };
+    private String applyXSSFilter(final XSSAPI xssapi, String text, MarkupContext xssContext) {
+        switch (xssContext) {
+            case ATTRIBUTE:
+                return xssapi.encodeForHTMLAttr(text);
+            case COMMENT:
+            case TEXT:
+                return xssapi.encodeForHTML(text);
+            case ATTRIBUTE_NAME:
+                return escapeAttributeName(text);
+            case NUMBER:
+                return xssapi.getValidLong(text, 0).toString();
+            case URI:
+                return xssapi.getValidHref(text);
+            case SCRIPT_TOKEN:
+            case SCRIPT_COMMENT:
+                return xssapi.getValidJSToken(text, "");
+            case STYLE_TOKEN:
+                return xssapi.getValidStyleToken(text, "");
+            case SCRIPT_STRING:
+                return xssapi.encodeForJSString(text);
+            case STYLE_STRING:
+                return xssapi.encodeForCSSString(text);
+            case ELEMENT_NAME:
+                return escapeElementName(text);
+            case HTML:
+                return xssapi.filterHTML(text);
+        }
+        return text; //todo: apply the rest of XSS filters
     }
 
     private String escapeElementName(String original) {

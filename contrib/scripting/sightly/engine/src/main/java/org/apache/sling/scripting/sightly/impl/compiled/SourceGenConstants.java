@@ -48,6 +48,6 @@ public final class SourceGenConstants {
     public static final String MAP_GET = "get";
     public static final String TRIM_METHOD = "trim";
     public static final String STRING_EMPTY = "isEmpty";
-    public static final String OBJ_GET = "get";
+    public static final String RECORD_GET_VALUE = "getProperty";
     public static final String ARGUMENTS_FIELD = "arguments";
 }

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 
+import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -36,15 +37,16 @@ public class ResourceSharedDistributionPackage implements SharedDistributionPack
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     protected static final String  REFERENCE_ROOT_NODE = "refs";
-    private static final String  PN_REFERENCE_COUNT = "ref.count";
 
 
     private final ResourceResolver resourceResolver;
     private final String packagePath;
     private final DistributionPackage distributionPackage;
+    private final String packageName;
 
-    public ResourceSharedDistributionPackage(ResourceResolver resourceResolver, String packagePath, DistributionPackage distributionPackage) {
+    public ResourceSharedDistributionPackage(ResourceResolver resourceResolver, String packageName, String packagePath, DistributionPackage distributionPackage) {
         this.resourceResolver = resourceResolver;
+        this.packageName = packageName;
         this.packagePath = packagePath;
         this.distributionPackage = distributionPackage;
     }
@@ -83,7 +85,7 @@ public class ResourceSharedDistributionPackage implements SharedDistributionPack
 
     @Nonnull
     public String getId() {
-        return packagePath;
+        return packageName;
     }
 
     @Nonnull

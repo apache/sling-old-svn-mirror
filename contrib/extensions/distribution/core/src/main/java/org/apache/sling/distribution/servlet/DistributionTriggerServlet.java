@@ -29,6 +29,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.resources.DistributionResourceTypes;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.distribution.trigger.DistributionTriggerException;
@@ -38,7 +39,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Triggers Server Sent Events servlet
  */
-@SlingServlet(resourceTypes = "sling/distribution/service/trigger", extensions = "event", methods = "GET")
+@SlingServlet(resourceTypes = DistributionResourceTypes.TRIGGER_RESOURCE_TYPE, extensions = "event", methods = "GET")
 public class DistributionTriggerServlet extends SlingAllMethodsServlet {
 
     private final Logger log = LoggerFactory.getLogger(getClass());

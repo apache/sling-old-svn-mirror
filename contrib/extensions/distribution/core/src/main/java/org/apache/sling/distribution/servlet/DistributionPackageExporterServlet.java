@@ -33,7 +33,7 @@ import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
-import org.apache.sling.distribution.resources.DistributionConstants;
+import org.apache.sling.distribution.resources.DistributionResourceTypes;
 import org.apache.sling.distribution.util.RequestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Servlet to handle fetching of distribution content.
  */
-@SlingServlet(resourceTypes = DistributionConstants.EXPORTER_RESOURCE_TYPE, methods = "POST")
+@SlingServlet(resourceTypes = DistributionResourceTypes.EXPORTER_RESOURCE_TYPE, methods = "POST")
 public class DistributionPackageExporterServlet extends SlingAllMethodsServlet {
 
     private final Logger log = LoggerFactory.getLogger(getClass());

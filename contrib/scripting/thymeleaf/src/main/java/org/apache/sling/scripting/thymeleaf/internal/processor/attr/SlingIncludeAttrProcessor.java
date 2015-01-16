@@ -23,14 +23,12 @@ import java.io.IOException;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
-import org.apache.sling.scripting.core.servlet.BufferedServletOutputStream;
 import org.apache.sling.scripting.core.servlet.CaptureResponseWrapper;
 import org.apache.sling.scripting.thymeleaf.internal.SlingWebContext;
 import org.apache.sling.scripting.thymeleaf.internal.dom.NodeUtil;
@@ -137,19 +135,14 @@ public class SlingIncludeAttrProcessor extends AbstractAttrProcessor {
             }
 
             if (dispatcher != null) {
-                final String encoding = slingHttpServletResponse.getCharacterEncoding();
-                final BufferedServletOutputStream bsos = new BufferedServletOutputStream(encoding);
                 try {
-                    final CaptureResponseWrapper wrapper = new CaptureResponseWrapper(slingHttpServletResponse, bsos);
+                    final CaptureResponseWrapper wrapper = new CaptureResponseWrapper(slingHttpServletResponse);
                     dispatcher.include(slingHttpServletRequest, wrapper);
                     if (!wrapper.isBinaryResponse()) {
-                        wrapper.flushBuffer();
-                        return bsos.getBuffer();
+                        return wrapper.getCapturedCharacterResponse();
                     }
                 } catch (ServletException e) {
                     logger.error(e.getMessage(), e);
-                } finally {
-                    IOUtils.closeQuietly(bsos);
                 }
             } else {
                 logger.error("no request dispatcher: unable to include {}/'{}'", resource, path);

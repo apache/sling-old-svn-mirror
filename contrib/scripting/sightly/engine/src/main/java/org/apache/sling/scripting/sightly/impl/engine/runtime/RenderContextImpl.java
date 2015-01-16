@@ -27,7 +27,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -42,7 +41,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.scripting.sightly.Record;
 import org.apache.sling.scripting.sightly.SightlyException;
-import org.apache.sling.scripting.sightly.extension.ExtensionInstance;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 
@@ -62,7 +60,6 @@ public class RenderContextImpl implements RenderContext {
     private final Bindings bindings;
     private final Map<String, RuntimeExtension> mapping;
     private final ResourceResolver scriptResourceResolver;
-    private final Map<String, ExtensionInstance> instanceCache = new HashMap<String, ExtensionInstance>();
 
     public static ResourceResolver getScriptResourceResolver(RenderContext renderContext) {
         if (renderContext instanceof RenderContextImpl) {
@@ -93,21 +90,11 @@ public class RenderContextImpl implements RenderContext {
 
     @Override
     public Object call(String functionName, Object... arguments) {
-        ExtensionInstance instance;
-        instance = instanceCache.get(functionName);
-        if (instance == null) {
-            instance = createInstance(functionName);
-            instanceCache.put(functionName, instance);
-        }
-        return instance.call(arguments);
-    }
-
-    private ExtensionInstance createInstance(String name) {
-        RuntimeExtension extension = mapping.get(name);
+        RuntimeExtension extension = mapping.get(functionName);
         if (extension == null) {
-            throw new SightlyRenderException("Runtime extension is not available: " + name);
+            throw new SightlyRenderException("Runtime extension is not available: " + functionName);
         }
-        return extension.provide(this);
+        return extension.call(this, arguments);
     }
 
     @Override
@@ -172,7 +159,7 @@ public class RenderContextImpl implements RenderContext {
             return ((Map) obj).keySet();
         }
         if (obj instanceof Record) {
-            return ((Record) obj).properties();
+            return ((Record) obj).getPropertyNames();
         }
         if (obj instanceof Enumeration) {
             return Collections.list((Enumeration<Object>) obj);
@@ -245,7 +232,7 @@ public class RenderContextImpl implements RenderContext {
             result = getMapProperty((Map) target, property);
         }
         if (result == null && target instanceof Record) {
-            result = ((Record) target).get(property);
+            result = ((Record) target).getProperty(property);
         }
         if (result == null) {
             result = getObjectProperty(target, property);

@@ -30,6 +30,8 @@ import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus.ItemState;
+import org.apache.sling.distribution.queue.DistributionQueueState;
+import org.apache.sling.distribution.queue.impl.DistributionQueueUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,19 +103,35 @@ public class SimpleDistributionQueue implements DistributionQueue {
         return queue.isEmpty();
     }
 
+    public int getItemsCount() {
+        return queue.size();
+    }
+
+    public DistributionQueueState getState() {
+        return DistributionQueueUtils.calculateState(this);
+    }
+
+
     @Nonnull
     public Iterable<DistributionQueueItem> getItems(int skip, int limit) {
         return queue;
     }
 
-
-    public DistributionQueueItem remove(@Nonnull String id) {
+    public DistributionQueueItem getItem(@Nonnull String id) {
         DistributionQueueItem toRemove = null;
         for (DistributionQueueItem item : queue) {
             if (id.equals(item.getId())) {
-                toRemove = item;
+                return item;
             }
         }
+
+        return null;
+    }
+
+
+    public DistributionQueueItem remove(@Nonnull String id) {
+        DistributionQueueItem toRemove =getItem(id);
+
         boolean removed = false;
         if (toRemove != null) {
             removed = queue.remove(toRemove);

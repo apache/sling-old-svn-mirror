@@ -22,17 +22,17 @@ package org.apache.sling.distribution.resources.impl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.distribution.component.impl.DistributionComponent;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.component.impl.DistributionComponentProvider;
 import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
+import org.apache.sling.distribution.resources.DistributionResourceTypes;
 import org.apache.sling.distribution.resources.impl.common.AbstractReadableResourceProvider;
+import org.apache.sling.distribution.resources.impl.common.SimplePathInfo;
 
 /**
  * {@link ResourceProvider} for Osgi services for a specific service interface.
@@ -44,17 +44,52 @@ public class DistributionServiceResourceProvider extends AbstractReadableResourc
     private final DistributionComponentKind kind;
     private final DistributionComponentProvider componentProvider;
 
+    private static final String SERVICES_RESOURCE_TYPE = DistributionResourceTypes.DEFAULT_SERVICE_RESOURCE_TYPE;
+
 
     public DistributionServiceResourceProvider(String kind,
                                                DistributionComponentProvider componentProvider,
-                                               String resourceRoot,
-                                               Map<String, String> additionalResourceProperties) {
-        super(resourceRoot, additionalResourceProperties);
+                                               String resourceRoot) {
+        super(resourceRoot);
         this.kind = DistributionComponentKind.fromName(kind);
         this.componentProvider = componentProvider;
     }
 
+
+
     @Override
+    protected Map<String, Object> getResourceProperties(SimplePathInfo pathInfo) {
+        if (pathInfo.isRoot()) {
+            return getResourceRootProperties();
+        }
+        else if (pathInfo.isMain()) {
+            return getResourceProperties(pathInfo.getMainResourceName());
+        } else if (pathInfo.isChild()) {
+            DistributionComponent component = componentProvider.getComponent(kind, pathInfo.getMainResourceName());
+
+            if (component != null) {
+                return getChildResourceProperties(component, pathInfo.getChildResourceName());
+            }
+        }
+
+        return null;
+    }
+
+
+    @Override
+    protected Iterable<String> getResourceChildren(SimplePathInfo pathInfo) {
+        if (pathInfo.isMain()) {
+            DistributionComponent component = componentProvider.getComponent(kind, pathInfo.getMainResourceName());
+
+            if (component != null) {
+                return getChildResourceChildren(component, pathInfo.getChildResourceName());
+            }
+        }
+
+        return null;
+    }
+
+
     protected Map<String, Object> getResourceProperties(String resourceName) {
 
         DistributionComponent component = componentProvider.getComponent(kind, resourceName);
@@ -64,13 +99,15 @@ public class DistributionServiceResourceProvider extends AbstractReadableResourc
 
             properties.put(DistributionComponentUtils.PN_NAME, resourceName);
             properties.put(ADAPTABLE_PROPERTY_NAME, component.getService());
+
+            String resourceType = getResourceType(kind);
+            properties.put(SLING_RESOURCE_TYPE, resourceType);
             return properties;
         }
 
         return null;
     }
 
-    @Override
     protected Map<String, Object> getResourceRootProperties() {
 
         List<DistributionComponent> componentList = componentProvider.getComponents(kind);
@@ -81,13 +118,52 @@ public class DistributionServiceResourceProvider extends AbstractReadableResourc
         }
 
         Map<String, Object> result = new HashMap<String, Object>();
-        result.put("items", nameList.toArray(new String[nameList.size()]));
+        result.put(ITEMS, nameList.toArray(new String[nameList.size()]));
+
+        String resourceType = getRootResourceType(kind);
+        result.put(SLING_RESOURCE_TYPE, resourceType);
 
         return result;
     }
 
-    public Iterator<Resource> listChildren(Resource parent) {
+
+
+    String getResourceType(DistributionComponentKind kind) {
+        if (DistributionComponentKind.AGENT.equals(kind)) {
+            return DistributionResourceTypes.AGENT_RESOURCE_TYPE;
+        } else if (DistributionComponentKind.IMPORTER.equals(kind)) {
+            return DistributionResourceTypes.IMPORTER_RESOURCE_TYPE;
+        } else if (DistributionComponentKind.EXPORTER.equals(kind)) {
+            return DistributionResourceTypes.EXPORTER_RESOURCE_TYPE;
+        } else if (DistributionComponentKind.TRIGGER.equals(kind)) {
+            return DistributionResourceTypes.TRIGGER_RESOURCE_TYPE;
+        }
+
+        return SERVICES_RESOURCE_TYPE;
+    }
+
+    String getRootResourceType(DistributionComponentKind kind) {
+        if (DistributionComponentKind.AGENT.equals(kind)) {
+            return DistributionResourceTypes.AGENT_LIST_RESOURCE_TYPE;
+        } else if (DistributionComponentKind.IMPORTER.equals(kind)) {
+            return DistributionResourceTypes.IMPORTER_LIST_RESOURCE_TYPE;
+        } else if (DistributionComponentKind.EXPORTER.equals(kind)) {
+            return DistributionResourceTypes.EXPORTER_LIST_RESOURCE_TYPE;
+        } else if (DistributionComponentKind.TRIGGER.equals(kind)) {
+            return DistributionResourceTypes.TRIGGER_LIST_RESOURCE_TYPE;
+        }
+
+        return SERVICES_RESOURCE_TYPE;
+    }
+
+
+
+    protected Map<String, Object> getChildResourceProperties(DistributionComponent component, String childResourceName) {
         return null;
     }
 
+
+    protected Iterable<String> getChildResourceChildren(DistributionComponent component, String childResourceName) {
+        return null;
+    }
 }

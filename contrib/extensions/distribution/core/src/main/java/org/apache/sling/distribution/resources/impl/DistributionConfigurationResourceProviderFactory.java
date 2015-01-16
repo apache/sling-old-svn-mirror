@@ -59,28 +59,11 @@ public class DistributionConfigurationResourceProviderFactory implements Resourc
     @Property
     public final static String KIND = DistributionComponentUtils.PN_KIND;
 
-    /**
-     * resourceProperties contains the list of properties returned by this provider.
-     * Properties can be configured for the main resource, for the root resource and for child resources.
-     * Root resource properties are static and can be configured as follows:
-     * ../rootResourcePropertyName = rootResourcePropertyValue
-     * <p/>
-     * Main resource properties can be static or dynamic (depending on the underlying resource) are configured as follows:
-     * mainResourceStaticPropertyName = mainResourceStaticPropertyValue
-     * mainResourceDynamicPropertyName = {mainResourceSourcePropertyName}
-     * <p/>
-     * Child resource properties are static an can be configured as follows:
-     * childResourceName/childResourcePropertyName=childResourcePropertyValue
-     */
-    @Property(cardinality = Integer.MAX_VALUE)
-    public final static String RESOURCE_PROPERTIES = "resourceProperties";
-
     @Reference
     DistributionConfigurationManager configurationManager;
 
     private String resourceRoot;
     private String kind;
-    Map<String, String> additionalResourceProperties;
 
     @Activate
     public void activate(BundleContext context, Map<String, Object> properties) {
@@ -90,10 +73,6 @@ public class DistributionConfigurationResourceProviderFactory implements Resourc
         resourceRoot = PropertiesUtil.toString(properties.get(ResourceProvider.ROOTS), null);
         kind = PropertiesUtil.toString(properties.get(KIND), null);
 
-
-
-        additionalResourceProperties = PropertiesUtil.toMap(properties.get(RESOURCE_PROPERTIES), new String[0]);
-
     }
 
     @Deactivate
@@ -102,9 +81,7 @@ public class DistributionConfigurationResourceProviderFactory implements Resourc
     }
 
     public ResourceProvider getResourceProvider(Map<String, Object> authenticationInfo) throws LoginException {
-        return new DistributionConfigurationResourceProvider(configurationManager, kind,
-                resourceRoot,
-                additionalResourceProperties);
+        return new DistributionConfigurationResourceProvider(configurationManager, kind, resourceRoot);
     }
 
     public ResourceProvider getAdministrativeResourceProvider(Map<String, Object> authenticationInfo) throws LoginException {

@@ -24,24 +24,28 @@ import java.util.Set;
 import aQute.bnd.annotation.ConsumerType;
 
 /**
- * A key-value immutable object understood by the Sightly runtime
+ * A {@code Record} is a key-value immutable object understood by the Sightly runtime, used for abstracting complex objects like Sightly
+ * templates (declared with the {@code data-sly-template} block element) or objects that need to be translated from Java to JavaScript
+ * and back.
+ *
  * @param <T> the type of values for this record
  */
 @ConsumerType
 public interface Record<T> {
 
     /**
-     * Get the value of the specified property
+     * Gets the value of a specified property.
+     *
      * @param name the name of the property
-     * @return the value of the property or null if this record does not
-     * have the specified property
+     * @return the value of the property or {@code null} if this record does not have the specified property
      */
-    T get(String name);
+    T getProperty(String name);
 
     /**
-     * Get the set of properties for this record
-     * @return this record's properties
+     * Gets the set of names for this record's properties.
+     *
+     * @return this record's properties' names
      */
-    Set<String> properties();
+    Set<String> getPropertyNames();
 
 }

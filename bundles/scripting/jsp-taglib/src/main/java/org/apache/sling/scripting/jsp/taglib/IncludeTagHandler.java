@@ -26,8 +26,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.BodyContent;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.sling.scripting.core.servlet.BufferedServletOutputStream;
 import org.apache.sling.scripting.core.servlet.CaptureResponseWrapper;
 
 /**
@@ -55,19 +53,12 @@ public class IncludeTagHandler extends AbstractDispatcherTagHandler {
         if (var == null) {
         	dispatcher.include(request, response);
         } else {
-        	String encoding = response.getCharacterEncoding();
-        	BufferedServletOutputStream bsops = new BufferedServletOutputStream(encoding);
-        	try{
-	        	CaptureResponseWrapper wrapper = new CaptureResponseWrapper((HttpServletResponse) response, bsops);
-	        	dispatcher.include(request, wrapper);
-	        	if (! wrapper.isBinaryResponse()) {
-	        		wrapper.flushBuffer();
-	            	pageContext.setAttribute(var, bsops.getBuffer(), scope);
-	        	}
-        	}finally{
-        		IOUtils.closeQuietly(bsops);
-        	}
-        }
+			final CaptureResponseWrapper wrapper = new CaptureResponseWrapper((HttpServletResponse) response);
+			dispatcher.include(request, wrapper);
+			if (!wrapper.isBinaryResponse()) {
+				pageContext.setAttribute(var, wrapper.getCapturedCharacterResponse(), scope);
+			}
+		}
     }
 
     public void setPageContext(PageContext pageContext) {

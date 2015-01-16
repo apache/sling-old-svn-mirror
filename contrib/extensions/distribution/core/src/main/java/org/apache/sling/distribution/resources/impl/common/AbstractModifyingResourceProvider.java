@@ -36,9 +36,8 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
     private final Map<String, Map<String, Object>> changedResources = new HashMap<String, Map<String, Object>>();
     private final Set<String> deletedResources = new HashSet<String>();
 
-    protected AbstractModifyingResourceProvider(String resourceRoot,
-                                                Map<String, String> additionalResourceProperties) {
-        super(resourceRoot, additionalResourceProperties);
+    protected AbstractModifyingResourceProvider(String resourceRoot) {
+        super(resourceRoot);
 
     }
 
@@ -62,7 +61,9 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
             throw new PersistenceException("Resource already exists at " + path, null, resourceName, null);
         }
 
-        return buildMainResource(resolver, pathInfo, properties);
+        Resource resource = buildMainResource(resolver, pathInfo, properties);
+
+        return resource;
     }
 
     public void delete(ResourceResolver resolver, String requestPath) throws PersistenceException {
@@ -140,7 +141,6 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
         return true;
     }
 
-    @Override
     protected Map<String, Object> getMainResourceProperties(String resourceName) {
 
         if (deletedResources.contains(resourceName)) {
@@ -151,13 +151,19 @@ public abstract class AbstractModifyingResourceProvider extends AbstractReadable
             return changedResources.get(resourceName);
         }
 
-        return super.getMainResourceProperties(resourceName);
+        SimplePathInfo pathInfo = SimplePathInfo.parsePathInfo(resourceRoot, resourceRoot + "/" + resourceName);
+
+        return getResourceProperties(pathInfo);
     }
 
-    @Override
-    protected Resource buildMainResource(ResourceResolver resourceResolver, SimplePathInfo pathInfo, Map<String, Object> properties, Object... adapters) {
+    Resource buildMainResource(ResourceResolver resourceResolver,
+                               SimplePathInfo pathInfo,
+                               Map<String, Object> properties,
+                               Object... adapters) {
         return new SimpleModifiableResource(resourceResolver, this, pathInfo.getResourcePath(), properties);
     }
+
+
 
     protected abstract void save(ResourceResolver resourceResolver,
                                  Map<String, Map<String, Object>> changedResources,
