@@ -28,6 +28,10 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.sling.commons.json.JSONArray;
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.commons.json.JSONTokener;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.testing.tools.http.Request;
 import org.apache.sling.testing.tools.sling.SlingClient;
@@ -44,6 +48,25 @@ public class DistributionUtils {
 
     private static final String JSON_SELECTOR = ".json";
     private static final String DISTRIBUTION_ROOT_PATH = "/libs/sling/distribution";
+
+    public static JSONObject getResource(SlingInstance slingInstance, String path) throws IOException, JSONException {
+        if (!path.endsWith(JSON_SELECTOR)) {
+            path += JSON_SELECTOR;
+        }
+        Request request = slingInstance.getRequestBuilder().buildGetRequest(path)
+                .withCredentials(slingInstance.getServerUsername(), slingInstance.getServerPassword());
+
+
+        // Get list of tests in JSON format
+        String content = slingInstance.getRequestExecutor().execute(request)
+                .assertStatus(200)
+                .assertContentType("application/json").getContent();
+
+        // Parse JSON response for more precise testing
+        final JSONObject json = new JSONObject(new JSONTokener(content));
+
+        return json;
+    }
 
     public static String assertPostResourceWithParameters(SlingInstance slingInstance,
                                                            int status, String path, String... parameters) throws IOException {
@@ -193,7 +216,7 @@ public class DistributionUtils {
     }
 
     public static String queueUrl(String agentName) {
-        return agentUrl(agentName) + "/queue";
+        return agentUrl(agentName) + "/queues";
     }
 
     public static String authorAgentConfigUrl(String agentName) {

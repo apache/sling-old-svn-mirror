@@ -21,7 +21,6 @@ package org.apache.sling.distribution.agent.impl;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
 import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
-import org.apache.sling.distribution.resources.DistributionConstants;
 import org.apache.sling.distribution.resources.impl.OsgiUtils;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.osgi.framework.BundleContext;
@@ -73,9 +72,6 @@ public abstract class AbstractDistributionAgentFactory {
 
             agentName = PropertiesUtil.toString(config.get(NAME), null);
             props.put(NAME, agentName);
-
-            boolean isResource = PropertiesUtil.toBoolean(config.get(DistributionConstants.PN_IS_RESOURCE), false);
-            props.put(DistributionConstants.PN_IS_RESOURCE, isResource);
 
             if (componentReg == null) {
 

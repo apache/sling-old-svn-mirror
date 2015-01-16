@@ -23,7 +23,11 @@ package org.apache.sling.distribution.resources.impl.common;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
@@ -34,32 +38,15 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
 
     protected static final String ADAPTABLE_PROPERTY_NAME = "adaptable";
 
-    private static final String MAIN_RESOURCE_PREFIX = ".";
+    protected static final String ITEMS = "items";
 
-    private final String resourceRoot;
-    private final Map<String, Map<String, String>> additionalResourcePropertiesMap = new HashMap<String, Map<String, String>>();
+    protected static final String SLING_RESOURCE_TYPE = "sling:resourceType";
 
-    protected AbstractReadableResourceProvider(String resourceRoot,
-                                               Map<String, String> additionalResourceProperties) {
+    protected final String resourceRoot;
+
+    protected AbstractReadableResourceProvider(String resourceRoot) {
 
         this.resourceRoot = resourceRoot;
-
-        additionalResourcePropertiesMap.put(MAIN_RESOURCE_PREFIX, new HashMap<String, String>());
-        for (Map.Entry<String, String> entry : additionalResourceProperties.entrySet()) {
-            String resourceName = MAIN_RESOURCE_PREFIX;
-            String propertyName = entry.getKey();
-            int idx = propertyName.indexOf("/");
-            if (idx >= 0) {
-                resourceName = propertyName.substring(0, idx);
-                propertyName = propertyName.substring(idx + 1);
-            }
-
-            if (!additionalResourcePropertiesMap.containsKey(resourceName)) {
-                additionalResourcePropertiesMap.put(resourceName, new HashMap<String, String>());
-            }
-
-            additionalResourcePropertiesMap.get(resourceName).put(propertyName, entry.getValue());
-        }
     }
 
     public Resource getResource(ResourceResolver resourceResolver, HttpServletRequest request, String path) {
@@ -83,55 +70,17 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
 
         Resource resource = null;
 
-        if (pathInfo.isRoot()) {
+        Map<String, Object> properties = getResourceProperties(pathInfo);
 
-            Map<String, Object> properties = getResourceRootProperties();
+        if (properties != null) {
+            Object adaptable = properties.remove(ADAPTABLE_PROPERTY_NAME);
 
-            if (properties != null) {
-                Object adaptable = properties.remove(ADAPTABLE_PROPERTY_NAME);
-
-                Map<String, String> additionalProperties = additionalResourcePropertiesMap.get(MAIN_RESOURCE_PREFIX);
-                if (!properties.containsKey("sling:resourceType") && additionalProperties.containsKey("sling:resourceType")) {
-                    properties.put("sling:resourceType", additionalProperties.get("sling:resourceType") + "/list");
-                }
-                if (!properties.containsKey("sling:resourceSuperType") && additionalProperties.containsKey("sling:resourceSuperType")) {
-                    properties.put("sling:resourceSuperType", additionalProperties.get("sling:resourceSuperType") + "/list");
-                }
-
-                resource = new SimpleReadableResource(resourceResolver, pathInfo.getResourcePath(), properties, adaptable);
-            }
-        } else if (pathInfo.isMain()) {
-            Map<String, Object> properties = getMainResourceProperties(pathInfo.getMainResourceName());
-
-            Map<String, String> additionalProperties = additionalResourcePropertiesMap.get(MAIN_RESOURCE_PREFIX);
-            if (!properties.containsKey("sling:resourceType") && additionalProperties.containsKey("sling:resourceType")) {
-                properties.put("sling:resourceType", additionalProperties.get("sling:resourceType"));
-            }
-
-            if (properties != null) {
-                Object adaptable = properties.remove(ADAPTABLE_PROPERTY_NAME);
-
-                resource = buildMainResource(resourceResolver, pathInfo, properties, adaptable);
-            }
-        } else if (pathInfo.isChild()) {
-            Map<String, Object> mainProperties = getMainResourceProperties(pathInfo.getMainResourceName());
-            Map<String, String> childProperties = additionalResourcePropertiesMap.get(pathInfo.getChildResourceName());
-
-            if (mainProperties != null && childProperties != null) {
-                Object adaptable = mainProperties.remove(ADAPTABLE_PROPERTY_NAME);
-
-                Map<String, Object> properties = new HashMap<String, Object>();
-                properties.putAll(childProperties);
-                resource = new SimpleReadableResource(resourceResolver, pathInfo.getResourcePath(), properties, adaptable);
-            }
+            resource = buildMainResource(resourceResolver, pathInfo, properties, adaptable);
         }
 
         return resource;
     }
 
-    Map<String, Object> getMainResourceProperties(String resourceName) {
-        return getResourceProperties(resourceName);
-    }
 
     Resource buildMainResource(ResourceResolver resourceResolver,
                                SimplePathInfo pathInfo,
@@ -139,6 +88,9 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
                                Object... adapters) {
         return new SimpleReadableResource(resourceResolver, pathInfo.getResourcePath(), properties, adapters);
     }
+
+
+
 
     SimplePathInfo extractPathInfo(String path) {
         return SimplePathInfo.parsePathInfo(resourceRoot, path);
@@ -161,7 +113,50 @@ public abstract class AbstractReadableResourceProvider implements ResourceProvid
     }
 
 
-    protected abstract Map<String, Object> getResourceProperties(String resourceName);
+    public Iterator<Resource> listChildren(Resource parent) {
+        String path = parent.getPath();
+        ResourceResolver resourceResolver = parent.getResourceResolver();
 
-    protected abstract Map<String, Object> getResourceRootProperties();
+        SimplePathInfo pathInfo = extractPathInfo(path);
+
+        if (pathInfo == null) {
+            return null;
+        }
+
+        if (pathInfo.getResourcePathInfo() != null && pathInfo.getResourcePathInfo().length() > 0) {
+            return null;
+        }
+
+        if (!hasPermission(resourceResolver, pathInfo.getResourcePath(), Session.ACTION_READ)) {
+            return null;
+        }
+
+        List<Resource> resourceList = new ArrayList<Resource>();
+        Iterable<String> childrenList = getResourceChildren(pathInfo);
+
+        if (childrenList == null) {
+            Map<String, Object> properties = getResourceProperties(pathInfo);
+
+            if (properties != null && properties.containsKey(ITEMS)
+                    && properties.get(ITEMS) instanceof String[]) {
+                String[] itemsArray = (String[]) properties.get(ITEMS);
+                childrenList = Arrays.asList(itemsArray);
+            }
+        }
+
+        if (childrenList != null) {
+            for (String childResourceName : childrenList) {
+                Resource childResource = getResource(resourceResolver, path + "/" + childResourceName);
+
+                resourceList.add(childResource);
+            }
+        }
+
+        return resourceList.listIterator();
+    }
+
+
+    protected abstract Map<String, Object> getResourceProperties(SimplePathInfo pathInfo);
+    protected abstract Iterable<String> getResourceChildren(SimplePathInfo pathInfo);
+
 }

@@ -21,20 +21,29 @@ package org.apache.sling.distribution.resources;
 /**
  * constants distribution resource types and paths
  */
-public class DistributionConstants {
+public class DistributionResourceTypes {
 
-    private static final String SUFFIX_RESOURCE_LIST = "/list";
-    private static final String SUFFIX_AGENT_QUEUE = "/queue";
-    private static final String SUFFIX_AGENT_QUEUE_EVENT = "/queue/event";
+    public static final String DEFAULT_SETTING_RESOURCE_TYPE = "sling/distribution/setting";
+    public static final String DEFAULT_SERVICE_RESOURCE_TYPE = "sling/distribution/service";
+
 
     public static final String AGENT_RESOURCE_TYPE = "sling/distribution/service/agent";
-    public static final String AGENT_QUEUE_RESOURCE_TYPE = AGENT_RESOURCE_TYPE + SUFFIX_AGENT_QUEUE;
-    public static final String AGENT_QUEUE_EVENT_RESOURCE_TYPE = AGENT_QUEUE_RESOURCE_TYPE + SUFFIX_AGENT_QUEUE_EVENT;
-    public static final String AGENT_ROOT_RESOURCE_TYPE = AGENT_RESOURCE_TYPE + SUFFIX_RESOURCE_LIST;
+    public static final String AGENT_LIST_RESOURCE_TYPE = "sling/distribution/service/agent/list";
+    public static final String AGENT_QUEUE_RESOURCE_TYPE = "sling/distribution/service/agent/queue";
+    public static final String AGENT_QUEUE_LIST_RESOURCE_TYPE = "sling/distribution/service/agent/queue/list";
+    public static final String AGENT_QUEUE_ITEM_RESOURCE_TYPE = "sling/distribution/service/agent/queue/item";
+
+
 
     public static final String IMPORTER_RESOURCE_TYPE = "sling/distribution/service/importer";
-    public static final String EXPORTER_RESOURCE_TYPE = "sling/distribution/service/exporter";
+    public static final String IMPORTER_LIST_RESOURCE_TYPE = "sling/distribution/service/importer/list";
 
-    public static final String PN_IS_RESOURCE = "isResource";
+    public static final String EXPORTER_RESOURCE_TYPE = "sling/distribution/service/exporter";
+    public static final String EXPORTER_LIST_RESOURCE_TYPE = "sling/distribution/service/exporter/list";
+
+    public static final String TRIGGER_RESOURCE_TYPE = "sling/distribution/service/trigger";
+    public static final String TRIGGER_LIST_RESOURCE_TYPE = "sling/distribution/service/trigger/list";
+
+
 
 }

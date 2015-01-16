@@ -1,9 +1,5 @@
 {
     "jcr:primaryType": "sling:OsgiConfig",
     "provider.roots": [ "/libs/sling/distribution/services/triggers" ],
-    "kind" : "trigger",
-    "resourceProperties": [
-        "sling:resourceType=sling/distribution/service/trigger",
-        "sling:resourceSuperType=sling/distribution/service"
-    ]
+    "kind" : "trigger"
 }

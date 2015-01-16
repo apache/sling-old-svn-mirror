@@ -62,9 +62,11 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
         }
 
         try {
-            String packagePath = generatePathFromId(resourceResolver, distributionPackage);
+            String packageName = generateNameFromId(resourceResolver, distributionPackage);
+            String packagePath = getPathFromName(packageName);
 
-            return new ResourceSharedDistributionPackage(resourceResolver, packagePath, distributionPackage);
+
+            return new ResourceSharedDistributionPackage(resourceResolver, packageName, packagePath, distributionPackage);
         }
         catch (PersistenceException e) {
             throw new DistributionPackageBuildingException(e);
@@ -80,9 +82,10 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
         }
 
         try {
-            String packagePath = generatePathFromId(resourceResolver, distributionPackage);
+            String packageName = generateNameFromId(resourceResolver, distributionPackage);
+            String packagePath = getPathFromName(packageName);
 
-            return new ResourceSharedDistributionPackage(resourceResolver, packagePath, distributionPackage);
+            return new ResourceSharedDistributionPackage(resourceResolver, packageName, packagePath, distributionPackage);
         }
         catch (PersistenceException e) {
             throw new DistributionPackageReadingException(e);
@@ -90,7 +93,8 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
     }
 
     public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String distributionPackageId) {
-        String originalPackageId = retrieveIdFromPath(resourceResolver, distributionPackageId);
+        String packageName = distributionPackageId;
+        String originalPackageId = retrieveIdFromName(resourceResolver, packageName);
 
         if (originalPackageId == null) {
             return null;
@@ -101,8 +105,8 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
         if (distributionPackage == null) {
             return null;
         }
-
-        return new ResourceSharedDistributionPackage(resourceResolver, distributionPackageId, distributionPackage);
+        String packagePath = getPathFromName(packageName);
+        return new ResourceSharedDistributionPackage(resourceResolver, packageName, packagePath, distributionPackage);
     }
 
     public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageReadingException {
@@ -117,9 +121,8 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
     }
 
 
-    private String generatePathFromId(ResourceResolver resourceResolver, DistributionPackage distributionPackage) throws PersistenceException {
+    private String generateNameFromId(ResourceResolver resourceResolver, DistributionPackage distributionPackage) throws PersistenceException {
         String name = PACKAGE_NAME_PREFIX + "_" + System.currentTimeMillis() + "_" +  UUID.randomUUID();
-        String packagePath = sharedPackagesRoot + name;
 
         Map<String, Object> properties = new HashMap<String, Object>();
         properties.put(PN_ORIGINAL_ID, distributionPackage.getId());
@@ -133,7 +136,10 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
             properties.put(PN_ORIGINAL_PATHS, distributionPackage.getInfo().getPaths());
         }
 
-        Resource resource = ResourceUtil.getOrCreateResource(resourceResolver, packagePath, "sling:Folder", "sling:Folder", false);
+        String packagePath = getPathFromName(name);
+
+        Resource resource = ResourceUtil.getOrCreateResource(resourceResolver, packagePath,
+                "sling:Folder", "sling:Folder", false);
 
         ModifiableValueMap valueMap = resource.adaptTo(ModifiableValueMap.class);
         valueMap.putAll(properties);
@@ -142,14 +148,16 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
                 Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object)"sling:Folder"));
 
         resourceResolver.commit();
-        return packagePath;
-
+        return name;
     }
 
-    private String retrieveIdFromPath(ResourceResolver resourceResolver, String packagePath) {
-        if (!packagePath.startsWith(sharedPackagesRoot)) {
-            return null;
-        }
+    private String getPathFromName(String name) {
+        String packagePath = sharedPackagesRoot + name;
+        return packagePath;
+    }
+
+    private String retrieveIdFromName(ResourceResolver resourceResolver, String name) {
+        String packagePath = getPathFromName(name);
 
         Resource resource = resourceResolver.getResource(packagePath);
 
