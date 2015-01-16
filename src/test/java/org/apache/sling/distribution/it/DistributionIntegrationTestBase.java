@@ -77,9 +77,6 @@ public abstract class DistributionIntegrationTestBase {
 
             assertExists(authorClient, agentUrl("publish-multiple"));
 
-
-
-
             assertExists(authorClient, authorAgentConfigUrl("publish-reverse"));
 
             String remoteExporterUrl = publish.getServerBaseUrl() + exporterUrl("reverse");
