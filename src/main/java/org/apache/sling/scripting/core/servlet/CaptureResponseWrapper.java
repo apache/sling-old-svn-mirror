@@ -17,8 +17,8 @@
 package org.apache.sling.scripting.core.servlet;
 
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
@@ -28,24 +28,20 @@ import javax.servlet.http.HttpServletResponseWrapper;
  * Extends the HttpServletResponse to wrap the response and capture the results.
  */
 public final class CaptureResponseWrapper extends HttpServletResponseWrapper {
-    private final String encoding;
-    private final ServletOutputStream ops;
+
     private boolean isBinaryResponse = false;
-    private PrintWriter writer = null;
+
+    private PrintWriter writer;
+
+    private StringWriter stringWriter;
 
     /**
      * Construct a new CaptureResponseWrapper.
      *
-     * @param response
-     *            the response to wrap
-     * @param ops
-     *            the output stream to write to
+     * @param response the response to wrap
      */
-    public CaptureResponseWrapper(HttpServletResponse response,
-                           ServletOutputStream ops) {
+    public CaptureResponseWrapper(HttpServletResponse response) {
         super(response);
-        this.encoding = response.getCharacterEncoding();
-        this.ops = ops;
     }
 
     /**
@@ -56,7 +52,6 @@ public final class CaptureResponseWrapper extends HttpServletResponseWrapper {
     public boolean isBinaryResponse() {
         return isBinaryResponse;
     }
-
 
     /*
      * (non-Javadoc)
@@ -96,8 +91,22 @@ public final class CaptureResponseWrapper extends HttpServletResponseWrapper {
         if (isBinaryResponse) {
             throw new IOException("'getOutputStream()' has already been invoked for a binary data response.");
         }
-        writer = new PrintWriter(new OutputStreamWriter(ops, encoding));
+        stringWriter = new StringWriter();
+        writer = new PrintWriter(stringWriter);
         return writer;
+    }
+
+    /**
+     *
+     * @return the captured character response data
+     * @throws IOException if no character response data captured
+     */
+    public String getCapturedCharacterResponse() throws IOException {
+        if (stringWriter == null) {
+            throw new IOException("no character response data captured");
+        }
+        writer.flush();
+        return stringWriter.toString();
     }
 
 }
