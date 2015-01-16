@@ -1,11 +1,5 @@
 {
     "jcr:primaryType": "sling:OsgiConfig",
     "provider.roots": [ "/libs/sling/distribution/services/agents" ],
-    "kind" : "agent",
-    "resourceProperties": [
-        "sling:resourceType=sling/distribution/service/agent",
-        "sling:resourceSuperType=sling/distribution/service",
-
-        "queue/sling:resourceType=sling/distribution/service/agent/queue"
-    ]
+    "kind" : "agent"
 }
