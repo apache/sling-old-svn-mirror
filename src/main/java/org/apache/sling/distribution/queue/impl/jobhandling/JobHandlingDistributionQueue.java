@@ -29,6 +29,8 @@ import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus;
 import org.apache.sling.distribution.queue.DistributionQueueItemStatus.ItemState;
+import org.apache.sling.distribution.queue.DistributionQueueState;
+import org.apache.sling.distribution.queue.impl.DistributionQueueUtils;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.JobManager.QueryType;
@@ -154,6 +156,11 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
         return getJobs(0, -1).isEmpty();
     }
 
+    public int getItemsCount() {
+        List<Job> jobs = getJobs(0, -1);
+        return jobs.size();
+    }
+
     @Nonnull
     public List<DistributionQueueItem> getItems(int skip, int limit) {
 
@@ -165,6 +172,20 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
         }
 
         return items;
+    }
+
+    public DistributionQueueItem getItem(@Nonnull String id) {
+        Job job = getJob(id);
+
+        DistributionQueueItem item = null;
+
+        if (job != null) {
+            item = JobHandlingUtils.getItem(job);
+
+            return item;
+        }
+
+        return null;
     }
 
     public DistributionQueueItem remove(@Nonnull String id) {
@@ -180,6 +201,10 @@ public class JobHandlingDistributionQueue implements DistributionQueue {
 
         log.info("item with id {} removed from the queue: {}", id, removed);
         return item;
+    }
+
+    public DistributionQueueState getState() {
+        return DistributionQueueUtils.calculateState(this);
     }
 
 }

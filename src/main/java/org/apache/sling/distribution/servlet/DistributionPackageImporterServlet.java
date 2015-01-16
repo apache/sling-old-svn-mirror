@@ -29,14 +29,14 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
-import org.apache.sling.distribution.resources.DistributionConstants;
+import org.apache.sling.distribution.resources.DistributionResourceTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Servlet to handle reception of distribution content.
  */
-@SlingServlet(resourceTypes = DistributionConstants.IMPORTER_RESOURCE_TYPE, methods = "POST")
+@SlingServlet(resourceTypes = DistributionResourceTypes.IMPORTER_RESOURCE_TYPE, methods = "POST")
 public class DistributionPackageImporterServlet extends SlingAllMethodsServlet {
 
     private final Logger log = LoggerFactory.getLogger(getClass());

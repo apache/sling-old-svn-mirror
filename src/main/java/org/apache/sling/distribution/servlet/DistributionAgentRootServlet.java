@@ -31,14 +31,14 @@ import org.apache.sling.distribution.agent.DistributionAgentException;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
-import org.apache.sling.distribution.resources.DistributionConstants;
+import org.apache.sling.distribution.resources.DistributionResourceTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Servlet for aggregate distribution on all agents
  */
-@SlingServlet(resourceTypes = DistributionConstants.AGENT_ROOT_RESOURCE_TYPE, methods = "POST")
+@SlingServlet(resourceTypes = DistributionResourceTypes.AGENT_LIST_RESOURCE_TYPE, methods = "POST")
 public class DistributionAgentRootServlet extends SlingAllMethodsServlet {
 
     private final Logger log = LoggerFactory.getLogger(getClass());

@@ -62,22 +62,6 @@ public class DistributionServiceResourceProviderFactory implements ResourceProvi
     @Property
     public final static String KIND = DistributionComponentUtils.PN_KIND;
 
-    /**
-     * resourceProperties contains the list of properties returned by this provider.
-     * Properties can be configured for the main resource, for the root resource and for child resources.
-     * Root resource properties are static and can be configured as follows:
-     * ../rootResourcePropertyName = rootResourcePropertyValue
-     * <p/>
-     * Main resource properties can be static or dynamic (depending on the underlying resource) are configured as follows:
-     * mainResourceStaticPropertyName = mainResourceStaticPropertyValue
-     * mainResourceDynamicPropertyName = {mainResourceSourcePropertyName}
-     * <p/>
-     * Child resource properties are static an can be configured as follows:
-     * childResourceName/childResourcePropertyName=childResourcePropertyValue
-     */
-    @Property(cardinality = Integer.MAX_VALUE)
-    public final static String RESOURCE_PROPERTIES = "resourceProperties";
-
     @Reference
     DistributionComponentProvider componentProvider;
 
@@ -91,13 +75,9 @@ public class DistributionServiceResourceProviderFactory implements ResourceProvi
         String kind = PropertiesUtil.toString(properties.get(KIND), null);
         String resourceRoot = PropertiesUtil.toString(properties.get(ResourceProvider.ROOTS), null);
 
-
-        Map<String, String> additionalResourceProperties = PropertiesUtil.toMap(properties.get(RESOURCE_PROPERTIES), new String[0]);
-
-        resourceProvider = new DistributionServiceResourceProvider(kind,
+        resourceProvider = new ExtendedDistributionServiceResourceProvider(kind,
                 componentProvider,
-                resourceRoot,
-                additionalResourceProperties);
+                resourceRoot);
 
         log.debug("created resource provider {}", resourceProvider);
     }

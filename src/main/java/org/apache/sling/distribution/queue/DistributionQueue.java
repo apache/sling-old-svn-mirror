@@ -74,13 +74,6 @@ public interface DistributionQueue {
     DistributionQueueItem getHead();
 
     /**
-     * check if the queue is empty
-     *
-     * @return {@code true} if the queue is empty, {@code false} otherwise
-     */
-    boolean isEmpty();
-
-    /**
      * get all the items in the queue
      *
      * @param skip the number of items to skip
@@ -90,6 +83,16 @@ public interface DistributionQueue {
     @Nonnull
     Iterable<DistributionQueueItem> getItems(int skip, int limit);
 
+
+    /**
+     * gets an item from the queue by specifying its id
+     *
+     * @param packageId the id of the package represented by the item
+     * @return the item, or {@code null} if the item with the given id
+     * doesn't exist
+     */
+    DistributionQueueItem getItem(@Nonnull String packageId);
+
     /**
      * remove an item from the queue by specifying its id
      *
@@ -98,4 +101,23 @@ public interface DistributionQueue {
      * doesn't exist
      */
     DistributionQueueItem remove(@Nonnull String packageId);
+
+
+    /**
+     * check if the queue is empty
+     *
+     * @return {@code true} if the queue is empty, {@code false} otherwise
+     */
+    boolean isEmpty();
+
+    /**
+     * returns the count of items in the queue
+     */
+    int getItemsCount();
+
+    /**
+     * returns the state of the queue
+     * @return the queue state
+     */
+    DistributionQueueState getState();
 }
