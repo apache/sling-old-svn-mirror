@@ -38,30 +38,54 @@ public final class ResourceResolution {
     private static final int RECURSION_LIMIT = 100;
 
     /**
-     * Resolve the resource with the given path relative to the base resource, using the
-     * resource super type logic
-     * @param resourceResolver The resource resolver to be used
-     * @param base the base resource. It can be null if path is absolute
-     * @param path the path to the resource
-     * @return the retrieved resource or null if no resource was found
+     * <p>
+     * Resolves a resource from the search path relative to the {@code base} resource by traversing the {@code sling:resourceSuperType}
+     * chain.
+     * </p>
+     * <p>
+     * Since this method will traverse the {@code sling:resourceSuperType} chain, the {@code ResourceResolver} used for resolving the
+     * {@code base} resource should be able to read the super type resources.
+     * </p>
+     *
+     * @param base the base resource from which to start the lookup
+     * @param path the relative path to the resource; if the path is absolute the {@code Resource} identified by this path will be
+     *             returned
+     * @return the resource identified by the relative {@code path} or {@code null} if no resource was found
      * @throws java.lang.UnsupportedOperationException if the resource is not in the resource resolver's search path
-     * @throws java.lang.IllegalStateException if the number of steps necessary to search for the resource on the resource
-     * superType chain has reached the maximum limit
-     * @throws java.lang.IllegalArgumentException if a null componentResource is provided but the path is not absolute
+     * @throws java.lang.IllegalStateException         if the number of steps necessary to search for the resource on the resource
+     *                                                 superType chain has reached the maximum limit
+     * @see ResourceResolver#getSearchPath()
      */
-    public static Resource resolveComponentRelative(ResourceResolver resourceResolver, Resource base, String path) {
-        Resource componentResource = null;
+    public static Resource getResourceFromSearchPath(Resource base, String path) {
+        if (path.startsWith("/")) {
+            Resource resource = base.getResourceResolver().getResource(path);
+            if (resource != null) {
+                return searchPathChecked(resource);
+            }
+            return null;
+        }
+        Resource internalBase = null;
         if (base != null) {
             if ("nt:file".equals(base.getResourceType())) {
-                componentResource = retrieveParent(resourceResolver, base);
+                internalBase = retrieveParent(base);
             } else {
-                componentResource = base;
+                internalBase = base;
             }
         }
-        return resolveComponent(resourceResolver, componentResource, path);
+        return resolveComponentInternal(internalBase, path);
     }
 
-    public static Resource resolveComponentForRequest(ResourceResolver resolver, SlingHttpServletRequest request) {
+    /**
+     * <p>
+     * Resolves the resource accessed by a {@code request}. Since the {@code request} can use an anonymous {@code ResourceResolver}, the
+     * passed {@code resolver} parameter should have read access rights to resources from the search path.
+     * </p>
+     *
+     * @param resolver a {@link ResourceResolver} that has read access rights to resources from the search path
+     * @param request  the request
+     * @return the resource identified by the {@code request} or {@code null} if no resource was found
+     */
+    public static Resource getResourceForRequest(ResourceResolver resolver, SlingHttpServletRequest request) {
         String resourceType = request.getResource().getResourceType();
         if (StringUtils.isNotEmpty(resourceType)) {
             if (resourceType.startsWith("/")) {
@@ -80,43 +104,34 @@ public final class ResourceResolution {
 
     /**
      * Resolve the resource in the specified component
-     * @param resourceResolver The resource resolver to be used
-     * @param componentResource The resource for the component. It can be null if path is absolute
+     *
+     * @param base The resource for the component. It can be null if path is absolute
      * @param path the path to the resource
      * @return the retrieved resource or null if no resource was found
      * @throws java.lang.UnsupportedOperationException if the resource is not in the resource resolver's search path
-     * @throws java.lang.IllegalStateException if more than {@link ResourceResolution#RECURSION_LIMIT} steps were
-     * necessary to search for the resource on the resource superType chain
-     * @throws java.lang.IllegalArgumentException if a null componentResource is provided but the path is not absolute
+     * @throws java.lang.IllegalStateException         if more than {@link ResourceResolution#RECURSION_LIMIT} steps were
+     *                                                 necessary to search for the resource on the resource superType chain
      */
-    private static Resource resolveComponent(ResourceResolver resourceResolver, Resource componentResource, String path) {
-        if (resourceResolver == null || path == null) {
+    private static Resource resolveComponentInternal(Resource base, String path) {
+        if (base == null || path == null) {
             throw new NullPointerException("Arguments cannot be null");
         }
-        Resource resource = null;
-        if (isAbsolutePath(path)) {
-            resource = resourceResolver.getResource(path);
-        }
+        Resource resource = recursiveResolution(base, path);
         if (resource == null) {
-            if (componentResource == null) {
-                throw new IllegalArgumentException("Argument cannot be null if path is not absolute: " + path);
-            }
-            resource = recursiveResolution(resourceResolver, componentResource, path);
+            resource = locateInSearchPath(base.getResourceResolver(), path);
         }
-        if (resource == null) {
-            resource = locateInSearchPath(resourceResolver, path);
-        }
-        return resource != null ? searchPathChecked(resourceResolver, resource) : null;
+        return resource != null ? searchPathChecked(resource) : null;
     }
 
-    private static Resource recursiveResolution(ResourceResolver resourceResolver, Resource componentResource, String path) {
+    private static Resource recursiveResolution(Resource base, String path) {
+        ResourceResolver resolver = base.getResourceResolver();
         for (int iteration = 0; iteration < RECURSION_LIMIT; iteration++) {
-            Resource resource = resourceResolver.getResource(componentResource, path);
+            Resource resource = resolver.getResource(base, path);
             if (resource != null) {
                 return resource;
             }
-            componentResource = findSuperComponent(resourceResolver, componentResource);
-            if (componentResource == null) {
+            base = findSuperComponent(base);
+            if (base == null) {
                 return null;
             }
         }
@@ -136,9 +151,10 @@ public final class ResourceResolution {
         return null;
     }
 
-    private static boolean isInSearchPath(ResourceResolver resourceResolver, Resource resource) {
+    private static boolean isInSearchPath(Resource resource) {
         String resourcePath = resource.getPath();
-        for (String path : resourceResolver.getSearchPath()) {
+        ResourceResolver resolver = resource.getResourceResolver();
+        for (String path : resolver.getSearchPath()) {
             if (resourcePath.startsWith(path)) {
                 return true;
             }
@@ -146,31 +162,28 @@ public final class ResourceResolution {
         return false;
     }
 
-    private static Resource findSuperComponent(ResourceResolver resourceResolver, Resource base) {
-        String superType = resourceResolver.getParentResourceType(base);
+    private static Resource findSuperComponent(Resource base) {
+        ResourceResolver resolver = base.getResourceResolver();
+        String superType = resolver.getParentResourceType(base);
         if (superType == null) {
             return null;
         }
-        return resourceResolver.getResource(superType);
+        return resolver.getResource(superType);
     }
 
-    private static Resource searchPathChecked(ResourceResolver resourceResolver, Resource resource) {
-        if (!isInSearchPath(resourceResolver, resource)) {
-            throw new UnsupportedOperationException("Access to resource " + resource.getPath() + " is denied, since the resource does not reside on the search path");
+    private static Resource searchPathChecked(Resource resource) {
+        if (!isInSearchPath(resource)) {
+            throw new UnsupportedOperationException("Access to resource " + resource.getPath() + " is denied, since the resource does not" +
+                    " reside on the search path");
         }
         return resource;
     }
 
-    private static Resource retrieveParent(ResourceResolver resourceResolver, Resource resource) {
+    private static Resource retrieveParent(Resource resource) {
         String parentPath = ResourceUtil.getParent(resource.getPath());
         if (parentPath == null) {
             return null;
         }
-        return resourceResolver.getResource(parentPath);
+        return resource.getResourceResolver().getResource(parentPath);
     }
-
-    private static boolean isAbsolutePath(String path) {
-        return path.startsWith("/");
-    }
-
 }

@@ -73,8 +73,8 @@ public class UseProviderUtils {
             result = resourceResolver.getResource(script);
         }
         if (result == null) {
-            Resource componentResource = ResourceResolution.resolveComponentForRequest(resourceResolver, sling.getRequest());
-            result = ResourceResolution.resolveComponentRelative(resourceResolver, componentResource, script);
+            Resource componentResource = ResourceResolution.getResourceForRequest(resourceResolver, sling.getRequest());
+            result = ResourceResolution.getResourceFromSearchPath(componentResource, script);
         }
         if (result != null) {
             checkSearchPath(result, resourceResolver);
