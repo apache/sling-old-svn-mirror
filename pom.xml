@@ -45,9 +45,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/engine</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/engine</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/scripting/sightly/engine</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/scripting/sightly/engine</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/scripting/sightly/engine</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/scripting/sightly/engine</url>
     </scm>
 
     <properties>
