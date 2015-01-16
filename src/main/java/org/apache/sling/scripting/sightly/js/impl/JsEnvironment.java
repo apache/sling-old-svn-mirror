@@ -87,12 +87,12 @@ public class JsEnvironment {
     public void run(Resource caller, String path, Bindings globalBindings, Bindings arguments, UnaryCallback callback) {
         Resource scriptResource = caller.getChild(path);
         SlingScriptHelper scriptHelper = (SlingScriptHelper) globalBindings.get(SlingBindings.SLING);
-        Resource componentCaller = ResourceResolution.resolveComponentForRequest(caller.getResourceResolver(), scriptHelper.getRequest());
+        Resource componentCaller = ResourceResolution.getResourceForRequest(caller.getResourceResolver(), scriptHelper.getRequest());
         if (scriptResource == null) {
-            scriptResource = ResourceResolution.resolveComponentRelative(caller.getResourceResolver(), componentCaller, path);
+            scriptResource = ResourceResolution.getResourceFromSearchPath(componentCaller, path);
         }
         if (scriptResource == null) {
-            scriptResource = ResourceResolution.resolveComponentRelative(caller.getResourceResolver(), caller, path);
+            scriptResource = ResourceResolution.getResourceFromSearchPath(caller, path);
         }
         if (scriptResource == null) {
             throw new SightlyException("Required script resource could not be located: " + path);
