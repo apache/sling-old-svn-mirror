@@ -87,10 +87,13 @@
             <version>4.8.2</version>
             <scope>compile</scope>
         </dependency>
+        <!-- SLF4J is needed at runtime (whenever SlingRemoteTestRunner is executed) -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>1.5.11</version>
+            <!-- scope must be given explicitly because it has provided scope in the depMgmt -->
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
