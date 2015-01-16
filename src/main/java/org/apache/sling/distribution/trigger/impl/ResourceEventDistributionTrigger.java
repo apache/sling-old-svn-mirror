@@ -70,11 +70,10 @@ public class ResourceEventDistributionTrigger implements DistributionTrigger {
     }
 
     public void disable() {
-        for (Map.Entry<String, ServiceRegistration> entry : registrations.entrySet()) {
-            if (entry.getValue() != null) {
-                entry.getValue().unregister();
-            }
+        for (ServiceRegistration serviceRegistration : registrations.values()) {
+           serviceRegistration.unregister();
         }
+
         registrations.clear();
     }
 

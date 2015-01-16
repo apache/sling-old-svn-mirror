@@ -54,9 +54,13 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
     private Session cachedSession;
 
     AbstractJcrEventTrigger(SlingRepository repository, String path, String serviceUser) {
+        if (path == null || serviceUser == null) {
+            throw new IllegalArgumentException("path and service are required");
+        }
         this.repository = repository;
         this.path = path;
         this.serviceUser = serviceUser;
+
     }
 
     public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
@@ -115,6 +119,17 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
     }
 
     public void disable() {
+        for (JcrEventDistributionTriggerListener listener: registeredListeners.values()) {
+            Session session;
+            try {
+                session = getSession();
+                session.getWorkspace().getObservationManager().removeEventListener(listener);
+            } catch (RepositoryException e) {
+                log.error("unable to unregister handler {}", listener, e);
+            }
+        }
+        registeredListeners.clear();
+
         if (cachedSession != null) {
             cachedSession.logout();
             cachedSession = null;

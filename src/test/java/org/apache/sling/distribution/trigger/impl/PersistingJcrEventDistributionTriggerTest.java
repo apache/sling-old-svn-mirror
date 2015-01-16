@@ -37,7 +37,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Testcase for {@link PersistingJcrEventDistributionTrigger}
+ * Testcase for {@link PersistedJcrEventDistributionTrigger}
  */
 public class PersistingJcrEventDistributionTriggerTest {
 
@@ -50,7 +50,7 @@ public class PersistingJcrEventDistributionTriggerTest {
         when(repository.loginService(serviceName, null)).thenReturn(session);
         String path = "/some/path";
         String nuggetsPath = "/var/nuggets";
-        PersistingJcrEventDistributionTrigger persistingJcrEventdistributionTrigger = new PersistingJcrEventDistributionTrigger(
+        PersistedJcrEventDistributionTrigger persistingJcrEventdistributionTrigger = new PersistedJcrEventDistributionTrigger(
                 repository, path, serviceName, nuggetsPath);
         Event event = mock(Event.class);
         DistributionRequest distributionRequest = persistingJcrEventdistributionTrigger.processEvent(event);
@@ -75,7 +75,7 @@ public class PersistingJcrEventDistributionTriggerTest {
         when(repository.loginService(serviceName, null)).thenReturn(session);
         String path = "/some/path";
         String nuggetsPath = "/var/nuggets";
-        PersistingJcrEventDistributionTrigger persistingJcrEventdistributionTrigger = new PersistingJcrEventDistributionTrigger(
+        PersistedJcrEventDistributionTrigger persistingJcrEventdistributionTrigger = new PersistedJcrEventDistributionTrigger(
                 repository, path, serviceName, nuggetsPath);
         Event event = mock(Event.class);
         DistributionRequest distributionRequest = persistingJcrEventdistributionTrigger.processEvent(event);
@@ -98,7 +98,7 @@ public class PersistingJcrEventDistributionTriggerTest {
         when(repository.loginService(serviceName, null)).thenReturn(session);
 
         String path = "/some/path";
-        PersistingJcrEventDistributionTrigger persistingJcrEventdistributionTrigger = new PersistingJcrEventDistributionTrigger(
+        PersistedJcrEventDistributionTrigger persistingJcrEventdistributionTrigger = new PersistedJcrEventDistributionTrigger(
                 repository, path, serviceName, nuggetsPath);
         DistributionRequestHandler handler = mock(DistributionRequestHandler.class);
         persistingJcrEventdistributionTrigger.register(handler);
@@ -136,7 +136,7 @@ public class PersistingJcrEventDistributionTriggerTest {
         when(repository.loginService(serviceName, null)).thenReturn(session);
 
         String path = "/some/path";
-        PersistingJcrEventDistributionTrigger persistingJcrEventdistributionTrigger = new PersistingJcrEventDistributionTrigger(
+        PersistedJcrEventDistributionTrigger persistingJcrEventdistributionTrigger = new PersistedJcrEventDistributionTrigger(
                 repository, path, serviceName, nuggetsPath);
         DistributionRequestHandler handler = mock(DistributionRequestHandler.class);
         persistingJcrEventdistributionTrigger.register(handler);

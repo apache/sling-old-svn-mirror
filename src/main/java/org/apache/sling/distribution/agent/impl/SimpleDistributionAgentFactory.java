@@ -135,7 +135,7 @@ public class SimpleDistributionAgentFactory extends AbstractDistributionAgentFac
         DistributionQueueDispatchingStrategy dispatchingStrategy = new SingleQueueDispatchingStrategy();
         return new SimpleDistributionAgent(agentName, isPassive, serviceName,
                 packageImporter, packageExporter, requestAuthorizationStrategy,
-                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory, triggers);
+                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory);
 
     }
 }
