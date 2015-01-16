@@ -44,9 +44,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/js-use-provider</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/js-use-provider</developerConnection>
-        <url>http://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/sightly/js-use-provider</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/scripting/sightly/js-use-provider</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/scripting/sightly/js-use-provider</developerConnection>
+        <url>http://svn.apache.org/repos/asf/sling/trunk/contrib/scripting/sightly/js-use-provider</url>
     </scm>
 
     <properties>
