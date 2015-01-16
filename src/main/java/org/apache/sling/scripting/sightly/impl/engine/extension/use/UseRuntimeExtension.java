@@ -37,6 +37,7 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
+import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.impl.plugin.UsePlugin;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.use.ProviderOutcome;
@@ -67,11 +68,12 @@ public class UseRuntimeExtension implements RuntimeExtension {
         if (arguments.length != 2) {
             throw new SightlyException("Use extension requires two arguments");
         }
-        String identifier = renderContext.toString(arguments[0]);
+        RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
+        String identifier = renderContextImpl.toString(arguments[0]);
         if (StringUtils.isEmpty(identifier)) {
             return null;
         }
-        Map<String, Object> useArgumentsMap = renderContext.toMap(arguments[1]);
+        Map<String, Object> useArgumentsMap = renderContextImpl.toMap(arguments[1]);
         Bindings useArguments = new SimpleBindings(Collections.unmodifiableMap(useArgumentsMap));
         ArrayList<UseProvider> providers = new ArrayList<UseProvider>(providersMap.values());
         ListIterator<UseProvider> iterator = providers.listIterator(providers.size());

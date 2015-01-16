@@ -36,6 +36,7 @@ import org.apache.sling.scripting.sightly.impl.compiler.util.stream.Streams;
 import org.apache.sling.scripting.sightly.impl.compiler.visitor.StatefulRangeIgnore;
 import org.apache.sling.scripting.sightly.impl.compiler.visitor.StatefulVisitor;
 import org.apache.sling.scripting.sightly.impl.compiler.visitor.TrackingVisitor;
+import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 
 /**
@@ -61,12 +62,12 @@ public class DeadCodeRemoval extends TrackingVisitor<Boolean> implements Emitter
 
     private final PushStream outStream = new PushStream();
     private final StatefulVisitor.StateControl stateControl;
-    private final RenderContext renderContext;
+    private final RenderContextImpl renderContext;
     private final Stack<Boolean> keepConditionalEndStack = new Stack<Boolean>();
 
     public DeadCodeRemoval(StatefulVisitor.StateControl stateControl, RenderContext renderContext) {
         this.stateControl = stateControl;
-        this.renderContext = renderContext;
+        this.renderContext = (RenderContextImpl) renderContext;
     }
 
     @Override

@@ -34,6 +34,7 @@ import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.i18n.ResourceBundleProvider;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
+import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.impl.filter.I18nFilter;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.slf4j.Logger;
@@ -50,11 +51,12 @@ public class I18nRuntimeExtension implements RuntimeExtension {
 
     @Override
     public Object call(final RenderContext renderContext, Object... arguments) {
+        RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
         ExtensionUtils.checkArgumentCount(I18nFilter.FUNCTION, arguments, 3);
-        String text = renderContext.toString(arguments[0]);
-        String locale = renderContext.toString(arguments[1]);
-        String hint = renderContext.toString(arguments[2]);
-        final Bindings bindings = renderContext.getBindings();
+        String text = renderContextImpl.toString(arguments[0]);
+        String locale = renderContextImpl.toString(arguments[1]);
+        String hint = renderContextImpl.toString(arguments[2]);
+        final Bindings bindings = renderContextImpl.getBindings();
         return get(bindings, text, locale, hint);
     }
 
@@ -86,7 +88,7 @@ public class I18nRuntimeExtension implements RuntimeExtension {
             }
         }
         LOG.warn("No translation found for string '{}' using expression provided locale '{}' or default locale '{}'",
-                new String[] {text, locale, resourceBundleProvider.getDefaultLocale().getLanguage()});
+                new String[] {text, locale, request.getLocale().getLanguage()});
         return text;
     }
 }

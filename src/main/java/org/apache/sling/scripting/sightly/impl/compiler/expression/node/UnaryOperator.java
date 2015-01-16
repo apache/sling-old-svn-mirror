@@ -19,6 +19,7 @@
 package org.apache.sling.scripting.sightly.impl.compiler.expression.node;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 
 /**
@@ -30,7 +31,8 @@ public enum UnaryOperator {
     NOT {
         @Override
         public Object eval(RenderContext renderContext, Object operand) {
-            return !renderContext.toBoolean(operand);
+            RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
+            return !renderContextImpl.toBoolean(operand);
         }
     },
 
@@ -38,7 +40,8 @@ public enum UnaryOperator {
     IS_WHITESPACE  {
         @Override
         public Object eval(RenderContext renderContext, Object operand) {
-            return StringUtils.isWhitespace(renderContext.toString(operand));
+            RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
+            return StringUtils.isWhitespace(renderContextImpl.toString(operand));
         }
     },
 
@@ -48,7 +51,8 @@ public enum UnaryOperator {
     LENGTH {
         @Override
         public Object eval(RenderContext renderContext, Object operand) {
-            return renderContext.toCollection(operand).size();
+            RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
+            return renderContextImpl.toCollection(operand).size();
         }
     };
 

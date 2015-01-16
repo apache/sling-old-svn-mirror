@@ -31,6 +31,7 @@ import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.Expression;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.ExpressionNode;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.node.RuntimeCall;
+import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 
 /**
@@ -61,12 +62,13 @@ public class JoinFilter extends FilterComponent implements RuntimeExtension {
         if (arguments.length != 2) {
             throw new SightlyException("Join function must be called with two arguments.");
         }
-        Collection<?> collection = renderContext.toCollection(arguments[0]);
-        String joinString = renderContext.toString(arguments[1]);
-        return join(renderContext, collection, joinString);
+        RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
+        Collection<?> collection = renderContextImpl.toCollection(arguments[0]);
+        String joinString = renderContextImpl.toString(arguments[1]);
+        return join(renderContextImpl, collection, joinString);
     }
 
-    private String join(final RenderContext renderContext, Collection<?> collection, String joinString) {
+    private String join(final RenderContextImpl renderContext, Collection<?> collection, String joinString) {
         StringBuilder sb = new StringBuilder();
         Iterator<?> iterator = collection.iterator();
         while (iterator.hasNext()) {

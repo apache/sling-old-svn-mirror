@@ -40,22 +40,22 @@ import org.apache.sling.scripting.sightly.impl.compiler.expression.node.StringCo
 import org.apache.sling.scripting.sightly.impl.compiler.expression.node.TernaryOperator;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.node.UnaryOperation;
 import org.apache.sling.scripting.sightly.impl.compiler.util.VariableTracker;
-import org.apache.sling.scripting.sightly.render.RenderContext;
+import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 
 /**
  * Try to evaluate constant parts in expressions
  */
 public class ExpressionReducer implements NodeVisitor<EvalResult> {
 
-    private final RenderContext renderContext;
+    private final RenderContextImpl renderContext;
     private final VariableTracker<EvalResult> tracker;
 
-    public static EvalResult reduce(ExpressionNode node, VariableTracker<EvalResult> tracker, RenderContext renderContext) {
+    public static EvalResult reduce(ExpressionNode node, VariableTracker<EvalResult> tracker, RenderContextImpl renderContext) {
         ExpressionReducer reducer = new ExpressionReducer(renderContext, tracker);
         return reducer.eval(node);
     }
 
-    public ExpressionReducer(RenderContext renderContext, VariableTracker<EvalResult> tracker) {
+    public ExpressionReducer(RenderContextImpl renderContext, VariableTracker<EvalResult> tracker) {
         this.renderContext = renderContext;
         this.tracker = tracker;
     }

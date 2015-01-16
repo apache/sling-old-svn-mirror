@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  ******************************************************************************/
-
 package org.apache.sling.scripting.sightly.impl.engine.runtime;
 
 import java.lang.reflect.Field;
@@ -61,18 +60,18 @@ public class RenderContextImpl implements RenderContext {
     private final Map<String, RuntimeExtension> mapping;
     private final ResourceResolver scriptResourceResolver;
 
+    public RenderContextImpl(Bindings bindings, Map<String, RuntimeExtension> mapping, ResourceResolver scriptResourceResolver) {
+        this.bindings = bindings;
+        this.mapping = mapping;
+        this.scriptResourceResolver = scriptResourceResolver;
+    }
+
     public static ResourceResolver getScriptResourceResolver(RenderContext renderContext) {
         if (renderContext instanceof RenderContextImpl) {
             return ((RenderContextImpl) renderContext).getScriptResourceResolver();
         }
 
         throw new SightlyException("Cannot retrieve Script ResourceResovler from RenderContext " + renderContext);
-    }
-
-    public RenderContextImpl(Bindings bindings, Map<String, RuntimeExtension> mapping, ResourceResolver scriptResourceResolver) {
-        this.bindings = bindings;
-        this.mapping = mapping;
-        this.scriptResourceResolver = scriptResourceResolver;
     }
 
     public ResourceResolver getScriptResourceResolver() {
@@ -97,7 +96,13 @@ public class RenderContextImpl implements RenderContext {
         return extension.call(this, arguments);
     }
 
-    @Override
+    /**
+     * Retrieve the specified property from the given object
+     *
+     * @param target   - the target object
+     * @param property - the property name
+     * @return - the value of the property or null if the object has no such property
+     */
     public Object resolveProperty(Object target, Object property) {
         if (property instanceof Number) {
             return getIndex(target, ((Number) property).intValue());
@@ -105,22 +110,42 @@ public class RenderContextImpl implements RenderContext {
         return getProperty(target, property);
     }
 
-    @Override
+    /**
+     * Convert the given object to a string.
+     *
+     * @param target - the target object
+     * @return - the string representation of the object
+     */
     public String toString(Object target) {
         return objectToString(target);
     }
 
-    @Override
+    /**
+     * Convert the given object to a boolean value
+     *
+     * @param object - the target object
+     * @return - the boolean representation of that object
+     */
     public boolean toBoolean(Object object) {
         return toBooleanInternal(object);
     }
 
-    @Override
+    /**
+     * Force the conversion of the object to a collection
+     *
+     * @param object - the target object
+     * @return the collection representation of the object
+     */
     public Collection<Object> toCollection(Object object) {
         return obtainCollection(object);
     }
 
-    @Override
+    /**
+     * Force the conversion of the target object to a map
+     *
+     * @param object - the target object
+     * @return - a map representation of the object. Default is an empty map
+     */
     public Map toMap(Object object) {
         if (object instanceof Map) {
             return (Map) object;
@@ -128,8 +153,12 @@ public class RenderContextImpl implements RenderContext {
         return Collections.emptyMap();
     }
 
-
-    @Override
+    /**
+     * Coerce the object to a numeric value
+     *
+     * @param object - the target object
+     * @return - the numeric representation
+     */
     public Number toNumber(Object object) {
         if (object instanceof Number) {
             return (Number) object;
@@ -137,11 +166,15 @@ public class RenderContextImpl implements RenderContext {
         return 0;
     }
 
-    @Override
-    public boolean isCollection(Object obj) {
-        return (obj instanceof Collection) || (obj instanceof Object[])
-                || (obj instanceof Iterable)
-                || (obj instanceof Iterator);
+    /**
+     * Checks if an object is a {@link Collection} or is backed by one.
+     * @param target the target object
+     * @return {@code true} if the {@code target} is a collection or is backed by one, {@code false} otherwise
+     */
+    public boolean isCollection(Object target) {
+        return (target instanceof Collection) || (target instanceof Object[])
+                || (target instanceof Iterable)
+                || (target instanceof Iterator);
     }
 
     @SuppressWarnings("unchecked")
