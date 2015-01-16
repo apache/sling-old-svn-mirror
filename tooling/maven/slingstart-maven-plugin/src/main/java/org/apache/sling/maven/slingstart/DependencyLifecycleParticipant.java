@@ -17,7 +17,6 @@
 package org.apache.sling.maven.slingstart;
 
 import java.io.File;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,11 +35,12 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
-import org.apache.sling.slingstart.model.SSMArtifact;
-import org.apache.sling.slingstart.model.SSMDeliverable;
-import org.apache.sling.slingstart.model.SSMFeature;
-import org.apache.sling.slingstart.model.SSMStartLevel;
-import org.apache.sling.slingstart.model.xml.XMLSSMModelWriter;
+import org.apache.sling.provisioning.model.ArtifactGroup;
+import org.apache.sling.provisioning.model.Feature;
+import org.apache.sling.provisioning.model.Model;
+import org.apache.sling.provisioning.model.ModelConstants;
+import org.apache.sling.provisioning.model.ModelUtility;
+import org.apache.sling.provisioning.model.RunMode;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.codehaus.plexus.logging.Logger;
@@ -102,28 +102,30 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
         for(final Dependency d : project.getDependencies() ) {
             if ( d.getType().equals(BuildConstants.PACKAGING_SLINGSTART)
               || d.getType().equals(BuildConstants.PACKAGING_PARTIAL_SYSTEM)) {
-                final File modelXML = getSlingstartArtifact(artifactHandlerManager, resolver, project, session, d);
-                dependencies.add(modelXML);
+                final File modelFile = getSlingstartArtifact(artifactHandlerManager, resolver, project, session, d);
+                dependencies.add(modelFile);
             }
         }
 
         final String directory = nodeValue((Xpp3Dom) plugin.getConfiguration(),
-                "systemsDirectory", new File(project.getBasedir(), "src/main/systems").getAbsolutePath());
-        final SSMDeliverable model = ModelUtils.readFullModel(new File(directory), dependencies, project, session, log);
+                "systemsDirectory", new File(project.getBasedir(), "src/main/provisioning").getAbsolutePath());
+        final Model model = ModelUtils.readFullModel(new File(directory), dependencies, project, session, log);
 
-        final StringWriter w = new StringWriter();
-        XMLSSMModelWriter.write(w, model);
-        project.setContextValue(SSMDeliverable.class.getName() + "/text", w.toString());
+        ModelUtils.storeRawModel(project, model);
+
+        final Model effectiveModel = ModelUtility.getEffectiveModel(model, null);
+
+        ModelUtils.storeEffectiveModel(project, effectiveModel);
 
         // start with base artifact
-        final SSMArtifact base = ModelUtils.getBaseArtifact(model);
+        final org.apache.sling.provisioning.model.Artifact base = ModelUtils.getBaseArtifact(effectiveModel);
         final String[] classifiers = new String[] {null, BuildConstants.CLASSIFIER_APP, BuildConstants.CLASSIFIER_WEBAPP};
         for(final String c : classifiers) {
             final Dependency dep = new Dependency();
-            dep.setGroupId(base.groupId);
-            dep.setArtifactId(base.artifactId);
-            dep.setVersion(model.getValue(base.version));
-            dep.setType(base.type);
+            dep.setGroupId(base.getGroupId());
+            dep.setArtifactId(base.getArtifactId());
+            dep.setVersion(base.getVersion());
+            dep.setType(base.getType());
             dep.setClassifier(c);
             if ( BuildConstants.CLASSIFIER_WEBAPP.equals(c) ) {
                 dep.setType(BuildConstants.TYPE_WAR);
@@ -134,27 +136,29 @@ public class DependencyLifecycleParticipant extends AbstractMavenLifecyclePartic
             project.getDependencies().add(dep);
         }
 
-        addDependencies(model, log, project);
+        addDependencies(effectiveModel, log, project);
     }
 
-    private static void addDependencies(final SSMDeliverable model, final Logger log, final MavenProject project) {
-        for(final SSMFeature feature : model.getFeatures()) {
+    private static void addDependencies(final Model model, final Logger log, final MavenProject project) {
+        for(final Feature feature : model.getFeatures()) {
             // skip base
-            if ( feature.isRunMode(SSMFeature.RUN_MODE_BASE) ) {
+            if ( feature.getName().equals(ModelConstants.FEATURE_LAUNCHPAD) ) {
                 continue;
             }
-            for(final SSMStartLevel sl : feature.getStartLevels()) {
-                for(final SSMArtifact a : sl.artifacts) {
-                    final Dependency dep = new Dependency();
-                    dep.setGroupId(a.groupId);
-                    dep.setArtifactId(a.artifactId);
-                    dep.setVersion(model.getValue(a.version));
-                    dep.setType(a.type);
-                    dep.setClassifier(a.classifier);
-                    dep.setScope(PROVIDED);
+            for(final RunMode runMode : feature.getRunModes()) {
+                for(final ArtifactGroup group : runMode.getArtifactGroups()) {
+                    for(final org.apache.sling.provisioning.model.Artifact a : group) {
+                        final Dependency dep = new Dependency();
+                        dep.setGroupId(a.getGroupId());
+                        dep.setArtifactId(a.getArtifactId());
+                        dep.setVersion(a.getVersion());
+                        dep.setType(a.getType());
+                        dep.setClassifier(a.getClassifier());
+                        dep.setScope(PROVIDED);
 
-                    log.debug("- adding dependency " + dep);
-                    project.getDependencies().add(dep);
+                        log.debug("- adding dependency " + dep);
+                        project.getDependencies().add(dep);
+                    }
                 }
             }
         }

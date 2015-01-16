@@ -71,59 +71,6 @@ public class RedirectOnLoginErrorTest extends HttpTestBase {
      *
      * @throws Exception
      */
-    public void testRedirectToSelectorLoginFormAfterLoginError() throws Exception {
-    	//login failure
-        List<NameValuePair> params = new ArrayList<NameValuePair>();
-        params.add(new NameValuePair("j_username", "___bogus___"));
-        params.add(new NameValuePair("j_password", "not_a_real_user"));
-        final String loginPageUrl = String.format("%s/system/sling/selector/login", HTTP_BASE_URL);
-		PostMethod post = (PostMethod)assertPostStatus(HTTP_BASE_URL + "/j_security_check",
-        		HttpServletResponse.SC_MOVED_TEMPORARILY,
-        		params,
-        		null,
-        		loginPageUrl);
-
-        final Header locationHeader = post.getResponseHeader("Location");
-        String location = locationHeader.getValue();
-        int queryStrStart = location.indexOf('?');
-        if (queryStrStart != -1) {
-        	location = location.substring(0, queryStrStart);
-        }
-        assertEquals("Expected to remain on the selector/login page", loginPageUrl, location);
-    }
-
-    /**
-     * Test SLING-2165.  Login Error should redirect back to the referrer
-     * login page.
-     *
-     * @throws Exception
-     */
-    public void testRedirectToOpenIDLoginFormAfterLoginError() throws Exception {
-    	//login failure
-        List<NameValuePair> params = new ArrayList<NameValuePair>();
-        params.add(new NameValuePair("openid_identifier", "___bogus___"));
-        final String loginPageUrl = String.format("%s/system/sling/openid/login", HTTP_BASE_URL);
-		PostMethod post = (PostMethod)assertPostStatus(HTTP_BASE_URL + "/j_security_check",
-        		HttpServletResponse.SC_MOVED_TEMPORARILY,
-        		params,
-        		null,
-        		loginPageUrl);
-
-        final Header locationHeader = post.getResponseHeader("Location");
-        String location = locationHeader.getValue();
-        int queryStrStart = location.indexOf('?');
-        if (queryStrStart != -1) {
-        	location = location.substring(0, queryStrStart);
-        }
-        assertEquals("Expected to remain on the openid/login page", loginPageUrl, location);
-    }
-
-    /**
-     * Test SLING-2165.  Login Error should redirect back to the referrer
-     * login page.
-     *
-     * @throws Exception
-     */
     public void testRedirectToLoginFormAfterLoginError() throws Exception {
     	//login failure
         List<NameValuePair> params = new ArrayList<NameValuePair>();

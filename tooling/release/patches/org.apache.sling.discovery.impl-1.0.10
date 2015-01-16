@@ -1,0 +1,10 @@
+--- pom.xml.orig	2014-10-05 23:20:24.955180364 +0300
++++ pom.xml	2014-10-05 23:20:30.675149845 +0300
+@@ -246,7 +246,6 @@
+         	<groupId>org.apache.sling</groupId>
+         	<artifactId>org.apache.sling.commons.threads</artifactId>
+         	<version>3.1.0</version>
+-        	<type>bundle</type>
+         	<scope>test</scope>
+         </dependency>
+         <dependency>

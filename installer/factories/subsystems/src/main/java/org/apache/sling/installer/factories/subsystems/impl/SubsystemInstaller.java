@@ -23,8 +23,9 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.ChangeStateTask;
@@ -41,15 +42,19 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 import org.osgi.service.subsystem.Subsystem;
+import org.osgi.service.subsystem.Subsystem.State;
 import org.osgi.service.subsystem.SubsystemConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * This is an extension for the OSGi installer
- * It listens for files ending with ".esa" and a proper manifest. Though subsystems does
- * not require a complete manifest, the installer supports only subsystems with the
- * basic info.
+ * It listens for files ending with ".esa" and a proper subsystem manifest.
+ * Though subsystems does not require a complete manifest, the installer supports
+ * only subsystems with the basic info (name and version).
+ *
+ * As subsystems currently do not support an update, an uninstall/install is done
+ * instead - which will lose bundle private data, bound configurations etc.
  */
 public class SubsystemInstaller
     implements ResourceTransformer, InstallTaskFactory {
@@ -174,43 +179,55 @@ public class SubsystemInstaller
                 // search a subsystem with the symbolic name
                 final ServiceReference<Subsystem> ref = this.getSubsystemReference(info.symbolicName);
 
-                final Version newVersion = new Version(info.version);
-                final Version oldVersion = (ref == null ? null : (Version)ref.getProperty("subsystem.version"));
+                final Subsystem currentSubsystem = (ref != null ? this.bundleContext.getService(ref) : null);
+                try {
+                    final Version newVersion = new Version(info.version);
+                    final Version oldVersion = (ref == null ? null : (Version)ref.getProperty("subsystem.version"));
 
-                // Install
-                if ( rsrc.getState() == ResourceState.INSTALL ) {
-                    if ( oldVersion != null ) {
+                    // Install
+                    if ( rsrc.getState() == ResourceState.INSTALL ) {
+                        if ( oldVersion != null ) {
 
-                        final int compare = oldVersion.compareTo(newVersion);
-                        if (compare < 0) {
-                            // installed version is lower -> update
-                            result = new UpdateSubsystemTask(toActivate, this.bundleContext, ref, this.rootSubsystem);
+                            final int compare = oldVersion.compareTo(newVersion);
+                            if (compare < 0) {
+                                // installed version is lower -> update
+                                result = new UpdateSubsystemTask(toActivate, this.bundleContext, ref, this.rootSubsystem);
+                            } else if ( compare == 0 && isSnapshot(newVersion) ) {
+                                // same version but snapshot -> update
+                                result = new UpdateSubsystemTask(toActivate, this.bundleContext, ref, this.rootSubsystem);
+                            } else if ( compare == 0 && currentSubsystem != null && currentSubsystem.getState() != State.ACTIVE ) {
+                                // try to start the version
+                                result = new StartSubsystemTask(toActivate, currentSubsystem);
+                            } else {
+                                logger.info("{} is not installed, subsystem with same or higher version is already installed: {}", info, newVersion);
+                                result = new ChangeStateTask(toActivate, ResourceState.IGNORED);
+                            }
                         } else {
-                            // TODO - support SNAPSHOT?
-                            logger.debug("{} is not installed, subsystem with same or higher version is already installed: {}", info, newVersion);
+                            result = new InstallSubsystemTask(toActivate, this.rootSubsystem);
+                        }
+
+                    // Uninstall
+                    } else if ( rsrc.getState() == ResourceState.UNINSTALL ) {
+                        if ( oldVersion == null ) {
+                            logger.error("Nothing to uninstall. {} is currently not installed.", info);
                             result = new ChangeStateTask(toActivate, ResourceState.IGNORED);
+                        } else {
+
+                            final int compare = oldVersion.compareTo(newVersion);
+                            if ( compare == 0 ) {
+                                result = new UninstallSubsystemTask(toActivate, this.bundleContext, ref);
+                            } else {
+                                logger.error("Nothing to uninstall. {} is currently not installed, different version is installed {}", info, oldVersion);
+                                result = new ChangeStateTask(toActivate, ResourceState.IGNORED);
+                            }
                         }
                     } else {
-                        result = new InstallSubsystemTask(toActivate, this.rootSubsystem);
+                        result = null;
                     }
-
-                // Uninstall
-                } else if ( rsrc.getState() == ResourceState.UNINSTALL ) {
-                    if ( oldVersion == null ) {
-                        logger.error("Nothing to uninstall. {} is currently not installed.", info);
-                        result = new ChangeStateTask(toActivate, ResourceState.IGNORED);
-                    } else {
-
-                        final int compare = oldVersion.compareTo(newVersion);
-                        if ( compare == 0 ) {
-                            result = new UninstallSubsystemTask(toActivate, this.bundleContext, ref);
-                        } else {
-                            logger.error("Nothing to uninstall. {} is currently not installed, different version is installed {}", info, oldVersion);
-                            result = new ChangeStateTask(toActivate, ResourceState.IGNORED);
-                        }
+                } finally {
+                    if ( currentSubsystem != null ) {
+                        this.bundleContext.ungetService(ref);
                     }
-                } else {
-                    result = null;
                 }
             }
         } else {
@@ -229,17 +246,18 @@ public class SubsystemInstaller
         Manifest result = null;
 
         if ( ins != null ) {
-            JarInputStream jis = null;
+            ZipInputStream jis = null;
             try {
-                jis = new JarInputStream(ins);
-                result = jis.getManifest();
+                jis = new ZipInputStream(ins);
 
-                // SLING-2288 : if this is a jar file, but the manifest is not the first entry
-                //              log a warning
-                if ( rsrc.getURL().endsWith(".jar") && result == null ) {
-                    logger.warn("Resource {} does not have the manifest as its first entry in the archive. If this is " +
-                                "a subsystem, make sure to put the manifest first in the jar file.", rsrc.getURL());
+                ZipEntry entry;
+
+                while ( (entry = jis.getNextEntry()) != null ) {
+                    if (entry.getName().equals("OSGI-INF/SUBSYSTEM.MF") ) {
+                        result = new Manifest(jis);
+                    }
                 }
+
             } finally {
 
                 // close the jar stream or the input stream, if the jar
@@ -300,5 +318,14 @@ public class SubsystemInstaller
             // ignore
         }
         return null;
+    }
+
+    private static final String MAVEN_SNAPSHOT_MARKER = "SNAPSHOT";
+
+    /**
+     * Check if the version is a snapshot version
+     */
+    public static boolean isSnapshot(final Version v) {
+        return v.toString().indexOf(MAVEN_SNAPSHOT_MARKER) >= 0;
     }
 }

@@ -42,7 +42,7 @@ public class HasFileMatcher extends TypeSafeMatcher<IProject> {
 
     @Override
     public void describeTo(Description description) {
-        description.appendText("project with a filed named " + fileName + " and contents (elided)");
+        description.appendText("project with a file named " + fileName + " and contents (elided)");
     }
 
     @Override

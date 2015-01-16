@@ -19,6 +19,7 @@ package org.apache.sling.models.impl;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,6 +30,7 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
+import org.apache.sling.models.factory.MissingElementsException;
 import org.apache.sling.models.impl.injectors.ChildResourceInjector;
 import org.apache.sling.models.impl.injectors.ValueMapInjector;
 import org.apache.sling.models.testmodels.classes.ArrayPrimitivesModel;
@@ -49,6 +51,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -69,8 +72,12 @@ public class ResourceModelClassesTest {
 
         factory = new ModelAdapterFactory();
         factory.activate(componentCtx);
-        factory.bindInjector(new ValueMapInjector(), new ServicePropertiesMap(2, 2));
+        ValueMapInjector valueMapInjector = new ValueMapInjector();
+        factory.bindInjector(valueMapInjector, new ServicePropertiesMap(2, 2));
         factory.bindInjector(new ChildResourceInjector(), new ServicePropertiesMap(1, 1));
+        
+        factory.bindInjectAnnotationProcessorFactory(valueMapInjector,
+                Collections.<String, Object> singletonMap(Constants.SERVICE_ID, 2L));
     }
 
     @Test
@@ -180,7 +187,7 @@ public class ResourceModelClassesTest {
     }
 
     @Test
-    public void testRequiredPropertyModelOptionalStrategyAvailable() {
+    public void testRequiredPropertyModelWithException() {
         Map<String, Object> map = new HashMap<String, Object>();
         map.put("first", "first-value");
         map.put("third", "third-value");
@@ -189,17 +196,41 @@ public class ResourceModelClassesTest {
         Resource res = mock(Resource.class);
         when(res.adaptTo(ValueMap.class)).thenReturn(vm);
 
-        ResourceModelWithRequiredFieldOptionalStrategy model = factory.getAdapter(res, ResourceModelWithRequiredFieldOptionalStrategy.class);
-        assertNull(model);
+        boolean thrown = false;
+        try {
+            factory.createModel(res, ResourceModelWithRequiredField.class);
+        } catch (MissingElementsException e) {
+            assertEquals(ResourceModelWithRequiredField.class, e.getType());
+            assertEquals("required", ((Field) e.getMissingElements().iterator().next()).getName());
+            thrown = true;
+        }
+        assertTrue(thrown);
 
-        verify(vm).get("optional", String.class);
         verify(vm).get("required", String.class);
     }
 
     @Test
-    public void testRequiredPropertyModelOptionalStrategyNotAvailable() {
+    public void testRequiredPropertyMissingModelOptionalStrategy() {
         Map<String, Object> map = new HashMap<String, Object>();
-        map.put("required", "first-value");
+        map.put("first", "first-value");
+        ValueMap vm = spy(new ValueMapDecorator(map));
+
+        Resource res = mock(Resource.class);
+        when(res.adaptTo(ValueMap.class)).thenReturn(vm);
+
+        ResourceModelWithRequiredFieldOptionalStrategy model = factory.getAdapter(res, ResourceModelWithRequiredFieldOptionalStrategy.class);
+        assertNull(model);
+
+        verify(vm).get("optional1", String.class);
+        verify(vm).get("required1", String.class);
+    }
+
+    @Test
+    public void testRequiredPropertyModelOptionalStrategy() {
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("required1", "required value");
+        map.put("required2", "required value");
+        map.put("required3", "required value");
         ValueMap vm = spy(new ValueMapDecorator(map));
 
         Resource res = mock(Resource.class);
@@ -207,9 +238,11 @@ public class ResourceModelClassesTest {
 
         ResourceModelWithRequiredFieldOptionalStrategy model = factory.getAdapter(res, ResourceModelWithRequiredFieldOptionalStrategy.class);
         assertNotNull(model);
-
-        verify(vm).get("optional", String.class);
-        verify(vm).get("required", String.class);
+        assertEquals("required value", model.getRequired1());
+        assertEquals("required value", model.getRequired2());
+        
+        verify(vm).get("optional1", String.class);
+        verify(vm).get("required1", String.class);
     }
 
     @Test

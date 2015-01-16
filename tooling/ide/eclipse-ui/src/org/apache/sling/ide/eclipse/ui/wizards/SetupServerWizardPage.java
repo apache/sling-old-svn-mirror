@@ -78,6 +78,8 @@ public class SetupServerWizardPage extends WizardPage {
 
     private Button startExistingServerButton;
 
+    private Button skipServerConfiguration;
+
     public SetupServerWizardPage(AbstractNewSlingApplicationWizard parent) {
 		super("chooseArchetypePage");
         setTitle("Select or Create Server");
@@ -129,6 +131,10 @@ public class SetupServerWizardPage extends WizardPage {
             startExistingServerButton.setText("Start server after project creation (if server not yet started).");
             startExistingServerButton.setSelection(true);
         }
+
+        skipServerConfiguration = new Button(container, SWT.RADIO);
+        skipServerConfiguration.setText("Don't deploy on a server");
+        singleRowGridDataFactory.applyTo(skipServerConfiguration);
 
         setupNewServer = new Button(container, SWT.RADIO);
         setupNewServer.setText("Setup new server");
@@ -206,6 +212,8 @@ public class SetupServerWizardPage extends WizardPage {
         installToolingSupportBundle.setSelection(true);
 
         updateEnablements();
+
+        setPageComplete(false);
 		
 		setControl(container);
 	}
@@ -299,7 +307,18 @@ public class SetupServerWizardPage extends WizardPage {
         return startExistingServerButton.getSelection();
     }
 	
+    /**
+     * Gets or creates a <tt>IServer</tt> instance to deploy projects on
+     * 
+     * @param monitor
+     * @return the server instance, possibly null if the user requested to skip deployment
+     * @throws CoreException
+     */
     public IServer getOrCreateServer(IProgressMonitor monitor) throws CoreException {
+
+        if (skipServerConfiguration.getSelection()) {
+            return null;
+        }
 
         if (server != null) {
             return server;
@@ -370,7 +389,6 @@ public class SetupServerWizardPage extends WizardPage {
                 wc.setAttribute(ISlingLaunchpadServer.PROP_INSTALL_LOCALLY, installToolingSupportBundle.getSelection());
                 wc.setAttribute(ISlingLaunchpadServer.PROP_USERNAME, newServerUsername.getText());
                 wc.setAttribute(ISlingLaunchpadServer.PROP_PASSWORD, newServerPassword.getText());
-                wc.setAttribute("auto-publish-setting", ISlingLaunchpadServer.PUBLISH_STATE_RESOURCE_CHANGE);
                 wc.setAttribute("auto-publish-time", 0);
                 if (finalVersion != null) {
                     wc.setAttribute(String.format(ISlingLaunchpadServer.PROP_BUNDLE_VERSION_FORMAT,

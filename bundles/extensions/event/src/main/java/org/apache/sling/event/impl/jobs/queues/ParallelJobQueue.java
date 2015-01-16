@@ -18,81 +18,91 @@
  */
 package org.apache.sling.event.impl.jobs.queues;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Date;
+import java.util.Set;
+import java.util.concurrent.Semaphore;
 
-import org.apache.sling.commons.scheduler.Scheduler;
-import org.apache.sling.commons.threads.ThreadPoolManager;
-import org.apache.sling.event.impl.jobs.JobConsumerManager;
 import org.apache.sling.event.impl.jobs.JobHandler;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
-import org.osgi.service.event.EventAdmin;
 
 /**
  * The default parallel job queue processing the entries FIFO.
  * Failing jobs are rescheduled and put at the end of the queue.
  */
-public final class ParallelJobQueue extends AbstractParallelJobQueue {
+public final class ParallelJobQueue extends AbstractJobQueue {
 
-    /** The queue. */
-    private final BlockingQueue<JobHandler> queue = new LinkedBlockingQueue<JobHandler>();
+    private final Semaphore available;
 
     public ParallelJobQueue(final String name,
                            final InternalQueueConfiguration config,
-                           final JobConsumerManager jobConsumerManager,
-                           final ThreadPoolManager threadPoolManager,
-                           final EventAdmin eventAdmin,
-                           final Scheduler scheduler) {
-        super(name, config, jobConsumerManager, threadPoolManager, eventAdmin, scheduler);
+                           final QueueServices services,
+                           final Set<String> topics) {
+        super(name, config, services, topics);
+        this.available = new Semaphore(config.getMaxParallel(), true);
     }
 
     @Override
-    protected void put(final JobHandler event) {
-        try {
-            this.isWaitingForNext = false;
-            this.queue.put(event);
-        } catch (final InterruptedException e) {
-            this.ignoreException(e);
-            Thread.currentThread().interrupt();
+    public String getStateInfo() {
+        return super.getStateInfo() + ", jobCount=" + String.valueOf(this.configuration.getMaxParallel() - this.available.availablePermits());
+    }
+
+    @Override
+    protected void start(final JobHandler handler) {
+        // acquire a slot
+        boolean hasSlot = false;
+        while ( !hasSlot ) {
+            try {
+                this.available.acquire();
+                hasSlot = true;
+            } catch ( final InterruptedException ie) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        // check if we got outdated in the meantime, otherwise execute
+        if ( this.isOutdated() || !this.running || !this.executeJob(handler)) {
+            this.available.release();
         }
     }
 
     @Override
-    protected JobHandler take() {
-        try {
-            this.isWaitingForNext = true;
-            return this.queue.take();
-        } catch (final InterruptedException e) {
-            this.ignoreException(e);
-            Thread.currentThread().interrupt();
-        } finally {
-            this.isWaitingForNext = false;
+    protected boolean canBeClosed() {
+        boolean result = super.canBeClosed();
+        if ( result ) {
+            result = this.available.availablePermits() == this.configuration.getMaxParallel();
         }
-        return null;
+        return result;
     }
 
     @Override
-    protected boolean isEmpty() {
-        return this.queue.isEmpty();
-    }
-
-    /**
-     * @see org.apache.sling.event.jobs.Queue#clear()
-     */
-    @Override
-    public void clear() {
-        this.queue.clear();
-        super.clear();
+    protected void notifyFinished(final boolean reschedule) {
+        this.available.release();
     }
 
     @Override
-    protected Collection<JobHandler> removeAllJobs() {
-        final List<JobHandler> events = new ArrayList<JobHandler>();
-        this.queue.drainTo(events);
-        return events;
+    protected void reschedule(final JobHandler handler) {
+        // we just sleep for the delay time - if none, we continue and retry
+        // this job again
+        final long delay = this.getRetryDelay(handler);
+        if ( delay > 0 ) {
+            handler.addToRetryList();
+            final Date fireDate = new Date();
+            fireDate.setTime(System.currentTimeMillis() + delay);
+
+            final String jobName = "Waiting:" + queueName + ":" + handler.hashCode();
+            final Runnable t = new Runnable() {
+                @Override
+                public void run() {
+                    if ( handler.removeFromRetryList() ) {
+                        ParallelJobQueue.super.reschedule(handler);
+                    }
+                }
+            };
+            services.scheduler.schedule(t, services.scheduler.AT(fireDate).name(jobName));
+        } else {
+            // put directly into queue
+            super.reschedule(handler);
+        }
     }
 }
 

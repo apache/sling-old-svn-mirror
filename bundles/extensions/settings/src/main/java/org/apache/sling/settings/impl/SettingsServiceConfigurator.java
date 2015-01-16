@@ -19,7 +19,11 @@
 package org.apache.sling.settings.impl;
 
 import java.util.Dictionary;
+import java.util.Hashtable;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 
@@ -27,12 +31,28 @@ public class SettingsServiceConfigurator implements ManagedService {
 
     private final SlingSettingsServiceImpl settings;
 
-    public SettingsServiceConfigurator(final SlingSettingsServiceImpl s) {
+    private final ServiceRegistration managedServiceReg;
+
+    public SettingsServiceConfigurator(final BundleContext btx,
+            final SlingSettingsServiceImpl s) {
         this.settings = s;
+        // setup manager service for configuration handling
+        final Dictionary<String, String> msProps = new Hashtable<String, String>();
+        msProps.put(Constants.SERVICE_PID, s.getClass().getName());
+        msProps.put(Constants.SERVICE_DESCRIPTION,
+            "Apache Sling Managed Service for the Settings Service");
+        msProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        managedServiceReg = btx.registerService(ManagedService.class.getName(), this, msProps);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public void updated(final Dictionary properties) throws ConfigurationException {
-        this.settings.update(properties);
+        if ( properties != null ) {
+            this.settings.update(properties);
+        }
+    }
+
+    public void destroy() {
+        managedServiceReg.unregister();
     }
 }

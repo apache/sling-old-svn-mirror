@@ -18,7 +18,9 @@ package org.apache.sling.models.spi.injectorspecific;
 
 /**
  * Processor for injector-specific annotations.
+ * @deprecated Use {@link InjectAnntoationProcessor2} instead
  */
+@Deprecated
 public interface InjectAnnotationProcessor {
 
     /**
@@ -45,7 +47,7 @@ public interface InjectAnnotationProcessor {
     boolean hasDefault();
 
     /**
-     * Tries to get the default value from the annotation. Only used if {@link hasDefaultValue()} is set to true.
+     * Tries to get the default value from the annotation. Only used if {@link #hasDefault()} is set to true.
      * 
      * @return the value to be used if nothing can be injected
      */
@@ -56,7 +58,10 @@ public interface InjectAnnotationProcessor {
      * 
      * @return the value to be used for the default or null, in
      *         which case the standard annotation should be used.
+     * @deprecated use {@link InjectAnntoationProcessor2.getInjectionStrategy} instead
      */
     Boolean isOptional();
+
+   
 
 }

@@ -1,0 +1,8 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+
+    "name": "pubsync-scheduled-trigger",
+
+    "action": "poll",
+    "seconds": "30"
+}

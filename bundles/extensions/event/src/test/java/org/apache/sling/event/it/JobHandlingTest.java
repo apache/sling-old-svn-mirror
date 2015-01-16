@@ -36,13 +36,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.sling.event.impl.Barrier;
 import org.apache.sling.event.impl.jobs.config.ConfigurationConstants;
-import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
-import org.apache.sling.event.jobs.JobProcessor;
-import org.apache.sling.event.jobs.JobUtil;
+import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
+import org.apache.sling.event.jobs.consumer.JobExecutionContext;
+import org.apache.sling.event.jobs.consumer.JobExecutionResult;
+import org.apache.sling.event.jobs.consumer.JobExecutor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -88,16 +89,31 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
     }
 
     /**
-     * Helper method to create a job event.
+     * Test simple job execution.
+     * The job is executed once and finished successfully.
      */
-    private Event getJobEvent(String id) {
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(ResourceHelper.PROPERTY_JOB_TOPIC, "sling/test");
-        if ( id != null ) {
-            props.put(ResourceHelper.PROPERTY_JOB_NAME, id);
-        }
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testSimpleJobExecutionUsingJobConsumer() throws Exception {
+        final Barrier cb = new Barrier(2);
 
-        return new Event(JobUtil.TOPIC_JOB, props);
+        final ServiceRegistration reg = this.registerJobConsumer(TOPIC,
+                new JobConsumer() {
+
+            @Override
+                    public JobResult process(final Job job) {
+                        cb.block();
+                        return JobResult.OK;
+                    }
+                 });
+
+        try {
+            this.getJobManager().addJob(TOPIC, null);
+            assertTrue("No event received in the given time.", cb.block(5));
+            cb.reset();
+            assertFalse("Unexpected event received in the given time.", cb.block(5));
+        } finally {
+            reg.unregister();
+        }
     }
 
     /**
@@ -105,22 +121,21 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
      * The job is executed once and finished successfully.
      */
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testSimpleJobExecution() throws Exception {
+    public void testSimpleJobExecutionUsingJobExecutor() throws Exception {
         final Barrier cb = new Barrier(2);
 
-        final ServiceRegistration reg = this.registerEventHandler("sling/test",
-                new EventHandler() {
-                    @Override
-                    public void handleEvent(Event event) {
-                        JobUtil.acknowledgeJob(event);
-                        JobUtil.finishedJob(event);
-                        cb.block();
-                    }
+        final ServiceRegistration reg = this.registerJobExecutor(TOPIC,
+                new JobExecutor() {
 
-                 });
+                    @Override
+                    public JobExecutionResult process(final Job job, final JobExecutionContext context) {
+                        cb.block();
+                        return context.result().succeeded();
+                    }
+                });
 
         try {
-            this.eventAdmin.sendEvent(getJobEvent(null));
+            this.getJobManager().addJob(TOPIC, null);
             assertTrue("No event received in the given time.", cb.block(5));
             cb.reset();
             assertFalse("Unexpected event received in the given time.", cb.block(5));
@@ -131,29 +146,20 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testManyJobs() throws Exception {
-        final ServiceRegistration reg1 = this.registerEventHandler("sling/test",
-                new EventHandler() {
-                    @Override
-                    public void handleEvent(Event event) {
-                        JobUtil.processJob(event, new JobProcessor() {
+        final ServiceRegistration reg1 = this.registerJobConsumer(TOPIC,
+                new JobConsumer() {
 
-                            @Override
-                            public boolean process(Event job) {
-                                try {
-                                    Thread.sleep(200);
-                                } catch (InterruptedException ie) {
-                                    // ignore
-                                }
-                                return true;
-                            }
-                        });
+                    @Override
+                    public JobResult process(final Job job) {
+                        return JobResult.OK;
                     }
+
                  });
         final AtomicInteger count = new AtomicInteger(0);
-        final ServiceRegistration reg2 = this.registerEventHandler(JobUtil.TOPIC_JOB_FINISHED,
+        final ServiceRegistration reg2 = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
                 new EventHandler() {
                     @Override
-                    public void handleEvent(Event event) {
+                    public void handleEvent(final Event event) {
                         count.incrementAndGet();
                     }
                  });
@@ -162,15 +168,10 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
             // we start "some" jobs
             final int COUNT = 300;
             for(int i = 0; i < COUNT; i++ ) {
-//                final String queueName = "queue" + (i % 20);
-                this.eventAdmin.sendEvent(this.getJobEvent(null));
+                this.getJobManager().addJob(TOPIC, null);
             }
             while ( count.get() < COUNT ) {
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException ie) {
-                    // ignore
-                }
+                this.sleep(50);
             }
             assertEquals("Finished count", COUNT, count.get());
             assertEquals("Finished count", COUNT, this.getJobManager().getStatistics().getNumberOfFinishedJobs());
@@ -178,33 +179,8 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
             reg1.unregister();
             reg2.unregister();
         }
-    }
-
-    /**
-     * Test simple job execution with job id.
-     * The job is executed once and finished successfully.
-     */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testSimpleJobWithIdExecution() throws Exception {
-        final Barrier cb = new Barrier(2);
-        final ServiceRegistration jcReg = this.registerJobConsumer(TOPIC,
-                new JobConsumer() {
-
-                    @Override
-                    public JobResult process(Job job) {
-                        cb.block();
-                        return JobResult.OK;
-                    }
-                });
-        try {
-            final JobManager jobManager = this.getJobManager();
-            jobManager.addJob(TOPIC, "myid1", null);
-            assertTrue("No event received in the given time.", cb.block(5));
-            cb.reset();
-            assertFalse("Unexpected event received in the given time.", cb.block(5));
-        } finally {
-            jcReg.unregister();
-        }
+        // we put an extra sleep to see whether this fixes the test problems on Java 8
+        this.sleep(5000);
     }
 
     /**
@@ -226,25 +202,31 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
                     }
                 });
         try {
+            final Map<String, Object> jobProperties = Collections.singletonMap("id", (Object)"cancelJobId");
+            @SuppressWarnings("unchecked")
+            final Map<String, Object>[] jobPropertiesAsArray = new Map[1];
+            jobPropertiesAsArray[0] = jobProperties;
+
+            // create job
             final JobManager jobManager = this.getJobManager();
-            jobManager.addJob(TOPIC, "myid2", null);
+            jobManager.addJob(TOPIC, jobProperties);
             cb.block();
 
-            assertEquals(1, jobManager.findJobs(JobManager.QueryType.ALL, "sling/test", -1, (Map<String, Object>[])null).size());
+            assertEquals(1, jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1, jobPropertiesAsArray).size());
             // job is currently waiting, therefore cancel fails
-            final Event e1 = jobManager.findJob("sling/test", Collections.singletonMap(ResourceHelper.PROPERTY_JOB_NAME, (Object)"myid2"));
+            final Job e1 = jobManager.getJob(TOPIC, jobProperties);
             assertNotNull(e1);
-            assertFalse(jobManager.removeJob((String)e1.getProperty(ResourceHelper.PROPERTY_JOB_ID)));
             cb2.block(); // and continue job
 
             sleep(200);
 
             // the job is now in the queue again
-            final Event e2 = jobManager.findJob("sling/test", Collections.singletonMap(ResourceHelper.PROPERTY_JOB_NAME, (Object)"myid2"));
+            final Job e2 = jobManager.getJob(TOPIC, jobProperties);
             assertNotNull(e2);
-            assertTrue(jobManager.removeJob((String)e2.getProperty(ResourceHelper.PROPERTY_JOB_ID)));
-            assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, "sling/test", -1, (Map<String, Object>[])null).size());
-            final Collection<Job> col = jobManager.findJobs(JobManager.QueryType.HISTORY, "sling/test", -1, (Map<String, Object>[])null);
+            assertTrue(jobManager.removeJobById(e2.getId()));
+            assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1, jobPropertiesAsArray).size());
+            final Collection<Job> col = jobManager.findJobs(JobManager.QueryType.HISTORY, TOPIC, -1,
+                    jobPropertiesAsArray);
             try {
                 assertEquals(1, col.size());
             } finally {
@@ -290,48 +272,6 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
     }
 
     /**
-     * Test force canceling a job
-     * The job execution always fails
-     */
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testForceCancelJob() throws Exception {
-        final Barrier cb = new Barrier(2);
-        final ServiceRegistration jcReg = this.registerJobConsumer(TOPIC,
-                new JobConsumer() {
-
-                    @Override
-                    public JobResult process(Job job) {
-                        cb.block();
-                        sleep(1000);
-                        return JobResult.FAILED;
-                    }
-                });
-        try {
-            final JobManager jobManager = this.getJobManager();
-            jobManager.addJob(TOPIC, "myid3", null);
-            cb.block();
-
-            assertEquals(1, jobManager.findJobs(JobManager.QueryType.ALL, "sling/test", -1, (Map<String, Object>[])null).size());
-            // job is currently sleeping, but force cancel always waits!
-            final Event e = jobManager.findJob("sling/test", Collections.singletonMap(ResourceHelper.PROPERTY_JOB_NAME, (Object)"myid3"));
-            assertNotNull(e);
-            jobManager.forceRemoveJob((String)e.getProperty(ResourceHelper.PROPERTY_JOB_ID));
-            // the job is now removed
-            assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, "sling/test", -1, (Map<String, Object>[])null).size());
-            final Collection<Job> col = jobManager.findJobs(JobManager.QueryType.HISTORY, "sling/test", -1, (Map<String, Object>[])null);
-            try {
-                assertEquals(1, col.size());
-            } finally {
-                for(final Job j : col) {
-                    jobManager.removeJobById(j.getId());
-                }
-            }
-        } finally {
-            jcReg.unregister();
-        }
-    }
-
-    /**
      * Reschedule test.
      * The job is rescheduled two times before it fails.
      */
@@ -359,7 +299,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
                 });
         try {
             final JobManager jobManager = this.getJobManager();
-            final Job job = jobManager.addJob(TOPIC, null, null);
+            final Job job = jobManager.addJob(TOPIC, null);
 
             assertTrue("No event received in the given time.", cb.block(5));
             cb.reset();
@@ -396,7 +336,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
                     @Override
                     public JobResult process(Job job) {
                         // events 1 and 4 finish the first time
-                        final String id = job.getName();
+                        final String id = (String)job.getProperty("id");
                         if ( "1".equals(id) || "4".equals(id) ) {
                             return JobResult.OK;
 
@@ -428,54 +368,50 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
                         return JobResult.FAILED;
                     }
                 });
-        final ServiceRegistration eh1Reg = this.registerEventHandler(JobUtil.TOPIC_JOB_CANCELLED,
+        final ServiceRegistration eh1Reg = this.registerEventHandler(NotificationConstants.TOPIC_JOB_CANCELLED,
                 new EventHandler() {
 
                     @Override
                     public void handleEvent(Event event) {
-                        final Event job = (Event) event.getProperty(JobUtil.PROPERTY_NOTIFICATION_JOB);
-                        final String id = (String)job.getProperty(ResourceHelper.PROPERTY_JOB_NAME);
+                        final String id = (String)event.getProperty("id");
                         cancelled.add(id);
                     }
                 });
-        final ServiceRegistration eh2Reg = this.registerEventHandler(JobUtil.TOPIC_JOB_FAILED,
+        final ServiceRegistration eh2Reg = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FAILED,
                 new EventHandler() {
 
                     @Override
                     public void handleEvent(Event event) {
-                        final Event job = (Event) event.getProperty(JobUtil.PROPERTY_NOTIFICATION_JOB);
-                        final String id = (String)job.getProperty(ResourceHelper.PROPERTY_JOB_NAME);
+                        final String id = (String)event.getProperty("id");
                         failed.add(id);
                     }
                 });
-        final ServiceRegistration eh3Reg = this.registerEventHandler(JobUtil.TOPIC_JOB_FINISHED,
+        final ServiceRegistration eh3Reg = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
                 new EventHandler() {
 
                     @Override
                     public void handleEvent(Event event) {
-                        final Event job = (Event) event.getProperty(JobUtil.PROPERTY_NOTIFICATION_JOB);
-                        final String id = (String)job.getProperty(ResourceHelper.PROPERTY_JOB_NAME);
+                        final String id = (String)event.getProperty("id");
                         finished.add(id);
                     }
                 });
-        final ServiceRegistration eh4Reg = this.registerEventHandler(JobUtil.TOPIC_JOB_STARTED,
+        final ServiceRegistration eh4Reg = this.registerEventHandler(NotificationConstants.TOPIC_JOB_STARTED,
                 new EventHandler() {
 
                     @Override
                     public void handleEvent(Event event) {
-                        final Event job = (Event) event.getProperty(JobUtil.PROPERTY_NOTIFICATION_JOB);
-                        final String id = (String)job.getProperty(ResourceHelper.PROPERTY_JOB_NAME);
+                        final String id = (String)event.getProperty("id");
                         started.add(id);
                     }
                 });
 
         final JobManager jobManager = this.getJobManager();
         try {
-            jobManager.addJob(TOPIC, "1", null);
-            jobManager.addJob(TOPIC, "2", null);
-            jobManager.addJob(TOPIC, "3", null);
-            jobManager.addJob(TOPIC, "4", null);
-            jobManager.addJob(TOPIC, "5", null);
+            jobManager.addJob(TOPIC, Collections.singletonMap("id", (Object)"1"));
+            jobManager.addJob(TOPIC, Collections.singletonMap("id", (Object)"2"));
+            jobManager.addJob(TOPIC, Collections.singletonMap("id", (Object)"3"));
+            jobManager.addJob(TOPIC, Collections.singletonMap("id", (Object)"4"));
+            jobManager.addJob(TOPIC, Collections.singletonMap("id", (Object)"5"));
 
             int count = 0;
             final long startTime = System.currentTimeMillis();
@@ -509,43 +445,18 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testNoJobProcessor() throws Exception {
         final AtomicInteger count = new AtomicInteger(0);
-        final AtomicInteger unprocessedCount = new AtomicInteger(0);
 
-        final ServiceRegistration eh1 = this.registerEventHandler(TOPIC,
-                new EventHandler() {
+        final ServiceRegistration eh1 = this.registerJobConsumer(TOPIC,
+                new JobConsumer() {
 
-                    @Override
-                    public void handleEvent(Event event) {
-                        JobUtil.processJob(event, new JobProcessor() {
+            @Override
+            public JobResult process(final Job job) {
+                count.incrementAndGet();
 
-                            @Override
-                            public boolean process(Event job) {
-                                try {
-                                    Thread.sleep(200);
-                                } catch (InterruptedException ie) {
-                                    // ignore
-                                }
-                                return true;
-                            }
-                        });
-                    }
-                });
-        final ServiceRegistration eh2 = this.registerEventHandler("sling/test2",
-                new EventHandler() {
+                return JobResult.OK;
+            }
+         });
 
-                    @Override
-                    public void handleEvent(Event event) {
-                        unprocessedCount.incrementAndGet();
-                    }
-                });
-        final ServiceRegistration eh3 = this.registerEventHandler(JobUtil.TOPIC_JOB_FINISHED,
-                new EventHandler() {
-
-                    @Override
-                    public void handleEvent(Event event) {
-                        count.incrementAndGet();
-                    }
-                });
         try {
             final JobManager jobManager = this.getJobManager();
 
@@ -553,44 +464,16 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
             final int COUNT = 20;
             for(int i = 0; i < COUNT; i++ ) {
                 final String jobTopic = (i % 2 == 0 ? TOPIC : TOPIC + "2");
-                final Dictionary<String, Object> props = new Hashtable<String, Object>();
-                props.put(ResourceHelper.PROPERTY_JOB_TOPIC, jobTopic);
 
-                this.eventAdmin.postEvent(new Event(JobUtil.TOPIC_JOB, props));
+                jobManager.addJob(jobTopic, null);
             }
-            final long startTime = System.currentTimeMillis();
-            while ( count.get() < COUNT / 2) {
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException ie) {
-                    // ignore
-                }
+            while ( jobManager.getStatistics().getNumberOfFinishedJobs() < COUNT / 2) {
+                this.sleep(50);
             }
-            while ( unprocessedCount.get() < COUNT / 2) {
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException ie) {
-                    // ignore
-                }
-            }
-            // clean up waits for one minute, so we should do the same
-            while ( System.currentTimeMillis() - startTime < 72000 ) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException ie) {
-                    // ignore
-                }
-            }
-            ((Runnable)jobManager).run();
-            while ( unprocessedCount.get() < COUNT ) {
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException ie) {
-                    // ignore
-                }
-            }
+
             assertEquals("Finished count", COUNT / 2, count.get());
-            assertEquals("Unprocessed count",COUNT, unprocessedCount.get());
+            // unprocessed count should be 0 as there is no job consumer for this job
+            assertEquals("Unprocessed count", 0, jobManager.getStatistics().getNumberOfJobs());
             assertEquals("Finished count", COUNT / 2, jobManager.getStatistics().getNumberOfFinishedJobs());
 
             // now remove jobs
@@ -599,8 +482,6 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
             }
         } finally {
             eh1.unregister();
-            eh2.unregister();
-            eh3.unregister();
         }
     }
 }

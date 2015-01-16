@@ -1,0 +1,8 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "queue.name" : "org/apache/sling/distribution/queue/{0}",
+    "queue.retries" : "-1",
+    "queue.topics": "org/apache/sling/distribution/queue/*",
+    "queue.type" : "ORDERED"
+}
+

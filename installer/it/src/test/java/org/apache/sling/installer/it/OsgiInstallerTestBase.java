@@ -40,6 +40,12 @@ import javax.inject.Inject;
 
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.OsgiInstaller;
+import org.apache.sling.installer.api.ResourceChangeListener;
+import org.apache.sling.installer.api.info.InfoProvider;
+import org.apache.sling.installer.api.info.InstallationState;
+import org.apache.sling.installer.api.info.Resource;
+import org.apache.sling.installer.api.info.ResourceGroup;
+import org.apache.sling.installer.api.tasks.ResourceState;
 import org.junit.Before;
 import org.ops4j.pax.exam.Option;
 import org.osgi.framework.Bundle;
@@ -66,10 +72,16 @@ public class OsgiInstallerTestBase implements FrameworkListener {
     private final static String CONFIG_VERSION = System.getProperty("installer.configuration.version", "INSTALLER_VERSION_NOT_SET");
 
 	public final static String JAR_EXT = ".jar";
-	private int packageRefreshEventsCount;
-	private ServiceTracker configAdminTracker;
+	private volatile int packageRefreshEventsCount;
+	private volatile ServiceTracker configAdminTracker;
 
-	protected OsgiInstaller installer;
+	protected volatile OsgiInstaller installer;
+
+    protected volatile ResourceChangeListener resourceChangeListener;
+
+    protected volatile InfoProvider infoProvider;
+
+    private final static long WAIT_FOR_CHANGE_TIMEOUT = 5000L;
 
     public static final long WAIT_FOR_ACTION_TIMEOUT_MSEC = 6000;
     public static final String BUNDLE_BASE_NAME = "org.apache.sling.installer.it-" + POM_VERSION;
@@ -101,6 +113,8 @@ public class OsgiInstallerTestBase implements FrameworkListener {
     /** Set up the installer service. */
     protected void setupInstaller() {
         installer = getService(OsgiInstaller.class);
+        resourceChangeListener = getService(ResourceChangeListener.class);
+        infoProvider = getService(InfoProvider.class);
     }
 
     @Before
@@ -187,77 +201,164 @@ public class OsgiInstallerTestBase implements FrameworkListener {
         }
     }
 
-    protected Configuration findConfiguration(String pid) throws Exception {
+    /**
+     * Encode the value for the ldap filter: \, *, (, and ) should be escaped.
+     */
+    private static String encode(final String value) {
+        return value.replace("\\", "\\\\")
+                .replace("*", "\\*")
+                .replace("(", "\\(")
+                .replace(")", "\\)");
+    }
+
+    /**
+     * Find the configuration with the given pid.
+     */
+    protected Configuration findConfiguration(final String pid) throws Exception {
     	final ConfigurationAdmin ca = this.waitForConfigAdmin(true);
     	if (ca != null) {
-	    	final Configuration[] cfgs = ca.listConfigurations(null);
-	    	if (cfgs != null) {
-		    	for(Configuration cfg : cfgs) {
-		    	    try {
-    		    		if(cfg.getPid().equals(pid)) {
-    		    			return cfg;
-    		    		}
-		    	    } catch (IllegalStateException e) {}
-		    	}
+	    	final Configuration[] cfgs = ca.listConfigurations("(" + Constants.SERVICE_PID + "=" + encode(pid) + ")");
+	    	if (cfgs != null && cfgs.length > 0 ) {
+                if ( cfgs.length == 1 ) {
+                    return cfgs[0];
+                }
+                throw new IllegalStateException("More than one configuration for " + pid);
 	    	}
     	}
     	return null;
     }
 
-    protected void waitForCondition(String info, long timeoutMsec, Condition c) throws Exception {
-        final long end = System.currentTimeMillis() + timeoutMsec;
+    /**
+     * Find the configuration with the given factory pid.
+     */
+    protected Configuration findFactoryConfiguration(final String factoryPid) throws Exception {
+        final ConfigurationAdmin ca = this.waitForConfigAdmin(true);
+        if (ca != null) {
+            final Configuration[] cfgs = ca.listConfigurations("("
+                    + ConfigurationAdmin.SERVICE_FACTORYPID + "=" + encode(factoryPid) + ")");
+            if (cfgs != null && cfgs.length > 0 ) {
+                if ( cfgs.length == 1 ) {
+                    return cfgs[0];
+                }
+                throw new IllegalStateException("More than one factory configuration for " + factoryPid);
+            }
+        }
+        return null;
+    }
+
+    protected void waitForCondition(String info, Condition c) throws Exception {
+        this.waitForCondition(info, c, WAIT_FOR_CHANGE_TIMEOUT);
+    }
+
+    protected void waitForCondition(String info, Condition c, final long timeOut) throws Exception {
+        final long end = System.currentTimeMillis() + timeOut;
         do {
-        	if(c.isTrue()) {
-        		return;
-        	}
-        	sleep(c.getMsecBetweenEvaluations());
+            if(c.isTrue()) {
+                return;
+            }
+            sleep(c.getMsecBetweenEvaluations());
         } while(System.currentTimeMillis() < end);
 
         if(c.additionalInfo() != null) {
-        	info += " " + c.additionalInfo();
+            info += " " + c.additionalInfo();
         }
 
         c.onFailure();
         fail("WaitForCondition failed: " + info);
     }
 
-    protected void waitForConfigValue(String info, String pid, long timeoutMsec, String key, String value) throws Exception {
-        final long end = System.currentTimeMillis() + timeoutMsec;
+    protected Configuration waitForFactoryConfigValue(final String info,
+            final String factoryPid,
+            final String key,
+            final String value)
+    throws Exception {
+        final long end = System.currentTimeMillis() + WAIT_FOR_CHANGE_TIMEOUT;
         do {
-        	final Configuration c = waitForConfiguration(info, pid, timeoutMsec, true);
-        	if(value.equals(c.getProperties().get(key))) {
-        		return;
+            final Configuration c = waitForFactoryConfiguration(info, factoryPid, true);
+            if (value.equals(c.getProperties().get(key))) {
+                return c;
+            }
+            sleep(100L);
+        } while(System.currentTimeMillis() < end);
+        fail("Did not get " + key + "=" + value + " for factory config " + factoryPid);
+        return null;
+    }
+
+    protected Configuration waitForConfigValue(final String info,
+            final String pid,
+            final String key,
+            final String value)
+    throws Exception {
+        final long end = System.currentTimeMillis() + WAIT_FOR_CHANGE_TIMEOUT;
+        do {
+        	final Configuration c = waitForConfiguration(info, pid, true);
+        	if (value.equals(c.getProperties().get(key))) {
+        		return c;
         	}
         	sleep(100L);
         } while(System.currentTimeMillis() < end);
         fail("Did not get " + key + "=" + value + " for config " + pid);
+        return null;
     }
 
-    protected Configuration waitForConfiguration(String info, String pid, long timeoutMsec, boolean shouldBePresent) throws Exception {
+    /**
+     * Wait for a configuration.
+     */
+    protected Configuration waitForConfiguration(final String info,
+            final String pid,
+            final boolean shouldBePresent)
+    throws Exception {
+        return this.waitForConfiguration(info, pid,  null, shouldBePresent);
+    }
+
+    /**
+     * Wait for a factory configuration.
+     */
+    protected Configuration waitForFactoryConfiguration(final String info,
+            final String factoryPid,
+            final boolean shouldBePresent)
+    throws Exception {
+        return this.waitForConfiguration(info, null,  factoryPid, shouldBePresent);
+    }
+
+    /**
+     * Internal method to wait for a configuration
+     */
+    private Configuration waitForConfiguration(final String info,
+            final String pid,
+            final String factoryPid,
+            final boolean shouldBePresent)
+    throws Exception {
+        final String logKey = factoryPid == null ? "config" : "factory config";
+        String msg;
         if (info == null) {
-            info = "";
+            msg = "";
         } else {
-            info += ": ";
+            msg = info + ": ";
         }
 
         Configuration result = null;
         final long start = System.currentTimeMillis();
-        final long end = start + timeoutMsec;
-        log(LogService.LOG_DEBUG, "Starting config check at " + start + "; ending by " + end);
+        final long end = start + WAIT_FOR_CHANGE_TIMEOUT;
+        log(LogService.LOG_DEBUG, "Starting " + logKey + " check at " + start + "; ending by " + end);
         do {
-            result = findConfiguration(pid);
+            if ( factoryPid != null ) {
+                result = findFactoryConfiguration(factoryPid);
+            } else {
+                result = findConfiguration(pid);
+            }
             if ((shouldBePresent && result != null) ||
                     (!shouldBePresent && result == null)) {
                 break;
             }
-            log(LogService.LOG_DEBUG, "Config check failed at " + System.currentTimeMillis() + "; sleeping");
+            log(LogService.LOG_DEBUG, logKey + " check failed at " + System.currentTimeMillis() + "; sleeping");
             sleep(25);
         } while(System.currentTimeMillis() < end);
 
         if (shouldBePresent && result == null) {
-            fail(info + "Configuration not found (" + pid + ")");
+            fail(msg + logKey + " not found (" + (factoryPid != null ? factoryPid : pid) + ")");
         } else if (!shouldBePresent && result != null) {
-            fail(info + "Configuration is still present (" + pid + ")");
+            fail(msg + logKey + " is still present (" + (factoryPid != null ? factoryPid : pid) + ")");
         }
         return result;
     }
@@ -395,6 +496,7 @@ public class OsgiInstallerTestBase implements FrameworkListener {
     	String localRepo = System.getProperty("maven.repo.local", "");
 
     	return options(
+
                 junitBundles(),
                 when( localRepo.length() > 0 ).useOptions(
                         systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
@@ -408,11 +510,11 @@ public class OsgiInstallerTestBase implements FrameworkListener {
                         mavenBundle("org.slf4j", "jcl-over-slf4j", "1.6.4"),
                         mavenBundle("org.slf4j", "log4j-over-slf4j", "1.6.4"),
 
-        	            mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.8.0"),
-        	            mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.2.8"),
-                        mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.0.2"),
-        	        	mavenBundle("org.apache.sling", "org.apache.sling.installer.core", POM_VERSION),
-                        mavenBundle("org.apache.sling", "org.apache.sling.installer.factory.configuration", CONFIG_VERSION)
+        	            mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.8.2"),
+        	            mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.0"),
+                        mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.0.10"),
+        	        	mavenBundle("org.apache.sling", "org.apache.sling.installer.core", POM_VERSION).startLevel(5),
+                        mavenBundle("org.apache.sling", "org.apache.sling.installer.factory.configuration", CONFIG_VERSION).startLevel(5)
         		)
         );
     }
@@ -488,6 +590,28 @@ public class OsgiInstallerTestBase implements FrameworkListener {
         for(Bundle b : bundleContext.getBundles()) {
             log(LogService.LOG_DEBUG, "Installed bundle: " + b.getSymbolicName());
         }
+    }
+
+    protected Resource waitForResource(final String url,
+            final ResourceState state) {
+        final long start = System.currentTimeMillis();
+        final long end = start + WAIT_FOR_CHANGE_TIMEOUT;
+
+        do {
+            final InstallationState is = this.infoProvider.getInstallationState();
+            for(final ResourceGroup rg : (state == ResourceState.INSTALL || state == ResourceState.UNINSTALL ? is.getActiveResources() : is.getInstalledResources())) {
+                for(final Resource rsrc : rg.getResources()) {
+                    if ( url.equals(rsrc.getURL()) ) {
+                        if ( rsrc.getState() == state ) {
+                            return rsrc;
+                        }
+                    }
+                }
+            }
+            sleep(50);
+        } while ( System.currentTimeMillis() < end);
+        fail("Resource " + url + " not found with state " + state + " : " + this.infoProvider.getInstallationState());
+        return null;
     }
 
     private final class BundleEventListener implements SynchronousBundleListener {

@@ -16,10 +16,12 @@
  */
 package org.apache.sling.models.spi.injectorspecific;
 
+
 /**
- * Default implementation of ModelAnnotationProcessor.
- *
+ * Default implementation of {@link InjectAnnotationProcessor}.
+ * @deprecated Use {@link AbstractInjectAnnotationProcessor2} instead
  */
+@Deprecated
 public class AbstractInjectAnnotationProcessor implements InjectAnnotationProcessor {
 
     public String getName() {

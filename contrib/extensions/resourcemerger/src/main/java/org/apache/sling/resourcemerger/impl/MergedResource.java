@@ -63,7 +63,15 @@ public class MergedResource extends AbstractResource {
         this.resolver = resolver;
         this.path = (relativePath.length() == 0 ? mergeRootPath : mergeRootPath + "/" + relativePath);
         this.properties = new DeepReadValueMapDecorator(this, new MergedValueMap(valueMaps));
-        this.resourceType = this.properties.get(ResourceResolver.PROPERTY_RESOURCE_TYPE, (relativePath.length() == 0 ? "/" : relativePath));
+        // get resource type
+        String rt = (relativePath.length() == 0 ? "/" : relativePath);
+        for(final Resource rsrc : mappedResources) {
+            final String value = rsrc.getResourceType();
+            if ( value != null ) {
+                rt = value;
+            }
+        }
+        this.resourceType = rt;
         metadata.put(MergedResourceConstants.METADATA_FLAG, true);
         final String[] resourcePaths = new String[mappedResources.size()];
         int i = 0;

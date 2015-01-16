@@ -1,0 +1,11 @@
+{
+    "type" : "queue",
+
+    "serviceName" : "distributionService",
+
+    "isPassive" : true,
+
+    "packageExporter":  {
+        "type": "local"
+    }
+}

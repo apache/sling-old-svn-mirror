@@ -208,6 +208,7 @@ public abstract class JobUtil {
 
     /**
      * Property containing the job event. The value is of type org.osgi.service.event.Event.
+     * Since 1.6 this property is not send anymore.
      * @deprecated
      */
     @Deprecated

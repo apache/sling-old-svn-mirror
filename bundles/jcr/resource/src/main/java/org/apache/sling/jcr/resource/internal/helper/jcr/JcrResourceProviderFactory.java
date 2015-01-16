@@ -79,6 +79,11 @@ import org.slf4j.LoggerFactory;
 })
 public class JcrResourceProviderFactory implements ResourceProviderFactory {
 
+    /** TODO - this is a copy from ResourceResolverFactory to avoid a dependency to the new 2.8.2 API just for this constants.
+     * This should be replaced once we update.
+     */
+    private static final String NEW_PASSWORD = "user.newpassword";
+
     /** Logger */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -102,6 +107,9 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
     /** This service is only available on OAK, therefore optional and static) */
     @Reference(policy=ReferencePolicy.STATIC, cardinality=ReferenceCardinality.OPTIONAL_UNARY)
     private Executor executor;
+
+    @Reference
+    private PathMapper pathMapper;
 
     /** The JCR observation listener. */
     private Closeable listener;
@@ -139,7 +147,7 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
         try {
             if ( isOak ) {
                 try {
-                    this.listener = new OakResourceListener(root, support, context.getBundleContext(), executor);
+                    this.listener = new OakResourceListener(root, support, context.getBundleContext(), executor, pathMapper);
                     log.info("Detected Oak based repository. Using improved JCR Resource Listener");
                 } catch ( final RepositoryException re ) {
                     throw re;
@@ -148,7 +156,7 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
                 }
             }
             if ( this.listener == null ) {
-                this.listener = new JcrResourceListener(root, support);
+                this.listener = new JcrResourceListener(root, support, pathMapper);
             }
             closeSupport = false;
         } finally {
@@ -339,7 +347,7 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
             holder.setSession(session);
         }
 
-        return new JcrResourceProvider(session, this.getDynamicClassLoader(), holder);
+        return new JcrResourceProvider(session, this.getDynamicClassLoader(), holder, pathMapper);
     }
 
     /**
@@ -410,32 +418,38 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
      * @return A credentials object or <code>null</code>
      */
     private Credentials getCredentials(final Map<String, Object> authenticationInfo) {
-        if (authenticationInfo == null) {
-            return null;
+
+        Credentials creds = null;
+        if (authenticationInfo != null) {
+
+            final Object credentialsObject = authenticationInfo.get(JcrResourceConstants.AUTHENTICATION_INFO_CREDENTIALS);
+
+            if (credentialsObject instanceof Credentials) {
+                creds = (Credentials) credentialsObject;
+            } else {
+                // otherwise try to create SimpleCredentials if the userId is set
+                final Object userId = authenticationInfo.get(ResourceResolverFactory.USER);
+                if (userId instanceof String) {
+                    final Object password = authenticationInfo.get(ResourceResolverFactory.PASSWORD);
+                    final SimpleCredentials credentials = new SimpleCredentials(
+                            (String) userId, ((password instanceof char[])
+                            ? (char[]) password
+                            : new char[0]));
+
+                    // add attributes
+                    copyAttributes(credentials, authenticationInfo);
+
+                    creds = credentials;
+                }
+            }
         }
 
-        final Object credentialsObject = authenticationInfo.get(JcrResourceConstants.AUTHENTICATION_INFO_CREDENTIALS);
-        if (credentialsObject instanceof Credentials) {
-            return (Credentials) credentialsObject;
+        if (creds instanceof SimpleCredentials
+                && authenticationInfo.get(NEW_PASSWORD) instanceof String) {
+            ((SimpleCredentials) creds).setAttribute(NEW_PASSWORD, authenticationInfo.get(NEW_PASSWORD));
         }
 
-        // otherwise try to create SimpleCredentials if the userId is set
-        final Object userId = authenticationInfo.get(ResourceResolverFactory.USER);
-        if (userId instanceof String) {
-            final Object password = authenticationInfo.get(ResourceResolverFactory.PASSWORD);
-            final SimpleCredentials credentials = new SimpleCredentials(
-                (String) userId, ((password instanceof char[])
-                        ? (char[]) password
-                        : new char[0]));
-
-            // add attributes
-            copyAttributes(credentials, authenticationInfo);
-
-            return credentials;
-        }
-
-        // no user id (or not a String)
-        return null;
+        return creds;
     }
 
     /**

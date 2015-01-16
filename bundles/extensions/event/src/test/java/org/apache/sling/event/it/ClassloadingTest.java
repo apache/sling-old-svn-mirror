@@ -136,7 +136,10 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
 
                 @Override
                 public String getDescription() {
-                    return "Waiting for job to be processed";
+                    return "Waiting for job to be processed. Conditions: queuedJobs=" + jobManager.getStatistics().getNumberOfQueuedJobs() +
+                            ", jobsCount=" + processedJobsCount + ", findJobs=" +
+                            jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1, (Map<String, Object>[]) null)
+                            .size();
                 }
 
                 @Override
@@ -206,13 +209,19 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
                             && finishedEvents.size() == 0
                             && jobManager.findJobs(JobManager.QueryType.ALL, TOPIC + "/failed", -1,
                                     (Map<String, Object>[]) null).size() == 1
-                            && jobManager.getStatistics().getNumberOfQueuedJobs() == 0
+                            && jobManager.getStatistics().getNumberOfQueuedJobs() == 1
                             && jobManager.getStatistics().getNumberOfActiveJobs() == 0;
                 }
 
                 @Override
                 public String getDescription() {
-                    return "Waiting for job failure to be recorded";
+                    return "Waiting for job failure to be recorded. Conditions " +
+                           "faildJobsCount=" + failedJobsCount.get() +
+                           ", finishedEvents=" + finishedEvents.size() +
+                           ", findJobs= " + jobManager.findJobs(JobManager.QueryType.ALL, TOPIC + "/failed", -1,
+                                   (Map<String, Object>[]) null).size()
+                           +", queuedJobs=" + jobManager.getStatistics().getNumberOfQueuedJobs()
+                           +", activeJobs=" + jobManager.getStatistics().getNumberOfActiveJobs();
                 }
             }, CONDITION_TIMEOUT_SECONDS, CONDITION_INTERVAL_MILLIS);
 

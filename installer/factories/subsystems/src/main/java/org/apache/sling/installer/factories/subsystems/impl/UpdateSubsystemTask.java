@@ -28,6 +28,9 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.subsystem.Subsystem;
 
+/**
+ * Update subsystem by uninstalling and installing it.
+ */
 public class UpdateSubsystemTask extends InstallTask {
 
     private static final String INSTALL_ORDER = "54-";
@@ -57,6 +60,7 @@ public class UpdateSubsystemTask extends InstallTask {
         try {
             subsystem = this.bundleContext.getService(this.subsystemReference);
             if ( subsystem != null ) {
+                subsystem.stop();
                 subsystem.uninstall();
                 ctx.addTaskToCurrentCycle(new InstallSubsystemTask(this.getResourceGroup(), this.rootSubsystem));
             } else {

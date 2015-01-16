@@ -40,6 +40,7 @@ import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.discovery.PropertyProvider;
+import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
 import org.apache.sling.event.impl.support.TopicMatcher;
 import org.apache.sling.event.impl.support.TopicMatcherHelper;
 import org.apache.sling.event.jobs.Job;
@@ -52,13 +53,16 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * This component manages/keeps track of all job consumer services.
  */
-@Component(label="%job.consumermanager.name",
-           description="%job.consumermanager.description",
+@Component(label="Apache Sling Job Consumer Manager",
+           description="The consumer manager controls the job consumer (= processors). "
+                     + "It can be used to temporarily disable job processing on the current instance. Other instances "
+                     + "in a cluster are not affected.",
            metatype=true)
 @Service(value=JobConsumerManager.class)
 @References({
@@ -75,10 +79,22 @@ import org.slf4j.LoggerFactory;
                     + "only used on the current instance. This option should always be disabled!")
 public class JobConsumerManager {
 
-    @Property(unbounded=PropertyUnbounded.ARRAY, value = "*")
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    @Property(unbounded=PropertyUnbounded.ARRAY, value = "*",
+              label="Topic Whitelist",
+              description="This is a list of topics which currently should be "
+                        + "processed by this instance. Leaving it empty, all job consumers are disabled. Putting a '*' as "
+                        + "one entry, enables all job consumers. Adding separate topics enables job consumers for exactly "
+                        + "this topic.")
     private static final String PROPERTY_WHITELIST = "job.consumermanager.whitelist";
 
-    @Property(unbounded=PropertyUnbounded.ARRAY)
+    @Property(unbounded=PropertyUnbounded.ARRAY,
+              label="Topic Blacklist",
+              description="This is a list of topics which currently shouldn't be "
+                        + "processed by this instance. Leaving it empty, all job consumers are enabled. Putting a '*' as "
+                        + "one entry, disables all job consumers. Adding separate topics disables job consumers for exactly "
+                        + "this topic.")
     private static final String PROPERTY_BLACKLIST = "job.consumermanager.blacklist";
 
     /** The map with the consumers, keyed by topic, sorted by service ranking. */
@@ -131,7 +147,7 @@ public class JobConsumerManager {
                 this.calculateTopics(enable);
             }
             if ( enable ) {
-                LoggerFactory.getLogger(this.getClass()).info("Registering property provider with: {}", this.topics);
+                logger.debug("Registering property provider with: {}", this.topics);
                 this.propagationService = bc.registerService(PropertyProvider.class.getName(),
                         new PropertyProvider() {
 
@@ -144,7 +160,7 @@ public class JobConsumerManager {
                             }
                         }, this.getRegistrationProperties());
             } else {
-                LoggerFactory.getLogger(this.getClass()).info("Unregistering property provider with");
+                logger.debug("Unregistering property provider with");
                 this.propagationService.unregister();
                 this.propagationService = null;
             }
@@ -153,7 +169,7 @@ public class JobConsumerManager {
             synchronized ( this.topicToConsumerMap ) {
                 this.calculateTopics(true);
             }
-            LoggerFactory.getLogger(this.getClass()).info("Updating property provider with: {}", this.topics);
+            logger.debug("Updating property provider with: {}", this.topics);
             this.propagationService.setProperties(this.getRegistrationProperties());
         }
     }
@@ -182,13 +198,23 @@ public class JobConsumerManager {
             if ( consumers != null ) {
                 return consumers.get(0).getExecutor(this.bundleContext);
             }
-            final int pos = topic.lastIndexOf('/');
+            int pos = topic.lastIndexOf('/');
             if ( pos > 0 ) {
                 final String category = topic.substring(0, pos + 1).concat("*");
                 final List<ConsumerInfo> categoryConsumers = this.topicToConsumerMap.get(category);
                 if ( categoryConsumers != null ) {
                     return categoryConsumers.get(0).getExecutor(this.bundleContext);
                 }
+
+                // search deep consumers (since 1.2 of the consumer package)
+                do {
+                    final String subCategory = topic.substring(0, pos + 1).concat("**");
+                    final List<ConsumerInfo> subCategoryConsumers = this.topicToConsumerMap.get(subCategory);
+                    if ( subCategoryConsumers != null ) {
+                        return subCategoryConsumers.get(0).getExecutor(this.bundleContext);
+                    }
+                    pos = topic.lastIndexOf('/', pos - 1);
+                } while ( pos > 0 );
             }
         }
         return null;
@@ -284,7 +310,7 @@ public class JobConsumerManager {
                 }
             }
             if ( changed && this.propagationService != null ) {
-                LoggerFactory.getLogger(this.getClass()).info("Updating property provider with: {}", this.topics);
+                logger.debug("Updating property provider with: {}", this.topics);
                 this.propagationService.setProperties(this.getRegistrationProperties());
             }
         }
@@ -334,7 +360,7 @@ public class JobConsumerManager {
                 }
             }
             if ( changed && this.propagationService != null ) {
-                LoggerFactory.getLogger(this.getClass()).info("Updating property provider with: {}", this.topics);
+                logger.debug("Updating property provider with: {}", this.topics);
                 this.propagationService.setProperties(this.getRegistrationProperties());
             }
         }

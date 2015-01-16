@@ -1,0 +1,13 @@
+{
+    "jcr:primaryType" : "nt:unstructured",
+
+    "kind" : "exporter",
+
+    "isResource" : "true",
+
+    "packageBuilder" : {
+        "kind" : "packageBuilder",
+        "type" : "service",
+        "name" : "vlt"
+    }
+}

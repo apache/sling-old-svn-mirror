@@ -16,7 +16,7 @@
     <parent>
         <groupId>org.apache.sling.ide</groupId>
         <artifactId>reactor</artifactId>
-        <version>1.0.3-SNAPSHOT</version>
+        <version>1.0.5-SNAPSHOT</version>
     </parent>
     
     <artifactId>org.apache.sling.ide.source-bundle</artifactId>
@@ -33,7 +33,6 @@
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
-                    <finalName>sling-ide-tooling-${project.version}</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
                     <descriptors>
                         <descriptor>assembly.xml</descriptor>

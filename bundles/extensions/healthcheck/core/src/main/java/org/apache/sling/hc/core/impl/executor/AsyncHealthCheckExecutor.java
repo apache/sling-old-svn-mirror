@@ -193,11 +193,17 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
 
     }
 
+    void updateWith(HealthCheckExecutionResult result) {
+        if (isAsync(result.getHealthCheckMetadata())) {
+            asyncResultsByDescriptor.put(result.getHealthCheckMetadata(), (ExecutionResult) result);
+            LOG.debug("Updated result for async hc {} with {}", result.getHealthCheckMetadata(), result);
+        }
+    }
+    
     private boolean isAsync(HealthCheckMetadata healthCheckMetadata) {
         return StringUtils.isNotBlank(healthCheckMetadata.getAsyncCronExpression());
     }
 
-    
     private class HealthCheckAsyncJob implements Runnable {
 
         private final HealthCheckMetadata healthCheckDescriptor;
@@ -220,20 +226,11 @@ public class AsyncHealthCheckExecutor implements ServiceListener {
 
                 @Override
                 public void finished(HealthCheckExecutionResult result) {
-                    // no action needed here
-                    
+                    updateWith(result);
                 }});
 
             // run future in same thread (as we are already async via scheduler)
             healthCheckFuture.run();
-
-            try {
-                ExecutionResult result = healthCheckFuture.get();
-                LOG.debug("Aync execution of {} returned {}", healthCheckDescriptor, result);
-                asyncResultsByDescriptor.put(healthCheckDescriptor, result);
-            } catch (Exception e) {
-                LOG.warn("Could not upated async execution result for " + healthCheckDescriptor + ". Exception: " + e, e);
-            }
 
         }
 

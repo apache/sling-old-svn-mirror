@@ -23,7 +23,6 @@ import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.injectorspecific.Self;
 
 @Model(adaptables=SlingHttpServletRequest.class)
-@SuppressWarnings("javadoc")
 public class SelfDependencyModelB {
 
     @Self

@@ -22,12 +22,12 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>20</version>
+        <version>22</version>
         <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>org.apache.sling.jcr.resourcesecurity</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling JCR Resource Security</name>
@@ -36,9 +36,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/resourcesecurity</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/resourcesecurity</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/jcr/resourcesecurity</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/jcr/resourcesecurity</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/jcr/resourcesecurity</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/jcr/resourcesecurity</url>
     </scm>
 
     <build>
@@ -98,7 +98,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.resourceaccesssecurity</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

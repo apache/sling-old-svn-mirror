@@ -22,11 +22,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Dictionary;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * A resource that's been registered in the OSGi controller.
  * Data can be either an input stream or a dictionary.
  * Registered resources are processed by a {@link ResourceTransformer}.
  */
+@ProviderType
 public interface RegisteredResource {
 
     /**

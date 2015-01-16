@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>20</version>
+        <version>22</version>
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
@@ -65,6 +65,9 @@
         <integration.test.code.path>
             **/launchpad/webapp/integrationtest
         </integration.test.code.path>
+
+        <!-- optionally exclude some integration tests  -->
+        <failsafe.exclude></failsafe.exclude>
 
         <!--
             Set this to true to stop mvn once the integration test Jetty instance is
@@ -133,7 +136,7 @@
             <plugin>
                 <groupId>org.apache.sling</groupId>
                 <artifactId>maven-launchpad-plugin</artifactId>
-                <version>2.3.0</version>
+                <version>2.3.3-SNAPSHOT</version>
                 <extensions>true</extensions>
                 <executions>
                     <execution>
@@ -160,12 +163,29 @@
                 </executions>
                 <configuration>
                     <defaultBundleList>
-                        <version>${project.version}</version>
+                        <version>8-SNAPSHOT</version>
                     </defaultBundleList>
                     <jarWebSupport>
-                        <groupId>org.apache.felix</groupId>
-                        <artifactId>org.apache.felix.http.jetty</artifactId>
-                        <version>2.2.2</version>
+                        <bundles>
+                          <bundle>
+                                <groupId>org.apache.felix</groupId>
+                                <artifactId>org.apache.felix.http.api</artifactId>
+                                <version>2.3.2</version>
+                                <startLevel>5</startLevel>
+                            </bundle>
+                            <bundle>
+                                <groupId>org.apache.felix</groupId>
+                                <artifactId>org.apache.felix.http.servlet-api</artifactId>
+                                <version>1.0.1</version>
+                                <startLevel>5</startLevel>
+                            </bundle>
+                            <bundle>
+                                <groupId>org.apache.felix</groupId>
+                                <artifactId>org.apache.felix.http.jetty</artifactId>
+                                <version>2.3.2</version>
+                                <startLevel>5</startLevel>
+                            </bundle>
+                        </bundles>
                     </jarWebSupport>
                 </configuration>
                 <dependencies>
@@ -242,6 +262,9 @@
                                 <include>**/*Test.java</include>
                                 <include>**/*IT.java</include>
                             </includes>
+                            <excludes>
+                                <exclude>${failsafe.exclude}</exclude>
+                            </excludes>
                             <excludedGroups>${sling.it.excludedGroups}</excludedGroups>
                             <systemPropertyVariables>
                                 <launchpad.http.server.url>http://${test.host}:${http.port}/</launchpad.http.server.url>
@@ -431,6 +454,13 @@
     </profiles>
 
     <dependencies>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.launchpad</artifactId>
+            <version>8-SNAPSHOT</version>
+            <type>partialbundlelist</type>
+            <classifier>bundlelist</classifier>
+        </dependency>
 
       <!-- The integration tests -->
         <dependency>

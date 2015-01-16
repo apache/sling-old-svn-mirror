@@ -1,0 +1,7 @@
+README.md
+3rd-party*
+.gitignore
+.*\.json
+.*\.iml
+.*\.svg
+rat.exclude

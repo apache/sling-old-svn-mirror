@@ -38,10 +38,9 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.event.impl.jobs.JobConsumerManager;
-import org.apache.sling.event.impl.jobs.JobManagerImpl;
-import org.apache.sling.event.impl.jobs.TopologyCapabilities;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
-import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
+import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
+import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.QueueConfiguration;
@@ -69,7 +68,7 @@ public class InventoryPlugin implements InventoryPrinter {
     private JobManager jobManager;
 
     @Reference
-    private QueueConfigurationManager queueConfigManager;
+    private JobManagerConfiguration configuration;
 
     @Reference
     private JobConsumerManager jobConsumerManager;
@@ -165,7 +164,7 @@ public class InventoryPlugin implements InventoryPrinter {
         pw.println();
 
         pw.println("Topology Capabilities");
-        final TopologyCapabilities cap = ((JobManagerImpl)this.jobManager).getTopologyCapabilities();
+        final TopologyCapabilities cap = this.configuration.getTopologyCapabilities();
         if ( cap == null ) {
             pw.print("No topology information available !");
         } else {
@@ -275,8 +274,8 @@ public class InventoryPlugin implements InventoryPrinter {
 
         pw.println("Apache Sling Job Handling - Job Queue Configurations");
         pw.println("----------------------------------------------------");
-        this.printQueueConfiguration(pw, this.queueConfigManager.getMainQueueConfiguration());
-        final InternalQueueConfiguration[] configs = this.queueConfigManager.getConfigurations();
+        this.printQueueConfiguration(pw, this.configuration.getQueueConfigurationManager().getMainQueueConfiguration());
+        final InternalQueueConfiguration[] configs = this.configuration.getQueueConfigurationManager().getConfigurations();
         for(final InternalQueueConfiguration c : configs ) {
             this.printQueueConfiguration(pw, c);
         }
@@ -320,7 +319,7 @@ public class InventoryPlugin implements InventoryPrinter {
         pw.printf("    \"averageWaitingTimeText\" : \"%s\"%n", formatTime(s.getAverageWaitingTime()));
         pw.print("  }");
 
-        final TopologyCapabilities cap = ((JobManagerImpl)this.jobManager).getTopologyCapabilities();
+        final TopologyCapabilities cap = this.configuration.getTopologyCapabilities();
         if ( cap != null ) {
             pw.println(",");
             pw.println("  \"capabilities\" : [");
@@ -425,8 +424,8 @@ public class InventoryPlugin implements InventoryPrinter {
 
         pw.println(",");
         pw.println("  \"configurations\" : [");
-        this.printQueueConfigurationJson(pw, this.queueConfigManager.getMainQueueConfiguration());
-        final InternalQueueConfiguration[] configs = this.queueConfigManager.getConfigurations();
+        this.printQueueConfigurationJson(pw, this.configuration.getQueueConfigurationManager().getMainQueueConfiguration());
+        final InternalQueueConfiguration[] configs = this.configuration.getQueueConfigurationManager().getConfigurations();
         for(final InternalQueueConfiguration c : configs ) {
             pw.println(",");
             this.printQueueConfigurationJson(pw, c);

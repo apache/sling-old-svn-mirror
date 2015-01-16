@@ -23,13 +23,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>20</version>
+        <version>22</version>
         <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>org.apache.sling.event</artifactId>
     <packaging>bundle</packaging>
-    <version>3.3.15-SNAPSHOT</version>
+    <version>3.5.1-SNAPSHOT</version>
 
     <name>Apache Sling Event Support</name>
     <description>
@@ -45,10 +45,12 @@
     <properties>
         <site.jira.version.id>12315369</site.jira.version.id>
         <sling.java.version>6</sling.java.version>
-        <exam.version>3.5.0</exam.version>
-        <url.version>2.1.0</url.version>
+        <exam.version>4.4.0</exam.version>
+        <url.version>2.3.0</url.version>
         <bundle.build.name>${basedir}/target</bundle.build.name>
         <bundle.file.name>${bundle.build.name}/${project.build.finalName}.jar</bundle.file.name>
+        <min.port>35000</min.port>
+        <max.port>35999</max.port>
     </properties>
 
 
@@ -76,7 +78,7 @@
                         <Embed-Dependency>
                             jackrabbit-jcr-commons;inline="org/apache/jackrabbit/util/ISO9075.*|org/apache/jackrabbit/util/ISO8601.*|org/apache/jackrabbit/util/XMLChar.*",
                             org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/PropertiesUtil.*",
-                            quartz;inline="org/quartz/CronExpression.*"
+                            quartz;inline="org/quartz/CronExpression.*|org/quartz/ValueSet.*"
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
@@ -89,6 +91,26 @@
                         <exclude>**/it/**</exclude>
                     </excludes>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>reserve-network-port</id>
+                        <goals>
+                            <goal>reserve-network-port</goal>
+                        </goals>
+                        <phase>pre-integration-test</phase>
+                        <configuration>
+                            <portNames>
+                                <portName>http.port</portName>
+                            </portNames>
+                            <minPortNumber>${min.port}</minPortNumber>
+                            <maxPortNumber>${max.port}</maxPortNumber>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <!-- integration tests run with pax-exam -->
             <plugin>
@@ -121,24 +143,6 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>reserve-network-port</id>
-                        <goals>
-                            <goal>reserve-network-port</goal>
-                        </goals>
-                        <phase>pre-integration-test</phase>
-                        <configuration>
-                            <portNames>
-                                <portName>http.port</portName>
-                            </portNames>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <artifactId>maven-clean-plugin</artifactId>
                 <configuration>
                     <filesets>
@@ -156,6 +160,43 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>port-java6</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <jdk>1.6</jdk>
+            </activation>
+            <properties>
+                <exam.version>3.5.0</exam.version>
+                <url.version>2.1.0</url.version>
+                <min.port>36000</min.port>
+                <max.port>36999</max.port>
+            </properties>
+        </profile>
+        <profile>
+            <id>port-java7</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <jdk>1.7</jdk>
+            </activation>
+            <properties>
+                <min.port>37000</min.port>
+                <max.port>37999</max.port>
+            </properties>
+        </profile>
+        <profile>
+            <id>port-java8</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <jdk>1.8</jdk>
+            </activation>
+            <properties>
+                <min.port>38000</min.port>
+                <max.port>38999</max.port>
+            </properties>
+        </profile>
+    </profiles>
     <reporting>
         <plugins>
             <plugin>
@@ -251,6 +292,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <version>4.12</version>
         </dependency>
         <dependency>
             <groupId>junit-addons</groupId>
@@ -261,6 +303,7 @@
         <dependency>
             <groupId>org.jmock</groupId>
             <artifactId>jmock-junit4</artifactId>
+            <version>2.6.0</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

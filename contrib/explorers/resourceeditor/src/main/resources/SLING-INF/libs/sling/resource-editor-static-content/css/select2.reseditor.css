@@ -1,0 +1,21 @@
+.select2-result-label, .select2-results {
+	text-shadow: none;
+}
+.select2-container {
+	display:block;
+}
+.select2-drop .search-choice-close {
+	background: url("select2.png") no-repeat scroll right top transparent;
+	background-position: right -10px;
+	background-position: right top;
+	display: inline-block;
+	margin-right: 5px;
+	width: 12px;
+	height: 12px;
+}
+
+
+.select2-drop .search-choice-close:hover {
+    background-position: right -11px;
+    cursor: pointer;
+}

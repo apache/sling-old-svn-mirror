@@ -1,6 +1,0 @@
-{
-    "jcr:primaryType":"nt:folder",
-    "jcr:mixinTypes":["slingshot:Album"],
-    "jcr:title":"Travel ApacheCon",
-    "jcr:description":"Everything from the various Apache Conferences."
-}

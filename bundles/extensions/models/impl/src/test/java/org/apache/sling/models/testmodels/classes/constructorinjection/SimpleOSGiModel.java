@@ -23,7 +23,6 @@ import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.testmodels.interfaces.ServiceInterface;
 
 @Model(adaptables = Resource.class)
-@SuppressWarnings("javadoc")
 public class SimpleOSGiModel {
 
     private final ServiceInterface service;

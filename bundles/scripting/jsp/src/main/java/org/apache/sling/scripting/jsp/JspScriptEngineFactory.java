@@ -153,6 +153,7 @@ public class JspScriptEngineFactory
     /**
      * @see javax.script.ScriptEngineFactory#getScriptEngine()
      */
+    @Override
     public ScriptEngine getScriptEngine() {
         return new JspScriptEngine();
     }
@@ -160,6 +161,7 @@ public class JspScriptEngineFactory
     /**
      * @see javax.script.ScriptEngineFactory#getLanguageName()
      */
+    @Override
     public String getLanguageName() {
         return "Java Server Pages";
     }
@@ -167,6 +169,7 @@ public class JspScriptEngineFactory
     /**
      * @see javax.script.ScriptEngineFactory#getLanguageVersion()
      */
+    @Override
     public String getLanguageVersion() {
         return "2.1";
     }
@@ -294,9 +297,17 @@ public class JspScriptEngineFactory
             if ( wrapper.isValid() ) {
                 return wrapper;
             }
-            rctxt.removeWrapper(wrapper.getJspUri());
-            this.renewJspRuntimeContext();
-            rctxt = this.getJspRuntimeContext();
+            synchronized ( this ) {
+                rctxt = this.getJspRuntimeContext();
+                wrapper = rctxt.getWrapper(scriptName);
+                if ( wrapper != null ) {
+                    if ( wrapper.isValid() ) {
+                        return wrapper;
+                    }
+                    this.renewJspRuntimeContext();
+                    rctxt = this.getJspRuntimeContext();
+                }
+            }
         }
 
         wrapper = new JspServletWrapper(servletConfig, options,
@@ -509,6 +520,7 @@ public class JspScriptEngineFactory
             super(JspScriptEngineFactory.this);
         }
 
+        @Override
         public Object eval(final Reader script, final ScriptContext context)
                 throws ScriptException {
             Bindings props = context.getBindings(ScriptContext.ENGINE_SCOPE);
@@ -610,6 +622,7 @@ public class JspScriptEngineFactory
     /**
      * @see org.osgi.service.event.EventHandler#handleEvent(org.osgi.service.event.Event)
      */
+    @Override
     public void handleEvent(final Event event) {
         final String path = (String)event.getProperty(SlingConstants.PROPERTY_PATH);
         if ( path != null ) {
@@ -647,6 +660,7 @@ public class JspScriptEngineFactory
     /* (non-Javadoc)
      * @see javax.servlet.Servlet#destroy()
      */
+    @Override
     public void destroy() {
         this.config = null;
     }
@@ -654,6 +668,7 @@ public class JspScriptEngineFactory
     /* (non-Javadoc)
      * @see javax.servlet.Servlet#getServletConfig()
      */
+    @Override
     public ServletConfig getServletConfig() {
         return this.config;
     }
@@ -661,6 +676,7 @@ public class JspScriptEngineFactory
     /* (non-Javadoc)
      * @see javax.servlet.Servlet#getServletInfo()
      */
+    @Override
     public String getServletInfo() {
         return "";
     }
@@ -668,6 +684,7 @@ public class JspScriptEngineFactory
     /* (non-Javadoc)
      * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
      */
+    @Override
     public void init(final ServletConfig config) throws ServletException {
         this.config = config;
     }
@@ -675,6 +692,7 @@ public class JspScriptEngineFactory
     /* (non-Javadoc)
      * @see javax.servlet.Servlet#service(javax.servlet.ServletRequest, javax.servlet.ServletResponse)
      */
+    @Override
     public void service(final ServletRequest request, final ServletResponse response)
             throws ServletException, IOException {
         if ( request instanceof HttpServletRequest ) {

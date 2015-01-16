@@ -18,6 +18,8 @@
  */
 package org.apache.sling.installer.api;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Service for installing/updating/removing installable resources
  * {@link InstallableResource} in an OSGi framework.
@@ -50,6 +52,7 @@ package org.apache.sling.installer.api;
  * update an already installed artifact or simply ignore them.
  * For example, for bundles the symbolic name and the version is used.
  */
+@ProviderType
 public interface OsgiInstaller {
 
 	/**

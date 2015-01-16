@@ -102,6 +102,29 @@ public class ContentXmlHandlerTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    public void parseSingleExplicitMultiValuedProperties() throws ParserConfigurationException, SAXException,
+            IOException {
+
+        Map<String, Object> properties = parseContentXmlFile("single-explicit-multivalued-properties-content.xml", "/")
+                .getProperties();
+
+        assertThat("properties.size", properties.size(), is(7));
+        assertThat("properties[values]", (String[]) properties.get("values"),
+                Matchers.is(new String[] { "first"}));
+        assertThat("properties[decimals]", (BigDecimal[]) properties.get("decimals"),
+                Matchers.is(new BigDecimal[] { new BigDecimal("5.10")}));
+        assertThat("properties[doubles]", (Double[]) properties.get("doubles"),
+                Matchers.is(new Double[] { new Double("5.1") }));
+        assertThat("properties[flags]", (Boolean[]) properties.get("flags"),
+                Matchers.is(new Boolean[] { Boolean.FALSE }));
+        assertThat("properties[longs]", (Long[]) properties.get("longs"),
+                Matchers.is(new Long[] { Long.valueOf(15)}));
+        assertThat("properties[dates]", (Calendar[]) properties.get("dates"),
+                array(millis(1377982800000l)));
+    }
+
+    @Test
     public void parseFullCoverageXmlFile() throws ParserConfigurationException, SAXException, IOException {
 
         ResourceProxy root = parseContentXmlFile("full-coverage.xml", "/apps/full-coverage");
@@ -154,6 +177,15 @@ public class ContentXmlHandlerTest {
         ResourceProxy root = parseContentXmlFile("binary-property.xml", "/");
 
         assertThat("root has 1 property, binary property is ignored", root.getProperties().entrySet(), hasSize(1));
+    }
+
+    @Test
+    public void escapedBraceAtStartOfPropertyValue() throws Exception {
+
+        ResourceProxy root = parseContentXmlFile("escaped-braces-at-start-of-property.xml", "/");
+        assertThat("properties[org.apache.sling.commons.log.pattern]",
+                root.getProperties(), hasEntry("org.apache.sling.commons.log.pattern",
+                        (Object) "{0,date,dd.MM.yyyy HH:mm:ss.SSS} *{4}* [{2}] {3} {5}"));
     }
 
     private static Matcher<Calendar> millis(long millis) {

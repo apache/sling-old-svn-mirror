@@ -1,4 +1,0 @@
-{
-    "jcr:mixinTypes":["sling:ResourceSuperType"],
-    "sling:resourceSuperType":"nt:folder"
-}

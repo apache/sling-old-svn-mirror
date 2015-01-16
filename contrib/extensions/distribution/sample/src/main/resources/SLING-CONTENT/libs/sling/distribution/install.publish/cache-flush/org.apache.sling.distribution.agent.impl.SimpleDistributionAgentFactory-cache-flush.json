@@ -1,0 +1,9 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "cache-flush",
+
+    "enabled" : false,
+
+    "requestAuthorizationStrategy.target" : "privilegeRead"
+
+}

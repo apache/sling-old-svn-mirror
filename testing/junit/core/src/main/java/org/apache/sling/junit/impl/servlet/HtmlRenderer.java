@@ -70,7 +70,7 @@ public class HtmlRenderer extends RunListener implements Renderer,RendererFactor
         output.println("<ul class='testNames'>");
         for(String str : data) {
             output.println("<li>");
-            HtmlFilter.escape(output, str);
+            link(str, str + ".html", "GET");
             output.println("</li>");
         }
         output.println("</ul>");
@@ -98,8 +98,8 @@ public class HtmlRenderer extends RunListener implements Renderer,RendererFactor
         } else {
             output.print("<a href='");
             output.print(url);
-            HtmlFilter.escape(output, info);
             output.print("'>");
+            HtmlFilter.escape(output, info);
             output.println("</a>");
         }
         

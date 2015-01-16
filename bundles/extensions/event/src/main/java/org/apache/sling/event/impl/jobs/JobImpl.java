@@ -36,7 +36,7 @@ import org.apache.sling.event.jobs.Queue;
 /**
  * This object encapsulates all information about a job.
  */
-public class JobImpl implements Job {
+public class JobImpl implements Job, Comparable<JobImpl> {
 
     /** Internal job property containing the resource path. */
     public static final String PROPERTY_RESOURCE_PATH = "slingevent:path";
@@ -68,6 +68,8 @@ public class JobImpl implements Job {
 
     private final List<Exception> readErrorList;
 
+    private final long counter;
+
     /**
      * Create a new job instance
      *
@@ -90,6 +92,8 @@ public class JobImpl implements Job {
 
         this.properties = new ValueMapDecorator(properties);
         this.properties.put(NotificationConstants.NOTIFICATION_PROPERTY_JOB_ID, jobId);
+        final int lastPos = jobId.lastIndexOf('_');
+        this.counter = Long.valueOf(jobId.substring(lastPos + 1));
     }
 
     /**
@@ -363,7 +367,7 @@ public class JobImpl implements Job {
     }
 
     /**
-     * @see org.apache.sling.event.jobs.Job#getCurrentProgressStep()
+     * @see org.apache.sling.event.jobs.Job#getFinishedProgressStep()
      */
     @Override
     public int getFinishedProgressStep() {
@@ -376,6 +380,37 @@ public class JobImpl implements Job {
     @Override
     public Calendar getProgressETA() {
         return this.getProperty(Job.PROPERTY_JOB_PROGRESS_ETA, Calendar.class);
+    }
+
+    @Override
+    public int compareTo(final JobImpl o) {
+        int result = this.getCreated().compareTo(o.getCreated());
+        if ( result == 0 ) {
+            if ( this.counter < o.counter ) {
+                result = -1;
+            } else if ( this.counter > o.counter ) {
+                result = 1;
+            } else {
+                result = this.jobId.compareTo(o.jobId);
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.jobId.hashCode();
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if ( obj == this ) {
+            return true;
+        }
+        if ( obj instanceof JobImpl ) {
+            return this.jobId.equals(((JobImpl)obj).jobId);
+        }
+        return false;
     }
 
     @Override

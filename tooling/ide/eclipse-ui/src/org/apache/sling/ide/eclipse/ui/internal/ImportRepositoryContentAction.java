@@ -21,16 +21,19 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.Text;
-import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.ResourceUtil;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
+import org.apache.sling.ide.eclipse.core.internal.ResourceAndInfo;
+import org.apache.sling.ide.eclipse.core.internal.ResourceChangeCommandFactory;
 import org.apache.sling.ide.eclipse.core.progress.ProgressUtils;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterResult;
@@ -52,10 +55,14 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.wst.server.core.IServer;
 
 // intentionally does not implement IRunnableWithProgress to cut dependency on JFace
@@ -74,6 +81,8 @@ public class ImportRepositoryContentAction {
     private Filter filter;
     private File contentSyncRoot;
     private IFolder contentSyncRootDir;
+    private Set<IResource> currentResources;
+    private IPath repositoryImportRoot;
 
     /**
      * @param server
@@ -89,6 +98,7 @@ public class ImportRepositoryContentAction {
         this.project = project;
         this.serializationManager = serializationManager;
         this.ignoredResources = new IgnoredResources();
+        this.currentResources = new HashSet<IResource>();
     }
 
     public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException,
@@ -103,17 +113,6 @@ public class ImportRepositoryContentAction {
 
         this.builder = serializationManager.newBuilder(
         		repository, ProjectUtil.getSyncDirectoryFile(project));
-
-        ISlingLaunchpadServer launchpad = (ISlingLaunchpadServer) server.loadAdapter(
-                ISlingLaunchpadServer.class, monitor);
-
-        int oldPublishState = launchpad.getPublishState();
-        // TODO disabling publish does not work; since the publish is done async
-        // Not sure if there is a simple workaround. Anyway, the only side effect is that we
-        // make too many calls after the import, functionality is not affected
-        if (server.canPublish().isOK() && oldPublishState != ISlingLaunchpadServer.PUBLISH_STATE_NEVER) {
-            launchpad.setPublishState(ISlingLaunchpadServer.PUBLISH_STATE_NEVER, monitor);
-        }
 
         SerializationKindManager skm;
         
@@ -131,7 +130,7 @@ public class ImportRepositoryContentAction {
         try {
 
             contentSyncRootDir = ProjectUtil.getSyncDirectory(project);
-            IPath repositoryImportRoot = projectRelativePath
+            repositoryImportRoot = projectRelativePath
                     .makeRelativeTo(contentSyncRootDir.getProjectRelativePath())
                     .makeAbsolute();
 
@@ -147,16 +146,21 @@ public class ImportRepositoryContentAction {
                     .trace("Starting import; repository start point is {0}, workspace start point is {1}",
                             repositoryImportRoot, projectRelativePath);
 
+            recordNotIgnoredResources();
+
+            ProgressUtils.advance(monitor, 1);
+
             crawlChildrenAndImport(repositoryImportRoot.toPortableString());
+
+            removeNotIgnoredAndNotUpdatedResources(new NullProgressMonitor());
+
+            ProgressUtils.advance(monitor, 1);
 
         } catch (OperationCanceledException e) {
             throw e;
         } catch (Exception e) {
             throw new InvocationTargetException(e);
         } finally {
-            if (oldPublishState != ISlingLaunchpadServer.PUBLISH_STATE_NEVER) {
-                launchpad.setPublishState(oldPublishState, monitor);
-            }
             if (builder!=null) {
             	builder.destroy();
             	builder = null;
@@ -175,6 +179,67 @@ public class ImportRepositoryContentAction {
                     .makeAbsolute();
             parseIgnoreFiles(current, repoPath.toPortableString());
             current = (IFolder) current.findMember(repositoryImportRoot.segment(i));
+        }
+
+    }
+
+    private void recordNotIgnoredResources() throws CoreException {
+
+        final ResourceChangeCommandFactory rccf = new ResourceChangeCommandFactory(serializationManager);
+
+        IResource importStartingPoint = contentSyncRootDir.findMember(repositoryImportRoot);
+        if (importStartingPoint == null) {
+            return;
+        }
+        importStartingPoint.accept(new IResourceVisitor() {
+
+            @Override
+            public boolean visit(IResource resource) throws CoreException {
+
+                try {
+                    ResourceAndInfo rai = rccf.buildResourceAndInfo(resource, repository);
+
+                    if (rai == null) {
+                        // can be a prerequisite
+                        return true;
+                    }
+
+                    String repositoryPath = rai.getResource().getPath();
+
+                    FilterResult filterResult = filter.filter(contentSyncRoot, repositoryPath);
+
+                    if (ignoredResources.isIgnored(repositoryPath)) {
+                        return false;
+                    }
+
+                    if (filterResult == FilterResult.ALLOW) {
+                        currentResources.add(resource);
+                        return true;
+                    }
+
+                    return false;
+                } catch (SerializationException e) {
+                    throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
+                            "Failed reading current project's resources", e));
+                } catch (IOException e) {
+                    throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
+                            "Failed reading current project's resources", e));
+                }
+            }
+        });
+
+        logger.trace("Found {0} not ignored local resources", currentResources.size());
+    }
+
+    private void removeNotIgnoredAndNotUpdatedResources(IProgressMonitor monitor) throws CoreException {
+
+        logger.trace("Found {0} resources to clean up", currentResources.size());
+
+        for (IResource resource : currentResources) {
+            if (resource.exists()) {
+                logger.trace("Deleting {0}", resource);
+                resource.delete(true, monitor);
+            }
         }
 
     }
@@ -312,7 +377,11 @@ public class ImportRepositoryContentAction {
      */
     private IPath getPathForPlainFileNode(ResourceProxy resource, IPath serializationFolderPath) {
 
-        return serializationFolderPath.removeLastSegments(1).append(Text.getName(resource.getPath()));
+        // TODO - can we just use the serializationFolderPath ?
+
+        String name = serializationManager.getOsPath(Text.getName(resource.getPath()));
+
+        return serializationFolderPath.removeLastSegments(1).append(name);
     }
 
     private void parseIgnoreFiles(IFolder folder, String path) throws IOException, CoreException {
@@ -349,10 +418,31 @@ public class ImportRepositoryContentAction {
 
             createParents(destinationFolder.getParent());
             destinationFolder.create(true, true, null /* TODO progress monitor */);
-            destinationFolder.setSessionProperty(ResourceUtil.QN_IGNORE_NEXT_CHANGE, Boolean.TRUE.toString());
         }
 
+        destinationFolder.setSessionProperty(ResourceUtil.QN_IMPORT_MODIFICATION_TIMESTAMP,
+                destinationFolder.getModificationStamp());
+        
+        removeTouchedResource(destinationFolder);
+
         return destinationFolder;
+    }
+
+    private void createParents(IContainer container) throws CoreException {
+        if (container.exists() || container.getType() != IResource.FOLDER) {
+            return;
+        }
+
+        createParents(container.getParent());
+        createFolder(container.getProject(), container.getProjectRelativePath());
+    }
+
+    private void removeTouchedResource(IResource resource) {
+
+        IResource current = resource;
+        do {
+            currentResources.remove(current);
+        } while ((current = current.getParent()) != null);
     }
 
     private void createFile(IProject project, IPath path, byte[] node) throws CoreException {
@@ -375,19 +465,9 @@ public class ImportRepositoryContentAction {
         	destinationFile.create(new ByteArrayInputStream(node), true, null);
         }
 
-        destinationFile.setSessionProperty(ResourceUtil.QN_IGNORE_NEXT_CHANGE, Boolean.TRUE.toString());
-    }
-    
-    private void createParents(IContainer container) throws CoreException {
-    	if (container.exists()) {
-    		return;
-    	}
-    	if (!(container instanceof IFolder)) {
-    		return;
-    	}
-    	createParents(container.getParent());
-    	IFolder parentFolder = (IFolder)container;
-        parentFolder.create(true, true, null);
-    }
+        removeTouchedResource(destinationFile);
 
+        destinationFile.setSessionProperty(ResourceUtil.QN_IMPORT_MODIFICATION_TIMESTAMP,
+                destinationFile.getModificationStamp());
+    }
 }

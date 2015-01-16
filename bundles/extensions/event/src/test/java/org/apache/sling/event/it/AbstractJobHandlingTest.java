@@ -37,7 +37,7 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.event.impl.jobs.JobManagerConfiguration;
+import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.apache.sling.event.jobs.consumer.JobExecutor;
@@ -69,6 +69,8 @@ public abstract class AbstractJobHandlingTest {
     @Inject
     protected BundleContext bc;
 
+    private static final String PORT_CONFIG = "org.osgi.service.http.port";
+
     @Configuration
     public Option[] config() {
         final String bundleFileName = System.getProperty( BUNDLE_JAR_SYS_PROP );
@@ -84,6 +86,8 @@ public abstract class AbstractJobHandlingTest {
                 when( localRepo.length() > 0 ).useOptions(
                         systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
                 ),
+                when( System.getProperty(PORT_CONFIG) != null ).useOptions(
+                        systemProperty(PORT_CONFIG).value(System.getProperty(PORT_CONFIG))),
                 mavenBundle("org.apache.sling", "org.apache.sling.fragment.xml", "1.0.2"),
                 mavenBundle("org.apache.sling", "org.apache.sling.fragment.transaction", "1.0.0"),
                 mavenBundle("org.apache.sling", "org.apache.sling.fragment.activation", "1.0.2"),
@@ -109,8 +113,10 @@ public abstract class AbstractJobHandlingTest {
                 mavenBundle("org.apache.tika", "tika-core", "1.2"),
                 mavenBundle("org.apache.tika", "tika-bundle", "1.2"),
 
-                mavenBundle("org.apache.felix", "org.apache.felix.http.jetty", "2.2.2"),
-                mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.3.2"),
+                mavenBundle("org.apache.felix", "org.apache.felix.http.servlet-api", "1.0.0"),
+                mavenBundle("org.apache.felix", "org.apache.felix.http.api", "2.3.0"),
+                //mavenBundle("org.apache.felix", "org.apache.felix.http.jetty", "2.3.0"),
+                mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.4.2"),
                 mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.8.2"),
                 mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.0"),
                 mavenBundle("org.apache.felix", "org.apache.felix.inventory", "1.0.4"),
@@ -120,22 +126,22 @@ public abstract class AbstractJobHandlingTest {
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.json", "2.0.6"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.mime", "2.1.4"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.classloader", "1.3.2"),
-                mavenBundle("org.apache.sling", "org.apache.sling.commons.scheduler", "2.4.2"),
+                mavenBundle("org.apache.sling", "org.apache.sling.commons.scheduler", "2.4.4"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.threads", "3.2.0"),
 
                 mavenBundle("org.apache.sling", "org.apache.sling.launchpad.api", "1.1.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.auth.core", "1.1.6"),
-                mavenBundle("org.apache.sling", "org.apache.sling.discovery.api", "1.0.0"),
+                mavenBundle("org.apache.sling", "org.apache.sling.auth.core", "1.3.0"),
+                mavenBundle("org.apache.sling", "org.apache.sling.discovery.api", "1.0.2"),
                 mavenBundle("org.apache.sling", "org.apache.sling.discovery.standalone", "1.0.0"),
 
-                mavenBundle("org.apache.sling", "org.apache.sling.api", "2.7.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.settings", "1.3.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.resourceresolver", "1.1.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.adapter", "2.1.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.jcr.resource", "2.3.6"),
-                mavenBundle("org.apache.sling", "org.apache.sling.jcr.classloader", "3.2.0"),
+                mavenBundle("org.apache.sling", "org.apache.sling.api", "2.8.0"),
+                mavenBundle("org.apache.sling", "org.apache.sling.settings", "1.3.4"),
+                mavenBundle("org.apache.sling", "org.apache.sling.resourceresolver", "1.1.6"),
+                mavenBundle("org.apache.sling", "org.apache.sling.adapter", "2.1.2"),
+                mavenBundle("org.apache.sling", "org.apache.sling.jcr.resource", "2.3.12"),
+                mavenBundle("org.apache.sling", "org.apache.sling.jcr.classloader", "3.2.2"),
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.contentloader", "2.1.8"),
-                mavenBundle("org.apache.sling", "org.apache.sling.engine", "2.3.2"),
+                mavenBundle("org.apache.sling", "org.apache.sling.engine", "2.3.6"),
                 mavenBundle("org.apache.sling", "org.apache.sling.serviceusermapper", "1.0.0"),
 
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.jcr-wrapper", "2.0.0"),
@@ -168,6 +174,7 @@ public abstract class AbstractJobHandlingTest {
         try {
             Thread.sleep(time);
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             // ignore
         }
     }
@@ -198,6 +205,22 @@ public abstract class AbstractJobHandlingTest {
         this.bc.registerService(StartupHandler.class.getName(), handler, null);
     }
 
+    private int deleteCount;
+
+    private void delete(final Resource rsrc )
+    throws PersistenceException {
+        final ResourceResolver resolver = rsrc.getResourceResolver();
+        for(final Resource child : rsrc.getChildren()) {
+            delete(child);
+        }
+        resolver.delete(rsrc);
+        deleteCount++;
+        if ( deleteCount >= 20 ) {
+            resolver.commit();
+            deleteCount = 0;
+        }
+    }
+
     public void cleanup() {
         final ServiceReference ref = this.bc.getServiceReference(ResourceResolverFactory.class.getName());
         final ResourceResolverFactory factory = (ResourceResolverFactory) this.bc.getService(ref);
@@ -206,7 +229,7 @@ public abstract class AbstractJobHandlingTest {
             resolver = factory.getAdministrativeResourceResolver(null);
             final Resource rsrc = resolver.getResource(JobManagerConfiguration.DEFAULT_REPOSITORY_PATH);
             if ( rsrc != null ) {
-                resolver.delete(rsrc);
+                delete(rsrc);
                 resolver.commit();
             }
         } catch ( final LoginException le ) {
@@ -218,6 +241,7 @@ public abstract class AbstractJobHandlingTest {
                 resolver.close();
             }
         }
+        this.sleep(1000);
     }
 
     /**

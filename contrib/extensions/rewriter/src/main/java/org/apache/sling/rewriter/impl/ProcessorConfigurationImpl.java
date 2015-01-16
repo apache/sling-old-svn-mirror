@@ -18,7 +18,9 @@ package org.apache.sling.rewriter.impl;
 
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -47,6 +49,8 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
 
     private static final String PROPERTY_RESOURCE_TYPES = "resourceTypes";
 
+    private static final String PROPERTY_SELECTORS = "selectors";
+
     private static final String PROPERTY_TRANFORMERS = "transformerTypes";
 
     private static final String PROPERTY_GENERATOR = "generatorType";
@@ -69,6 +73,9 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
 
     /** For which resource types should this processor be applied. */
     private final String[] resourceTypes;
+
+    /** For which selectors should this processor be applied. */
+    private final String[] selectors;
 
     /** The order of this processor */
     private final int order;
@@ -105,6 +112,7 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
                                       String[] paths,
                                       String[] extensions,
                                       String[] resourceTypes,
+                                      String[] selectors,
                                       int      order,
                                       ProcessingComponentConfiguration generatorConfig,
                                       ProcessingComponentConfiguration[] transformerConfigs,
@@ -112,6 +120,7 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
                                       boolean processErrorResponse) {
         this.contentTypes = contentTypes;
         this.resourceTypes = resourceTypes;
+        this.selectors = selectors;
         this.paths = paths;
         this.extensions = extensions;
         this.order = order;
@@ -132,8 +141,9 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
     public ProcessorConfigurationImpl(String[] contentTypes,
                                       String[] paths,
                                       String[] extensions,
-                                      String[] resourceTypes) {
-        this(contentTypes, paths, extensions, resourceTypes, 0, null, null, null, false);
+                                      String[] resourceTypes,
+                                      String[] selectors) {
+        this(contentTypes, paths, extensions, resourceTypes, selectors, 0, null, null, null, false);
     }
 
     /**
@@ -144,6 +154,7 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
         final ValueMap properties = ResourceUtil.getValueMap(resource);
         this.contentTypes = properties.get(PROPERTY_CONTENT_TYPES, String[].class);
         this.resourceTypes = properties.get(PROPERTY_RESOURCE_TYPES, String[].class);
+        this.selectors = properties.get(PROPERTY_SELECTORS, String[].class);
         this.paths = properties.get(PROPERTY_PATHS, String[].class);
         this.extensions = properties.get(PROPERTY_EXTENSIONS, String[].class);
 
@@ -184,6 +195,10 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
         if ( this.resourceTypes != null ) {
             pw.print("Resource Types : ");
             pw.println(Arrays.toString(this.resourceTypes));
+        }
+        if ( this.selectors != null ) {
+            pw.print("Selectors : ");
+            pw.println(Arrays.toString(this.selectors));
         }
         if ( this.paths != null ) {
             pw.print("Paths : ");
@@ -235,11 +250,16 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
         if ( this.contentTypes != null ) {
             sb.append("contentTypes=");
             sb.append(Arrays.toString(this.contentTypes));
-            sb.append(',');
+            sb.append(", ");
         }
         if ( this.resourceTypes != null ) {
             sb.append("resourceTypes=");
             sb.append(Arrays.toString(this.resourceTypes));
+            sb.append(", ");
+        }
+        if ( this.selectors != null ) {
+            sb.append("selectors=");
+            sb.append(Arrays.toString(this.selectors));
             sb.append(", ");
         }
         if ( this.paths != null ) {
@@ -417,6 +437,31 @@ public class ProcessorConfigurationImpl implements PipelineConfiguration {
                 return false;
             }
         }
+
+        // now check for selectors
+        if( this.selectors != null && this.selectors.length > 0 ) {
+            final String selectorString = processContext.getRequest().getRequestPathInfo().getSelectorString();
+            if ( selectorString == null || "".equals(selectorString )) {
+                // selectors required but not set
+                return false;
+            }
+
+            final Set<String> selectors = new HashSet<String>(Arrays.asList(selectorString.split("\\.")));
+            int index = 0;
+            boolean found = false;
+            while ( !found && index < this.selectors.length ) {
+                final String selector = this.selectors[index];
+                if( selectors.contains(selector) ) {
+                    found = true;
+                }
+                index++;
+            }
+
+            if( !found ) {
+                return false;
+            }
+        }
+
         return true;
     }
 

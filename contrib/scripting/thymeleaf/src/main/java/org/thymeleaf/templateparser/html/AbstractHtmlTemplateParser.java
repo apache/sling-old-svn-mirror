@@ -1,7 +1,7 @@
 /*
  * =============================================================================
  *
- *   Copyright (c) 2011-2013, The THYMELEAF team (http://www.thymeleaf.org)
+ *   Copyright (c) 2011-2014, The THYMELEAF team (http://www.thymeleaf.org)
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -223,6 +223,8 @@ public abstract class AbstractHtmlTemplateParser implements ITemplateParser {
 
 
     /**
+     *
+     * @return the result
      * @since 2.0.11
      */
     protected boolean shouldAddThymeleafRootToParser() {
@@ -232,6 +234,9 @@ public abstract class AbstractHtmlTemplateParser implements ITemplateParser {
 
 
     /**
+     *
+     * @param reader reader
+     * @return the result
      * @since 2.0.11
      */
     protected TemplatePreprocessingReader getTemplatePreprocessingReader(final Reader reader) {

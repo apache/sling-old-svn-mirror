@@ -78,22 +78,27 @@ public class JarArchiverHelper {
             }
             outManifest.addConfiguredAttribute(new Attribute(BuildConstants.ATTR_IMPLEMENTATION_BUILD,
                             project.getVersion()));
-            outManifest.addConfiguredAttribute(new Attribute(BuildConstants.ATTR_IMPLEMENTATION_VENDOR,
-                            project.getOrganization().getName()));
             outManifest.addConfiguredAttribute(new Attribute(BuildConstants.ATTR_IMPLEMENTATION_VERSION,
                             project.getVersion()));
-            outManifest.addConfiguredAttribute(new Attribute(BuildConstants.ATTR_CREATED_BY,
-                            project.getOrganization().getName()));
-            outManifest.addConfiguredAttribute(new Attribute(BuildConstants.ATTR_BUILT_BY,
-                            project.getOrganization().getName()));
+
+            String organizationName = project.getOrganization() != null ? project.getOrganization().getName() : null;
+            if ( organizationName != null ) {
+                outManifest.addConfiguredAttribute(new Attribute(BuildConstants.ATTR_IMPLEMENTATION_VENDOR,
+                            organizationName));
+                outManifest.addConfiguredAttribute(new Attribute(BuildConstants.ATTR_CREATED_BY,
+                            organizationName));
+                outManifest.addConfiguredAttribute(new Attribute(BuildConstants.ATTR_BUILT_BY,
+                            organizationName));
+                outManifest.addConfiguredAttribute(new Attribute(BuildConstants.ATTR_SPECIFICATION_VENDOR,
+                        organizationName));
+            }
+
             outManifest.addConfiguredAttribute(new Attribute(BuildConstants.ATTR_IMPLEMENTATION_VENDOR_ID,
                             project.getGroupId()));
             outManifest.addConfiguredAttribute(new Attribute(BuildConstants.ATTR_IMPLEMENTATION_TITLE,
                             project.getName()));
             outManifest.addConfiguredAttribute(new Attribute(BuildConstants.ATTR_SPECIFICATION_TITLE,
                             project.getName()));
-            outManifest.addConfiguredAttribute(new Attribute(BuildConstants.ATTR_SPECIFICATION_VENDOR,
-                            project.getOrganization().getName()));
             outManifest.addConfiguredAttribute(new Attribute(BuildConstants.ATTR_SPECIFICATION_VERSION,
                             project.getVersion()));
 

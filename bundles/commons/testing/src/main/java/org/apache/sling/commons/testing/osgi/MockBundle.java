@@ -133,7 +133,6 @@ public class MockBundle implements Bundle {
     public void stop(int options) throws BundleException {
     }
 
-    @SuppressWarnings("unchecked")
     public Map getSignerCertificates(int signersType) {
         return null;
     }

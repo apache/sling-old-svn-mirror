@@ -1,0 +1,9 @@
+/var/log/sling/sling-start.log {
+  rotate 5
+  size 4M
+  copytruncate
+  daily
+  compress
+  missingok
+  notifempty
+}

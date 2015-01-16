@@ -70,7 +70,17 @@
          typeIds="org.apache.sling.ide.launchpadServer"
          class="org.apache.sling.ide.eclipse.ui.internal.InstallEditorSection">
       </section>
-   </extension>   
+   </extension>
+   
+   <!-- hook in the server creation wizard -->
+    <extension
+          point="org.eclipse.wst.server.ui.wizardFragments">
+       <fragment
+             class="org.apache.sling.ide.eclipse.ui.wizards.OverridePublishIntervalFragment"
+             id="org.apache.sling.ide.eclipse.ui.wizards.SomeWizardFragment"
+             typeIds="org.apache.sling.ide.launchpadServer">
+       </fragment>
+    </extension>   
   
   <!-- Runtime images -->
     <extension point="org.eclipse.wst.common.project.facet.ui.images">

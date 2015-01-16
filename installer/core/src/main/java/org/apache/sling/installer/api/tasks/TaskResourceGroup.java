@@ -18,10 +18,13 @@
  */
 package org.apache.sling.installer.api.tasks;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * This is a group of resources all pointing to the same artifact,
  * but maybe in different versions or locations.
  */
+@ProviderType
 public interface TaskResourceGroup {
 
 

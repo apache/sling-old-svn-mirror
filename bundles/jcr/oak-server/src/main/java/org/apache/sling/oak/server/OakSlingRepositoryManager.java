@@ -19,12 +19,13 @@ package org.apache.sling.oak.server;
 
 import static com.google.common.collect.ImmutableSet.of;
 import static java.util.Collections.singleton;
+import static org.apache.felix.scr.annotations.ReferencePolicy.STATIC;
+import static org.apache.felix.scr.annotations.ReferencePolicyOption.GREEDY;
 import static org.apache.jackrabbit.oak.plugins.index.IndexConstants.INDEX_DEFINITIONS_NAME;
 import static org.apache.jackrabbit.oak.plugins.index.IndexUtils.createIndexDefinition;
 
 import java.util.Arrays;
 import java.util.Dictionary;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.TreeMap;
@@ -34,7 +35,6 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.security.Privilege;
-import javax.security.auth.login.Configuration;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -60,24 +60,17 @@ import org.apache.jackrabbit.oak.plugins.nodetype.TypeEditorProvider;
 import org.apache.jackrabbit.oak.plugins.nodetype.write.InitialContent;
 import org.apache.jackrabbit.oak.plugins.observation.CommitRateLimiter;
 import org.apache.jackrabbit.oak.plugins.version.VersionEditorProvider;
-import org.apache.jackrabbit.oak.security.SecurityProviderImpl;
 import org.apache.jackrabbit.oak.spi.commit.EditorHook;
 import org.apache.jackrabbit.oak.spi.lifecycle.RepositoryInitializer;
-import org.apache.jackrabbit.oak.spi.security.ConfigurationParameters;
 import org.apache.jackrabbit.oak.spi.security.SecurityProvider;
-import org.apache.jackrabbit.oak.spi.security.authentication.ConfigurationUtil;
 import org.apache.jackrabbit.oak.spi.security.principal.EveryonePrincipal;
-import org.apache.jackrabbit.oak.spi.security.privilege.PrivilegeConstants;
 import org.apache.jackrabbit.oak.spi.security.user.UserConfiguration;
 import org.apache.jackrabbit.oak.spi.security.user.UserConstants;
-import org.apache.jackrabbit.oak.spi.security.user.action.AccessControlAction;
 import org.apache.jackrabbit.oak.spi.state.NodeBuilder;
 import org.apache.jackrabbit.oak.spi.state.NodeStore;
 import org.apache.jackrabbit.oak.spi.whiteboard.Whiteboard;
 import org.apache.jackrabbit.oak.spi.whiteboard.WhiteboardIndexEditorProvider;
 import org.apache.jackrabbit.oak.spi.whiteboard.WhiteboardIndexProvider;
-import org.apache.jackrabbit.oak.spi.xml.ImportBehavior;
-import org.apache.jackrabbit.oak.spi.xml.ProtectedItemImporter;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
@@ -208,9 +201,13 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         return this.namespaceMappers;
     }
 
+    @Reference(policy = STATIC, policyOption = GREEDY)
+    private SecurityProvider securityProvider = null;
+
+    private ServiceRegistration nodeAggregator;
+
     @Override
     protected Repository acquireRepository() {
-        final SecurityProvider securityProvider = new SecurityProviderImpl(buildSecurityConfig());
         this.adminUserName = securityProvider.getConfiguration(UserConfiguration.class).getParameters().getConfigValue(
             UserConstants.PARAM_ADMIN_ID, UserConstants.DEFAULT_ADMIN_ID);
 
@@ -243,15 +240,6 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         // index stuff
         .with(indexProvider)
         .with(indexEditorProvider)
-//        .with(new PropertyIndexEditorProvider())
-
-//        .with(new PropertyIndexProvider())
-//        .with(new NodeTypeIndexProvider())
-
-//        .with(new LuceneIndexEditorProvider())
-        .with(AggregateIndexProvider.wrap(new LuceneIndexProvider()
-                .with(getNodeAggregator())))
-
         .with(getDefaultWorkspace())
         .withAsyncIndexing()
         .with(whiteboard)
@@ -330,8 +318,6 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
     @Activate
     private void activate(ComponentContext componentContext) {
-        // FIXME GRANITE-2315
-        Configuration.setConfiguration(ConfigurationUtil.getJackrabbit2Configuration(ConfigurationParameters.EMPTY));
         this.componentContext = componentContext;
 
         @SuppressWarnings("unchecked")
@@ -344,6 +330,9 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         this.observationQueueLength = getObservationQueueLength(componentContext);
         this.commitRateLimiter = getCommitRateLimiter(componentContext);
         this.threadPool = threadPoolManager.get("oak-observation");
+        this.nodeAggregator = componentContext.getBundleContext()
+                .registerService(NodeAggregator.class.getName(), getNodeAggregator(), null);
+
         super.start(componentContext.getBundleContext(), defaultWorkspace, disableLoginAdministrative);
     }
 
@@ -355,6 +344,7 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
         this.namespaceMappers = null;
         this.threadPoolManager.release(this.threadPool);
         this.threadPool = null;
+        this.nodeAggregator.unregister();
         this.tearDown();
     }
 
@@ -433,23 +423,6 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
             }
         }
 
-    }
-
-    // TODO: use proper osgi configuration (once that works in oak)
-    private static ConfigurationParameters buildSecurityConfig() {
-        Map<String, Object> userConfig = new HashMap<String, Object>();
-        userConfig.put(UserConstants.PARAM_GROUP_PATH, "/home/groups");
-        userConfig.put(UserConstants.PARAM_USER_PATH, "/home/users");
-        userConfig.put(UserConstants.PARAM_DEFAULT_DEPTH, 1);
-        userConfig.put(AccessControlAction.USER_PRIVILEGE_NAMES, new String[] { PrivilegeConstants.JCR_ALL });
-        userConfig.put(AccessControlAction.GROUP_PRIVILEGE_NAMES, new String[] { PrivilegeConstants.JCR_READ });
-        userConfig.put(ProtectedItemImporter.PARAM_IMPORT_BEHAVIOR, ImportBehavior.NAME_BESTEFFORT);
-
-        Map<String, Object> config = new HashMap<String, Object>();
-        config.put(
-                UserConfiguration.NAME,
-                ConfigurationParameters.of(userConfig));
-        return ConfigurationParameters.of(config);
     }
 
     private static int getObservationQueueLength(ComponentContext context) {

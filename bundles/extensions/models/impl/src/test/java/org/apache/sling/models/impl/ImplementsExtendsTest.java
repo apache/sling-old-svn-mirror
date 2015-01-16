@@ -17,8 +17,10 @@
 package org.apache.sling.models.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
@@ -165,6 +167,7 @@ public class ImplementsExtendsTest {
         assertNotNull(model);
         assertEquals(ImplementsInterfacePropertyModel.class, model.getClass());
         assertEquals("first-value|null|third-value", model.getAllProperties());
+        assertTrue(factory.canCreateFromAdaptable(res, SampleServiceInterface.class));
     }
 
     /**
@@ -179,10 +182,12 @@ public class ImplementsExtendsTest {
         Resource res = getMockResourceWithProps();
         SampleServiceInterface model = factory.getAdapter(res, SampleServiceInterface.class);
         assertNull(model);
+        assertFalse(factory.isModelClass(res, SampleServiceInterface.class));
 
         model = factory.getAdapter(res, ImplementsInterfacePropertyModel.class);
         assertNotNull(model);
         assertEquals("first-value|null|third-value", model.getAllProperties());
+        assertTrue(factory.canCreateFromAdaptable(res, ImplementsInterfacePropertyModel.class));
     }
 
     /**
@@ -207,6 +212,7 @@ public class ImplementsExtendsTest {
         Resource res = getMockResourceWithProps();
         InvalidSampleServiceInterface model = factory.getAdapter(res, InvalidSampleServiceInterface.class);
         assertNull(model);
+        assertFalse(factory.isModelClass(res, InvalidSampleServiceInterface.class));
     }
 
     /**
@@ -219,10 +225,12 @@ public class ImplementsExtendsTest {
         SimplePropertyModel model = factory.getAdapter(res, SimplePropertyModel.class);
         assertNotNull(model);
         assertEquals("!first-value|null|third-value!", model.getAllProperties());
+        assertTrue(factory.canCreateFromAdaptable(res, SimplePropertyModel.class));
 
         EvenSimplerPropertyModel simplerModel = factory.getAdapter(res, EvenSimplerPropertyModel.class);
         assertNotNull(simplerModel);
         assertEquals("first-value", model.getFirst());
+        assertTrue(factory.canCreateFromAdaptable(res, EvenSimplerPropertyModel.class));
     }
 
     /**
@@ -237,6 +245,7 @@ public class ImplementsExtendsTest {
         assertNotNull(model);
         assertEquals(ImplementsInterfacePropertyModel2.class, model.getClass());
         assertEquals("first-value|null|third-value", model.getAllProperties());
+        assertTrue(factory.canCreateFromAdaptable(res, SampleServiceInterface.class));
     }
 
     private Resource getMockResourceWithProps() {

@@ -1,0 +1,33 @@
+<%
+var valueMap = resource.adaptTo(Packages.org.apache.sling.api.resource.ValueMap);
+var pit = valueMap.keySet().iterator();
+var settingsUrl = request.contextPath + "/libs/sling/distribution/settings/";
+%>
+<html>
+  <body>
+    <h1>Settings: <%= valueMap.get("name") %></h1>
+
+    <ul>
+    <% while(pit.hasNext()) { %>
+
+        <%
+            var pname =  pit.next();
+            var pvalue = valueMap.get(pname).toString();
+            var purl = "";
+            if (!pname.contains(":") && pvalue.contains("/")) {
+                purl = settingsUrl + pvalue + ".html";
+            }
+        %>
+
+        <li>
+            <%= pname %>:
+            <% if(purl.length > 0) { %>
+                <a href="<%= purl %>"><%= pvalue %></a>
+            <% } else { %>
+                <%= pvalue %>
+            <% } %>
+        </li>
+    <% } %>
+    </ul>
+  </body>
+</html>

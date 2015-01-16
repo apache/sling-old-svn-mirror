@@ -20,6 +20,7 @@ package org.apache.sling.event.impl.jobs.console;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
@@ -37,12 +38,12 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.request.ResponseUtil;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.event.impl.jobs.JobConsumerManager;
-import org.apache.sling.event.impl.jobs.JobManagerImpl;
-import org.apache.sling.event.impl.jobs.TopologyCapabilities;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
-import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
+import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
+import org.apache.sling.event.impl.jobs.config.TopologyCapabilities;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.Queue;
@@ -80,18 +81,10 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
     private JobManager jobManager;
 
     @Reference
-    private QueueConfigurationManager queueConfigManager;
+    private JobManagerConfiguration configuration;
 
     @Reference
     private JobConsumerManager jobConsumerManager;
-
-    /** Escape the output for HTML. */
-    private String escape(final String text) {
-        if ( text == null ) {
-            return "";
-        }
-        return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
-    }
 
     private static final String PAR_QUEUE = "queue";
 
@@ -134,13 +127,6 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
             } else {
                 msg = this.getQueueErrorMessage(req, "resume");
             }
-        } else if ( "clear".equals(cmd) ) {
-            final Queue q = this.getQueue(req);
-            if ( q != null ) {
-                q.clear();
-            } else {
-                msg = this.getQueueErrorMessage(req, "clear");
-            }
         } else if ( "reset".equals(cmd) ) {
             if ( req.getParameter(PAR_QUEUE) == null || req.getParameter(PAR_QUEUE).length() == 0 ) {
                 this.jobManager.getStatistics().reset();
@@ -154,8 +140,6 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
             }
         } else if ( "test".equals(cmd) ) {
             this.startTestJob();
-        } else if ( "restart".equals(cmd) ) {
-            this.jobManager.restart();
         } else if ( "dropall".equals(cmd) ) {
             final Queue q = this.getQueue(req);
             if ( q != null ) {
@@ -171,13 +155,13 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
         if ( msg == null ) {
             redirectTo = path;
         } else {
-            redirectTo = path + "?message=" + msg;
+            redirectTo = path + "?message=" + URLEncoder.encode(msg, "UTF-8");
         }
-        resp.sendRedirect(redirectTo);
+        resp.sendRedirect(resp.encodeRedirectURL(redirectTo));
     }
 
     private void startTestJob() {
-        logger.info("Adding test job.");
+        logger.info("Adding test job: {}", SLING_WEBCONSOLE_TEST_JOB_TOPIC);
         this.jobManager.addJob(SLING_WEBCONSOLE_TEST_JOB_TOPIC, null);
     }
 
@@ -193,19 +177,15 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
                    "</form>");
         pw.println("<script type='text/javascript'>");
         pw.println("function eventingsubmit(action, queue) {" +
-                   " if ( action == 'restart' ) {" +
-                   "   if ( !confirm('Do you really want to restart the job handling?') ) { return; }" +
-                   " }" +
                    " document.forms['eventingcmd'].action.value = action;" +
                    " document.forms['eventingcmd'].queue.value = queue;" +
                    " document.forms['eventingcmd'].submit();" +
                    "} </script>");
 
         pw.printf("<p class='statline ui-state-highlight'>Apache Sling Job Handling%s%n</p>",
-                msg != null ? " : " + msg : "");
+                msg != null ? " : " + ResponseUtil.escapeXml(msg) : "");
         pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>");
         pw.println("<span style='float: left; margin-left: 1em'>Apache Sling Job Handling: Overall Statistics</span>");
-        this.printForm(pw, null, "Restart!", "restart");
         this.printForm(pw, null, "Reset Stats", "reset");
         pw.println("</div>");
 
@@ -223,7 +203,7 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
                 } else {
                     sb.append("<br/>");
                 }
-                sb.append(t);
+                sb.append(ResponseUtil.escapeXml(t));
             }
             topics = sb.toString();
         }
@@ -246,7 +226,7 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
 
         pw.println("<table class='nicetable'><tbody>");
         pw.println("<tr><th colspan='2'>Topology Capabilities</th></tr>");
-        final TopologyCapabilities cap = ((JobManagerImpl)this.jobManager).getTopologyCapabilities();
+        final TopologyCapabilities cap = this.configuration.getTopologyCapabilities();
         if ( cap == null ) {
             pw.print("<tr><td colspan='2'>No topology information available !</td></tr>");
         } else {
@@ -260,10 +240,10 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
                     if ( id.isLocal() ) {
                         sb.append("<b>local</b>");
                     } else {
-                        sb.append(id.getSlingId());
+                        sb.append(ResponseUtil.escapeXml(id.getSlingId()));
                     }
                 }
-                pw.printf("<tr><td>%s</td><td>%s</td></tr>", entry.getKey(), sb.toString());
+                pw.printf("<tr><td>%s</td><td>%s</td></tr>", ResponseUtil.escapeXml(entry.getKey()), sb.toString());
             }
         }
         pw.println("</tbody></table>");
@@ -279,7 +259,7 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
             int index = 1;
             for(final ScheduledJobInfo info : infos) {
                 pw.printf("<tr><td><b>%s</b></td><td>%s</td><td>",
-                        String.valueOf(index), info.getJobTopic());
+                        String.valueOf(index), ResponseUtil.escapeXml(info.getJobTopic()));
                 boolean first = true;
                 for(final ScheduleInfo si : info.getSchedules() ) {
                     if ( !first ) {
@@ -297,7 +277,7 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
                                  break;
                     case HOURLY : pw.printf("HOURLY %s", si.getMinuteOfHour());
                                  break;
-                    case CRON : pw.printf("CRON %s", si.getExpression());
+                    case CRON : pw.printf("CRON %s", ResponseUtil.escapeXml(si.getExpression()));
                                   break;
                     default : pw.printf("AT %s", si.getAt());
                     }
@@ -312,9 +292,9 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
         boolean isEmpty = true;
         for(final Queue q : this.jobManager.getQueues()) {
             isEmpty = false;
-            String queueName = q.getName();
+            final String queueName = q.getName();
             pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>");
-            pw.printf("<span style='float: left; margin-left: 1em'>Active JobQueue: %s %s</span>", escape(q.getName()),
+            pw.printf("<span style='float: left; margin-left: 1em'>Active JobQueue: %s %s</span>", ResponseUtil.escapeXml(queueName),
                     q.isSuspended() ? "(SUSPENDED)" : "");
             this.printForm(pw, queueName, "Reset Stats", "reset");
             if ( q.isSuspended() ) {
@@ -323,7 +303,6 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
                 this.printForm(pw, queueName, "Suspend", "suspend");
             }
             this.printForm(pw, queueName, "Test", "test");
-            this.printForm(pw, queueName, "Clear Queue", "clear");
             this.printForm(pw, queueName, "Drop All", "dropall");
             pw.println("</div>");
             pw.println("<table class='nicetable'><tbody>");
@@ -343,7 +322,7 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
             pw.printf("<tr><td>Processed Jobs</td><td>%s</td><td colspan='2'>&nbsp</td></tr>", s.getNumberOfProcessedJobs());
             pw.printf("<tr><td>Average Processing Time</td><td>%s</td><td colspan='2'>&nbsp</td></tr>", formatTime(s.getAverageProcessingTime()));
             pw.printf("<tr><td>Average Waiting Time</td><td>%s</td><td colspan='2'>&nbsp</td></tr>", formatTime(s.getAverageWaitingTime()));
-            pw.printf("<tr><td>Status Info</td><td colspan='3'>%s</td></tr>", escape(q.getStateInfo()));
+            pw.printf("<tr><td>Status Info</td><td colspan='3'>%s</td></tr>", ResponseUtil.escapeXml(q.getStateInfo()));
             pw.println("</tbody></table>");
             pw.println("<br/>");
         }
@@ -354,7 +333,7 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
 
         for(final TopicStatistics ts : this.jobManager.getTopicStatistics()) {
             pw.println("<table class='nicetable'><tbody>");
-            pw.printf("<tr><th colspan='2'>Topic Statistics: %s</th></tr>", escape(ts.getTopic()));
+            pw.printf("<tr><th colspan='2'>Topic Statistics: %s</th></tr>", ResponseUtil.escapeXml(ts.getTopic()));
 
             pw.printf("<tr><td>Last Activated</td><td>%s</td></tr>", formatDate(ts.getLastActivatedJobTime()));
             pw.printf("<tr><td>Last Finished</td><td>%s</td></tr>", formatDate(ts.getLastFinishedJobTime()));
@@ -369,8 +348,8 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
         }
 
         pw.println("<p class='statline'>Apache Sling Job Handling - Job Queue Configurations</p>");
-        this.printQueueConfiguration(req, pw, this.queueConfigManager.getMainQueueConfiguration());
-        final InternalQueueConfiguration[] configs = this.queueConfigManager.getConfigurations();
+        this.printQueueConfiguration(req, pw, this.configuration.getQueueConfigurationManager().getMainQueueConfiguration());
+        final InternalQueueConfiguration[] configs = this.configuration.getQueueConfigurationManager().getConfigurations();
         for(final InternalQueueConfiguration c : configs ) {
             this.printQueueConfiguration(req, pw, c);
         }
@@ -379,7 +358,7 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
     private void printQueueConfiguration(final HttpServletRequest req, final PrintWriter pw, final InternalQueueConfiguration c) {
         pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>");
         pw.printf("<span style='float: left; margin-left: 1em'>Job Queue Configuration: %s</span>%n",
-                escape(c.getName()));
+                ResponseUtil.escapeXml(c.getName()));
         pw.printf("<button id='edit' class='ui-state-default ui-corner-all' onclick='javascript:window.location=\"%s%s/configMgr/%s\";'>Edit</button>",
                 req.getContextPath(), req.getServletPath(), c.getPid());
         this.printForm(pw, c.getName(), "Test", "test");
@@ -416,7 +395,7 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
             first = false;
             sb.append(s);
         }
-        return escape(sb.toString());
+        return ResponseUtil.escapeXml(sb.toString());
     }
 
     private String formatType(final QueueConfiguration.Type type) {
@@ -465,12 +444,12 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
             final String buttonLabel,
             final String cmd) {
         pw.printf("<button class='ui-state-default ui-corner-all' onclick='javascript:eventingsubmit(\"%s\", \"%s\");'>" +
-                "%s</button>", cmd, (qeueName != null ? qeueName : ""), buttonLabel);
+                "%s</button>", ResponseUtil.escapeXml(cmd), (qeueName != null ? ResponseUtil.escapeXml(qeueName) : ""), ResponseUtil.escapeXml(buttonLabel));
     }
 
     @Override
     public JobResult process(final Job job) {
-        logger.info("Received test event.");
+        logger.info("Received test job {}", job.getTopic());
         return JobResult.OK;
     }
 }

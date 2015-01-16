@@ -68,16 +68,34 @@ class MergingResourceProvider implements ResourceProvider {
 
     protected static final class ParentHidingHandler {
 
-        private List<ExcludeEntry> entries;
+        private List<ExcludeEntry> entries = new ArrayList<ExcludeEntry>();
 
         public ParentHidingHandler(final Resource parent) {
             final ValueMap parentProps = ResourceUtil.getValueMap(parent);
             final String[] childrenToHideArray = parentProps.get(MergedResourceConstants.PN_HIDE_CHILDREN, String[].class);
-            if ( childrenToHideArray != null ) {
-                this.entries = new ArrayList<ExcludeEntry>();
-                for(final String value : childrenToHideArray) {
+            if (childrenToHideArray != null) {
+                for (final String value : childrenToHideArray) {
                     final ExcludeEntry entry = new ExcludeEntry(value);
                     this.entries.add(entry);
+                }
+            }
+            if (parent != null) {
+                Resource ancestor = parent.getParent();
+                while (ancestor != null) {
+                    String previousAncestorName = parent.getName();
+                    final ValueMap ancestorProps = ResourceUtil.getValueMap(ancestor);
+                    final String[] ancestorChildrenToHideArray = ancestorProps.get(MergedResourceConstants.PN_HIDE_CHILDREN, String[].class);
+                    if (ancestorChildrenToHideArray != null) {
+                        for (final String value : ancestorChildrenToHideArray) {
+                            final ExcludeEntry entry = new ExcludeEntry(value);
+                            final Boolean hides = hides(entry, previousAncestorName);
+                            if (hides != null && hides.booleanValue() == true) {
+                                this.entries.add(new ExcludeEntry("*"));
+                                break;
+                            }
+                        }
+                    }
+                    ancestor = ancestor.getParent();
                 }
             }
         }
@@ -86,14 +104,29 @@ class MergingResourceProvider implements ResourceProvider {
             boolean hidden = false;
             if ( this.entries != null ) {
                 for(final ExcludeEntry entry : this.entries) {
-                    if ( entry.name.equals("*") || entry.name.equals(name) ) {
-                        hidden = !entry.exclude;
+                    Boolean result = hides(entry, name);
+                    if (result != null) {
+                        hidden = result.booleanValue();
                         break;
                     }
                 }
             }
             return hidden;
         }
+
+        /**
+         * Determine if an entry should hide the named resource.
+         * 
+         * @return a non-null value if the entry matches; a null value if it does not
+         */
+        private Boolean hides(final ExcludeEntry entry, final String name) {
+            Boolean result = null;
+            if (entry.name.equals("*") || entry.name.equals(name)) {
+                result = Boolean.valueOf(!entry.exclude);
+            }
+            return result;
+        }
+
     }
 
     protected static final class ResourceHolder {

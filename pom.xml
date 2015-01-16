@@ -80,12 +80,15 @@
         <!-- The real Sling Parent Project -->
         <module>parent</module>
 
+        <!-- Tooling Support -->
+        <module>tooling/support/provisioning-model</module>
         <!-- The Maven Plugins and Archeyptes-->
         <module>tooling/maven/adapter-annotations</module>
         <module>tooling/maven/maven-jcrocm-plugin</module>
         <module>tooling/maven/maven-jspc-plugin</module>
         <module>tooling/maven/maven-sling-plugin</module>
         <module>tooling/maven/maven-launchpad-plugin</module>
+        <module>tooling/maven/slingstart-maven-plugin</module>
         <module>tooling/maven/archetypes/launchpad-standalone</module>
         <module>tooling/maven/archetypes/launchpad-webapp</module>
         <module>tooling/maven/archetypes/initial-content</module>
@@ -93,7 +96,7 @@
         <module>tooling/maven/archetypes/bundle</module>
         <module>tooling/maven/archetypes/bundle-for-jcrinstall</module>
         <module>tooling/maven/archetypes/taglib</module>
-
+     
         <!-- The Sling API -->
         <module>bundles/api</module>
 
@@ -121,9 +124,7 @@
 
         <!-- Authentication Support -->
         <module>bundles/auth/core</module>
-        <module>bundles/auth/openid</module>
         <module>bundles/auth/form</module>
-        <module>bundles/auth/selector</module>
         
         <!-- The Sling Engine -->
         <module>bundles/engine</module>
@@ -165,6 +166,7 @@
         <!-- Extensions -->
         <module>bundles/extensions/adapter</module>
         <module>bundles/extensions/bundleresource</module>
+        <module>bundles/extensions/dea</module>
         <module>bundles/extensions/discovery/api</module>
         <module>bundles/extensions/discovery/impl</module>
         <module>bundles/extensions/discovery/support</module>
@@ -186,14 +188,7 @@
         <module>bundles/extensions/models/integration-tests</module>
 
         <!-- Testing Support -->
-        <module>testing/tools</module>
-        <module>testing/junit/core</module>
-        <module>testing/junit/scriptable</module>
-        <module>testing/junit/healthcheck</module>
-        <module>testing/junit/remote</module>
-        <module>testing/junit/performance</module>
-        <module>testing/resourceresolver-mock</module>
-        <module>testing/sling-pax-util</module>
+        <module>testing</module>
         
         <!-- Installer -->
         <module>installer/core</module>
@@ -212,10 +207,6 @@
         <module>launchpad/content</module>
         <module>launchpad/builder</module>
         
-        <!-- Testing Samples -->
-        <module>testing/samples/sample-tests</module>
-        <module>testing/samples/failing-tests</module>
-        <module>testing/samples/integration-tests</module>
     </modules>
 
     <profiles>

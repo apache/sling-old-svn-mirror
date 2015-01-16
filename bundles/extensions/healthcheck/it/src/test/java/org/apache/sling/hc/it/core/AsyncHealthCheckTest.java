@@ -21,7 +21,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -29,7 +28,6 @@ import javax.inject.Inject;
 
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.api.execution.HealthCheckExecutor;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -75,20 +73,8 @@ public class AsyncHealthCheckTest {
         final ServiceRegistration reg = bundleContext.registerService(HealthCheck.class, hc, props);
         
         try {
-            {
-                // Wait for HC to be registered
-                final long timeout = System.currentTimeMillis() + 10000L;
-                boolean hcFound = false;
-                while(System.currentTimeMillis() < timeout) {
-                    final List<HealthCheckExecutionResult> results = executor.execute(id);
-                    if(!results.isEmpty()) {
-                        hcFound = true;
-                        break;
-                    }
-                    Thread.sleep(100L);
-                }
-                assertTrue("Expecting HC to become active", hcFound);
-            }
+            // Wait for HC to be registered
+            U.expectHealthChecks(1, executor, id);
             
             // Now reset the counter and check that HC increments it even if we don't
             // use the executor

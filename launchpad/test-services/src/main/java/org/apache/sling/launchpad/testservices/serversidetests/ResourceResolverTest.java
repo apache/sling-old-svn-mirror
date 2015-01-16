@@ -45,7 +45,7 @@ import org.apache.sling.junit.annotations.SlingAnnotationsTestRunner;
 import org.apache.sling.junit.annotations.TestReference;
 import org.apache.sling.launchpad.testservices.events.EventsCounter;
 import org.apache.sling.launchpad.testservices.exported.FakeSlingHttpServletRequest;
-import org.junit.AfterClass;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -60,7 +60,7 @@ public class ResourceResolverTest {
     public static final String PROP_REDIRECT_EXTERNAL = "sling:redirect";
     public static final String MAPPING_EVENT_TOPIC = "org/apache/sling/api/resource/ResourceResolverMapping/CHANGED";
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private static final Logger logger = LoggerFactory.getLogger(ResourceResolverTest.class);
     private static ResourceResolver resResolver;
     private static Session session;
     private String rootPath;
@@ -69,6 +69,7 @@ public class ResourceResolverTest {
     private String [] vanity;
     private static List<String> toDelete = new ArrayList<String>();
     private static ResourceResolverFactory cleanupResolverFactory;
+    private MappingsFacade mappingsFacade;
     
     @TestReference
     private EventsCounter eventsCounter;
@@ -76,41 +77,18 @@ public class ResourceResolverTest {
     @TestReference
     private ResourceResolverFactory resourceResolverFactory;  
     
-    // How long to wait for mapping updates
-    public static final String MAPPING_UPDATE_TIMEOUT_MSEC = "ResourceResolverTest.mapping.update.timeout.msec";
-    private static final long updateTimeout = Long.valueOf(System.getProperty(MAPPING_UPDATE_TIMEOUT_MSEC, "10000"));
-
-    public ResourceResolverTest() throws Exception {
-        logger.info("updateTimeout = {}, use {} system property to change", updateTimeout, MAPPING_UPDATE_TIMEOUT_MSEC);
-    }
-    
-    /** Save a Session that has mapping changes, and wait for the OSGi event
-     *  that signals that mappings have been updated.
-     */
-    private void saveMappings(Session session) throws Exception {
-        final int oldEventsCount = eventsCounter.getEventsCount(MAPPING_EVENT_TOPIC);
-        session.save();
-        final long timeout = System.currentTimeMillis() + updateTimeout;
-        while(System.currentTimeMillis() < timeout) {
-            if(eventsCounter.getEventsCount(MAPPING_EVENT_TOPIC) != oldEventsCount) {
-                // Sleeping here shouldn't be needed but it looks
-                // like mappings are not immediately updated once the event arrives
-                Thread.sleep(updateTimeout / 50);
-                return;
-            }
-            try {
-                Thread.sleep(10);
-            } catch(InterruptedException ignore) {
-            }
-        }
-        fail("Timeout waiting for " + MAPPING_EVENT_TOPIC + " event, after " + updateTimeout + " msec");
-    }
-    
     private Node maybeCreateNode(Node parent, String name, String type) throws RepositoryException {
         if(parent.hasNode(name)) {
             return parent.getNode(name);
         } else {
             return parent.addNode(name, type);
+        }
+    }
+    
+    private void saveMappings(Session s) throws Exception {
+        final String saveMappingsError = mappingsFacade.saveMappings(s);
+        if(saveMappingsError != null) {
+            fail(saveMappingsError);
         }
     }
 
@@ -120,6 +98,7 @@ public class ResourceResolverTest {
         resResolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
         cleanupResolverFactory = resourceResolverFactory;
         session = resResolver.adaptTo(Session.class);
+        mappingsFacade = new MappingsFacade(eventsCounter);
         
         // Do the mappings setup only once, and clean it up 
         // after all tests
@@ -138,6 +117,7 @@ public class ResourceResolverTest {
         }
         
         mapRoot = session.getNode("/etc");
+        session.save();
         
         // define a vanity path for the rootPath
         vanity = new String[] {"testVanity","testV", "testVanityToUpdate"};
@@ -160,8 +140,9 @@ public class ResourceResolverTest {
         
     }
 
-    @AfterClass
-    public static void deleteTestNodes() throws Exception {
+    @After
+    public void deleteTestNodes() throws Exception {
+        logger.debug("{} test done, deleting test nodes", ResourceResolverTest.class.getSimpleName());
         final ResourceResolver resolver = cleanupResolverFactory.getAdministrativeResourceResolver(null);
         final Session session = resolver.adaptTo(Session.class);
         
@@ -178,7 +159,7 @@ public class ResourceResolverTest {
             resolver.close();
         }
     }
-
+    
     @Test public void test_clone_based_on_anonymous() throws Exception {
         final ResourceResolver anon0 = this.resourceResolverFactory.getResourceResolver((Map<String, Object>) null);
         final Session anon0Session = anon0.adaptTo(Session.class);
@@ -1586,93 +1567,84 @@ public class ResourceResolverTest {
     }
     
     @Test public void testResolveVanityPathWithUpdate() throws Exception {
-        try {
+        String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
+                + "/" + vanity[2] + ".print.html");
 
-            String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
-                    + "/" + vanity[2] + ".print.html");
+        HttpServletRequest request = new FakeSlingHttpServletRequest(path);
+        Resource res = resResolver.resolve(request, path);
+        assertNotNull(res);
+        assertEquals(rootPath, res.getPath());
+        assertEquals(rootNode.getPrimaryNodeType().getName(),
+                res.getResourceType());
 
-            HttpServletRequest request = new FakeSlingHttpServletRequest(path);
-            Resource res = resResolver.resolve(request, path);
-            assertNotNull(res);
-            assertEquals(rootPath, res.getPath());
-            assertEquals(rootNode.getPrimaryNodeType().getName(),
-                    res.getResourceType());
+        assertEquals(".print.html",
+                res.getResourceMetadata().getResolutionPathInfo());
 
-            assertEquals(".print.html",
-                    res.getResourceMetadata().getResolutionPathInfo());
+        assertNotNull(res.adaptTo(Node.class));
+        assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
 
-            assertNotNull(res.adaptTo(Node.class));
-            assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
+        path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath) + "/"
+                + vanity[2] + ".print.html/suffix.pdf");
 
-            path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath) + "/"
-                    + vanity[2] + ".print.html/suffix.pdf");
+        request = new FakeSlingHttpServletRequest(path);
+        res = resResolver.resolve(request, path);
+        assertNotNull(res);
+        assertEquals(rootPath, res.getPath());
+        assertEquals(rootNode.getPrimaryNodeType().getName(),
+                res.getResourceType());
 
-            request = new FakeSlingHttpServletRequest(path);
-            res = resResolver.resolve(request, path);
-            assertNotNull(res);
-            assertEquals(rootPath, res.getPath());
-            assertEquals(rootNode.getPrimaryNodeType().getName(),
-                    res.getResourceType());
+        assertEquals(".print.html/suffix.pdf",
+                res.getResourceMetadata().getResolutionPathInfo());
 
-            assertEquals(".print.html/suffix.pdf",
-                    res.getResourceMetadata().getResolutionPathInfo());
+        assertNotNull(res.adaptTo(Node.class));
+        assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
+        
+        //update vanityPath
+        String [] vanityPathUpdated = new String[] {"testVanity","testV", "testVanityUpdated"};
+        rootNode.setProperty("sling:vanityPath", vanityPathUpdated);
+        saveMappings(session);
+        
+        path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
+                + "/" + vanityPathUpdated[2] + ".print.html");
 
-            assertNotNull(res.adaptTo(Node.class));
-            assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
-            
-            //update vanityPath
-            String [] vanityPathUpdated = new String[] {"testVanity","testV", "testVanityUpdated"};
-            rootNode.setProperty("sling:vanityPath", vanityPathUpdated);
-            saveMappings(session);
-            
-            path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
-                    + "/" + vanityPathUpdated[2] + ".print.html");
+        request = new FakeSlingHttpServletRequest(path);
+        res = resResolver.resolve(request, path);
+        assertNotNull(res);
+        assertEquals(rootPath, res.getPath());
+        assertEquals(rootNode.getPrimaryNodeType().getName(),
+                res.getResourceType());
 
-            request = new FakeSlingHttpServletRequest(path);
-            res = resResolver.resolve(request, path);
-            assertNotNull(res);
-            assertEquals(rootPath, res.getPath());
-            assertEquals(rootNode.getPrimaryNodeType().getName(),
-                    res.getResourceType());
+        assertEquals(".print.html",
+                res.getResourceMetadata().getResolutionPathInfo());
 
-            assertEquals(".print.html",
-                    res.getResourceMetadata().getResolutionPathInfo());
+        assertNotNull(res.adaptTo(Node.class));
+        assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
 
-            assertNotNull(res.adaptTo(Node.class));
-            assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
+        path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath) + "/"
+                + vanityPathUpdated[2] + ".print.html/suffix.pdf");
 
-            path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath) + "/"
-                    + vanityPathUpdated[2] + ".print.html/suffix.pdf");
+        request = new FakeSlingHttpServletRequest(path);
+        res = resResolver.resolve(request, path);
+        assertNotNull(res);
+        assertEquals(rootPath, res.getPath());
+        assertEquals(rootNode.getPrimaryNodeType().getName(),
+                res.getResourceType());
 
-            request = new FakeSlingHttpServletRequest(path);
-            res = resResolver.resolve(request, path);
-            assertNotNull(res);
-            assertEquals(rootPath, res.getPath());
-            assertEquals(rootNode.getPrimaryNodeType().getName(),
-                    res.getResourceType());
+        assertEquals(".print.html/suffix.pdf",
+                res.getResourceMetadata().getResolutionPathInfo());
 
-            assertEquals(".print.html/suffix.pdf",
-                    res.getResourceMetadata().getResolutionPathInfo());
+        assertNotNull(res.adaptTo(Node.class));
+        assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
+        
+        
+        path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
+                + "/" + vanity[2] + ".print.html");
 
-            assertNotNull(res.adaptTo(Node.class));
-            assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
-            
-            
-            path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
-                    + "/" + vanity[2] + ".print.html");
-
-            request = new FakeSlingHttpServletRequest(path);
-            res = resResolver.resolve(request, path);
-            assertNotNull(res);
-            assertTrue(res instanceof NonExistingResource);
-            assertEquals("/"+vanity[2]+".print.html", res.getPath());
-            
-        } finally {
-            //restore vanityPath
-            vanity = new String[] {"testVanity","testV", "testVanityToUpdate"};
-            rootNode.setProperty("sling:vanityPath", vanity);
-            saveMappings(session);
-        }
+        request = new FakeSlingHttpServletRequest(path);
+        res = resResolver.resolve(request, path);
+        assertNotNull(res);
+        assertTrue(res instanceof NonExistingResource);
+        assertEquals("/"+vanity[2]+".print.html", res.getPath());
     }
     
     @Test public void testResolveRemovedVanityPath() throws Exception {          
@@ -2334,7 +2306,7 @@ public class ResourceResolverTest {
         // define an alias for the rootPath
         String alias = "testAlias";
         rootNode.setProperty("sling:alias", alias);
-        session.save();
+        saveMappings(session);
 
         try {
             String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
@@ -2362,7 +2334,7 @@ public class ResourceResolverTest {
         String alias = "testAlias";
         Node content = rootNode.addNode("jcr:content", "nt:unstructured");
         content.setProperty("sling:alias", alias);
-        session.save();
+        saveMappings(session);
 
         try {
             String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)

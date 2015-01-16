@@ -1,7 +1,0 @@
-{
-    "jcr:primaryType":"sling:Folder",
-    "jcr:mixinTypes":["slingshot:Album","sling:Resource"],
-    "sling:resourceType":"slingshot:Album",
-    "jcr:description":"This is the slingshot root album.",
-    "jcr:title":"Root Album"
-}

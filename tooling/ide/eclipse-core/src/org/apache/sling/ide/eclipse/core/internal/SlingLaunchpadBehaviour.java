@@ -21,7 +21,9 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.artifacts.EmbeddedArtifact;
@@ -78,8 +80,6 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
 
     public void start(IProgressMonitor monitor) throws CoreException {
 
-        
-        
         boolean success = false;
         Result<ResourceProxy> result = null;
         monitor.beginTask("Starting server", 5);
@@ -220,12 +220,6 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                 BundleStateHelper.resetBundleState(getServer(), module[0].getProject());
             }
         } else if (ProjectHelper.isContentProject(module[0].getProject())) {
-
-            if (kind == IServer.PUBLISH_FULL && deltaKind == ServerBehaviourDelegate.ADDED) {
-                logger.trace("Ignoring request to fully publish an added content module");
-                setModulePublishState(module, IServer.PUBLISH_STATE_NONE);
-                return;
-            }
 
             try {
                 publishContentModule(kind, deltaKind, module, monitor);
@@ -379,6 +373,8 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
         // would be an incorrect ( or at least suprising ) behaviour at development time
 
         List<IModuleResource> addedOrUpdatedResources = new ArrayList<IModuleResource>();
+        IModuleResource[] allResources = getResources(module);
+        Set<IPath> handledPaths = new HashSet<IPath>();
 
         switch (deltaKind) {
             case ServerBehaviourDelegate.CHANGED:
@@ -412,8 +408,14 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
                         case IModuleResourceDelta.ADDED:
                         case IModuleResourceDelta.CHANGED:
                         case IModuleResourceDelta.NO_CHANGE: // TODO is this needed?
-                            execute(addFileCommand(repository, resourceDelta.getModuleResource()));
-                            addedOrUpdatedResources.add(resourceDelta.getModuleResource());
+                            Command<?> command = addFileCommand(repository, resourceDelta.getModuleResource());
+
+                            if (command != null) {
+                                ensureParentIsPublished(resourceDelta.getModuleResource(), repository, allResources,
+                                        handledPaths);
+                                addedOrUpdatedResources.add(resourceDelta.getModuleResource());
+                            }
+                            execute(command);
                             break;
                         case IModuleResourceDelta.REMOVED:
                             execute(removeFileCommand(repository, resourceDelta.getModuleResource()));
@@ -425,8 +427,11 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
             case ServerBehaviourDelegate.ADDED:
             case ServerBehaviourDelegate.NO_CHANGE: // TODO is this correct ?
                 for (IModuleResource resource : getResources(module)) {
-                    execute(addFileCommand(repository, resource));
-                    addedOrUpdatedResources.add(resource);
+                    Command<?> command = addFileCommand(repository, resource);
+                    execute(command);
+                    if (command != null) {
+                        addedOrUpdatedResources.add(resource);
+                    }
                 }
                 break;
             case ServerBehaviourDelegate.REMOVED:
@@ -447,6 +452,64 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegateWithModulePu
         setModulePublishState(module, IServer.PUBLISH_STATE_NONE);
 //        setServerPublishState(IServer.PUBLISH_STATE_NONE);
 	}
+
+    /**
+     * Ensures that the parent of this resource has been published to the repository
+     * 
+     * <p>
+     * Note that the parents explicitly do not have their child nodes reordered, this will happen when they are
+     * published due to a resource change
+     * </p>
+     * 
+     * @param moduleResource the current resource
+     * @param repository the repository to publish to
+     * @param allResources all of the module's resources
+     * @param handledPaths the paths that have been handled already in this publish operation, but possibly not
+     *            registered as published
+     * @throws IOException
+     * @throws SerializationException
+     * @throws CoreException
+     */
+    private void ensureParentIsPublished(IModuleResource moduleResource, Repository repository,
+            IModuleResource[] allResources, Set<IPath> handledPaths)
+            throws CoreException, SerializationException, IOException {
+
+        Logger logger = Activator.getDefault().getPluginLogger();
+
+        IPath currentPath = moduleResource.getModuleRelativePath();
+
+        logger.trace("Ensuring that parent of path {0} is published", currentPath);
+
+        // we assume the root is always published
+        if (currentPath.segmentCount() == 0) {
+            logger.trace("Path {0} can not have a parent, skipping", currentPath);
+            return;
+        }
+
+        IPath parentPath = currentPath.removeLastSegments(1);
+
+        // already published by us, a parent of another resource that was published in this execution
+        if (handledPaths.contains(parentPath)) {
+            logger.trace("Parent path {0} was already handled, skipping", parentPath);
+            return;
+        }
+
+        for (IModuleResource maybeParent : allResources) {
+            if (maybeParent.getModuleRelativePath().equals(parentPath)) {
+                // handle the parent's parent first, if needed
+                ensureParentIsPublished(maybeParent, repository, allResources, handledPaths);
+                // create this resource
+                execute(addFileCommand(repository, maybeParent));
+                handledPaths.add(maybeParent.getModuleRelativePath());
+                logger.trace("Ensured that resource at path {0} is published", parentPath);
+                return;
+            }
+        }
+
+        throw new IllegalArgumentException("Resource at " + moduleResource.getModuleRelativePath()
+                + " has parent path " + parentPath + " but no resource with that path is in the module's resources.");
+
+    }
 
     private void execute(Command<?> command) throws CoreException {
         if (command == null) {

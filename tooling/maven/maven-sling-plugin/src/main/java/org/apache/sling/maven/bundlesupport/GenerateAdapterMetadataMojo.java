@@ -16,7 +16,9 @@
  */
 package org.apache.sling.maven.bundlesupport;
 
-import static org.objectweb.asm.ClassReader.*;
+import static org.objectweb.asm.ClassReader.SKIP_CODE;
+import static org.objectweb.asm.ClassReader.SKIP_DEBUG;
+import static org.objectweb.asm.ClassReader.SKIP_FRAMES;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,7 +37,6 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.apache.sling.adapter.annotations.Adaptable;
 import org.apache.sling.adapter.annotations.Adaptables;
-import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.codehaus.plexus.util.IOUtil;
@@ -209,7 +210,6 @@ public class GenerateAdapterMetadataMojo extends AbstractMojo {
             final JSONObject descriptor) throws JSONException {
         String adaptableClassName = null;
         List<AnnotationNode> adapters = null;
-        String servicePid = null;
 
         final List<?> values = annotation.values;
 

@@ -30,69 +30,69 @@ import org.apache.sling.commons.json.JSONString;
 
 /** Various JSON-to-String primitives, used by other classes
  *  when outputting/formatting JSON.
- *  
+ *
  *  Streaming variants of some methods are provided.
  *  The existing code in this module is often not streaming, but
  *  we should write newer code using streams, as much as
  *  possible.
  */
 public class JSONRenderer {
-    
+
     /** Rendering options */
     static public class Options {
         int indent;
         private boolean indentIsPositive;
         int initialIndent;
         boolean arraysForChildren;
-        
+
         public static final String DEFAULT_CHILDREN_KEY = "__children__";
         public static final String DEFAULT_CHILD_NAME_KEY = "__name__";
-        
+
         String childrenKey = DEFAULT_CHILDREN_KEY;
         String childNameKey = DEFAULT_CHILD_NAME_KEY;
-        
+
         /** Clients use JSONRenderer.options() to create objects */
         private Options() {
         }
-        
+
         Options(Options opt) {
             this.indent = opt.indent;
             this.indentIsPositive = opt.indentIsPositive;
             this.initialIndent = opt.initialIndent;
             this.arraysForChildren = opt.arraysForChildren;
         }
-        
+
         public Options withIndent(int n) {
             indent = n;
             indentIsPositive = indent > 0;
             return this;
         }
-        
+
         public Options withInitialIndent(int n) {
             initialIndent = n;
             return this;
         }
-        
+
         public Options withArraysForChildren(boolean b) {
             arraysForChildren = b;
             return this;
         }
-        
+
         public Options withChildNameKey(String key) {
             childNameKey = key;
             return this;
         }
-        
+
         public Options withChildrenKey(String key) {
             childrenKey = key;
             return this;
         }
-        
+
         boolean hasIndent() {
             return indentIsPositive;
         }
     }
-    
+
     /** JSONObject that has a name - overrides just what we
      *  need for our rendering purposes.
      */
@@ -101,7 +101,7 @@ public class JSONRenderer {
         final JSONObject jsonObject;
         final String nameKey;
         final List<String> keysWithName;
-        
+
         NamedJSONObject(String name, JSONObject jsonObject, Options opt) {
             this.name = name;
             this.jsonObject = jsonObject;
@@ -113,7 +113,7 @@ public class JSONRenderer {
                 keysWithName.add(it.next());
             }
         }
-        
+
         @Override
         public int length() {
             return keysWithName.size();
@@ -160,7 +160,7 @@ public class JSONRenderer {
                 String o = keys.next();
                 sb.append(quote(o));
                 sb.append(':');
-                sb.append(valueToString(jo.get(o)));
+                sb.append(valueToString(jo.opt(o)));
             }
             sb.append('}');
             return sb.toString();
@@ -168,7 +168,7 @@ public class JSONRenderer {
             return null;
         }
     }
-    
+
     /** Make a JSON text of the supplied JSONArray. For compactness, no
      *  unnecessary whitespace is added. If it is not possible to produce a
      *  syntactically correct JSON text then null will be returned instead. This
@@ -196,20 +196,20 @@ public class JSONRenderer {
         }
         return sw.toString();
     }
-    
+
     /** Quote the supplied string for JSON, to the supplied Writer */
     public void quote(Writer w, String string) throws IOException {
         if (string == null || string.length() == 0) {
             w.write("\"\"");
             return;
         }
-    
+
         char         b;
         char         c = 0;
         int          i;
         int          len = string.length();
         String       t;
-    
+
         w.write('"');
         for (i = 0; i < len; i += 1) {
             b = c;
@@ -253,7 +253,7 @@ public class JSONRenderer {
         }
         w.write('"');
     }
-    
+
     /**
      * Make a JSON text of an Object value. If the object has an
      * value.toJSONString() method, then that method will be used to produce
@@ -296,7 +296,7 @@ public class JSONRenderer {
         }
         return quote(value.toString());
     }
-    
+
     /** Make a JSON String of an Object value, with rendering options
      * <p>
      * Warning: This method assumes that the data structure is acyclical.
@@ -337,9 +337,9 @@ public class JSONRenderer {
             return prettyPrint((JSONArray)value, opt);
         }
         return quote(value.toString());
-        
+
     }
-    
+
     /**
      * Produce a string from a Number.
      * @param  n A Number
@@ -366,7 +366,7 @@ public class JSONRenderer {
         }
         return s;
     }
-    
+
     /** Decide whether o must be skipped and added to a, when rendering a JSONObject */
     private boolean skipChildObject(JSONArray a, Options  opt, String key, Object value) {
         if(opt.arraysForChildren && (value instanceof JSONObject)) {
@@ -375,7 +375,7 @@ public class JSONRenderer {
         }
         return false;
     }
-    
+
     /**
      * Make a prettyprinted JSON text of this JSONObject.
      * <p>
@@ -422,7 +422,7 @@ public class JSONRenderer {
                 indent(sb, newindent);
                 sb.append(quote(o.toString()));
                 sb.append(": ");
-                sb.append(valueToString(v, 
+                sb.append(valueToString(v,
                         options().withIndent(opt.indent).withInitialIndent(newindent)));
             }
             if (sb.length() > 1) {
@@ -430,8 +430,8 @@ public class JSONRenderer {
                 indent(sb, newindent);
             }
         }
-        
-        /** Render children if any were skipped (in "children in arrays" mode) */ 
+
+        /** Render children if any were skipped (in "children in arrays" mode) */
         if(children.length() > 0) {
             if (sb.length() > 1) {
                 sb.append(",\n");
@@ -444,7 +444,7 @@ public class JSONRenderer {
             sb.append(quote(opt.childrenKey)).append(":");
             sb.append(prettyPrint(children, childOpt));
         }
-        
+
         sb.append('}');
         return sb.toString();
     }
@@ -482,7 +482,7 @@ public class JSONRenderer {
         sb.append(']');
         return sb.toString();
     }
-    
+
     /**
      * Throw an exception if the object is an NaN or infinite number.
      * @param o The object to test.
@@ -503,7 +503,7 @@ public class JSONRenderer {
             }
         }
     }
-    
+
     /**
      * Make a string from the contents of this JSONArray. The
      * <code>separator</code> string is inserted between each element.
@@ -524,7 +524,7 @@ public class JSONRenderer {
         }
         return sb.toString();
     }
-    
+
     /**
      * Write the contents of the supplied JSONObject as JSON text to a writer.
      * For compactness, no whitespace is added.
@@ -563,7 +563,7 @@ public class JSONRenderer {
            throw new JSONException(e);
        }
     }
-    
+
     /**
      * Write the contents of the supplied JSONArray as JSON text to a writer.
      * For compactness, no whitespace is added.
@@ -600,7 +600,7 @@ public class JSONRenderer {
            throw new JSONException(e);
         }
     }
-    
+
     /**
      * Produce a string from a double. The string "null" will be returned if
      * the number is not finite.

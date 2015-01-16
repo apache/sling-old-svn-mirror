@@ -92,9 +92,13 @@ abstract class AbstractConfigTask extends InstallTask {
         return this.getResource().getDictionary();
     }
 
-    protected Configuration getConfiguration(final ConfigurationAdmin ca,
-                                             final boolean createIfNeeded)
+    protected Configuration getConfiguration()
     throws IOException, InvalidSyntaxException {
-        return ConfigUtil.getConfiguration(ca, this.factoryPid, (this.factoryPid != null && this.aliasPid != null ? this.aliasPid : this.configPid), createIfNeeded);
+        return ConfigUtil.getConfiguration(this.configAdmin, this.factoryPid, (this.factoryPid != null && this.aliasPid != null ? this.aliasPid : this.configPid));
+    }
+
+    protected Configuration createConfiguration(final String location)
+    throws IOException, InvalidSyntaxException {
+        return ConfigUtil.createConfiguration(this.configAdmin, this.factoryPid, (this.factoryPid != null && this.aliasPid != null ? this.aliasPid : this.configPid), location);
     }
 }

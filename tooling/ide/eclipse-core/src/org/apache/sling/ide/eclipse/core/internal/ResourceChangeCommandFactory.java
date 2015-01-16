@@ -92,22 +92,35 @@ public class ResourceChangeCommandFactory {
 
         ResourceAndInfo rai = buildResourceAndInfo(resource, repository);
         
-        if ( rai == null ) {
+        if (rai == null) {
             return null;
         }
 
         return repository.newAddOrUpdateNodeCommand(rai.getInfo(), rai.getResource());
     }
 
-    private ResourceAndInfo buildResourceAndInfo(IResource resource, Repository repository) throws CoreException,
+    /**
+     * Convenience method which builds a <tt>ResourceAndInfo</tt> info for a specific <tt>IResource</tt>
+     * 
+     * @param resource the resource to process
+     * @param repository the repository, used to extract serialization information for different resource types
+     * @return the build object, or null if one could not be built
+     * @throws CoreException
+     * @throws SerializationException
+     * @throws IOException
+     */
+    public ResourceAndInfo buildResourceAndInfo(IResource resource, Repository repository) throws CoreException,
             SerializationException, IOException {
         if (ignoredFileNames.contains(resource.getName())) {
             return null;
         }
 
-        Object ignoreNextUpdate = resource.getSessionProperty(ResourceUtil.QN_IGNORE_NEXT_CHANGE);
-        if (ignoreNextUpdate != null) {
-            resource.setSessionProperty(ResourceUtil.QN_IGNORE_NEXT_CHANGE, null);
+        Long modificationTimestamp = (Long) resource.getSessionProperty(ResourceUtil.QN_IMPORT_MODIFICATION_TIMESTAMP);
+
+        if (modificationTimestamp != null && modificationTimestamp >= resource.getModificationStamp()) {
+            Activator.getDefault().getPluginLogger()
+                    .trace("Change for resource {0} ignored as the import timestamp {1} >= modification timestamp {2}",
+                            resource, modificationTimestamp, resource.getModificationStamp());
             return null;
         }
 
@@ -207,8 +220,19 @@ public class ResourceChangeCommandFactory {
         return info;
     }
 
-    private FilterResult getFilterResult(IResource resource, Filter filter, File contentSyncRoot, IFolder syncFolder) throws SerializationException {
+    private FilterResult getFilterResult(IResource resource, Filter filter) throws SerializationException {
 
+        File contentSyncRoot = ProjectUtil.getSyncDirectoryFile(resource.getProject());
+
+        String repositoryPath = getRepositoryPathForDeletedResource(resource, contentSyncRoot);
+
+        Activator.getDefault().getPluginLogger().trace("Filtering by {0} for {1}", repositoryPath, resource);
+
+        return filter.filter(contentSyncRoot, repositoryPath);
+    }
+
+    private String getRepositoryPathForDeletedResource(IResource resource, File contentSyncRoot) {
+        IFolder syncFolder = ProjectUtil.getSyncDirectory(resource.getProject());
         IPath relativePath = resource.getFullPath().makeRelativeTo(syncFolder.getFullPath());
 
         String absFilePath = new File(contentSyncRoot, relativePath.toOSString()).getAbsolutePath();
@@ -216,11 +240,12 @@ public class ResourceChangeCommandFactory {
 
         IPath osPath = Path.fromOSString(filePath);
         String repositoryPath = serializationManager.getRepositoryPath(osPath.makeRelativeTo(syncFolder.getLocation())
-                .toPortableString());
+                .makeAbsolute().toPortableString());
 
-        Activator.getDefault().getPluginLogger().trace("Filtering by {0} for {1}", repositoryPath, resource);
+        Activator.getDefault().getPluginLogger()
+                .trace("Repository path for deleted resource {0} is {1}", resource, repositoryPath);
 
-        return filter.filter(contentSyncRoot, repositoryPath);
+        return repositoryPath;
     }
 
     private boolean isFiltered(Filter filter, ResourceProxy resourceProxy, IResource resource) {
@@ -487,20 +512,18 @@ public class ResourceChangeCommandFactory {
         }
 
         IFolder syncDirectory = ProjectUtil.getSyncDirectory(resource.getProject());
-        File syncDirectoryAsFile = ProjectUtil.getSyncDirectoryFile(resource.getProject());
-        final IFolder syncFolder = syncDirectory;
 
-        Filter filter = ProjectUtil.loadFilter(syncFolder.getProject());
+        Filter filter = ProjectUtil.loadFilter(syncDirectory.getProject());
 
         if (filter != null) {
-            FilterResult filterResult = getFilterResult(resource, filter, syncDirectoryAsFile, syncDirectory);
+            FilterResult filterResult = getFilterResult(resource, filter);
             if (filterResult == FilterResult.DENY || filterResult == FilterResult.PREREQUISITE) {
                 return null;
             }
         }
         
-        String resourceLocation = '/' + resource.getFullPath().makeRelativeTo(syncDirectory.getFullPath())
-                .toPortableString();
+        String resourceLocation = getRepositoryPathForDeletedResource(resource,
+                ProjectUtil.getSyncDirectoryFile(resource.getProject()));
         
         // make sure that a 'plain' folder being deleted does not signal that the content structure
         // was rearranged under a covering parent aggregate
@@ -540,24 +563,6 @@ public class ResourceChangeCommandFactory {
         } catch (IOException e) {
             throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, "Failed reordering child nodes for "
                     + res, e));
-        }
-    }
-
-    private static class ResourceAndInfo {
-        private final ResourceProxy resource;
-        private final FileInfo info;
-
-        public ResourceAndInfo(ResourceProxy resource, FileInfo info) {
-            this.resource = resource;
-            this.info = info;
-        }
-
-        public ResourceProxy getResource() {
-            return resource;
-        }
-
-        public FileInfo getInfo() {
-            return info;
         }
     }
 }

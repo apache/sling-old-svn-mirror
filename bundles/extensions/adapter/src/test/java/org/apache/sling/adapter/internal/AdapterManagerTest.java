@@ -18,6 +18,7 @@
  */
 package org.apache.sling.adapter.internal;
 
+import org.apache.sling.adapter.Adaption;
 import org.apache.sling.adapter.mock.MockAdapterFactory;
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.adapter.SlingAdaptable;
@@ -38,6 +39,7 @@ import org.osgi.service.component.ComponentContext;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 
+import java.util.Dictionary;
 import java.util.Map;
 
 import junitx.util.PrivateAccessor;
@@ -98,6 +100,8 @@ public class AdapterManagerTest {
             allowing(bundleCtx).getServiceReferences(with(any(String.class)), with(any(String.class)));
             will(returnValue(null));
             allowing(bundleCtx).removeServiceListener(with(any(ServiceListener.class)));
+            allowing(bundleCtx).registerService(with(Adaption.class.getName()), with(AdaptionImpl.INSTANCE), with(any(Dictionary.class)));
+            will(returnValue(null));
         }});
         return ctx;
     }
@@ -122,6 +126,8 @@ public class AdapterManagerTest {
             allowing(bundleCtx).getServiceReferences(with(any(String.class)), with(any(String.class)));
             will(returnValue(null));
             allowing(bundleCtx).removeServiceListener(with(any(ServiceListener.class)));
+            allowing(bundleCtx).registerService(with(Adaption.class.getName()), with(AdaptionImpl.INSTANCE), with(any(Dictionary.class)));
+            will(returnValue(null));
         }});
         return ctx;
     }

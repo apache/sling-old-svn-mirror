@@ -1,0 +1,9 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+
+    "name": "reverse-userGeneratedContent",
+
+    "path" : "/content/usergenerated",
+    "serviceName" : "distributionService"
+
+}

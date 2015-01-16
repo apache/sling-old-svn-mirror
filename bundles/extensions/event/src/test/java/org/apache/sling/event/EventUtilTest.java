@@ -25,24 +25,13 @@ import static org.junit.Assert.assertTrue;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JMock;
-import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.osgi.service.event.Event;
 
 /**
  * Tests for the EventUtil utility methods.
  */
-@RunWith(JMock.class)
 public class EventUtilTest {
-
-    protected Mockery context;
-
-    public EventUtilTest() {
-        this.context = new JUnit4Mockery();
-    }
 
     @Test public void testDistributeFlag() {
         final Event distributableEvent = EventUtil.createDistributableEvent("some/topic", null);

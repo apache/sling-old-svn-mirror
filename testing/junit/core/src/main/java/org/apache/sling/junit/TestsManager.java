@@ -18,30 +18,33 @@ package org.apache.sling.junit;
 
 import java.util.Collection;
 
+import aQute.bnd.annotation.ProviderType;
+
 /** Service that gives access to JUnit test classes */
+@ProviderType
 public interface TestsManager {
-    /** Return the names of available tests 
+    /** Return the names of available tests
      *  @param selector if null, returns all available tests.
      */
     public Collection<String> getTestNames(TestSelector selector);
-    
+
     /** Clear our internal caches. Useful in automated testing, to make
      *  sure changes introduced by recent uploads or configuration or bundles
-     *  changes are taken into account immediately. 
+     *  changes are taken into account immediately.
      */
     public void clearCaches();
-    
+
     /** Instantiate test class for specified test */
     public Class<?> getTestClass(String testName) throws ClassNotFoundException;
-    
+
     /** List tests using supplied Renderer - does NOT call setup or cleanup
      *  on renderer.
      */
     public void listTests(Collection<String> testNames, Renderer renderer) throws Exception;
-    
+
     /** Execute tests and report results using supplied Renderer - does NOT call setup or cleanup
      *  on renderer.
      *  @param selector if not null, used to select tests and test methods.
-     */ 
+     */
     public void executeTests(Collection<String> testNames, Renderer renderer, TestSelector selector) throws Exception;
 }

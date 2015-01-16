@@ -39,6 +39,8 @@ import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.ConfigurationListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Task creator for configurations.
@@ -46,11 +48,14 @@ import org.osgi.service.cm.ConfigurationListener;
 public class ConfigTaskCreator
     implements InstallTaskFactory, ConfigurationListener, ResourceTransformer {
 
+    /** Logger. */
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
     /** Configuration admin. */
-    private ConfigurationAdmin configAdmin;
+    private final ConfigurationAdmin configAdmin;
 
     /** Resource change listener. */
-    private ResourceChangeListener changeListener;
+    private final ResourceChangeListener changeListener;
 
     public ConfigTaskCreator(final ResourceChangeListener listener, final ConfigurationAdmin configAdmin) {
         this.changeListener = listener;
@@ -73,8 +78,9 @@ public class ConfigTaskCreator
             // if this is an uninstall, check if we have to install an older version
             // in this case we should do an update instead of uninstall/install (!)
             final TaskResource second = group.getNextActiveResource();
-            if ( second != null &&
-                ( second.getState() == ResourceState.IGNORED || second.getState() == ResourceState.INSTALLED || second.getState() == ResourceState.INSTALL ) ) {
+            if ( second != null
+                && ( second.getState() == ResourceState.IGNORED || second.getState() == ResourceState.INSTALLED || second.getState() == ResourceState.INSTALL )
+                && ( second.getDictionary() == null || second.getDictionary().get(InstallableResource.RESOURCE_IS_TEMPLATE) == null)) {
                 result = new ChangeStateTask(group, ResourceState.UNINSTALLED);
             } else {
                 result = new ConfigRemoveTask(group, this.configAdmin);
@@ -90,7 +96,7 @@ public class ConfigTaskCreator
      */
     @SuppressWarnings("unchecked")
     public void configurationEvent(final ConfigurationEvent event) {
-        synchronized ( ConfigTaskCreator.getLock() ) {
+        synchronized ( Coordinator.SHARED ) {
             final String id;
             final String pid;
             if (event.getFactoryPid() == null ) {
@@ -102,41 +108,43 @@ public class ConfigTaskCreator
                 id = event.getFactoryPid() + '.' + event.getPid();
             }
             if ( event.getType() == ConfigurationEvent.CM_DELETED ) {
-                this.changeListener.resourceRemoved(InstallableResource.TYPE_CONFIG, id);
+                final Coordinator.Operation op = Coordinator.SHARED.get(event.getPid(), event.getFactoryPid(), true);
+                if ( op == null ) {
+                    this.changeListener.resourceRemoved(InstallableResource.TYPE_CONFIG, id);
+                } else {
+                    this.logger.debug("Ignoring configuration event for {}:{}", event.getPid(), event.getFactoryPid());
+                }
             } else if ( event.getType() == ConfigurationEvent.CM_UPDATED ) {
                 try {
                     final Configuration config = ConfigUtil.getConfiguration(configAdmin,
                             event.getFactoryPid(),
-                            event.getPid(),
-                            false);
-                    if ( config != null ) {
+                            event.getPid());
+                    final Coordinator.Operation op = Coordinator.SHARED.get(event.getPid(), event.getFactoryPid(), false);
+                    if ( config != null && op == null ) {
+                        final boolean persist = ConfigUtil.toBoolean(config.getProperties().get(ConfigurationConstants.PROPERTY_PERSISTENCE), true);
+
                         final Dictionary<String, Object> dict = ConfigUtil.cleanConfiguration(config.getProperties());
-                        boolean persist = true;
-                        final Object persistProp = dict.get(ConfigurationConstants.PROPERTY_PERSISTENCE);
-                        if ( persistProp != null ) {
-                            if (persistProp instanceof Boolean) {
-                                persist = ((Boolean) persistProp).booleanValue();
-                            } else {
-                                persist = Boolean.valueOf(String.valueOf(persistProp));
-                            }
+                        final Map<String, Object> attrs = new HashMap<String, Object>();
+                        if ( !persist ) {
+                            attrs.put(ResourceChangeListener.RESOURCE_PERSIST, Boolean.FALSE);
                         }
-                        if ( persist ) {
-                            final Map<String, Object> attrs = new HashMap<String, Object>();
-                            attrs.put(Constants.SERVICE_PID, event.getPid());
-                            if ( event.getFactoryPid() == null ) {
-                                attrs.put(InstallableResource.RESOURCE_URI_HINT, pid);
-                            } else {
-                                attrs.put(InstallableResource.RESOURCE_URI_HINT, event.getFactoryPid() + '-' + pid);
-                            }
-                            if ( config.getBundleLocation() != null ) {
-                                attrs.put(InstallableResource.INSTALLATION_HINT, config.getBundleLocation());
-                            }
-                            // Factory?
-                            if (event.getFactoryPid() != null) {
-                                attrs.put(ConfigurationAdmin.SERVICE_FACTORYPID, event.getFactoryPid());
-                            }
-                            this.changeListener.resourceAddedOrUpdated(InstallableResource.TYPE_CONFIG, id, null, dict, attrs);
+                        attrs.put(Constants.SERVICE_PID, event.getPid());
+                        if ( event.getFactoryPid() == null ) {
+                            attrs.put(InstallableResource.RESOURCE_URI_HINT, pid);
+                        } else {
+                            attrs.put(InstallableResource.RESOURCE_URI_HINT, event.getFactoryPid() + '-' + pid);
                         }
+                        if ( config.getBundleLocation() != null ) {
+                            attrs.put(InstallableResource.INSTALLATION_HINT, config.getBundleLocation());
+                        }
+                        // Factory?
+                        if (event.getFactoryPid() != null) {
+                            attrs.put(ConfigurationAdmin.SERVICE_FACTORYPID, event.getFactoryPid());
+                        }
+                        this.changeListener.resourceAddedOrUpdated(InstallableResource.TYPE_CONFIG, id, null, dict, attrs);
+
+                    } else {
+                        this.logger.debug("Ignoring configuration event for {}:{}", event.getPid(), event.getFactoryPid());
                     }
                 } catch ( final Exception ignore) {
                     // ignore for now
@@ -186,7 +194,7 @@ public class ConfigTaskCreator
             final String cString = pid.substring(n + 1);
             boolean useExtendedPid = false;
             try {
-                if ( ConfigUtil.getConfiguration(this.configAdmin, fString, fString + '.' + cString, false) != null ) {
+                if ( ConfigUtil.getConfiguration(this.configAdmin, fString, fString + '.' + cString) != null ) {
                     useExtendedPid = true;
                 }
             } catch ( final Exception ignore) {
@@ -249,11 +257,5 @@ public class ConfigTaskCreator
             return path;
         }
         return path.replace('\\', '/');
-    }
-
-    private static final Object LOCK = new Object();
-
-    public static Object getLock() {
-        return LOCK;
     }
 }

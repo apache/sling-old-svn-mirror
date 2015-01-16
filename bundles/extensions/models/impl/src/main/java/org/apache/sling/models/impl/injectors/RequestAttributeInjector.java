@@ -24,22 +24,19 @@ import javax.servlet.ServletRequest;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 import org.apache.sling.models.annotations.injectorspecific.RequestAttribute;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
-import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor;
-import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
-import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
+import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor2;
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor2;
+import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 import org.osgi.framework.Constants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 4000)
-public class RequestAttributeInjector implements Injector, InjectAnnotationProcessorFactory {
-
-    private static final Logger log = LoggerFactory.getLogger(RequestAttributeInjector.class);
+public class RequestAttributeInjector implements Injector, StaticInjectAnnotationProcessorFactory {
 
     @Override
     public String getName() {
@@ -57,7 +54,7 @@ public class RequestAttributeInjector implements Injector, InjectAnnotationProce
     }
 
     @Override
-    public InjectAnnotationProcessor createAnnotationProcessor(Object adaptable, AnnotatedElement element) {
+    public InjectAnnotationProcessor2 createAnnotationProcessor(AnnotatedElement element) {
         // check if the element has the expected annotation
         RequestAttribute annotation = element.getAnnotation(RequestAttribute.class);
         if (annotation != null) {
@@ -66,7 +63,7 @@ public class RequestAttributeInjector implements Injector, InjectAnnotationProce
         return null;
     }
 
-    private static class RequestAttributeAnnotationProcessor extends AbstractInjectAnnotationProcessor {
+    private static class RequestAttributeAnnotationProcessor extends AbstractInjectAnnotationProcessor2 {
 
         private final RequestAttribute annotation;
 
@@ -74,6 +71,11 @@ public class RequestAttributeInjector implements Injector, InjectAnnotationProce
             this.annotation = annotation;
         }
 
+        @Override
+        public InjectionStrategy getInjectionStrategy() {
+            return annotation.injectonStrategy();
+        }
+        
         @Override
         public Boolean isOptional() {
             return annotation.optional();

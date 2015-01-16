@@ -29,8 +29,6 @@ import org.osgi.framework.Version;
 
 public class SlingLaunchpadServer extends ServerDelegate implements ISlingLaunchpadServer {
 
-    private static final String PROP_AUTO_PUBLISH_SETTING = "auto-publish-setting";
-
     private static final String MODULE_TYPE_SLING_CONTENT = "sling.content";
 
     private static final String MODULE_TYPE_SLING_BUNDLE = "sling.bundle";
@@ -124,25 +122,6 @@ public class SlingLaunchpadServer extends ServerDelegate implements ISlingLaunch
         setAttribute(PROP_CONTEXT_PATH, "/");
         setAttribute(PROP_USERNAME, "admin");
         setAttribute(PROP_PASSWORD, "admin");
-    }
-
-    @Override
-    public int getPublishState() {
-        return getAttribute(PROP_AUTO_PUBLISH_SETTING, PUBLISH_STATE_NEVER);
-    }
-    
-    @Override
-    public void setPublishState(int publishState, IProgressMonitor monitor) {
-
-        Activator.getDefault().getPluginLogger().trace("Set {0} to {1}", PROP_AUTO_PUBLISH_SETTING, publishState);
-
-        IServerWorkingCopy wc = getServer().createWorkingCopy();
-		wc.setAttribute(PROP_AUTO_PUBLISH_SETTING, publishState);
-		try {
-			wc.save(false, monitor);
-		} catch (CoreException e) {
-			throw new RuntimeException(e);
-		}
     }
 
     @Override

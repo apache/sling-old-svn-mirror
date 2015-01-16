@@ -17,6 +17,7 @@
  */
 package org.apache.sling.hc.it.core;
 
+import static org.junit.Assert.fail;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
@@ -24,10 +25,40 @@ import static org.ops4j.pax.exam.CoreOptions.provision;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import static org.ops4j.pax.exam.CoreOptions.when;
 
+import java.util.Arrays;
+import java.util.List;
+
+import org.apache.sling.hc.api.execution.HealthCheckExecutionOptions;
+import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
+import org.apache.sling.hc.api.execution.HealthCheckExecutor;
 import org.ops4j.pax.exam.Option;
 
 /** Test utilities */
 public class U {
+
+    /** Wait until the specified number of health checks are seen by supplied executor */
+    static void expectHealthChecks(int howMany, HealthCheckExecutor executor, String ... tags) {
+        expectHealthChecks(howMany, executor, new HealthCheckExecutionOptions(), tags);
+    }
+    
+    /** Wait until the specified number of health checks are seen by supplied executor */
+    static void expectHealthChecks(int howMany, HealthCheckExecutor executor, HealthCheckExecutionOptions options, String ... tags) {
+        final long timeout = System.currentTimeMillis() + 10000L;
+        int count = 0;
+        while(System.currentTimeMillis() < timeout) {
+            final List<HealthCheckExecutionResult> results = executor.execute(options, tags);
+            count = results.size();
+            if(count== howMany) {
+                return;
+            }
+            try {
+                Thread.sleep(100L);
+            } catch(InterruptedException iex) {
+                throw new RuntimeException("Unexpected InterruptedException");
+            }
+        }
+        fail("Did not get " + howMany + " health checks with tags " + Arrays.asList(tags) + " after " + timeout + " msec (last count=" + count + ")");
+    }
     
     static Option[] config() {
         final String coreVersion = System.getProperty("sling.hc.core.version");

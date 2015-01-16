@@ -18,6 +18,7 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -254,18 +255,18 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
             assertEquals(values.get(entry.getKey()), stored);
         }
     }
-    
+
     /**
      * Test date conversions from Date to Calendar and vice versa when reading or writing from value maps.
      */
     public void testDateConversion() throws Exception {
         this.rootNode.getSession().refresh(false);
-        
+
         // prepare some date values
         Date dateValue1 = new Date(10000);
         Calendar calendarValue1 = Calendar.getInstance();
         calendarValue1.setTime(dateValue1);
-        
+
         Date dateValue2 = new Date(20000);
         Calendar calendarValue2 = Calendar.getInstance();
         calendarValue2.setTime(dateValue2);
@@ -294,11 +295,15 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
         assertEquals(dateValue3, vm.get(PROP3, Date.class));
         assertEquals(calendarValue3, vm.get(PROP3, Calendar.class));
 
+        // check types
+        assertTrue(vm.get(PROP1) instanceof Calendar);
+        assertTrue(vm.get(PROP2) instanceof InputStream);
+        assertTrue(vm.get(PROP3) instanceof Calendar);
+
         // read properties
         assertEquals(calendarValue1, testNode.getProperty(PROP1).getDate());
-        assertEquals(calendarValue2, testNode.getProperty(PROP2).getDate());
         assertEquals(calendarValue3, testNode.getProperty(PROP3).getDate());
-        
+
     }
-    
+
 }

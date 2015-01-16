@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
     Licensed to the Apache Software Foundation (ASF) under one
     or more contributor license agreements.  See the NOTICE file
@@ -17,86 +17,53 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.apache.sling</groupId>
-        <artifactId>sling</artifactId>
-        <version>20</version>
-        <relativePath>../../../parent/pom.xml</relativePath>
-    </parent>
+  <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>org.apache.sling.scripting.api</artifactId>
-    <version>2.1.7-SNAPSHOT</version>
-    <packaging>bundle</packaging>
+  <parent>
+    <groupId>org.apache.sling</groupId>
+    <artifactId>sling</artifactId>
+    <version>22</version>
+    <relativePath>../../../parent/pom.xml</relativePath>
+  </parent>
 
-    <name>Apache Sling Scripting Implementation API</name>
-    <description>
-        This bundle provides the internal API to implement scripting. As such
-        it bundles the Java Scripting API provided by Apache BSF.
-    </description>
+  <artifactId>org.apache.sling.scripting.api</artifactId>
+  <version>2.1.7-SNAPSHOT</version>
+  <packaging>bundle</packaging>
 
-    <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/api</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/api</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/scripting/api</url>
-    </scm>
+  <name>Apache Sling Scripting Implementation API</name>
+  <description>This bundle provides the internal API to implement scripting.</description>
 
-   <properties>
-        <sling.java.version>6</sling.java.version>
-    </properties>
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/api</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/scripting/api
+    </developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/bundles/scripting/api</url>
+  </scm>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-scr-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <instructions>
-                        <Import-Package>
-                            javax.script
-                        </Import-Package>
-                        <Export-Package>
-                            org.apache.sling.scripting.api;version=2.2.0
-                        </Export-Package>
-                    </instructions>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+  <properties>
+    <sling.java.version>6</sling.java.version>
+  </properties>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr.annotations</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-        </dependency>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Import-Package>
+              javax.script
+            </Import-Package>
+            <Export-Package>
+              org.apache.sling.scripting.api;version=2.2.0
+            </Export-Package>
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-        </dependency>
-    </dependencies>
 </project>

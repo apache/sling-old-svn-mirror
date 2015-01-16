@@ -18,6 +18,7 @@
  */
 package org.apache.sling.discovery.impl.setup;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,27 +40,40 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.testing.jcr.RepositoryProvider;
+import org.apache.sling.commons.testing.jcr.RepositoryUtil;
+import org.apache.sling.jcr.api.SlingRepository;
 
 public class MockedResourceResolver implements ResourceResolver {
 
-	private final Repository repository;
-	
+	private final SlingRepository repository;
+
 	private Session session;
-	
+
     private List<MockedResource> resources = new LinkedList<MockedResource>();
 
     public MockedResourceResolver() throws RepositoryException {
     	this(null);
     }
 
-    public MockedResourceResolver(Repository repositoryOrNull) throws RepositoryException {
+    public MockedResourceResolver(SlingRepository repositoryOrNull) throws RepositoryException {
     	if (repositoryOrNull==null) {
     		this.repository = RepositoryProvider.instance().getRepository();
+    		Session adminSession = null;
+    		try {
+    		    adminSession = this.repository.loginAdministrative(null);
+                RepositoryUtil.registerSlingNodeTypes(adminSession);
+    		} catch ( final IOException ioe ) {
+    		    throw new RepositoryException(ioe);
+    		} finally {
+    		    if ( adminSession != null ) {
+    		        adminSession.logout();
+    		    }
+    		}
     	} else {
     		this.repository = repositoryOrNull;
     	}
     }
-    
+
     public Session getSession() throws RepositoryException {
         synchronized (this) {
             if (session != null) {
@@ -73,14 +87,14 @@ public class MockedResourceResolver implements ResourceResolver {
     private Repository getRepository() {
     	return repository;
     }
-    
+
     private Session createSession() throws RepositoryException {
         final Credentials credentials = new SimpleCredentials("admin",
                 "admin".toCharArray());
         return repository.login(credentials, "default");
     }
-	
-	
+
+
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         if (type.equals(Session.class)) {

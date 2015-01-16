@@ -18,6 +18,8 @@
  */
 package org.apache.sling.installer.api.tasks;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * The install task factory creates a task for a given
  * resource.
@@ -25,6 +27,7 @@ package org.apache.sling.installer.api.tasks;
  * checks a resource if it is installable by this plugin
  * and creates an appropriate task.
  */
+@ConsumerType
 public interface InstallTaskFactory {
 
     /**

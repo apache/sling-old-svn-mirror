@@ -30,6 +30,7 @@ import javax.management.ObjectName;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
+import org.apache.sling.hc.api.execution.HealthCheckExecutionOptions;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.core.impl.executor.ExtendedHealthCheckExecutor;
 import org.apache.sling.hc.util.HealthCheckMetadata;
@@ -144,6 +145,11 @@ public class HealthCheckMBeanTest {
                         return false;
                     }
                 };
+            }
+
+            @Override
+            public List<HealthCheckExecutionResult> execute(HealthCheckExecutionOptions options, String... tags) {
+                return null;
             }
         });
         final ObjectName name = new ObjectName(OBJECT_NAME);

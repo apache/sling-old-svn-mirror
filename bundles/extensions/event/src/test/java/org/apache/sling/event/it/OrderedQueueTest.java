@@ -20,12 +20,15 @@ package org.apache.sling.event.it;
 
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.sling.event.impl.Barrier;
@@ -93,8 +96,15 @@ public class OrderedQueueTest extends AbstractJobHandlingTest {
         final ServiceRegistration jcReg = this.registerJobConsumer("sling/orderedtest/*",
                 new JobConsumer() {
 
+                    private volatile int lastCounter = -1;
+
                     @Override
                     public JobResult process(final Job job) {
+                        final int counter = job.getProperty("counter", -10);
+                        assertNotEquals("Counter property is missing", -10, counter);
+                        assertTrue("Counter should only increment by max of 1 " + counter + " - " + lastCounter,
+                                counter == lastCounter || counter == lastCounter +1);
+                        lastCounter = counter;
                         if ("sling/orderedtest/start".equals(job.getTopic()) ) {
                             cb.block();
                             return JobResult.OK;
@@ -131,7 +141,9 @@ public class OrderedQueueTest extends AbstractJobHandlingTest {
 
         try {
             // we first sent one event to get the queue started
-            jobManager.addJob("sling/orderedtest/start", null);
+            final Map<String, Object> properties = new HashMap<String, Object>();
+            properties.put("counter", -1);
+            jobManager.addJob("sling/orderedtest/start", properties);
             assertTrue("No event received in the given time.", cb.block(5));
             cb.reset();
 
@@ -147,7 +159,9 @@ public class OrderedQueueTest extends AbstractJobHandlingTest {
             // we start "some" jobs:
             for(int i = 0; i < NUM_JOBS; i++ ) {
                 final String subTopic = "sling/orderedtest/sub" + (i % 10);
-                jobManager.addJob(subTopic, null);
+                properties.clear();
+                properties.put("counter", i);
+                jobManager.addJob(subTopic, properties);
             }
             // start the queue
             q.resume();

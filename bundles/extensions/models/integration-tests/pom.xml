@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>20</version>
+        <version>22</version>
         <relativePath>../../../../parent/pom.xml</relativePath>
     </parent>
 
@@ -73,6 +73,9 @@
         
         <!-- Options for the VM that executes our runnable jar -->
         <jar.executor.vm.options>-Xmx512m</jar.executor.vm.options>
+        <!-- Alternative with JVM debug port
+        <jar.executor.vm.options>-Xmx512m -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=38080,suspend=n</jar.executor.vm.options>
+        -->
         
         <!-- Change this to use longer or shorter timeouts for testing -->
         <sling.testing.timeout.multiplier>1.0</sling.testing.timeout.multiplier>
@@ -246,10 +249,11 @@
             <version>1.0.8</version>
             <scope>provided</scope>
         </dependency>
+        <!-- use 1.0.9-SNAPSHOT due to SLING-3819, SLING-4249 -->
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.tools</artifactId>
-            <version>1.0.8</version>
+            <version>1.0.9-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -316,7 +320,7 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad</artifactId>
             <classifier>standalone</classifier>
-            <version>7-SNAPSHOT</version>
+            <version>7</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

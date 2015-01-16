@@ -27,15 +27,15 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.sling.slingstart.model.SSMDeliverable;
-import org.apache.sling.slingstart.model.xml.XMLSSMModelWriter;
+import org.apache.sling.provisioning.model.Model;
+import org.apache.sling.provisioning.model.io.ModelWriter;
 
 /**
  * Attaches the subsystem as a project artifact.
  *
  */
 @Mojo(
-        name = "attach-slingsubsystem",
+        name = "attach-slingfeature",
         defaultPhase = LifecyclePhase.PACKAGE,
         requiresDependencyResolution = ResolutionScope.TEST,
         threadSafe = true
@@ -44,14 +44,15 @@ public class AttachSlingStartModel extends AbstractSlingStartMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        final SSMDeliverable model = this.readModel();
+        final Model model = ModelUtils.getRawModel(this.project);
 
-        final File outputFile = new File(this.project.getBuild().getDirectory() + File.separatorChar + "slingstart.xml");
+        final File outputFile = new File(this.project.getBuild().getDirectory() + File.separatorChar + "slingstart.txt");
         outputFile.getParentFile().mkdirs();
         Writer writer = null;
         try {
+
             writer = new FileWriter(outputFile);
-            XMLSSMModelWriter.write(writer, model);
+            ModelWriter.write(writer, model);
         } catch (IOException e) {
             throw new MojoExecutionException("Unable to write model to " + outputFile, e);
         } finally {
@@ -63,7 +64,7 @@ public class AttachSlingStartModel extends AbstractSlingStartMojo {
             project.getArtifact().setFile(outputFile);
         } else {
             // otherwise attach it as an additional artifact
-            projectHelper.attachArtifact(project, BuildConstants.TYPE_XML, BuildConstants.CLASSIFIER_PARTIAL_SYSTEM, outputFile);
+            projectHelper.attachArtifact(project, BuildConstants.PACKAGING_PARTIAL_SYSTEM, BuildConstants.CLASSIFIER_PARTIAL_SYSTEM, outputFile);
         }
     }
 }

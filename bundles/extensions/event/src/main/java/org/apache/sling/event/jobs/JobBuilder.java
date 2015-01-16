@@ -131,7 +131,7 @@ public interface JobBuilder {
         /**
          * Schedule the job for according to the cron expression.
          * If no expression is specified, the job can't be scheduled.
-         * @param date The date
+         * @param expression The cron expression
          */
         ScheduleBuilder cron(final String expression);
 

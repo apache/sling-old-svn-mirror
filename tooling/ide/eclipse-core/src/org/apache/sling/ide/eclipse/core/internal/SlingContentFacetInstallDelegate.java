@@ -16,6 +16,7 @@
  */
 package org.apache.sling.ide.eclipse.core.internal;
 
+import org.apache.sling.ide.log.Logger;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -28,7 +29,11 @@ public class SlingContentFacetInstallDelegate implements IDelegate {
     public void execute(IProject project, IProjectFacetVersion facetVersion, Object config, IProgressMonitor monitor)
             throws CoreException {
 
-        // nothing for now
+        Logger pluginLogger = Activator.getDefault().getPluginLogger();
+
+        pluginLogger.trace("Installing facet {0} on project {1}", facetVersion, project);
+
+        new ProjectDescriptionManager(pluginLogger).enableValidationBuilderAndCommand(project, monitor);
     }
 
 }

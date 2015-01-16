@@ -33,8 +33,10 @@ public interface QueueConfiguration {
         UNORDERED,          // unordered, parallel processing (push)
         ORDERED,            // ordered, FIFO (push)
         TOPIC_ROUND_ROBIN,  // unordered, parallel processing, executed based on topic (push)
-        IGNORE,             // ignore job, but do not remove
-        DROP                // drop job without processing!
+        @Deprecated
+        IGNORE,             // This queue type is not supported anymore
+        @Deprecated
+        DROP                // This queue type is not supported anymore
     }
 
     /**

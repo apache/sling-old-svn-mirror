@@ -35,7 +35,6 @@ import org.apache.sling.auth.form.FormReason;
  */
 @Component
 @Properties( {
-    @Property(name = "service.vendor", value = "The Apache Software Foundation"),
     @Property(name = "service.description", value = "Default Login Form for Form Based Authentication") })
 @Service(value = Servlet.class)
 @SuppressWarnings("serial")

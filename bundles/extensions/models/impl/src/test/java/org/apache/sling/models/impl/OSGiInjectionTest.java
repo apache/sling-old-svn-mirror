@@ -48,7 +48,6 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 
 @RunWith(MockitoJUnitRunner.class)
-@SuppressWarnings("javadoc")
 public class OSGiInjectionTest {
     private ModelAdapterFactory factory;
 

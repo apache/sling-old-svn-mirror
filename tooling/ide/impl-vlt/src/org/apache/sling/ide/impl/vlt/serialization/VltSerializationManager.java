@@ -128,6 +128,12 @@ public class VltSerializationManager implements SerializationManager {
             return file.getAbsolutePath();
         }
 
+        // assume that delete file with the xml extension is a full serialization aggregate
+        // TODO - this can generate false results
+        if (!file.exists()) {
+            return getPathWithoutXmlExtension(file);
+        }
+
         // TODO - refrain from doing I/O here
         // TODO - copied from TransactionImpl
         InputStream in = null;
@@ -135,7 +141,7 @@ public class VltSerializationManager implements SerializationManager {
             in = new BufferedInputStream(new FileInputStream(file));
             SerializationType serType = XmlAnalyzer.analyze(new InputSource(in));
             if (serType == SerializationType.XML_DOCVIEW) {
-                return file.getAbsolutePath().substring(0, file.getAbsolutePath().length() - EXTENSION_XML.length());
+                return getPathWithoutXmlExtension(file);
             }
 
             return file.getAbsolutePath();
@@ -144,6 +150,10 @@ public class VltSerializationManager implements SerializationManager {
         } finally {
             IOUtils.closeQuietly(in);
         }
+    }
+
+    private String getPathWithoutXmlExtension(File file) {
+        return file.getAbsolutePath().substring(0, file.getAbsolutePath().length() - EXTENSION_XML.length());
     }
 
     @Override
@@ -164,8 +174,34 @@ public class VltSerializationManager implements SerializationManager {
 
     @Override
     public String getRepositoryPath(String osPath) {
-        // TODO - this is a bit risky, we might clean legitimate directories which contain '.dir'
-        return PlatformNameFormat.getRepositoryPath(osPath).replace(".dir/", "/");
+
+        String repositoryPath;
+        String name = Text.getName(osPath);
+        if (name.equals(Constants.DOT_CONTENT_XML)) {
+            // TODO - this is a bit risky, we might clean legitimate directories which contain '.dir'
+            String parentPath = Text.getRelativeParent(osPath, 1);
+            if (parentPath != null && parentPath.endsWith(".dir")) {
+                parentPath = parentPath.substring(0, parentPath.length() - ".dir".length());
+            }
+            repositoryPath = PlatformNameFormat.getRepositoryPath(parentPath);
+        } else {
+            // TODO - we assume here that it's a full coverage aggregate but it might not be
+            if (osPath.endsWith(EXTENSION_XML)) {
+                repositoryPath = PlatformNameFormat.getRepositoryPath(osPath.substring(0, osPath.length()
+                        - EXTENSION_XML.length()));
+            } else {
+                repositoryPath = PlatformNameFormat.getRepositoryPath(osPath).replace(".dir/", "/");
+            }
+        }
+
+        // TODO extract into PathUtils
+        if (repositoryPath.length() > 0 && repositoryPath.charAt(0) != '/') {
+            repositoryPath = '/' + repositoryPath;
+        } else if (repositoryPath.length() == 0) {
+            repositoryPath = "/";
+        }
+
+        return repositoryPath;
     }
 
     @Override
@@ -205,30 +241,7 @@ public class VltSerializationManager implements SerializationManager {
         if (source == null)
             return null;
 
-        String repositoryPath;
-        String name = Text.getName(filePath);
-        if (name.equals(Constants.DOT_CONTENT_XML)) {
-            // TODO - generalize instead of special-casing the parent name
-            String parentPath = Text.getRelativeParent(filePath, 1);
-            if (parentPath != null && parentPath.endsWith(".dir")) {
-                parentPath = parentPath.substring(0, parentPath.length() - ".dir".length());
-            }
-            repositoryPath = PlatformNameFormat.getRepositoryPath(parentPath);
-        } else {
-            if (!filePath.endsWith(EXTENSION_XML)) {
-                throw new IllegalArgumentException("Don't know how to extract resource path from file named "
-                        + filePath);
-            }
-            repositoryPath = PlatformNameFormat.getRepositoryPath(filePath.substring(0,
-                    filePath.length() - EXTENSION_XML.length()));
-        }
-
-        // TODO extract into PathUtils
-        if (repositoryPath.length() > 0 && repositoryPath.charAt(0) != '/') {
-            repositoryPath = '/' + repositoryPath;
-        } else if (repositoryPath.length() == 0) {
-            repositoryPath = "/";
-        }
+        String repositoryPath = getRepositoryPath(filePath);
 
         try {
             SAXParserFactory factory = SAXParserFactory.newInstance();

@@ -40,7 +40,7 @@ public class SlingLaunchpadConfiguration {
 
     public static final String KARAF_ARTIFACT_ID = "apache-karaf";
 
-    public static final String KARAF_VERSION = "3.0.1";
+    public static final String KARAF_VERSION = "3.0.2";
 
     public static final String KARAF_NAME = "Apache Karaf";
 
@@ -101,13 +101,16 @@ public class SlingLaunchpadConfiguration {
             addBootFeature("sling-auth-openid"),
             addBootFeature("sling-auth-selector"),
             addBootFeature("sling-scripting-groovy"),
+            addBootFeature("sling-installer-provider-jcr"),
             // misc (legacy, snapshots, ...) stuff
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.servlets.compat").version("1.0.3-SNAPSHOT"),
             // test support
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.junit.core").version("1.0.9-SNAPSHOT"),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.junit.remote").version("1.0.9-SNAPSHOT"),
             mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.junit.scriptable").version("1.0.9-SNAPSHOT"),
-            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.launchpad.test-services").version("2.0.9-SNAPSHOT")
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.launchpad.test-services").version("2.0.9-SNAPSHOT"),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.launchpad.test-fragment").version("2.0.9-SNAPSHOT"),
+            mavenBundle().groupId("org.apache.sling").artifactId("org.apache.sling.testing.samples.failingtests").version("1.0.6")
         );
     }
 

@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.StringTokenizer;
 
 import javax.jcr.Node;
@@ -131,16 +130,12 @@ public class JcrResourceUtil {
      * @return the value or null if not convertible to a valid PropertyType
      * @throws RepositoryException in case of error, accessing the Repository
      */
-    public static Value createValue(Object value, Session session)
-            throws RepositoryException {
+    public static Value createValue(final Object value, final Session session)
+    throws RepositoryException {
         Value val;
         ValueFactory fac = session.getValueFactory();
         if(value instanceof Calendar) {
             val = fac.createValue((Calendar)value);
-        } else if(value instanceof Date) {
-            Calendar calendarValue = Calendar.getInstance();
-            calendarValue.setTime((Date)value);
-            val = fac.createValue(calendarValue);
         } else if (value instanceof InputStream) {
             val = fac.createValue(fac.createBinary((InputStream)value));
         } else if (value instanceof Node) {
@@ -157,7 +152,7 @@ public class JcrResourceUtil {
             val = fac.createValue(((Number)value).doubleValue());
         } else if (value instanceof Boolean) {
             val = fac.createValue((Boolean) value);
-        } else if ( value instanceof String ){
+        } else if ( value instanceof String ) {
             val = fac.createValue((String)value);
         } else {
             val = null;

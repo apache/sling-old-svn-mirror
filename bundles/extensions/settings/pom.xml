@@ -23,13 +23,13 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>20</version>
+        <version>22</version>
         <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>org.apache.sling.settings</artifactId>
     <packaging>bundle</packaging>
-    <version>1.3.3-SNAPSHOT</version>
+    <version>1.3.5-SNAPSHOT</version>
 
     <name>Apache Sling Settings</name>
     <description>
@@ -71,10 +71,11 @@
                             org.apache.sling.settings.impl.Activator
                         </Bundle-Activator>
                         <DynamicImport-Package>
-                            org.osgi.service.cm
+                            org.osgi.service.cm,
+                            org.apache.felix.shell
                         </DynamicImport-Package>
                         <Import-Package>
-                            !org.osgi.service.cm,
+                            org.osgi.service.cm;resolution:=optional,
                             org.apache.felix.shell;resolution:=optional, 
                             *
                         </Import-Package>

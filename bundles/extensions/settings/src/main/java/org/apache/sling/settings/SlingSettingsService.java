@@ -89,24 +89,28 @@ public interface SlingSettingsService {
      * Utility method to generate an absolute path
      * within Sling Home.
      *
+     * @return the absolute including the sling home directory.
      * @since 1.1.0
      */
     String getAbsolutePathWithinSlingHome(String relativePath);
 
     /**
      * The identifier of the running Sling instance.
+     * @return The unique Sling identifier.
      */
     String getSlingId();
 
     /**
      * Returns the value of the {@link #SLING_HOME}
      * property.
+     * @return The sling home.
      */
     String getSlingHomePath();
 
     /**
      * Returns the value of the {@link #SLING_HOME_URL}
      * property.
+     * @return Sling home as a URL.
      */
     URL getSlingHome();
 
@@ -120,12 +124,14 @@ public interface SlingSettingsService {
     /**
      * Return the optional name of the instance.
      * @return The name of the instance or <code>null</code>.
+     * @since 1.3
      */
     String getSlingName();
 
     /**
      * Return the optional description of the instance.
      * @return The description of the instance or <code>null</code>.
+     * @since 1.3
      */
     String getSlingDescription();
 }

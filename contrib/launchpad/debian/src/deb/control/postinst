@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+echo $0 $*
+[ "$DEBUG" ] && set -x
+
+
+
+SLING_DEFAULTS=/etc/default/sling
+if [ ! -e $SLING_DEFAULTS ] ; then
+	cp $SLING_DEFAULTS.sample $SLING_DEFAULTS
+fi
+. $SLING_DEFAULTS
+
+chmod +x /etc/init.d/sling
+
+# Check for sling user
+if ! getent passwd | grep -q sling ; then
+	useradd --home-dir $SLING_HOME --gid adm $SLING_USER
+fi
+
+# Make data dir
+SLING_DATA=/var/lib/sling
+if [ ! -d $SLING_DATA ] ; then
+	echo Create $SLING_DATA
+	mkdir -p $SLING_DATA
+	chown -R $SLING_USER:adm $SLING_DATA
+fi
+
+# Make log dir
+if [ ! -d $SLING_LOG_DIR ] ; then
+	echo Create $SLING_LOG_DIR
+	mkdir -p $SLING_LOG_DIR
+	chown -R $SLING_USER:adm $SLING_LOG_DIR
+fi
+
+update-rc.d sling defaults
+
+if service sling status; then
+	service sling restart
+fi
+

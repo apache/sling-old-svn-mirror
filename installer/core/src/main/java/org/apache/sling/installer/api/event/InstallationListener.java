@@ -18,6 +18,8 @@
  */
 package org.apache.sling.installer.api.event;
 
+import aQute.bnd.annotation.ConsumerType;
+
 
 /**
  * Optional listener which can be used to monitor the activities
@@ -25,6 +27,7 @@ package org.apache.sling.installer.api.event;
  *
  * @since 1.0
  */
+@ConsumerType
 public interface InstallationListener {
 
     /**

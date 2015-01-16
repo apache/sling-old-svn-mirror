@@ -36,26 +36,25 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.api.SlingConstants;
-import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.QuerySyntaxException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.scheduler.JobContext;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
-import org.apache.sling.discovery.TopologyEvent;
-import org.apache.sling.discovery.TopologyEvent.Type;
-import org.apache.sling.discovery.TopologyEventListener;
+import org.apache.sling.event.impl.jobs.config.ConfigurationChangeListener;
+import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.impl.support.ScheduleInfoImpl;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobBuilder;
+import org.apache.sling.event.jobs.JobUtil;
+import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.ScheduleInfo;
 import org.apache.sling.event.jobs.ScheduleInfo.ScheduleType;
 import org.apache.sling.event.jobs.ScheduledJobInfo;
@@ -70,7 +69,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class JobSchedulerImpl
-    implements EventHandler, TopologyEventListener, org.apache.sling.commons.scheduler.Job {
+    implements EventHandler, ConfigurationChangeListener, org.apache.sling.commons.scheduler.Job {
 
     private static final String TOPIC_READ_JOB = "org/apache/sling/event/impl/jobs/READSCHEDULEDJOB";
 
@@ -87,9 +86,7 @@ public class JobSchedulerImpl
     /** Is this active? */
     private volatile boolean active;
 
-    private final ResourceResolverFactory resourceResolverFactory;
-
-    private final JobManagerConfiguration config;
+    private final JobManagerConfiguration configuration;
 
     private final Scheduler scheduler;
 
@@ -104,11 +101,9 @@ public class JobSchedulerImpl
     private final Map<String, ScheduledJobInfoImpl> scheduledJobs = new HashMap<String, ScheduledJobInfoImpl>();
 
     public JobSchedulerImpl(final JobManagerConfiguration configuration,
-            final ResourceResolverFactory resourceResolverFactory,
             final Scheduler scheduler,
             final JobManagerImpl jobManager) {
-        this.config = configuration;
-        this.resourceResolverFactory = resourceResolverFactory;
+        this.configuration = configuration;
         this.scheduler = scheduler;
         this.running = true;
         this.jobManager = jobManager;
@@ -127,12 +122,14 @@ public class JobSchedulerImpl
             }
         });
         backgroundThread.start();
+        this.configuration.addListener(this);
     }
 
     /**
      * Deactivate this component.
      */
     public void deactivate() {
+        this.configuration.removeListener(this);
         this.running = false;
         this.stopScheduling();
         synchronized ( this.scheduledJobs ) {
@@ -142,7 +139,7 @@ public class JobSchedulerImpl
         // stop background threads by putting empty objects into the queue
         this.queue.clear();
         try {
-            this.queue.put(new Event(Utility.TOPIC_STOPPED, (Dictionary<String, Object>)null));
+            this.queue.put(new Event(NotificationConstants.TOPIC_JOB_REMOVED, (Dictionary<String, Object>)null));
         } catch (final InterruptedException e) {
             this.ignoreException(e);
             Thread.currentThread().interrupt();
@@ -168,7 +165,7 @@ public class JobSchedulerImpl
     }
 
     /**
-     * @see org.apache.sling.event.impl.AbstractRepositoryEventHandler#runInBackground()
+     * This is the background thread processing new scheduled jobs.
      */
     protected void runInBackground() {
         Event event = null;
@@ -199,9 +196,8 @@ public class JobSchedulerImpl
                 if ( event.getTopic().equals(SlingConstants.TOPIC_RESOURCE_ADDED)
                      || event.getTopic().equals(SlingConstants.TOPIC_RESOURCE_CHANGED)) {
                     final String path = (String)event.getProperty(SlingConstants.PROPERTY_PATH);
-                    ResourceResolver resolver = null;
+                    final ResourceResolver resolver = this.configuration.createResourceResolver();;
                     try {
-                        resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
                         final Resource eventResource = resolver.getResource(path);
                         if ( ResourceHelper.RESOURCE_TYPE_SCHEDULED_JOB.equals(eventResource.getResourceType()) ) {
                             final ReadResult result = this.readScheduledJob(eventResource);
@@ -215,12 +211,8 @@ public class JobSchedulerImpl
                                 }
                             }
                         }
-                    } catch (final LoginException le) {
-                        this.ignoreException(le);
                     } finally {
-                        if ( resolver != null ) {
-                            resolver.close();
-                        }
+                        resolver.close();
                     }
                 } else if ( event.getTopic().equals(SlingConstants.TOPIC_RESOURCE_REMOVED) ) {
                     final String path = (String)event.getProperty(SlingConstants.PROPERTY_PATH);
@@ -341,11 +333,9 @@ public class JobSchedulerImpl
     }
 
     public void unschedule(final ScheduledJobInfoImpl info) {
-        ResourceResolver resolver = null;
+        final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-            final StringBuilder sb = new StringBuilder(this.config.getScheduledJobsPathWithSlash());
-            sb.append('/');
+            final StringBuilder sb = new StringBuilder(this.configuration.getScheduledJobsPath(true));
             sb.append(ResourceHelper.filterName(info.getName()));
             final String path = sb.toString();
 
@@ -354,15 +344,11 @@ public class JobSchedulerImpl
                 resolver.delete(eventResource);
                 resolver.commit();
             }
-        } catch (final LoginException le) {
-            this.ignoreException(le);
         } catch (final PersistenceException pe) {
             // we ignore the exception if removing fails
             ignoreException(pe);
         } finally {
-            if ( resolver != null ) {
-                resolver.close();
-            }
+            resolver.close();
         }
     }
 
@@ -387,11 +373,10 @@ public class JobSchedulerImpl
                         @Override
                         public void run() {
                             synchronized (unloadedEvents) {
-                                ResourceResolver resolver = null;
+                                final ResourceResolver resolver = configuration.createResourceResolver();
                                 final Set<String> newUnloadedEvents = new HashSet<String>();
                                 newUnloadedEvents.addAll(unloadedEvents);
                                 try {
-                                    resolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
                                     for(final String path : unloadedEvents ) {
                                         newUnloadedEvents.remove(path);
                                         final Resource eventResource = resolver.getResource(path);
@@ -409,13 +394,8 @@ public class JobSchedulerImpl
                                             }
                                         }
                                     }
-                                } catch (final LoginException re) {
-                                    // unable to create resource resolver so we try it again next time
-                                    ignoreException(re);
                                 } finally {
-                                    if ( resolver != null ) {
-                                        resolver.close();
-                                    }
+                                    resolver.close();
                                     unloadedEvents.clear();
                                     unloadedEvents.addAll(newUnloadedEvents);
                                 }
@@ -428,7 +408,7 @@ public class JobSchedulerImpl
             } else {
                 final String path = (String)event.getProperty(SlingConstants.PROPERTY_PATH);
                 final String resourceType = (String)event.getProperty(SlingConstants.PROPERTY_RESOURCE_TYPE);
-                if ( path != null && path.startsWith(this.config.getScheduledJobsPathWithSlash())
+                if ( path != null && path.startsWith(this.configuration.getScheduledJobsPath(true))
                      && (resourceType == null || ResourceHelper.RESOURCE_TYPE_SCHEDULED_JOB.equals(resourceType))) {
                     logger.debug("Received resource event for {} : {}", path, resourceType);
                     try {
@@ -446,9 +426,8 @@ public class JobSchedulerImpl
      * Load all scheduled jobs from the resource tree
      */
     private void loadScheduledJobs(final long startTime) {
-        ResourceResolver resolver = null;
+        final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
             final Calendar startDate = Calendar.getInstance();
             startDate.setTimeInMillis(startTime);
 
@@ -468,7 +447,7 @@ public class JobSchedulerImpl
             while ( result.hasNext() ) {
                 final Resource eventResource = result.next();
                 // sanity check for the path
-                if ( eventResource.getPath().startsWith(this.config.getScheduledJobsPathWithSlash()) ) {
+                if ( eventResource.getPath().startsWith(this.configuration.getScheduledJobsPath(true)) ) {
                     final ReadResult readResult = this.readScheduledJob(eventResource);
                     if ( readResult != null ) {
                         if ( readResult.hasReadErrors ) {
@@ -489,12 +468,8 @@ public class JobSchedulerImpl
 
         } catch (final QuerySyntaxException qse) {
             this.ignoreException(qse);
-        } catch (final LoginException le) {
-            this.ignoreException(le);
         } finally {
-            if ( resolver != null ) {
-                resolver.close();
-            }
+            resolver.close();
         }
     }
 
@@ -545,9 +520,8 @@ public class JobSchedulerImpl
             final boolean suspend,
             final List<ScheduleInfoImpl> scheduleInfos)
     throws PersistenceException {
-        ResourceResolver resolver = null;
+        final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
 
             // create properties
             final Map<String, Object> properties = new HashMap<String, Object>();
@@ -563,7 +537,7 @@ public class JobSchedulerImpl
 
             properties.put(ResourceHelper.PROPERTY_JOB_TOPIC, jobTopic);
             if ( jobName != null ) {
-                properties.put(ResourceHelper.PROPERTY_JOB_NAME, jobName);
+                properties.put(JobUtil.PROPERTY_JOB_NAME, jobName);
             }
             properties.put(Job.PROPERTY_JOB_CREATED, Calendar.getInstance());
             properties.put(Job.PROPERTY_JOB_CREATED_INSTANCE, Environment.APPLICATION_ID);
@@ -584,7 +558,7 @@ public class JobSchedulerImpl
             // create path and resource
             properties.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, ResourceHelper.RESOURCE_TYPE_SCHEDULED_JOB);
 
-            final String path = this.config.getScheduledJobsPathWithSlash() + ResourceHelper.filterName(scheduleName);
+            final String path = this.configuration.getScheduledJobsPath(true) + ResourceHelper.filterName(scheduleName);
 
             // update existing resource
             final Resource existingInfo = resolver.getResource(path);
@@ -605,15 +579,9 @@ public class JobSchedulerImpl
             properties.put(ResourceHelper.PROPERTY_SCHEDULE_INFO, scheduleInfos);
 
             return this.addOrUpdateScheduledJob(properties);
-        } catch ( final LoginException le ) {
-            // we ignore this
-            this.ignoreException(le);
         } finally {
-            if ( resolver != null ) {
-                resolver.close();
-            }
+            resolver.close();
         }
-        return null;
     }
 
     /**
@@ -626,22 +594,22 @@ public class JobSchedulerImpl
         }
     }
 
-    /**
-     * @see org.apache.sling.discovery.TopologyEventListener#handleTopologyEvent(org.apache.sling.discovery.TopologyEvent)
-     */
     @Override
-    public void handleTopologyEvent(final TopologyEvent event) {
-        if ( event.getType() == Type.TOPOLOGY_CHANGING ) {
+    public void configurationChanged(final boolean active) {
+        if ( !active ) {
             this.active = false;
             this.stopScheduling();
-        } else if ( event.getType() == Type.TOPOLOGY_CHANGED || event.getType() == Type.TOPOLOGY_INIT ) {
+        } else {
             final boolean previouslyActive = this.active;
-            this.active = event.getNewView().getLocalInstance().isLeader();
-            if ( this.active && !previouslyActive ) {
-                this.startScheduling();
-            }
-            if ( !this.active && previouslyActive ) {
-                this.stopScheduling();
+            final JobManagerConfiguration config = this.configuration;
+            if ( config != null ) {
+                this.active = config.getTopologyCapabilities().isLeader();
+                if ( this.active && !previouslyActive ) {
+                    this.startScheduling();
+                }
+                if ( !this.active && previouslyActive ) {
+                    this.stopScheduling();
+                }
             }
         }
     }
@@ -763,11 +731,9 @@ public class JobSchedulerImpl
     }
 
     public void setSuspended(final ScheduledJobInfoImpl info, final boolean flag) {
-        ResourceResolver resolver = null;
+        final ResourceResolver resolver = configuration.createResourceResolver();
         try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-            final StringBuilder sb = new StringBuilder(this.config.getScheduledJobsPathWithSlash());
-            sb.append('/');
+            final StringBuilder sb = new StringBuilder(this.configuration.getScheduledJobsPath(true));
             sb.append(ResourceHelper.filterName(info.getName()));
             final String path = sb.toString();
 
@@ -781,15 +747,11 @@ public class JobSchedulerImpl
                 }
                 resolver.commit();
             }
-        } catch (final LoginException le) {
-            this.ignoreException(le);
         } catch (final PersistenceException pe) {
             // we ignore the exception if removing fails
             ignoreException(pe);
         } finally {
-            if ( resolver != null ) {
-                resolver.close();
-            }
+            resolver.close();
         }
     }
 }

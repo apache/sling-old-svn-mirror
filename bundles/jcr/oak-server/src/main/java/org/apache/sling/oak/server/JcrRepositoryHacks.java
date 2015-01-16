@@ -31,74 +31,23 @@ import org.apache.jackrabbit.oak.spi.security.SecurityProvider;
 import org.apache.jackrabbit.oak.spi.whiteboard.Whiteboard;
 
 class JcrRepositoryHacks extends RepositoryImpl {
-    
-    // TODO TCCL switching shouldn't be needed?
-    // LoginModules are not found without this
-    static abstract class LoginHelper {
-        Session TCCLLogin() throws RepositoryException {
-            final Thread thread = Thread.currentThread();
-            final ClassLoader loader = thread.getContextClassLoader();
-            try {
-                thread.setContextClassLoader(Oak.class.getClassLoader());
-                return doLogin();
-            } finally {
-                thread.setContextClassLoader(loader);
-            }
-            
-        }
-        
-        protected abstract Session doLogin() throws RepositoryException;
-    };
-    
+
 	JcrRepositoryHacks(ContentRepository contentRepository, Whiteboard whiteboard, 
 	        SecurityProvider securityProvider, int observationQueueLenght, CommitRateLimiter commitRateLimiter) {
 		super(contentRepository, whiteboard, securityProvider, observationQueueLenght, commitRateLimiter);
 	}
-	
-    @Override
-    public Session login() throws RepositoryException {
-        return new LoginHelper() {
-            protected Session doLogin() throws RepositoryException {
-                return JcrRepositoryHacks.super.login();
-            }
-        }.TCCLLogin();
-    }
 
     @Override
-    public Session login(final Credentials creds, final String workspace, final Map<String, Object> opt)
-            throws RepositoryException {
-        return new LoginHelper() {
-            protected Session doLogin() throws RepositoryException {
-                return JcrRepositoryHacks.super.login(creds, workspace, opt);
-            }
-        }.TCCLLogin();
-    }
-
-    @Override
-    public Session login(final Credentials credentials) throws RepositoryException {
-        return new LoginHelper() {
-            protected Session doLogin() throws RepositoryException {
-                return JcrRepositoryHacks.super.login(credentials);
-            }
-        }.TCCLLogin();
-    }
-
-    @Override
-    public Session login(final String workspace) throws RepositoryException {
-        return new LoginHelper() {
-            protected Session doLogin() throws RepositoryException {
-                return JcrRepositoryHacks.super.login(workspace);
-            }
-        }.TCCLLogin();
-    }
-
-    @Override
-    public Session login(final Credentials credentials, final String workspace)
-            throws RepositoryException {
-        return new LoginHelper() {
-            protected Session doLogin() throws RepositoryException {
-                return JcrRepositoryHacks.super.login(credentials, workspace);
-            }
-        }.TCCLLogin();
+    public Session login(
+            Credentials credentials, String workspace,
+            Map<String, Object> attributes) throws RepositoryException {
+        Thread thread = Thread.currentThread();
+        ClassLoader loader = thread.getContextClassLoader();
+        try {
+            thread.setContextClassLoader(Oak.class.getClassLoader());
+            return super.login(credentials, workspace, attributes);
+        } finally {
+            thread.setContextClassLoader(loader);
+        }
     }
 }

@@ -81,6 +81,7 @@ import org.apache.sling.api.scripting.SlingScriptResolver;
 import org.apache.sling.api.servlets.OptingServlet;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.engine.ResponseUtil;
 import org.apache.sling.engine.servlets.ErrorHandler;
 import org.apache.sling.servlets.resolver.internal.defaults.DefaultErrorHandlerServlet;
 import org.apache.sling.servlets.resolver.internal.defaults.DefaultServlet;
@@ -754,19 +755,22 @@ public class SlingServletResolver
             request.setAttribute(SlingConstants.ERROR_SERVLET_NAME, errorHandler.getServletConfig().getServletName());
         }
 
+        // Let the error handler servlet process the request and
+        // forward all exceptions if it fails.
+        // Before SLING-4143 we only forwarded IOExceptions.
         try {
             errorHandler.service(request, response);
             // commit the response
             response.flushBuffer();
             // close the response (SLING-2724)
             response.getWriter().close();
-        } catch (final IOException ioe) {
-            // forward the IOException
-            throw ioe;
         } catch (final Throwable t) {
             LOGGER.error("Calling the error handler resulted in an error", t);
             LOGGER.error("Original error " + request.getAttribute(SlingConstants.ERROR_EXCEPTION_TYPE),
                     (Throwable) request.getAttribute(SlingConstants.ERROR_EXCEPTION));
+            final IOException x = new IOException("Error handler failed: " + t.getClass().getName());
+            x.initCause(t);
+            throw x;
         }
     }
 
@@ -850,7 +854,7 @@ public class SlingServletResolver
                 properties);
 
         this.plugin = new ServletResolverWebConsolePlugin(context.getBundleContext());
-        
+
         try {
             Dictionary<String, String> mbeanProps = new Hashtable<String, String>();
             mbeanProps.put("jmx.objectname", "org.apache.sling:type=servletResolver,service=SlingServletResolverCache");
@@ -1183,7 +1187,7 @@ public class SlingServletResolver
                 pw.print(PARAMETER_URL);
                 pw.print("' value='");
                 if ( url != null ) {
-                    pw.print(url);
+                    pw.print(ResponseUtil.escapeXml(url));
                 }
                 pw.println("' class='input' size='50'>");
                 closeTd(pw);
@@ -1211,7 +1215,7 @@ public class SlingServletResolver
                     pw.println("<dl>");
                     pw.println("<dt>Path</dt>");
                     pw.print("<dd>");
-                    pw.print(requestPathInfo.getResourcePath());
+                    pw.print(ResponseUtil.escapeXml(requestPathInfo.getResourcePath()));
                     pw.print("<br/>");
                     pw.print(CONSOLE_PATH_WARNING);
                     pw.println("</dd>");
@@ -1221,19 +1225,19 @@ public class SlingServletResolver
                         pw.print("&lt;none&gt;");
                     } else {
                         pw.print("[");
-                        pw.print(StringUtils.join(requestPathInfo.getSelectors(), ", "));
+                        pw.print(ResponseUtil.escapeXml(StringUtils.join(requestPathInfo.getSelectors(), ", ")));
                         pw.print("]");
                     }
                     pw.println("</dd>");
                     pw.println("<dt>Extension</dt>");
                     pw.print("<dd>");
-                    pw.print(requestPathInfo.getExtension());
+                    pw.print(ResponseUtil.escapeXml(requestPathInfo.getExtension()));
                     pw.println("</dd>");
                     pw.println("</dl>");
                     pw.println("</dd>");
                     pw.println("<dt>Suffix</dt>");
                     pw.print("<dd>");
-                    pw.print(requestPathInfo.getSuffix());
+                    pw.print(ResponseUtil.escapeXml(requestPathInfo.getSuffix()));
                     pw.println("</dd>");
                     pw.println("</dl>");
                     closeTd(pw);
@@ -1263,7 +1267,7 @@ public class SlingServletResolver
                         pw.println("Could not find a suitable servlet for this request!");
                     } else {
                         pw.print("Candidate servlets and scripts in order of preference for method ");
-                        pw.print(method);
+                        pw.print(ResponseUtil.escapeXml(method));
                         pw.println(":<br/>");
                         pw.println("<ol class='servlets'>");
                         outputServlets(pw, servlets.iterator());
@@ -1307,7 +1311,7 @@ public class SlingServletResolver
 
         private void tdLabel(final PrintWriter pw, final String label) {
             pw.print("<td class='content'>");
-            pw.print(label);
+            pw.print(ResponseUtil.escapeXml(label));
             pw.println("</td>");
         }
 
@@ -1327,10 +1331,10 @@ public class SlingServletResolver
                     }
 
                     if (candidate instanceof SlingScript) {
-                        pw.print(candidateResource.getPath());
+                        pw.print(ResponseUtil.escapeXml(candidateResource.getPath()));
                     } else {
                         final boolean isOptingServlet = candidate instanceof OptingServlet;
-                        pw.print(candidate.getClass().getName());
+                        pw.print(ResponseUtil.escapeXml((candidate.getClass().getName())));
                         if ( isOptingServlet ) {
                             pw.print(" (OptingServlet)");
                         }
@@ -1347,14 +1351,14 @@ public class SlingServletResolver
         private void titleHtml(final PrintWriter pw, final String title, final String description) {
             tr(pw);
             pw.print("<th colspan='3' class='content container'>");
-            pw.print(title);
+            pw.print(ResponseUtil.escapeXml(title));
             pw.println("</th>");
             closeTr(pw);
 
             if (description != null) {
                 tr(pw);
                 pw.print("<td colspan='3' class='content'>");
-                pw.print(description);
+                pw.print(ResponseUtil.escapeXml(description));
                 pw.println("</th>");
                 closeTr(pw);
             }

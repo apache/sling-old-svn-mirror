@@ -18,6 +18,8 @@
  */
 package org.apache.sling.installer.api.tasks;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The retry handler should be informed by external services
  * whenever something in the system changed which might make
@@ -30,6 +32,7 @@ package org.apache.sling.installer.api.tasks;
  *
  * @since 1.2
  */
+@ProviderType
 public interface RetryHandler {
 
     /**

@@ -242,13 +242,13 @@ public class ChangeUserPasswordServlet extends AbstractUserPostServlet implement
                 "New Password does not match the confirmation password");
         }
 
-        if (oldPassword != null && oldPassword.length() > 0) {
-            // verify old password
-            checkPassword(authorizable, oldPassword);
-        }
-
         try {
-            user.changePassword(newPassword);
+            if (oldPassword != null && oldPassword.length() > 0) {
+                // verify old password
+                user.changePassword(newPassword, oldPassword);
+            } else {
+                user.changePassword(newPassword);
+            }
 
             final String passwordPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PREFIX + user.getID() + "/rep:password";
 
@@ -258,35 +258,5 @@ public class ChangeUserPasswordServlet extends AbstractUserPostServlet implement
         }
 
         return user;
-    }
-
-
-    private void checkPassword(Authorizable authorizable, String oldPassword)
-            throws RepositoryException {
-        Credentials oldCreds = ((User) authorizable).getCredentials();
-        if (oldCreds instanceof SimpleCredentials) {
-            char[] oldCredsPwd = ((SimpleCredentials) oldCreds).getPassword();
-            if (oldPassword.equals(String.valueOf(oldCredsPwd))) {
-                return;
-            }
-        } else {
-            try {
-                // CryptSimpleCredentials.matches(SimpleCredentials credentials)
-                Class<?> oldCredsClass = oldCreds.getClass();
-                Method matcher = oldCredsClass.getMethod("matches",
-                    SimpleCredentials.class);
-                SimpleCredentials newCreds = new SimpleCredentials(
-                    authorizable.getPrincipal().getName(),
-                    oldPassword.toCharArray());
-                boolean match = (Boolean) matcher.invoke(oldCreds, newCreds);
-                if (match) {
-                    return;
-                }
-            } catch (Throwable t) {
-                // failure here, fall back to password check failure below
-            }
-        }
-
-        throw new RepositoryException("Old Password does not match");
     }
 }

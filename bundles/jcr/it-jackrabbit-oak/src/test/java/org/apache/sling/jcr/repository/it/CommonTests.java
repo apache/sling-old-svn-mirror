@@ -21,10 +21,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.ops4j.pax.exam.CoreOptions.junitBundles;
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+import static org.ops4j.pax.exam.CoreOptions.vmOptions;
 
-import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -46,11 +50,15 @@ import javax.jcr.observation.ObservationManager;
 import javax.jcr.query.Query;
 
 import org.apache.jackrabbit.commons.cnd.CndImporter;
+import org.apache.sling.api.SlingConstants;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.ops4j.pax.exam.Option;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
@@ -71,14 +79,15 @@ public abstract class CommonTests {
 
     @Inject
     protected BundleContext bundleContext;
-
+    
     /** Check some repository descriptors to make sure we're
      *  testing the expected implementation. */
     protected abstract void doCheckRepositoryDescriptors();
 
     private final List<String> toDelete = new LinkedList<String>();
     private final AtomicInteger uniqueNameCounter = new AtomicInteger();
-
+    protected static final Integer TEST_SCALE = Integer.getInteger("test.scale", 1); 
+    
     public static final String I18N_MESSAGE_CND =
         "<sling = 'http://sling.apache.org/jcr/sling/1.0'>\n"
         + "[mix:language]\n"
@@ -125,6 +134,97 @@ public abstract class CommonTests {
             return jcrEventsCounter;
         }
     }
+    
+    public Collection<Option> commonOptions() {
+        final String localRepo = System.getProperty("maven.repo.local", "");
+        final String paxVmOptions = System.getProperty("pax.vm.options", "");
+        final boolean webconsole = "true".equals(System.getProperty("webconsole.active", "false"));
+        
+        final List<Option> opt = new LinkedList<Option>();
+        if(localRepo.length() > 0 ) {
+            opt.add(systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo));
+        }
+        if(paxVmOptions.length() > 0) {
+            opt.add(vmOptions(paxVmOptions));
+        }
+        
+        // Optionally add webconsole
+        if(webconsole) {
+            opt.add(mavenBundle("org.apache.felix", "org.apache.felix.webconsole", "4.2.2"));
+            opt.add(mavenBundle("org.apache.felix", "org.apache.felix.webconsole.plugins.ds", "1.0.0"));
+            opt.add(mavenBundle("org.apache.felix", "org.apache.felix.webconsole.plugins.packageadmin", "1.0.0"));
+            opt.add(mavenBundle("org.apache.felix", "org.apache.felix.webconsole.plugins.event", "1.0.2"));
+            opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.webconsole", "1.0.2"));
+            opt.add(mavenBundle("org.apache.geronimo.bundles", "json", "20090211_1"));
+        }
+        
+        final String SLF4J_VERSION = "1.7.5";
+        opt.add(mavenBundle("org.slf4j", "slf4j-api", SLF4J_VERSION));
+        opt.add(mavenBundle("org.slf4j", "jcl-over-slf4j", SLF4J_VERSION));
+        opt.add(mavenBundle("org.slf4j", "log4j-over-slf4j", SLF4J_VERSION));
+        
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.fragment.xml", "1.0.2"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.fragment.transaction", "1.0.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.fragment.activation", "1.0.2"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.fragment.ws", "1.0.2"));
+
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "4.0.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.logservice", "1.0.2"));
+
+        opt.add(mavenBundle("commons-io", "commons-io", "2.4"));
+        opt.add(mavenBundle("commons-fileupload", "commons-fileupload", "1.3.1"));
+        opt.add(mavenBundle("commons-collections", "commons-collections", "3.2.1"));
+        opt.add(mavenBundle("commons-codec", "commons-codec", "1.9"));
+        opt.add(mavenBundle("commons-lang", "commons-lang", "2.6"));
+        opt.add(mavenBundle("commons-pool", "commons-pool", "1.6"));
+
+        opt.add(mavenBundle("org.apache.servicemix.bundles", "org.apache.servicemix.bundles.concurrent", "1.3.4_1"));
+
+        opt.add(mavenBundle("org.apache.geronimo.bundles", "commons-httpclient", "3.1_1"));
+        opt.add(mavenBundle("org.apache.tika", "tika-core", "1.2"));
+        opt.add(mavenBundle("org.apache.tika", "tika-bundle", "1.2"));
+
+        opt.add(mavenBundle("org.apache.felix", "org.apache.felix.http.jetty", "2.2.2"));
+        opt.add(mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.3.2"));
+        opt.add(mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.8.2"));
+        opt.add(mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.8.0"));
+        opt.add(mavenBundle("org.apache.felix", "org.apache.felix.inventory", "1.0.4"));
+
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.2.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.json", "2.0.6"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.mime", "2.1.4"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.classloader", "1.3.2"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.scheduler", "2.4.2"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.commons.threads", "3.2.0"));
+
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.launchpad.api", "1.1.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.auth.core", "1.1.6"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.discovery.api", "1.0.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.discovery.standalone", "1.0.0"));
+
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.api", "2.8.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.settings", "1.3.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.resourceresolver", "1.1.6"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.adapter", "2.1.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.resource", "2.3.12"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.classloader", "3.2.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.contentloader", "2.1.8"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.engine", "2.3.8"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.event", "3.2.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.serviceusermapper", "1.0.0"));
+        
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.testing.tools", "1.0.6"));
+        opt.add(mavenBundle("org.apache.httpcomponents", "httpcore-osgi", "4.1.2"));
+        opt.add(mavenBundle("org.apache.httpcomponents", "httpclient-osgi", "4.1.2"));
+
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.jcr-wrapper", "2.0.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.api", "2.2.0"));
+        opt.add(mavenBundle("org.apache.sling", "org.apache.sling.jcr.base", "2.2.2"));
+        
+        opt.add(junitBundles());
+        return opt;
+    }
+
 
     private <ItemType extends Item> ItemType deleteAfterTests(ItemType it) throws RepositoryException {
         toDelete.add(it.getPath());
@@ -180,7 +280,7 @@ public abstract class CommonTests {
             s.logout();
         }
     }
-
+    
     @Test
     public void testRepositoryPresent() {
         assertNotNull(repository);
@@ -340,15 +440,17 @@ public abstract class CommonTests {
     }
 
     @Test
-    @Ignore("SLING-3479 - doesn't work with Oak 1.0 yet")
     public void testOsgiResourceEvents() throws RepositoryException {
         final ResourceEventListener listener = new ResourceEventListener();
-        final ServiceRegistration reg = listener.register(bundleContext);
+        final ServiceRegistration reg = listener.register(bundleContext, SlingConstants.TOPIC_RESOURCE_ADDED);
         final Session s = repository.loginAdministrative(null);
-        final int nPaths = 500;
-        final int timeoutMsec = 5000;
+        final int nPaths = 2500 * TEST_SCALE;
+        final int timeoutMsec = 2 * nPaths;
         final String prefix = uniqueName("testOsgiResourceEvents");
 
+        // Create N nodes with a unique name under /
+        // and verify that ResourceEventListener gets an event
+        // for each of them
         try {
             for(int i=0; i  < nPaths; i++) {
                 s.getRootNode().addNode(prefix + i);
@@ -374,14 +476,17 @@ public abstract class CommonTests {
             }
 
             if(!missing.isEmpty()) {
+                final String missingStr = missing.size() > 10 ? missing.size() + " paths missing" : missing.toString();
                 fail("OSGi add resource events are missing for "
                         + missing.size() + "/" + nPaths + " paths after "
-                        + timeoutMsec + " msec: " + missing);
+                        + timeoutMsec + " msec: " + missingStr);
             }
         } finally {
             reg.unregister();
             s.logout();
         }
+        
+        log.info("Successfuly detected OSGi observation events for " + nPaths + " paths");
     }
 
     @Test
@@ -413,7 +518,9 @@ public abstract class CommonTests {
         } finally {
             s.logout();
             cnd.close();
-            counter.close();
+            if(counter != null) {
+                counter.close();
+            }
         }
 
         // In a separate session, modify node and verify that we get events
@@ -441,13 +548,38 @@ public abstract class CommonTests {
 
     }
 
-    public void setup() throws IOException {
+    public void setup() throws Exception {
         final ServiceTracker st = new ServiceTracker(bundleContext, SlingRepository.class.getName(), null);
         st.open(true);
         try {
             this.repository = (SlingRepository) st.waitForService(10000);
         } catch (InterruptedException e) {
         }
+        
+        // Make sure the JcrResourceProvider is initialized, as it
+        // setups conversion of JCR to OSGi events, and some tests use this
+        // @Injecting the ResourceResolverFactory fails, haven't found why.
+        final int timeout = 10;
+        final long timeoutAt = System.currentTimeMillis() + (timeout * 1000L);
+        ServiceReference ref = null;
+        while(System.currentTimeMillis() < timeoutAt) {
+            ref = bundleContext.getServiceReference(ResourceResolverFactory.class.getName());
+            if(ref != null) {
+                break;
+            }
+        }
+        
+        assertNotNull("Expecting ResourceResolverFactory within " + timeout + " seconds", ref);
+        ResourceResolver rr = null;
+        try {
+            final ResourceResolverFactory f = (ResourceResolverFactory)bundleContext.getService(ref);
+            rr = f.getAdministrativeResourceResolver(null);
+            rr.getResource("/");
+        } finally {
+            if(rr != null) {
+                rr.close();
+            }
+            bundleContext.ungetService(ref);
+        }
     }
-
 }

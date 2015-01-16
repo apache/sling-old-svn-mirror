@@ -31,17 +31,18 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.models.annotations.injectorspecific.ChildResource;
+import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
-import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor;
-import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
-import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
+import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProcessor2;
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor2;
+import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory2;
 import org.osgi.framework.Constants;
 
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 3000)
-public class ChildResourceInjector implements Injector, InjectAnnotationProcessorFactory {
+public class ChildResourceInjector implements Injector, InjectAnnotationProcessorFactory2 {
 
     @Override
     public String getName() {
@@ -102,7 +103,7 @@ public class ChildResourceInjector implements Injector, InjectAnnotationProcesso
    }
 
     @Override
-    public InjectAnnotationProcessor createAnnotationProcessor(Object adaptable, AnnotatedElement element) {
+    public InjectAnnotationProcessor2 createAnnotationProcessor(Object adaptable, AnnotatedElement element) {
         // check if the element has the expected annotation
         ChildResource annotation = element.getAnnotation(ChildResource.class);
         if (annotation != null) {
@@ -111,7 +112,7 @@ public class ChildResourceInjector implements Injector, InjectAnnotationProcesso
         return null;
     }
 
-    private static class ChildResourceAnnotationProcessor extends AbstractInjectAnnotationProcessor {
+    private static class ChildResourceAnnotationProcessor extends AbstractInjectAnnotationProcessor2 {
 
         private final ChildResource annotation;
         private final Object adaptable;
@@ -129,6 +130,11 @@ public class ChildResourceInjector implements Injector, InjectAnnotationProcesso
                 return null;
             }
             return annotation.name();
+        }
+
+        @Override
+        public InjectionStrategy getInjectionStrategy() {
+            return annotation.injectionStrategy();
         }
 
         @Override

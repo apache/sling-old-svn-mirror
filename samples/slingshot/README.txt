@@ -1,14 +1,22 @@
-Apache Sling Slingshot Sample
+Apache Sling Slingshot Sample Application
+-----------------------------------------
 
 This bundle provides a sample application for Apache Sling.
-Slingshot provides a basic gallery application presenting folders as albums
-and files as photos.
+Slingshot provides a basic gallery application presenting categorized items.
+Users can leave comments and rate individual items.
+
+Quickstart
+==========
+Brief quickstart guide - more detailed description below:
+Launch a Sling installation (Sling 7 or later), deploy the Slingshot bundle
+and go to http://localhost:8080/slingshot.html. Login with slingshot1/slingshot1
+or slingshot2/slingshot2.
 
 Getting Started
 ===============
 
 This component uses a Maven 3 (http://maven.apache.org/) build
-environment. It requires a Java 5 JDK (or higher) and Maven (http://maven.apache.org/)
+environment. It requires a Java 6 JDK (or higher) and Maven (http://maven.apache.org/)
 3.0.5 or later. We recommend to use the latest Maven version.
 
 If you have Maven 3 installed, you can compile and
@@ -38,7 +46,7 @@ The default user name and password are: admin/admin.
 Install and start the built bundle from the OSGi->Bundles page.
 
 When deployed the application can be accessed from:
-  http://localhost:8080/slingshot/albums.html
+  http://localhost:8080/slingshot.html
   
 
 The latest source code for this component is available in the

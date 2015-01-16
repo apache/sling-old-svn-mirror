@@ -53,7 +53,6 @@ public class RedirectOnLogoutTest {
      * @throws Exception
      */
     @Test 
-    @Category(JackrabbitOnly.class) // TODO: fails on Oak
     public void testRedirectToResourceAfterLogout() throws Exception {
     	//login
         List<NameValuePair> params = new ArrayList<NameValuePair>();

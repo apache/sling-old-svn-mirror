@@ -27,7 +27,6 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.security.AccessControlException;
 
-import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
@@ -49,6 +48,7 @@ import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
 import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.engine.impl.filter.AbstractSlingFilterChain;
+import org.apache.sling.engine.impl.filter.FilterHandle;
 import org.apache.sling.engine.impl.filter.RequestSlingFilterChain;
 import org.apache.sling.engine.impl.filter.ServletFilterManager;
 import org.apache.sling.engine.impl.filter.ServletFilterManager.FilterChainType;
@@ -68,9 +68,7 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
 
     // used fields ....
 
-    private final DefaultErrorHandler defaultErrorHandler = new DefaultErrorHandler();
-
-    private ErrorHandler errorHandler = defaultErrorHandler;
+    private final DefaultErrorHandler errorHandler = new DefaultErrorHandler();
 
     private ServletResolver servletResolver;
 
@@ -81,16 +79,16 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
     // ---------- helper setters
 
     void setServerInfo(final String serverInfo) {
-        defaultErrorHandler.setServerInfo(serverInfo);
+        errorHandler.setServerInfo(serverInfo);
     }
 
-    void setErrorHandler(final ErrorHandler errorHandler) {
-        this.errorHandler = errorHandler;
+    void setErrorHandler(final ErrorHandler eh) {
+        errorHandler.setDelegate(eh);
     }
 
-    void unsetErrorHandler(final ErrorHandler errorHandler) {
-        if (this.errorHandler == errorHandler) {
-            this.errorHandler = defaultErrorHandler;
+    void unsetErrorHandler(final ErrorHandler eh) {
+        if (errorHandler.getDelegate() == eh) {
+            errorHandler.setDelegate(null);
         }
     }
 
@@ -142,7 +140,7 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
             Resource resource = requestData.initResource(resourceResolver);
             requestData.initServlet(resource, sr);
 
-            Filter[] filters = filterManager.getFilters(FilterChainType.REQUEST);
+            FilterHandle[] filters = filterManager.getFilters(FilterChainType.REQUEST);
             if (filters != null) {
                 FilterChain processor = new RequestSlingFilterChain(this,
                     filters);
@@ -275,7 +273,7 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
             final FilterChainType filterChainType) throws IOException,
             ServletException {
 
-        Filter filters[] = filterManager.getFilters(filterChainType);
+        FilterHandle filters[] = filterManager.getFilters(filterChainType);
         if (filters != null) {
 
             FilterChain processor = new SlingComponentFilterChain(filters);
@@ -337,7 +335,7 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
         // the response output stream if reset does not reset this
         response = new ErrorResponseWrapper(response);
 
-        Filter[] filters = filterManager.getFilters(FilterChainType.ERROR);
+        FilterHandle[] filters = filterManager.getFilters(FilterChainType.ERROR);
         if (filters != null && filters.length > 0) {
             FilterChain processor = new AbstractSlingFilterChain(filters) {
 
@@ -369,7 +367,7 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
         // the response output stream if reset does not reset this
         response = new ErrorResponseWrapper(response);
 
-        Filter[] filters = filterManager.getFilters(FilterChainType.ERROR);
+        FilterHandle[] filters = filterManager.getFilters(FilterChainType.ERROR);
         if (filters != null && filters.length > 0) {
             FilterChain processor = new AbstractSlingFilterChain(filters) {
 

@@ -17,10 +17,13 @@
  */
 package org.apache.sling.hc.webconsole.impl;
 
+import static org.apache.sling.hc.util.FormattingResultLog.msHumanReadable;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 
 import javax.servlet.Servlet;
@@ -37,6 +40,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.request.ResponseUtil;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
+import org.apache.sling.hc.api.execution.HealthCheckExecutionOptions;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.api.execution.HealthCheckExecutor;
 
@@ -59,6 +63,10 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
     public static final String PARAM_TAGS = "tags";
     public static final String PARAM_DEBUG = "debug";
     public static final String PARAM_QUIET = "quiet";
+
+    public static final String PARAM_FORCE_INSTANT_EXECUTION = "forceInstantExecution";
+    public static final String PARAM_COMBINE_TAGS_WITH_OR = "combineTagsWithOr";
+    public static final String PARAM_OVERRIDE_GLOBAL_TIMEOUT = "overrideGlobalTimeout";
 
     @Reference
     private HealthCheckExecutor healthCheckExecutor;
@@ -103,13 +111,25 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         final String tags = getParam(req, PARAM_TAGS, null);
         final boolean debug = Boolean.valueOf(getParam(req, PARAM_DEBUG, "false"));
         final boolean quiet = Boolean.valueOf(getParam(req, PARAM_QUIET, "false"));
+        final boolean combineTagsWithOr = Boolean.valueOf(getParam(req, PARAM_COMBINE_TAGS_WITH_OR, "false"));
+        final boolean forceInstantExecution = Boolean.valueOf(getParam(req, PARAM_FORCE_INSTANT_EXECUTION, "false"));
+        final String overrideGlobalTimeoutStr = getParam(req, PARAM_OVERRIDE_GLOBAL_TIMEOUT, "");
 
         final PrintWriter pw = resp.getWriter();
-        doForm(pw, tags, debug, quiet);
+        doForm(pw, tags, debug, quiet, combineTagsWithOr, forceInstantExecution, overrideGlobalTimeoutStr);
 
         // Execute health checks only if tags are specified (even if empty)
         if (tags != null) {
-            Collection<HealthCheckExecutionResult> results = healthCheckExecutor.execute(tags.split(","));
+            HealthCheckExecutionOptions options = new HealthCheckExecutionOptions();
+            options.setCombineTagsWithOr(combineTagsWithOr);
+            options.setForceInstantExecution(forceInstantExecution);
+            try {
+                options.setOverrideGlobalTimeout(Integer.valueOf(overrideGlobalTimeoutStr));
+            } catch (NumberFormatException nfe) {
+                // override not set in UI
+            }
+
+            Collection<HealthCheckExecutionResult> results = healthCheckExecutor.execute(options, tags.split(","));
 
             pw.println("<table class='content healthcheck' cellpadding='0' cellspacing='0' width='100%'>");
             int total = 0;
@@ -129,6 +149,8 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
             final WebConsoleHelper c = new WebConsoleHelper(resp.getWriter());
             c.titleHtml("Summary", total + " HealthCheck executed, " + failed + " failures");
             pw.println("</table>");
+            pw.println("<a href='configMgr/org.apache.sling.hc.core.impl.executor.HealthCheckExecutorImpl'>Configure executor</a><br/><br/>");
+
         }
     }
 
@@ -142,6 +164,9 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         final StringBuilder status = new StringBuilder();
 
         status.append("Tags: ").append(exResult.getHealthCheckMetadata().getTags());
+        status.append(" Finished: ").append(new SimpleDateFormat("yyyy-MM-dd mm:ss").format(exResult.getFinishedAt()) + " after "
+                + msHumanReadable(exResult.getElapsedTimeInMs()));
+
         c.titleHtml(exResult.getHealthCheckMetadata().getTitle(), null);
 
         c.tr();
@@ -167,6 +192,10 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
             c.writer().print(e.getStatus().toString());
             c.writer().print(' ');
             c.writer().print(ResponseUtil.escapeXml(e.getMessage()));
+            if (e.getException() != null) {
+                c.writer().print(" ");
+                c.writer().print(ResponseUtil.escapeXml(e.getException().toString()));
+            }
             c.writer().println("</div>");
         }
         c.closeTd();
@@ -175,7 +204,10 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
     private void doForm(final PrintWriter pw,
             final String tags,
             final boolean debug,
-            final boolean quiet)
+            final boolean quiet,
+            final boolean combineTagsWithOr,
+            final boolean forceInstantExecution,
+            final String overrideGlobalTimeoutStr)
     throws IOException {
         final WebConsoleHelper c = new WebConsoleHelper(pw);
         pw.print("<form method='get'>");
@@ -192,6 +224,17 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
             c.writer().print(ResponseUtil.escapeXml(tags));
         }
         c.writer().println("' class='input' size='80'>");
+        c.closeTd();
+        c.closeTr();
+
+        c.tr();
+        c.tdLabel("Combine tags with logical 'OR' instead of the default 'AND'");
+        c.tdContent();
+        c.writer().print("<input type='checkbox' name='" + PARAM_COMBINE_TAGS_WITH_OR + "' class='input' value='true'");
+        if (combineTagsWithOr) {
+            c.writer().print(" checked=true");
+        }
+        c.writer().println(">");
         c.closeTd();
         c.closeTr();
 
@@ -214,6 +257,28 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
             c.writer().print(" checked=true");
         }
         c.writer().println(">");
+        c.closeTd();
+        c.closeTr();
+
+        c.tr();
+        c.tdLabel("Force instant execution (no cache, async checks are executed)");
+        c.tdContent();
+        c.writer().print("<input type='checkbox' name='" + PARAM_FORCE_INSTANT_EXECUTION + "' class='input' value='true'");
+        if (forceInstantExecution) {
+            c.writer().print(" checked=true");
+        }
+        c.writer().println(">");
+        c.closeTd();
+        c.closeTr();
+
+        c.tr();
+        c.tdLabel("Override global timeout");
+        c.tdContent();
+        c.writer().print("<input type='text' name='" + PARAM_OVERRIDE_GLOBAL_TIMEOUT + "' value='");
+        if (overrideGlobalTimeoutStr != null) {
+            c.writer().print(ResponseUtil.escapeXml(overrideGlobalTimeoutStr));
+        }
+        c.writer().println("' class='input' size='80'>");
         c.closeTd();
         c.closeTr();
 

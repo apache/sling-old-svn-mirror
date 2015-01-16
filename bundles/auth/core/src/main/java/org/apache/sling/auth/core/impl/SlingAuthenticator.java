@@ -174,6 +174,12 @@ public class SlingAuthenticator implements Authenticator,
      * return <code>true</code>.
      */
     private static final String DEFAULT_AUTH_URI_SUFFIX = "/j_security_check";
+    
+    /**
+     * The name of the form submission parameter providing the new password of
+     * the user (value is "j_newpassword").
+     */
+    private static final String PAR_NEW_PASSWORD = "j_newpassword";
 
     /**
      * The name of the configuration property used to set a (potentially
@@ -760,6 +766,7 @@ public class SlingAuthenticator implements Authenticator,
         // try to connect
         try {
             handleImpersonation(request, authInfo);
+            handlePasswordChange(request, authInfo);
             ResourceResolver resolver = resourceResolverFactory.getResourceResolver(authInfo);
             final boolean impersChanged = setSudoCookie(request, response, authInfo);
 
@@ -1238,6 +1245,25 @@ public class SlingAuthenticator implements Authenticator,
         // sudo the session if needed
         if (sudo != null && sudo.length() > 0) {
             authInfo.put(ResourceResolverFactory.USER_IMPERSONATION, sudo);
+        }
+    }
+
+    /**
+     * Handles password change based on the request parameter for the new password
+     * (see {@link #newPasswordParameterName}).
+     * <p>
+     * If the new password request parameter is present, it is added to the authInfo
+     * object, which is later transformed to SimpleCredentials attributes.
+     *
+     * @param req The {@link HttpServletRequest} optionally containing
+     *            the new password parameter.
+     * @param authInfo The authentication info into which the
+     *            <code>newPassword</code> property is set.
+     */
+    private void handlePasswordChange(HttpServletRequest req, AuthenticationInfo authInfo) {
+        String newPassword = req.getParameter(PAR_NEW_PASSWORD );
+        if (newPassword != null && newPassword.length() > 0) {
+            authInfo.put("user.newpassword", newPassword);
         }
     }
 

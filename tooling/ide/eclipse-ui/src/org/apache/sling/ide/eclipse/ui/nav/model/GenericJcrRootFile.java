@@ -34,10 +34,6 @@ import org.xml.sax.SAXException;
 
 import de.pdark.decentxml.Document;
 import de.pdark.decentxml.Element;
-import de.pdark.decentxml.XMLParser;
-import de.pdark.decentxml.XMLSource;
-import de.pdark.decentxml.XMLStringSource;
-import de.pdark.decentxml.XMLTokenizer;
 import de.pdark.decentxml.XMLTokenizer.Type;
 
 /** WIP: model object for a [.content.xml] shown in the content package view in project explorer **/
@@ -59,8 +55,12 @@ public class GenericJcrRootFile extends JcrNode {
 		this.domElement = null;
 		
         InputStream in = file.getContents();
-        this.document = TolerantXMLParser.parse(in, file.getFullPath().toOSString());
-		handleJcrRoot(this.document.getRootElement());
+        try {
+            this.document = TolerantXMLParser.parse(in, file.getFullPath().toOSString());
+            handleJcrRoot(this.document.getRootElement());
+        } finally {
+            IOUtils.closeQuietly(in);
+        }
 	}
 	
 	@Override
@@ -83,7 +83,6 @@ public class GenericJcrRootFile extends JcrNode {
 		if (isRootContentXml()) {
 			if (parent instanceof DirNode) {
 				DirNode dirNodeParent = (DirNode)parent;
-				JcrNode dirNodeParentParent = dirNodeParent.getParent();
 				JcrNode effectiveSibling = dirNodeParent.getEffectiveSibling();
 				if (effectiveSibling!=null) {
 				    effectiveSibling.dirSibling = dirNodeParent;
@@ -92,7 +91,6 @@ public class GenericJcrRootFile extends JcrNode {
 				    handleProperties(element, parent.properties);
 				}
 				effectiveParent = parent;
-				dirNodeParentParent.hide(parent);
 			} else {
 				handleProperties(element, parent.properties);
 				effectiveParent = parent;
@@ -161,18 +159,18 @@ public class GenericJcrRootFile extends JcrNode {
 		}
 	}
 
-	public void pickResources(List<Object> membersList) {
-		for (Iterator<Object> it = membersList.iterator(); it.hasNext();) {
-			final IResource resource = (IResource) it.next();
+    public void pickResources(List<IResource> membersList) {
+        for (Iterator<IResource> it = membersList.iterator(); it.hasNext();) {
+            final IResource resource = it.next();
 			final String resName = resource.getName();
-			Iterator it2;
+            Iterator<JcrNode> it2;
 			if (isRootContentXml()) {
 				it2 = parent.children.iterator();
 			} else {
 				it2 = children.iterator();
 			}
 			while(it2.hasNext()) {
-				JcrNode aChild = (JcrNode) it2.next();
+                JcrNode aChild = it2.next();
 				if (resName.equals(aChild.getName())) {
 					// then pick this one
 					it.remove();

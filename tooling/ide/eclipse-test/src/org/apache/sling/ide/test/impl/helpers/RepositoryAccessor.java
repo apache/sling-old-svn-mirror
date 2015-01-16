@@ -115,6 +115,21 @@ public class RepositoryAccessor {
         return login().getNode(nodePath);
     }
 
+    /**
+     * Returns true if a node exists at the specified path
+     * 
+     * @param path the path, in absolute format or relative to the repository root
+     * @return true if the path exists, false otherwise
+     * @throws RepositoryException
+     */
+    public boolean hasNode(String path) throws RepositoryException {
+        if (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+
+        return login().getRootNode().hasNode(path);
+    }
+
     public void createNode(String path, String primaryNodeType) throws RepositoryException {
 
         Session session = login();

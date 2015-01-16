@@ -1,0 +1,7 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+
+    "name": "publish-reverse-scheduled",
+    "action": "pull",
+    "seconds": "30"
+}

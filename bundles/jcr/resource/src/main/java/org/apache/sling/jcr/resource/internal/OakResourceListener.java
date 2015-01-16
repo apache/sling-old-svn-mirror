@@ -47,6 +47,8 @@ import org.apache.jackrabbit.oak.spi.commit.Observer;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProvider;
+import org.apache.sling.jcr.resource.internal.helper.jcr.PathMapper;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -71,14 +73,18 @@ public class OakResourceListener extends NodeObserver implements Closeable {
     /** Helper object. */
     final ObservationListenerSupport support;
 
+    private final PathMapper pathMapper;
+
     public OakResourceListener(
             final String mountPrefix,
             final ObservationListenerSupport support,
             final BundleContext bundleContext,
-            final Executor executor)
+            final Executor executor,
+            final PathMapper pathMapper)
     throws RepositoryException {
         super("/", "jcr:primaryType", "sling:resourceType", "sling:resourceSuperType");
         this.support = support;
+        this.pathMapper = pathMapper;
         this.mountPrefix = (mountPrefix == null || mountPrefix.length() == 0 || mountPrefix.equals("/") ? null : mountPrefix);
 
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
@@ -106,6 +112,7 @@ public class OakResourceListener extends NodeObserver implements Closeable {
             final CommitInfo commitInfo) {
         final Map<String, Object> changes = toEventProperties(added, deleted, changed);
         addCommitInfo(changes, commitInfo);
+        logger.debug("added(changes={})", changes);
         sendOsgiEvent(path, TOPIC_RESOURCE_ADDED, changes, properties);
     }
 
@@ -118,6 +125,7 @@ public class OakResourceListener extends NodeObserver implements Closeable {
             final CommitInfo commitInfo) {
         final Map<String, Object> changes = toEventProperties(added, deleted, changed);
         addCommitInfo(changes, commitInfo);
+        logger.debug("deleted(changes={})", changes);
         sendOsgiEvent(path, TOPIC_RESOURCE_REMOVED, changes, properties);
     }
 
@@ -130,6 +138,7 @@ public class OakResourceListener extends NodeObserver implements Closeable {
             final CommitInfo commitInfo) {
         final Map<String, Object> changes = toEventProperties(added, deleted, changed);
         addCommitInfo(changes, commitInfo);
+        logger.debug("changed (changes={})", changes);
         sendOsgiEvent(path, TOPIC_RESOURCE_CHANGED, changes, properties);
     }
 
@@ -240,7 +249,14 @@ public class OakResourceListener extends NodeObserver implements Closeable {
                 }
 
                 if ( sendEvent ) {
-                    localEa.sendEvent(new org.osgi.service.event.Event(topic, new EventProperties(changes)));
+                    final String resourcePath = pathMapper.mapJCRPathToResourcePath(changes.get(SlingConstants.PROPERTY_PATH).toString());
+                    if ( resourcePath != null ) {
+                        changes.put(SlingConstants.PROPERTY_PATH, resourcePath);
+
+                        localEa.sendEvent(new org.osgi.service.event.Event(topic, new EventProperties(changes)));
+                    } else {
+                        logger.debug("Dropping observation event for {}", changes.get(SlingConstants.PROPERTY_PATH));
+                    }
                 }
             }
         } catch (final Exception e) {

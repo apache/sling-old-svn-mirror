@@ -57,7 +57,7 @@ public class AdapterImplementationsTest {
     public void testSingleMapping() {
         underTest.add(SAMPLE_ADAPTER, String.class);
         
-        assertEquals(String.class, underTest.lookup(SAMPLE_ADAPTER, SAMPLE_ADAPTABLE));
+        assertEquals(String.class, underTest.lookup(SAMPLE_ADAPTER, SAMPLE_ADAPTABLE).getType());
         
         underTest.remove(SAMPLE_ADAPTER.getName(), String.class.getName());
 
@@ -70,11 +70,11 @@ public class AdapterImplementationsTest {
         underTest.add(SAMPLE_ADAPTER, Integer.class);
         underTest.add(SAMPLE_ADAPTER, Long.class);
         
-        assertEquals(Integer.class, underTest.lookup(SAMPLE_ADAPTER, SAMPLE_ADAPTABLE));
+        assertEquals(Integer.class, underTest.lookup(SAMPLE_ADAPTER, SAMPLE_ADAPTABLE).getType());
         
         underTest.remove(SAMPLE_ADAPTER.getName(), Integer.class.getName());
 
-        assertEquals(Long.class, underTest.lookup(SAMPLE_ADAPTER, SAMPLE_ADAPTABLE));
+        assertEquals(Long.class, underTest.lookup(SAMPLE_ADAPTER, SAMPLE_ADAPTABLE).getType());
 
         underTest.remove(SAMPLE_ADAPTER.getName(), Long.class.getName());
         underTest.remove(SAMPLE_ADAPTER.getName(), String.class.getName());
@@ -105,7 +105,14 @@ public class AdapterImplementationsTest {
         underTest.add(SAMPLE_ADAPTER, Integer.class);
         underTest.add(SAMPLE_ADAPTER, Long.class);
         
-        assertEquals(String.class, underTest.lookup(SAMPLE_ADAPTER, SAMPLE_ADAPTABLE));
+        assertEquals(String.class, underTest.lookup(SAMPLE_ADAPTER, SAMPLE_ADAPTABLE).getType());
+    }
+    
+    @Test
+    public void testSimpleModel() {
+        underTest.add(SAMPLE_ADAPTER, SAMPLE_ADAPTER);
+        
+        assertEquals(SAMPLE_ADAPTER, underTest.lookup(SAMPLE_ADAPTER, SAMPLE_ADAPTABLE).getType());
     }
     
     static final class NoneImplementationPicker implements ImplementationPicker {

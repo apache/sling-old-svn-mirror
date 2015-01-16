@@ -33,35 +33,25 @@ import org.osgi.framework.ServiceRegistration;
  */
 public class RunModeCommand implements Command {
 
-    private static ServiceRegistration pluginReg;
+    private static final String CMD_NAME = "runmodes";
 
-    public static void initPlugin(final BundleContext bundleContext,
-            final Set<String> modes) {
-        final RunModeCommand command = new RunModeCommand(modes);
+    private final ServiceRegistration pluginReg;
+
+    private final Set<String> modes;
+
+    public RunModeCommand(final BundleContext btx, final Set<String> modes) {
+        this.modes = modes;
 
         final Dictionary<String, String> props = new Hashtable<String, String>();
         props.put(Constants.SERVICE_DESCRIPTION,
             "Apache Sling Sling Run Mode Shell Command");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
 
-        pluginReg = bundleContext.registerService(Command.class.getName(),
-                command,
-                props);
+        pluginReg = btx.registerService(Command.class.getName(), this, props);
     }
 
-    public static void destroyPlugin() {
-        if ( pluginReg != null) {
-            pluginReg.unregister();
-            pluginReg = null;
-        }
-    }
-
-    private static final String CMD_NAME = "runmodes";
-
-    private Set<String> modes;
-
-    public RunModeCommand(final Set<String> modes) {
-        this.modes = modes;
+    public void destroy() {
+        pluginReg.unregister();
     }
 
     /**

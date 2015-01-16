@@ -73,7 +73,9 @@ public interface Queue {
      * Remove all outstanding jobs from the queue. This does not delete
      * the jobs. The jobs are either processed by a different cluster node
      * or on restart.
+     * @deprecated This method does nothing anymore
      */
+    @Deprecated
     void clear();
 
     /**

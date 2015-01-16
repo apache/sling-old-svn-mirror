@@ -184,7 +184,21 @@ public class ResourceResolverFactoryActivator {
               description = "This flag controls whether all resources with a sling:vanityPath property " +
                             "are processed and added to the mappoing table.")
     private static final String PROP_ENABLE_VANITY_PATH = "resource.resolver.enable.vanitypath";
+    
+    private static final long DEFAULT_MAX_CACHED_VANITY_PATHS = -1;
+    @Property(longValue = DEFAULT_MAX_CACHED_VANITY_PATHS,
+              label = "Maximum number of cached vanity path entries",
+              description = "The maximum number of cached vanity path entries. " +
+                            "Default is -1 (no limit)")
+    private static final String PROP_MAX_CACHED_VANITY_PATHS = "resource.resolver.vanitypath.maxEntries";
 
+    private static final int DEFAULT_VANITY_BLOOM_FILTER_MAX_BYTES = 1024000;
+    @Property(longValue = DEFAULT_VANITY_BLOOM_FILTER_MAX_BYTES,
+              label = "Maximum number of vanity bloom filter bytes",
+              description = "The maximum number of vanity bloom filter bytes. " +
+                            "Changing this value is subject to vanity bloom filter rebuild")
+    private static final String PROP_VANITY_BLOOM_FILTER_MAX_BYTES = " resource.resolver.vanitypath.bloomfilter.maxBytes";
+    
     private static final boolean DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION = true;
     @Property(boolValue = DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION ,
               label = "Optimize alias resolution",
@@ -259,6 +273,12 @@ public class ResourceResolverFactoryActivator {
 
     /** alias resource resolution optimization enabled? */
     private boolean enableOptimizeAliasResolution = DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION;
+    
+    /** max number of cache vanity path entries */
+    private long maxCachedVanityPathEntries = DEFAULT_MAX_CACHED_VANITY_PATHS;
+    
+    /** Maximum number of vanity bloom filter bytes */
+    private int vanityBloomFilterMaxBytes = DEFAULT_VANITY_BLOOM_FILTER_MAX_BYTES;
     
     /** vanity paths will have precedence over existing /etc/map mapping? */
     private boolean vanityPathPrecedence = DEFAULT_VANITY_PATH_PRECEDENCE;
@@ -346,6 +366,14 @@ public class ResourceResolverFactoryActivator {
     
     public boolean hasVanityPathPrecedence() {
         return this.vanityPathPrecedence;
+    }
+    
+    public long getMaxCachedVanityPathEntries() {
+        return this.maxCachedVanityPathEntries;
+    }
+    
+    public int getVanityBloomFilterMaxBytes() {
+        return this.vanityBloomFilterMaxBytes;
     }
 
     // ---------- SCR Integration ---------------------------------------------
@@ -449,7 +477,9 @@ public class ResourceResolverFactoryActivator {
         }
 
         this.enableOptimizeAliasResolution = PropertiesUtil.toBoolean(properties.get(PROP_ENABLE_OPTIMIZE_ALIAS_RESOLUTION), DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION);
-
+        this.maxCachedVanityPathEntries = PropertiesUtil.toLong(properties.get(PROP_MAX_CACHED_VANITY_PATHS), DEFAULT_MAX_CACHED_VANITY_PATHS);
+        this.vanityBloomFilterMaxBytes = PropertiesUtil.toInteger(properties.get(PROP_VANITY_BLOOM_FILTER_MAX_BYTES), DEFAULT_VANITY_BLOOM_FILTER_MAX_BYTES);
+        
         this.vanityPathPrecedence = PropertiesUtil.toBoolean(properties.get(PROP_VANITY_PATH_PRECEDENCE), DEFAULT_VANITY_PATH_PRECEDENCE);
         
         final BundleContext bc = componentContext.getBundleContext();

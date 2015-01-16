@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>20</version>
+        <version>22</version>
         <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
 
@@ -94,7 +94,7 @@
             <!-- TODO create separate API package, this is just to get the special Sling test runner and SlingTestContext -->
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.junit.core</artifactId>
-            <version>1.0.9-SNAPSHOT</version>
+            <version>1.0.10</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

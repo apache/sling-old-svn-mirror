@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.jcr.Item;
@@ -104,13 +105,16 @@ public class JcrResourceProvider
     private final Session session;
     private final ClassLoader dynamicClassLoader;
     private final RepositoryHolder repositoryHolder;
+    private final PathMapper pathMapper;
 
     public JcrResourceProvider(final Session session,
                                final ClassLoader dynamicClassLoader,
-                               final RepositoryHolder repositoryHolder) {
+                               final RepositoryHolder repositoryHolder,
+                               final PathMapper pathMapper) {
         this.session = session;
         this.dynamicClassLoader = dynamicClassLoader;
         this.repositoryHolder = repositoryHolder;
+        this.pathMapper = pathMapper;
     }
 
     // ---------- ResourceProvider interface ----------------------------------
@@ -179,30 +183,31 @@ public class JcrResourceProvider
      * read-access for the session of this resolver, <code>null</code> is
      * returned.
      *
-     * @param path The absolute path
+     * @param resourcePath The absolute path
      * @return The <code>Resource</code> for the item at the given path.
      * @throws RepositoryException If an error occurrs accessingor checking the
      *             item in the repository.
      */
     private JcrItemResource createResource(final ResourceResolver resourceResolver,
-            final String path) throws RepositoryException {
-        if (itemExists(path)) {
-            Item item = session.getItem(path);
+            final String resourcePath) throws RepositoryException {
+        final String jcrPath = pathMapper.mapResourcePathToJCRPath(resourcePath);
+        if (jcrPath != null && itemExists(jcrPath)) {
+            Item item = session.getItem(jcrPath);
             if (item.isNode()) {
                 log.debug(
                     "createResource: Found JCR Node Resource at path '{}'",
-                    path);
-                return new JcrNodeResource(resourceResolver, path, (Node) item, dynamicClassLoader);
+                    resourcePath);
+                return new JcrNodeResource(resourceResolver, resourcePath, (Node) item, dynamicClassLoader, pathMapper);
             }
 
             log.debug(
                 "createResource: Found JCR Property Resource at path '{}'",
-                path);
-            return new JcrPropertyResource(resourceResolver, path,
-                (Property) item);
+                resourcePath);
+            return new JcrPropertyResource(resourceResolver, resourcePath,
+                (Property) item, pathMapper);
         }
 
-        log.debug("createResource: No JCR Item exists at path '{}'", path);
+        log.debug("createResource: No JCR Item exists at path '{}'", jcrPath);
         return null;
     }
 
@@ -262,7 +267,7 @@ public class JcrResourceProvider
 
         try {
             final QueryResult res = JcrResourceUtil.query(session, query, language);
-            return new JcrNodeResourceIterator(resolver, res.getNodes(), this.dynamicClassLoader);
+            return new JcrNodeResourceIterator(resolver, res.getNodes(), this.dynamicClassLoader, pathMapper);
         } catch (final javax.jcr.query.InvalidQueryException iqe) {
             throw new QuerySyntaxException(iqe.getMessage(), query, language, iqe);
         } catch (final RepositoryException re) {
@@ -279,49 +284,71 @@ public class JcrResourceProvider
         final String queryLanguage = isSupportedQueryLanguage(language) ? language : DEFAULT_QUERY_LANGUAGE;
 
         try {
-            QueryResult result = JcrResourceUtil.query(session, query,
-                queryLanguage);
+            final QueryResult result = JcrResourceUtil.query(session, query, queryLanguage);
             final String[] colNames = result.getColumnNames();
             final RowIterator rows = result.getRows();
+
             return new Iterator<ValueMap>() {
+
+                private ValueMap next;
+
+                {
+                    seek();
+                }
                 public boolean hasNext() {
-                    return rows.hasNext();
+                    return next != null;
                 };
 
                 public ValueMap next() {
-                    final Map<String, Object> row = new HashMap<String, Object>();
-                    try {
-                        Row jcrRow = rows.nextRow();
-                        boolean didPath = false;
-                        boolean didScore = false;
-                        Value[] values = jcrRow.getValues();
-                        for (int i = 0; i < values.length; i++) {
-                            Value v = values[i];
-                            if (v != null) {
-                                String colName = colNames[i];
-                                row.put(colName,
-                                    JcrResourceUtil.toJavaObject(values[i]));
-                                if (colName.equals(QUERY_COLUMN_PATH)) {
-                                    didPath = true;
-                                }
-                                if (colName.equals(QUERY_COLUMN_SCORE)) {
-                                    didScore = true;
-                                }
-                            }
-                        }
-                        if (!didPath) {
-                            row.put(QUERY_COLUMN_PATH, jcrRow.getPath());
-                        }
-                        if (!didScore) {
-                            row.put(QUERY_COLUMN_SCORE, jcrRow.getScore());
-                        }
-
-                    } catch (RepositoryException re) {
-                        log.error(
-                            "queryResources$next: Problem accessing row values",
-                            re);
+                    if ( next == null ) {
+                        throw new NoSuchElementException();
                     }
-                    return new ValueMapDecorator(row);
+                    final ValueMap result = next;
+                    seek();
+                    return result;
+                }
+
+                private void seek() {
+                    while ( next == null && rows.hasNext() ) {
+                        try {
+                            final Row jcrRow = rows.nextRow();
+                            final String resourcePath = pathMapper.mapJCRPathToResourcePath(jcrRow.getPath());
+                            if ( resourcePath != null ) {
+                                final Map<String, Object> row = new HashMap<String, Object>();
+
+                                boolean didPath = false;
+                                boolean didScore = false;
+                                final Value[] values = jcrRow.getValues();
+                                for (int i = 0; i < values.length; i++) {
+                                    Value v = values[i];
+                                    if (v != null) {
+                                        String colName = colNames[i];
+                                        row.put(colName,
+                                            JcrResourceUtil.toJavaObject(values[i]));
+                                        if (colName.equals(QUERY_COLUMN_PATH)) {
+                                            didPath = true;
+                                            row.put(colName,
+                                                    pathMapper.mapJCRPathToResourcePath(JcrResourceUtil.toJavaObject(values[i]).toString()));
+                                        }
+                                        if (colName.equals(QUERY_COLUMN_SCORE)) {
+                                            didScore = true;
+                                        }
+                                    }
+                                }
+                                if (!didPath) {
+                                    row.put(QUERY_COLUMN_PATH, pathMapper.mapJCRPathToResourcePath(jcrRow.getPath()));
+                                }
+                                if (!didScore) {
+                                    row.put(QUERY_COLUMN_SCORE, jcrRow.getScore());
+                                }
+                                next = new ValueMapDecorator(row);
+                            }
+                        } catch (final RepositoryException re) {
+                            log.error(
+                                "queryResources$next: Problem accessing row values",
+                                re);
+                        }
+                    }
                 }
 
                 public void remove() {
@@ -413,7 +440,7 @@ public class JcrResourceProvider
     /**
      * @see org.apache.sling.api.resource.ModifyingResourceProvider#create(ResourceResolver, java.lang.String, Map)
      */
-    public Resource create(final ResourceResolver resolver, final String path, final Map<String, Object> properties)
+    public Resource create(final ResourceResolver resolver, final String resourcePath, final Map<String, Object> properties)
     throws PersistenceException {
         // check for node type
         final Object nodeObj = (properties != null ? properties.get(NodeUtil.NODE_TYPE) : null);
@@ -441,16 +468,20 @@ public class JcrResourceProvider
                 nodeType = null;
             }
         }
+        final String jcrPath = pathMapper.mapResourcePathToJCRPath(resourcePath);
+        if ( jcrPath == null ) {
+            throw new PersistenceException("Unable to create node at " + resourcePath, null, resourcePath, null);
+        }
         Node node = null;
         try {
-            final int lastPos = path.lastIndexOf('/');
+            final int lastPos = jcrPath.lastIndexOf('/');
             final Node parent;
             if ( lastPos == 0 ) {
                 parent = this.session.getRootNode();
             } else {
-                parent = (Node)this.session.getItem(path.substring(0, lastPos));
+                parent = (Node)this.session.getItem(jcrPath.substring(0, lastPos));
             }
-            final String name = path.substring(lastPos + 1);
+            final String name = jcrPath.substring(lastPos + 1);
             if ( nodeType != null ) {
                 node = parent.addNode(name, nodeType);
             } else {
@@ -475,31 +506,35 @@ public class JcrResourceProvider
                             } catch ( final RepositoryException re) {
                                 // we ignore this
                             }
-                            throw new PersistenceException(iae.getMessage(), iae, path, entry.getKey());
+                            throw new PersistenceException(iae.getMessage(), iae, resourcePath, entry.getKey());
                         }
                     }
                 }
             }
 
-            return new JcrNodeResource(resolver, path, node, this.dynamicClassLoader);
+            return new JcrNodeResource(resolver, resourcePath, node, this.dynamicClassLoader, pathMapper);
         } catch (final RepositoryException e) {
-            throw new PersistenceException("Unable to create node at " + path, e, path, null);
+            throw new PersistenceException("Unable to create node at " + jcrPath, e, resourcePath, null);
         }
     }
 
     /**
      * @see org.apache.sling.api.resource.ModifyingResourceProvider#delete(ResourceResolver, java.lang.String)
      */
-    public void delete(final ResourceResolver resolver, final String path)
+    public void delete(final ResourceResolver resolver, final String resourcePath)
     throws PersistenceException {
+        final String jcrPath = pathMapper.mapResourcePathToJCRPath(resourcePath);
+        if ( jcrPath == null ) {
+            throw new PersistenceException("Unable to delete resource at " + resourcePath, null, resourcePath, null);
+        }
         try {
-            if ( session.itemExists(path) ) {
-                session.getItem(path).remove();
+            if ( session.itemExists(jcrPath) ) {
+                session.getItem(jcrPath).remove();
             } else {
-                throw new PersistenceException("Unable to delete resource at " + path + ". Resource does not exist.", null, path, null);
+                throw new PersistenceException("Unable to delete resource at " + jcrPath + ". Resource does not exist.", null, resourcePath, null);
             }
         } catch (final RepositoryException e) {
-            throw new PersistenceException("Unable to delete resource at " + path, e, path, null);
+            throw new PersistenceException("Unable to delete resource at " + jcrPath, e, resourcePath, null);
         }
     }
 

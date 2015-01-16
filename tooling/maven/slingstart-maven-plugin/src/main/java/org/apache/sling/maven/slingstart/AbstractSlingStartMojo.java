@@ -17,23 +17,18 @@
 package org.apache.sling.maven.slingstart;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.StringReader;
 
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
-import org.apache.sling.slingstart.model.SSMDeliverable;
-import org.apache.sling.slingstart.model.xml.XMLSSMModelReader;
 
 public abstract class AbstractSlingStartMojo extends AbstractMojo {
 
-    @Parameter(defaultValue="${basedir}/src/main/systems")
-    protected File systemsDirectory;
+    @Parameter(defaultValue="${basedir}/src/main/provisioning")
+    private File systemsDirectory;
 
     @Parameter(property = "project", readonly = true, required = true)
     protected MavenProject project;
@@ -46,25 +41,6 @@ public abstract class AbstractSlingStartMojo extends AbstractMojo {
 
     @Parameter(defaultValue="false")
     protected boolean createWebapp;
-
-    /**
-     * Read the model prepared by the lifecycle plugin
-     */
-    protected SSMDeliverable readModel()
-    throws MojoExecutionException {
-        SSMDeliverable result = (SSMDeliverable)this.project.getContextValue(SSMDeliverable.class.getName());
-        if ( result == null ) {
-            try {
-                final String contents = (String)this.project.getContextValue(SSMDeliverable.class.getName() + "/text");
-                result = XMLSSMModelReader.read(new StringReader(contents));
-
-                this.project.setContextValue(SSMDeliverable.class.getName(), result);
-            } catch ( final IOException ioe) {
-                throw new MojoExecutionException("Unable to cache model", ioe);
-            }
-        }
-        return result;
-    }
 
     protected File getTmpDir() {
         return new File(this.project.getBuild().getDirectory(), "slingstart-tmp");

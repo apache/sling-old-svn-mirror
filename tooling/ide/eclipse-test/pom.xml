@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.sling.ide</groupId>
         <artifactId>reactor</artifactId>
-        <version>1.0.3-SNAPSHOT</version>
+        <version>1.0.5-SNAPSHOT</version>
     </parent>
     <artifactId>org.apache.sling.ide.eclipse-test</artifactId>
     <packaging>eclipse-test-plugin</packaging>
@@ -111,7 +111,7 @@
                         <artifactItem>
                             <groupId>org.apache.sling</groupId>
                             <artifactId>org.apache.sling.launchpad</artifactId>
-                            <version>7-SNAPSHOT</version>
+                            <version>7</version>
                             <type>war</type>
                             <overWrite>false</overWrite>
                             <outputDirectory>${project.build.directory}</outputDirectory>

@@ -37,23 +37,39 @@ import org.slf4j.LoggerFactory;
  * This is the configuration for the main queue.
  *
  */
-@Component(label="%job.events.name",
-        description="%job.events.description",
-        name="org.apache.sling.event.impl.jobs.DefaultJobManager",
-        metatype=true)
+@Component(label="Apache Sling Job Default Queue",
+           description="The configuration of the default job queue.",
+           name="org.apache.sling.event.impl.jobs.DefaultJobManager",
+           metatype=true)
 @Service(value=MainQueueConfiguration.class)
 @Properties({
     @Property(name=ConfigurationConstants.PROP_PRIORITY,
-            value=ConfigurationConstants.DEFAULT_PRIORITY,
-            options={@PropertyOption(name="NORM",value="Norm"),
-            @PropertyOption(name="MIN",value="Min"),
-            @PropertyOption(name="MAX",value="Max")}),
+              value=ConfigurationConstants.DEFAULT_PRIORITY,
+              options={@PropertyOption(name="NORM",value="Norm"),
+                       @PropertyOption(name="MIN",value="Min"),
+                       @PropertyOption(name="MAX",value="Max")},
+              label="Priority",
+              description="The priority for the threads used by this queue. Default is norm."),
     @Property(name=ConfigurationConstants.PROP_RETRIES,
-            intValue=ConfigurationConstants.DEFAULT_RETRIES),
+            intValue=ConfigurationConstants.DEFAULT_RETRIES,
+            label="Maximum Retries",
+            description="The maximum number of times a failed job slated "
+                      + "for retries is actually retried. If a job has been retried this number of "
+                      + "times and still fails, it is not rescheduled and assumed to have failed. The "
+                      + "default value is 10."),
     @Property(name=ConfigurationConstants.PROP_RETRY_DELAY,
-            longValue=ConfigurationConstants.DEFAULT_RETRY_DELAY),
+            longValue=ConfigurationConstants.DEFAULT_RETRY_DELAY,
+            label="Retry Delay",
+            description="The number of milliseconds to sleep between two "
+                      + "consecutive retries of a job which failed and was set to be retried. The "
+                      + "default value is 2 seconds. This value is only relevant if there is a single "
+                      + "failed job in the queue. If there are multiple failed jobs, each job is "
+                      + "retried in turn without an intervening delay."),
     @Property(name=ConfigurationConstants.PROP_MAX_PARALLEL,
-            intValue=ConfigurationConstants.DEFAULT_MAX_PARALLEL)
+            intValue=ConfigurationConstants.DEFAULT_MAX_PARALLEL,
+            label="Maximum Parallel Jobs",
+            description="The maximum number of parallel jobs started for this queue. "
+                      + "A value of -1 is substituted with the number of available processors."),
 })
 public class MainQueueConfiguration {
 
@@ -96,6 +112,10 @@ public class MainQueueConfiguration {
         this.mainConfiguration = InternalQueueConfiguration.fromConfiguration(queueProps);
     }
 
+    /**
+     * Return the main queue configuration object.
+     * @return The main queue configuration object.
+     */
     public InternalQueueConfiguration getMainConfiguration() {
         return this.mainConfiguration;
     }

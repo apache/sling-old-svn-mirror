@@ -1,0 +1,13 @@
+{
+    "jcr:primaryType": "sling:OsgiConfig",
+    "name": "cache-flush",
+    "parent.name": "cache-flush",
+    "useCustomHeaders": true,
+    "customHeaders": [
+        "Path: {path}",
+        "add -> Action : REFRESH",
+        "delete -> Change : REMOVE" ],
+    "useCustomBody": true,
+    "customBody": "",
+    "endpoints": [ "http://localhost:8000/invalidatecache" ]
+}

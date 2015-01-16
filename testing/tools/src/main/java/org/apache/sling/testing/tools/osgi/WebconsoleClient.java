@@ -56,6 +56,8 @@ public class WebconsoleClient {
     public void uninstallBundle(String symbolicName, File f) throws Exception {
         final long bundleId = getBundleId(symbolicName);
         
+        log.info("Uninstalling bundle {} with bundleId {}", symbolicName, bundleId);
+
         final MultipartEntity entity = new MultipartEntity();
         entity.addPart("action",new StringBody("uninstall"));
         executor.execute(
@@ -171,4 +173,19 @@ public class WebconsoleClient {
         return CONSOLE_BUNDLES_PATH + "/" + symbolicName 
         + (extension == null ? "" : extension);
     }
+
+    /** Calls PackageAdmin.refreshPackages to enforce re-wiring of all bundles. */
+    public void refreshPackages() throws Exception {
+        log.info("Refresh packages.");
+
+        final MultipartEntity entity = new MultipartEntity();
+        entity.addPart("action", new StringBody("refreshPackages"));
+
+        executor.execute(
+                builder.buildPostRequest(CONSOLE_BUNDLES_PATH)
+                .withCredentials(username, password)
+                .withEntity(entity)
+        ).assertStatus(200);
+    }
+    
 }

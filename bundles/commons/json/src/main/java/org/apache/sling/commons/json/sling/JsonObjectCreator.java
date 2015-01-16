@@ -116,8 +116,8 @@ public abstract class JsonObjectCreator {
     /** Used to format date values */
     private static final String ECMA_DATE_FORMAT = "EEE MMM dd yyyy HH:mm:ss 'GMT'Z";
 
-    /** Used to format date values */
-    private static final Locale DATE_FORMAT_LOCALE = Locale.US;
+    /** The Locale used to format date values */
+    static final Locale DATE_FORMAT_LOCALE = Locale.US;
 
     private static final DateFormat CALENDAR_FORMAT = new SimpleDateFormat(ECMA_DATE_FORMAT, DATE_FORMAT_LOCALE);
 

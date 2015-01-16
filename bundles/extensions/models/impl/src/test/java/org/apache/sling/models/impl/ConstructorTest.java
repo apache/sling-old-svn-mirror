@@ -22,6 +22,7 @@ import static org.mockito.Mockito.*;
 import java.util.Hashtable;
 
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.models.factory.ModelClassException;
 import org.apache.sling.models.impl.injectors.RequestAttributeInjector;
 import org.apache.sling.models.impl.injectors.SelfInjector;
 import org.apache.sling.models.testmodels.classes.InvalidConstructorModel;
@@ -40,7 +41,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
 
 @RunWith(MockitoJUnitRunner.class)
-@SuppressWarnings("javadoc")
 public class ConstructorTest {
 
     @Mock
@@ -108,6 +108,11 @@ public class ConstructorTest {
     public void testInvalidConstructorInjector() {
         InvalidConstructorModel model = factory.getAdapter(request, InvalidConstructorModel.class);
         assertNull(model);
+    }
+
+    @Test(expected = ModelClassException.class)
+    public void testInvalidConstructorInjectorException() {
+        factory.createModel(request, InvalidConstructorModel.class);
     }
 
     /**

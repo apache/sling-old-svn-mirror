@@ -28,6 +28,9 @@ import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.osgi.service.subsystem.Subsystem;
 
+/**
+ * This is the subsystem install task.
+ */
 public class InstallSubsystemTask extends InstallTask {
 
     private static final String INSTALL_ORDER = "53-";
@@ -45,8 +48,9 @@ public class InstallSubsystemTask extends InstallTask {
         ctx.log("Installing new subsystem from {}", tr);
 
         try {
-            this.rootSubsystem.install(tr.getURL(), tr.getInputStream());
-            ctx.addTaskToCurrentCycle(new ChangeStateTask(this.getResourceGroup(), ResourceState.INSTALLED));
+            final Subsystem sub = this.rootSubsystem.install(tr.getURL(), tr.getInputStream());
+            ctx.addTaskToCurrentCycle(new StartSubsystemTask(this.getResourceGroup(), sub));
+            ctx.log("Installed new subsystem {}", sub);
         } catch (final IOException e) {
             ctx.log("Unable to install subsystem {} : {}", tr, e);
             ctx.addTaskToCurrentCycle(new ChangeStateTask(this.getResourceGroup(), ResourceState.IGNORED));

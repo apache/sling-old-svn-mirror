@@ -91,14 +91,14 @@ public class ContentXmlHandler extends DefaultHandler {
     static enum TypeHint {
         BINARY("Binary") {
             @Override
-            Object parseValues(String[] values) {
+            Object parseValues(String[] values, boolean explicitMultiValue) {
                 return null;
             }
         },
         BOOLEAN("Boolean") {
             @Override
-            Object parseValues(String[] values) {
-                if (values.length == 1) {
+            Object parseValues(String[] values, boolean explicitMultiValue) {
+                if (values.length == 1 && !explicitMultiValue) {
                     return Boolean.valueOf(values[0]);
                 }
 
@@ -112,9 +112,9 @@ public class ContentXmlHandler extends DefaultHandler {
         },
         DATE("Date") {
             @Override
-            Object parseValues(String[] values) {
+            Object parseValues(String[] values, boolean explicitMultiValue) {
 
-                if (values.length == 1) {
+                if (values.length == 1 && !explicitMultiValue) {
                     return ISO8601.parse(values[0]);
                 }
 
@@ -127,8 +127,8 @@ public class ContentXmlHandler extends DefaultHandler {
         },
         DOUBLE("Double") {
             @Override
-            Object parseValues(String[] values) {
-                if (values.length == 1) {
+            Object parseValues(String[] values, boolean explicitMultiValue) {
+                if (values.length == 1 && !explicitMultiValue) {
                     return Double.parseDouble(values[0]);
                 }
 
@@ -141,8 +141,8 @@ public class ContentXmlHandler extends DefaultHandler {
         },
         LONG("Long") {
             @Override
-            Object parseValues(String[] values) {
-                if ( values.length == 1 ) {
+            Object parseValues(String[] values, boolean explicitMultiValue) {
+                if (values.length == 1 && !explicitMultiValue) {
                     return Long.valueOf(values[0]);
                 }
                 
@@ -155,8 +155,8 @@ public class ContentXmlHandler extends DefaultHandler {
         },
         DECIMAL("Decimal") {
             @Override
-            Object parseValues(String[] values) {
-                if ( values.length == 1) {
+            Object parseValues(String[] values, boolean explicitMultiValue) {
+                if (values.length == 1 && !explicitMultiValue) {
                     return new BigDecimal(values[0]);
                 }
                 
@@ -168,29 +168,23 @@ public class ContentXmlHandler extends DefaultHandler {
             }
         },
         NAME("Name") {
-
             @Override
-            Object parseValues(String[] values) {
-                if (values.length == 1) {
-                    return values[0];
-                }
-
+            Object parseValues(String[] values, boolean explicitMultiValue) {
                 return values;
             }
         },
         PATH("Path") {
 
             @Override
-            Object parseValues(String[] values) {
-                return NAME.parseValues(values);
+            Object parseValues(String[] values, boolean explicitMultiValue) {
+                return NAME.parseValues(values, explicitMultiValue);
             }
 
         },
         REFERENCE("Reference") {
-
             @Override
-            Object parseValues(String[] values) {
-                if (values.length == 1) {
+            Object parseValues(String[] values, boolean explicitMultiValue) {
+                if (values.length == 1 && !explicitMultiValue) {
                     return UUID.fromString(values[0]);
                 }
 
@@ -205,16 +199,16 @@ public class ContentXmlHandler extends DefaultHandler {
 
         },
         WEAKREFERENCE("WeakReference") {
-
             @Override
-            Object parseValues(String[] values) {
-                return REFERENCE.parseValues(values);
+            Object parseValues(String[] values, boolean explicitMultiValue) {
+                return REFERENCE.parseValues(values, explicitMultiValue);
             }
 
         };
 
         static Object parsePossiblyTypedValue(String value) {
 
+            boolean explicitMultiValue = false;
             String rawValue;
             int hintEnd = -1;
             
@@ -240,12 +234,15 @@ public class ContentXmlHandler extends DefaultHandler {
 
                 String rawValues = rawValue.substring(1, rawValue.length() - 1);
                 values = rawValues.split(",");
+                explicitMultiValue = true;
             } else {
                 values = new String[] { rawValue };
             }
 
+            // no hint -> string type
             if (hintEnd == -1) {
-                if (values.length == 1) {
+                unescape(values);
+                if (values.length == 1 && !explicitMultiValue) {
                     return values[0];
                 }
                 return values;
@@ -255,11 +252,20 @@ public class ContentXmlHandler extends DefaultHandler {
 
             for (TypeHint hint : EnumSet.allOf(TypeHint.class)) {
                 if (hint.rawHint.equals(rawHint)) {
-                    return hint.parseValues(values);
+                    return hint.parseValues(values, explicitMultiValue);
                 }
             }
 
             throw new IllegalArgumentException("Unknown typeHint value '" + rawHint + "'");
+        }
+
+        private static void unescape(String[] values) {
+
+            for (int i = 0; i < values.length; i++) {
+                if (values[i].length() > 0 && values[i].charAt(0) == '\\') {
+                    values[i] = values[i].substring(1);
+                }
+            }
         }
 
         private final String rawHint;
@@ -269,7 +275,7 @@ public class ContentXmlHandler extends DefaultHandler {
             this.rawHint = rawHint;
         }
 
-        abstract Object parseValues(String[] values);
+        abstract Object parseValues(String[] values, boolean explicitMultiValue);
 
     }
 }

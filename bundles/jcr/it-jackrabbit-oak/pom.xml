@@ -9,7 +9,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>20</version>
+        <version>22</version>
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
@@ -27,8 +27,23 @@
         <url.version>2.1.0</url.version>
         <org.ops4j.pax.logging.DefaultServiceLog.level>WARN</org.ops4j.pax.logging.DefaultServiceLog.level>
         <org.ops4j.pax.url.mvn.settings></org.ops4j.pax.url.mvn.settings>
-        <oak.version>1.0.0</oak.version>
+        
+        <!-- Set this to enable debugging of the VM used to run pax exam -->
+        <!-- Include -Dtest.scale=N to use larger data sets in some tests -->
+        <pax.vm.options></pax.vm.options>
+
+        <!-- 
+            WARNING make sure oak.version and sling.oak.server.version 
+            are in sync with bundles/jcr/oak-server
+        -->
+        <oak.version>1.0.9</oak.version>
         <sling.oak.server.version>${project.version}</sling.oak.server.version>
+        
+        <!-- optionally activate the webconsole -->
+        <webconsole.active>false</webconsole.active>
+        <http.port></http.port>
+        
+        <pax.exam.service.timeout>10000</pax.exam.service.timeout>
     </properties>
 
     <build>
@@ -74,6 +89,18 @@
                         <property>
                             <name>sling.oak.server.version</name>
                             <value>${sling.oak.server.version}</value>
+                        </property>
+                        <property>
+                            <name>pax.vm.options</name>
+                            <value>${pax.vm.options}</value>
+                        </property>
+                        <property>
+                            <name>webconsole.active</name>
+                            <value>${webconsole.active}</value>
+                        </property>
+                        <property>
+                            <name>pax.exam.service.timeout</name>
+                            <value>${pax.exam.service.timeout}</value>
                         </property>
                     </systemProperties>
                     <argLine>

@@ -37,6 +37,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
@@ -49,6 +50,7 @@ import org.apache.sling.ide.filter.FilterResult;
 import org.apache.sling.ide.log.Logger;
 import org.apache.sling.ide.serialization.SerializationKind;
 import org.apache.sling.ide.serialization.SerializationKindManager;
+import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.NodeTypeRegistry;
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryException;
@@ -311,8 +313,8 @@ public class JcrNode implements IAdaptable {
 				}
 			}
 		}
-		for (Iterator it = values.iterator(); it.hasNext();) {
-            JcrNode jcrNode = (JcrNode) it.next();
+        for (Iterator<JcrNode> it = values.iterator(); it.hasNext();) {
+            JcrNode jcrNode = it.next();
             if (jcrNode instanceof DirNode) {
                 DirNode dirNode = (DirNode)jcrNode;
                 // DirNodes are candidates for hiding
@@ -359,18 +361,22 @@ public class JcrNode implements IAdaptable {
 				throw new IllegalStateException("Children already loaded");
 			}
 			Set<String> childrenNames = new HashSet<String>();
-			for (Iterator it = children.iterator(); it.hasNext();) {
-				JcrNode node = (JcrNode) it.next();
+            for (Iterator<JcrNode> it = children.iterator(); it.hasNext();) {
+                JcrNode node = it.next();
 				childrenNames.add(node.getName());
 			}
 			
 			if (resource!=null && resource instanceof IFolder) {
 				IFolder folder = (IFolder)resource;
 				IResource[] members = folder.members();
-				List<Object> membersList = new LinkedList<Object>(Arrays.asList(members));
+                List<IResource> membersList = new LinkedList<IResource>(Arrays.asList(members));
 				outerLoop: while(membersList.size()>0) {
-					for (Iterator it = membersList.iterator(); it.hasNext();) {
-						IResource iResource = (IResource) it.next();
+                    for (Iterator<IResource> it = membersList.iterator(); it.hasNext();) {
+                        IResource iResource = it.next();
+                        if (isDotVltFile(iResource)) {
+                            it.remove();
+                            continue;
+                        }
 						if (isVaultFile(iResource)) {
 							GenericJcrRootFile gjrf = new GenericJcrRootFile(this, (IFile)iResource);
 							it.remove();
@@ -379,7 +385,7 @@ public class JcrNode implements IAdaptable {
 							
 							// as this might have added some new children, go through the children again and
 							// add them if they're not already added
-							for (Iterator it3 = children.iterator(); it3
+                            for (Iterator<JcrNode> it3 = children.iterator(); it3
 									.hasNext();) {
 								JcrNode node = (JcrNode) it3.next();
 								if (!childrenNames.contains(node.getName())) {
@@ -391,7 +397,7 @@ public class JcrNode implements IAdaptable {
 						}
 					}
 					List<JcrNode> newNodes = new LinkedList<JcrNode>();
-					for (Iterator it = membersList.iterator(); it.hasNext();) {
+                    for (Iterator<IResource> it = membersList.iterator(); it.hasNext();) {
 						IResource iResource = (IResource) it.next();
 						JcrNode node;
 						if (DirNode.isDirNode(iResource)) {
@@ -427,7 +433,11 @@ public class JcrNode implements IAdaptable {
 		}
 	}
 
-	private boolean isVaultFile(IResource iResource)
+    private boolean isDotVltFile(IResource res) {
+        return res.getType() == IResource.FILE && res.getName().equals(".vlt");
+    }
+
+    private boolean isVaultFile(IResource iResource)
 			throws ParserConfigurationException, SAXException, IOException,
 			CoreException {
 		if (iResource.getName().endsWith(".xml")) {
@@ -440,9 +450,13 @@ public class JcrNode implements IAdaptable {
 		    SAXParser saxParser = factory.newSAXParser();
 
 		    JcrRootHandler h = new JcrRootHandler();
-			saxParser.parse(new InputSource(file.getContents()), h);
-
-			return h.isVaultFile();
+			InputStream contents = file.getContents();
+            try {
+                saxParser.parse(new InputSource(contents), h);
+                return h.isVaultFile();
+            } finally {
+                IOUtils.closeQuietly(contents);
+            }
 		}
 		return false;
 	}
@@ -844,6 +858,8 @@ public class JcrNode implements IAdaptable {
 	    String thisNodeType = getPrimaryType();
 	    final SerializationKind parentSk = getSerializationKind(thisNodeType);
         final SerializationKind childSk = getSerializationKind(childNodeType);
+
+        final SerializationManager serializationManager = Activator.getDefault().getSerializationManager();
 	    
 	    if (parentSk==SerializationKind.METADATA_FULL) {
 	        createDomChild(childNodeName, childNodeType);
@@ -889,8 +905,9 @@ public class JcrNode implements IAdaptable {
 	            MessageDialog.openError(Display.getDefault().getActiveShell(), "Error creating node", "Error creating child of "+thisNodeType+" with type "+childNodeType+": "+e);
 	            return;
 	        }
-	    } else if (parentSk==SerializationKind.FOLDER && childSk==SerializationKind.METADATA_FULL) {
-            createVaultFile((IFolder)resource, childNodeName+".xml", childNodeType);
+        } else if ((parentSk == SerializationKind.FOLDER || parentSk == SerializationKind.METADATA_PARTIAL)
+                && childSk == SerializationKind.METADATA_FULL) {
+            createVaultFile((IFolder) resource, serializationManager.getOsPath(childNodeName) + ".xml", childNodeType);
 	    } else if (parentSk==SerializationKind.FOLDER && childSk==SerializationKind.METADATA_PARTIAL) {
 //	        createVaultFile((IFolder)resource, childNodeName+".xml", childNodeType);
 
@@ -900,7 +917,7 @@ public class JcrNode implements IAdaptable {
                 public void run(IProgressMonitor monitor) throws CoreException {
                     IFolder f = (IFolder)resource;
                     IFolder newFolder = null;
-                    newFolder = f.getFolder(childNodeName);
+                    newFolder = f.getFolder(serializationManager.getOsPath(childNodeName));
                     newFolder.create(true, true, new NullProgressMonitor());
                     createVaultFile(newFolder, ".content.xml", childNodeType);
                 }
@@ -924,6 +941,11 @@ public class JcrNode implements IAdaptable {
 	            return;
 	        }
 	        //TODO: FILE not yet supported
+
+            Activator.getDefault().getPluginLogger()
+                    .error("Cannot create child node of type " + childNodeType + ", serializationKind " + childSk
+                            + " under child node of type " + thisNodeType + ", serializationKind " + parentSk);
+
 	        MessageDialog.openWarning(Display.getDefault().getActiveShell(), "Error creating node", "Cannot create child of "+thisNodeType+" with type "+childNodeType+" (yet?)");
 	        return;
 	    }
@@ -961,8 +983,8 @@ public class JcrNode implements IAdaptable {
                 Document document = TolerantXMLParser.parse(xml, file.getFullPath().toOSString());
                 // add the attributes of content
                 List<Attribute> attributes = content.getAttributes();
-                for (Iterator it = attributes.iterator(); it.hasNext();) {
-                    Attribute anAttribute = (Attribute) it.next();
+                for (Iterator<Attribute> it = attributes.iterator(); it.hasNext();) {
+                    Attribute anAttribute = it.next();
                     if (anAttribute.getName().equals("jcr:primaryType")) {
                         // skip this
                         continue;
@@ -1325,9 +1347,8 @@ public class JcrNode implements IAdaptable {
                 Element propDomElement = properties.getDomElement();
                 if (propDomElement!=null) {
                     List<Attribute> attributes = propDomElement.getAttributes();
-                    for (Iterator it = attributes.iterator(); it
-                            .hasNext();) {
-                        Attribute anAttribute = (Attribute) it.next();
+                    for (Iterator<Attribute> it = attributes.iterator(); it.hasNext();) {
+                        Attribute anAttribute = it.next();
                         if (anAttribute.getName().startsWith("xmlns:")) {
                             continue;
                         }
@@ -1427,8 +1448,9 @@ public class JcrNode implements IAdaptable {
         
         IFolder contentSyncRoot = ProjectUtil.getSyncDirectory(getProject());
         IFile file = (IFile) u.file;
+        InputStream contents = null;
         try{
-            InputStream contents = file.getContents();
+            contents = file.getContents();
             String resourceLocation = file.getFullPath().makeRelativeTo(contentSyncRoot.getFullPath())
                     .toPortableString();
             ResourceProxy resourceProxy = Activator.getDefault()
@@ -1440,6 +1462,8 @@ public class JcrNode implements IAdaptable {
             return PropertyTypeSupport.propertyTypeOfString(rawValue);
         } catch(Exception e) {
             Activator.getDefault().getPluginLogger().warn("Exception occurred during analyzing propertyType ("+propertyName+") for "+this, e);
+        } finally {
+            IOUtils.closeQuietly(contents);
         }
         return -1;
     }
@@ -1454,9 +1478,9 @@ public class JcrNode implements IAdaptable {
             }
         } else {
             List<ResourceProxy> resourceProxyChildren = resourceProxy.getChildren();
-            for (Iterator it = resourceProxyChildren.iterator(); it
+            for (Iterator<ResourceProxy> it = resourceProxyChildren.iterator(); it
                     .hasNext();) {
-                final ResourceProxy aChild = (ResourceProxy) it.next();
+                final ResourceProxy aChild = it.next();
                 final Object p1 = doGetProperty(aChild, propertyName);
                 if (p1!=null) {
                     return p1;
@@ -1475,8 +1499,8 @@ public class JcrNode implements IAdaptable {
         nodeTypes.add(nt0);
         // add all supertypes
         nodeTypes.addAll(Arrays.asList(nt0.getSupertypes()));
-        for (Iterator it = nodeTypes.iterator(); it.hasNext();) {
-            NodeType nt = (NodeType) it.next();
+        for (Iterator<NodeType> it = nodeTypes.iterator(); it.hasNext();) {
+            NodeType nt = it.next();
             PropertyDefinition[] pds = nt.getPropertyDefinitions();
             for (int i = 0; i < pds.length; i++) {
                 PropertyDefinition propertyDefinition = pds[i];
@@ -1577,9 +1601,9 @@ public class JcrNode implements IAdaptable {
         }
         IFolder folder = (IFolder) node.resource;
         parentNames.add(childNodeName);
-        for (Iterator it = parentNames.iterator(); it
+        for (Iterator<String> it = parentNames.iterator(); it
                 .hasNext();) {
-            String aParentName = (String) it.next();
+            String aParentName = it.next();
             String encodedParentName = DirNode.encode(aParentName);
             IResource member = folder.findMember(encodedParentName);
             if (member!=null && !(member instanceof IFolder)) {

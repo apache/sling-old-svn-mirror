@@ -28,17 +28,14 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.event.impl.jobs.JobImpl;
-import org.apache.sling.event.impl.jobs.JobManagerImpl;
+import org.apache.sling.event.impl.jobs.config.JobManagerConfiguration;
 import org.apache.sling.event.jobs.Job;
-import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.consumer.JobExecutionContext;
 import org.apache.sling.event.jobs.consumer.JobExecutionResult;
 import org.apache.sling.event.jobs.consumer.JobExecutor;
@@ -71,10 +68,7 @@ public class HistoryCleanUpTask implements JobExecutor {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Reference
-    private ResourceResolverFactory resourceResolverFactory;
-
-    @Reference
-    private JobManager jobManager;
+    private JobManagerConfiguration configuration;
 
     @Override
     public JobExecutionResult process(final Job job, final JobExecutionContext context) {
@@ -101,29 +95,23 @@ public class HistoryCleanUpTask implements JobExecutor {
         } else {
             stateList = null;
         }
-        ResourceResolver resolver = null;
+        final ResourceResolver resolver = this.configuration.createResourceResolver();
         try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-
             if ( stateList == null || stateList.contains(Job.JobState.SUCCEEDED.name()) ) {
-                this.cleanup(removeDate, resolver, context, ((JobManagerImpl)jobManager).getConfiguration().getStoredSuccessfulJobsPath(), topics, null);
+                this.cleanup(removeDate, resolver, context, configuration.getStoredSuccessfulJobsPath(), topics, null);
             }
             if ( stateList == null || stateList.contains(Job.JobState.DROPPED.name())
                  || stateList.contains(Job.JobState.ERROR.name())
                  || stateList.contains(Job.JobState.GIVEN_UP.name())
                  || stateList.contains(Job.JobState.STOPPED.name())) {
-                this.cleanup(removeDate, resolver, context, ((JobManagerImpl)jobManager).getConfiguration().getStoredCancelledJobsPath(), topics, stateList);
+                this.cleanup(removeDate, resolver, context, configuration.getStoredCancelledJobsPath(), topics, stateList);
             }
 
         } catch (final PersistenceException pe) {
             // in the case of an error, we just log this as a warning
             this.logger.warn("Exception during job resource tree cleanup.", pe);
-        } catch (final LoginException ignore) {
-            this.ignoreException(ignore);
         } finally {
-            if ( resolver != null ) {
-                resolver.close();
-            }
+            resolver.close();
         }
         return context.result().succeeded();
     }
@@ -243,16 +231,6 @@ public class HistoryCleanUpTask implements JobExecutor {
                     }
                 }
             }
-        }
-    }
-
-    /**
-     * Helper method which just logs the exception in debug mode.
-     * @param e
-     */
-    private void ignoreException(final Exception e) {
-        if ( this.logger.isDebugEnabled() ) {
-            this.logger.debug("Ignored exception " + e.getMessage(), e);
         }
     }
 }

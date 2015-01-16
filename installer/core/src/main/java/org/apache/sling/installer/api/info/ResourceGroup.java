@@ -20,11 +20,14 @@ package org.apache.sling.installer.api.info;
 
 import java.util.List;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * This is a group of resources all pointing to the same artifact,
  * but maybe in different versions or locations.
  * @since 1.0
  */
+@ProviderType
 public interface ResourceGroup {
 
     /**

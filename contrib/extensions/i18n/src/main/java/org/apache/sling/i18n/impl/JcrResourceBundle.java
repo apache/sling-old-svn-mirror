@@ -24,15 +24,12 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.query.Query;
 
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.api.SlingException;
@@ -78,7 +75,7 @@ public class JcrResourceBundle extends ResourceBundle {
         this.locale = locale;
 
         long start = System.currentTimeMillis();
-        refreshSession(resourceResolver, true);
+        refreshSession(resourceResolver);
         Set<String> roots = loadPotentialLanguageRoots(resourceResolver, locale, baseName);
         this.resources = loadFully(resourceResolver, roots, this.languageRoots);
         long end = System.currentTimeMillis();
@@ -91,17 +88,8 @@ public class JcrResourceBundle extends ResourceBundle {
         }
     }
 
-    static void refreshSession(ResourceResolver resolver, boolean keepChanges) {
-        final Session s = resolver.adaptTo(Session.class);
-        if(s == null) {
-            log.warn("ResourceResolver {} does not adapt to Session, cannot refresh", resolver);
-        } else {
-            try {
-                s.refresh(keepChanges);
-            } catch(RepositoryException re) {
-                throw new RuntimeException("RepositoryException in session.refresh", re);
-            }
-        }
+    static void refreshSession(final ResourceResolver resolver) {
+        resolver.refresh();
     }
 
     protected Set<String> getLanguageRootPaths() {
@@ -165,8 +153,11 @@ public class JcrResourceBundle extends ResourceBundle {
      */
     @SuppressWarnings("deprecation")
     private Map<String, Object> loadFully(final ResourceResolver resourceResolver, Set<String> roots, Set<String> languageRoots) {
-        final Map<String, Object> rest = new HashMap<String, Object>();
-        for (String root: roots) {
+        final List<List<Map<String, Object>>> allResources = new ArrayList<List<Map<String,Object>>>();
+
+        final String[] path = resourceResolver.getSearchPath();
+
+        for (final String root: roots) {
             String fullLoadQuery = String.format(QUERY_MESSAGES_FORMAT, ISO9075.encodePath(root));
 
             log.debug("Executing full load query {}", fullLoadQuery);
@@ -175,18 +166,21 @@ public class JcrResourceBundle extends ResourceBundle {
             // (2011/04/04) is the fastest query language ...
             Iterator<Map<String, Object>> bundles = null;
             try {
-                bundles = resourceResolver.queryResources(fullLoadQuery, Query.XPATH);
+                bundles = resourceResolver.queryResources(fullLoadQuery, "xpath");
             } catch (final SlingException se) {
                 log.error("Exception during resource query " + fullLoadQuery, se);
             }
 
             if ( bundles != null ) {
-                final String[] path = resourceResolver.getSearchPath();
 
+                final Map<String, Object> rest = new HashMap<String, Object>();
                 final List<Map<String, Object>> res0 = new ArrayList<Map<String, Object>>();
                 for (int i = 0; i < path.length; i++) {
                     res0.add(new HashMap<String, Object>());
                 }
+                res0.add(rest); // add global list at the end
+
+                allResources.add(res0);
 
                 while (bundles.hasNext()) {
                     final Map<String, Object> row = bundles.next();
@@ -213,16 +207,27 @@ public class JcrResourceBundle extends ResourceBundle {
                 for (int i = path.length - 1; i >= 0; i--) {
                     final Map<String, Object> resources = res0.get(i);
                     if (!resources.isEmpty()) {
-                        rest.putAll(resources);
                         // also remember root
                         languageRoots.add(root);
-
                     }
                 }
             }
         }
+        final Map<String, Object> result = new HashMap<String, Object>();
+        for(final List<Map<String, Object>> current : allResources) {
+            final Map<String, Object> rest = current.get(current.size() - 1);
+            result.putAll(rest);
+        }
 
-        return rest;
+        for (int i = path.length - 1; i >= 0; i--) {
+
+            for(final List<Map<String, Object>> current : allResources) {
+                final Map<String, Object> resources = current.get(i);
+                result.putAll(resources);
+            }
+        }
+
+        return result;
     }
 
     private Set<String> loadPotentialLanguageRoots(ResourceResolver resourceResolver, Locale locale, String baseName) {
@@ -231,9 +236,9 @@ public class JcrResourceBundle extends ResourceBundle {
         final String localeRFC4646String = toRFC4646String(locale);
         final String localeRFC4646StringLower = localeRFC4646String.toLowerCase();
 
-        Set<String> paths = new HashSet<String>();
+        Set<String> paths = new LinkedHashSet<String>();
         @SuppressWarnings("deprecation")
-        Iterator<Resource> bundles = resourceResolver.findResources(QUERY_LANGUAGE_ROOTS, Query.XPATH);
+        Iterator<Resource> bundles = resourceResolver.findResources(QUERY_LANGUAGE_ROOTS, "xpath");
         while (bundles.hasNext()) {
             Resource bundle = bundles.next();
             ValueMap properties = bundle.adaptTo(ValueMap.class);
