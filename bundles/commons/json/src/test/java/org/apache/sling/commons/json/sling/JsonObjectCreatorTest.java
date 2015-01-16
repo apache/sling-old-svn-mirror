@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -29,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import org.apache.sling.api.resource.Resource;
@@ -155,6 +157,18 @@ public class JsonObjectCreatorTest {
         final String nowString = new SimpleDateFormat(ECMA_DATE_FORMAT, Locale.ENGLISH).format(nowCalendar.getTime());
         assertGet(nowCalendar, nowString);
     }
+    
+    @Test
+    public void testCalendarTimezones() throws JSONException {
+        TimeZone midwayTimeZone=TimeZone.getTimeZone("Pacific/Midway");
+        final Calendar midwayCalendar = Calendar.getInstance(midwayTimeZone);
+        final String ECMA_DATE_FORMAT = "EEE MMM dd yyyy HH:mm:ss 'GMT'Z";
+        DateFormat formatter= new SimpleDateFormat(ECMA_DATE_FORMAT, Locale.ENGLISH);
+        formatter.setTimeZone(midwayTimeZone);
+        final String nowString =formatter.format(midwayCalendar.getTime());
+        assertGet(midwayCalendar, nowString);
+    }
+    
 
     @Test
     public void testStream() throws JSONException {
