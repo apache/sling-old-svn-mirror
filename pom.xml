@@ -71,14 +71,15 @@
                             org.junit.rules.*;version=${junit.version},
                             org.junit.runner.*;version=${junit.version},
                             org.junit.runners.*;version=${junit.version},
-                            org.hamcrest.*;version=${hamcrest.version},
-                            org.hamcrest.core.*;version=${hamcrest.version}
+                            org.hamcrest;version=${hamcrest.version},
+                            org.hamcrest.*;version=${hamcrest.version}
                         </_exportcontents>
                         <Private-Package>org.apache.sling.junit.impl.*</Private-Package>
                         <Embed-Dependency>
                             org.jacoco.agent;classifier=runtime;inline=org/jacoco/agent/rt/IAgent.class,
                             *;artifactId=junit,
-                            *;artifactId=hamcrest-core
+                            *;artifactId=hamcrest-core,
+                            *;artifactId=hamcrest-library
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
@@ -178,6 +179,12 @@
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-core</artifactId>
+            <version>${hamcrest.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-library</artifactId>
             <version>${hamcrest.version}</version>
             <scope>compile</scope>
         </dependency>
