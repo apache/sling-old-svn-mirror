@@ -276,9 +276,11 @@ public class RenderContextImpl implements RenderContext {
     }
 
     private Object getObjectProperty(Object obj, String property) {
-        Object result = getObjectNoArgMethod(obj, property);
-        if (result != null) return result;
-        return getField(obj, property);
+        try {
+            return getObjectNoArgMethod(obj, property);
+        } catch (NoSuchMethodException nsmex) {
+            return getField(obj, property);
+        }
     }
 
     private Object getField(Object obj, String property) {
@@ -295,21 +297,18 @@ public class RenderContextImpl implements RenderContext {
         }
     }
 
-    private Object getObjectNoArgMethod(Object obj, String property) {
+    private Object getObjectNoArgMethod(Object obj, String property) throws NoSuchMethodException {
         Class<?> cls = obj.getClass();
         Method method = findMethod(cls, property);
-        if (method != null) {
-            try {
-                method = extractMethodInheritanceChain(cls, method);
-                return method.invoke(obj);
-            } catch (Exception e) {
-                throw new SightlyRenderException(e);
-            }
+        try {
+            method = extractMethodInheritanceChain(cls, method);
+            return method.invoke(obj);
+        } catch (Exception e) {
+            throw new SightlyRenderException(e);
         }
-        return null;
     }
 
-    private Method findMethod(Class<?> cls, String baseName) {
+    private Method findMethod(Class<?> cls, String baseName) throws NoSuchMethodException {
         Method[] publicMethods = cls.getMethods();
         String capitalized = StringUtils.capitalize(baseName);
         for (Method m : publicMethods) {
@@ -326,7 +325,8 @@ public class RenderContextImpl implements RenderContext {
                 }
             }
         }
-        return null;
+
+        throw new NoSuchMethodException(baseName);
     }
 
     private boolean isMethodAllowed(Method method) {
