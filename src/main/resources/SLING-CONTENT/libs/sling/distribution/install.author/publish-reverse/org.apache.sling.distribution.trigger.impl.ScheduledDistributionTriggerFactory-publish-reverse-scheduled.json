@@ -2,9 +2,6 @@
     "jcr:primaryType": "sling:OsgiConfig",
 
     "name": "publish-reverse-scheduled",
-
-    "type": "scheduledEvent",
     "action": "pull",
     "seconds": "30"
-
 }
