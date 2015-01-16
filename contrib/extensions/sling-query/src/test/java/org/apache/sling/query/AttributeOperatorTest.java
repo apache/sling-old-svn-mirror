@@ -37,6 +37,12 @@ public class AttributeOperatorTest {
 	}
 
 	@Test
+	public void testEqualsWithMultivalue() {
+		SlingQuery query = $(tree).children("cq:PageContent[cq:allowedTemplates=other demo template]");
+		assertResourceSetEquals(query.iterator(), "jcr:content");
+	}
+
+	@Test
 	public void testNotEquals() {
 		SlingQuery query = $(tree).children("cq:PageContent[jcr:title=123]");
 		assertEmptyIterator(query.iterator());
@@ -45,6 +51,12 @@ public class AttributeOperatorTest {
 	@Test
 	public void testContains() {
 		SlingQuery query = $(tree).children("cq:PageContent[jcr:title*=mmons de]");
+		assertResourceSetEquals(query.iterator(), "jcr:content");
+	}
+
+	@Test
+	public void testContainsWithMultivalue() {
+		SlingQuery query = $(tree).children("cq:PageContent[cq:allowedTemplates*=her demo templa]");
 		assertResourceSetEquals(query.iterator(), "jcr:content");
 	}
 
@@ -61,6 +73,12 @@ public class AttributeOperatorTest {
 	}
 
 	@Test
+	public void testContainsWordWithMultivalue() {
+		SlingQuery query = $(tree).children("cq:PageContent[cq:allowedTemplates~=template]");
+		assertResourceSetEquals(query.iterator(), "jcr:content");
+	}
+
+	@Test
 	public void testNotContainsWord() {
 		SlingQuery query = $(tree).children("cq:PageContent[jcr:title~=mmons de]");
 		assertEmptyIterator(query.iterator());
@@ -69,6 +87,12 @@ public class AttributeOperatorTest {
 	@Test
 	public void testEndsWith() {
 		SlingQuery query = $(tree).children("cq:PageContent[jcr:title$=demo]");
+		assertResourceSetEquals(query.iterator(), "jcr:content");
+	}
+
+	@Test
+	public void testEndsWithWithMultivalue() {
+		SlingQuery query = $(tree).children("cq:PageContent[cq:allowedTemplates$=demo template]");
 		assertResourceSetEquals(query.iterator(), "jcr:content");
 	}
 
@@ -93,6 +117,12 @@ public class AttributeOperatorTest {
 	@Test
 	public void testStartsWith() {
 		SlingQuery query = $(tree).children("cq:PageContent[jcr:title^=CQ]");
+		assertResourceSetEquals(query.iterator(), "jcr:content");
+	}
+
+	@Test
+	public void testStartsWithWithMultivalue() {
+		SlingQuery query = $(tree).children("cq:PageContent[cq:allowedTemplates^=other demo]");
 		assertResourceSetEquals(query.iterator(), "jcr:content");
 	}
 

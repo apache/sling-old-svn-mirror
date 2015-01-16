@@ -6,8 +6,8 @@
     "redirectTarget": "/content/cqc-demo/home",
     "sling:resourceType": "demo/core/renderers/redirectRenderer",
     "cq:allowedTemplates": [
-      "/apps/demo/.*/templates(.*)?",
-      "/apps/cq-commons(.*)?"
+      "some demo template",
+      "other demo template"
     ],
     "jcr:title": "CQ Commons demo",
     "cq:designPath": "/etc/designs/demo",
