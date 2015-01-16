@@ -162,10 +162,11 @@ public class JsonObjectCreatorTest {
     
     @Test
     public void testCalendarTimezones() throws JSONException {
-        TimeZone midwayTimeZone=TimeZone.getTimeZone("Pacific/Midway");
-        final Calendar midwayCalendar = Calendar.getInstance(midwayTimeZone);
+        String[] tzIds=TimeZone.getAvailableIDs();
+        TimeZone timezone=TimeZone.getTimeZone(tzIds[tzIds.length/2]);
+        final Calendar midwayCalendar = Calendar.getInstance(timezone);
         DateFormat formatter= new SimpleDateFormat(ECMA_DATE_FORMAT, Locale.ENGLISH);
-        formatter.setTimeZone(midwayTimeZone);
+        formatter.setTimeZone(timezone);
         final String nowString =formatter.format(midwayCalendar.getTime());
         assertGet(midwayCalendar, nowString);
     }

@@ -94,9 +94,9 @@ public class SlingDateValuesTest extends HttpTestBase {
     }
     
     public void testDateTimezone() throws IOException {
-        
-        TimeZone tzLosAngeles = TimeZone.getTimeZone("America/Los_Angeles");
-        Calendar calendar= Calendar.getInstance(tzLosAngeles);
+        String[] timezones= TimeZone.getAvailableIDs();
+        TimeZone timezone1 = TimeZone.getTimeZone(timezones[timezones.length/3]);
+        Calendar calendar= Calendar.getInstance(timezone1);
         SimpleDateFormat ecmaFmt = new SimpleDateFormat(ECMA_FORMAT, Locale.US);
         ecmaFmt.setTimeZone(calendar.getTimeZone());
         
@@ -104,11 +104,11 @@ public class SlingDateValuesTest extends HttpTestBase {
         String date1ISO= ISO8601.format(calendar);
         String date1Ecma=ecmaFmt.format(calendar.getTime());
         
-        TimeZone tzMoscow= TimeZone.getTimeZone("Europe/Moscow");
+        TimeZone timezone2= TimeZone.getTimeZone(timezones[timezones.length/2]);
         Date now= new Date();
         calendar.setTime(now);
-        calendar.setTimeZone(tzMoscow);
-        ecmaFmt.setTimeZone(tzMoscow);
+        calendar.setTimeZone(timezone2);
+        ecmaFmt.setTimeZone(timezone2);
         String date2Ecma= ecmaFmt.format(now);
         String date2ISO= ISO8601.format(calendar);
         doDateTest(date1Ecma,date1ISO, date2Ecma,date2ISO);
