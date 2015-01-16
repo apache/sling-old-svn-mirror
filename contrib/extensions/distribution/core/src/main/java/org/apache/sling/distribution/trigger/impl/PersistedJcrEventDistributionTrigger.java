@@ -39,15 +39,15 @@ import org.slf4j.LoggerFactory;
  * {@link org.apache.sling.distribution.trigger.DistributionTrigger} that listens for certain events and persists them
  * under a specific path in the repo
  */
-public class PersistingJcrEventDistributionTrigger extends AbstractJcrEventTrigger implements DistributionTrigger {
+public class PersistedJcrEventDistributionTrigger extends AbstractJcrEventTrigger implements DistributionTrigger {
 
-    private static final String DEFAULT_NUGGETS_PATH = "/var/nuggets";
+    private static final String DEFAULT_NUGGETS_PATH = "/var/distribution/nuggets";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final String nuggetsPath;
 
-    public PersistingJcrEventDistributionTrigger(SlingRepository repository, String path, String servicename, String nuggetsPath) {
+    public PersistedJcrEventDistributionTrigger(SlingRepository repository, String path, String servicename, String nuggetsPath) {
         super(repository, path, servicename);
         this.nuggetsPath = nuggetsPath == null || nuggetsPath.length() == 0 ? DEFAULT_NUGGETS_PATH : nuggetsPath;
     }
@@ -122,6 +122,7 @@ public class PersistingJcrEventDistributionTrigger extends AbstractJcrEventTrigg
         }
     }
 
+    @Override
     public void enable() {
         log.debug("enabling persisting jcr event listener");
         Session session;
@@ -133,9 +134,5 @@ public class PersistingJcrEventDistributionTrigger extends AbstractJcrEventTrigg
         } catch (RepositoryException e) {
             log.warn("could not create nuggets path " + nuggetsPath, e);
         }
-    }
-
-    public void disable() {
-        log.debug("disabling persisting jcr event listener");
     }
 }

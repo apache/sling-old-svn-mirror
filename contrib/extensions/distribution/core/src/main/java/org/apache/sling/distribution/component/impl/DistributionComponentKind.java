@@ -41,7 +41,11 @@ import org.apache.sling.distribution.serialization.impl.vlt.VaultDistributionPac
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.transport.impl.UserCredentialsDistributionTransportSecretProvider;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
-import org.apache.sling.distribution.trigger.impl.LocalDistributionTriggerFactory;
+import org.apache.sling.distribution.trigger.impl.DistributionEventDistributeDistributionTriggerFactory;
+import org.apache.sling.distribution.trigger.impl.JcrEventDistributionTriggerFactory;
+import org.apache.sling.distribution.trigger.impl.PersistedJcrEventDistributionTriggerFactory;
+import org.apache.sling.distribution.trigger.impl.ResourceEventDistributionTriggerFactory;
+import org.apache.sling.distribution.trigger.impl.ScheduledDistributionTriggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -102,10 +106,12 @@ public enum DistributionComponentKind {
 
         registerFactory(DistributionComponentKind.TRANSPORT_SECRET_PROVIDER, "user", UserCredentialsDistributionTransportSecretProvider.class);
 
-        registerFactory(DistributionComponentKind.TRIGGER, "resourceEvent", LocalDistributionTriggerFactory.class);
-        registerFactory(DistributionComponentKind.TRIGGER, "scheduledEvent", LocalDistributionTriggerFactory.class);
-        registerFactory(DistributionComponentKind.TRIGGER, "distributionEvent", LocalDistributionTriggerFactory.class);
-        registerFactory(DistributionComponentKind.TRIGGER, "persistedJcrEvent", LocalDistributionTriggerFactory.class);
+        registerFactory(DistributionComponentKind.TRIGGER, "resourceEvent", ResourceEventDistributionTriggerFactory.class);
+        registerFactory(DistributionComponentKind.TRIGGER, "scheduledEvent", ScheduledDistributionTriggerFactory.class);
+        registerFactory(DistributionComponentKind.TRIGGER, "distributionEvent", DistributionEventDistributeDistributionTriggerFactory.class);
+        registerFactory(DistributionComponentKind.TRIGGER, "persistedJcrEvent", PersistedJcrEventDistributionTriggerFactory.class);
+        registerFactory(DistributionComponentKind.TRIGGER, "jcrEvent", JcrEventDistributionTriggerFactory.class);
+
 
     }
 

@@ -130,6 +130,6 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
 
         return new SimpleDistributionAgent(agentName, true, serviceName,
                 null, packageExporter, requestAuthorizationStrategy,
-                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory, triggers);
+                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory);
     }
 }

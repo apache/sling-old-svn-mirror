@@ -180,7 +180,7 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
 
         return new SimpleDistributionAgent(agentName, false, serviceName,
                 packageImporter, packageExporter, requestAuthorizationStrategy,
-                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory, triggers);
+                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory);
 
     }
 }

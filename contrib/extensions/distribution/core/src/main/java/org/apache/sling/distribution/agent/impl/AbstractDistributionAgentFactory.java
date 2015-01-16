@@ -51,7 +51,7 @@ public abstract class AbstractDistributionAgentFactory {
     private BundleContext savedContext;
     private Map<String, Object> savedConfig;
     private String agentName;
-    List<DistributionTrigger> triggers = new CopyOnWriteArrayList<DistributionTrigger>();
+    private List<DistributionTrigger> triggers = new CopyOnWriteArrayList<DistributionTrigger>();
 
     private SimpleDistributionAgent agent;
 
@@ -89,6 +89,10 @@ public abstract class AbstractDistributionAgentFactory {
                     // register agent service
                     componentReg = context.registerService(DistributionAgent.class.getName(), agent, props);
                     agent.enable();
+
+                    for (DistributionTrigger trigger : triggers) {
+                        agent.enableTrigger(trigger);
+                    }
                 }
 
                 log.info("activated agent {}", agentName);
@@ -118,8 +122,13 @@ public abstract class AbstractDistributionAgentFactory {
             ServiceReference reference = componentReg.getReference();
             Object service = context.getService(reference);
             if (service instanceof SimpleDistributionAgent) {
-                ((SimpleDistributionAgent) service).disable();
+                SimpleDistributionAgent agent = (SimpleDistributionAgent) service;
+                for (DistributionTrigger trigger : triggers) {
+                    agent.disableTrigger(trigger);
+                }
+                triggers.clear();
 
+                agent.disable();
             }
 
             componentReg.unregister();
@@ -128,8 +137,6 @@ public abstract class AbstractDistributionAgentFactory {
         }
 
         log.info("deactivated agent {}", agentName);
-
-
     }
 
 

@@ -166,7 +166,7 @@ public class ForwardDistributionAgentFactory extends AbstractDistributionAgentFa
 
         return new SimpleDistributionAgent(agentName, false, serviceName,
                 packageImporter, packageExporter, requestAuthorizationStrategy,
-                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory, triggers);
+                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory);
 
 
     }

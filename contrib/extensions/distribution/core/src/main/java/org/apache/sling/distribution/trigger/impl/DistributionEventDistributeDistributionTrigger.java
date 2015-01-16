@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 /**
  * {@link org.apache.sling.distribution.trigger.DistributionTrigger} for chain distribution upon a certain {@link org.apache.sling.distribution.event.DistributionEventType}
  */
-public class ChainDistributeDistributionTrigger implements DistributionTrigger {
+public class DistributionEventDistributeDistributionTrigger implements DistributionTrigger {
 
     public static final String PATH = "path";
 
@@ -52,7 +52,10 @@ public class ChainDistributeDistributionTrigger implements DistributionTrigger {
     private final Map<String, ServiceRegistration> registrations = new ConcurrentHashMap<String, ServiceRegistration>();
 
 
-    public ChainDistributeDistributionTrigger(String pathPrefix, BundleContext bundleContext) {
+    public DistributionEventDistributeDistributionTrigger(String pathPrefix, BundleContext bundleContext) {
+        if (pathPrefix == null) {
+            throw new IllegalArgumentException("path is required");
+        }
         this.bundleContext = bundleContext;
         this.pathPrefix = pathPrefix;
     }
@@ -85,8 +88,6 @@ public class ChainDistributeDistributionTrigger implements DistributionTrigger {
         }
     }
 
-    public void enable() {
-    }
 
     public void disable() {
         for (Map.Entry<String, ServiceRegistration> entry : registrations.entrySet()) {

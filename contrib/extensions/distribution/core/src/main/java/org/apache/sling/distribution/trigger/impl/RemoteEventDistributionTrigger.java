@@ -67,7 +67,7 @@ public class RemoteEventDistributionTrigger implements DistributionTrigger {
 
     private Scheduler scheduler;
 
-    private final Map<String, Future<HttpResponse>> requests = new ConcurrentHashMap<String, Future<HttpResponse>>();
+    private final Map<DistributionRequestHandler, Future<HttpResponse>> requests = new ConcurrentHashMap<DistributionRequestHandler, Future<HttpResponse>>();
 
     public RemoteEventDistributionTrigger(String endpoint, DistributionTransportSecretProvider distributionTransportSecretProvider, Scheduler scheduler) {
         if (endpoint == null) {
@@ -189,7 +189,7 @@ public class RemoteEventDistributionTrigger implements DistributionTrigger {
                                         log.warn("request cancelled");
                                     }
                                 });
-                        requests.put(requestHandler.toString(), futureResponse);
+                        requests.put(requestHandler, futureResponse);
                         futureResponse.get();
 
                     } catch (Exception e) {
@@ -201,6 +201,14 @@ public class RemoteEventDistributionTrigger implements DistributionTrigger {
             } catch (Exception e) {
                 log.error("cannot run event based distribution {}", e);
             }
+        }
+    }
+
+    public void disable() {
+
+        for (Map.Entry<DistributionRequestHandler, Future<HttpResponse>> entry : requests.entrySet()) {
+            entry.getValue().cancel(true);
+            scheduler.unschedule(getJobName(entry.getKey()));
         }
     }
 }
