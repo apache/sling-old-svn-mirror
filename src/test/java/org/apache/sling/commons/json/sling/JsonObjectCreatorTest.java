@@ -152,7 +152,7 @@ public class JsonObjectCreatorTest {
     public void testCalendar() throws JSONException {
         final Calendar nowCalendar = Calendar.getInstance();
         final String ECMA_DATE_FORMAT = "EEE MMM dd yyyy HH:mm:ss 'GMT'Z";
-        final String nowString = new SimpleDateFormat(ECMA_DATE_FORMAT, Locale.ENGLISH).format(nowCalendar.getTime());
+        final String nowString = new SimpleDateFormat(ECMA_DATE_FORMAT, JsonObjectCreator.DATE_FORMAT_LOCALE).format(nowCalendar.getTime());
         assertGet(nowCalendar, nowString);
     }
 
