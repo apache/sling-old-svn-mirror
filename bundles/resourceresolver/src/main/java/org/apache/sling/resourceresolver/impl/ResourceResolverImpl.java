@@ -94,12 +94,19 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /** Resource resolver context. */
     private final ResourceResolverContext context;
 
+    private final String mapRoot;
+
     /**
      * The resource resolver context.
      */
-    public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final ResourceResolverContext ctx) {
+    public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, String mapRoot, final ResourceResolverContext ctx) {
         this.factory = factory;
+        this.mapRoot = mapRoot;
         this.context = ctx;
+    }
+
+    public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final ResourceResolverContext ctx) {
+        this(factory, factory.getMapRoot(), ctx);
     }
 
     /**
@@ -125,7 +132,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         this.factory.getRootProviderEntry().loginToRequiredFactories(newContext);
 
         // create a regular resource resolver
-        return new ResourceResolverImpl(this.factory, newContext);
+        return new ResourceResolverImpl(this.factory, mapRoot, newContext);
     }
 
     /**
@@ -494,7 +501,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         }
 
         boolean mappedPathIsUrl = false;
-        for (final MapEntry mapEntry : this.factory.getMapEntries().getMapMaps()) {
+        for (final MapEntry mapEntry : this.factory.getMapEntries().getMapMaps(mapRoot)) {
             final String[] mappedPaths = mapEntry.replace(mappedPath);
             if (mappedPaths != null) {
 

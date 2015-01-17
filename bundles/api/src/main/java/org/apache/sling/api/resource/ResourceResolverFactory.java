@@ -129,6 +129,27 @@ public interface ResourceResolverFactory {
      * returned will only have administrative privileges if the user identified
      * by the property has administrative privileges.
      * <p>
+     * The {@link #USER_IMPERSONATION} property is obeyed but requires that the actual user has permission to
+     * impersonate as the requested user. If such permission is missing, a {@code LoginException} is thrown.
+     * 
+     * @param authenticationInfo A map of further credential information which may be used by the
+     * implementation to parameterize how the resource resolver is created. This may be <code>null</code>.
+     * @param customRootMap root map to the mapping configuration
+     * @return A {@link ResourceResolver} according to the <code>authenticationInfo</code>.
+     * @throws LoginException If an error occurs creating the new <code>ResourceResolver</code> with the
+     * provided credential data.
+     */
+    ResourceResolver getResourceResolver(Map<String, Object> authenticationInfo, String customRootMap)
+            throws LoginException;
+
+    /**
+     * Returns a new {@link ResourceResolver} instance with administrative privileges with further
+     * configuration taken from the given <code>authenticationInfo</code> map.
+     * <p>
+     * Note, that if the <code>authenticationInfo</code> map contains the {@link #USER_IMPERSONATION}
+     * attribute the <code>ResourceResolver</code> returned will only have administrative privileges if the
+     * user identified by the property has administrative privileges.
+     * <p>
      * <b><i>NOTE: This method is intended for use by infrastructure bundles to
      * access the repository and provide general services. This method MUST not
      * be used to handle client requests of whatever kinds. To handle client

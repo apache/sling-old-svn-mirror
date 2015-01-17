@@ -68,37 +68,47 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
 
     // ---------- Resource Resolver Factory ------------------------------------
 
-    public ResourceResolver getAdministrativeResourceResolver(final Map<String, Object> passedAuthenticationInfo)
-    throws LoginException {
+    public ResourceResolver getAdministrativeResourceResolver(
+            final Map<String, Object> passedAuthenticationInfo) throws LoginException {
+        return getResourceResolverInternal(passedAuthenticationInfo, getMapRoot(), false);
+    }
+
+    public ResourceResolver getAdministrativeResourceResolver(
+            final Map<String, Object> passedAuthenticationInfo, String customMapRoot) throws LoginException {
         // create a copy of the passed authentication info as we modify the map
         final Map<String, Object> authenticationInfo = new HashMap<String, Object>();
-        if ( passedAuthenticationInfo != null ) {
+        if (passedAuthenticationInfo != null) {
             authenticationInfo.putAll(passedAuthenticationInfo);
             // make sure there is no leaking of service bundle and info props
             authenticationInfo.remove(ResourceProviderFactory.SERVICE_BUNDLE);
             authenticationInfo.remove(SUBSERVICE);
         }
 
-        return getResourceResolverInternal(authenticationInfo, true);
+        return getResourceResolverInternal(authenticationInfo, customMapRoot, true);
+    }
+
+    public ResourceResolver getResourceResolver(final Map<String, Object> passedAuthenticationInfo)
+            throws LoginException {
+        return getResourceResolver(passedAuthenticationInfo, getMapRoot());
     }
 
     /**
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getResourceResolver(java.util.Map)
      */
-    public ResourceResolver getResourceResolver(final Map<String, Object> passedAuthenticationInfo)
-    throws LoginException {
+    public ResourceResolver getResourceResolver(final Map<String, Object> passedAuthenticationInfo,
+            String customMapRoot) throws LoginException {
         // create a copy of the passed authentication info as we modify the map
         final Map<String, Object> authenticationInfo = new HashMap<String, Object>();
-        if ( passedAuthenticationInfo != null ) {
+        if (passedAuthenticationInfo != null) {
             authenticationInfo.putAll(passedAuthenticationInfo);
             // make sure there is no leaking of service bundle and info props
             authenticationInfo.remove(ResourceProviderFactory.SERVICE_BUNDLE);
             authenticationInfo.remove(SUBSERVICE);
         }
 
-        final ResourceResolver result = getResourceResolverInternal(authenticationInfo, false);
+        final ResourceResolver result = getResourceResolverInternal(authenticationInfo, customMapRoot, false);
         Stack<ResourceResolver> resolverStack = resolverStackHolder.get();
-        if ( resolverStack == null ) {
+        if (resolverStack == null) {
             resolverStack = new Stack<ResourceResolver>();
             resolverStackHolder.set(resolverStack);
         }
@@ -106,14 +116,13 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         return result;
     }
 
-
     /**
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getThreadResourceResolver()
      */
     public ResourceResolver getThreadResourceResolver() {
         ResourceResolver result = null;
         final Stack<ResourceResolver> resolverStack = resolverStackHolder.get();
-        if ( resolverStack != null && !resolverStack.isEmpty() ) {
+        if (resolverStack != null && !resolverStack.isEmpty()) {
             result = resolverStack.peek();
         }
         return result;
@@ -122,38 +131,43 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     // ---------- Implementation helpers --------------------------------------
 
     /**
-     * Inform about a closed resource resolver.
-     * Make sure to remove it from the current thread context.
+     * Inform about a closed resource resolver. Make sure to remove it from the current thread context.
      */
     public void closed(final ResourceResolverImpl resourceResolverImpl) {
         // on shutdown, the factory might already be closed before the resolvers close
         // therefore we have to check for null
         final ThreadLocal<Stack<ResourceResolver>> tl = resolverStackHolder;
-        if ( tl != null ) {
+        if (tl != null) {
             final Stack<ResourceResolver> resolverStack = tl.get();
-            if ( resolverStack != null ) {
+            if (resolverStack != null) {
                 resolverStack.remove(resourceResolverImpl);
             }
         }
     }
 
+    public ResourceResolver getResourceResolverInternal(final Map<String, Object> authenticationInfo,
+            final boolean isAdmin) throws LoginException {
+        return getResourceResolverInternal(authenticationInfo, getMapRoot(), isAdmin);
+    }
+
     /**
      * Create a new ResourceResolver
+     * 
      * @param authenticationInfo The authentication map
      * @param isAdmin is an administrative resolver requested?
      * @return A resource resolver
      * @throws LoginException if login to any of the required resource providers fails.
      */
     public ResourceResolver getResourceResolverInternal(final Map<String, Object> authenticationInfo,
-                    final boolean isAdmin)
-    throws LoginException {
+            String mapRoot, final boolean isAdmin) throws LoginException {
         // create context
-        final ResourceResolverContext ctx = new ResourceResolverContext(isAdmin, authenticationInfo, this.activator.getResourceAccessSecurityTracker());
+        final ResourceResolverContext ctx = new ResourceResolverContext(isAdmin, authenticationInfo,
+                this.activator.getResourceAccessSecurityTracker());
 
         // login
         this.activator.getRootProviderEntry().loginToRequiredFactories(ctx);
 
-        return new ResourceResolverImpl(this, ctx);
+        return new ResourceResolverImpl(this, mapRoot, ctx);
     }
 
     public MapEntries getMapEntries() {
@@ -229,23 +243,23 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     /**
      * get's the ServiceTracker of the ResourceAccessSecurity service
      */
-    public ResourceAccessSecurityTracker getResourceAccessSecurityTracker () {
+    public ResourceAccessSecurityTracker getResourceAccessSecurityTracker() {
         return this.activator.getResourceAccessSecurityTracker();
     }
 
-    public ResourceResolver getServiceResourceResolver(
-            final Map<String, Object> authenticationInfo) throws LoginException {
+    public ResourceResolver getServiceResourceResolver(final Map<String, Object> authenticationInfo)
+            throws LoginException {
         throw new IllegalStateException("This method is not implemented.");
     }
 
     public boolean isVanityPathEnabled() {
         return this.activator.isVanityPathEnabled();
     }
-    
+
     public long getMaxCachedVanityPathEntries() {
         return this.activator.getMaxCachedVanityPathEntries();
     }
-    
+
     public int getVanityBloomFilterMaxBytes() {
         return this.activator.getVanityBloomFilterMaxBytes();
     }

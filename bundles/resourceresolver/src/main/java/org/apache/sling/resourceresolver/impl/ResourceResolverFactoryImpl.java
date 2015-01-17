@@ -107,6 +107,16 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory {
         return commonFactory.getAdministrativeResourceResolver(authenticationInfo);
     }
 
+    public ResourceResolver getResourceResolver(final Map<String, Object> authenticationInfo,
+            final String customPathRoot) throws LoginException {
+        return commonFactory.getResourceResolver(authenticationInfo, customPathRoot);
+    }
+
+    public ResourceResolver getAdministrativeResourceResolver(final Map<String, Object> authenticationInfo,
+            final String customPathRoot) throws LoginException {
+        return commonFactory.getAdministrativeResourceResolver(authenticationInfo, customPathRoot);
+    }
+
     /**
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getThreadResourceResolver()
      */

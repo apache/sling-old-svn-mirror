@@ -34,7 +34,10 @@ import org.mockito.MockitoAnnotations;
 
 /** Test ResourceResolverImpl.mangleNamespaces methods */
 public class ResourceResolverMangleNamespacesTest {
+
     private ResourceResolverImpl rr;
+
+    private static final String DEFAULT_MAPPING_LOCATION = "/etc/map";
 
     @Mock
     private Session mockedSession;
@@ -42,6 +45,7 @@ public class ResourceResolverMangleNamespacesTest {
     private Session activeSession;
 
     public static final String NS_PREFIX = "testNS";
+
     public static final String NS_URL = "http://example.com/namespaces/testNS";
 
     @Before
@@ -77,7 +81,8 @@ public class ResourceResolverMangleNamespacesTest {
             }
         };
 
-        rr = new ResourceResolverImpl(fac, new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker()));
+        rr = new ResourceResolverImpl(fac, DEFAULT_MAPPING_LOCATION, new ResourceResolverContext(false, null,
+                new ResourceAccessSecurityTracker()));
     }
 
     @Test

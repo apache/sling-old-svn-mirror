@@ -33,16 +33,18 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
-import java.util.SortedMap;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
@@ -108,7 +110,7 @@ public class MapEntries implements EventHandler {
 
     private Map<String, List<MapEntry>> resolveMapsMap;
 
-    private Collection<MapEntry> mapMaps;
+    private ConcurrentMap<String, List<MapEntry>> mapMaps;
 
     private Map <String,List <String>> vanityTargets;
 
@@ -149,7 +151,7 @@ public class MapEntries implements EventHandler {
         this.mapRoot = DEFAULT_MAP_ROOT;
 
         this.resolveMapsMap = Collections.singletonMap(GLOBAL_LIST_KEY, (List<MapEntry>)Collections.EMPTY_LIST);
-        this.mapMaps = Collections.<MapEntry> emptyList();
+        this.mapMaps = new ConcurrentHashMap<String, List<MapEntry>>();
         this.vanityTargets = Collections.<String,List <String>>emptyMap();
         this.aliasMap = Collections.<String, Map<String, String>>emptyMap();
         this.registration = null;
@@ -179,7 +181,7 @@ public class MapEntries implements EventHandler {
         this.eventAdmin = eventAdmin;
 
         this.resolveMapsMap = Collections.singletonMap(GLOBAL_LIST_KEY, (List<MapEntry>)Collections.EMPTY_LIST);
-        this.mapMaps = Collections.<MapEntry> emptyList();
+        this.mapMaps = new ConcurrentHashMap<String, List<MapEntry>>();
         this.vanityTargets = Collections.<String,List <String>>emptyMap();
         this.aliasMap = Collections.<String, Map<String, String>>emptyMap();
 
@@ -202,7 +204,7 @@ public class MapEntries implements EventHandler {
      * ReentrantLock. Does nothing if the resource resolver has already been
      * null-ed.
      */
-    protected void doInit() {
+    protected void doInit(String mapRoot) {
 
         this.initializing.lock();
         try {
@@ -234,6 +236,11 @@ public class MapEntries implements EventHandler {
             this.initializing.unlock();
 
         }
+    }
+
+
+    protected void doInit() {
+        doInit(mapRoot);
     }
     
     /**
@@ -433,7 +440,7 @@ public class MapEntries implements EventHandler {
         final List<MapEntry> globalResolveMap = new ArrayList<MapEntry>();
         final SortedMap<String, MapEntry> newMapMaps = new TreeMap<String, MapEntry>();
         // load the /etc/map entries into the maps
-        loadResolverMap(resolver, globalResolveMap, newMapMaps);
+        loadResolverMap(resolver, globalResolveMap, newMapMaps, mapRoot);
         // load the configuration into the resolver map
         loadConfiguration(factory, globalResolveMap);
         // load the configuration into the mapper map
@@ -441,7 +448,7 @@ public class MapEntries implements EventHandler {
         // sort global list and add to map
         Collections.sort(globalResolveMap);
         resolveMapsMap.put(GLOBAL_LIST_KEY, globalResolveMap);
-        this.mapMaps = Collections.unmodifiableSet(new TreeSet<MapEntry>(newMapMaps.values()));
+        this.mapMaps.putIfAbsent(mapRoot, new LinkedList<MapEntry>(newMapMaps.values()));
     }
 
     private void doAddVanity(String path) {
@@ -695,13 +702,23 @@ public class MapEntries implements EventHandler {
     }
 
     public Collection<MapEntry> getMapMaps() {
-        return mapMaps;
+        return mapMaps.get(mapRoot);
+    }
+
+    public Collection<MapEntry> getMapMaps(String customMapRoot) {
+        List<MapEntry> mapEntryCollection = mapMaps.get(customMapRoot);
+        return mapEntryCollection == null ? new LinkedList<MapEntry>() : mapEntryCollection;
     }
 
     public Map<String, String> getAliasMap(final String parentPath) {
         return aliasMap.get(parentPath);
     }
-    
+
+
+    public void putIfAbsent(String customMapRoot) {
+        doInit(customMapRoot);
+    }
+
     /**
      * get the MapEnty containing all the nodes having a specific vanityPath
      */
@@ -748,7 +765,7 @@ public class MapEntries implements EventHandler {
         boolean wasResolverRefreshed = false;
 
         //removal of a node is handled differently
-        if (SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic())) {
+        if (SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic()) && !containsStartingWith(path, this.mapMaps.keySet())) {
             final String actualContentPath = getActualContentPath(path);
             for (final String target : this.vanityTargets.keySet()) {
                 if (target.startsWith(actualContentPath)) {
@@ -795,7 +812,16 @@ public class MapEntries implements EventHandler {
     }
 
     // ---------- internal
-    
+
+    private boolean containsStartingWith(String pattern, Set<String> collection) {
+        for (String el : collection) {
+            if (pattern.startsWith(el)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private byte[] createVanityBloomFilter() throws IOException {
         byte bloomFilter[] = null;
         if (vanityBloomFilter == null) {            
@@ -934,7 +960,7 @@ public class MapEntries implements EventHandler {
         }
     }
 
-    private void loadResolverMap(final ResourceResolver resolver, final List<MapEntry> entries, final Map<String, MapEntry> mapEntries) {
+    private void loadResolverMap(final ResourceResolver resolver, final List<MapEntry> entries, final Map<String, MapEntry> mapEntries, String mapRoot) {
         // the standard map configuration
         final Resource res = resolver.getResource(mapRoot);
         if (res != null) {
