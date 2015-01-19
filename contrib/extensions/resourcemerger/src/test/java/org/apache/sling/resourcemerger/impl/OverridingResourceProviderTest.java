@@ -55,6 +55,7 @@ public class OverridingResourceProviderTest {
      * /apps/a/1/d
      * /apps/a/1/d/1
      * /apps/a/1/d/1/a
+     * /apps/a/1/d/1/b/1
      * /apps/a/1/c
      * /apps/a/2/c
      * 
@@ -76,6 +77,8 @@ public class OverridingResourceProviderTest {
                     .resource("/apps/a/1/d").p("a", "1").p("b", "2")
                     .resource("1").p("1", "a").p("2", "b")
                     .resource("a")
+                    .resource("/apps/a/1/d/1/b")
+                    .resource("1")
                     .resource("/apps/a/1/c").p("1", "a").p("2", "b")
                     .resource("/apps/a/2").p(SUPER_TYPE, "a/1").p("b", "2").p(MergedResourceConstants.PN_HIDE_CHILDREN, new String[] {"b"})
                     .resource("c").p("1", "c")
@@ -122,6 +125,9 @@ public class OverridingResourceProviderTest {
         assertNotNull(this.provider.getResource(this.resolver, "/override/apps/a/1/b/1"));
         assertNull(this.provider.getResource(this.resolver, "/override/apps/a/2/b"));
         assertNull(this.provider.getResource(this.resolver, "/override/apps/a/2/b/1"));
+        assertNotNull(this.provider.getResource(this.resolver, "/override/apps/a/2/d/1/a"));
+        assertNotNull(this.provider.getResource(this.resolver, "/override/apps/a/2/d/1/b"));
+        assertNotNull(this.provider.getResource(this.resolver, "/override/apps/a/2/d/1/b/1"));
     }
 
     // doing it this way because the mock resource resolver doesn't

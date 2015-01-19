@@ -95,6 +95,7 @@ class MergingResourceProvider implements ResourceProvider {
                             }
                         }
                     }
+                    previousAncestorName = ancestor.getName();
                     ancestor = ancestor.getParent();
                 }
             }
