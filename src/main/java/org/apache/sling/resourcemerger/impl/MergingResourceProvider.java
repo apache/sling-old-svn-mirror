@@ -81,8 +81,8 @@ class MergingResourceProvider implements ResourceProvider {
             }
             if (parent != null) {
                 Resource ancestor = parent.getParent();
+                String previousAncestorName = parent.getName();
                 while (ancestor != null) {
-                    String previousAncestorName = parent.getName();
                     final ValueMap ancestorProps = ResourceUtil.getValueMap(ancestor);
                     final String[] ancestorChildrenToHideArray = ancestorProps.get(MergedResourceConstants.PN_HIDE_CHILDREN, String[].class);
                     if (ancestorChildrenToHideArray != null) {
