@@ -40,7 +40,6 @@ import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
-import org.apache.sling.jcr.resource.internal.helper.jcr.JcrItemResourceTestBase;
 
 public class JcrModifiableValueMapTest extends RepositoryTestBase {
 
@@ -82,8 +81,7 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
         return values;
     }
 
-    // SLING-4307 introduced a regresssion that makes this test fail
-    public void DISABLED_testStreams() throws Exception {
+    public void testStreams() throws Exception {
         final ModifiableValueMap pvm = new JcrModifiableValueMap(this.rootNode, null);
         InputStream stream = new ByteArrayInputStream(TEST_BYTE_ARRAY);
         pvm.put("binary", stream);
