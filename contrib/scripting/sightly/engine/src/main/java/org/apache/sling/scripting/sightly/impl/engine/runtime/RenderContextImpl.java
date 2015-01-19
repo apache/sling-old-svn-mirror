@@ -347,14 +347,17 @@ public class RenderContextImpl implements RenderContext {
         for (Method m : publicMethods) {
             if (m.getParameterTypes().length == 0) {
                 String methodName = m.getName();
-                if (baseName.equals(methodName)) {
-                    return (isMethodAllowed(m)) ? m : null;
-                }
-                if (("get" + capitalized).equals(methodName)) {
-                    return (isMethodAllowed(m)) ? m : null;
-                }
-                if (("is" + capitalized).equals(methodName)) {
-                    return (isMethodAllowed(m)) ? m : null;
+                if (baseName.equals(methodName)
+                    || ("get" + capitalized).equals(methodName)
+                    || ("is" + capitalized).equals(methodName)) {
+
+                    // this method is good, check whether allowed
+                    if (isMethodAllowed(m)) {
+                        return m;
+                    }
+
+                    // method would match but is not allwed, abort
+                    break;
                 }
             }
         }
