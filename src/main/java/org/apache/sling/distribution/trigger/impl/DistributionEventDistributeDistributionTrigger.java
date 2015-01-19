@@ -43,8 +43,6 @@ import org.slf4j.LoggerFactory;
  */
 public class DistributionEventDistributeDistributionTrigger implements DistributionTrigger {
 
-    public static final String PATH = "path";
-
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final String pathPrefix;
 

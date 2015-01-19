@@ -22,6 +22,7 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
@@ -38,7 +39,7 @@ import javax.annotation.Nonnull;
 import java.util.Map;
 
 @Component(metatype = true,
-        label = "Sling Distribution - Persisted Jcr Event Triggers Factory",
+        label = "Sling Distribution Trigger - Persisted Jcr Event Triggers Factory",
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE
@@ -47,19 +48,26 @@ import java.util.Map;
 public class PersistedJcrEventDistributionTriggerFactory implements DistributionTrigger {
 
 
+    @Property(label = "Name", description = "The name of the trigger.")
+    public static final String NAME = DistributionComponentUtils.PN_NAME;
+
+
     /**
      * jcr persisting event trigger path property
      */
+    @Property(label = "Path", description = "The path for which changes are listened and distributed as persisted nugget events.")
     public static final String PATH = "path";
 
     /**
      * jcr persisting event trigger service user property
      */
+    @Property(label = "Service Name", description = "The service used to listen for jcr events")
     public static final String SERVICE_NAME = "serviceName";
 
     /**
      * jcr persisting event trigger nuggets path property
      */
+    @Property(value = PersistedJcrEventDistributionTrigger.DEFAULT_NUGGETS_PATH, label = "Nuggets Path", description = "The location where serialization of jcr events will be stored")
     public static final String NUGGETS_PATH = "nuggetsPath";
 
 

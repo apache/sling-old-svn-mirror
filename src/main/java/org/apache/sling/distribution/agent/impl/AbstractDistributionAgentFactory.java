@@ -24,8 +24,10 @@ import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
 import org.apache.sling.distribution.resources.impl.OsgiUtils;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.ComponentConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,11 +49,15 @@ public abstract class AbstractDistributionAgentFactory {
 
     protected static final String DEFAULT_TRIGGER_TARGET = "(name=)";
 
+    private static final String TRIGGERS_TARGET = "triggers.target";
+
+
     private ServiceRegistration componentReg;
     private BundleContext savedContext;
     private Map<String, Object> savedConfig;
     private String agentName;
     private List<DistributionTrigger> triggers = new CopyOnWriteArrayList<DistributionTrigger>();
+    private boolean triggersEnabled = false;
 
     private SimpleDistributionAgent agent;
 
@@ -66,12 +72,22 @@ public abstract class AbstractDistributionAgentFactory {
         Dictionary<String, Object> props = new Hashtable<String, Object>();
 
         boolean enabled = PropertiesUtil.toBoolean(config.get(ENABLED), true);
+        String triggersTarget = PropertiesUtil.toString(config.get(TRIGGERS_TARGET), null);
+        triggersEnabled = triggersTarget != null || triggersTarget.trim().length() > 0;
+        agentName = PropertiesUtil.toString(config.get(NAME), null);
 
-        if (enabled) {
-            props.put(ENABLED, true);
 
-            agentName = PropertiesUtil.toString(config.get(NAME), null);
-            props.put(NAME, agentName);
+        if (enabled && agentName != null) {
+
+            for (Map.Entry<String, Object> entry: config.entrySet()) {
+                // skip service and component related properties
+                if (entry.getKey().startsWith("service.") || entry.getKey().startsWith("component.")) {
+                    continue;
+                }
+
+                props.put(entry.getKey(), entry.getValue());
+
+            }
 
             if (componentReg == null) {
 
@@ -90,9 +106,12 @@ public abstract class AbstractDistributionAgentFactory {
                     componentReg = context.registerService(DistributionAgent.class.getName(), agent, props);
                     agent.enable();
 
-                    for (DistributionTrigger trigger : triggers) {
-                        agent.enableTrigger(trigger);
+                    if (triggersEnabled) {
+                        for (DistributionTrigger trigger : triggers) {
+                            agent.enableTrigger(trigger);
+                        }
                     }
+
                 }
 
                 log.info("activated agent {}", agentName);
@@ -103,7 +122,7 @@ public abstract class AbstractDistributionAgentFactory {
 
     protected void bindDistributionTrigger(DistributionTrigger distributionTrigger, Map<String, Object> config) {
         triggers.add(distributionTrigger);
-        if (agent != null) {
+        if (agent != null  && triggersEnabled) {
             agent.enableTrigger(distributionTrigger);
         }
 
@@ -117,6 +136,7 @@ public abstract class AbstractDistributionAgentFactory {
         }
     }
 
+
     protected void deactivate(BundleContext context) {
         if (componentReg != null) {
             ServiceReference reference = componentReg.getReference();
@@ -127,7 +147,7 @@ public abstract class AbstractDistributionAgentFactory {
                     agent.disableTrigger(trigger);
                 }
                 triggers.clear();
-
+                triggersEnabled = false;
                 agent.disable();
             }
 

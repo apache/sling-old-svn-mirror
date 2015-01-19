@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  */
 public class PersistedJcrEventDistributionTrigger extends AbstractJcrEventTrigger implements DistributionTrigger {
 
-    private static final String DEFAULT_NUGGETS_PATH = "/var/distribution/nuggets";
+    public static final String DEFAULT_NUGGETS_PATH = "/var/distribution/nuggets";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 

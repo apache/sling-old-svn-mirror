@@ -38,6 +38,7 @@ import org.apache.sling.distribution.queue.DistributionQueueProvider;
 import org.apache.sling.distribution.queue.impl.SingleQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.impl.jobhandling.JobHandlingDistributionQueueProvider;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
+import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.settings.SlingSettingsService;
@@ -51,7 +52,7 @@ import java.util.Map;
  * An OSGi service factory for {@link org.apache.sling.distribution.agent.DistributionAgent}s which references already existing OSGi services.
  */
 @Component(metatype = true,
-        label = "Sling Distribution - Queue Agents Factory",
+        label = "Sling Distribution Agent - Queue Agents Factory",
         description = "OSGi configuration factory for queueing agents",
         configurationFactory = true,
         specVersion = "1.1",
@@ -63,31 +64,34 @@ import java.util.Map;
 public class QueueDistributionAgentFactory extends AbstractDistributionAgentFactory {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(label = "Name")
+    @Property(label = "Name", description = "The name of the agent.")
     public static final String NAME = DistributionComponentUtils.PN_NAME;
 
-    @Property(boolValue = true, label = "Enabled")
+    @Property(boolValue = true, label = "Enabled", description = "Whether or not to start the distribution agent.")
     private static final String ENABLED = "enabled";
 
 
-    @Property(label = "Service Name")
+    @Property(label = "Service Name", description = "The name of the service used to access the repository.")
     public static final String SERVICE_NAME = "serviceName";
 
-    @Reference
-    private Packaging packaging;
 
-    @Property(name = "requestAuthorizationStrategy.target")
+    @Property(name = "requestAuthorizationStrategy.target", label = "Request Authorization Strategy", description = "The target reference for the DistributionRequestAuthorizationStrategy used to authorize the access to distribution process," +
+            "e.g. use target=(name=...) to bind to services by name.")
     @Reference(name = "requestAuthorizationStrategy")
     private DistributionRequestAuthorizationStrategy requestAuthorizationStrategy;
 
 
-    @Property(name = "packageBuilder.target")
+    @Property(name = "packageBuilder.target", label = "Package Builder", description = "The target reference for the DistributionPackageBuilder used to create distribution packages, " +
+            "e.g. use target=(name=...) to bind to services by name.")
     @Reference(name = "packageBuilder")
     private DistributionPackageBuilder packageBuilder;
 
-    @Property(value = DEFAULT_TRIGGER_TARGET)
+    @Property(value = DEFAULT_TRIGGER_TARGET, label = "Triggers", description = "The target reference for DistributionTrigger used to trigger distribution, " +
+            "e.g. use target=(name=...) to bind to services by name.")
     public static final String TRIGGERS_TARGET = "triggers.target";
 
+    @Reference
+    private Packaging packaging;
 
     @Reference
     private DistributionEventFactory distributionEventFactory;
@@ -128,7 +132,7 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
         DistributionQueueDispatchingStrategy dispatchingStrategy = new SingleQueueDispatchingStrategy();
         DistributionPackageExporter packageExporter = new LocalDistributionPackageExporter(packageBuilder);
 
-        return new SimpleDistributionAgent(agentName, true, serviceName,
+        return new SimpleDistributionAgent(agentName, false, serviceName,
                 null, packageExporter, requestAuthorizationStrategy,
                 queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory);
     }

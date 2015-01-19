@@ -40,11 +40,10 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 
 
-@Component(label = "Distribution Configuration Resource Provider Factory",
+@Component(label = "Sling Distribution Resources - Configuration Resource Provider Factory",
         description = "Distribution Configuration Resource Provider Factory",
         specVersion = "1.1",
-        policy = ConfigurationPolicy.REQUIRE,
-        metatype = true)
+        policy = ConfigurationPolicy.REQUIRE)
 @Service(value = ResourceProviderFactory.class)
 @Properties({
         @Property(name = ResourceProvider.ROOTS),
@@ -53,8 +52,6 @@ import java.util.Map;
 public class DistributionConfigurationResourceProviderFactory implements ResourceProviderFactory {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-
-
 
     @Property
     public final static String KIND = DistributionComponentUtils.PN_KIND;

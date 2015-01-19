@@ -39,7 +39,7 @@ import javax.annotation.Nonnull;
 import java.util.Map;
 
 @Component(metatype = true,
-        label = "Sling Distribution - Jcr Event Triggers Factory",
+        label = "Sling Distribution Trigger - Jcr Event Triggers Factory",
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE
@@ -48,22 +48,19 @@ import java.util.Map;
 public class JcrEventDistributionTriggerFactory implements DistributionTrigger {
 
 
-
-    /**
-     * jcr event trigger type
-     */
-    public static final String TRIGGER_JCR_EVENT = "jcrEvent";
+    @Property(label = "Name", description = "The name of the trigger.")
+    public static final String NAME = DistributionComponentUtils.PN_NAME;
 
     /**
      * jcr event trigger path property
      */
-    @Property
+    @Property(label = "Path", description = "The path for whcih changes are distributed.")
     public static final String PATH = "path";
 
     /**
      * jcr event trigger service user property
      */
-    @Property
+    @Property(label = "Service Name", description = "The service used to listen for jcr events")
     public static final String SERVICE_NAME = "serviceName";
 
 

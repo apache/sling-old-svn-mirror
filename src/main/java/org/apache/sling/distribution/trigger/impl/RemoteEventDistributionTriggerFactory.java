@@ -40,7 +40,7 @@ import javax.annotation.Nonnull;
 import java.util.Map;
 
 @Component(metatype = true,
-        label = "Sling Distribution - Remote Event Triggers Factory",
+        label = "Sling Distribution Trigger - Remote Event Triggers Factory",
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE
@@ -49,15 +49,13 @@ import java.util.Map;
 public class RemoteEventDistributionTriggerFactory implements DistributionTrigger {
 
 
-    /**
-     * remote event trigger type
-     */
-    public static final String TRIGGER_REMOTE_EVENT = "remoteEvent";
+    @Property(label = "Name", description = "The name of the trigger.")
+    public static final String NAME = DistributionComponentUtils.PN_NAME;
 
     /**
      * remote event endpoint property
      */
-    @Property
+    @Property(label = "Endpoint", description = "The endpoint from which the remote requests should be polled.")
     public static final String ENDPOINT = "endpoint";
 
 

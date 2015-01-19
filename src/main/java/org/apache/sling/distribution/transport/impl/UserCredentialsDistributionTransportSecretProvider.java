@@ -35,7 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component(metatype = true,
-        label = "Sling Distribution - User Credentials based DistributionTransportSecretProvider",
+        label = "Sling Distribution Transport Credentials - User Credentials based DistributionTransportSecretProvider",
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE)
@@ -46,13 +46,13 @@ public class UserCredentialsDistributionTransportSecretProvider implements
     /**
      * name of this component.
      */
-    @Property
+    @Property(label = "Name")
     public static final String NAME = DistributionComponentUtils.PN_NAME;
 
-    @Property
+    @Property(label = "User Name", description = "The name of the user used to perform remote actions.")
     public final static String USERNAME = "username";
 
-    @Property
+    @Property(label = "Password", description = "The clear text password to perform authentication. Warning: storing clear text passwords is not safe.")
     public final static String PASSWORD = "password";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
