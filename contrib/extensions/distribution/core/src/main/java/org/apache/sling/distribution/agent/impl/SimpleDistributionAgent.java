@@ -70,7 +70,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
     private final DistributionQueueProvider queueProvider;
 
-    private final boolean passive;
+    private final boolean queueProcessingEnabled;
     private final DistributionPackageImporter distributionPackageImporter;
     private final DistributionPackageExporter distributionPackageExporter;
 
@@ -87,7 +87,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
     private boolean active = false;
 
     public SimpleDistributionAgent(String name,
-                                   boolean passive,
+                                   boolean queueProcessingEnabled,
                                    String subServiceName,
                                    DistributionPackageImporter distributionPackageImporter,
                                    DistributionPackageExporter distributionPackageExporter,
@@ -99,7 +99,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
         // check configuration is valid
         if (name == null
-                || (!passive && distributionPackageImporter == null)
+                || (queueProcessingEnabled && distributionPackageImporter == null)
                 || distributionPackageExporter == null
                 || subServiceName == null
                 || distributionRequestAuthorizationStrategy == null
@@ -124,7 +124,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
         this.distributionRequestAuthorizationStrategy = distributionRequestAuthorizationStrategy;
         this.resourceResolverFactory = resourceResolverFactory;
         this.name = name;
-        this.passive = passive;
+        this.queueProcessingEnabled = queueProcessingEnabled;
         this.distributionPackageImporter = distributionPackageImporter;
         this.distributionPackageExporter = distributionPackageExporter;
         this.queueProvider = queueProvider;
@@ -156,7 +156,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
     }
 
     boolean isPassive() {
-        return passive;
+        return !queueProcessingEnabled;
     }
 
     private List<DistributionPackage> exportPackages(ResourceResolver agentResourceResolver, DistributionRequest distributionRequest) throws DistributionPackageExportException {

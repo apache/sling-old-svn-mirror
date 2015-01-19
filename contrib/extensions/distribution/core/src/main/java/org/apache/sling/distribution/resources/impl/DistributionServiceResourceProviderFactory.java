@@ -43,12 +43,11 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServletRequest;
 
 
-@Component(label = "Distribution Service Resource Provider Factory",
+@Component(label = "Sling Distribution Resources - Service Resource Provider Factory",
         description = "Distribution Service Resource Provider Factory",
         configurationFactory = true,
         specVersion = "1.1",
-        policy = ConfigurationPolicy.REQUIRE,
-        metatype = true)
+        policy = ConfigurationPolicy.REQUIRE)
 @Service(value = ResourceProvider.class)
 @Properties({
         @Property(name = ResourceProvider.ROOTS),

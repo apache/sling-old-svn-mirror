@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Remote implementation of {@link org.apache.sling.distribution.packaging.DistributionPackageImporter}
  */
-@Component(label = "Sling Distribution - Remote Package Importer Factory",
+@Component(label = "Sling Distribution Importer - Remote Package Importer Factory",
         metatype = true,
         configurationFactory = true,
         specVersion = "1.1",
@@ -54,16 +54,18 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+
     /**
-     * name of this component.
+     * name of this importer.
      */
-    @Property
+    @Property(label = "Name", description = "The name of the importer.")
     public static final String NAME = DistributionComponentUtils.PN_NAME;
+
 
     /**
      * endpoints property
      */
-    @Property(cardinality = -1)
+    @Property(cardinality = 100, label = "Endpoints", description = "The list of endpoints to which the packages will be imported.")
     public static final String ENDPOINTS = "endpoints";
 
     /**
@@ -76,13 +78,16 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
             @PropertyOption(name = "One",
                     value = "one endpoint"
             )},
-            value = "One"
+            value = "One",
+            label = "Endpoint Strategy", description = "Specifies whether to import packages to all endpoints or just to one."
     )
     public static final String ENDPOINTS_STRATEGY = "endpoints.strategy";
 
-    @Property(name = "transportSecretProvider.target")
+
+    @Property(name = "transportSecretProvider.target", label = "Transport Secret Provider", description = "The target reference for the DistributionTransportSecretProvider used to obtain the credentials used for accessing the remote endpoints, " +
+            "e.g. use target=(name=...) to bind to services by name.")
     @Reference(name = "transportSecretProvider")
-    private DistributionTransportSecretProvider distributionTransportSecretProvider;
+    DistributionTransportSecretProvider transportSecretProvider;
 
     private DistributionPackageImporter importer;
 
@@ -94,7 +99,7 @@ public class RemoteDistributionPackageImporterFactory implements DistributionPac
 
         TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(endpointStrategyName);
 
-        importer =  new RemoteDistributionPackageImporter(distributionTransportSecretProvider, endpoints, transportEndpointStrategyType);
+        importer =  new RemoteDistributionPackageImporter(transportSecretProvider, endpoints, transportEndpointStrategyType);
 
     }
 

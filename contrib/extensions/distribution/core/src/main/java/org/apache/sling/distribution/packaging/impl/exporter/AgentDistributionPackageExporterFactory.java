@@ -40,7 +40,7 @@ import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(label = "Sling Distribution - Agent Based Package Exporter",
+@Component(label = "Sling Distribution Exporter - Agent Based Package Exporter",
         metatype = true,
         configurationFactory = true,
         specVersion = "1.1",
@@ -51,22 +51,23 @@ public class AgentDistributionPackageExporterFactory implements DistributionPack
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
-     * name of this component.
+     * name of this exporter.
      */
-    @Property
+    @Property(label = "Name", description = "The name of the exporter.")
     public static final String NAME = DistributionComponentUtils.PN_NAME;
 
-    @Property
+    @Property(label = "Queue", description = "The name of the queue from which the packages should be exported.")
     private static final String QUEUE_NAME = "queue";
 
-    @Property(name = "agent.target")
+    @Property(name = "agent.target", label = "The target reference for the DistributionAgent that will be used to export packages.")
     @Reference(name = "agent")
     private DistributionAgent agent;
 
 
-    @Property(name = "packageBuilder.target")
+    @Property(name = "packageBuilder.target", label = "Package Builder", description = "The target reference for the DistributionPackageBuilder used to create distribution packages, " +
+            "e.g. use target=(name=...) to bind to services by name.")
     @Reference(name = "packageBuilder")
-    DistributionPackageBuilder packageBuilder;
+    private DistributionPackageBuilder packageBuilder;
 
     private DistributionPackageExporter packageExporter;
 

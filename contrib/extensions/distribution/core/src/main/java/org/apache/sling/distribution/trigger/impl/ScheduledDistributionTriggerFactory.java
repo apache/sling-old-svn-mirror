@@ -39,7 +39,7 @@ import javax.annotation.Nonnull;
 import java.util.Map;
 
 @Component(metatype = true,
-        label = "Sling Distribution - Scheduled Triggers Factory",
+        label = "Sling Distribution Trigger - Scheduled Triggers Factory",
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE
@@ -47,22 +47,26 @@ import java.util.Map;
 @Service(DistributionTrigger.class)
 public class ScheduledDistributionTriggerFactory implements DistributionTrigger {
 
+
+    @Property(label = "Name", description = "The name of the trigger.")
+    public static final String NAME = DistributionComponentUtils.PN_NAME;
+
     /**
      * scheduled trigger action property
      */
-    @Property
+    @Property(label = "Distribution Type", description = "The type of the distribution request produced by this trigger.")
     public static final String ACTION = "action";
 
     /**
      * scheduled trigger path property
      */
-    @Property
+    @Property(label = "Distributed Path", description = "The path to be distributed periodically.")
     public static final String PATH = "path";
 
     /**
      * scheduled trigger seconds property
      */
-    @Property
+    @Property(label = "Interval in Seconds", description = "The number of seconds between executions")
     public static final String SECONDS = "seconds";
 
 

@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Default implementation of {@link org.apache.sling.distribution.packaging.DistributionPackageExporter}
  */
-@Component(label = "Sling Distribution - Remote Package Exporter Factory",
+@Component(label = "Sling Distribution Exporter - Remote Package Exporter Factory",
         metatype = true,
         configurationFactory = true,
         specVersion = "1.1",
@@ -59,15 +59,15 @@ public class RemoteDistributionPackageExporterFactory implements DistributionPac
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
-     * name of this component.
+     * name of this exporter.
      */
-    @Property
+    @Property(label = "Name", description = "The name of the exporter.")
     public static final String NAME = DistributionComponentUtils.PN_NAME;
 
     /**
      * endpoints property
      */
-    @Property(cardinality = -1)
+    @Property(cardinality = 100, label = "Endpoints", description = "The list of endpoints from which the packages will be exported.")
     public static final String ENDPOINTS = "endpoints";
 
     /**
@@ -80,36 +80,40 @@ public class RemoteDistributionPackageExporterFactory implements DistributionPac
             @PropertyOption(name = "One",
                     value = "one endpoint"
             )},
-            value = "One"
+            value = "One",
+            label = "Endpoint Strategy", description = "Specifies whether to export packages from all endpoints or just from one."
     )
     public static final String ENDPOINTS_STRATEGY = "endpoints.strategy";
 
     /**
      * no. of items to poll property
      */
-    @Property(name = "pull items", description = "number of subsequent pull requests to make", intValue = 1)
+    @Property(label = "Pull Items", description = "number of subsequent pull requests to make", intValue = 1)
     public static final String PULL_ITEMS = "pull.items";
 
-    @Property(name = "packageBuilder.target")
+    @Property(name = "packageBuilder.target", label = "Package Builder", description = "The target reference for the DistributionPackageBuilder used to create distribution packages, " +
+            "e.g. use target=(name=...) to bind to services by name.")
     @Reference(name = "packageBuilder")
     private DistributionPackageBuilder packageBuilder;
 
-    @Property(name = "transportSecretProvider.target")
+
+    @Property(name = "transportSecretProvider.target", label = "Transport Secret Provider", description = "The target reference for the DistributionTransportSecretProvider used to obtain the credentials used for accessing the remote endpoints, " +
+            "e.g. use target=(name=...) to bind to services by name.")
     @Reference(name = "transportSecretProvider")
-    private DistributionTransportSecretProvider distributionTransportSecretProvider;
+    DistributionTransportSecretProvider transportSecretProvider;
 
     private DistributionPackageExporter exporter;
 
     @Activate
     protected void activate(Map<String, Object> config) throws Exception {
-        log.info("activating remote exporter with pb {} and dtsp {}", packageBuilder, distributionTransportSecretProvider);
+        log.info("activating remote exporter with pb {} and dtsp {}", packageBuilder, transportSecretProvider);
 
         String[] endpoints = PropertiesUtil.toStringArray(config.get(ENDPOINTS), new String[0]);
         String endpointStrategyName = PropertiesUtil.toString(config.get(ENDPOINTS_STRATEGY), "One");
         int pollItems = PropertiesUtil.toInteger(config.get(PULL_ITEMS), Integer.MAX_VALUE);
 
         TransportEndpointStrategyType transportEndpointStrategyType = TransportEndpointStrategyType.valueOf(endpointStrategyName);
-        exporter = new RemoteDistributionPackageExporter(packageBuilder, distributionTransportSecretProvider, endpoints,
+        exporter = new RemoteDistributionPackageExporter(packageBuilder, transportSecretProvider, endpoints,
                 transportEndpointStrategyType, pollItems);
     }
 

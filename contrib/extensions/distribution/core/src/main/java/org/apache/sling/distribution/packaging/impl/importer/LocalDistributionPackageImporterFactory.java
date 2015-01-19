@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  * {@link org.apache.sling.distribution.packaging.DistributionPackageImporter} implementation which imports a FileVault
  * based {@link org.apache.sling.distribution.packaging.DistributionPackage} locally.
  */
-@Component(label = "Sling Distribution - Local Package Importer Factory",
+@Component(label = "Sling Distribution Importer - Local Package Importer Factory",
         metatype = true,
         configurationFactory = true,
         specVersion = "1.1",
@@ -50,12 +50,14 @@ public class LocalDistributionPackageImporterFactory implements DistributionPack
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
-     * name of this component.
+     * name of this importer.
      */
-    @Property
+    @Property(label = "Name", description = "The name of the importer.")
     public static final String NAME = DistributionComponentUtils.PN_NAME;
 
-    @Property(name = "packageBuilder.target")
+
+    @Property(name = "packageBuilder.target", label = "Package Builder", description = "The target reference for the DistributionPackageBuilder used to create distribution packages, " +
+            "e.g. use target=(name=...) to bind to services by name.")
     @Reference(name = "packageBuilder")
     private DistributionPackageBuilder packageBuilder;
 

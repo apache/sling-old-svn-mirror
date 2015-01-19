@@ -39,7 +39,7 @@ import javax.annotation.Nonnull;
 import java.util.Map;
 
 @Component(metatype = true,
-        label = "Sling Distribution - Resource Event Triggers Factory",
+        label = "Sling Distribution Trigger - Resource Event Triggers Factory",
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE
@@ -47,10 +47,15 @@ import java.util.Map;
 @Service(DistributionTrigger.class)
 public class ResourceEventDistributionTriggerFactory implements DistributionTrigger {
 
+
+
+    @Property(label = "Name", description = "The name of the trigger.")
+    public static final String NAME = DistributionComponentUtils.PN_NAME;
+
     /**
      * resource event path property
      */
-    @Property
+    @Property(label = "Path", description = "The resource path for which changes are distributed")
     public static final String PATH = "path";
 
     ResourceEventDistributionTrigger trigger;
