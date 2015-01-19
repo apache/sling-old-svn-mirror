@@ -82,10 +82,6 @@ public class JcrPropertyMapCacheEntry {
         this.propertyValue = value;
         this.isArray = value.getClass().isArray();
         // check if values can be stored in JCR
-        // TODO this causes createValue to be called, we might
-        // want to store the result of that?? But maybe we expect
-        // future createValue to happen on a different node due to
-        // caching?
         if ( isArray ) {
             final Object[] values = convertToObjectArray(value);
             for(int i=0; i<values.length; i++) {
@@ -96,8 +92,9 @@ public class JcrPropertyMapCacheEntry {
         }
      }
     
-    private void failIfCannotStore(Object value, Node node) throws RepositoryException {
-        if(value instanceof InputStream) {
+    private void failIfCannotStore(final Object value, final Node node) 
+    throws RepositoryException {
+        if (value instanceof InputStream) {
             // InputStream is storable and calling createValue for nothing
             // eats its contents
             return;
