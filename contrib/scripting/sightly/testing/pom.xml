@@ -173,7 +173,7 @@
                     <controlHost>${test.host}</controlHost>
                     <controlPort>${sling.control.port}</controlPort>
                     <defaultBundleList>
-                        <version>8-SNAPSHOT</version>
+                        <version>7</version>
                     </defaultBundleList>
                     <jarWebSupport>
                         <bundles>
@@ -201,7 +201,7 @@
                         <bundle>
                             <groupId>org.apache.sling</groupId>
                             <artifactId>org.apache.sling.launchpad.installer</artifactId>
-                            <version>1.2.1-SNAPSHOT</version>
+                            <version>1.2.2</version>
                         </bundle>
                         <bundle>
                             <groupId>org.apache.sling</groupId>
