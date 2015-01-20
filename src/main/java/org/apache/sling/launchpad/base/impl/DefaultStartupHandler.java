@@ -18,10 +18,7 @@
  */
 package org.apache.sling.launchpad.base.impl;
 
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -110,14 +107,17 @@ public class DefaultStartupHandler
         this.listenerTracker = new ServiceTracker<StartupListener, StartupListener>(context, StartupListener.class,
                 new ServiceTrackerCustomizer<StartupListener, StartupListener>() {
 
+                    @Override
                     public void removedService(final ServiceReference<StartupListener> reference, final StartupListener service) {
                         context.ungetService(reference);
                     }
 
+                    @Override
                     public void modifiedService(final ServiceReference<StartupListener> reference, final StartupListener service) {
                         // nothing to do
                     }
 
+                    @Override
                     public StartupListener addingService(final ServiceReference<StartupListener> reference) {
                         final StartupListener listener = context.getService(reference);
                         if (listener != null) {
@@ -155,6 +155,7 @@ public class DefaultStartupHandler
     /**
      * @see org.apache.sling.launchpad.api.StartupHandler#getMode()
      */
+    @Override
     public StartupMode getMode() {
         return this.startupMode;
     }
@@ -162,6 +163,7 @@ public class DefaultStartupHandler
     /**
      * @see org.apache.sling.launchpad.api.StartupHandler#isFinished()
      */
+    @Override
     public boolean isFinished() {
         return this.finished.get();
     }
@@ -169,6 +171,7 @@ public class DefaultStartupHandler
     /**
      * @see java.lang.Runnable#run()
      */
+    @Override
     public void run() {
         while ( !this.finished.get() ) {
             Boolean doInc = null;
@@ -205,6 +208,7 @@ public class DefaultStartupHandler
     /**
      * @see org.apache.sling.launchpad.api.StartupHandler#waitWithStartup(boolean)
      */
+    @Override
     public void waitWithStartup(final boolean flag) {
         logger.log(Logger.LOG_DEBUG, "Wait with startup " + flag);
         if ( flag ) {
@@ -241,6 +245,7 @@ public class DefaultStartupHandler
     /**
      * @see org.osgi.framework.FrameworkListener#frameworkEvent(org.osgi.framework.FrameworkEvent)
      */
+    @Override
     public void frameworkEvent(final FrameworkEvent event) {
         if ( finished.get() ) {
             return;
@@ -279,7 +284,7 @@ public class DefaultStartupHandler
         logger.log(Logger.LOG_INFO, "Startup finished.");
         this.finished.set(true);
 
-        for (StartupListener listener : this.getStartupListeners()) {
+        for (final StartupListener listener : this.listenerTracker.getServices(new StartupListener[0])) {
             try {
                 listener.startupFinished(this.startupMode);
             } catch (Throwable t) {
@@ -305,7 +310,7 @@ public class DefaultStartupHandler
      * @param ratio ratio
      */
     private void startupProgress(final float ratio) {
-        for (StartupListener listener : this.getStartupListeners()) {
+        for (final StartupListener listener : this.listenerTracker.getServices(new StartupListener[0])) {
             try {
                 listener.startupProgress(ratio);
             } catch (Throwable t) {
@@ -317,6 +322,7 @@ public class DefaultStartupHandler
     /**
      * @see org.osgi.framework.BundleListener#bundleChanged(org.osgi.framework.BundleEvent)
      */
+    @Override
     public void bundleChanged(final BundleEvent event) {
         if (!finished.get()) {
             logger.log(Logger.LOG_DEBUG, "Received bundle event " + event);
@@ -334,57 +340,5 @@ public class DefaultStartupHandler
                 activeBundles.remove(event.getBundle().getSymbolicName());
             }
         }
-    }
-
-    private Iterable<StartupListener> getStartupListeners() {
-        final ServiceReference<StartupListener>[] refs = this.listenerTracker.getServiceReferences();
-        if (refs == null || refs.length == 0) {
-            return Collections.<StartupListener>emptyList();
-        }
-
-        return new Iterable<StartupListener>() {
-
-            @Override
-            public Iterator<StartupListener> iterator() {
-                return new Iterator<StartupListener>() {
-
-                    private int i = 0;
-
-                    private StartupListener next = seek();
-
-                    @Override
-                    public StartupListener next() {
-                        if (this.next == null) {
-                            throw new NoSuchElementException();
-                        }
-
-                        final StartupListener result = this.next;
-                        this.next = seek();
-                        return result;
-                    }
-
-                    @Override
-                    public boolean hasNext() {
-                        return this.next != null;
-                    }
-
-                    @Override
-                    public void remove() {
-                        throw new UnsupportedOperationException();
-                    }
-
-                    private StartupListener seek() {
-                        for (; i < refs.length; i++) {
-                            final StartupListener sl = DefaultStartupHandler.this.listenerTracker.getService(refs[i]);
-                            if (sl != null) {
-                                return sl;
-                            }
-                        }
-
-                        return null;
-                    }
-                };
-            }
-        };
     }
 }
