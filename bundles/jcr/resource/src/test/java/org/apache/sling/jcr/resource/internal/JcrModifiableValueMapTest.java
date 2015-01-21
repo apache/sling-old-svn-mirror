@@ -18,6 +18,7 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeType;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.ValueMap;
@@ -44,6 +46,9 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
     private String rootPath;
 
     private Node rootNode;
+
+    public static final byte[] TEST_BYTE_ARRAY = {'T', 'e', 's', 't'};
+    public static final String TEST_BYTE_ARRAY_TO_STRING = new String(TEST_BYTE_ARRAY);
 
     @Override
     protected void setUp() throws Exception {
@@ -74,6 +79,16 @@ public class JcrModifiableValueMapTest extends RepositoryTestBase {
         values.put("long", 1L);
         values.put("bool", Boolean.TRUE);
         return values;
+    }
+
+    public void testStreams() throws Exception {
+        final ModifiableValueMap pvm = new JcrModifiableValueMap(this.rootNode, null);
+        InputStream stream = new ByteArrayInputStream(TEST_BYTE_ARRAY);
+        pvm.put("binary", stream);
+        getSession().save();
+        final ModifiableValueMap modifiableValueMap2 = new JcrModifiableValueMap(this.rootNode, null);
+        assertTrue("The read stream is not what we wrote.", IOUtils.toString(modifiableValueMap2.get("binary", InputStream.class)).equals
+                (TEST_BYTE_ARRAY_TO_STRING));
     }
 
     public void testPut()

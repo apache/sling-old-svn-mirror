@@ -33,7 +33,7 @@ import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
 import org.osgi.framework.BundleContext;
 
 @Component(metatype = true,
-        label = "Sling Distribution - Privilege Request Authorization Strategy",
+        label = "Sling Distribution Request Authorization - Privilege Request Authorization Strategy",
         description = "OSGi configuration for request based authorization strategy based on privileges",
         configurationFactory = true,
         specVersion = "1.1",
@@ -44,23 +44,23 @@ import org.osgi.framework.BundleContext;
 public class PrivilegeDistributionRequestAuthorizationStrategyFactory implements DistributionRequestAuthorizationStrategy {
 
     /**
-     * name of this component.
+     * name of this strategy.
      */
-    @Property
+    @Property(label = "Name")
     public static final String NAME = DistributionComponentUtils.PN_NAME;
 
     /**
      * privilege request authorization strategy jcr privilege property
      */
-    @Property
-    public static final String REQUEST_AUTHORIZATION_STRATEGY_PRIVILEGE_PROPERTY_JCR_PRIVILEGE = "jcrPrivilege";
+    @Property(label = "Jcr Privilege", description = "Jcr privilege to check for authorizing distribution requests. The privilege is checked for the calling user session.")
+    public static final String JCR_PRIVILEGE = "jcrPrivilege";
 
 
     DistributionRequestAuthorizationStrategy authorizationStrategy;
 
     @Activate
     public void activate(BundleContext context, Map<String, Object> config) {
-        String jcrPrivilege = PropertiesUtil.toString(config.get(REQUEST_AUTHORIZATION_STRATEGY_PRIVILEGE_PROPERTY_JCR_PRIVILEGE), null);
+        String jcrPrivilege = PropertiesUtil.toString(config.get(JCR_PRIVILEGE), null);
         authorizationStrategy = new PrivilegeDistributionRequestAuthorizationStrategy(jcrPrivilege);
     }
 

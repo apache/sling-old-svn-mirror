@@ -25,7 +25,7 @@ import org.osgi.framework.BundleContext;
 import static org.mockito.Mockito.mock;
 
 /**
- * Testcase for {@link ChainDistributeDistributionTrigger}
+ * Testcase for {@link DistributionEventDistributeDistributionTrigger}
  */
 public class ChainDistributionTriggerTest {
 
@@ -33,7 +33,7 @@ public class ChainDistributionTriggerTest {
     public void testRegister() throws Exception {
         String pathPrefix = "/prefix";
         BundleContext bundleContext = mock(BundleContext.class);
-        ChainDistributeDistributionTrigger chainDistributeDistributionTrigger = new ChainDistributeDistributionTrigger(pathPrefix, bundleContext);
+        DistributionEventDistributeDistributionTrigger chainDistributeDistributionTrigger = new DistributionEventDistributeDistributionTrigger(pathPrefix, bundleContext);
         DistributionRequestHandler handler = mock(DistributionRequestHandler.class);
         chainDistributeDistributionTrigger.register(handler);
     }
@@ -42,24 +42,17 @@ public class ChainDistributionTriggerTest {
     public void testUnregister() throws Exception {
         String pathPrefix = "/prefix";
         BundleContext bundleContext = mock(BundleContext.class);
-        ChainDistributeDistributionTrigger chainDistributeDistributionTrigger = new ChainDistributeDistributionTrigger(pathPrefix, bundleContext);
+        DistributionEventDistributeDistributionTrigger chainDistributeDistributionTrigger = new DistributionEventDistributeDistributionTrigger(pathPrefix, bundleContext);
         DistributionRequestHandler handler = mock(DistributionRequestHandler.class);
         chainDistributeDistributionTrigger.unregister(handler);
     }
 
-    @Test
-    public void testEnable() throws Exception {
-        String pathPrefix = "/prefix";
-        BundleContext bundleContext = mock(BundleContext.class);
-        ChainDistributeDistributionTrigger chainDistributeDistributionTrigger = new ChainDistributeDistributionTrigger(pathPrefix, bundleContext);
-        chainDistributeDistributionTrigger.enable();
-    }
 
     @Test
     public void testDisable() throws Exception {
         String pathPrefix = "/prefix";
         BundleContext bundleContext = mock(BundleContext.class);
-        ChainDistributeDistributionTrigger chainDistributeDistributionTrigger = new ChainDistributeDistributionTrigger(pathPrefix, bundleContext);
+        DistributionEventDistributeDistributionTrigger chainDistributeDistributionTrigger = new DistributionEventDistributeDistributionTrigger(pathPrefix, bundleContext);
         chainDistributeDistributionTrigger.disable();
     }
 }

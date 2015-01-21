@@ -70,15 +70,13 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
     private final DistributionQueueProvider queueProvider;
 
-    private final boolean passive;
+    private final boolean queueProcessingEnabled;
     private final DistributionPackageImporter distributionPackageImporter;
     private final DistributionPackageExporter distributionPackageExporter;
 
     private final DistributionQueueDispatchingStrategy queueDistributionStrategy;
 
     private final DistributionEventFactory distributionEventFactory;
-
-    private final List<DistributionTrigger> triggers;
 
     private final String name;
 
@@ -89,7 +87,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
     private boolean active = false;
 
     public SimpleDistributionAgent(String name,
-                                   boolean passive,
+                                   boolean queueProcessingEnabled,
                                    String subServiceName,
                                    DistributionPackageImporter distributionPackageImporter,
                                    DistributionPackageExporter distributionPackageExporter,
@@ -97,12 +95,11 @@ public class SimpleDistributionAgent implements DistributionAgent {
                                    DistributionQueueProvider queueProvider,
                                    DistributionQueueDispatchingStrategy queueDistributionStrategy,
                                    DistributionEventFactory distributionEventFactory,
-                                   ResourceResolverFactory resourceResolverFactory,
-                                   List<DistributionTrigger> triggers) {
+                                   ResourceResolverFactory resourceResolverFactory) {
 
         // check configuration is valid
         if (name == null
-                || (!passive && distributionPackageImporter == null)
+                || (queueProcessingEnabled && distributionPackageImporter == null)
                 || distributionPackageExporter == null
                 || subServiceName == null
                 || distributionRequestAuthorizationStrategy == null
@@ -127,13 +124,12 @@ public class SimpleDistributionAgent implements DistributionAgent {
         this.distributionRequestAuthorizationStrategy = distributionRequestAuthorizationStrategy;
         this.resourceResolverFactory = resourceResolverFactory;
         this.name = name;
-        this.passive = passive;
+        this.queueProcessingEnabled = queueProcessingEnabled;
         this.distributionPackageImporter = distributionPackageImporter;
         this.distributionPackageExporter = distributionPackageExporter;
         this.queueProvider = queueProvider;
         this.queueDistributionStrategy = queueDistributionStrategy;
         this.distributionEventFactory = distributionEventFactory;
-        this.triggers = triggers == null ? new ArrayList<DistributionTrigger>() : triggers;
     }
 
     @Nonnull
@@ -160,7 +156,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
     }
 
     boolean isPassive() {
-        return passive;
+        return !queueProcessingEnabled;
     }
 
     private List<DistributionPackage> exportPackages(ResourceResolver agentResourceResolver, DistributionRequest distributionRequest) throws DistributionPackageExportException {
@@ -260,14 +256,6 @@ public class SimpleDistributionAgent implements DistributionAgent {
         // register triggers if any
         agentBasedRequestHandler = new AgentBasedRequestHandler(this);
 
-        for (DistributionTrigger trigger : triggers) {
-            try {
-                trigger.register(agentBasedRequestHandler);
-            } catch (DistributionTriggerException e) {
-                log.error("could not register handler from trigger {} {}", trigger, e);
-            }
-        }
-
         if (!isPassive()) {
             try {
                 queueProvider.enableQueueProcessing(new PackageQueueProcessor());
@@ -280,7 +268,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
     }
 
     public void enableTrigger(DistributionTrigger trigger) {
-        if (!active) {
+        if (!active || agentBasedRequestHandler == null) {
             return;
         }
 
@@ -293,7 +281,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
     }
 
     public void disableTrigger(DistributionTrigger trigger) {
-        if (!active) {
+        if (!active || agentBasedRequestHandler == null) {
             return;
         }
 
@@ -307,15 +295,6 @@ public class SimpleDistributionAgent implements DistributionAgent {
     public void disable() {
         log.info("disabling agent");
         active = false;
-
-
-        for (DistributionTrigger trigger : triggers) {
-            try {
-                trigger.unregister(agentBasedRequestHandler);
-            } catch (DistributionTriggerException e) {
-                log.error("could not unregister handler trigger {} {}", trigger, e);
-            }
-        }
 
         agentBasedRequestHandler = null;
 

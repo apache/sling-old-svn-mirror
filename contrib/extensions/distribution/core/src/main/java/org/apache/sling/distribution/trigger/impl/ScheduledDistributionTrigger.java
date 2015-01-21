@@ -59,6 +59,17 @@ public class ScheduledDistributionTrigger implements DistributionTrigger {
         this.path = path;
         this.secondsInterval = secondsInterval;
         this.scheduler = scheduler;
+
+        if (distributionAction == null) {
+            throw new IllegalArgumentException("unsupported action " + distributionActionName);
+        }
+
+        if (path == null &&
+                (DistributionRequestType.ADD.equals(distributionAction)
+                        || DistributionRequestType.DELETE.equals(distributionAction))) {
+
+            throw new IllegalArgumentException("path is required for action " + distributionActionName);
+        }
     }
 
     public void register(@Nonnull DistributionRequestHandler requestHandler) throws DistributionTriggerException {
@@ -67,6 +78,7 @@ public class ScheduledDistributionTrigger implements DistributionTrigger {
             String jobName = getJobName(requestHandler);
 
             options.name(jobName);
+            options.canRunConcurrently(false);
             boolean success = scheduler.schedule(new ScheduledDistribution(requestHandler), options);
 
             if (success) {
@@ -93,7 +105,7 @@ public class ScheduledDistributionTrigger implements DistributionTrigger {
 
     }
 
-    public void unregisterAll() {
+    public void disable() {
         for (String jobName : registeredJobs) {
             boolean result = scheduler.unschedule(jobName);
             log.info("handler unregistered {} {}", jobName, result);

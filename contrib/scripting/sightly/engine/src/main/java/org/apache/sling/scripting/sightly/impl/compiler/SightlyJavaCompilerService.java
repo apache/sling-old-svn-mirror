@@ -105,7 +105,7 @@ public class SightlyJavaCompilerService {
             LOG.debug("trying to find Java source based on resource: {}", resource.getPath());
             // try to find Java source in JCR from a non-fully qualified class name
             Resource scriptResource = ResourceResolution
-                    .resolveComponentRelative(resource.getResourceResolver(), resource, className + ".java");
+                    .getResourceFromSearchPath(resource, className + ".java");
             if (scriptResource != null) {
                 String pojoPath = scriptResource.getPath();
                 LOG.debug("found Java bean script resource: " + scriptResource.getPath());

@@ -56,8 +56,7 @@ import org.slf4j.LoggerFactory;
  * A root path must be configured for listening on content changes.
  * The changes to the resource settings will be checked periodically (30s) to avoid event bursts and concurrency issues.
  */
-@Component(metatype = true,
-        label = "Sling Distribution - Resource Based Component Factory",
+@Component(label = "Sling Distribution - Resource Based Component Factory",
         description = "Resource configuration for Distribution Components Factory",
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE

@@ -26,6 +26,7 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.vault.fs.api.ImportMode;
@@ -42,7 +43,7 @@ import org.apache.sling.distribution.serialization.DistributionPackageReadingExc
 import org.apache.sling.distribution.serialization.impl.ResourceSharedDistributionPackageBuilder;
 
 @Component(metatype = true,
-        label = "Sling Distribution - Vault Package Builder Factory",
+        label = "Sling Distribution Packaging - Vault Package Builder Factory",
         description = "OSGi configuration for vault package builders",
         configurationFactory = true,
         specVersion = "1.1",
@@ -53,28 +54,38 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
 
 
     /**
-     * type of this component.
+     * name of this package builder.
      */
-    @Property
-    public static final String TYPE = DistributionComponentUtils.PN_TYPE;
+    @Property(label = "Name", description = "The name of the package builder.")
+    public static final String NAME = DistributionComponentUtils.PN_NAME;
+
+
 
     /**
-     * name of this component.
+     * type of this package builder.
      */
-    @Property
-    public static final String NAME = DistributionComponentUtils.PN_NAME;
+    @Property(options = {
+            @PropertyOption(name = "jcrvlt",
+                    value = "jcr packages"
+            ),
+            @PropertyOption(name = "filevlt",
+                    value = "file packages"
+            )},
+            value = "jcrvlt", label = "type", description = "The type of this package builder")
+    public static final String TYPE = DistributionComponentUtils.PN_TYPE;
+
 
     /**
      * import mode property for file vault package builder
      */
-    @Property
-    public static final String PACKAGE_BUILDER_FILEVLT_IMPORT_MODE = "importMode";
+    @Property(label = "Import Mode", description = "The vlt import mode for created packages.")
+    public static final String IMPORT_MODE = "importMode";
 
     /**
      * ACL handling property for file vault package builder
      */
-    @Property
-    public static final String PACKAGE_BUILDER_FILEVLT_ACLHANDLING = "aclHandling";
+    @Property(label = "Acl Handling", description = "The vltacl handling mode for created packages.")
+    public static final String ACL_HANDLING = "aclHandling";
 
     @Reference
     private Packaging packaging;
@@ -86,8 +97,8 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
     public void activate(Map<String, Object> config) {
 
         String type = PropertiesUtil.toString(config.get(TYPE), null);
-        String importModeString = PropertiesUtil.toString(config.get(PACKAGE_BUILDER_FILEVLT_IMPORT_MODE), null);
-        String aclHandlingString = PropertiesUtil.toString(config.get(PACKAGE_BUILDER_FILEVLT_ACLHANDLING), null);
+        String importModeString = PropertiesUtil.toString(config.get(IMPORT_MODE), null);
+        String aclHandlingString = PropertiesUtil.toString(config.get(ACL_HANDLING), null);
 
         ImportMode importMode = null;
         if (importMode != null) {

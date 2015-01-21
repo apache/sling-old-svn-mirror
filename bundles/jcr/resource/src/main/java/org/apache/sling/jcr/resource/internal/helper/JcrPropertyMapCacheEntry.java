@@ -85,18 +85,25 @@ public class JcrPropertyMapCacheEntry {
         if ( isArray ) {
             final Object[] values = convertToObjectArray(value);
             for(int i=0; i<values.length; i++) {
-                final Value val = this.createValue(values[i], node);
-                if ( val == null ) {
-                    throw new IllegalArgumentException("Value can't be stored in the repository: " + values[i]);
-                }
+                failIfCannotStore(values[i], node);
             }
         } else {
-            final Value val = this.createValue(value, node);
-            if ( val == null ) {
-                throw new IllegalArgumentException("Value can't be stored in the repository: " + value);
-            }
+            failIfCannotStore(value, node);
         }
      }
+    
+    private void failIfCannotStore(final Object value, final Node node) 
+    throws RepositoryException {
+        if (value instanceof InputStream) {
+            // InputStream is storable and calling createValue for nothing
+            // eats its contents
+            return;
+        }
+        final Value val = this.createValue(value, node);
+        if ( val == null ) {
+            throw new IllegalArgumentException("Value can't be stored in the repository: " + value);
+        }
+    }
 
     /**
      * Create a value for the object.

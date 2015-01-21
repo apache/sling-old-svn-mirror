@@ -18,6 +18,7 @@
  ******************************************************************************/
 package org.apache.sling.scripting.sightly.impl.compiler.expression.node;
 
+import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 
 /**
@@ -28,14 +29,16 @@ public enum BinaryOperator {
     AND {
         @Override
         public Object eval(RenderContext renderContext, Object left, Object right) {
-            return (renderContext.toBoolean(left)) ? right : left;
+            RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
+            return (renderContextImpl.toBoolean(left)) ? right : left;
         }
     },
     // logical disjunction
     OR {
         @Override
         public Object eval(RenderContext renderContext, Object left, Object right) {
-            return (renderContext.toBoolean(left)) ? left : right;
+            RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
+            return (renderContextImpl.toBoolean(left)) ? left : right;
         }
     },
     // string concatenation
@@ -43,7 +46,8 @@ public enum BinaryOperator {
     {
         @Override
         public Object eval(RenderContext renderContext, Object left, Object right) {
-            return renderContext.toString(left).concat(renderContext.toString(right));
+            RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
+            return renderContextImpl.toString(left).concat(renderContextImpl.toString(right));
         }
     },
     // less-than
@@ -108,8 +112,9 @@ public enum BinaryOperator {
     ADD {
         @Override
         public Object eval(RenderContext renderContext, Object left, Object right) {
-            return adjust(renderContext.toNumber(left).doubleValue()
-                + renderContext.toNumber(right).doubleValue());
+            RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
+            return adjust(renderContextImpl.toNumber(left).doubleValue()
+                + renderContextImpl.toNumber(right).doubleValue());
         }
     },
 
@@ -117,24 +122,27 @@ public enum BinaryOperator {
     SUB {
         @Override
         public Object eval(RenderContext renderContext, Object left, Object right) {
-            return adjust(renderContext.toNumber(left).doubleValue()
-                - renderContext.toNumber(right).doubleValue());
+            RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
+            return adjust(renderContextImpl.toNumber(left).doubleValue()
+                - renderContextImpl.toNumber(right).doubleValue());
         }
     },
     // multiplication
     MUL {
         @Override
         public Object eval(RenderContext renderContext, Object left, Object right) {
-            return adjust(renderContext.toNumber(left).doubleValue()
-                * renderContext.toNumber(right).doubleValue());
+            RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
+            return adjust(renderContextImpl.toNumber(left).doubleValue()
+                * renderContextImpl.toNumber(right).doubleValue());
         }
     },
     // floating point division
     DIV {
         @Override
         public Object eval(RenderContext renderContext, Object left, Object right) {
-            return adjust(renderContext.toNumber(left).doubleValue()
-                / renderContext.toNumber(right).doubleValue());
+            RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
+            return adjust(renderContextImpl.toNumber(left).doubleValue()
+                / renderContextImpl.toNumber(right).doubleValue());
         }
     },
 
@@ -142,8 +150,9 @@ public enum BinaryOperator {
     I_DIV {
         @Override
         public Object eval(RenderContext renderContext, Object left, Object right) {
-            return adjust(renderContext.toNumber(left).intValue()
-                / renderContext.toNumber(right).intValue());
+            RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
+            return adjust(renderContextImpl.toNumber(left).intValue()
+                / renderContextImpl.toNumber(right).intValue());
         }
     },
 
@@ -152,8 +161,9 @@ public enum BinaryOperator {
     {
         @Override
         public Object eval(RenderContext renderContext, Object left, Object right) {
-            return adjust(renderContext.toNumber(left).intValue()
-                % renderContext.toNumber(right).intValue());
+            RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
+            return adjust(renderContextImpl.toNumber(left).intValue()
+                % renderContextImpl.toNumber(right).intValue());
         }
 
     };

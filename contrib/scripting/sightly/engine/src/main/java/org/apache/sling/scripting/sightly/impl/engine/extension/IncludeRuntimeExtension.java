@@ -36,6 +36,7 @@ import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
+import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.impl.engine.runtime.SightlyRenderException;
 import org.apache.sling.scripting.sightly.impl.plugin.IncludePlugin;
 import org.apache.sling.scripting.sightly.render.RenderContext;
@@ -62,7 +63,8 @@ public class IncludeRuntimeExtension implements RuntimeExtension {
     @Override
     public Object call(final RenderContext renderContext, Object... arguments) {
         ExtensionUtils.checkArgumentCount(IncludePlugin.FUNCTION, arguments, 2);
-        String originalPath = renderContext.toString(arguments[0]);
+        RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
+        String originalPath = renderContextImpl.toString(arguments[0]);
         Map options = (Map) arguments[1];
         String path = buildPath(originalPath, options);
         if (path == null) {

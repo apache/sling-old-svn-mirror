@@ -33,6 +33,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.impl.compiler.CompilerException;
+import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.impl.filter.XSSFilter;
 import org.apache.sling.scripting.sightly.impl.html.MarkupUtils;
 import org.apache.sling.scripting.sightly.impl.plugin.MarkupContext;
@@ -79,7 +80,8 @@ public class XSSRuntimeExtension implements RuntimeExtension {
             LOG.warn("Expression context {} is invalid, expression will be replaced by the empty string", option);
             return "";
         }
-        String text = renderContext.toString(original);
+        RenderContextImpl renderContextImpl = (RenderContextImpl) renderContext;
+        String text = renderContextImpl.toString(original);
         final XSSAPI xssapi = obtainAPI(renderContext.getBindings());
         return applyXSSFilter(xssapi, text, hint, markupContext);
     }
