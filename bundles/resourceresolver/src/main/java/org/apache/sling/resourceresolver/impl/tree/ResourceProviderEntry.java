@@ -37,6 +37,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
+import org.apache.sling.resourceresolver.impl.tree.params.PathParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -311,7 +312,8 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
                 logger.debug("Not absolute {}", fullPath);
                 return null; // fullpath must be absolute
             }
-            final String[] elements = split(fullPath);
+            final PathParameters params = new PathParameters(fullPath);
+            final String[] elements = split(params.getRawPath());
             final List<ResourceProviderEntry> entries = new ArrayList<ResourceProviderEntry>();
             this.populateProviderPath(entries, elements);
 
@@ -323,7 +325,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
                 for (final ProviderHandler rp : rps) {
 
                     boolean foundFallback = false;
-                    final Resource resource = rp.getResource(ctx, resourceResolver, fullPath);
+                    final Resource resource = rp.getResource(ctx, resourceResolver, params.getRawPath(), params.getParameters());
                     if (resource != null) {
                         if ( resource.getResourceMetadata() != null && resource.getResourceMetadata().get(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING) != null ) {
                             if ( logger.isDebugEnabled() ) {
@@ -386,10 +388,11 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
             final String fullPath) {
         Resource fallbackResource = null;
         final ProviderHandler[] rps = getResourceProviders();
+        final PathParameters params = new PathParameters(fullPath);
         for (final ProviderHandler rp : rps) {
             boolean foundFallback = false;
 
-            final Resource resource = rp.getResource(ctx, resourceResolver, fullPath);
+            final Resource resource = rp.getResource(ctx, resourceResolver, params.getRawPath(), params.getParameters());
             if (resource != null) {
                 if ( resource.getResourceMetadata() != null && resource.getResourceMetadata().get(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING) != null ) {
                     logger.debug("Resolved Base {} using {} - continue resolving flag is set!", fullPath, rp);

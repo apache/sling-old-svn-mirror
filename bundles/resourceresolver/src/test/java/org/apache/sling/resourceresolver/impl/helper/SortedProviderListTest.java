@@ -211,7 +211,7 @@ public class SortedProviderListTest {
             return null;
         }
 
-        public Resource getResource(ResourceResolver resourceResolver, String path) {
+        public Resource getResource(ResourceResolver resourceResolver, String path, Map<String, String> parameters) {
             return null;
         }
 

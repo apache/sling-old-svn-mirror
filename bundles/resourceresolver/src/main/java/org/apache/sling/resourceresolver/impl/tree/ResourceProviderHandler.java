@@ -46,8 +46,8 @@ public class ResourceProviderHandler extends ProviderHandler {
     /**
      * @see ResourceProvider#getResource(ResourceResolver, String)
      */
-    public Resource getResource(final ResourceResolverContext ctx, final ResourceResolver resourceResolver, final String path) {
-        return getReadableResource(ctx, this.resourceProvider.getResource(resourceResolver, path) );
+    public Resource getResource(final ResourceResolverContext ctx, final ResourceResolver resourceResolver, final String path, final Map<String, String> parameters) {
+        return getReadableResource(ctx, this.resourceProvider.getResource(resourceResolver, path, parameters) );
     }
 
     /**

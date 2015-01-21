@@ -21,6 +21,7 @@ package org.apache.sling.api.resource;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -125,6 +126,13 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * @since 2.2
      */
     public static final String INTERNAL_CONTINUE_RESOLVING = ":org.apache.sling.resource.internal.continue.resolving";
+
+    /**
+     * Returns a map containing parameters added to path after semicolon.
+     * For instance, map for path <code>/content/test;v='1.2.3'.html</code>
+     * will contain one entry key <code>v</code> and value <code>1.2.3</code>.
+     */
+    public static final String PARAMETER_MAP = "sling.parameterMap";
 
     private boolean isReadOnly = false;
 
@@ -293,6 +301,31 @@ public class ResourceMetadata extends HashMap<String, Object> {
         return null;
     }
 
+    /**
+     * Sets the {@link #PARAMETER_MAP} property to
+     * <code>parameterMap</code> if not <code>null</code>.
+     */
+    public void setParameterMap(Map<String, String> parameterMap) {
+        if (parameterMap != null) {
+            put(PARAMETER_MAP, new LinkedHashMap<String, String>(parameterMap));
+        }
+    }
+
+    /**
+     * Returns the {@link #PARAMETER_MAP} property if not
+     * <code>null</code> and a <code>Map</code> instance. Otherwise
+     * <code>null</code> is returned.
+     */
+    public Map<?, ?> getParameterMap() {
+        Object value = get(PARAMETER_MAP);
+        if (value instanceof Map) {
+            return (Map<?, ?>) value;
+        }
+
+        return null;
+    }
+
+    
     /**
      * Make this object read-only. All method calls trying to modify this object
      * result in an exception!

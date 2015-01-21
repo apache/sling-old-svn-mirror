@@ -49,7 +49,7 @@ public class ResourceProviderFactoryHandler extends ProviderHandler {
             return null;
         }
 
-        public Resource getResource(final ResourceResolver resourceResolver, final String path) {
+        public Resource getResource(final ResourceResolver resourceResolver, final String path, final Map<String, String> parameters) {
             return null;
         }
 
@@ -101,10 +101,10 @@ public class ResourceProviderFactoryHandler extends ProviderHandler {
     /**
      * @see ResourceProvider#getResource(ResourceResolver, String)
      */
-    public Resource getResource(final ResourceResolverContext ctx, final ResourceResolver resourceResolver, final String path) {
+    public Resource getResource(final ResourceResolverContext ctx, final ResourceResolver resourceResolver, final String path, final Map<String, String> parameters) {
         final ResourceProvider rp = this.getResourceProvider(ctx);
         if ( rp != null ) {
-            return getReadableResource(ctx, rp.getResource(resourceResolver, path) );
+            return getReadableResource(ctx, rp.getResource(resourceResolver, path, parameters) );
         }
         return null;
     }
