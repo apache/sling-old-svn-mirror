@@ -86,6 +86,7 @@ public class PersistedJcrEventDistributionTriggerFactory implements Distribution
         String nuggetsPath = PropertiesUtil.toString(config.get(NUGGETS_PATH), null);
 
         trigger =  new PersistedJcrEventDistributionTrigger(repository, path, serviceName, nuggetsPath);
+        trigger.enable();
     }
 
     @Deactivate

@@ -44,9 +44,9 @@ public class JcrVaultDistributionPackage extends AbstractDistributionPackage imp
         try {
             return jcrPackage.getPackage().getId().getName();
         } catch (RepositoryException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            log.error("Cannot obtain package id", e);
         } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            log.error("Cannot obtain package id", e);
         }
 
         return null;
@@ -62,9 +62,9 @@ public class JcrVaultDistributionPackage extends AbstractDistributionPackage imp
         try {
             return jcrPackage.getData().getBinary().getStream();
         } catch (RepositoryException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            log.error("Cannot create input stream", e);
+            throw new IOException();
         }
-        return null;
     }
 
     public void delete() {
@@ -73,7 +73,7 @@ public class JcrVaultDistributionPackage extends AbstractDistributionPackage imp
             node.remove();
             session.save();
         } catch (RepositoryException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            log.error("Cannot delete package", e);
         }
     }
 }
