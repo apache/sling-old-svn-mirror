@@ -20,6 +20,7 @@ package org.apache.sling.jcr.resource.internal.helper.jcr;
 
 import java.security.Principal;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -29,19 +30,27 @@ import java.util.Set;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionException;
+import javax.jcr.version.VersionHistory;
+import javax.jcr.version.VersionManager;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.AttributableResourceProvider;
@@ -125,17 +134,17 @@ public class JcrResourceProvider
     @SuppressWarnings("javadoc")
     public Resource getResource(ResourceResolver resourceResolver,
             HttpServletRequest request, String path) throws SlingException {
-        return getResource(resourceResolver, path);
+        return getResource(resourceResolver, path, Collections.<String, String> emptyMap());
     }
 
     /**
      * @see org.apache.sling.api.resource.ResourceProvider#getResource(org.apache.sling.api.resource.ResourceResolver, java.lang.String)
      */
-    public Resource getResource(ResourceResolver resourceResolver, String path)
+    public Resource getResource(ResourceResolver resourceResolver, String path, Map<String, String> parameters)
     throws SlingException {
         this.checkClosed();
         try {
-            return createResource(resourceResolver, path);
+            return createResource(resourceResolver, path, parameters);
         } catch (RepositoryException re) {
             throw new SlingException("Problem retrieving node based resource "
                 + path, re);
@@ -162,7 +171,7 @@ public class JcrResourceProvider
             // children
             try {
                 parentItemResource = createResource(
-                    parent.getResourceResolver(), parent.getPath());
+                    parent.getResourceResolver(), parent.getPath(), Collections.<String, String> emptyMap());
             } catch (RepositoryException re) {
                 parentItemResource = null;
             }
@@ -189,26 +198,81 @@ public class JcrResourceProvider
      *             item in the repository.
      */
     private JcrItemResource createResource(final ResourceResolver resourceResolver,
-            final String resourcePath) throws RepositoryException {
+            final String resourcePath, final Map<String, String> parameters) throws RepositoryException {
         final String jcrPath = pathMapper.mapResourcePathToJCRPath(resourcePath);
         if (jcrPath != null && itemExists(jcrPath)) {
             Item item = session.getItem(jcrPath);
+            if (parameters != null && parameters.containsKey("v")) {
+                item = getHistoricItem(item, parameters.get("v"));
+            }
             if (item.isNode()) {
                 log.debug(
                     "createResource: Found JCR Node Resource at path '{}'",
                     resourcePath);
-                return new JcrNodeResource(resourceResolver, resourcePath, (Node) item, dynamicClassLoader, pathMapper);
+                final JcrNodeResource resource = new JcrNodeResource(resourceResolver, resourcePath, (Node) item, dynamicClassLoader, pathMapper);
+                resource.getResourceMetadata().setParameterMap(parameters);
+                return resource;
             }
 
             log.debug(
                 "createResource: Found JCR Property Resource at path '{}'",
                 resourcePath);
-            return new JcrPropertyResource(resourceResolver, resourcePath,
+            final JcrPropertyResource resource = new JcrPropertyResource(resourceResolver, resourcePath,
                 (Property) item, pathMapper);
+            resource.getResourceMetadata().setParameterMap(parameters);
+            return resource;
         }
 
         log.debug("createResource: No JCR Item exists at path '{}'", jcrPath);
         return null;
+    }
+
+    private Item getHistoricItem(Item item, String versionSpecifier) throws RepositoryException {
+        Item currentItem = item;
+        StringBuilder relPath = new StringBuilder();
+        Node version = null;
+        while (!"/".equals(currentItem.getPath())) {
+            if (isVersionable(currentItem)) {
+                version = getFrozenNode((Node) currentItem, versionSpecifier);
+                break;
+            } else {
+                if (relPath.length() > 0) {
+                    relPath.append('/');
+                }
+                relPath.append(currentItem.getName());
+                currentItem = currentItem.getParent();
+            }
+        }
+        if (version != null) {
+            return getSubitem(version, relPath.toString());
+        }
+        return null;
+    }
+
+    private static Item getSubitem(Node node, String relPath) throws RepositoryException {
+        if (node.hasNode(relPath)) {
+            return node.getNode(relPath);
+        } else if (node.hasProperty(relPath)) {
+            return node.getProperty(relPath);
+        } else {
+            return null;
+        }
+    }
+
+    private Node getFrozenNode(Node node, String versionSpecifier) throws RepositoryException {
+        final VersionManager versionManager = session.getWorkspace().getVersionManager();
+        final VersionHistory history = versionManager.getVersionHistory(node.getPath());
+        if (history.hasVersionLabel(versionSpecifier)) {
+            return history.getVersionByLabel(versionSpecifier).getFrozenNode();
+        } else if (history.hasNode(versionSpecifier)) {
+            return history.getVersion(versionSpecifier).getFrozenNode();
+        } else {
+            return null;
+        }
+    }
+
+    private static boolean isVersionable(Item item) throws RepositoryException {
+        return item.isNode() && ((Node) item).isNodeType(JcrConstants.MIX_VERSIONABLE);
     }
 
     /**

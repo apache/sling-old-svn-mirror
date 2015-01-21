@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -92,7 +93,7 @@ public class ProviderHandlerTest {
         leaveProperties.put(ResourceProvider.ROOTS, servletpath);
 
         final ResourceProvider leaveProvider = Mockito.mock(ResourceProvider.class);
-        Mockito.when(leaveProvider.getResource(null, servletpath)).thenReturn(servletResource);
+        Mockito.when(leaveProvider.getResource(null, servletpath, Collections.<String,String>emptyMap())).thenReturn(servletResource);
 
         root.bindResourceProvider(leaveProvider, leaveProperties);
 
@@ -125,7 +126,7 @@ public class ProviderHandlerTest {
         }
 
         @Override
-        public Resource getResource(ResourceResolverContext ctx, ResourceResolver resourceResolver, String path) {
+        public Resource getResource(ResourceResolverContext ctx, ResourceResolver resourceResolver, String path, Map<String, String> parameters) {
             return null;
         }
 

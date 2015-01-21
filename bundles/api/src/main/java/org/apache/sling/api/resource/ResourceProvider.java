@@ -19,6 +19,7 @@
 package org.apache.sling.api.resource;
 
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -131,7 +132,7 @@ public interface ResourceProvider {
      * @throws org.apache.sling.api.SlingException
      *             may be thrown in case of any problem creating the <code>Resource</code> instance.
      */
-    Resource getResource(ResourceResolver resourceResolver, String path);
+    Resource getResource(ResourceResolver resourceResolver, String path, Map<String, String> parameters);
 
     /**
      * Returns an <code>Iterator</code> of {@link Resource} objects loaded from

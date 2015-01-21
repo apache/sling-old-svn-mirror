@@ -48,7 +48,7 @@ public class ResourceProviderEntryTest {
     @Before public void setUp() throws Exception {
         this.rootResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider rootProvider = Mockito.mock(ResourceProvider.class);
-        Mockito.when(rootProvider.getResource(Mockito.any(ResourceResolver.class), Mockito.anyString())).thenReturn(new TestResource(this.rootResolver));
+        Mockito.when(rootProvider.getResource(Mockito.any(ResourceResolver.class), Mockito.anyString(), Mockito.anyMap())).thenReturn(new TestResource(this.rootResolver));
         final Map<String, Object> props = new HashMap<String, Object>();
         props.put(Constants.SERVICE_ID, (long)0);
         this.root = new ResourceProviderEntry("/", new ResourceProviderHandler[]{ new ResourceProviderHandler(rootProvider, props)});
@@ -70,7 +70,7 @@ public class ResourceProviderEntryTest {
         final ResourceResolverContext ctx = getResourceResolverContext();
         final ResourceResolver resolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider first = Mockito.mock(ResourceProvider.class);
-        Mockito.when(first.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(firstPath))).thenReturn(new TestResource(resolver));
+        Mockito.when(first.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(firstPath), Mockito.anyMap())).thenReturn(new TestResource(resolver));
 
         final Map<String, Object> firstProps = new HashMap<String, Object>();
         firstProps.put(Constants.SERVICE_ID, (long)1);
@@ -96,13 +96,13 @@ public class ResourceProviderEntryTest {
         final ResourceResolverContext ctx = getResourceResolverContext();
         final ResourceResolver firstResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider first = Mockito.mock(ResourceProvider.class);
-        Mockito.when(first.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(firstPath))).thenReturn(new TestResource(firstResolver));
+        Mockito.when(first.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(firstPath), Mockito.anyMap())).thenReturn(new TestResource(firstResolver));
         final ResourceResolver secondResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider second = Mockito.mock(ResourceProvider.class);
-        Mockito.when(second.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(secondPath))).thenReturn(new TestResource(secondResolver));
+        Mockito.when(second.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(secondPath), Mockito.anyMap())).thenReturn(new TestResource(secondResolver));
         final ResourceResolver thirdResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider third = Mockito.mock(ResourceProvider.class);
-        Mockito.when(third.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(thirdPath))).thenReturn(new TestResource(thirdResolver));
+        Mockito.when(third.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(thirdPath), Mockito.anyMap())).thenReturn(new TestResource(thirdResolver));
 
         final Map<String, Object> firstProps = new HashMap<String, Object>();
         firstProps.put(Constants.SERVICE_ID, (long)1);
@@ -135,13 +135,13 @@ public class ResourceProviderEntryTest {
         final ResourceResolverContext ctx = getResourceResolverContext();
         final ResourceResolver firstResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider first = Mockito.mock(ResourceProvider.class);
-        Mockito.when(first.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(firstPath))).thenReturn(new TestResource(firstResolver));
+        Mockito.when(first.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(firstPath), Mockito.anyMap())).thenReturn(new TestResource(firstResolver));
         final ResourceResolver secondResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider second = Mockito.mock(ResourceProvider.class);
-        Mockito.when(second.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(secondPath))).thenReturn(new TestResource(secondResolver));
+        Mockito.when(second.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(secondPath), Mockito.anyMap())).thenReturn(new TestResource(secondResolver));
         final ResourceResolver thirdResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider third = Mockito.mock(ResourceProvider.class);
-        Mockito.when(third.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(thirdPath))).thenReturn(new TestResource(thirdResolver));
+        Mockito.when(third.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(thirdPath), Mockito.anyMap())).thenReturn(new TestResource(thirdResolver));
 
         final Map<String, Object> firstProps = new HashMap<String, Object>();
         firstProps.put(Constants.SERVICE_ID, (long)1);
@@ -174,13 +174,13 @@ public class ResourceProviderEntryTest {
         final ResourceResolverContext ctx = getResourceResolverContext();
         final ResourceResolver firstResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider first = Mockito.mock(ResourceProvider.class);
-        Mockito.when(first.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(firstPath))).thenReturn(new TestResource(firstResolver));
+        Mockito.when(first.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(firstPath), Mockito.anyMap())).thenReturn(new TestResource(firstResolver));
         final ResourceResolver secondResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider second = Mockito.mock(ResourceProvider.class);
-        Mockito.when(second.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(secondPath))).thenReturn(new TestResource(secondResolver));
+        Mockito.when(second.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(secondPath), Mockito.anyMap())).thenReturn(new TestResource(secondResolver));
         final ResourceResolver thirdResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider third = Mockito.mock(ResourceProvider.class);
-        Mockito.when(third.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(thirdPath))).thenReturn(new TestResource(thirdResolver));
+        Mockito.when(third.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(thirdPath), Mockito.anyMap())).thenReturn(new TestResource(thirdResolver));
 
         final Map<String, Object> firstProps = new HashMap<String, Object>();
         firstProps.put(Constants.SERVICE_ID, (long)1);
@@ -218,7 +218,7 @@ public class ResourceProviderEntryTest {
         for(String path : new String[] { "/foo", "/", "/foo/bar" }) {
             final ResourceResolver resolver = Mockito.mock(ResourceResolver.class);
             final ResourceProvider p = Mockito.mock(ResourceProvider.class);
-            Mockito.when(p.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(path))).thenReturn(new TestResource(resolver));
+            Mockito.when(p.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(path), Mockito.anyMap())).thenReturn(new TestResource(resolver));
             final ResourceResolverContext ctx = getResourceResolverContext();
 
             final Map<String, Object> props = new HashMap<String, Object>();
