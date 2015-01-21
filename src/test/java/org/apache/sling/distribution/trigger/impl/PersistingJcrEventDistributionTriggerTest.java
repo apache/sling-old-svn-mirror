@@ -27,6 +27,7 @@ import javax.jcr.observation.ObservationManager;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
@@ -39,6 +40,7 @@ import static org.mockito.Mockito.when;
 /**
  * Testcase for {@link PersistedJcrEventDistributionTrigger}
  */
+@Ignore("Until SLING-4312 is fixed")
 public class PersistingJcrEventDistributionTriggerTest {
 
     @Test

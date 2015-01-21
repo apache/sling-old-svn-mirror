@@ -163,7 +163,9 @@ public abstract class AbstractJcrEventTrigger implements DistributionTrigger {
      * @throws RepositoryException
      */
     Session getSession() throws RepositoryException {
-        return cachedSession != null ? cachedSession : (cachedSession = repository.loginService(serviceUser, null));
+        return cachedSession != null ? cachedSession
+                : (cachedSession = repository.loginAdministrative(null)); // TODO: change after SLING-4312
+                // : (cachedSession = repository.loginService(serviceUser, null));
     }
 
 

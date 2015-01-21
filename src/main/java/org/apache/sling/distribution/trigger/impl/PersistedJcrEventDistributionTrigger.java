@@ -132,7 +132,7 @@ public class PersistedJcrEventDistributionTrigger extends AbstractJcrEventTrigge
                 initializeNuggetsPath(session);
             }
         } catch (RepositoryException e) {
-            log.warn("could not create nuggets path " + nuggetsPath, e);
+            log.warn("could not create nuggets path {}", nuggetsPath, e);
         }
     }
 }
