@@ -92,7 +92,7 @@ public class ReverseDistributionAgentFactory extends AbstractDistributionAgentFa
     /**
      * no. of items to poll property
      */
-    @Property(intValue = 1, label = "Pull Items", description = "Number of subsequent pull requests to make.")
+    @Property(intValue = 10, label = "Pull Items", description = "Number of subsequent pull requests to make.")
     public static final String PULL_ITEMS = "pull.items";
 
 

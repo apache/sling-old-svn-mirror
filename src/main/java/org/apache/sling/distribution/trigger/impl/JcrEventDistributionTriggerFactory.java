@@ -77,6 +77,7 @@ public class JcrEventDistributionTriggerFactory implements DistributionTrigger {
         String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
 
         trigger =  new JcrEventDistributionTrigger(repository, path, serviceName);
+        trigger.enable();
     }
 
     @Deactivate
