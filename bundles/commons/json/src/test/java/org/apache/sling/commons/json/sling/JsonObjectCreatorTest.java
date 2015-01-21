@@ -50,7 +50,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class JsonObjectCreatorTest {
 
-
     @Mock
     private Resource resource;
 
@@ -65,7 +64,6 @@ public class JsonObjectCreatorTest {
     private static final String PATH = "/" + RESOURCE_NAME;
     private static final String ECMA_DATE_FORMAT = "EEE MMM dd yyyy HH:mm:ss 'GMT'Z";
 
-
     private static final Object SAME = new Object();
     private static final int NCHILDREN = 3;
 
@@ -78,7 +76,7 @@ public class JsonObjectCreatorTest {
         when(childResourceResolver.listChildren(any(Resource.class))).thenReturn(empty.iterator());
 
         final List<Resource> children = new ArrayList<Resource>();
-        for(int i=0; i < NCHILDREN; i++) {
+        for (int i = 0; i < NCHILDREN; i++) {
             final Map<String, Object> childProps = new HashMap<String, Object>();
             final String id = "child" + i;
             childProps.put("id", id);
@@ -105,9 +103,9 @@ public class JsonObjectCreatorTest {
         when(resource.adaptTo(ValueMap.class)).thenReturn(new ValueMapDecorator(props));
         final JSONObject j = JsonObjectCreator.create(resource, 1);
 
-        final String getKey = data instanceof InputStream ? ":"  + key : key;
+        final String getKey = data instanceof InputStream ? ":" + key : key;
         final Object toExpect = expected == SAME ? data : expected;
-        if(toExpect instanceof String) {
+        if (toExpect instanceof String) {
             assertEquals(toExpect, j.get(getKey).toString());
         } else {
             assertEquals(toExpect, j.get(getKey));
@@ -133,7 +131,7 @@ public class JsonObjectCreatorTest {
 
     @Test
     public void testStringArray() throws JSONException {
-        final String [] values = { "A", "B" };
+        final String[] values = { "A", "B" };
         when(resource.adaptTo(String[].class)).thenReturn(values);
         final JSONObject j = JsonObjectCreator.create(resource, 1);
         assertEquals("A", j.getJSONArray(RESOURCE_NAME).get(0));
@@ -142,39 +140,44 @@ public class JsonObjectCreatorTest {
 
     @Test
     public void testArray() throws JSONException {
-        final String [] values = { "C", "D" };
+        final String[] values = { "C", "D" };
         final JSONArray a = new JSONArray().put("C").put("D");
         assertGet(values, a.toString());
     }
 
     @Test
     public void testEmptyArray() throws JSONException {
-        final Long [] values = {};
+        final Long[] values = {};
         assertGet(values, "[]");
     }
 
     @Test
     public void testCalendar() throws JSONException {
         final Calendar nowCalendar = Calendar.getInstance();
-        final String nowString = new SimpleDateFormat(ECMA_DATE_FORMAT, JsonObjectCreator.DATE_FORMAT_LOCALE).format(nowCalendar.getTime());
+        final String nowString = new SimpleDateFormat(ECMA_DATE_FORMAT, JsonObjectCreator.DATE_FORMAT_LOCALE)
+                .format(nowCalendar.getTime());
         assertGet(nowCalendar, nowString);
     }
-    
+
+
     @Test
     public void testCalendarTimezones() throws JSONException {
-        String[] tzIds=TimeZone.getAvailableIDs( -14400000);
-        TimeZone timezone=TimeZone.getTimeZone(tzIds[0]);
-        final Calendar midwayCalendar = Calendar.getInstance(timezone);
-        DateFormat formatter= new SimpleDateFormat(ECMA_DATE_FORMAT, Locale.ENGLISH);
-        formatter.setTimeZone(timezone);
-        final String nowString =formatter.format(midwayCalendar.getTime());
-        assertGet(midwayCalendar, nowString);
+        final int[] offsets = { -14400000, -4200000, 14400000, 4300000 };
+        for (int offset : offsets) {
+            for (String tzId : TimeZone.getAvailableIDs(offset)) {
+                final TimeZone tz = TimeZone.getTimeZone(tzId);
+                final Calendar cal = Calendar.getInstance(tz);
+                DateFormat fmt = new SimpleDateFormat(ECMA_DATE_FORMAT, Locale.ENGLISH);
+                fmt.setTimeZone(tz);
+                final String nowString = fmt.format(cal.getTime());
+                assertGet(cal, nowString);
+            }
+        }
     }
-    
 
     @Test
     public void testStream() throws JSONException {
-        final byte [] bytes = "Hello there".getBytes();
+        final byte[] bytes = "Hello there".getBytes();
         final InputStream stream = new ByteArrayInputStream(bytes);
         // TODO not sure why we don't get the actual length here
         assertGet(stream, -1L);
@@ -184,7 +187,7 @@ public class JsonObjectCreatorTest {
     public void testChildren() throws JSONException {
         when(resource.adaptTo(ValueMap.class)).thenReturn(new ValueMapDecorator(props));
         final JSONObject j = JsonObjectCreator.create(resource, 2);
-        for(int i=0 ; i < NCHILDREN; i++) {
+        for (int i = 0; i < NCHILDREN; i++) {
             final String id = "child" + i;
             assertEquals(id, j.getJSONObject(id).get("id"));
         }

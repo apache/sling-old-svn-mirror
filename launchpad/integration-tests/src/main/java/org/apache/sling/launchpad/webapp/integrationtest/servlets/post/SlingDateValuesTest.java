@@ -17,6 +17,7 @@
 package org.apache.sling.launchpad.webapp.integrationtest.servlets.post;
 
 import java.io.IOException;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -93,25 +94,28 @@ public class SlingDateValuesTest extends HttpTestBase {
         }
     }
     
-    public void testDateTimezone() throws IOException {
-        String[] timezones= TimeZone.getAvailableIDs(-14400000);
-        String[] timezones2= TimeZone.getAvailableIDs(14400000);
-        TimeZone timezone1 = TimeZone.getTimeZone(timezones[0]);
-        Calendar calendar= Calendar.getInstance(timezone1);
-        SimpleDateFormat ecmaFmt = new SimpleDateFormat(ECMA_FORMAT, Locale.US);
-        ecmaFmt.setTimeZone(calendar.getTimeZone());
+    
+    public void testDateTimezones() throws IOException{
         
-        calendar.set(Calendar.YEAR, 2000);
-        String date1ISO= ISO8601.format(calendar);
-        String date1Ecma=ecmaFmt.format(calendar.getTime());
+        final int [] offsets = { -14400000, -4200000, 14400000, 4300000 };
+        for(int offset : offsets) {
+            for(String tzId : TimeZone.getAvailableIDs(offset)) {
+                final TimeZone tz =TimeZone.getTimeZone(tzId);
+                final Calendar cal = Calendar.getInstance(tz);
+                DateFormat fmt = new SimpleDateFormat(ECMA_FORMAT, Locale.ENGLISH);
+                fmt.setTimeZone(tz);
+                final String ecmaNow = fmt.format(cal.getTime());
+                final String isoNow=ISO8601.format(cal);
+                
+                final Calendar cal2= Calendar.getInstance(tz);
+                final String ecmaNow2 = fmt.format(cal2.getTime());
+                final String isoNow2=ISO8601.format(cal2);   
+                    
+                doDateTest(ecmaNow, isoNow, ecmaNow2, isoNow2);
+            }
+        }
         
-        TimeZone timezone2= TimeZone.getTimeZone(timezones2[0]);
-        Date now= new Date();
-        calendar.setTime(now);
-        calendar.setTimeZone(timezone2);
-        ecmaFmt.setTimeZone(timezone2);
-        String date2Ecma= ecmaFmt.format(now);
-        String date2ISO= ISO8601.format(calendar);
-        doDateTest(date1Ecma,date1ISO, date2Ecma,date2ISO);
+        
     }
+    
 }
