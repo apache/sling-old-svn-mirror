@@ -28,7 +28,6 @@ import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.resource.internal.PathMapperImpl;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory;
 import org.apache.sling.jcr.resource.internal.helper.jcr.PathMapper;
 import org.apache.sling.resourceresolver.impl.CommonResourceResolverFactoryImpl;
