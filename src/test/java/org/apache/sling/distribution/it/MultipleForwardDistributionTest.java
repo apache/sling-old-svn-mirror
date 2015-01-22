@@ -19,18 +19,26 @@
 package org.apache.sling.distribution.it;
 
 import org.apache.sling.distribution.DistributionRequestType;
+import org.junit.After;
 import org.junit.Test;
+
+import java.io.IOException;
 
 import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
 import static org.apache.sling.distribution.it.DistributionUtils.assertNotExists;
+import static org.apache.sling.distribution.it.DistributionUtils.assertPostResourceWithParameters;
 import static org.apache.sling.distribution.it.DistributionUtils.createRandomNode;
 import static org.apache.sling.distribution.it.DistributionUtils.distribute;
 import static org.apache.sling.distribution.it.DistributionUtils.distributeDeep;
+import static org.apache.sling.distribution.it.DistributionUtils.queueUrl;
 
 /**
  * Integration test for forward distribution
  */
 public class MultipleForwardDistributionTest extends DistributionIntegrationTestBase {
+
+    final static String DELETE_LIMIT = "100";
+
 
     @Test
     public void testAddContent() throws Exception {
@@ -46,6 +54,17 @@ public class MultipleForwardDistributionTest extends DistributionIntegrationTest
         assertExists(publishClient, nodePath);
         distribute(author, "publish-multiple", DistributionRequestType.DELETE, nodePath);
         assertNotExists(publishClient, nodePath);
+    }
+
+
+    @After
+    public void clean() throws IOException {
+        assertPostResourceWithParameters(author, 200, queueUrl("publish-multiple") + "/endpoint1",
+                "operation", "delete", "limit", DELETE_LIMIT);
+
+        assertPostResourceWithParameters(author, 200, queueUrl("publish-multiple") + "/endpoint2",
+                "operation", "delete", "limit", DELETE_LIMIT);
+
     }
 
 }
