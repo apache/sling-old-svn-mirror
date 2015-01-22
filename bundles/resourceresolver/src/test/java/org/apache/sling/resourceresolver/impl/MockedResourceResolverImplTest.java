@@ -17,7 +17,11 @@
  */
 package org.apache.sling.resourceresolver.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -565,5 +569,26 @@ public class MockedResourceResolverImplTest {
         }
         Assert.assertEquals(5,i);
     }
+    
+    @Test public void test_versions() throws LoginException {
+        ResourceResolver resourceResolver = resourceResolverFactory.getResourceResolver(null);
 
+        Resource resource = resourceResolver.resolve("/content/test.html;v=1.0");
+        Map<String, String> parameters = resource.getResourceMetadata().getParameterMap();
+        assertEquals("/content/test.html", resource.getPath());
+        assertEquals("test.html", resource.getName());
+        assertEquals(Collections.singletonMap("v", "1.0"), parameters);
+
+        resource = resourceResolver.resolve("/content/test;v='1.0'.html");
+        parameters = resource.getResourceMetadata().getParameterMap();
+        assertEquals("/content/test.html", resource.getPath());
+        assertEquals("test.html", resource.getName());
+        assertEquals(Collections.singletonMap("v", "1.0"), parameters);
+
+        buildResource("/single/test/withchildren", buildChildResources("/single/test/withchildren"), resourceResolver, resourceProvider);
+        resource = resourceResolver.getResource("/single/test/withchildren;v='1.0'");
+        assertNotNull(resource);
+        assertEquals("/single/test/withchildren", resource.getPath());
+        assertEquals("withchildren", resource.getName());
+    }
 }
