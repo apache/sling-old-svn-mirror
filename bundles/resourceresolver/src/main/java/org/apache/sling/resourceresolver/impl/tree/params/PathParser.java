@@ -33,15 +33,24 @@ class PathParser {
         INIT, V1_EXTENSION, V1_PARAMS, V2_PARAMS, V2_EXTENSION, SUFFIX, INVALID
     }
 
-    private Map<String, String> parameters;
-
     private String rawPath;
+
+    private String parametersString;
+
+    private Map<String, String> parameters;
 
     /**
      * @return Path with no parameters.
      */
     public String getPath() {
         return rawPath;
+    }
+
+    /**
+     * @return Path's substring containing parameters
+     */
+    public String getParametersString() {
+        return parametersString;
     }
 
     /**
@@ -132,19 +141,23 @@ class PathParser {
         if (state == ParserState.INVALID) {
             paramsStart = paramsEnd = -1;
         } else {
-            rawPath = cut(path, paramsStart, paramsEnd);
+            cutPath(path, paramsStart, paramsEnd);
             parameters = parametersParser.getParameters();
         }
     }
 
-    private static String cut(String string, int from, int to) {
+    private void cutPath(String path, int from, int to) {
         if (from == -1) {
-            return string;
+            rawPath = path;
+            parametersString = null;
         } else if (to == -1) {
-            return string.substring(0, from);
+            rawPath = path.substring(0, from);
+            parametersString = path.substring(from);
         } else {
-            return string.substring(0, from) + string.substring(to, string.length());
+            rawPath = path.substring(0, from) + path.substring(to);
+            parametersString = path.substring(from, to);
         }
     }
+
 
 }

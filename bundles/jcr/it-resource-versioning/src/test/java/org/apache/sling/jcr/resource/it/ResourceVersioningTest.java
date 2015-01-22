@@ -126,6 +126,30 @@ public class ResourceVersioningTest {
         assertEquals("child_old_value", prop);
     }
 
+    @Test
+    public void getChildOnVersionableResource() throws RepositoryException, NamingException {
+        Resource resource = resolver.getResource("/content/test;v='1.0'").getChild("x/y");
+        String prop = resource.adaptTo(ValueMap.class).get("child_prop", String.class);
+        assertEquals("/content/test/x/y;v='1.0'", resource.getPath());
+        assertEquals("child_old_value", prop);
+    }
+
+    @Test
+    public void listChildrenOnVersionableResource() throws RepositoryException, NamingException {
+        Resource resource = resolver.getResource("/content/test/x;v='1.0'").listChildren().next();
+        String prop = resource.adaptTo(ValueMap.class).get("child_prop", String.class);
+        assertEquals("/content/test/x/y;v='1.0'", resource.getPath());
+        assertEquals("child_old_value", prop);
+    }
+
+    @Test
+    public void getParentOnVersionableResource() throws RepositoryException, NamingException {
+        Resource resource = resolver.getResource("/content/test/x;v='1.0'").getParent();
+        String prop = resource.adaptTo(ValueMap.class).get("prop", String.class);
+        assertEquals("/content/test", resource.getPath());
+        assertEquals("newvalue", prop);
+    }
+
     private void registerNamespace(String prefix, String uri) throws RepositoryException {
         NamespaceRegistry registry = session.getWorkspace().getNamespaceRegistry();
         if (!ArrayUtils.contains(registry.getPrefixes(), prefix)) {

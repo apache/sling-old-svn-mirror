@@ -35,6 +35,8 @@ public class ParsedParameters {
 
     private final Map<String, String> parameters;
 
+    private final String parametersString;
+
     private final String path;
 
     /**
@@ -46,6 +48,7 @@ public class ParsedParameters {
         final PathParser parser = new PathParser();
         parser.parse(fullPath);
 
+        parametersString = parser.getParametersString();
         parameters = Collections.unmodifiableMap(parser.getParameters());
         path = parser.getPath();
     }
@@ -56,6 +59,13 @@ public class ParsedParameters {
     public String getRawPath() {
         return path;
     }
+    
+    /**
+     * @return Path's substring containing parameters
+     */
+    public String getParametersString() {
+        return parametersString;
+    }
 
     /**
      * @return Map of the parameters.
@@ -63,4 +73,5 @@ public class ParsedParameters {
     public Map<String, String> getParameters() {
         return parameters;
     }
+
 }
