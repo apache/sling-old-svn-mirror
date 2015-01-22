@@ -87,7 +87,7 @@ public class ResourceVersioningTest {
     public void getResourceOnVersionableNode() throws RepositoryException, NamingException {
         Resource resource = resolver.getResource("/content/test;v='1.0'");
         String prop = resource.adaptTo(ValueMap.class).get("prop", String.class);
-        assertEquals("/content/test", resource.getPath());
+        assertEquals("/content/test;v='1.0'", resource.getPath());
         assertEquals("oldvalue", prop);
     }
 
@@ -95,7 +95,7 @@ public class ResourceVersioningTest {
     public void getResourceOnVersionableProperty() throws RepositoryException, NamingException {
         Resource resource = resolver.getResource("/content/test/prop;v='1.0'");
         String prop = resource.adaptTo(String.class);
-        assertEquals("/content/test/prop", resource.getPath());
+        assertEquals("/content/test/prop;v='1.0'", resource.getPath());
         assertEquals("oldvalue", prop);
     }
 
@@ -105,7 +105,7 @@ public class ResourceVersioningTest {
                 "/content/test;v='1.0'.html/some/suffix", "/content/test.html;v=1.0/some/suffix")) {
             Resource resource = resolver.resolve(path);
             String prop = resource.adaptTo(ValueMap.class).get("prop", String.class);
-            assertEquals("/content/test", resource.getPath());
+            assertEquals("/content/test;v='1.0'", resource.getPath());
             assertEquals("oldvalue", prop);
         }
     }
@@ -114,7 +114,7 @@ public class ResourceVersioningTest {
     public void getResourceOnVersionableDescendant() throws RepositoryException, NamingException {
         Resource resource = resolver.getResource("/content/test/x/y;v='1.0'");
         String prop = resource.adaptTo(ValueMap.class).get("child_prop", String.class);
-        assertEquals("/content/test/x/y", resource.getPath());
+        assertEquals("/content/test/x/y;v='1.0'", resource.getPath());
         assertEquals("child_old_value", prop);
     }
 
@@ -122,7 +122,7 @@ public class ResourceVersioningTest {
     public void getResourceOnVersionableDescendantProperty() throws RepositoryException, NamingException {
         Resource resource = resolver.getResource("/content/test/x/y/child_prop;v='1.0'");
         String prop = resource.adaptTo(String.class);
-        assertEquals("/content/test/x/y/child_prop", resource.getPath());
+        assertEquals("/content/test/x/y/child_prop;v='1.0'", resource.getPath());
         assertEquals("child_old_value", prop);
     }
 
