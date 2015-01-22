@@ -26,7 +26,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 
-public class StringResourceMock implements Resource {
+public class PropertyResourceMock implements Resource {
 
 	private final String name;
 
@@ -34,10 +34,20 @@ public class StringResourceMock implements Resource {
 
 	private final String value;
 
-	public StringResourceMock(Resource parent, String name, String value) {
+	private final String[] values;
+
+	public PropertyResourceMock(Resource parent, String name, String value) {
 		this.parent = parent;
 		this.name = name;
 		this.value = value;
+		this.values = null;
+	}
+
+	public PropertyResourceMock(Resource parent, String name, String[] values) {
+		this.parent = parent;
+		this.name = name;
+		this.value = null;
+		this.values = values;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -45,6 +55,8 @@ public class StringResourceMock implements Resource {
 	public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
 		if (type.isAssignableFrom(String.class)) {
 			return (AdapterType) value;
+		} else if (type.isAssignableFrom(String[].class)) {
+			return (AdapterType) (value == null ? values : new String[] { value });
 		} else {
 			return null;
 		}
