@@ -3,7 +3,7 @@ package org.apache.sling.resourceresolver.impl.tree.params;
 import java.util.Collections;
 import java.util.Map;
 
-public class PathParser {
+class PathParser {
 
     /**
      * List of states. V1 and V2 prefixes means variant 1 and 2. In V1, the parameters are added after

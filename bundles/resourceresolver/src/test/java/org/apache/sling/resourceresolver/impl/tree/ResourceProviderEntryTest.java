@@ -23,6 +23,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,6 +42,8 @@ import org.osgi.framework.Constants;
 
 public class ResourceProviderEntryTest {
 
+    private static final Map<String, String> EMPTY_PARAMS = Collections.emptyMap();
+    
     private ResourceResolver rootResolver;
 
     private ResourceProviderEntry root;
@@ -55,14 +58,14 @@ public class ResourceProviderEntryTest {
     }
 
     @Test public void testRootProvider() {
-        assertNull(root.getResource(null, null, "relpath", false));
+        assertNull(root.getResource(null, null, "relpath", EMPTY_PARAMS, false));
         final ResourceResolverContext ctx = getResourceResolverContext();
-        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/", false));
-        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/rootel", false));
-        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/rootel/child", false));
-        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/apps/sling/sample/html.js", false));
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/", EMPTY_PARAMS, false));
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/rootel", EMPTY_PARAMS, false));
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/rootel/child", EMPTY_PARAMS, false));
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/apps/sling/sample/html.js", EMPTY_PARAMS, false));
         assertEqualsResolver(this.rootResolver, root.getResource(ctx, null,
-            "/apps/sling/microsling/html.js", false));
+            "/apps/sling/microsling/html.js", EMPTY_PARAMS, false));
     }
 
     @Test public void testAdd1Provider() {
@@ -77,15 +80,15 @@ public class ResourceProviderEntryTest {
         root.addResourceProvider(firstPath, new ResourceProviderHandler(first, firstProps));
 
 
-        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/", false));
-        assertEqualsResolver(resolver, root.getResource(ctx, null, "/rootel", false));
-        assertEqualsResolver(resolver, root.getResource(ctx, null, "/rootel/html.js", false));
-        assertEqualsResolver(resolver, root.getResource(ctx, null, "/rootel/child", false));
-        assertEqualsResolver(resolver, root.getResource(ctx, null, "/rootel/child/html.js", false));
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/", EMPTY_PARAMS, false));
+        assertEqualsResolver(resolver, root.getResource(ctx, null, "/rootel", EMPTY_PARAMS, false));
+        assertEqualsResolver(resolver, root.getResource(ctx, null, "/rootel/html.js", EMPTY_PARAMS, false));
+        assertEqualsResolver(resolver, root.getResource(ctx, null, "/rootel/child", EMPTY_PARAMS, false));
+        assertEqualsResolver(resolver, root.getResource(ctx, null, "/rootel/child/html.js", EMPTY_PARAMS, false));
         assertEqualsResolver(this.rootResolver, root.getResource(ctx, null,
-            "/apps/sling/sample/html.js", false));
+            "/apps/sling/sample/html.js", EMPTY_PARAMS, false));
         assertEqualsResolver(this.rootResolver, root.getResource(ctx, null,
-            "/apps/sling/microsling/html.js", false));
+            "/apps/sling/microsling/html.js", EMPTY_PARAMS, false));
     }
 
     @Test public void testAdd3Providers() {
@@ -115,15 +118,15 @@ public class ResourceProviderEntryTest {
         root.addResourceProvider(secondPath, new ResourceProviderHandler(second, secondProps));
         root.addResourceProvider(thirdPath, new ResourceProviderHandler(third, thirdProps));
 
-        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/", false));
-        assertEqualsResolver(firstResolver, root.getResource(ctx, null, "/rootel", false));
-        assertEqualsResolver(firstResolver, root.getResource(ctx, null, "/rootel/html.js", false));
-        assertEqualsResolver(secondResolver, root.getResource(ctx, null, "/rootel/child", false));
-        assertEqualsResolver(secondResolver, root.getResource(ctx, null, "/rootel/child/html.js", false));
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/", EMPTY_PARAMS, false));
+        assertEqualsResolver(firstResolver, root.getResource(ctx, null, "/rootel", EMPTY_PARAMS, false));
+        assertEqualsResolver(firstResolver, root.getResource(ctx, null, "/rootel/html.js", EMPTY_PARAMS, false));
+        assertEqualsResolver(secondResolver, root.getResource(ctx, null, "/rootel/child", EMPTY_PARAMS, false));
+        assertEqualsResolver(secondResolver, root.getResource(ctx, null, "/rootel/child/html.js", EMPTY_PARAMS, false));
         assertEqualsResolver(thirdResolver,
-            root.getResource(ctx, null, "/apps/sling/sample/html.js", false));
+            root.getResource(ctx, null, "/apps/sling/sample/html.js", EMPTY_PARAMS, false));
         final Resource resource = root.getResource(ctx, null,
-            "/apps/sling/microsling/html.js", false);
+            "/apps/sling/microsling/html.js", EMPTY_PARAMS, false);
         assertEqualsResolver(this.rootResolver, resource);
     }
 
@@ -154,15 +157,15 @@ public class ResourceProviderEntryTest {
         root.addResourceProvider(secondPath, new ResourceProviderHandler(second, secondProps));
         root.addResourceProvider(thirdPath, new ResourceProviderHandler(third, thirdProps));
 
-        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/", false));
-        assertEqualsResolver(firstResolver, root.getResource(ctx, null, "/rootel", false));
-        assertEqualsResolver(firstResolver, root.getResource(ctx, null, "/rootel/html.js", false));
-        assertEqualsResolver(secondResolver, root.getResource(ctx, null, "/rootel/child", false));
-        assertEqualsResolver(secondResolver, root.getResource(ctx, null, "/rootel/child/html.js", false));
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/", EMPTY_PARAMS, false));
+        assertEqualsResolver(firstResolver, root.getResource(ctx, null, "/rootel", EMPTY_PARAMS, false));
+        assertEqualsResolver(firstResolver, root.getResource(ctx, null, "/rootel/html.js", EMPTY_PARAMS, false));
+        assertEqualsResolver(secondResolver, root.getResource(ctx, null, "/rootel/child", EMPTY_PARAMS, false));
+        assertEqualsResolver(secondResolver, root.getResource(ctx, null, "/rootel/child/html.js", EMPTY_PARAMS, false));
         assertEqualsResolver(thirdResolver,
-           root.getResource(ctx, null, "/apps/sling/sample/html.js", false));
+           root.getResource(ctx, null, "/apps/sling/sample/html.js", EMPTY_PARAMS, false));
         Resource resource = root.getResource(ctx, null,
-              "/apps/sling/microsling/html.js", false);
+              "/apps/sling/microsling/html.js", EMPTY_PARAMS, false);
         assertEqualsResolver(this.rootResolver, resource);
     }
 
@@ -193,22 +196,22 @@ public class ResourceProviderEntryTest {
         root.addResourceProvider(secondPath, new ResourceProviderHandler(second, secondProps));
         root.addResourceProvider(thirdPath, new ResourceProviderHandler(third, thirdProps));
 
-        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/", false));
-        assertEqualsResolver(firstResolver, root.getResource(ctx, null, "/rootel/html.js", false));
-        assertEqualsResolver(secondResolver, root.getResource(ctx, null, "/rootel/child/html.js", false));
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/", EMPTY_PARAMS, false));
+        assertEqualsResolver(firstResolver, root.getResource(ctx, null, "/rootel/html.js", EMPTY_PARAMS, false));
+        assertEqualsResolver(secondResolver, root.getResource(ctx, null, "/rootel/child/html.js", EMPTY_PARAMS, false));
 
         root.removeResourceProvider(firstPath, new ResourceProviderHandler(first, firstProps));
 
-        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/", false));
-        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/rootel/sddsf/sdfsdf/html.js", false));
-        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/rootel/html.js", false));
-        assertEqualsResolver(secondResolver, root.getResource(ctx, null, "/rootel/child/html.js", false));
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/", EMPTY_PARAMS, false));
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/rootel/sddsf/sdfsdf/html.js", EMPTY_PARAMS, false));
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/rootel/html.js", EMPTY_PARAMS, false));
+        assertEqualsResolver(secondResolver, root.getResource(ctx, null, "/rootel/child/html.js", EMPTY_PARAMS, false));
 
         root.addResourceProvider(firstPath, new ResourceProviderHandler(first, firstProps));
 
-        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/", false));
-        assertEqualsResolver(firstResolver, root.getResource(ctx, null, "/rootel/html.js", false));
-        assertEqualsResolver(secondResolver, root.getResource(ctx, null, "/rootel/child/html.js", false));
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/", EMPTY_PARAMS, false));
+        assertEqualsResolver(firstResolver, root.getResource(ctx, null, "/rootel/html.js", EMPTY_PARAMS, false));
+        assertEqualsResolver(secondResolver, root.getResource(ctx, null, "/rootel/child/html.js", EMPTY_PARAMS, false));
     }
 
     @Test public void testRemoveTheOnlyProvider() {
@@ -226,14 +229,14 @@ public class ResourceProviderEntryTest {
 
             e.addResourceProvider(path, new ResourceProviderHandler(p, props));
             {
-                final Resource r = e.getResource(ctx, null, path, false);
+                final Resource r = e.getResource(ctx, null, path, EMPTY_PARAMS, false);
                 assertEqualsResolver(resolver, r);
                 assertFalse(r instanceof SyntheticResource);
             }
 
             e.removeResourceProvider(path, new ResourceProviderHandler(p, props));
             {
-                final Resource r = e.getResource(ctx, null, path, false);
+                final Resource r = e.getResource(ctx, null, path, EMPTY_PARAMS, false);
                 // If our provider is indeed gone, we should get one of the following conditions
                 if(r == null) {
                     //fine
