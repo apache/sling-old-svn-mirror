@@ -19,11 +19,15 @@
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
 import java.security.Principal;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -46,6 +50,7 @@ import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionManager;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.user.Authorizable;
@@ -229,22 +234,19 @@ public class JcrResourceProvider
 
     private Item getHistoricItem(Item item, String versionSpecifier) throws RepositoryException {
         Item currentItem = item;
-        StringBuilder relPath = new StringBuilder();
+        Deque<String> relPath = new ArrayDeque<String>();
         Node version = null;
         while (!"/".equals(currentItem.getPath())) {
             if (isVersionable(currentItem)) {
                 version = getFrozenNode((Node) currentItem, versionSpecifier);
                 break;
             } else {
-                if (relPath.length() > 0) {
-                    relPath.append('/');
-                }
-                relPath.append(currentItem.getName());
+                relPath.addFirst(currentItem.getName());
                 currentItem = currentItem.getParent();
             }
         }
         if (version != null) {
-            return getSubitem(version, relPath.toString());
+            return getSubitem(version, StringUtils.join(relPath.iterator(), '/'));
         }
         return null;
     }
