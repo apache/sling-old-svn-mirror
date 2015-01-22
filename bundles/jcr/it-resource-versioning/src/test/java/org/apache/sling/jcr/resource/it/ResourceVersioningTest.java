@@ -1,14 +1,36 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.apache.sling.jcr.resource.it;
 
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
+
+import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.version.Version;
 import javax.jcr.version.VersionManager;
 import javax.naming.NamingException;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -25,8 +47,6 @@ public class ResourceVersioningTest {
 
     private Node testNode;
 
-    private String testPath;
-
     private ResourceResolver resolver;
 
     private Session session;
@@ -36,33 +56,81 @@ public class ResourceVersioningTest {
         resolver = MockSling.newResourceResolver(ResourceResolverType.JCR_JACKRABBIT);
         session = resolver.adaptTo(Session.class);
         versionManager = session.getWorkspace().getVersionManager();
+        registerNamespace("sling", "http://sling.apache.org/jcr/sling/1.0");
 
-        testNode = session.getRootNode().addNode("mytest");
-        testPath = testNode.getPath();
+        Node testRoot = session.getRootNode().addNode("content");
+        testNode = testRoot.addNode("test");
         testNode.addMixin(JcrConstants.MIX_VERSIONABLE);
         session.save();
+
+        versionManager.checkout(testNode.getPath());
+        testNode.setProperty("prop", "oldvalue");
+        testNode.addNode("x").addNode("y").setProperty("child_prop", "child_old_value");
+        session.save();
+        versionManager.checkin(testNode.getPath());
+
+        versionManager.checkout(testNode.getPath());
+        testNode.setProperty("prop", "newvalue");
+        testNode.getProperty("x/y/child_prop").setValue("child_new_value");
+        session.save();
+        versionManager.checkin(testNode.getPath());
     }
 
     @After
     public void tearDown() throws Exception {
+        session.removeItem("/content");
+        session.save();
         resolver.close();
     }
 
     @Test
-    public void getVersion() throws RepositoryException, NamingException {
-        versionManager.checkout(testPath);
-        testNode.setProperty("prop", "testvalue1");
-        session.save();
-        Version v1 = versionManager.checkin(testPath);
-
-        versionManager.checkout(testPath);
-        testNode.setProperty("prop", "testvalue2");
-        session.save();
-        versionManager.checkin(testPath);
-
-        String path = String.format("%s;v='%s'", testPath, v1.getName());
-        Resource resource = resolver.getResource(path);
+    public void getResourceOnVersionableNode() throws RepositoryException, NamingException {
+        Resource resource = resolver.getResource("/content/test;v='1.0'");
         String prop = resource.adaptTo(ValueMap.class).get("prop", String.class);
-        assertEquals("testvalue1", prop);
+        assertEquals("/content/test", resource.getPath());
+        assertEquals("oldvalue", prop);
+    }
+
+    @Test
+    public void getResourceOnVersionableProperty() throws RepositoryException, NamingException {
+        Resource resource = resolver.getResource("/content/test/prop;v='1.0'");
+        String prop = resource.adaptTo(String.class);
+        assertEquals("/content/test/prop", resource.getPath());
+        assertEquals("oldvalue", prop);
+    }
+
+    @Test
+    public void resolveOnVersionableNode() throws RepositoryException, NamingException {
+        for (String path : Arrays.asList("/content/test;v='1.0'.html", "/content/test.html;v=1.0",
+                "/content/test;v='1.0'.html/some/suffix", "/content/test.html;v=1.0/some/suffix")) {
+            Resource resource = resolver.resolve(path);
+            String prop = resource.adaptTo(ValueMap.class).get("prop", String.class);
+            assertEquals("/content/test", resource.getPath());
+            assertEquals("oldvalue", prop);
+        }
+    }
+
+    @Test
+    public void getResourceOnVersionableDescendant() throws RepositoryException, NamingException {
+        Resource resource = resolver.getResource("/content/test/x/y;v='1.0'");
+        String prop = resource.adaptTo(ValueMap.class).get("child_prop", String.class);
+        assertEquals("/content/test/x/y", resource.getPath());
+        assertEquals("child_old_value", prop);
+    }
+
+    @Test
+    public void getResourceOnVersionableDescendantProperty() throws RepositoryException, NamingException {
+        Resource resource = resolver.getResource("/content/test/x/y/child_prop;v='1.0'");
+        String prop = resource.adaptTo(String.class);
+        assertEquals("/content/test/x/y/child_prop", resource.getPath());
+        assertEquals("child_old_value", prop);
+    }
+
+    private void registerNamespace(String prefix, String uri) throws RepositoryException {
+        NamespaceRegistry registry = session.getWorkspace().getNamespaceRegistry();
+        if (!ArrayUtils.contains(registry.getPrefixes(), prefix)) {
+            session.getWorkspace().getNamespaceRegistry().registerNamespace(prefix, uri);
+        }
+
     }
 }
