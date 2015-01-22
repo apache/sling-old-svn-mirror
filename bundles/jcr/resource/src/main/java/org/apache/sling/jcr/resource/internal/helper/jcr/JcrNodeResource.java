@@ -77,10 +77,11 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
      */
     public JcrNodeResource(final ResourceResolver resourceResolver,
                            final String path,
+                           final String version,
                            final Node node,
                            final ClassLoader dynamicClassLoader,
                            final PathMapper pathMapper) {
-        super(resourceResolver, path, node, new JcrNodeResourceMetadata(node), pathMapper);
+        super(resourceResolver, path, version, node, new JcrNodeResourceMetadata(node), pathMapper);
         this.pathMapper = pathMapper;
         this.dynamicClassLoader = dynamicClassLoader;
         this.resourceSuperType = UNSET_RESOURCE_SUPER_TYPE;
@@ -241,7 +242,7 @@ class JcrNodeResource extends JcrItemResource<Node> { // this should be package 
     Iterator<Resource> listJcrChildren() {
         try {
             if (getNode().hasNodes()) {
-                return new JcrNodeResourceIterator(getResourceResolver(),
+                return new JcrNodeResourceIterator(getResourceResolver(), path, version,
                     getNode().getNodes(), this.dynamicClassLoader, pathMapper);
             }
         } catch (final RepositoryException re) {

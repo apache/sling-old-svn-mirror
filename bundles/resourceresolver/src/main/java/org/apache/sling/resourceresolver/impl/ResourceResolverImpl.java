@@ -614,11 +614,28 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
         String absolutePath = path;
         if (absolutePath != null && !absolutePath.startsWith("/") && base != null) {
-            absolutePath = base.getPath() + "/" + absolutePath;
+            absolutePath = appendToPath(base.getPath(), absolutePath);
         }
 
         final Resource result = getResourceInternal(absolutePath);
         return result;
+    }
+
+    /**
+     * Methods concatenates two paths. If the first path contains parameters separated semicolon, they are
+     * moved at the end of the result.
+     * 
+     * @param pathWithParameters
+     * @param segmentToAppend
+     * @return
+     */
+    private static String appendToPath(final String pathWithParameters, final String segmentToAppend) {
+        final ParsedParameters parsed = new ParsedParameters(pathWithParameters);
+        if (parsed.getParametersString() == null) {
+            return String.format("%s/%s", parsed.getRawPath(), segmentToAppend);
+        } else {
+            return String.format("%s/%s%s", parsed.getRawPath(), segmentToAppend, parsed.getParametersString());
+        }
     }
 
     private Resource getResourceInternal(String path) {
