@@ -19,33 +19,27 @@
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
 import java.security.Principal;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Queue;
 import java.util.Set;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
-import javax.jcr.version.Version;
-import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionManager;
 import javax.servlet.http.HttpServletRequest;
@@ -55,7 +49,6 @@ import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.UserManager;
-import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.AttributableResourceProvider;
@@ -238,7 +231,7 @@ public class JcrResourceProvider
 
     private Item getHistoricItem(Item item, String versionSpecifier) throws RepositoryException {
         Item currentItem = item;
-        Deque<String> relPath = new ArrayDeque<String>();
+        Queue<String> relPath = new LinkedList<String>();
         Node version = null;
         while (!"/".equals(currentItem.getPath())) {
             if (isVersionable(currentItem)) {
@@ -250,13 +243,13 @@ public class JcrResourceProvider
             }
         }
         if (version != null) {
-            return getSubitem(version, StringUtils.join(relPath.descendingIterator(), '/'));
+            return getSubitem(version, StringUtils.join(relPath.iterator(), '/'));
         }
         return null;
     }
 
     private static Item getSubitem(Node node, String relPath) throws RepositoryException {
-        if (relPath.isEmpty()) {
+        if (relPath.length() == 0) { // not using isEmpty() due to 1.5 compatibility
             return node;
         } else if (node.hasNode(relPath)) {
             return node.getNode(relPath);
