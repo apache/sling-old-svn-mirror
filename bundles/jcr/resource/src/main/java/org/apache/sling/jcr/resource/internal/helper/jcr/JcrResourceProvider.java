@@ -231,14 +231,14 @@ public class JcrResourceProvider
 
     private Item getHistoricItem(Item item, String versionSpecifier) throws RepositoryException {
         Item currentItem = item;
-        Queue<String> relPath = new LinkedList<String>();
+        LinkedList<String> relPath = new LinkedList<String>();
         Node version = null;
         while (!"/".equals(currentItem.getPath())) {
             if (isVersionable(currentItem)) {
                 version = getFrozenNode((Node) currentItem, versionSpecifier);
                 break;
             } else {
-                relPath.add(currentItem.getName());
+                relPath.addFirst(currentItem.getName());
                 currentItem = currentItem.getParent();
             }
         }
