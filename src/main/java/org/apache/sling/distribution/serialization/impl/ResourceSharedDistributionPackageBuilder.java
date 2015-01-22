@@ -45,12 +45,16 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
     private final String PN_ORIGINAL_PATHS = "original.package.paths";
 
     private final String PACKAGE_NAME_PREFIX = "distrpackage";
-    private final String sharedPackagesRoot = "/var/sling/distribution/";
+    private final String SHARED_PACKAGES_ROOT = "/var/sling/distribution/packages";
 
     private final DistributionPackageBuilder distributionPackageBuilder;
 
     public ResourceSharedDistributionPackageBuilder(DistributionPackageBuilder distributionPackageExporter) {
         this.distributionPackageBuilder = distributionPackageExporter;
+    }
+
+    public String getType() {
+        return distributionPackageBuilder.getType();
     }
 
     @CheckForNull
@@ -152,7 +156,7 @@ public class ResourceSharedDistributionPackageBuilder implements DistributionPac
     }
 
     private String getPathFromName(String name) {
-        String packagePath = sharedPackagesRoot + name;
+        String packagePath = SHARED_PACKAGES_ROOT + "/" + name;
         return packagePath;
     }
 

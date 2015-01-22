@@ -23,8 +23,6 @@ import javax.annotation.Nonnull;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.sling.api.resource.ResourceResolver;
@@ -51,6 +49,11 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         this.type = type;
     }
 
+
+    public String getType() {
+        return type;
+    }
+
     @CheckForNull
     public DistributionPackage createPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request)
             throws DistributionPackageBuildingException {
@@ -58,9 +61,9 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         if (DistributionRequestType.ADD.equals(request.getRequestType())) {
             distributionPackage = createPackageForAdd(resourceResolver, request);
         } else if (DistributionRequestType.DELETE.equals(request.getRequestType())) {
-            distributionPackage = new VoidDistributionPackage(request, type);
+            distributionPackage = new SimpleDistributionPackage(request, type);
         } else if (DistributionRequestType.PULL.equals(request.getRequestType())) {
-            distributionPackage = new VoidDistributionPackage(request, type);
+            distributionPackage = new SimpleDistributionPackage(request, type);
         } else {
             throw new DistributionPackageBuildingException("unknown action type "
                     + request.getRequestType());
@@ -78,21 +81,12 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
         if (!stream.markSupported()) {
             stream = new BufferedInputStream(stream);
         }
-        try {
-            stream.mark(6);
-            byte[] buffer = new byte[6];
-            int bytesRead = stream.read(buffer, 0, 6);
-            stream.reset();
-            String s = new String(buffer, "UTF-8");
-            log.info("read {} bytes as {}", bytesRead, s);
+        distributionPackage = SimpleDistributionPackage.fromStream(stream);
 
-            if (bytesRead > 0 && buffer[0] > 0 && s.startsWith("DEL")) {
-                distributionPackage = VoidDistributionPackage.fromStream(stream);
-            }
-        } catch (Exception e) {
-            log.warn("cannot parse stream", e);
-        }
+
         stream.mark(-1);
+
+        // not a simple package
         if (distributionPackage == null) {
             distributionPackage = readPackageInternal(resourceResolver, stream);
         }
@@ -100,6 +94,7 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
     }
 
     public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageReadingException {
+
         DistributionRequestType actionType = distributionPackage.getInfo().getRequestType();
         boolean installed;
         if (DistributionRequestType.DELETE.equals(actionType)) {
@@ -134,13 +129,10 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
     }
 
     public DistributionPackage getPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull String id) {
-        DistributionPackage distributionPackage = null;
-        try {
-            distributionPackage = VoidDistributionPackage.fromStream(new ByteArrayInputStream(id.getBytes("UTF-8")));
-        } catch (IOException ex) {
-            // not a void package
-        }
+        DistributionPackage distributionPackage = SimpleDistributionPackage.fromIdString(id);
 
+
+        // not a simple package
         if (distributionPackage == null) {
             distributionPackage = getPackageInternal(resourceResolver, id);
         }

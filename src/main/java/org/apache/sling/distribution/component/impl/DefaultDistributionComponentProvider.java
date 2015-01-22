@@ -32,10 +32,12 @@ import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
+import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueProvider;
+import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -50,7 +52,8 @@ import org.slf4j.LoggerFactory;
         @Reference(name = "distributionPackageExporter", referenceInterface = DistributionPackageExporter.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
         @Reference(name = "distributionQueueProvider", referenceInterface = DistributionQueueProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
         @Reference(name = "distributionQueueDistributionStrategy", referenceInterface = DistributionQueueDispatchingStrategy.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
-        @Reference(name = "distributionTransportSecretProvider", referenceInterface = DistributionTransportSecretProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
+        @Reference(name = "distributionTransportSecretProvider", referenceInterface = DistributionTransportSecretProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
+        @Reference(name = "distributionPackageBuilder", referenceInterface = DistributionPackageBuilder.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
 })
 @Service(DistributionComponentProvider.class)
 public class DefaultDistributionComponentProvider implements DistributionComponentProvider {
@@ -65,6 +68,8 @@ public class DefaultDistributionComponentProvider implements DistributionCompone
     private Map<String, DistributionComponent<DistributionTransportSecretProvider>> distributionTransportSecretProviderMap = new ConcurrentHashMap<String, DistributionComponent<DistributionTransportSecretProvider>>();
     private Map<String, DistributionComponent<DistributionPackageImporter>> distributionPackageImporterMap = new ConcurrentHashMap<String, DistributionComponent<DistributionPackageImporter>>();
     private Map<String, DistributionComponent<DistributionPackageExporter>> distributionPackageExporterMap = new ConcurrentHashMap<String, DistributionComponent<DistributionPackageExporter>>();
+    private Map<String, DistributionComponent<DistributionPackageBuilder>> distributionPackageBuilderMap = new ConcurrentHashMap<String, DistributionComponent<DistributionPackageBuilder>>();
+
     private BundleContext bundleContext;
 
 
@@ -107,6 +112,8 @@ public class DefaultDistributionComponentProvider implements DistributionCompone
             return (Map) distributionQueueDistributionStrategyMap;
         } else if (type.isAssignableFrom(DistributionTransportSecretProvider.class)) {
             return (Map) distributionTransportSecretProviderMap;
+        } else if (type.isAssignableFrom(DistributionPackageBuilder.class)) {
+            return (Map) distributionPackageBuilderMap;
         }
 
         return null;
@@ -172,6 +179,18 @@ public class DefaultDistributionComponentProvider implements DistributionCompone
     private void unbindDistributionAgent(DistributionAgent distributionAgent, Map<String, Object> config) {
 
         remove(DistributionAgent.class, distributionAgent, config);
+
+    }
+
+
+    private void bindDistributionPackageBuilder(DistributionPackageBuilder distributionPackageBuilder, Map<String, Object> config) {
+
+        put(DistributionPackageBuilder.class, distributionPackageBuilder, config);
+    }
+
+    private void unbindDistributionPackageBuilder(DistributionPackageBuilder distributionPackageBuilder, Map<String, Object> config) {
+
+        remove(DistributionPackageBuilder.class, distributionPackageBuilder, config);
 
     }
 

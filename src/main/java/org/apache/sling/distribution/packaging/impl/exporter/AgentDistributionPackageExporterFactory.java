@@ -37,6 +37,7 @@ import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExportException;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
+import org.apache.sling.distribution.serialization.DistributionPackageBuilderProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,10 +65,8 @@ public class AgentDistributionPackageExporterFactory implements DistributionPack
     private DistributionAgent agent;
 
 
-    @Property(name = "packageBuilder.target", label = "Package Builder", description = "The target reference for the DistributionPackageBuilder used to create distribution packages, " +
-            "e.g. use target=(name=...) to bind to services by name.")
-    @Reference(name = "packageBuilder")
-    private DistributionPackageBuilder packageBuilder;
+    @Reference
+    private DistributionPackageBuilderProvider packageBuilderProvider;
 
     private DistributionPackageExporter packageExporter;
 
@@ -77,7 +76,7 @@ public class AgentDistributionPackageExporterFactory implements DistributionPack
 
         String queueName = PropertiesUtil.toString(config.get(QUEUE_NAME), "");
 
-        packageExporter = new AgentDistributionPackageExporter(queueName, agent, packageBuilder);
+        packageExporter = new AgentDistributionPackageExporter(queueName, agent, packageBuilderProvider);
     }
 
     @Nonnull

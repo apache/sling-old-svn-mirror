@@ -31,15 +31,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Testcase for {@link VoidDistributionPackage}
+ * Testcase for {@link SimpleDistributionPackage}
  */
-public class VoidDistributionPackageTest {
+public class SimpleDistributionPackageTest {
 
     @Test
     public void testCreatedAndReadPackagesEquality() throws Exception {
         DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.DELETE, "/abc");
-        VoidDistributionPackage createdPackage = new VoidDistributionPackage(request);
-        VoidDistributionPackage readPackage = VoidDistributionPackage.fromStream(new ByteArrayInputStream(("DELETE:/abc:VOID").getBytes()));
+        SimpleDistributionPackage createdPackage = new SimpleDistributionPackage(request, "VOID");
+        SimpleDistributionPackage readPackage = SimpleDistributionPackage.fromStream(new ByteArrayInputStream(("DSTRPCK:DELETE|/abc|VOID").getBytes()));
         assertEquals(createdPackage.getType(), readPackage.getType());
         assertEquals(createdPackage.getInfo().getRequestType(), readPackage.getInfo().getRequestType());
         assertEquals(Arrays.toString(createdPackage.getInfo().getPaths()), Arrays.toString(readPackage.getInfo().getPaths()));

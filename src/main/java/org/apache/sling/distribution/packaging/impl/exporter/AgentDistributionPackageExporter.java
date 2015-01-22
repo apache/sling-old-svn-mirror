@@ -30,25 +30,26 @@ import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
+import org.apache.sling.distribution.serialization.DistributionPackageBuilderProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AgentDistributionPackageExporter implements DistributionPackageExporter {
     private final Logger log = LoggerFactory.getLogger(getClass());
+    private final DistributionPackageBuilderProvider packageBuilderProvider;
 
 
     private DistributionAgent agent;
-    private final DistributionPackageBuilder packageBuilder;
     private String queueName;
 
-    public AgentDistributionPackageExporter(String queueName, DistributionAgent agent, DistributionPackageBuilder packageBuilder) {
+    public AgentDistributionPackageExporter(String queueName, DistributionAgent agent, DistributionPackageBuilderProvider packageBuilderProvider) {
+        this.packageBuilderProvider = packageBuilderProvider;
 
-        if (agent == null || packageBuilder == null) {
+        if (agent == null || packageBuilderProvider == null) {
             throw new IllegalArgumentException("Agent and package builder are required");
         }
         this.queueName = queueName;
         this.agent = agent;
-        this.packageBuilder = packageBuilder;
     }
 
     @Nonnull
@@ -62,12 +63,19 @@ public class AgentDistributionPackageExporter implements DistributionPackageExpo
             DistributionQueueItem info = queue.getHead();
             DistributionPackage distributionPackage;
             if (info != null) {
-                distributionPackage = packageBuilder.getPackage(resourceResolver, info.getId());
-                DistributionQueueItem item = queue.remove(info.getId());
-                log.info("item {} fetched and removed from the queue", item);
-                if (distributionPackage != null) {
-                    result.add(distributionPackage);
+                DistributionPackageBuilder packageBuilder = packageBuilderProvider.getPackageBuilder(info.getType());
+
+                if (packageBuilder != null) {
+                    distributionPackage = packageBuilder.getPackage(resourceResolver, info.getId());
+                    DistributionQueueItem item = queue.remove(info.getId());
+                    log.info("item {} fetched and removed from the queue", item);
+                    if (distributionPackage != null) {
+                        result.add(distributionPackage);
+                    }
+                } else {
+                    log.warn("cannot find package builder with type {}", info.getType());
                 }
+
             }
 
         } catch (Exception ex) {
