@@ -39,7 +39,7 @@ public class FileVaultDistributionPackageTest {
         File file = mock(File.class);
         when(file.getAbsolutePath()).thenReturn("/path/to/file.txt");
         when(vaultPackage.getFile()).thenReturn(file);
-        FileVaultDistributionPackage fileVaultdistributionPackage = new FileVaultDistributionPackage(vaultPackage);
+        FileVaultDistributionPackage fileVaultdistributionPackage = new FileVaultDistributionPackage("filevlt", vaultPackage);
         assertNotNull(fileVaultdistributionPackage.getId());
     }
 
@@ -49,7 +49,7 @@ public class FileVaultDistributionPackageTest {
         File file = mock(File.class);
         when(file.getAbsolutePath()).thenReturn("/path/to/file.txt");
         when(vaultPackage.getFile()).thenReturn(file);
-        FileVaultDistributionPackage fileVaultdistributionPackage = new FileVaultDistributionPackage(vaultPackage);
+        FileVaultDistributionPackage fileVaultdistributionPackage = new FileVaultDistributionPackage("filevlt", vaultPackage);
         assertNull(fileVaultdistributionPackage.getInfo().getPaths());
     }
 
@@ -58,7 +58,7 @@ public class FileVaultDistributionPackageTest {
         VaultPackage vaultPackage = mock(VaultPackage.class);
         File file = File.createTempFile("sample", "txt");
         when(vaultPackage.getFile()).thenReturn(file);
-        FileVaultDistributionPackage fileVaultdistributionPackage = new FileVaultDistributionPackage(vaultPackage);
+        FileVaultDistributionPackage fileVaultdistributionPackage = new FileVaultDistributionPackage("filevlt", vaultPackage);
         assertNotNull(fileVaultdistributionPackage.createInputStream());
     }
 
@@ -68,7 +68,7 @@ public class FileVaultDistributionPackageTest {
         File file = mock(File.class);
         when(file.getAbsolutePath()).thenReturn("/path/to/file.txt");
         when(vaultPackage.getFile()).thenReturn(file);
-        FileVaultDistributionPackage fileVaultdistributionPackage = new FileVaultDistributionPackage(vaultPackage);
+        FileVaultDistributionPackage fileVaultdistributionPackage = new FileVaultDistributionPackage("filevlt", vaultPackage);
         assertNotNull(fileVaultdistributionPackage.getType());
     }
 
@@ -78,7 +78,7 @@ public class FileVaultDistributionPackageTest {
         File file = mock(File.class);
         when(file.getAbsolutePath()).thenReturn("/path/to/file.txt");
         when(vaultPackage.getFile()).thenReturn(file);
-        FileVaultDistributionPackage fileVaultdistributionPackage = new FileVaultDistributionPackage(vaultPackage);
+        FileVaultDistributionPackage fileVaultdistributionPackage = new FileVaultDistributionPackage("filevlt", vaultPackage);
         assertNotNull(fileVaultdistributionPackage.getInfo().getRequestType());
     }
 
@@ -88,7 +88,7 @@ public class FileVaultDistributionPackageTest {
         File file = mock(File.class);
         when(file.getAbsolutePath()).thenReturn("/path/to/file.txt");
         when(vaultPackage.getFile()).thenReturn(file);
-        FileVaultDistributionPackage fileVaultdistributionPackage = new FileVaultDistributionPackage(vaultPackage);
+        FileVaultDistributionPackage fileVaultdistributionPackage = new FileVaultDistributionPackage("filevlt", vaultPackage);
         fileVaultdistributionPackage.close();
     }
 
@@ -98,7 +98,7 @@ public class FileVaultDistributionPackageTest {
         File file = mock(File.class);
         when(file.getAbsolutePath()).thenReturn("/path/to/file.txt");
         when(vaultPackage.getFile()).thenReturn(file);
-        FileVaultDistributionPackage fileVaultdistributionPackage = new FileVaultDistributionPackage(vaultPackage);
+        FileVaultDistributionPackage fileVaultdistributionPackage = new FileVaultDistributionPackage("filevlt", vaultPackage);
         fileVaultdistributionPackage.delete();
     }
 }

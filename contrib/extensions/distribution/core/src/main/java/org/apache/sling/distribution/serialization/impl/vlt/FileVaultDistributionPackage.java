@@ -38,9 +38,11 @@ public class FileVaultDistributionPackage extends AbstractDistributionPackage im
 
     private final String id;
 
+    private final String type;
     private final VaultPackage pkg;
 
-    public FileVaultDistributionPackage(VaultPackage pkg) {
+    public FileVaultDistributionPackage(String type, VaultPackage pkg) {
+        this.type = type;
         this.pkg = pkg;
         String[] paths = VltUtils.getPaths(pkg.getMetaInf());
         this.getInfo().setPaths(paths);
@@ -60,7 +62,7 @@ public class FileVaultDistributionPackage extends AbstractDistributionPackage im
 
     @Nonnull
     public String getType() {
-        return FileVaultDistributionPackageBuilder.PACKAGING_TYPE;
+        return type;
     }
 
     public void close() {

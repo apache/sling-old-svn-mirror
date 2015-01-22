@@ -61,7 +61,7 @@ public class JobHandlingDistributionQueueProvider implements DistributionQueuePr
     @Nonnull
     public DistributionQueue getQueue(@Nonnull String queueName) throws DistributionQueueException {
         String topic = JobHandlingDistributionQueue.DISTRIBUTION_QUEUE_TOPIC + '/' + name + "/" + queueName;
-        return new JobHandlingDistributionQueue(name, topic, jobManager);
+        return new JobHandlingDistributionQueue(queueName, topic, jobManager);
     }
 
 

@@ -1,0 +1,166 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.apache.sling.distribution.serialization.impl;
+
+import javax.annotation.Nonnull;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.regex.Pattern;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.distribution.SimpleDistributionRequest;
+import org.apache.sling.distribution.packaging.DistributionPackage;
+
+/**
+ * A simple {@link org.apache.sling.distribution.packaging.DistributionPackage} is used for deletion of certain paths on the target instance
+ */
+public class SimpleDistributionPackage extends AbstractDistributionPackage implements DistributionPackage {
+
+    private final static String PACKAGE_START = "DSTRPCK:";
+    private final static String DELIM = "|";
+    private final static String PATH_DELIM = ",";
+
+
+    private final String type;
+
+    private final String[] paths;
+
+    private final String id;
+
+    private final DistributionRequestType requestType;
+
+
+    public SimpleDistributionPackage(DistributionRequest request, String type) {
+        this.type = type;
+        this.paths = request.getPaths();
+        this.requestType = request.getRequestType();
+        this.id = toIdString(request, type);
+
+        this.getInfo().setPaths(paths);
+        this.getInfo().setRequestType(requestType);
+    }
+
+    public static String toIdString(DistributionRequest request, String type) {
+
+        StringBuilder b = new StringBuilder();
+
+        b.append(PACKAGE_START);
+
+        b.append(request.getRequestType().toString());
+        b.append(DELIM);
+
+        String[] paths = request.getPaths();
+
+        if (paths == null || paths.length == 0) {
+            // do nothing
+        } else {
+            for (int i = 0; i < paths.length; i++) {
+                b.append(paths[i]);
+                if (i < paths.length-1) {
+                    b.append(PATH_DELIM);
+                }
+            }
+        }
+
+        b.append(DELIM);
+        b.append(type);
+
+
+        return b.toString();
+    }
+
+    public static SimpleDistributionPackage fromIdString(String id) {
+        if (!id.startsWith(PACKAGE_START)) {
+            return null;
+        }
+
+        id = id.substring(PACKAGE_START.length());
+
+
+        String[] parts = id.split(Pattern.quote(DELIM));
+
+        if (parts.length < 3) return null;
+
+        String actionString = parts[0];
+        String pathsString = parts[1];
+        String typeString = parts[2];
+
+
+        DistributionRequestType distributionRequestType = DistributionRequestType.fromName(actionString);
+
+        SimpleDistributionPackage distributionPackage = null;
+        if (distributionRequestType != null) {
+            String[] paths = pathsString.split(PATH_DELIM);
+
+            DistributionRequest request = new SimpleDistributionRequest(distributionRequestType, paths);
+            distributionPackage = new SimpleDistributionPackage(request, typeString);
+        }
+
+        return distributionPackage;
+    }
+
+
+    @Nonnull
+    public String getType() {
+        return type;
+    }
+
+    @Nonnull
+    public InputStream createInputStream() throws IOException {
+        return IOUtils.toInputStream(id, "UTF-8");
+    }
+
+    @Nonnull
+    public String getId() {
+        return id;
+    }
+
+    public void delete() {
+        // there's nothing to delete
+    }
+
+    @Override
+    public String toString() {
+        return id;
+    }
+
+    public static SimpleDistributionPackage fromStream(InputStream stream)  {
+
+        try {
+            int size = SimpleDistributionPackage.PACKAGE_START.getBytes("UTF-8").length;
+            stream.mark(size);
+            byte[] buffer = new byte[size];
+            int bytesRead = stream.read(buffer, 0, size);
+            stream.reset();
+            String s = new String(buffer, "UTF-8");
+
+            if (bytesRead > 0 && buffer[0] > 0 && s.startsWith(SimpleDistributionPackage.PACKAGE_START)) {
+                String streamString = IOUtils.toString(stream, "UTF-8");
+
+                return fromIdString(streamString);
+            }
+        } catch (Exception e) {
+
+        }
+
+        return null;
+    }
+}

@@ -76,7 +76,7 @@ public class FileVaultDistributionPackageBuilderTest {
         when(resourceResolver.adaptTo(Session.class)).thenReturn(session);
 
 
-        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder(packaging, null, null);
+        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder("filevlt", packaging, null, null);
         DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, new String[]{"/"});
         DistributionPackage distributionPackage = fileVaultdistributionPackageBuilder.createPackageForAdd(resourceResolver, request);
         assertNotNull(distributionPackage);
@@ -88,7 +88,7 @@ public class FileVaultDistributionPackageBuilderTest {
         PackageManager packageManager = mock(PackageManager.class);
         when(packaging.getPackageManager()).thenReturn(packageManager);
 
-        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder(packaging, null, null);
+        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder("filevlt", packaging, null, null);
 
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         InputStream stream = new ByteArrayInputStream("some binary".getBytes("UTF-8"));
@@ -102,7 +102,7 @@ public class FileVaultDistributionPackageBuilderTest {
         PackageManager packageManager = mock(PackageManager.class);
         when(packaging.getPackageManager()).thenReturn(packageManager);
 
-        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder(packaging, null, null);
+        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder("filevlt", packaging, null, null);
 
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         String id = "some-id";
@@ -119,7 +119,7 @@ public class FileVaultDistributionPackageBuilderTest {
         when(packageManager.open(tempFile)).thenReturn(vaultPackage);
         when(packaging.getPackageManager()).thenReturn(packageManager);
 
-        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder(packaging, null, null);
+        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder("filevlt", packaging, null, null);
 
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         Session session = mock(Session.class);
@@ -148,7 +148,7 @@ public class FileVaultDistributionPackageBuilderTest {
         when(packageManager.open(tempFile)).thenReturn(vaultPackage);
         when(packaging.getPackageManager()).thenReturn(packageManager);
 
-        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder(packaging,
+        FileVaultDistributionPackageBuilder fileVaultdistributionPackageBuilder = new FileVaultDistributionPackageBuilder("filevlt", packaging,
                 ImportMode.MERGE, AccessControlHandling.MERGE);
 
         ResourceResolver resourceResolver = mock(ResourceResolver.class);

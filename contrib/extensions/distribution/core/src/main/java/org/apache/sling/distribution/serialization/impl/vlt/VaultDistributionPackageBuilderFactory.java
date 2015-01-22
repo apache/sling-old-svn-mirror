@@ -96,6 +96,7 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
     @Activate
     public void activate(Map<String, Object> config) {
 
+        String name = PropertiesUtil.toString(config.get(NAME), null);
         String type = PropertiesUtil.toString(config.get(TYPE), null);
         String importModeString = PropertiesUtil.toString(config.get(IMPORT_MODE), null);
         String aclHandlingString = PropertiesUtil.toString(config.get(ACL_HANDLING), null);
@@ -109,11 +110,16 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
         if (aclHandlingString != null) {
             aclHandling= AccessControlHandling.valueOf(aclHandlingString);
         }
-        if (FileVaultDistributionPackageBuilder.PACKAGING_TYPE.equals(type)) {
-            packageBuilder = new ResourceSharedDistributionPackageBuilder(new FileVaultDistributionPackageBuilder(packaging, importMode, aclHandling));
+        if ("filevlt".equals(type)) {
+            packageBuilder = new ResourceSharedDistributionPackageBuilder(new FileVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling));
         } else  {
-            packageBuilder = new ResourceSharedDistributionPackageBuilder(new JcrVaultDistributionPackageBuilder(packaging, importMode, aclHandling));
+            packageBuilder = new ResourceSharedDistributionPackageBuilder(new JcrVaultDistributionPackageBuilder(name, packaging, importMode, aclHandling));
         }
+    }
+
+
+    public String getType() {
+        return packageBuilder.getType();
     }
 
 
