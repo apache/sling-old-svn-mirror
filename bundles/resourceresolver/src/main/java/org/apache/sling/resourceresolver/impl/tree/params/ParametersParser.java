@@ -1,3 +1,22 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.apache.sling.resourceresolver.impl.tree.params;
 
 import java.util.LinkedHashMap;
@@ -17,6 +36,15 @@ class ParametersParser {
 
     private boolean invalid;
 
+    /**
+     * Parses parameters string, eg.: {@code ;x=123;a='1.0'}. The result of the method is available in
+     * {@link #parameters} and {@link #invalid}.
+     * 
+     * @param chars Array containing path with parameters.
+     * @param from Index of the first character of the parameters substring (it must be a semicolon).
+     * @param dotAllowed If true, the dot in parameter value won't stop parsing.
+     * @return Index of the first character not related to parameters.
+     */
     public int parseParameters(final char[] chars, final int from, final boolean dotAllowed) {
         resetCurrentParameter();
         parameters.clear();
@@ -104,10 +132,16 @@ class ParametersParser {
         return chars.length;
     }
 
+    /**
+     * @return Parsed parameters.
+     */
     public Map<String, String> getParameters() {
         return parameters;
     }
 
+    /**
+     * @return True if the {@link #parseParameters(char[], int, boolean)} method failed.
+     */
     public boolean isInvalid() {
         return invalid;
     }
