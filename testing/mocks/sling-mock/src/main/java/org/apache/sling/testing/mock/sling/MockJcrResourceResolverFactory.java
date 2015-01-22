@@ -28,7 +28,9 @@ import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.resource.internal.PathMapperImpl;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory;
+import org.apache.sling.jcr.resource.internal.helper.jcr.PathMapper;
 import org.apache.sling.resourceresolver.impl.CommonResourceResolverFactoryImpl;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
@@ -64,6 +66,8 @@ class MockJcrResourceResolverFactory implements ResourceResolverFactory {
         // setup mocked JCR environment
         componentContext.getBundleContext()
                 .registerService(SlingRepository.class.getName(), this.slingRepository, null);
+        componentContext.getBundleContext()
+                .registerService(PathMapper.class.getName(), new PathMapper(), null);
 
         // setup real sling JCR resource provider implementation for use in
         // mocked context
@@ -123,6 +127,11 @@ class MockJcrResourceResolverFactory implements ResourceResolverFactory {
     public ResourceResolver getServiceResourceResolver(final Map<String, Object> authenticationInfo)
             throws LoginException {
         return getResourceResolverInternal(authenticationInfo, true);
+    }
+
+    @Override
+    public ResourceResolver getThreadResourceResolver() {
+        return null;
     }
 
 }
