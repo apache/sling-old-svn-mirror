@@ -207,14 +207,16 @@ public class JcrResourceProvider
         final String jcrPath = pathMapper.mapResourcePathToJCRPath(resourcePath);
         if (jcrPath != null && itemExists(jcrPath)) {
             Item item = session.getItem(jcrPath);
+            String pathWithVersion = resourcePath;
             if (parameters != null && parameters.containsKey("v")) {
                 item = getHistoricItem(item, parameters.get("v"));
+                pathWithVersion = addVersion(resourcePath, parameters.get("v"));
             }
             if (item.isNode()) {
                 log.debug(
                     "createResource: Found JCR Node Resource at path '{}'",
                     resourcePath);
-                final JcrNodeResource resource = new JcrNodeResource(resourceResolver, resourcePath, (Node) item, dynamicClassLoader, pathMapper);
+                final JcrNodeResource resource = new JcrNodeResource(resourceResolver, pathWithVersion, (Node) item, dynamicClassLoader, pathMapper);
                 resource.getResourceMetadata().setParameterMap(parameters);
                 return resource;
             }
@@ -222,7 +224,7 @@ public class JcrResourceProvider
             log.debug(
                 "createResource: Found JCR Property Resource at path '{}'",
                 resourcePath);
-            final JcrPropertyResource resource = new JcrPropertyResource(resourceResolver, resourcePath,
+            final JcrPropertyResource resource = new JcrPropertyResource(resourceResolver, pathWithVersion,
                 (Property) item, pathMapper);
             resource.getResourceMetadata().setParameterMap(parameters);
             return resource;
@@ -277,6 +279,14 @@ public class JcrResourceProvider
 
     private static boolean isVersionable(Item item) throws RepositoryException {
         return item.isNode() && ((Node) item).isNodeType(JcrConstants.MIX_VERSIONABLE);
+    }
+    
+    private static String addVersion(String resourcePath, String version) {
+        if (StringUtils.contains(version, '.')) {
+            return String.format("%s;v='%s'", resourcePath, version);
+        } else {
+            return String.format("%s;v=%s", resourcePath, version);
+        }
     }
 
     /**
