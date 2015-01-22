@@ -293,8 +293,9 @@ public class JcrResourceProvider
                 private ValueMap next;
 
                 {
-                    seek();
+                    next = seek();
                 }
+
                 public boolean hasNext() {
                     return next != null;
                 };
@@ -304,12 +305,13 @@ public class JcrResourceProvider
                         throw new NoSuchElementException();
                     }
                     final ValueMap result = next;
-                    seek();
+                    next = seek();
                     return result;
                 }
 
-                private void seek() {
-                    while ( next == null && rows.hasNext() ) {
+                private ValueMap seek() {
+                    ValueMap result = null;
+                    while ( result == null && rows.hasNext() ) {
                         try {
                             final Row jcrRow = rows.nextRow();
                             final String resourcePath = pathMapper.mapJCRPathToResourcePath(jcrRow.getPath());
@@ -341,7 +343,7 @@ public class JcrResourceProvider
                                 if (!didScore) {
                                     row.put(QUERY_COLUMN_SCORE, jcrRow.getScore());
                                 }
-                                next = new ValueMapDecorator(row);
+                                result = new ValueMapDecorator(row);
                             }
                         } catch (final RepositoryException re) {
                             log.error(
@@ -349,6 +351,7 @@ public class JcrResourceProvider
                                 re);
                         }
                     }
+                    return result;
                 }
 
                 public void remove() {
