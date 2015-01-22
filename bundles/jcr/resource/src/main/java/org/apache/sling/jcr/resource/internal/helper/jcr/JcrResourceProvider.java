@@ -250,7 +250,9 @@ public class JcrResourceProvider
     }
 
     private static Item getSubitem(Node node, String relPath) throws RepositoryException {
-        if (node.hasNode(relPath)) {
+        if (relPath.isEmpty()) {
+            return node;
+        } else if (node.hasNode(relPath)) {
             return node.getNode(relPath);
         } else if (node.hasProperty(relPath)) {
             return node.getProperty(relPath);
