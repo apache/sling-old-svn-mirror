@@ -291,6 +291,12 @@
     <feature version="${project.version}">sling</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.resourcemerger/1.2.0</bundle>
   </feature>
+  <feature name="sling-extension-urlrewriter" version="0.0.1-SNAPSHOT">
+    <feature version="${project.version}">sling</feature>
+    <bundle>mvn:org.apache.sling/org.apache.sling.urlrewriter/0.0.1-SNAPSHOT</bundle>
+    <!-- bundle dependencies -->
+    <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.urlrewritefilter/4.0.4_1</bundle>
+  </feature>
   <!-- Apache Sling Scripting (contrib) -->
   <feature name="sling-scripting-groovy" version="1.0.0">
     <feature version="${project.version}">sling</feature>
