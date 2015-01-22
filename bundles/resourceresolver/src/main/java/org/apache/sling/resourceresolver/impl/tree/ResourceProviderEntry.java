@@ -352,7 +352,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
             }
 
             // resolve against this one
-            final Resource resource = getResourceFromProviders(ctx, resourceResolver, fullPath);
+            final Resource resource = getResourceFromProviders(ctx, resourceResolver, fullPath, parameters);
             if (resource != null) {
                 return resource;
             }
@@ -388,14 +388,14 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
 
     public Resource getResourceFromProviders(final ResourceResolverContext ctx,
             final ResourceResolver resourceResolver,
-            final String fullPath) {
+            final String fullPath,
+            final Map<String, String> parameters) {
         Resource fallbackResource = null;
         final ProviderHandler[] rps = getResourceProviders();
-        final ParsedParameters params = new ParsedParameters(fullPath);
         for (final ProviderHandler rp : rps) {
             boolean foundFallback = false;
 
-            final Resource resource = rp.getResource(ctx, resourceResolver, params.getRawPath(), params.getParameters());
+            final Resource resource = rp.getResource(ctx, resourceResolver, fullPath, parameters);
             if (resource != null) {
                 if ( resource.getResourceMetadata() != null && resource.getResourceMetadata().get(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING) != null ) {
                     logger.debug("Resolved Base {} using {} - continue resolving flag is set!", fullPath, rp);
