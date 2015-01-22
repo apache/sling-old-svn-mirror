@@ -969,6 +969,14 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
         return sortedInjectAnnotationProcessorFactories;
     }
 
+    InjectAnnotationProcessorFactory2[] getInjectAnnotationProcessorFactories2() {
+        return sortedInjectAnnotationProcessorFactories2;
+    }
+
+    Collection<StaticInjectAnnotationProcessorFactory> getStaticInjectAnnotationProcessorFactories() {
+        return staticInjectAnnotationProcessorFactories.values();
+    }
+
     ImplementationPicker[] getImplementationPickers() {
         return adapterImplementations.getImplementationPickers();
     }
