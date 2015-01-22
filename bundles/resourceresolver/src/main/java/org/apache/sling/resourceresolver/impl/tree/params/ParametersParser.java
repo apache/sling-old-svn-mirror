@@ -3,7 +3,7 @@ package org.apache.sling.resourceresolver.impl.tree.params;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class ParametersParser {
+class ParametersParser {
 
     private enum ParamsState {
         INIT, NAME, EQUALS, VALUE, QUOTED_VALUE, QUOTE_END

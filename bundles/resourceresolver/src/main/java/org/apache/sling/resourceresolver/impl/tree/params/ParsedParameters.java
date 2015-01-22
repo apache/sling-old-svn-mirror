@@ -3,13 +3,13 @@ package org.apache.sling.resourceresolver.impl.tree.params;
 import java.util.Collections;
 import java.util.Map;
 
-public class PathParameters {
+public class ParsedParameters {
 
     private final Map<String, String> parameters;
 
     private final String path;
 
-    public PathParameters(final String fullPath) {
+    public ParsedParameters(final String fullPath) {
         final PathParser parser = new PathParser();
         parser.parse(fullPath);
 

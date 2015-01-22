@@ -316,10 +316,11 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * <code>null</code> and a <code>Map</code> instance. Otherwise
      * <code>null</code> is returned.
      */
-    public Map<?, ?> getParameterMap() {
+    @SuppressWarnings("unchecked")
+    public Map<String, String> getParameterMap() {
         Object value = get(PARAMETER_MAP);
         if (value instanceof Map) {
-            return (Map<?, ?>) value;
+            return (Map<String, String>) value;
         }
 
         return null;

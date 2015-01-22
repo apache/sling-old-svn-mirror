@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -410,6 +411,12 @@ public class ResourceResolverImplTest {
         assertFalse(resolver.isResourceType(r, "x:y"));
         assertTrue(resolver.isResourceType(r, "t:c"));
         assertFalse(resolver.isResourceType(r, "h:p"));
+    }
+    
+    @Test public void test_versions() {
+        Resource resource = resResolver.resolve("/content/test;v='1.0'.html");
+        Map<String, String> parameters = resource.getResourceMetadata().getParameterMap();
+        assertEquals(Collections.singletonMap("v", "1.0"), parameters);
     }
 
     private static class PathBasedResourceResolverImpl extends ResourceResolverImpl {
