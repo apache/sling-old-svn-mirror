@@ -412,12 +412,6 @@ public class ResourceResolverImplTest {
         assertTrue(resolver.isResourceType(r, "t:c"));
         assertFalse(resolver.isResourceType(r, "h:p"));
     }
-    
-    @Test public void test_versions() {
-        Resource resource = resResolver.resolve("/content/test;v='1.0'.html");
-        Map<String, String> parameters = resource.getResourceMetadata().getParameterMap();
-        assertEquals(Collections.singletonMap("v", "1.0"), parameters);
-    }
 
     private static class PathBasedResourceResolverImpl extends ResourceResolverImpl {
 
