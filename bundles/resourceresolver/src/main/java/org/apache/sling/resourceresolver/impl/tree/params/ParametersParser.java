@@ -6,7 +6,7 @@ import java.util.Map;
 public class ParametersParser {
 
     private enum ParamsState {
-        BEFORE_PARAMS, NAME, EQUALS, QUOTED_VALUE, QUOTE_END, VALUE
+        INIT, NAME, EQUALS, VALUE, QUOTED_VALUE, QUOTE_END
     }
 
     private StringBuilder name;
@@ -22,7 +22,7 @@ public class ParametersParser {
         parameters.clear();
         invalid = false;
 
-        ParamsState state = ParamsState.BEFORE_PARAMS;
+        ParamsState state = ParamsState.INIT;
         for (int i = from; i <= chars.length; i++) {
             final char c;
             if (i == chars.length) {
@@ -31,7 +31,7 @@ public class ParametersParser {
                 c = chars[i];
             }
             switch (state) {
-                case BEFORE_PARAMS:
+                case INIT:
                     if (c == ';') {
                         state = ParamsState.NAME;
                     } else if (c == '.' || c == '/' || c == 0) {

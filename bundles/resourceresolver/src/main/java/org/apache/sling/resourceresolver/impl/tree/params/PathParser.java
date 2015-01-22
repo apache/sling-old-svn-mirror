@@ -5,21 +5,13 @@ import java.util.Map;
 
 public class PathParser {
 
+    /**
+     * List of states. V1 and V2 prefixes means variant 1 and 2. In V1, the parameters are added after
+     * selectors and extension: {@code /content/test.sel.html;v=1.0}. In V2 parameters are added before
+     * selectors and extension: {@code /content/test;v='1.0'.sel.html}
+     */
     private enum ParserState {
-        // initial state, before semicolon or dot
-        INIT,
-        // parameters have been parsed, waiting for dot marking extension
-        PARSED_PARAMS_WAITING_FOR_EXTENSION,
-        // parameters have been already parsed, parsing extension,
-        PARSED_PARAMS_PARSING_EXT,
-        // parsing extension, there have been no parameters yet
-        PARSING_EXTENSION_NO_PARAMS,
-        // extension and parameters parsed, waiting for suffix
-        PARSED_EXT_AND_PARAMS,
-        // parsing suffix
-        SUFFIX,
-        // illegal path, parsing cancelled
-        INVALID
+        INIT, V1_EXTENSION, V1_PARAMS, V2_PARAMS, V2_EXTENSION, SUFFIX, INVALID
     }
 
     private Map<String, String> parameters;
@@ -59,29 +51,27 @@ public class PathParser {
             switch (state) {
                 case INIT:
                     if (c == '.') {
-                        state = ParserState.PARSING_EXTENSION_NO_PARAMS;
+                        state = ParserState.V1_EXTENSION;
                     } else if (c == ';') {
                         paramsStart = i;
                         i = parametersParser.parseParameters(chars, i, false);
                         paramsEnd = i--;
-                        state = parametersParser.isInvalid() ? ParserState.INVALID
-                                : ParserState.PARSED_PARAMS_WAITING_FOR_EXTENSION;
+                        state = parametersParser.isInvalid() ? ParserState.INVALID : ParserState.V2_PARAMS;
                     }
                     break;
 
-                case PARSING_EXTENSION_NO_PARAMS:
+                case V1_EXTENSION:
                     if (c == '/') {
                         state = ParserState.SUFFIX;
                     } else if (c == ';') {
                         paramsStart = i;
                         i = parametersParser.parseParameters(chars, i, true);
                         paramsEnd = i--;
-                        state = parametersParser.isInvalid() ? ParserState.INVALID
-                                : ParserState.PARSED_EXT_AND_PARAMS;
+                        state = parametersParser.isInvalid() ? ParserState.INVALID : ParserState.V1_PARAMS;
                     }
                     break;
 
-                case PARSED_EXT_AND_PARAMS:
+                case V1_PARAMS:
                     if (c == '/') {
                         state = ParserState.SUFFIX;
                     } else if (c == '.') {
@@ -89,15 +79,15 @@ public class PathParser {
                     }
                     break;
 
-                case PARSED_PARAMS_WAITING_FOR_EXTENSION:
+                case V2_PARAMS:
                     if (c == '/') {
                         state = ParserState.INVALID; // there was no extension, so no suffix is allowed
                     } else if (c == '.') {
-                        state = ParserState.PARSED_PARAMS_PARSING_EXT;
+                        state = ParserState.V2_EXTENSION;
                     }
                     break;
 
-                case PARSED_PARAMS_PARSING_EXT:
+                case V2_EXTENSION:
                     if (c == '/') {
                         state = ParserState.SUFFIX;
                     }
