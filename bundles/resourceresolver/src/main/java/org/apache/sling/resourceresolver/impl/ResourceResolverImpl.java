@@ -429,7 +429,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
         }
 
-        final Resource res = resolveInternal(mappedPath, EMPTY_PARAMETERS);
+        ParsedParameters parsed = new ParsedParameters(mappedPath);
+        final Resource res = resolveInternal(parsed.getRawPath(), parsed.getParameters());
 
         if (res != null) {
 
