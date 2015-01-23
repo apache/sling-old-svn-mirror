@@ -56,7 +56,6 @@ import org.apache.sling.scripting.sightly.impl.engine.compiled.JavaClassTemplate
 import org.apache.sling.scripting.sightly.impl.engine.compiled.SourceIdentifier;
 import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderUnit;
-import org.apache.sling.scripting.sightly.impl.engine.runtime.SightlyRenderException;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -137,15 +136,13 @@ public class UnitLoader {
                     }
                     lock.lock();
                 }
-                createClass(adminResolver, sourceIdentifier, bindings, encoding, renderContext);
-                Resource javaClassResource = adminResolver.getResource(sourceIdentifier.getSourceFullPath());
+                Resource javaClassResource = createClass(adminResolver, sourceIdentifier, bindings, encoding, renderContext);
                 obj = sightlyJavaCompilerService.compileSource(javaClassResource, sourceIdentifier.getFullyQualifiedName());
             } else {
-                Resource javaClassResource = adminResolver.getResource(sourceIdentifier.getSourceFullPath());
-                obj = sightlyJavaCompilerService.getInstance(javaClassResource, sourceIdentifier.getFullyQualifiedName());
+                obj = sightlyJavaCompilerService.getInstance(adminResolver, null, sourceIdentifier.getFullyQualifiedName());
             }
             if (!(obj instanceof RenderUnit)) {
-                throw new SightlyRenderException("Class is not a RenderUnit instance");
+                throw new SightlyException("Class is not a RenderUnit instance");
             }
             return (RenderUnit) obj;
         } finally {
@@ -185,7 +182,8 @@ public class UnitLoader {
         }
     }
 
-    private synchronized void writeSource(ResourceResolver resolver, String sourceFullPath, String source) {
+    private synchronized Resource writeSource(ResourceResolver resolver, String sourceFullPath, String source) {
+        Resource sourceResource;
         try {
             String sourceParentPath = ResourceUtil.getParent(sourceFullPath);
             Map<String, Object> sourceFolderProperties = new HashMap<String, Object>();
@@ -194,7 +192,7 @@ public class UnitLoader {
 
             Map<String, Object> sourceFileProperties = new HashMap<String, Object>();
             sourceFileProperties.put(JCR_PRIMARY_TYPE, NT_FILE);
-            createResource(resolver, sourceFullPath, sourceFileProperties, null, false, false);
+            sourceResource = createResource(resolver, sourceFullPath, sourceFileProperties, null, false, false);
 
             Map<String, Object> ntResourceProperties = new HashMap<String, Object>();
             ntResourceProperties.put(JCR_PRIMARY_TYPE, NT_RESOURCE);
@@ -203,8 +201,9 @@ public class UnitLoader {
             createResource(resolver, sourceFullPath + "/" + JCR_CONTENT, ntResourceProperties, NT_RESOURCE, true, true);
             log.debug("Successfully written Java source file to repository: {}", sourceFullPath);
         } catch (PersistenceException e) {
-            log.error("Repository error while writing Java source file: " + sourceFullPath, e);
+            throw new SightlyException("Repository error while writing Java source file: " + sourceFullPath, e);
         }
+        return sourceResource;
     }
 
     private SourceIdentifier obtainIdentifier(Resource resource) {
@@ -213,7 +212,7 @@ public class UnitLoader {
         return new SourceIdentifier(resource, CLASS_NAME_PREFIX, basePath);
     }
 
-    private void createClass(ResourceResolver resolver, SourceIdentifier identifier, Bindings bindings, String encoding,
+    private Resource createClass(ResourceResolver resolver, SourceIdentifier identifier, Bindings bindings, String encoding,
                              RenderContextImpl renderContext) {
         String scriptSource = null;
         try {
@@ -221,7 +220,7 @@ public class UnitLoader {
             if (scriptResource != null) {
                 scriptSource = IOUtils.toString(scriptResource.adaptTo(InputStream.class), encoding);
                 String javaSourceCode = obtainResultSource(scriptSource, identifier, bindings, renderContext);
-                writeSource(resolver, identifier.getSourceFullPath(), javaSourceCode);
+                return writeSource(resolver, identifier.getSourceFullPath(), javaSourceCode);
             }
         } catch (SightlyParsingException e) {
             String offendingInput = e.getOffendingInput();
@@ -233,10 +232,10 @@ public class UnitLoader {
             } else {
                 throw e;
             }
-
         } catch (IOException e) {
-            throw new SightlyRenderException(e);
+            throw new SightlyException(e);
         }
+        throw new SightlyException("Unable to generate Java class for template " + identifier.getResource().getPath());
     }
 
     private String obtainResultSource(String scriptSource, SourceIdentifier identifier, Bindings bindings, RenderContextImpl renderContext) {

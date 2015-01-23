@@ -59,16 +59,34 @@ public class UnitChangeMonitor {
     @Reference
     private SlingSettingsService slingSettings = null;
 
+    /**
+     * Returns the last modified date for a Sightly script.
+     *
+     * @param script the script's full path
+     * @return the script's last modified date or 0 if there's no information about the script
+     */
     public long getLastModifiedDateForScript(String script) {
         Long date = slyScriptsMap.get(script);
         return date != null ? date : 0;
     }
 
+    /**
+     * Returns the last modified date of a generated Java source file.
+     *
+     * @param file the full path of the generated source file
+     * @return the file's last modified date or 0 if there's no information about the file
+     */
     public long getLastModifiedDateForJavaSourceFile(String file) {
         Long date = slySourcesMap.get(file);
         return date != null ? date : 0;
     }
 
+    /**
+     * Returns the last modified date for a Java Use-API object stored in the repository.
+     *
+     * @param path the full path of the file defining the Java Use-API object
+     * @return the Java Use-API file's last modified date or 0 if there's no information about this file
+     */
     public long getLastModifiedDateForJavaUseObject(String path) {
         Long date = slyJavaUseMap.get(path);
         return date != null ? date : 0;

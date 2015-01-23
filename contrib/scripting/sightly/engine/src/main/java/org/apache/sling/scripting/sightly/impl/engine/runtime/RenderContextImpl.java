@@ -91,7 +91,7 @@ public class RenderContextImpl implements RenderContext {
     public Object call(String functionName, Object... arguments) {
         RuntimeExtension extension = mapping.get(functionName);
         if (extension == null) {
-            throw new SightlyRenderException("Runtime extension is not available: " + functionName);
+            throw new SightlyException("Runtime extension is not available: " + functionName);
         }
         return extension.call(this, arguments);
     }
@@ -337,7 +337,7 @@ public class RenderContextImpl implements RenderContext {
             method = extractMethodInheritanceChain(cls, method);
             return method.invoke(obj);
         } catch (Exception e) {
-            throw new SightlyRenderException(e);
+            throw new SightlyException(e);
         }
     }
 
