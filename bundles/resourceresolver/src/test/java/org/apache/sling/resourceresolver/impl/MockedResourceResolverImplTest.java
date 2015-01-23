@@ -17,13 +17,17 @@
  */
 package org.apache.sling.resourceresolver.impl;
 
+import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -64,6 +68,8 @@ import org.osgi.service.event.EventAdmin;
 public class MockedResourceResolverImplTest {
 
     private static final List<Resource> EMPTY_RESOURCE_LIST = new ArrayList<Resource>();
+    private static final String FAKE_QUERY_LANGUAGE = "fake";
+    private static final String PATH = "path";
 
     private ResourceResolverFactoryActivator activator;
 
@@ -114,6 +120,12 @@ public class MockedResourceResolverImplTest {
      */
     @Mock
     private ResourceProvider appsResourceProvider;
+    
+    /**
+     * QueriableResourceProviders
+     */
+    @Mock
+    private QueriableResourceProvider queriableResourceProviderA;
 
 
     public MockedResourceResolverImplTest() {
@@ -168,6 +180,11 @@ public class MockedResourceResolverImplTest {
             buildResourceProviderProperties("org.apache.sling.resourceresolver.impl.AppsProvider",
                 13L,
                 new String[] { "/apps", "/libs" }));
+
+        activator.bindResourceProvider(queriableResourceProviderA,
+                buildResourceProviderProperties("org.apache.sling.resourceresolver.impl.QueriableResourceProviderA",
+                    14L,
+                    new String[] { "/searchA" }));
 
         // activate the components.
         activator.activate(componentContext);
@@ -260,6 +277,17 @@ public class MockedResourceResolverImplTest {
     private Resource buildResource(String fullpath, Iterable<Resource> children) {
         return buildResource(fullpath, children, null, null, null);
     }
+    
+    /** Build a List of ValueMap */
+    private List<ValueMap> buildValueMapCollection(int howMany, String pathPrefix) {
+        final List<ValueMap> result = new ArrayList<ValueMap>();
+        for(int i=0;  i < howMany; i++) {
+            final Map<String, Object> m = new HashMap<String, Object>();
+            m.put(PATH, pathPrefix + i);
+            result.add(new ValueMapDecorator(m));
+        }
+        return result;
+    }
 
     /**
      * Build a resource with path, children and resource resolver.
@@ -331,7 +359,7 @@ public class MockedResourceResolverImplTest {
         resourceProviderProperties.put(Constants.SERVICE_DESCRIPTION,
             "Dummy Provider");
         resourceProviderProperties.put(QueriableResourceProvider.LANGUAGES,
-                new String[] { "lang1"} );
+                new String[] { FAKE_QUERY_LANGUAGE } );
 
 
         resourceProviderProperties.put(ResourceProvider.ROOTS, roots);
@@ -564,6 +592,28 @@ public class MockedResourceResolverImplTest {
             i++;
         }
         Assert.assertEquals(5,i);
+    }
+    
+    @Test
+    public void testQueryResources() throws LoginException {
+        final int n = 3;
+        Mockito.when(queriableResourceProviderA.queryResources(Mockito.any(ResourceResolver.class), Mockito.any(String.class), Mockito.any(String.class)))
+        .thenReturn(buildValueMapCollection(n, "A_").iterator());
+        
+        final ResourceResolver rr = resourceResolverFactory.getResourceResolver(null);
+        buildResource("/search/test/withchildren", buildChildResources("/search/test/withchildren"), rr, resourceProvider);
+        final Iterator<Map<String, Object>> it = rr.queryResources("/search", FAKE_QUERY_LANGUAGE);
+        final Set<String> toFind = new HashSet<String>();
+        for(int i=0; i < n; i++) {
+            toFind.add("A_" + i);
+        }
+        
+        assertTrue("Expecting non-empty result (" + n + ")", it.hasNext());
+        while(it.hasNext()) {
+            final Map<String, Object> m = it.next();
+            toFind.remove(m.get(PATH));
+        }
+        assertTrue("Expecting no leftovers (" + n + ") in" + toFind, toFind.isEmpty());
     }
 
 }
