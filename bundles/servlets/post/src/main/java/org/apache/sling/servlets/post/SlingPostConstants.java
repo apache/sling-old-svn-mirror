@@ -145,6 +145,19 @@ public interface SlingPostConstants {
     public static final String OPERATION_CHECKOUT = "checkout";
 
     /**
+     * Name of the predefined restore operation (value is "restore").
+     * <p>
+     * The restore operation requires the {@link #RP_VERSION} request parameter
+     * denoting the name or the label of the version to be restored.
+     * <p>
+     * If the {@link #RP_APPLY_TO} parameter is set the resources listed in that
+     * parameter are restored instead of the request resource. The
+     * {@link #RP_REMOVE_EXISTING} parameter may be set to true to force
+     * the operation even if there is a collision.
+     */
+    public static final String OPERATION_RESTORE = "restore";
+
+    /**
      * Name of the predefined import operation (value is "import").
      *
      * <p>
@@ -203,6 +216,23 @@ public interface SlingPostConstants {
      * parent node.
      */
     public static final String RP_ORDER = RP_PREFIX + "order";
+
+    /**
+     * Name of the request parameter indicating whether the nodes existing
+     * outside the versioning graph should be removed. See
+     * {@link javax.jcr.version.VersionManager#restore(javax.jcr.version.Version, boolean)
+     * VersionManager#restore()} for more info.
+     * <p>
+     * This request parameter is optional and can be used by the {@link #OPERATION_RESTORE}.
+     */
+    public static final String RP_REMOVE_EXISTING = RP_PREFIX + "removeExisting";
+
+    /**
+     * Name of the request parameter indicating the name or the label of the
+     * resource version. This request parameter is required by the
+     * {@link #OPERATION_RESTORE}.
+     */
+    public static final String RP_VERSION = RP_PREFIX + "version";
 
     /**
      * Possible value of the {@link #RP_ORDER} parameter indicating that the
