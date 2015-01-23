@@ -27,6 +27,8 @@ import java.io.Reader;
  */
 public final class HtmlParser {
 
+    private static int BUF_SIZE = 2048;
+
     /** Internal character buffer */
     private final CharArrayWriter buffer = new CharArrayWriter(256);
 
@@ -101,7 +103,7 @@ public final class HtmlParser {
     throws IOException {
         try {
             this.documentHandler.onStart();
-            final char[] readBuffer = new char[2048];
+            final char[] readBuffer = new char[BUF_SIZE];
             int readLen = 0;
             while ( (readLen = reader.read(readBuffer)) > 0 ) {
                 this.update(readBuffer, readLen);
@@ -163,7 +165,7 @@ public final class HtmlParser {
                         parseState = PARSE_STATE.COMMENT;
                         parseSubState = 0;
                         tagType = TT_NONE;
-                        flushBuffer();
+                        // keep the accumulated buffer
                     } else if (c == '"' || c == '\'') {
                         quoteChar = c;
                         prevParseState = parseState;
@@ -281,7 +283,7 @@ public final class HtmlParser {
                 case 4:
                     if (c == '>') {
                         parseState = PARSE_STATE.OUTSIDE;
-                        documentHandler.onComment(new String(buf, start, curr - start + 1));
+                        processComment(buf, start, curr - start + 1);
                         start = curr + 1;
                     } else {
                         parseSubState = 2;
@@ -398,7 +400,7 @@ public final class HtmlParser {
             }
         }
         if (start < end) {
-            if (tagType == TT_NONE) {
+            if (tagType == TT_NONE && parseState != PARSE_STATE.COMMENT) {
                 documentHandler.onCharacters(buf, start, end - start);
             } else {
                 buffer.write(buf, start, end - start);
@@ -436,6 +438,20 @@ public final class HtmlParser {
             documentHandler.onCharacters(chars, 0, chars.length);
             buffer.reset();
         }
+    }
+
+    /**
+     * Process a comment from current and accumulated character data
+     *
+     * @param ch character data work buffer
+     * @param off start offset for current data
+     * @param len length of current data
+     * @throws IOException
+     */
+    private void processComment(char[] ch, int off, int len) throws IOException {
+        buffer.write(ch, off, len);
+        documentHandler.onComment(buffer.toString());
+        buffer.reset();
     }
 
     /**
