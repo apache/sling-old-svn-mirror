@@ -204,11 +204,12 @@ public class JcrResourceBundle extends ResourceBundle {
                     }
                 }
 
-                for (int i = path.length - 1; i >= 0; i--) {
+                for (int i = res0.size() - 1; i >= 0; i--) {
                     final Map<String, Object> resources = res0.get(i);
                     if (!resources.isEmpty()) {
-                        // also remember root
+                        // also remember root (in case we face a non-empty map)
                         languageRoots.add(root);
+                        break;
                     }
                 }
             }
