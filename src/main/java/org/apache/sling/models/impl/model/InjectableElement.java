@@ -23,6 +23,7 @@ import java.lang.reflect.Type;
 
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
 
+@SuppressWarnings("deprecation")
 public interface InjectableElement {
     
     /**

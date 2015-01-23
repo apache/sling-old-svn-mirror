@@ -38,6 +38,7 @@ import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProces
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@SuppressWarnings("deprecation")
 abstract class AbstractInjectableElement implements InjectableElement {
     
     private final AnnotatedElement element;

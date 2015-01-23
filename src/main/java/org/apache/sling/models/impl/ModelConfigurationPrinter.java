@@ -25,6 +25,7 @@ import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFac
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory2;
 import org.apache.sling.models.spi.injectorspecific.StaticInjectAnnotationProcessorFactory;
 
+@SuppressWarnings("deprecation")
 public class ModelConfigurationPrinter {
 
     private final ModelAdapterFactory modelAdapterFactory;

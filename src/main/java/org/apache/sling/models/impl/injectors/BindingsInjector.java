@@ -99,6 +99,7 @@ public class BindingsInjector implements Injector, StaticInjectAnnotationProcess
         }
         
         @Override
+        @SuppressWarnings("deprecation")
         public Boolean isOptional() {
             return annotation.optional();
         }
