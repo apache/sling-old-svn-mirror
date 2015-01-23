@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.urlrewriter;
+package org.apache.sling.urlrewriter.internal;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
