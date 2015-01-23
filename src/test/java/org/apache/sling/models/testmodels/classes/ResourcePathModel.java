@@ -18,6 +18,8 @@
  */
 package org.apache.sling.models.testmodels.classes;
 
+import java.util.List;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -37,9 +39,22 @@ public class ResourcePathModel {
     @Inject
     @Named("propertyContainingAPath")
     private Resource derefProperty;
+    
+    @Inject
+    @Path(paths={"/some/path", "/some/path2"})
+    private List<Resource> manyFromPath;
+    
+    @ResourcePath(paths={"/some/path2","/some/path"})
+    private List<Resource> manyFromPath2;
 
     @ResourcePath(path = "/some/path2")
     private Resource fromPath2;
+    
+    @ResourcePath(name="propertyWithSeveralPaths")
+    private List<Resource> multipleResources;
+    
+    @ResourcePath
+    private List<Resource> propertyWithSeveralPaths;
 
     @ResourcePath(name = "anotherPropertyContainingAPath")
     private Resource derefProperty2;
@@ -59,5 +74,20 @@ public class ResourcePathModel {
     public Resource getByDerefProperty2() {
         return derefProperty2;
     }
+    
+    public List<Resource> getMultipleResources(){
+    	return this.multipleResources;
+    }
+    
+    public List<Resource> getManyFromPath(){
+        return this.manyFromPath;
+    }
+    
+    public List<Resource> getManyFromPath2(){
+        return this.manyFromPath2;
+    }
 
+    public List<Resource> getPropertyWithSeveralPaths(){
+        return this.propertyWithSeveralPaths;
+    }
 }
