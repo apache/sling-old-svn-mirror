@@ -78,7 +78,6 @@ public class SightlyJavaCompilerServiceTest {
     private void getInstancePojoTest(String pojoPath, String className) throws Exception {
         Resource pojoResource = Mockito.mock(Resource.class);
         ResourceResolver resolver = Mockito.mock(ResourceResolver.class);
-        when(pojoResource.getResourceResolver()).thenReturn(resolver);
         when(resolver.getResource(pojoPath)).thenReturn(pojoResource);
         JcrJavaCompiler jcrJavaCompiler = Mockito.mock(JcrJavaCompiler.class);
         CompilationResult compilationResult = Mockito.mock(CompilationResult.class);
@@ -91,7 +90,7 @@ public class SightlyJavaCompilerServiceTest {
             }
         });
         Whitebox.setInternalState(compiler, "jcrJavaCompiler", jcrJavaCompiler);
-        Object obj = compiler.getInstance(pojoResource, className);
+        Object obj = compiler.getInstance(resolver, null, className);
         assertTrue("Expected to obtain a " + MockPojo.class.getName() + " object.", obj instanceof MockPojo);
     }
 }

@@ -84,7 +84,7 @@ public class PojoUseProvider implements UseProvider {
         try {
             ResourceResolver adminResolver = RenderContextImpl.getScriptResourceResolver(renderContext);
             Resource resource = ResourceResolution.getResourceForRequest(adminResolver, sling.getRequest());
-            Object result = sightlyJavaCompilerService.getInstance(resource, identifier);
+            Object result = sightlyJavaCompilerService.getInstance(adminResolver, resource, identifier);
             if (result instanceof Use) {
                 ((Use) result).init(bindings);
             }
