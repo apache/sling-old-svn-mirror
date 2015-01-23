@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 2000)
+@SuppressWarnings("deprecation")
 public class ValueMapInjector extends AbstractInjector implements Injector, InjectAnnotationProcessorFactory {
 
     private static final Logger log = LoggerFactory.getLogger(ValueMapInjector.class);

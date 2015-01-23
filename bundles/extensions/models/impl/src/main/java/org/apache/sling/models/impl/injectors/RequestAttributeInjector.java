@@ -77,6 +77,7 @@ public class RequestAttributeInjector implements Injector, StaticInjectAnnotatio
         }
         
         @Override
+        @SuppressWarnings("deprecation")
         public Boolean isOptional() {
             return annotation.optional();
         }

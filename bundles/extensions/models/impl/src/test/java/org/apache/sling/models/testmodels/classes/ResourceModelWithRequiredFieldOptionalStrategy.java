@@ -33,6 +33,7 @@ public class ResourceModelWithRequiredFieldOptionalStrategy {
     @ValueMapValue(optional=false)
     private String optional5;
     
+    @SuppressWarnings("unused")
     @Inject
     private String optional1;
 

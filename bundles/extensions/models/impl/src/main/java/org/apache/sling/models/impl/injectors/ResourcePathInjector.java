@@ -112,6 +112,7 @@ public class ResourcePathInjector extends AbstractInjector implements Injector, 
         }
 
         @Override
+        @SuppressWarnings("deprecation")
         public Boolean isOptional() {
             return annotation.optional();
         }

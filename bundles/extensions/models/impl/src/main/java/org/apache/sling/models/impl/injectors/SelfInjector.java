@@ -88,6 +88,7 @@ public class SelfInjector implements Injector, StaticInjectAnnotationProcessorFa
         }
         
         @Override
+        @SuppressWarnings("deprecation")
         public Boolean isOptional() {
             return annotation.optional();
         }

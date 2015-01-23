@@ -138,6 +138,7 @@ public class ChildResourceInjector implements Injector, InjectAnnotationProcesso
         }
 
         @Override
+        @SuppressWarnings("deprecation")
         public Boolean isOptional() {
             return annotation.optional();
         }

@@ -94,6 +94,7 @@ import org.slf4j.LoggerFactory;
 
 @Component(metatype = true, immediate = true)
 @Service(value = ModelFactory.class)
+@SuppressWarnings("deprecation")
 public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFactory {
 
     private static class DisposalCallbackRegistryImpl implements DisposalCallbackRegistry {
