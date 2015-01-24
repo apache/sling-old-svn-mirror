@@ -79,6 +79,9 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
     @Property(label = "Service Name", description = "The name of the service used to access the repository.")
     public static final String SERVICE_NAME = "serviceName";
 
+    @Property(boolValue = true, label = "Queue Processing Enabled", description = "Whether or not the distribution agent should process packages in the queues.")
+    public static final String QUEUE_PROCESSING_ENABLED = "queue.processing.enabled";
+
     /**
      * endpoints property
      */
@@ -158,6 +161,8 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
     @Override
     protected SimpleDistributionAgent createAgent(String agentName, BundleContext context, Map<String, Object> config) {
         String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
+        boolean queueProcessingEnabled = PropertiesUtil.toBoolean(config.get(QUEUE_PROCESSING_ENABLED), true);
+
 
 
         Object exporterEndpointsValue = config.get(EXPORTER_ENDPOINTS);
@@ -184,7 +189,7 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
         DistributionPackageExporter packageExporter = new RemoteDistributionPackageExporter(packageBuilder, transportSecretProvider, exporterEndpoints, TransportEndpointStrategyType.All, 1);
         DistributionQueueProvider queueProvider =  new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
 
-        return new SimpleDistributionAgent(agentName, false, serviceName,
+        return new SimpleDistributionAgent(agentName, queueProcessingEnabled, serviceName,
                 packageImporter, packageExporter, requestAuthorizationStrategy,
                 queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory);
 
