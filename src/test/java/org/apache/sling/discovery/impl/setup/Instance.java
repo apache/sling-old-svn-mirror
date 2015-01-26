@@ -348,6 +348,11 @@ public class Instance {
 
         osgiMock.activateAll(resetRepo);
     }
+    
+    @Override
+    public String toString() {
+        return "a [Test]Instance[slingId="+slingId+", debugName="+debugName+"]";
+    }
 
     public static Instance newStandaloneInstance(String debugName,
             SlingRepository repository) throws Exception {
