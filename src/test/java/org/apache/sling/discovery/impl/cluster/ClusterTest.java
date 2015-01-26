@@ -445,7 +445,7 @@ public class ClusterTest {
         // simulate a crash of instance1, resulting in load-balancer to switch the pings
         boolean success = false;
         for(int i=0; i<25; i++) {
-            // loop for max 10 times
+            // loop for max 25 times, min 15 times
             runHeartbeatOnceWith(instance2, instance3, /*instance4, */instance5);
             final boolean ping1 = pingConnector(instance3, instance2);
             final boolean ping2 = pingConnector(instance5, instance2);
@@ -453,6 +453,11 @@ public class ClusterTest {
                 // both pings were fine - hence break
                 success = true;
                 logger.info("testDuplicateInstance3726: successfully switched all pings to instance2 after "+i+" rounds.");
+                if (i<15) {
+                    logger.info("testDuplicateInstance3726: min loop cnt not yet reached: i="+i);
+                    Thread.sleep(500); // 25x500ms = 12.5sec max - (vs 5sec timeout)
+                    continue;
+                }
                 break;
             }
             logger.info("testDuplicateInstance3726: looping");
