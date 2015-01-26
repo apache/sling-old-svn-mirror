@@ -50,10 +50,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
@@ -183,14 +183,14 @@ public class TopologyRequestValidator {
     /**
      * Decode a response from the server.
      *
-     * @param method the method that received the response.
+     * @param response the response.
      * @return the message in clear text.
      * @throws IOException if there was a problem decoding the message.
      */
-    public String decodeMessage(HttpMethod method) throws IOException {
+    public String decodeMessage(String uri, HttpResponse response) throws IOException {
         checkActive();
-        return decodeMessage("response:", method.getPath(), getResponseBody(method),
-            getResponseHeader(method, HASH_HEADER));
+        return decodeMessage("response:", uri, getResponseBody(response),
+            getResponseHeader(response, HASH_HEADER));
     }
 
     /**
@@ -258,14 +258,14 @@ public class TopologyRequestValidator {
     /**
      * Is the response from the server to be trusted by the client.
      *
-     * @param method the client method.
+     * @param response the response
      * @return true if trusted, or true if this component is disabled.
      */
-    public boolean isTrusted(HttpMethod method) {
+    public boolean isTrusted(HttpResponse response) {
         checkActive();
         if (trustEnabled) {
-            return checkTrustHeader(getResponseHeader(method, HASH_HEADER),
-                getResponseHeader(method, SIG_HEADER));
+            return checkTrustHeader(getResponseHeader(response, HASH_HEADER),
+                getResponseHeader(response, SIG_HEADER));
         }
         return false;
     }
@@ -276,12 +276,12 @@ public class TopologyRequestValidator {
      * @param method the method which will have headers set after the call.
      * @param body the body.
      */
-    public void trustMessage(HttpMethod method, String body) {
+    public void trustMessage(HttpUriRequest method, String body) {
         checkActive();
         if (trustEnabled) {
-            String bodyHash = hash("request:" + method.getPath() + ":" + body);
-            method.setRequestHeader(HASH_HEADER, bodyHash);
-            method.setRequestHeader(SIG_HEADER, createTrustHeader(bodyHash));
+            String bodyHash = hash("request:" + method.getURI().getPath() + ":" + body);
+            method.setHeader(HASH_HEADER, bodyHash);
+            method.setHeader(SIG_HEADER, createTrustHeader(bodyHash));
         }
     }
 
@@ -516,12 +516,12 @@ public class TopologyRequestValidator {
     /**
      * Get the value of a response header.
      *
-     * @param method the method
+     * @param response the response
      * @param name the name of the response header.
      * @return the value of the response header, null if none.
      */
-    private String getResponseHeader(HttpMethod method, String name) {
-        Header h = method.getResponseHeader(name);
+    private String getResponseHeader(HttpResponse response, String name) {
+        Header h = response.getFirstHeader(name);
         if (h == null) {
             return null;
         }
@@ -550,25 +550,22 @@ public class TopologyRequestValidator {
     }
 
     /**
-     * @param method the response method.
+     * @param response the response
      * @return the body of the response from the server.
      * @throws IOException
      */
-    private String getResponseBody(HttpMethod method) throws IOException {
-        final Header contentEncoding = method.getResponseHeader("Content-Encoding");
+    private String getResponseBody(HttpResponse response) throws IOException {
+        final Header contentEncoding = response.getFirstHeader("Content-Encoding");
         if (contentEncoding!=null && contentEncoding.getValue()!=null &&
                 contentEncoding.getValue().contains("gzip")) {
             // then the server sent gzip - treat it so:
-            final GZIPInputStream gzipIn = new GZIPInputStream(method.getResponseBodyAsStream());
+            final GZIPInputStream gzipIn = new GZIPInputStream(response.getEntity().getContent());
             final String gunzippedEncodedJson = IOUtils.toString(gzipIn);
             gzipIn.close();
             return gunzippedEncodedJson;
         } else {
-            // otherwise the server sent plaintext:
-            if (method instanceof HttpMethodBase) {
-                return ((HttpMethodBase) method).getResponseBodyAsString(16 * 1024 * 1024);
-            }
-            return method.getResponseBodyAsString();
+        	// otherwise the server sent plaintext:
+        	return IOUtils.toString(response.getEntity().getContent(), "UTF-8");
         }
     }
 
