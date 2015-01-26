@@ -30,7 +30,6 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.resourcemerger.spi.MergedResourcePicker;
 
 /**
@@ -48,7 +47,6 @@ public class CRUDMergingResourceProvider
     private static final class ExtendedResourceHolder {
         public final String name;
         public final List<Resource> resources = new ArrayList<Resource>();
-        public final List<ValueMap> valueMaps = new ArrayList<ValueMap>();
         public int count;
         public String highestResourcePath;
 
