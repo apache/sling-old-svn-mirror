@@ -105,7 +105,10 @@ public class VersionInfoServlet extends SlingSafeMethodsServlet {
             obj.put("baseVersion", baseVersion.isSame(v));
             result.put(v.getName(), obj);
         }
-        return result;
+
+        final JSONObject wrapper = new JSONObject();
+        wrapper.put("versions", result);
+        return wrapper;
     }
 
     private static Collection<String> getNames(Version[] versions) throws RepositoryException {
