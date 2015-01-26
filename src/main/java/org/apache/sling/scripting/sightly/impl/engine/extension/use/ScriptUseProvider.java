@@ -32,7 +32,6 @@ import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.sightly.impl.engine.SightlyScriptEngineFactory;
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.use.ProviderOutcome;
 import org.apache.sling.scripting.sightly.use.UseProvider;
@@ -77,11 +76,7 @@ public class ScriptUseProvider implements UseProvider {
             return ProviderOutcome.failure();
         }
         SlingScriptHelper sling = (SlingScriptHelper) bindings.get(SlingBindings.SLING);
-        ResourceResolver adminResolver = RenderContextImpl.getScriptResourceResolver(renderContext);
-        if (adminResolver == null) {
-            log.warn("Cannot obtain administrative resource resolver for " + scriptName);
-            return ProviderOutcome.failure();
-        }
+        ResourceResolver adminResolver = renderContext.getScriptResourceResolver();
         Resource scriptResource = UseProviderUtils.locateScriptResource(adminResolver, sling, scriptName);
         if (scriptResource == null) {
             log.debug("Path does not match an existing resource: {}", scriptName);

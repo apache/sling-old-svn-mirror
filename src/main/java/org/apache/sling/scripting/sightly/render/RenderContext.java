@@ -20,7 +20,11 @@ package org.apache.sling.scripting.sightly.render;
 
 import javax.script.Bindings;
 
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.servlets.ServletResolver;
+import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderUnit;
+import org.apache.sling.scripting.sightly.use.UseProvider;
 
 import aQute.bnd.annotation.ProviderType;
 
@@ -45,5 +49,26 @@ public interface RenderContext {
      * @return the {@link RuntimeExtension}'s result
      */
     Object call(String functionName, Object... arguments);
-    
+
+    /**
+     * Returns the {@link ResourceResolver} that was used for resolving the
+     * currently evaluated script. This resolver is the same resolver used by
+     * the {@link ServletResolver} and thus should be used <i>only</i> for
+     * script resolution.
+     * <p>
+     * This {@code ResourceResolver} must not be closed.
+     * <p>
+     * If a {@link RuntimeExtension} or a {@link UseProvider} need to resolve
+     * content, then the {@link ResourceResolver} of the current request should
+     * be used. This can be retrieved by using the following call:
+     *
+     * <pre>
+     * ResourceResolver resolver = (ResourceResolver) renderContext.getBindings().get(SlingBindings.REQUEST).getResourceResolver();
+     * </pre>
+     *
+     * @return the resource resolver used to resolve the currently evaluated
+     *         script
+     */
+    ResourceResolver getScriptResourceResolver();
+
 }
