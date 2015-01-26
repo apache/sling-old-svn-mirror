@@ -23,15 +23,18 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
 import org.apache.sling.distribution.component.impl.SettingsUtils;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
+import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.packaging.impl.exporter.RemoteDistributionPackageExporter;
@@ -78,6 +81,16 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
 
     @Property(label = "Service Name", description = "The name of the service used to access the repository.")
     public static final String SERVICE_NAME = "serviceName";
+
+    @Property(options = {
+            @PropertyOption(name = "debug", value = "debug"), @PropertyOption(name = "info", value = "info"),  @PropertyOption(name = "warn", value = "warn"),
+            @PropertyOption(name = "error", value = "error")},
+            value = "info",
+            label = "Log Level", description = "The log level recorded in the transient log accessible via http."
+    )
+    public static final String LOG_LEVEL = AbstractDistributionAgentFactory.LOG_LEVEL;
+
+
 
     @Property(boolValue = true, label = "Queue Processing Enabled", description = "Whether or not the distribution agent should process packages in the queues.")
     public static final String QUEUE_PROCESSING_ENABLED = "queue.processing.enabled";
@@ -159,7 +172,7 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
 
 
     @Override
-    protected SimpleDistributionAgent createAgent(String agentName, BundleContext context, Map<String, Object> config) {
+    protected SimpleDistributionAgent createAgent(String agentName, BundleContext context, Map<String, Object> config, DefaultDistributionLog distributionLog) {
         String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
         boolean queueProcessingEnabled = PropertiesUtil.toBoolean(config.get(QUEUE_PROCESSING_ENABLED), true);
 
@@ -189,9 +202,10 @@ public class SyncDistributionAgentFactory extends AbstractDistributionAgentFacto
         DistributionPackageExporter packageExporter = new RemoteDistributionPackageExporter(packageBuilder, transportSecretProvider, exporterEndpoints, TransportEndpointStrategyType.All, 1);
         DistributionQueueProvider queueProvider =  new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
 
+
         return new SimpleDistributionAgent(agentName, queueProcessingEnabled, serviceName,
                 packageImporter, packageExporter, requestAuthorizationStrategy,
-                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory);
+                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory, distributionLog);
 
     }
 }

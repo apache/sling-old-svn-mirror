@@ -188,7 +188,9 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
                 result.addAll(Arrays.asList(configurations));
             }
         } catch (IOException e) {
+            log.error("cannot get osgi configs", e);
         } catch (InvalidSyntaxException e) {
+            log.error("cannot parse filter", e);
         }
 
         return result;

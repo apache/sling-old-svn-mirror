@@ -18,70 +18,54 @@
  */
 package org.apache.sling.distribution.servlet;
 
-import javax.servlet.ServletException;
-import java.io.IOException;
-
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.apache.sling.distribution.agent.DistributionAgent;
-import org.apache.sling.distribution.agent.DistributionAgentException;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionResponse;
+import org.apache.sling.distribution.agent.DistributionAgent;
+import org.apache.sling.distribution.agent.DistributionAgentException;
+import org.apache.sling.distribution.log.DistributionLog;
 import org.apache.sling.distribution.resources.DistributionResourceTypes;
 import org.apache.sling.distribution.util.RequestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.ServletException;
+import java.io.IOException;
+import java.io.PrintWriter;
+
 /**
  * Servlet to ask {@link org.apache.sling.distribution.agent.DistributionAgent}s to distribute (via HTTP POST).
  */
-@SlingServlet(resourceTypes = DistributionResourceTypes.AGENT_RESOURCE_TYPE, methods = "POST")
-public class DistributionAgentServlet extends SlingAllMethodsServlet {
+@SlingServlet(resourceTypes = DistributionResourceTypes.LOG_RESOURCE_TYPE, methods = "GET", extensions = "txt")
+public class DistributionAgentLogServlet extends SlingAllMethodsServlet {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
-    protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
+    protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response)
             throws ServletException, IOException {
 
-        response.setContentType("application/json");
+        response.setContentType("text/plain");
 
         DistributionRequest distributionRequest = RequestUtils.fromServletRequest(request);
 
         log.debug("distribution request : {}", distributionRequest);
 
-        DistributionAgent agent = request.getResource().adaptTo(DistributionAgent.class);
+        DistributionLog distributionLog = request.getResource().adaptTo(DistributionLog.class);
+        PrintWriter writer = response.getWriter();
 
-        ResourceResolver resourceResolver = request.getResourceResolver();
-
-        if (agent != null) {
-            try {
-                DistributionResponse distributionResponse = agent.execute(resourceResolver, distributionRequest);
-                switch (distributionResponse.getState()) {
-                    case DISTRIBUTED:
-                        response.setStatus(200);
-                        break;
-                    case DROPPED:
-                        response.setStatus(400);
-                        break;
-                    case ACCEPTED:
-                        response.setStatus(202);
-                        break;
-                }
-                response.getWriter().append(distributionResponse.toString());
-
-                log.debug("distribution response : {}", distributionResponse);
-            } catch (DistributionAgentException e) {
-                response.setStatus(503);
-                response.getWriter().append("{\"error\" : \"").append(e.toString()).append("\"}");
+        if (distributionLog != null) {
+            for (String line : distributionLog.getLines()) {
+                writer.append(line);
+                writer.append("\n");
             }
         } else {
             response.setStatus(404);
-            response.getWriter().append("{\"error\" : \"agent ").append(request.getServletPath())
-                    .append(" not found\"}");
+            writer.append("Agent not found");
         }
     }
 }

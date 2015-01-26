@@ -75,7 +75,7 @@ public class RemoteDistributionPackageImporter implements DistributionPackageImp
         try {
             transportHandler.deliverPackage(resourceResolver, distributionPackage, distributionTransportSecretProvider.getSecret());
         } catch (Exception e) {
-            throw new DistributionPackageImportException("failed in importing package " + distributionPackage);
+            throw new DistributionPackageImportException("failed in importing package " + distributionPackage, e);
         }
     }
 

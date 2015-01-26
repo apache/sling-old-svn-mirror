@@ -101,9 +101,9 @@ public class DistributionPackageExporterServlet extends SlingAllMethodsServlet {
                 log.debug("nothing to fetch");
             }
 
-        } catch (Exception e) {
+        } catch (Throwable e) {
             response.setStatus(503);
-            log.error("error while exporting from {}", request.getRequestURL(), e);
+            log.error("error while exporting package", e);
         }
     }
 

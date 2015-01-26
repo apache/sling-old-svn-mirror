@@ -25,6 +25,7 @@ import aQute.bnd.annotation.ProviderType;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionResponse;
+import org.apache.sling.distribution.log.DistributionLog;
 import org.apache.sling.distribution.queue.DistributionQueue;
 
 /**
@@ -38,7 +39,7 @@ import org.apache.sling.distribution.queue.DistributionQueue;
 public interface DistributionAgent {
 
     /**
-     * retrieves the names of the queues for this agent.
+     * Retrieves the names of the queues for this agent.
      *
      * @return the list of queue names
      */
@@ -46,7 +47,7 @@ public interface DistributionAgent {
     Iterable<String> getQueueNames();
 
     /**
-     * get the agent queue with the given name
+     * Get the agent queue with the given name
      *
      * @param name a queue name
      * @return a {@link org.apache.sling.distribution.queue.DistributionQueue} with the given name bound to this agent, if it exists,
@@ -55,6 +56,14 @@ public interface DistributionAgent {
      */
     @CheckForNull
     DistributionQueue getQueue(@Nonnull String name) throws DistributionAgentException;
+
+
+    /**
+     * Get the agent log
+     * @return the log for this agent
+     */
+    @Nonnull
+    DistributionLog getLog();
 
     /**
      * Perform a {@link org.apache.sling.distribution.DistributionRequest} to distribute content from a source

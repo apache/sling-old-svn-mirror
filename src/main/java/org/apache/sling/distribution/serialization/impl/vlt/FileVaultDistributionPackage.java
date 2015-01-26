@@ -28,11 +28,15 @@ import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.impl.AbstractDistributionPackage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * a FileVault {@link org.apache.sling.distribution.packaging.DistributionPackage}
  */
 public class FileVaultDistributionPackage extends AbstractDistributionPackage implements DistributionPackage {
+
+    Logger log = LoggerFactory.getLogger(FileVaultDistributionPackage.class);
 
     private static final long serialVersionUID = 1L;
 
@@ -76,7 +80,8 @@ public class FileVaultDistributionPackage extends AbstractDistributionPackage im
             if (file.exists()) {
                 file.delete();
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
+            log.error("cannot delete file", e);
         }
     }
 
