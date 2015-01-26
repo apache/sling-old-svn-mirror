@@ -58,7 +58,6 @@ public class ConnectorRegistryTest {
     
     @Test
     public void testRegisterUnregister() throws Exception {
-        Instance i = Instance.newStandaloneInstance("i", true);
         Config config = new Config() {
             @Override
             public long getHeartbeatTimeout() {
