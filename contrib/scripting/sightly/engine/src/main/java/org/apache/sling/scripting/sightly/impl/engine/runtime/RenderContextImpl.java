@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.script.Bindings;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -66,14 +65,7 @@ public class RenderContextImpl implements RenderContext {
         this.scriptResourceResolver = scriptResourceResolver;
     }
 
-    public static ResourceResolver getScriptResourceResolver(RenderContext renderContext) {
-        if (renderContext instanceof RenderContextImpl) {
-            return ((RenderContextImpl) renderContext).getScriptResourceResolver();
-        }
-
-        throw new SightlyException("Cannot retrieve Script ResourceResovler from RenderContext " + renderContext);
-    }
-
+    @Override
     public ResourceResolver getScriptResourceResolver() {
         return scriptResourceResolver;
     }
@@ -450,5 +442,4 @@ public class RenderContextImpl implements RenderContext {
         }
         return null;
     }
-
 }

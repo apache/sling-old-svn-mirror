@@ -33,7 +33,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.sightly.ResourceResolution;
 import org.apache.sling.scripting.sightly.impl.compiler.SightlyJavaCompilerService;
-import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
 import org.apache.sling.scripting.sightly.pojo.Use;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.apache.sling.scripting.sightly.use.ProviderOutcome;
@@ -82,7 +81,7 @@ public class PojoUseProvider implements UseProvider {
         Bindings bindings = UseProviderUtils.merge(globalBindings, arguments);
         SlingScriptHelper sling = UseProviderUtils.getHelper(bindings);
         try {
-            ResourceResolver adminResolver = RenderContextImpl.getScriptResourceResolver(renderContext);
+            ResourceResolver adminResolver = renderContext.getScriptResourceResolver();
             Resource resource = ResourceResolution.getResourceForRequest(adminResolver, sling.getRequest());
             Object result = sightlyJavaCompilerService.getInstance(adminResolver, resource, identifier);
             if (result instanceof Use) {
