@@ -19,6 +19,7 @@
 package org.apache.sling.discovery.impl.common.heartbeat;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
@@ -68,7 +69,7 @@ public class HeartbeatHandler implements Runnable, StartupListener {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /** the name used for the period job with the scheduler **/
-    private static final String NAME = "discovery.impl.heartbeat.runner";
+    private String NAME = "discovery.impl.heartbeat.runner.";
 
     @Reference
     private SlingSettingsService slingSettingsService;
@@ -150,6 +151,7 @@ public class HeartbeatHandler implements Runnable, StartupListener {
     		this.context = context;
 
 	        slingId = slingSettingsService.getSlingId();
+	        NAME = "discovery.impl.heartbeat.runner." + slingId;
 	        // on activate the resetLeaderElectionId is set to true to ensure that
 	        // the 'leaderElectionId' property is reset on next heartbeat issuance.
 	        // the idea being that a node which leaves the cluster should not
@@ -232,7 +234,10 @@ public class HeartbeatHandler implements Runnable, StartupListener {
         forcePing = true;
         try {
             // then fire a job immediately
-            scheduler.fireJob(this, null);
+            // use 'fireJobAt' here, instead of 'fireJob' to make sure the job can always be triggered
+            // 'fireJob' checks for a job from the same job-class to already exist
+            // 'fireJobAt' though allows to pass a name for the job - which can be made unique, thus does not conflict/already-exist
+            scheduler.fireJobAt(NAME+UUID.randomUUID(), this, null, new Date(System.currentTimeMillis()-1000 /* make sure it gets triggered immediately*/));
         } catch (Exception e) {
             logger.info("triggerHeartbeat: Could not trigger heartbeat: " + e);
         }
@@ -429,7 +434,7 @@ public class HeartbeatHandler implements Runnable, StartupListener {
     private void doCheckView(final ResourceResolver resourceResolver) throws PersistenceException {
 
         if (votingHandler==null) {
-            logger.info("doCheckView: votingHandler is null!");
+            logger.info("doCheckView: votingHandler is null! slingId="+slingId);
         } else {
             votingHandler.analyzeVotings(resourceResolver);
             try{
