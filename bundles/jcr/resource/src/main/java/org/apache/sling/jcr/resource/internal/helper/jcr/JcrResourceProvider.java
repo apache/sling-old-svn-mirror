@@ -54,6 +54,7 @@ import org.apache.sling.api.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.AttributableResourceProvider;
 import org.apache.sling.api.resource.DynamicResourceProvider;
 import org.apache.sling.api.resource.ModifyingResourceProvider;
+import org.apache.sling.api.resource.ParametrizableResourceProvider;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.QueriableResourceProvider;
 import org.apache.sling.api.resource.QuerySyntaxException;
@@ -84,7 +85,8 @@ public class JcrResourceProvider
                AttributableResourceProvider,
                QueriableResourceProvider,
                RefreshableResourceProvider,
-               ModifyingResourceProvider {
+               ModifyingResourceProvider,
+               ParametrizableResourceProvider {
 
     /** column name for node path */
     private static final String QUERY_COLUMN_PATH = "jcr:path";
@@ -135,6 +137,15 @@ public class JcrResourceProvider
         return getResource(resourceResolver, path, Collections.<String, String> emptyMap());
     }
 
+    /**
+     * @see org.apache.sling.api.resource.ResourceProvider#getResource(org.apache.sling.api.resource.ResourceResolver, java.lang.String)
+     */
+    public Resource getResource(ResourceResolver resourceResolver, String path)
+    throws SlingException {
+        return getResource(resourceResolver, path, Collections.<String, String> emptyMap());
+    }
+
+    
     /**
      * @see org.apache.sling.api.resource.ResourceProvider#getResource(org.apache.sling.api.resource.ResourceResolver, java.lang.String)
      */

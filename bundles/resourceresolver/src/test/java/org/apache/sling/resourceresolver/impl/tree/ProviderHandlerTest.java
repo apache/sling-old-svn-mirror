@@ -94,7 +94,7 @@ public class ProviderHandlerTest {
         leaveProperties.put(ResourceProvider.ROOTS, servletpath);
 
         final ResourceProvider leaveProvider = Mockito.mock(ResourceProvider.class);
-        Mockito.when(leaveProvider.getResource(null, servletpath, emptyParams)).thenReturn(servletResource);
+        Mockito.when(leaveProvider.getResource(null, servletpath)).thenReturn(servletResource);
 
         root.bindResourceProvider(leaveProvider, leaveProperties);
 

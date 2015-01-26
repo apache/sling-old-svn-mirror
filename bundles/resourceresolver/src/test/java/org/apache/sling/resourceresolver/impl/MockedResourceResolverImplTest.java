@@ -222,7 +222,7 @@ public class MockedResourceResolverImplTest {
         mappingChildren.add(buildResource(path+"/http/localhost_any", localHostAnyList, resourceResolver, provider,"sling:match", "localhost\\.\\d*", "sling:internalRedirect", "/content"));
 
         Resource etcMapResource = buildResource(path+"/http", mappingChildren);
-        Mockito.when(provider.getResource(Mockito.any(ResourceResolver.class), Mockito.eq(path), Mockito.anyMap())).thenReturn(etcMapResource);
+        Mockito.when(provider.getResource(Mockito.any(ResourceResolver.class), Mockito.eq(path))).thenReturn(etcMapResource);
         return etcMapResource;
     }
 
@@ -285,10 +285,10 @@ public class MockedResourceResolverImplTest {
         if ( provider != null ) {
             Mockito.when(provider.listChildren(resource)).thenReturn(children.iterator());
             if ( resourceResolver != null) {
-                Mockito.when(provider.getResource(Mockito.eq(resourceResolver), Mockito.eq(fullpath), Mockito.anyMap())).thenReturn(resource);
+                Mockito.when(provider.getResource(Mockito.eq(resourceResolver), Mockito.eq(fullpath))).thenReturn(resource);
                 Mockito.when(provider.getResource(Mockito.eq(resourceResolver), Mockito.any(HttpServletRequest.class), Mockito.eq(fullpath))).thenReturn(resource);
             } else {
-                Mockito.when(provider.getResource(Mockito.any(ResourceResolver.class), Mockito.eq(fullpath), Mockito.anyMap())).thenReturn(resource);
+                Mockito.when(provider.getResource(Mockito.any(ResourceResolver.class), Mockito.eq(fullpath))).thenReturn(resource);
                 Mockito.when(provider.getResource(Mockito.any(ResourceResolver.class), Mockito.any(HttpServletRequest.class), Mockito.eq(fullpath))).thenReturn(resource);
             }
         }

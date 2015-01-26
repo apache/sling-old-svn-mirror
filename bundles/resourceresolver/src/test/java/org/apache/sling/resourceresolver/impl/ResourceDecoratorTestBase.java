@@ -71,10 +71,10 @@ public abstract class ResourceDecoratorTestBase {
         final ResourceProvider provider = new QueriableResourceProvider() {
 
             public Resource getResource(ResourceResolver resourceResolver, HttpServletRequest request, String path) {
-                return getResource(null, path, null);
+                return getResource(null, path);
             }
 
-            public Resource getResource(ResourceResolver resourceResolver, String path, Map<String, String> parameters) {
+            public Resource getResource(ResourceResolver resourceResolver, String path) {
                 if(path.equals("/") || path.startsWith("/tmp") || path.startsWith("/var")) {
                     return mockResource(path);
                 }
