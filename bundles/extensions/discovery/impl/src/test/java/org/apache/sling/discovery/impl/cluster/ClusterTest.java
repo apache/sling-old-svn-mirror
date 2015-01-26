@@ -645,11 +645,11 @@ public class ClusterTest {
         instance1 = null; // set to null to early fail if anyone still assumes (original) instance1 is up form now on
         instance2.getConfig().setHeartbeatTimeout(1); // set instance2's heartbeatTimeout to 1 sec to time out instance1 quickly!
         instance3.getConfig().setHeartbeatTimeout(1); // set instance3's heartbeatTimeout to 1 sec to time out instance1 quickly!
-        Thread.sleep(100);
+        Thread.sleep(500);
         runHeartbeatOnceWith(instance2, instance3);
-        Thread.sleep(100);
+        Thread.sleep(500);
         runHeartbeatOnceWith(instance2, instance3);
-        Thread.sleep(100);
+        Thread.sleep(500);
         runHeartbeatOnceWith(instance2, instance3);
         // instance 2 should now be alone - in fact, 3 should be alone as well
         instance2.dumpRepo();
