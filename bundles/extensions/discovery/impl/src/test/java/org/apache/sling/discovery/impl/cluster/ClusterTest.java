@@ -147,7 +147,7 @@ public class ClusterTest {
     	instance1.stopHeartbeats();
         instance2.stop();
         instance1.stop();
-        instance1 = Instance.newStandaloneInstance("/var/discovery/impl/", "firstInstance", true, 1, 1, slingId1);
+        instance1 = Instance.newStandaloneInstance("/var/discovery/impl/", "firstInstance", true, 2, 1, slingId1);
         // sleep so that the two dont have the same startup time, and thus leaderElectionId is lower for instance1
         logger.info("doTestLeader: 1st sleep 200ms");
         Thread.sleep(200);
@@ -163,14 +163,12 @@ public class ClusterTest {
         assertTrue(instance2.getLocalInstanceDescription().isLeader());
 
         // let the sync/voting happen
-        instance1.runHeartbeatOnce();
-        instance2.runHeartbeatOnce();
-        logger.info("doTestLeader: 2nd sleep 500ms");
-        Thread.sleep(500);
-        instance1.runHeartbeatOnce();
-        instance2.runHeartbeatOnce();
-        logger.info("doTestLeader: 3rd sleep 500ms");
-        Thread.sleep(500);
+        for(int m=0; m<4; m++) {
+            instance1.runHeartbeatOnce();
+            instance2.runHeartbeatOnce();
+            logger.info("doTestLeader: sleep 500ms");
+            Thread.sleep(500);
+        }
         instance1.runHeartbeatOnce();
         instance2.runHeartbeatOnce();
         
