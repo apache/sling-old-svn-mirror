@@ -214,19 +214,16 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         logger.debug("bindTopologyEventListener: Binding TopologyEventListener {}",
                 eventListener);
 
-        boolean activated = false;
         synchronized (lock) {
             final List<TopologyEventListener> currentList = new ArrayList<TopologyEventListener>(
                     Arrays.asList(eventListeners));
             currentList.add(eventListener);
             this.eventListeners = currentList
                     .toArray(new TopologyEventListener[currentList.size()]);
-            activated = this.activated;
-        }
-
-        if (activated) {
-            sendTopologyEvent(eventListener, new TopologyEvent(
-                    Type.TOPOLOGY_INIT, null, getTopology()));
+            if (activated) {
+                sendTopologyEvent(eventListener, new TopologyEvent(
+                        Type.TOPOLOGY_INIT, null, getTopology()));
+            }
         }
     }
 
