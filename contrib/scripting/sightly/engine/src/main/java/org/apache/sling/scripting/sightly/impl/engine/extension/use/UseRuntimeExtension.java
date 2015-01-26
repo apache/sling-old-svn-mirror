@@ -77,14 +77,17 @@ public class UseRuntimeExtension implements RuntimeExtension {
         Bindings useArguments = new SimpleBindings(Collections.unmodifiableMap(useArgumentsMap));
         ArrayList<UseProvider> providers = new ArrayList<UseProvider>(providersMap.values());
         ListIterator<UseProvider> iterator = providers.listIterator(providers.size());
+        Throwable failureCause = null;
         while (iterator.hasPrevious()) {
             UseProvider provider = iterator.previous();
             ProviderOutcome outcome = provider.provide(identifier, renderContext, useArguments);
             if (outcome.isSuccess()) {
                 return outcome.getResult();
+            } else if (outcome.getCause() != null) {
+                failureCause = outcome.getCause();
             }
         }
-        throw new SightlyException("No use provider could resolve identifier: " + identifier);
+        throw new SightlyException("No use provider could resolve identifier: " + identifier, failureCause);
     }
 
     // OSGi ################################################################################################################################

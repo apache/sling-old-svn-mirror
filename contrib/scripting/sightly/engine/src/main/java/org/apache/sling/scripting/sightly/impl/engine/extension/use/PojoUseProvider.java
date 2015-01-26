@@ -89,8 +89,7 @@ public class PojoUseProvider implements UseProvider {
             }
             return ProviderOutcome.notNullOrFailure(result);
         } catch (Exception e) {
-            LOG.error(String.format("Can't instantiate %s POJO.", identifier), e);
-            return ProviderOutcome.failure();
+            return ProviderOutcome.failure(e);
         }
     }
 }
