@@ -175,6 +175,16 @@ public class TopologyViewImpl implements TopologyView {
             for (Iterator<InstanceDescription> it2 = this.instances.iterator(); it2.hasNext();) {
                 InstanceDescription existingInstance = it2.next();
                 if (existingInstance.getSlingId().equals(instanceDescription.getSlingId())) {
+                    // SLING-3726:
+                    // while 'normal duplicate instances' are filtered out here correctly,
+                    // 'hidden duplicate instances' that are added via this instanceDescription's
+                    // cluster, are not caught.
+                    // there is, however, no simple fix for this. Since the reason is 
+                    // inconsistent state information in /var/discovery/impl - either
+                    // due to stale-announcements (SLING-4139) - or by some manualy
+                    // copying of data from one cluster to the next (which will also
+                    // be cleaned up by SLING-4139 though)
+                    // so the fix for avoiding duplicate instances is really SLING-4139
                     logger.info("addInstance: cannot add same instance twice: "
                             + instanceDescription);
                     continue outerLoop;
