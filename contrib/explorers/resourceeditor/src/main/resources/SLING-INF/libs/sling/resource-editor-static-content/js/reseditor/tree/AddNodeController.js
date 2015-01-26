@@ -31,108 +31,238 @@ org.apache.sling.reseditor = org.apache.sling.reseditor || {};
 org.apache.sling.reseditor.AddNodeController = (function() {
 
 	function AddNodeController(settings, mainController){
-		var thatAddNodeController = this;
 		this.settings = settings;
 		this.mainController = mainController;
 		this.lastAddNodeURL = "";
+		this.dialogShown = false;
+		this.showAllNodeTypes = false;
+		this.nodeTypeObjects = [];
+		this.nodeType="";
 		
+		var thatAddNodeController = this;
 		$(document).ready(function() {
 			$('#addNodeDialog .submit').click(function(){
 				thatAddNodeController.addNode();
 			});
-			
-			var nodeTypeObjects = jQuery.map( mainController.getNodeTypes(), function( nt, i ) {
+			$('#addNodeDialog').on('shown.bs.modal', function () {
+				thatAddNodeController.dialogShown = true;
+				$('#nodeName').select2("open");
+			})
+			$('#addNodeDialog').on('hide.bs.modal', function () {
+				thatAddNodeController.dialogShown = false;
+			})
+			$('#addNodeDialog .info-icon').click(function () {
+				$('#addNodeDialog .info-content').slideToggle();
+			});
+			$('#addNodeDialog .info-content .close').click(function () {
+				$('#addNodeDialog .info-content').slideToggle();
+			});
+			$('#addNodeDialog .nt-toggle').click(function () {
+				thatAddNodeController.toggleApplicableNodeTypes();
+			});
+			$("body").on('keydown', function (e) {
+		    	// see http://www.javascripter.net/faq/keycodes.htm
+				var aKey = 65;
+		    	if (e.ctrlKey && aKey==e.which) {
+		    		if (thatAddNodeController.dialogShown){
+		    			thatAddNodeController.addNode();
+		    		}
+		    	}
+			})
+		});
+	};
+
+	AddNodeController.prototype.addNode = function() {
+		var thatAddNodeController = this;
+		var nodeName = $("#nodeName").val().trim();
+		var nodeType = $("#nodeType").val();
+		var resourceTypeData = $("#resourceType").select2('data');
+		var resourceType = resourceTypeData != null ? resourceTypeData.text.trim() : "";
+		
+		var data = {"_charset_": "utf-8"};
+		if ("" != nodeType){
+			data["jcr:primaryType"] = nodeType;
+		}
+		var canAddResourceType = nodeType == "" ? true : this.mainController.ntManager.getNodeType(nodeType).canAddProperty("sling:resourceType", "String");
+		if ("" != resourceType && canAddResourceType){
+			data["sling:resourceType"] = resourceType;
+		}
+		var targetURL = (this.lastAddNodeURL=="/") ? "/" : this.lastAddNodeURL+"/";
+		targetURL = this.mainController.decodeFromHTML(targetURL);
+		if ("" != nodeName) {
+			targetURL += nodeName;
+		}
+		if (targetURL=="/"){
+			//adding a node without a specified name to the root node 
+			targetURL = "/*";
+		}
+		var encodedTargetURL = this.mainController.encodeURL(targetURL);
+
+		$.ajax({
+	  	  type: 'POST',
+		  url: encodedTargetURL,
+		  dataType: "json",
+	  	  data: data
+	  	})
+		.done(function() {
+			$('#addNodeDialog').modal("hide");
+			var htmlDecodedLastAddNodeURL = thatAddNodeController.mainController.decodeFromHTML(thatAddNodeController.lastAddNodeURL);
+			thatAddNodeController.mainController.redirectTo(htmlDecodedLastAddNodeURL);
+		})
+		.fail(function(errorJson) {
+			$('#addNodeDialog').modal("hide");
+			thatAddNodeController.mainController.displayAlert(errorJson);
+		});
+		
+	}
+	
+	AddNodeController.prototype.toggleApplicableNodeTypes = function() {
+		if (this.showAllNodeTypes){
+			this.showAllNodeTypes=false;
+			$('#addNodeDialog .form-group.node-type .nt-dependency-description').text("applicable together with node name");
+			$('#addNodeDialog .form-group.node-type .nt-toggle').text("show generally applicable");
+		} else {
+			this.showAllNodeTypes=true;
+			$('#addNodeDialog .form-group.node-type .nt-dependency-description').text("generally applicable");
+			$('#addNodeDialog .form-group.node-type .nt-toggle').text("show applicable together with node name");
+		}
+		var nodeType = mainController.ntManager.getNodeType(this.nodeTypeName);
+		var appliCnTypesByNodeName = nodeType.getApplicableCnTypesPerCnDef(false /*include mixins*/);
+		var nodeNameList = Object.keys(appliCnTypesByNodeName);
+		this.nodeTypeObjects = getNodeTypesByDependenyState.call(this, nodeNameList, appliCnTypesByNodeName, this.nodeTypeObjects);
+	}
+	
+	function getNodeTypesByDependenyState(nodeNameList, appliCnTypesByNodeName, nodeTypeObjects){
+		var allAppliCnTypes = getAllApplicableCnTypesSorted(nodeNameList, appliCnTypesByNodeName);
+		if (this.showAllNodeTypes){
+			return jQuery.map( allAppliCnTypes, function( nt, i ) {
 				return {id: nt, text: nt};
 			});
-
-			$("#nodeType").select2({
-				placeholder: "Node Type",
-				allowClear: true, 
-				data: nodeTypeObjects
-			})
-
-			function format(element) {
-				return "<span><span class=\"search-choice-close\"></span>"+element.text+"</span>";
+		} else {
+			return getNodeTypesByNodeName(appliCnTypesByNodeName, nodeTypeObjects, allAppliCnTypes);
+		}
+	}
+	
+	function getAllApplicableCnTypesSorted(nodeNameList, appliCnTypesByNodeName){
+		var allAppliCnTypes = [];
+		for (var nodeNameIndex in nodeNameList) {
+			var nodeName = nodeNameList[nodeNameIndex];
+			for (var nodeType in appliCnTypesByNodeName[nodeName]){
+				if (allAppliCnTypes.indexOf(nodeType)<0){
+					allAppliCnTypes.push(nodeType);
+				}
 			}
+		}
+		allAppliCnTypes.sort();
+		return allAppliCnTypes;
+	}
+	
+	function getNodeTypesByNodeName(appliCnTypesByNodeName, nodeTypeObjects, allAppliCnTypes){
+		var nodeName = $("#nodeName").val();
+		if ("" === nodeName || typeof appliCnTypesByNodeName[nodeName] === "undefined"){
+			return nodeTypeObjects = jQuery.map(allAppliCnTypes, function( nt, i ) {
+				return {id: nt, text: nt};
+			});
+		} else if (typeof appliCnTypesByNodeName[nodeName] != "undefined"){
+			var nodeTypes = Object.keys(appliCnTypesByNodeName[nodeName]);
+			return nodeTypeObjects = jQuery.map(nodeTypes, function( nt, i ) {
+					return {id: nt, text: nt};
+				});
+		} else if (typeof appliCnTypesByNodeName["*"] != "undefined"){
+			var nodeTypes = Object.keys(appliCnTypesByNodeName["*"]);
+			return nodeTypeObjects = jQuery.map(nodeTypes, function( nt, i ) {
+					return {id: nt, text: nt};
+				});
+		}
+//		wenn node name leer, dann alle nt anzeigen	
+	}
+	
+	AddNodeController.prototype.openAddNodeDialog = function(resourcePath, nodeTypeName) {
+		var thatAddNodeController = this;
+		var resTypeHelpElement = $('#addNodeDialog .resource-type-not-allowed');
+		resTypeHelpElement.hide();
+		this.nodeTypeName = nodeTypeName;
+		var nodeType = mainController.ntManager.getNodeType(this.nodeTypeName);
+		var appliCnTypesByNodeName = nodeType.getApplicableCnTypesPerCnDef(false /*include mixins*/);
+		var nodeNameListStar = Object.keys(appliCnTypesByNodeName);
+		var nodeHelpElement = $('#addNodeDialog .only-listed-node-names-allowed');
+		var indexOfResidualDef = nodeNameListStar.indexOf("*");
+		var residualsDefined = indexOfResidualDef >= 0;
+		if (residualsDefined){
+			nodeNameListStar.splice(indexOfResidualDef, 1);
+			nodeHelpElement.parents(".form-group").addClass("has-warning");
+			nodeHelpElement.hide();
+		} else {
+			nodeHelpElement.parents(".form-group").addClass("has-warning");
+			nodeHelpElement.show();
+		}
+		nodeNameListStar.sort();
+		var nodeNameObjects = jQuery.map(nodeNameListStar, function( nt, i ) {
+			return {id: nt, text: nt};
+		});
+		$('#nodeName').select2('data', null);
+		$("#nodeName").select2({
+			placeholder: "Enter or select a node name",
+			allowClear: true, 
+			data: nodeNameObjects,
+			createSearchChoice: function(searchTerm){
+				return {id:searchTerm, text:searchTerm};
+			}
+		});
 
-			var data=[];
+		var nodeNameList = Object.keys(appliCnTypesByNodeName);
+		nodeNameList.sort();
+		thatAddNodeController.nodeTypeObjects = getNodeTypesByDependenyState.call(thatAddNodeController, nodeNameList, appliCnTypesByNodeName, thatAddNodeController.nodeTypeObjects);
+		$("#nodeName").on("change", function(e) {
+			thatAddNodeController.nodeTypeObjects = getNodeTypesByDependenyState.call(thatAddNodeController, nodeNameList, appliCnTypesByNodeName, thatAddNodeController.nodeTypeObjects);
+		});
+		
+		$("#nodeType").on("change", function(e) {
+			var nodeTypeName = $("#nodeType").val();
+			var nodeType = mainController.ntManager.getNodeType(nodeTypeName);
+			var canAddResourceType = nodeType.canAddProperty("sling:resourceType", "String");
+			if (canAddResourceType){
+				resTypeHelpElement.hide();
+			} else {
+				resTypeHelpElement.parents(".form-group").addClass("has-warning");
+				resTypeHelpElement.show();
+			}
+		});
+		
+		
+		$('#nodeType').select2('data', null);
+		$("#nodeType").select2({
+			placeholder: "Select a node type",
+			allowClear: true,  
+			data: function() { 
+			      return { results: thatAddNodeController.nodeTypeObjects } ; // Use the global variable to populate the list
+		    }
+		});
+		
+		$('#addNodeDialog').modal('show');
+		
+		var contextPath = this.mainController.getContextPath() == "/" && resourcePath.length>0 && resourcePath.charAt(0)=="/" ? "" : this.mainController.getContextPath(); 
+		this.lastAddNodeURL = contextPath+resourcePath;
 
+
+		$('#resourceType').select2('data', null);
+		var contextPath = this.mainController.getContextPath();
+		contextPath = "/" === contextPath ? "" : contextPath;
+		var url = contextPath+"/libs/sling/resource-editor/servlet-nodes/resource-types.json";
+		$.getJSON(url, function( origData ) {
+			var data = jQuery.map( origData, function( n, i ) {
+				return ( {id:i, text:n} );
+			});
+			
 			var select2 = $("#resourceType").select2({
-				placeholder: "Resource Type",
+				placeholder: "Enter or select a resource type",
 				allowClear: true, 
-				formatResult: format,
 				data: data,
 				createSearchChoice: function(searchTerm){
 					return {id:searchTerm, text:searchTerm};
 				}
 			}).data("select2");
-			
-			// To get called on a click in the result list:
-			// http://stackoverflow.com/a/15637696/1743551
-			select2.onSelect = (function(fn) {
-			    return function(data, options) {
-			        var target;
-			        
-			        if (options != null) {
-			            target = $(options.target);
-			        }
-			        
-			        if (target && target.hasClass('search-choice-close')) {
-			            alert('click!');
-			        } else {
-			            return fn.apply(this, arguments);
-			        }
-			    }
-			})(select2.onSelect);
 		});
-
-		AddNodeController.prototype.addNode = function() {
-			var thatAddNodeController = this;
-			var nodeName = $("#nodeName").val().trim();
-			var nodeType = $("#nodeType").val();
-			var resourceType = $("#resourceType").val().trim();
-			
-			var data = {"_charset_": "utf-8"};
-			if ("" != nodeType){
-				data["jcr:primaryType"] = nodeType;
-			}
-			if ("" != resourceType){
-				data["sling:resourceType"] = resourceType;
-			}
-			var targetURL = (this.lastAddNodeURL=="/") ? "/" : this.lastAddNodeURL+"/";
-			targetURL = this.mainController.decodeFromHTML(targetURL);
-			if ("" != nodeName) {
-				targetURL += nodeName;
-			}
-			if (targetURL=="/"){
-				//adding a node without a specified name to the root node 
-				targetURL = "/*";
-			}
-			var encodedTargetURL = this.mainController.encodeURL(targetURL);
-
-			$.ajax({
-		  	  type: 'POST',
-			  url: encodedTargetURL,
-			  dataType: "json",
-		  	  data: data
-		  	})
-			.done(function() {
-				$('#addNodeDialog').modal("hide");
-				var htmlDecodedLastAddNodeURL = thatAddNodeController.mainController.decodeFromHTML(thatAddNodeController.lastAddNodeURL);
-				thatAddNodeController.mainController.redirectTo(htmlDecodedLastAddNodeURL);
-			})
-			.fail(function(errorJson) {
-				$('#addNodeDialog').modal("hide");
-				thatAddNodeController.mainController.displayAlert(errorJson);
-			});
-			
-		}
-	};
-	
-	AddNodeController.prototype.openAddNodeDialog = function(resourcePath) {
-		$('#addNodeDialog').modal({});
-		var contextPath = this.mainController.getContextPath() == "/" && resourcePath=="/" ? "" : this.mainController.getContextPath(); 
-		this.lastAddNodeURL = contextPath+resourcePath;
 	}
 	
 	return AddNodeController;

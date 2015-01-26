@@ -162,76 +162,96 @@ new org.apache.sling.reseditor.JSTreeAdapter(jsTreeAdapterSettings, treeControll
 		<div class="row">
 			<div class="col-sm-4">
 				<div id="sidebar" class="plate">
-					<div id="tree" class="root" ></div>
+					<div class="ie9filter-plate-div">
+						<div style="display:none;" class="info-content-container" >
+							<div class="well well-sm info-content">
+								<button type="button" class="close"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+							  	<h4>Cheat Sheet</h4>
+						  		<p>You can use</p>
+						  		<ul>
+						  			<li>the arrow keys <kbd>&#x25C0;</kbd>,<kbd>&#x25B6;</kbd>,<kbd>&#x25B2;</kbd>,<kbd>&#x25BC;</kbd> for navigation. You can keep them pressed for faster navigation.</li>
+						  			<li>the <kbd>space</kbd> key for selecting nodes.</li>
+						  			<li>the <kbd>cmd</kbd> key for Mac or <kbd>ctrl</kbd> key for non Mac systems for multi selecting single nodes.</li>
+						  			<li>the <kbd>shift</kbd> key for multi selecting a list of nodes.</li>
+						  			<li>the <kbd>del</kbd> key for deleting the selected nodes.</li>
+						  			<li>the <kbd>c</kbd> key on a node when the tree has the focus for opening the dialog to add a child node.</li>
+						  			<li>a double click to rename a node. Special JCR characters like ':' are not allowed as node names.</li>
+						  		</ul>
+							</div>
+					  	</div>	
+						<div id="tree" class="root" ></div>
+					</div>
 				</div>
 			</div>
 			<div class="col-sm-8">
 				<div id="outer_content" class="plate">
-					<div id="inner_content_margin">
-						<form action="not_configured_yet.change.properties" method="post">
-							<c:set var="resourceIsNode" scope="request" value="<%=resource.adaptTo(Node.class) !=null %>"/>
-							<c:choose>
-							     <c:when test="${resourceIsNode}" >
-									<%--
-									For some reason I get the following exception when using the JSTL expression '${currentNode.properties}'
-									instead of the scriptlet code 'currentNode.getProperties()':
-									org.apache.sling.scripting.jsp.jasper.JasperException: Unable to compile class for JSP: 
-									org.apache.sling.scripting.jsp.jasper.el.JspValueExpression cannot be resolved to a type
-									see https://issues.apache.org/jira/browse/SLING-2455
-									 --%>
-									<c:forEach var="property" items="<%=currentNode.getProperties()%>">
-								<%  Property property = (Property) pageContext.getAttribute("property");%>
-										<fieldset>
-											<label class="proplabel" for='${property.name}'>${property.name} [<%=PropertyType.nameFromValue(property.getType())%>${property.multiple ? ' multiple' : ''}]</label>
-											<c:choose>
-											     <c:when test="${property.multiple}" >
-											     	<fieldset class="propmultival_fieldset">
-											     		<div>&nbsp;</div>
-											     	<c:forEach var="value" items="<%=property.getValues()%>">
-											     		<c:choose>
-											     		<c:when test="${property.type == PropertyType.BINARY}" >
-													     	<p>I'm a binary property</p>
-													     </c:when>
-													     <c:otherwise>
-												     		<input class="propinputmultival form-control" value="${value.string}"/>
-													     </c:otherwise>
-													     </c:choose>
-											     	</c:forEach>
-					     							</fieldset>
-											     </c:when>
-											     <c:when test="${false}" >
-											     </c:when>
-											     <c:otherwise>
-												     <c:choose>
-												     <c:when test="<%=property.getType() == PropertyType.BINARY%>" >
-												     	<c:choose>
-													     	<c:when test='<%=currentNode.getParent().isNodeType("nt:file") %>'>
-													     		<a class="propinput" href="<%= request.getContextPath() %>${resource.parent.path}">Download</a>
-													     	</c:when>
-													     	<c:otherwise>
-													     		<a class="propinput" href="<%= request.getContextPath() %>${resource.path}.property.download?property=${property.name}">View (choose "Save as..." to download)</a>
-													     	</c:otherwise>
-												     	</c:choose>
+					<div class="ie9filter-plate-div">
+						<div id="inner_content_margin">
+							<form action="not_configured_yet.change.properties" method="post">
+								<c:set var="resourceIsNode" scope="request" value="<%=resource.adaptTo(Node.class) !=null %>"/>
+								<c:choose>
+								     <c:when test="${resourceIsNode}" >
+										<%--
+										For some reason I get the following exception when using the JSTL expression '${currentNode.properties}'
+										instead of the scriptlet code 'currentNode.getProperties()':
+										org.apache.sling.scripting.jsp.jasper.JasperException: Unable to compile class for JSP: 
+										org.apache.sling.scripting.jsp.jasper.el.JspValueExpression cannot be resolved to a type
+										see https://issues.apache.org/jira/browse/SLING-2455
+										 --%>
+										<c:forEach var="property" items="<%=currentNode.getProperties()%>">
+									<%  Property property = (Property) pageContext.getAttribute("property");%>
+											<fieldset>
+												<label class="proplabel" for='${property.name}'>${property.name} [<%=PropertyType.nameFromValue(property.getType())%>${property.multiple ? ' multiple' : ''}]</label>
+												<c:choose>
+												     <c:when test="${property.multiple}" >
+												     	<fieldset class="propmultival_fieldset">
+												     		<div>&nbsp;</div>
+												     	<c:forEach var="value" items="<%=property.getValues()%>">
+												     		<c:choose>
+												     		<c:when test="${property.type == PropertyType.BINARY}" >
+														     	<p>I'm a binary property</p>
+														     </c:when>
+														     <c:otherwise>
+													     		<input class="propinputmultival form-control" value="${value.string}"/>
+														     </c:otherwise>
+														     </c:choose>
+												     	</c:forEach>
+						     							</fieldset>
+												     </c:when>
+												     <c:when test="${false}" >
 												     </c:when>
 												     <c:otherwise>
-														<input class="propinput form-control" id="${property.name}" name="${property.name}" value="${property.string}"/>							
+													     <c:choose>
+													     <c:when test="<%=property.getType() == PropertyType.BINARY%>" >
+													     	<c:choose>
+														     	<c:when test='<%=currentNode.getParent().isNodeType("nt:file") %>'>
+														     		<a class="propinput" href="<%= request.getContextPath() %>${resource.parent.path}">Download</a>
+														     	</c:when>
+														     	<c:otherwise>
+														     		<a class="propinput" href="<%= request.getContextPath() %>${resource.path}.property.download?property=${property.name}">View (choose "Save as..." to download)</a>
+														     	</c:otherwise>
+													     	</c:choose>
+													     </c:when>
+													     <c:otherwise>
+															<input class="propinput form-control" id="${property.name}" name="${property.name}" value="${property.string}"/>							
+													     </c:otherwise>
+													     </c:choose>
 												     </c:otherwise>
-												     </c:choose>
-											     </c:otherwise>
-											 </c:choose>
-										</fieldset>
-									</c:forEach>
-							     </c:when>
-							     <c:otherwise>
-									<c:forEach var="property" items="<%=resource.adaptTo(ValueMap.class)%>">	
-										<fieldset>										
-											<label class="proplabel" for='${property.key}'>${property.key}</label>
-											<input class="propinput form-control" id="${property.key}" name="${property.key}" value="${property.value}"/>
-										</fieldset>							
-									</c:forEach>
-							     </c:otherwise>
-							 </c:choose>
-						</form>
+												 </c:choose>
+											</fieldset>
+										</c:forEach>
+								     </c:when>
+								     <c:otherwise>
+										<c:forEach var="property" items="<%=resource.adaptTo(ValueMap.class)%>">	
+											<fieldset>										
+												<label class="proplabel" for='${property.key}'>${property.key}</label>
+												<input class="propinput form-control" id="${property.key}" name="${property.key}" value="${property.value}"/>
+											</fieldset>							
+										</c:forEach>
+								     </c:otherwise>
+								 </c:choose>
+							</form>
+						</div>
 					</div>
 			    </div>
 			</div>
@@ -244,26 +264,55 @@ new org.apache.sling.reseditor.JSTreeAdapter(jsTreeAdapterSettings, treeControll
 			</div>
 		</div>
 	</div>
+	<span id="tree-info-icon" class="info-icon info-icon-lightgray pull-right clearfix" style="display:none;"></span>
 	<!-- Add node dialog -->
 	<div class="modal fade" id="addNodeDialog" tabindex="-1" role="dialog" aria-labelledby="addNodeDialogLabel" aria-hidden="true">
 	  <div class="modal-dialog modal-sm">
 	    <div class="modal-content">
 		      <div class="modal-header">
 		        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-		        <h4 class="modal-title" id="addNodeDialogLabel">Add Node</h4>
+		        <h4 class="modal-title" id="addNodeDialogLabel">Add Child Node
+			  		<span class="info-icon info-icon-dark pull-right"></span>
+		        </h4>
 		      </div>
-		      <div class="modal-body">
-					  <div class="form-group">
-					    <label for="nodeName">Node Name</label>
-					    <input name="nodeName" type="text" class="form-control" id="nodeName" placeholder="Node Name">
+		      <div class="modal-body vertical-form">
+					  <div id="cheatsheet">
+							<div id="cheatsheet-content" style="display:none;" class="well well-sm info-content">
+								<button type="button" class="close"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+							  	<h3>Cheat Sheet</h3>
+							  	<h4>Shortcuts</h4>
+						  		<p>You can use the</p>
+						  		<ul>
+					  				<li><kbd>c</kbd> key on a node when the tree has the focus for opening the dialog to add a child node.</li>
+					  				<li><kbd>esc</kbd> key to close the dialog.</li>
+						  			<li><kbd><kbd>ctrl</kbd>+<kbd>a</kbd></kbd> keys to submit the form.</li>
+						  			<li><kbd>tab</kbd> key to navigate from one form element to the next one and <kbd><kbd>shift</kbd>+<kbd>tab</kbd></kbd> to navigate back.</li>
+						  		</ul>
+						  		<h4>Defaults</h4>
+						  		<p>Defaults are used for empty fields if you submit the dialog.</p>
+						  		<h4>New dropdown entries</h4>
+						  		<ul>
+						  			<li>New node names are allowed for most of the node types.</li>
+						  			<li>It's not allowed to enter new node type names.</li>
+					  				<li>You can enter new values for resource types if the node type allows for the 'sling:resourceType' String property.</li>
+						  		</ul>
+						  		<h4>Searching dropdown entries</h4>
+						  		<p>Entering text in the dropdown boxes searches for entries that contain that text.</p>
+						  	</div>		
 					  </div>
 					  <div class="form-group">
-					    <label for="nodeType">Node Type</label>
+					    <label for="nodeName">Node Name</label>
+					    <input name="nodeName" type="hidden" id="nodeName">
+					    <span class="only-listed-node-names-allowed help-block" style="display:none;">Only the node names listed in the drop down box are allowed.</span>
+					  </div>
+					  <div class="form-group node-type">
+					    <label for="nodeType">Node Type - <span class="nt-dependency-description">applicable together with node name</span> (<a class="nt-toggle" href="javascript:void(0)">show generally applicable</a>)</label>
 					    <input name="jcr:primaryType" type="hidden" id="nodeType">
 					  </div>
 					  <div class="form-group">
 					    <label for="resourceType">Sling Resource Type</label>
 					    <input name="sling:resourceType" type="hidden" id="resourceType">
+					    <span class="resource-type-not-allowed help-block" style="display:none;">The selected node type does not allow the resulting node to have a Sling resource type property.</span>
 					  </div>
 		      </div>
 		      <div class="modal-footer">
