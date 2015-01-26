@@ -235,7 +235,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.resource</artifactId>
-            <version>2.4.5-SNAPSHOT</version>
+            <version>2.4.4</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
