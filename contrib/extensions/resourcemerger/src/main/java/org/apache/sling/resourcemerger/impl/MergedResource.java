@@ -71,6 +71,7 @@ public class MergedResource extends AbstractResource {
                 final String value = rsrc.getResourceType();
                 if ( value != null ) {
                     rt = value;
+                    break;
                 }
             }
         }
