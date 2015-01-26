@@ -290,14 +290,14 @@ public class ClusterTest {
 
         tearDown(); // reset any setup that was done - we start with a different setup than the default one
         
-        instance1 = Instance.newStandaloneInstance("/var/discovery/clusterA/", "instance1", true, 8 /* sec*/, MIN_EVENT_DELAY);
+        instance1 = Instance.newStandaloneInstance("/var/discovery/clusterA/", "instance1", true, 5 /* sec*/, MIN_EVENT_DELAY);
         instance2 = Instance.newClusterInstance("/var/discovery/clusterA/", "instance2", instance1,
-                false, 8 /* sec*/, MIN_EVENT_DELAY);
+                false, 5 /* sec*/, MIN_EVENT_DELAY);
         // now launch the remote instance
-        instance3 = Instance.newStandaloneInstance("/var/discovery/clusterB/", "instance3", false, 8 /* sec*/, MIN_EVENT_DELAY);
+        instance3 = Instance.newStandaloneInstance("/var/discovery/clusterB/", "instance3", false, 5 /* sec*/, MIN_EVENT_DELAY);
         instance4 = Instance.newClusterInstance("/var/discovery/clusterB/", "instance4", instance3,
-                false, 8 /* sec*/, MIN_EVENT_DELAY);
-        instance5 = Instance.newStandaloneInstance("/var/discovery/clusterC/", "instance5", false, 8 /* sec*/, MIN_EVENT_DELAY);
+                false, 5 /* sec*/, MIN_EVENT_DELAY);
+        instance5 = Instance.newStandaloneInstance("/var/discovery/clusterC/", "instance5", false, 5 /* sec*/, MIN_EVENT_DELAY);
 
         // join the instances to form a cluster by sending out heartbeats
         runHeartbeatOnceWith(instance1, instance2, instance3, instance4, instance5);
@@ -331,7 +331,7 @@ public class ClusterTest {
         // simulate a crash of instance1, resulting in load-balancer to switch the pings
         boolean success = false;
         for(int i=0; i<25; i++) {
-            // loop for max 10 times
+            // loop for max 25 times, min 15 times
             runHeartbeatOnceWith(instance2, instance3, instance4, instance5);
             final boolean ping1 = pingConnector(instance3, instance2);
             final boolean ping2 = pingConnector(instance5, instance2);
@@ -339,6 +339,11 @@ public class ClusterTest {
                 // both pings were fine - hence break
                 success = true;
                 logger.info("testConnectorSwitching4139: successfully switched all pings to instance2 after "+i+" rounds.");
+                if (i<20) {
+                    logger.info("testDuplicateInstance3726: min loop cnt not yet reached: i="+i);
+                    Thread.sleep(500); // 20x500ms = 10sec max - (vs 5sec timeout) - should be enough for timing out
+                    continue;
+                }
                 break;
             }
             logger.info("testConnectorSwitching4139: looping");
@@ -453,9 +458,9 @@ public class ClusterTest {
                 // both pings were fine - hence break
                 success = true;
                 logger.info("testDuplicateInstance3726: successfully switched all pings to instance2 after "+i+" rounds.");
-                if (i<15) {
+                if (i<20) {
                     logger.info("testDuplicateInstance3726: min loop cnt not yet reached: i="+i);
-                    Thread.sleep(500); // 25x500ms = 12.5sec max - (vs 5sec timeout)
+                    Thread.sleep(500); // 20x500ms = 10sec max - (vs 5sec timeout) - should be enough for timing out
                     continue;
                 }
                 break;
