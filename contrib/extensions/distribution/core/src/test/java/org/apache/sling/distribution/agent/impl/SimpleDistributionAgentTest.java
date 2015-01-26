@@ -28,6 +28,7 @@ import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.DistributionResponse;
 import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
+import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
@@ -68,7 +69,7 @@ public class SimpleDistributionAgentTest {
                 false, "serviceName", packageImporter,
                 packageExporter, packageExporterStrategy,
                 queueProvider, distributionHandler,
-                distributionEventFactory, resolverFactory);
+                distributionEventFactory, resolverFactory, mock(DefaultDistributionLog.class));
         DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
@@ -98,7 +99,7 @@ public class SimpleDistributionAgentTest {
                 false, "subServiceName", packageImporter,
                 packageExporter, packageExporterStrategy,
                 queueProvider,
-                distributionHandler, distributionEventFactory, resolverFactory);
+                distributionHandler, distributionEventFactory, resolverFactory, mock(DefaultDistributionLog.class));
         DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
@@ -132,7 +133,7 @@ public class SimpleDistributionAgentTest {
                 false, "serviceName", packageImporter,
                 packageExporter, packageExporterStrategy,
                 queueProvider, distributionHandler,
-                distributionEventFactory, resolverFactory);
+                distributionEventFactory, resolverFactory, mock(DefaultDistributionLog.class));
         DistributionRequest request = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         DistributionPackageInfo packageInfo = new DistributionPackageInfo();
@@ -162,7 +163,7 @@ public class SimpleDistributionAgentTest {
                 false, "serviceName", packageImporter,
                 packageExporter, packageExporterStrategy,
                 queueProvider, distributionHandler,
-                distributionEventFactory, resolverFactory);
+                distributionEventFactory, resolverFactory, mock(DefaultDistributionLog.class));
         DistributionQueue queue = mock(DistributionQueue.class);
         when(queueProvider.getQueue(DistributionQueueDispatchingStrategy.DEFAULT_QUEUE_NAME))
                 .thenReturn(queue);
@@ -185,7 +186,7 @@ public class SimpleDistributionAgentTest {
                 false, "serviceName", packageImporter,
                 packageExporter, packageExporterStrategy,
                 queueProvider, distributionHandler,
-                distributionEventFactory, resolverFactory);
+                distributionEventFactory, resolverFactory, mock(DefaultDistributionLog.class));
         DistributionQueue queue = mock(DistributionQueue.class);
         when(queueProvider.getQueue("priority")).thenReturn(queue);
         assertNotNull(agent.getQueue("priority"));
@@ -207,7 +208,7 @@ public class SimpleDistributionAgentTest {
                 false, "serviceName", packageImporter,
                 packageExporter, packageExporterStrategy,
                 queueProvider, distributionHandler,
-                distributionEventFactory, resolverFactory);
+                distributionEventFactory, resolverFactory, mock(DefaultDistributionLog.class));
         DistributionQueue queue = mock(DistributionQueue.class);
         when(queueProvider.getQueue("priority")).thenReturn(queue);
         assertNull(agent.getQueue("weird"));

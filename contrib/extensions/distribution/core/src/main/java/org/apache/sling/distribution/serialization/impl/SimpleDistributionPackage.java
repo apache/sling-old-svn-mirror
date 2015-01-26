@@ -28,11 +28,15 @@ import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A simple {@link org.apache.sling.distribution.packaging.DistributionPackage} is used for deletion of certain paths on the target instance
  */
 public class SimpleDistributionPackage extends AbstractDistributionPackage implements DistributionPackage {
+
+    static Logger log = LoggerFactory.getLogger(SimpleDistributionPackage.class);
 
     private final static String PACKAGE_START = "DSTRPCK:";
     private final static String DELIM = "|";
@@ -157,8 +161,8 @@ public class SimpleDistributionPackage extends AbstractDistributionPackage imple
 
                 return fromIdString(streamString);
             }
-        } catch (Exception e) {
-
+        } catch (IOException e) {
+            log.error("cannot read stream", e);
         }
 
         return null;

@@ -67,7 +67,7 @@ public class DistributionAgentRootServlet extends SlingAllMethodsServlet {
         for (DistributionAgent agent : agents) {
             try {
                 agent.execute(resourceResolver, distributionRequest);
-            } catch (DistributionAgentException e) {
+            } catch (Throwable e) {
                 log.warn("agent {} execution failed", agent, e);
 
                 response.getWriter().append("error :'").append(e.toString()).append("'");

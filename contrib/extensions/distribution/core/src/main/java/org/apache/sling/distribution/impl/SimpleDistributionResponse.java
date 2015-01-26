@@ -51,4 +51,14 @@ public class SimpleDistributionResponse implements DistributionResponse {
     public String getMessage() {
         return message;
     }
+
+    @Override
+    public String toString() {
+        return "CompositeDistributionResponse{" +
+                "isSuccesful=" + isSuccessful() +
+                ", state=" + state +
+                ", message=" + message +
+                '}';
+    }
+
 }

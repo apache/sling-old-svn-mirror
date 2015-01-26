@@ -20,7 +20,9 @@ import org.apache.sling.distribution.serialization.impl.AbstractDistributionPack
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
 /**
@@ -135,7 +137,8 @@ public class JcrVaultDistributionPackageBuilder  extends AbstractDistributionPac
                 return null;
             }
             return new JcrVaultDistributionPackage(getType(), jcrPackage, session);
-        } catch (Exception e) {
+        } catch (RepositoryException e) {
+            log.error("cannot ge package with id {}", id, e);
             return null;
         } finally {
             ungetSession(session);

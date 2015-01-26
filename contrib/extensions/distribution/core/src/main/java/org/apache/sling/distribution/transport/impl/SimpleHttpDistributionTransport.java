@@ -148,12 +148,17 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
 
                         pulls++;
                     } else {
-                        log.info("");
+                        log.info("no entity available");
                         break;
                     }
                 }
 
-                log.info("pulled {} packages from {}", pulls, distributionEndpoint.getUri());
+                // only log.info when something is pulled in order to keep a quite log
+                if (pulls == 0) {
+                    log.debug("pulled {} packages from {}", pulls, distributionEndpoint.getUri());
+                } else {
+                    log.info("pulled {} packages from {}", pulls, distributionEndpoint.getUri());
+                }
 
             } catch (HttpHostConnectException e) {
                 log.info("could not connect to {} - skipping", distributionEndpoint.getUri());

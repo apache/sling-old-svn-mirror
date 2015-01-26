@@ -24,6 +24,7 @@ import org.apache.sling.distribution.agent.DistributionAgentException;
 import org.apache.sling.distribution.component.impl.DistributionComponent;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.component.impl.DistributionComponentProvider;
+import org.apache.sling.distribution.log.DistributionLog;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
@@ -42,6 +43,8 @@ import java.util.Map;
 public class ExtendedDistributionServiceResourceProvider extends DistributionServiceResourceProvider {
 
     private static final String QUEUES_PATH = "queues";
+    private static final String LOG_PATH = "log";
+
     private static final int MAX_QUEUE_DEPTH = 100;
 
 
@@ -58,12 +61,21 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
         if (kind.equals(DistributionComponentKind.AGENT)) {
             DistributionAgent agent = (DistributionAgent) component.getService();
 
-            if (agent != null) {
+            if (agent != null && childResourceName != null) {
                 if (childResourceName.startsWith(QUEUES_PATH)) {
                     SimplePathInfo queuePathInfo = SimplePathInfo.parsePathInfo(QUEUES_PATH, childResourceName);
                     Map<String, Object> result = getQueueProperties(agent, queuePathInfo);
                     return result;
+                } else if (childResourceName.startsWith(LOG_PATH)) {
+                    Map<String, Object> result = new HashMap<String, Object>();
+                    result.put(SLING_RESOURCE_TYPE, DistributionResourceTypes.LOG_RESOURCE_TYPE);
+                    DistributionLog distributionLog = agent.getLog();
+
+                    result.put(ADAPTABLE_PROPERTY_NAME, distributionLog);
+
+                    return result;
                 }
+
             }
         }
         return null;
@@ -80,6 +92,7 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
                 if (childResourceName == null) {
                     List<String> nameList = new ArrayList<String>();
                     nameList.add(QUEUES_PATH);
+                    nameList.add(LOG_PATH);
                     return nameList;
                 }
             }
@@ -119,6 +132,7 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
                 result.put(ADAPTABLE_PROPERTY_NAME, queue);
 
             } catch (DistributionAgentException e) {
+                // do nothing
 
             }
 
@@ -149,8 +163,10 @@ public class ExtendedDistributionServiceResourceProvider extends DistributionSer
 
                 }
             } catch (DistributionAgentException e) {
+                // do nothing
 
             } catch (DistributionQueueException e) {
+                // do nothing
             }
             return result;
         }

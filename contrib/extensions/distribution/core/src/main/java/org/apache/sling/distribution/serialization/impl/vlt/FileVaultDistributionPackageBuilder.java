@@ -21,6 +21,7 @@ package org.apache.sling.distribution.serialization.impl.vlt;
 import javax.jcr.Session;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
 
@@ -30,6 +31,7 @@ import org.apache.jackrabbit.vault.fs.api.WorkspaceFilter;
 import org.apache.jackrabbit.vault.fs.io.AccessControlHandling;
 import org.apache.jackrabbit.vault.fs.io.ImportOptions;
 import org.apache.jackrabbit.vault.packaging.ExportOptions;
+import org.apache.jackrabbit.vault.packaging.PackageException;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -131,8 +133,8 @@ public class FileVaultDistributionPackageBuilder extends AbstractDistributionPac
                 VaultPackage pkg = packaging.getPackageManager().open(file);
                 distributionPackage = new FileVaultDistributionPackage(getType(), pkg);
             }
-        } catch (Exception e) {
-            log.warn("could not find a package with id : {}", id);
+        } catch (IOException e) {
+            log.warn("could not find a package with id {}", id, e);
         }
         return distributionPackage;
     }

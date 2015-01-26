@@ -20,7 +20,10 @@ package org.apache.sling.distribution.agent.impl;
 
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
+import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
+import org.apache.sling.distribution.log.DistributionLog;
+import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.resources.impl.OsgiUtils;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.osgi.framework.BundleContext;
@@ -50,6 +53,9 @@ public abstract class AbstractDistributionAgentFactory {
     protected static final String DEFAULT_TRIGGER_TARGET = "(name=)";
 
     private static final String TRIGGERS_TARGET = "triggers.target";
+
+    protected static final String LOG_LEVEL = "log.level";
+
 
 
     private ServiceRegistration componentReg;
@@ -93,7 +99,16 @@ public abstract class AbstractDistributionAgentFactory {
 
                 try {
 
-                   agent = createAgent(agentName, context, config);
+                    String logLevel = PropertiesUtil.toString(config.get(LOG_LEVEL), DefaultDistributionLog.LogLevel.INFO.name());
+                    DefaultDistributionLog.LogLevel level = DefaultDistributionLog.LogLevel.valueOf(logLevel.trim().toUpperCase());
+                    if (level == null) {
+                        level = DefaultDistributionLog.LogLevel.INFO;
+                    }
+
+
+                    DefaultDistributionLog distributionLog = new DefaultDistributionLog(DistributionComponentKind.AGENT, agentName, SimpleDistributionAgent.class, level);
+
+                    agent = createAgent(agentName, context, config, distributionLog);
                 }
                 catch (IllegalArgumentException e) {
                     log.warn("cannot create agent", e);
@@ -160,6 +175,6 @@ public abstract class AbstractDistributionAgentFactory {
     }
 
 
-    protected abstract SimpleDistributionAgent createAgent(String agentName, BundleContext context, Map<String, Object> config);
+    protected abstract SimpleDistributionAgent createAgent(String agentName, BundleContext context, Map<String, Object> config, DefaultDistributionLog distributionLog);
 
 }
