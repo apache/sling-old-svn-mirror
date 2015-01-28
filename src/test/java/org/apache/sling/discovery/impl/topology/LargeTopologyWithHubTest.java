@@ -76,7 +76,8 @@ public class LargeTopologyWithHubTest {
     
     @Test
     @Retry(timeoutMsec=30000, intervalMsec=500)
-    public void testLargeTopologyWithHub() {
+    public void testLargeTopologyWithHub() throws Exception {
+        hub.dumpRepo();
         final TopologyView tv = hub.getDiscoveryService().getTopology();
         logger.info(
                 "testLargeTopologyWithHub: checking if all connectors are registered, TopologyView has {} Instances", 
