@@ -67,11 +67,11 @@ public class MergedResource extends AbstractResource {
         String rt = this.properties.get(ResourceResolver.PROPERTY_RESOURCE_TYPE, String.class);
         if (rt == null) {
             rt = relativePath.length() == 0 ? "/" : relativePath;
+            // use the resource type of the last resource in the set that provides one
             for(final Resource rsrc : mappedResources) {
                 final String value = rsrc.getResourceType();
                 if ( value != null ) {
                     rt = value;
-                    break;
                 }
             }
         }
