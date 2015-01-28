@@ -668,26 +668,24 @@ public class ResourceResolverFactoryActivator implements Runnable {
             }
             isRunning = !ops.contains(BG_OP.STOP);
 
-            if ( isRunning ) {
-                final int doUnregister = ops.lastIndexOf(BG_OP.UNREGISTER_AND_CHECK);
-                if ( doUnregister != -1 ) {
-                    this.unregisterFactory();
-                    // we only delay between unregister and check
-                    // the delay is not really necessary but it provides
-                    // a smoother unregistration/registration cascade
-                    // and delaying for 2 secs should not hurt
-                    try {
-                        Thread.sleep(2000);
-                    } catch ( final InterruptedException ie ) {
-                        Thread.currentThread().interrupt();
-                    }
-                    ops.clear();
-                    synchronized ( this.coordinator ) {
-                        ops.addAll(this.operations);
-                        this.operations.clear();
-                    }
-                    isRunning = !ops.contains(BG_OP.STOP);
+            if ( isRunning && ops.lastIndexOf(BG_OP.UNREGISTER_AND_CHECK) != -1 ) {
+                this.unregisterFactory();
+                // we only delay between unregister and check
+                // the delay is not really necessary but it provides
+                // a smoother unregistration/registration cascade
+                // and delaying for 2 secs should not hurt
+                try {
+                    Thread.sleep(2000);
+                } catch ( final InterruptedException ie ) {
+                    Thread.currentThread().interrupt();
                 }
+                // check for new operations and simply ignore them (except for STOP)
+                ops.clear();
+                synchronized ( this.coordinator ) {
+                    ops.addAll(this.operations);
+                    this.operations.clear();
+                }
+                isRunning = !ops.contains(BG_OP.STOP);
             }
 
             if ( isRunning ) {
