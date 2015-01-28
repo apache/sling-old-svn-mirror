@@ -448,6 +448,7 @@ public class ClusterTest {
                 new SimpleClusterView(instance5));
         
         // simulate a crash of instance1, resulting in load-balancer to switch the pings
+        instance1.stopHeartbeats();
         boolean success = false;
         for(int i=0; i<25; i++) {
             // loop for max 25 times, min 15 times
