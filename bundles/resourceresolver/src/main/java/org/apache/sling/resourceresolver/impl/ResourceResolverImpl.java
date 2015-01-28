@@ -132,7 +132,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      * @see org.apache.sling.api.resource.ResourceResolver#isLive()
      */
     public boolean isLive() {
-        return !this.closed && this.context.isLive();
+        return !this.closed && this.context.isLive() && this.factory.isLive();
     }
 
     /**
@@ -439,8 +439,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
                 if (current != null && !path.endsWith(JCR_CONTENT_LEAF)) {
                     if (factory.getMapEntries().isOptimizeAliasResolutionEnabled()) {
                         logger.debug("map: Optimize Alias Resolution is Enabled");
-                        String parentPath = ResourceUtil.getParent(path);    
-                        if (parentPath != null) {         
+                        String parentPath = ResourceUtil.getParent(path);
+                        if (parentPath != null) {
                             final Map<String, String> aliases = factory.getMapEntries().getAliasMap(parentPath);
                             if (aliases!= null && aliases.containsValue(current.getName())) {
                                 for (String key:aliases.keySet()) {
@@ -449,12 +449,12 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
                                         break;
                                     }
                                 }
-                            } 
+                            }
                         }
                     } else {
                         logger.debug("map: Optimize Alias Resolution is Disabled");
                         alias = ResourceResolverContext.getProperty(current, PROP_ALIAS);
-                    }                    
+                    }
                 }
                 if (alias == null || alias.length() == 0) {
                     alias = ResourceUtil.getName(path);
