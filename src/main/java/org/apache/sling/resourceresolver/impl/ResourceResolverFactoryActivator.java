@@ -674,7 +674,7 @@ public class ResourceResolverFactoryActivator implements Runnable {
                     this.unregisterFactory();
                     // we only delay between unregister and check
                     // the delay is not really necessary but it provides
-                    // a smother unregistration/registration cascade
+                    // a smoother unregistration/registration cascade
                     // and delaying for 2 secs should not hurt
                     try {
                         Thread.sleep(2000);
