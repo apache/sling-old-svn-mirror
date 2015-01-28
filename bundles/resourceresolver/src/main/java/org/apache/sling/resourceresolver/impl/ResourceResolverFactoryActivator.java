@@ -616,7 +616,7 @@ public class ResourceResolverFactoryActivator implements Runnable {
     protected void unbindResourceProvider(final ResourceProvider provider, final Map<String, Object> props) {
         this.rootProviderEntry.unbindResourceProvider(provider, props);
         this.preconds.unbindProvider(props);
-        this.addOperation(BG_OP.CHECK);
+        this.addOperation(BG_OP.UNREGISTER_AND_CHECK);
     }
 
     /**
