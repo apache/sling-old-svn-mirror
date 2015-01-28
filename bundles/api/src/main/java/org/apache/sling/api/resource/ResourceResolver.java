@@ -89,7 +89,7 @@ import aQute.bnd.annotation.ProviderType;
  * A <code>ResourceResolver</code> is only valid for as long as the
  * <code>ResourceResolverFactory</code> that created this instance exists. The
  * same applies in general to all objects returned by this instance,
- * especially for all instances. If the <code>ResourceResolverFactory</code>
+ * especially for all resources. If the <code>ResourceResolverFactory</code>
  * does not exist anymore, the resource resolver instances becomes invalid.
  * <p>
  * <b>Resource Resolver Attributes</b>
