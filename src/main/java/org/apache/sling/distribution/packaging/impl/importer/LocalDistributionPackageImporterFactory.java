@@ -20,6 +20,7 @@ package org.apache.sling.distribution.packaging.impl.importer;
 
 import javax.annotation.Nonnull;
 import java.io.InputStream;
+import java.util.Map;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -28,7 +29,11 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
+import org.apache.sling.distribution.event.DistributionEventType;
+import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
@@ -61,16 +66,23 @@ public class LocalDistributionPackageImporterFactory implements DistributionPack
     @Reference(name = "packageBuilder")
     private DistributionPackageBuilder packageBuilder;
 
+    @Reference
+    private DistributionEventFactory eventFactory;
+
     private DistributionPackageImporter importer;
 
+    private String name;
+
     @Activate
-    public void activate() {
+    public void activate(Map<String, Object> config) {
+        name = PropertiesUtil.toString(config.get(NAME), null);
         importer = new LocalDistributionPackageImporter(packageBuilder);
     }
 
 
     public void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageImportException {
         importer.importPackage(resourceResolver, distributionPackage);
+        eventFactory.generatePackageEvent(DistributionEventType.IMPORTER_PACKAGE_IMPORTED, DistributionComponentKind.IMPORTER, name, distributionPackage.getInfo());
     }
 
     public DistributionPackage importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException {

@@ -25,6 +25,7 @@ import java.util.Hashtable;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.event.DistributionEventType;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.osgi.service.event.Event;
@@ -44,16 +45,17 @@ public class DefaultDistributionEventFactory implements DistributionEventFactory
     @Reference
     private EventAdmin eventAdmin;
 
-    public void generateEvent(@Nonnull DistributionEventType distributionEventType, @Nonnull Dictionary<?, ?> properties) {
+    private void generateEvent(@Nonnull DistributionEventType distributionEventType, @Nonnull Dictionary<?, ?> properties) {
         eventAdmin.postEvent(new Event(distributionEventType.getTopic(), properties));
         log.debug("distribution event {} posted", distributionEventType.name());
     }
 
-    public void generateAgentPackageEvent(@Nonnull DistributionEventType distributionEventType, @Nonnull String agentName, @Nonnull DistributionPackageInfo info) {
+    public void generatePackageEvent(@Nonnull DistributionEventType distributionEventType, DistributionComponentKind kind, @Nonnull String name, @Nonnull DistributionPackageInfo info) {
         Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
-        dictionary.put("distribution.agent.name", agentName);
-        dictionary.put("distribution.request.type", info.getRequestType());
-        dictionary.put("distribution.path", info.getPaths());
+        dictionary.put(DistributionEventType.PROPERTY_DISTRIBUTION_COMPONENT_NAME, name);
+        dictionary.put(DistributionEventType.PROPERTY_DISTRIBUTION_COMPONENT_KIND, kind.name());
+        dictionary.put(DistributionEventType.PROPERTY_DISTRIBUTION_TYPE, info.getRequestType());
+        dictionary.put(DistributionEventType.PROPERTY_DISTRIBUTION_PATHS, info.getPaths());
         generateEvent(distributionEventType, dictionary);
     }
 

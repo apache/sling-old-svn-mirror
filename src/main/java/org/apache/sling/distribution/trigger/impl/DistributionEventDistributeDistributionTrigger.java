@@ -108,8 +108,8 @@ public class DistributionEventDistributeDistributionTrigger implements Distribut
         }
 
         public void handleEvent(Event event) {
-            Object actionProperty = event.getProperty("distribution.action");
-            Object pathProperty = event.getProperty("distribution.path");
+            Object actionProperty = event.getProperty(DistributionEventType.PROPERTY_DISTRIBUTION_TYPE);
+            Object pathProperty = event.getProperty(DistributionEventType.PROPERTY_DISTRIBUTION_PATHS);
             if (actionProperty != null && pathProperty != null) {
                 String[] paths = (String[]) pathProperty;
                 for (String p : paths) {
