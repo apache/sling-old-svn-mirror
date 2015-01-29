@@ -63,7 +63,7 @@ public class RemoteDistributionPackageImporter implements DistributionPackageImp
             String endpointKey = entry.getKey();
             String endpoint = entry.getValue();
             if (endpoint != null && endpoint.length() > 0) {
-                transportHandlers.put(endpointKey, new SimpleHttpDistributionTransport(new DistributionEndpoint(endpoint), null, -1));
+                transportHandlers.put(endpointKey, new SimpleHttpDistributionTransport(new DistributionEndpoint(endpoint), null, distributionTransportSecretProvider, -1));
             }
         }
         transportHandler = new MultipleEndpointDistributionTransport(transportHandlers,
@@ -73,7 +73,7 @@ public class RemoteDistributionPackageImporter implements DistributionPackageImp
 
     public void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageImportException {
         try {
-            transportHandler.deliverPackage(resourceResolver, distributionPackage, distributionTransportSecretProvider.getSecret());
+            transportHandler.deliverPackage(resourceResolver, distributionPackage);
         } catch (Exception e) {
             throw new DistributionPackageImportException("failed in importing package " + distributionPackage, e);
         }
