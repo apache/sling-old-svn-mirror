@@ -109,6 +109,15 @@ public class Config {
     private String discoveryResourcePath = DEFAULT_DISCOVERY_RESOURCE_PATH;
 
     /**
+     * If set to true the TOPOLOGY_INIT event will be sent only once the cluster view was established.
+     * This can mean there is a delay until the voting in the cluster was finished.
+     * But the advantage of delaying the INIT event is to make sure no two instances see themselves
+     * as leader at startup. (see SLING-3750).
+     */
+    @Property(boolValue=true)
+    private static final String DELAY_INIT_EVENT_UNTIL_VOTED = "delayInitEventUntilVoted";
+
+    /**
      * If set to true, local-loops of topology connectors are automatically stopped when detected so.
      */
     @Property(boolValue=false)
@@ -164,6 +173,9 @@ public class Config {
 
     /** True when auto-stop of a local-loop is enabled. Default is false. **/
     private boolean autoStopLocalLoopEnabled;
+    
+    /** True to make sure the INIT delay is only sent once there is (the first) established view in the cluster **/
+    private boolean delayInitEventUntilVoted = true; /* default: true */
     
     /**
      * True when the hmac is enabled and signing is disabled.
@@ -290,6 +302,7 @@ public class Config {
         logger.debug("configure: leaderElectionRepositoryDescriptor='{}'",
                 this.leaderElectionRepositoryDescriptor);
 
+        delayInitEventUntilVoted = PropertiesUtil.toBoolean(properties.get(DELAY_INIT_EVENT_UNTIL_VOTED), true);
         autoStopLocalLoopEnabled = PropertiesUtil.toBoolean(properties.get(AUTO_STOP_LOCAL_LOOP_ENABLED), false);
         gzipConnectorRequestsEnabled = PropertiesUtil.toBoolean(properties.get(GZIP_CONNECTOR_REQUESTS_ENABLED), false);
         
@@ -451,6 +464,14 @@ public class Config {
      */
     public boolean isGzipConnectorRequestsEnabled() {
         return gzipConnectorRequestsEnabled;
+    }
+    
+    /**
+     * @return true to make sure the INIT event is only sent to topology listeners once
+     * there is (eg the first) an established cluster view
+     */
+    public boolean isDelayInitEventUntilVoted() {
+        return delayInitEventUntilVoted;
     }
     
     /**
