@@ -40,6 +40,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
+import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.transport.core.DistributionTransport;
 import org.apache.sling.distribution.transport.core.DistributionTransportException;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
@@ -53,19 +54,21 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
 
     private final DistributionEndpoint distributionEndpoint;
     private final DistributionPackageBuilder packageBuilder;
+    protected final DistributionTransportSecretProvider secretProvider;
     private final int maxNumberOfPackages;
 
     public SimpleHttpDistributionTransport(DistributionEndpoint distributionEndpoint,
                                            DistributionPackageBuilder packageBuilder,
+                                           DistributionTransportSecretProvider secretProvider,
                                            int maxNumberOfPackages) {
 
         this.distributionEndpoint = distributionEndpoint;
         this.packageBuilder = packageBuilder;
+        this.secretProvider = secretProvider;
         this.maxNumberOfPackages = maxNumberOfPackages;
     }
 
-    public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage,
-                               @Nonnull DistributionTransportSecret secret) throws DistributionTransportException {
+    public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionTransportException {
         String hostAndPort = getHostAndPort(distributionEndpoint.getUri());
 
         URI packageOrigin = distributionPackage.getInfo().getOrigin();
@@ -75,12 +78,13 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
             log.info("delivering package {} to {} using secret {}", new Object[]{
                     distributionPackage.getId(),
                     distributionEndpoint.getUri(),
-                    secret
+                    secretProvider
             });
 
             try {
                 Executor executor = Executor.newInstance();
 
+                DistributionTransportSecret secret = secretProvider.getSecret(distributionEndpoint.getUri());
                 executor = authenticate(secret, executor);
 
                 Request req = Request.Post(distributionEndpoint.getUri()).useExpectContinue();
@@ -111,7 +115,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
 
     @Nonnull
     public List<DistributionPackage> retrievePackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest
-            distributionRequest, @Nonnull DistributionTransportSecret secret) throws DistributionTransportException {
+            distributionRequest) throws DistributionTransportException {
         log.debug("pulling from {}", distributionEndpoint.getUri());
 
         try {
@@ -122,6 +126,7 @@ public class SimpleHttpDistributionTransport implements DistributionTransport {
 
             Executor executor = Executor.newInstance();
 
+            DistributionTransportSecret secret = secretProvider.getSecret(distributionEndpoint.getUri());
             executor = authenticate(secret, executor);
 
             Request req = Request.Post(distributionURI).useExpectContinue();

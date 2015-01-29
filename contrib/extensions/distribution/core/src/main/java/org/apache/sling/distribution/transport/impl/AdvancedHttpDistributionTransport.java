@@ -35,6 +35,7 @@ import org.apache.http.entity.ContentType;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
+import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.apache.sling.distribution.transport.core.DistributionTransportException;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
 import org.slf4j.Logger;
@@ -66,10 +67,11 @@ public class AdvancedHttpDistributionTransport extends SimpleHttpDistributionTra
                                              String customBody,
                                              DistributionEndpoint distributionEndpoint,
                                              DistributionPackageBuilder packageBuilder,
+                                             DistributionTransportSecretProvider secretProvider,
                                              int maxNoOfPackages) {
 
 
-        super(distributionEndpoint, packageBuilder, maxNoOfPackages);
+        super(distributionEndpoint, packageBuilder, secretProvider, maxNoOfPackages);
         this.useCustomHeaders = useCustomHeaders;
         this.customHeaders = customHeaders;
         this.useCustomBody = useCustomBody;
@@ -79,13 +81,13 @@ public class AdvancedHttpDistributionTransport extends SimpleHttpDistributionTra
     }
 
     @Override
-    public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage,
-                               @Nonnull DistributionTransportSecret secret) throws DistributionTransportException {
+    public void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionTransportException {
         log.info("delivering package {} to {} using auth {}",
                 new Object[]{distributionPackage.getId(),
-                        distributionEndpoint.getUri(), secret});
+                        distributionEndpoint.getUri(), secretProvider});
 
         try {
+            DistributionTransportSecret secret = secretProvider.getSecret(distributionEndpoint.getUri());
             Executor executor = authenticate(secret, Executor.newInstance());
 
             deliverPackage(executor, distributionPackage, distributionEndpoint);

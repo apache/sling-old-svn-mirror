@@ -24,6 +24,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
+import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 
 /**
  * A transport layer implementation to transport data between two (or eventually more) Sling instances.
@@ -39,13 +40,10 @@ public interface DistributionTransport {
      *
      * @param resourceResolver    a resolver used to eventually access local resources needed by the transport algorithm
      * @param distributionPackage a {@link org.apache.sling.distribution.packaging.DistributionPackage} to transport
-     * @param secret              the {@link org.apache.sling.distribution.transport.DistributionTransportSecret} used to authenticate
-     *                            against the target instance according to an authentication algorithm implemented by the transport.
      * @throws DistributionTransportException if the {@link org.apache.sling.distribution.packaging.DistributionPackage}
      *                                        fails to be delivered to the target instance (e.g. because of network, I/O issues)
      */
-    void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage
-            distributionPackage, @Nonnull DistributionTransportSecret secret) throws DistributionTransportException;
+    void deliverPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionTransportException;
 
     /**
      * Retrieve {@link org.apache.sling.distribution.packaging.DistributionPackage}s from a target Sling instance, which
@@ -54,15 +52,12 @@ public interface DistributionTransport {
      * @param resourceResolver a resolver used to eventually access local resources needed by the transport algorithm
      * @param request          a {@link org.apache.sling.distribution.DistributionRequest} to be forwarded to the target
      *                         instance
-     * @param secret           the {@link org.apache.sling.distribution.transport.DistributionTransportSecret} used to authenticate
-     *                         against the target instance according to an authentication algorithm implemented by the transport.
      * @return an {@link java.lang.Iterable} of {@link org.apache.sling.distribution.packaging.DistributionPackage}s fetched
      * from the target instance.
      * @throws DistributionTransportException if the {@link org.apache.sling.distribution.packaging.DistributionPackage}s
      *                                        fail to be retrieved from the target instance
      */
     @Nonnull
-    Iterable<DistributionPackage> retrievePackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest
-            request, @Nonnull DistributionTransportSecret secret) throws DistributionTransportException;
+    Iterable<DistributionPackage> retrievePackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest request) throws DistributionTransportException;
 
 }

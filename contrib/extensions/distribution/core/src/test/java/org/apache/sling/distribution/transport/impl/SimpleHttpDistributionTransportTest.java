@@ -20,6 +20,7 @@ package org.apache.sling.distribution.transport.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,7 @@ import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecret;
+import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -62,6 +64,9 @@ public class SimpleHttpDistributionTransportTest {
         credentialsMap.put("username", "foo");
         credentialsMap.put("password", "foo");
         when(secret.asCredentialsMap()).thenReturn(credentialsMap);
+        DistributionTransportSecretProvider secretProvider = mock(DistributionTransportSecretProvider.class);
+        when(secretProvider.getSecret(any(URI.class))).thenReturn(secret);
+
         Executor executor = mock(Executor.class);
         Response response = mock(Response.class);
         when(executor.execute(any(Request.class))).thenReturn(response);
@@ -69,13 +74,13 @@ public class SimpleHttpDistributionTransportTest {
         DistributionPackageBuilder packageBuilder = mock(DistributionPackageBuilder.class);
         int maxNoOfPackages = Integer.MAX_VALUE;
         SimpleHttpDistributionTransport simpleHttpDistributionTransport = new SimpleHttpDistributionTransport(
-                endpoint, packageBuilder, maxNoOfPackages);
+                endpoint, packageBuilder, secretProvider, maxNoOfPackages);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         when(distributionPackage.getInfo()).thenReturn(new DistributionPackageInfo());
         InputStream stream = mock(InputStream.class);
         when(distributionPackage.createInputStream()).thenReturn(stream);
-        simpleHttpDistributionTransport.deliverPackage(resourceResolver, distributionPackage, secret);
+        simpleHttpDistributionTransport.deliverPackage(resourceResolver, distributionPackage);
     }
 
     @Test
@@ -85,6 +90,9 @@ public class SimpleHttpDistributionTransportTest {
         credentialsMap.put("username", "foo");
         credentialsMap.put("password", "foo");
         when(secret.asCredentialsMap()).thenReturn(credentialsMap);
+        DistributionTransportSecretProvider secretProvider = mock(DistributionTransportSecretProvider.class);
+        when(secretProvider.getSecret(any(URI.class))).thenReturn(secret);
+
         Executor executor = mock(Executor.class);
         Response response = mock(Response.class);
         HttpResponse httpResponse = mock(HttpResponse.class);
@@ -97,10 +105,10 @@ public class SimpleHttpDistributionTransportTest {
         DistributionPackageBuilder packageBuilder = mock(DistributionPackageBuilder.class);
         int maxNoOfPackages = 1;
         SimpleHttpDistributionTransport simpleHttpDistributionTransport = new SimpleHttpDistributionTransport(
-                endpoint, packageBuilder, maxNoOfPackages);
+                endpoint, packageBuilder, secretProvider, maxNoOfPackages);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
-        List<DistributionPackage> packages = simpleHttpDistributionTransport.retrievePackages(resourceResolver, distributionRequest, secret);
+        List<DistributionPackage> packages = simpleHttpDistributionTransport.retrievePackages(resourceResolver, distributionRequest);
         assertNotNull(packages);
         assertTrue(packages.isEmpty());
     }
@@ -112,6 +120,9 @@ public class SimpleHttpDistributionTransportTest {
         credentialsMap.put("username", "foo");
         credentialsMap.put("password", "foo");
         when(secret.asCredentialsMap()).thenReturn(credentialsMap);
+        DistributionTransportSecretProvider secretProvider = mock(DistributionTransportSecretProvider.class);
+        when(secretProvider.getSecret(any(URI.class))).thenReturn(secret);
+
         Executor executor = mock(Executor.class);
         Response response = mock(Response.class);
         HttpResponse httpResponse = mock(HttpResponse.class);
@@ -131,10 +142,10 @@ public class SimpleHttpDistributionTransportTest {
         when(packageBuilder.readPackage(any(ResourceResolver.class), any(InputStream.class))).thenReturn(distributionPackage);
         int maxNoOfPackages = 1;
         SimpleHttpDistributionTransport simpleHttpDistributionTransport = new SimpleHttpDistributionTransport(
-                endpoint, packageBuilder, maxNoOfPackages);
+                endpoint, packageBuilder, secretProvider, maxNoOfPackages);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
-        List<DistributionPackage> packages = simpleHttpDistributionTransport.retrievePackages(resourceResolver, distributionRequest, secret);
+        List<DistributionPackage> packages = simpleHttpDistributionTransport.retrievePackages(resourceResolver, distributionRequest);
         assertNotNull(packages);
         assertFalse(packages.isEmpty());
         assertEquals(1, packages.size());

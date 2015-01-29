@@ -18,6 +18,7 @@
  */
 package org.apache.sling.distribution.transport.impl;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -66,7 +67,7 @@ public class UserCredentialsDistributionTransportSecretProvider implements
         password = PropertiesUtil.toString(config.get(PASSWORD), "").trim();
     }
 
-    public DistributionTransportSecret getSecret() {
+    public DistributionTransportSecret getSecret(URI uri) {
         return new DistributionTransportSecret() {
             public String asToken() {
                 return null;

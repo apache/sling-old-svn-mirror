@@ -48,10 +48,9 @@ public class MultipleEndpointDistributionTransportTest {
         List<DistributionTransport> subHandlers = new ArrayList<DistributionTransport>();
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
-        DistributionTransportSecret secret = mock(DistributionTransportSecret.class);
         for (TransportEndpointStrategyType strategy : TransportEndpointStrategyType.values()) {
             MultipleEndpointDistributionTransport multipleEndpointDistributionTransport = new MultipleEndpointDistributionTransport(subHandlers, strategy);
-            multipleEndpointDistributionTransport.deliverPackage(resourceResolver, distributionPackage, secret);
+            multipleEndpointDistributionTransport.deliverPackage(resourceResolver, distributionPackage);
         }
     }
 
@@ -60,10 +59,9 @@ public class MultipleEndpointDistributionTransportTest {
         List<DistributionTransport> subHandlers = new ArrayList<DistributionTransport>();
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
-        DistributionTransportSecret secret = mock(DistributionTransportSecret.class);
         for (TransportEndpointStrategyType strategy : TransportEndpointStrategyType.values()) {
             MultipleEndpointDistributionTransport multipleEndpointdistributionTransport = new MultipleEndpointDistributionTransport(subHandlers, strategy);
-            List<DistributionPackage> distributionPackages = multipleEndpointdistributionTransport.retrievePackages(resourceResolver, distributionRequest, secret);
+            List<DistributionPackage> distributionPackages = multipleEndpointdistributionTransport.retrievePackages(resourceResolver, distributionRequest);
             assertNotNull(distributionPackages);
             assertTrue(distributionPackages.isEmpty());
         }
@@ -76,31 +74,29 @@ public class MultipleEndpointDistributionTransportTest {
         subHandlers.add(first);
         DistributionTransport second = mock(DistributionTransport.class);
         subHandlers.add(second);
-        DistributionTransportSecret secret = mock(DistributionTransportSecret.class);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
         for (TransportEndpointStrategyType strategy : TransportEndpointStrategyType.values()) {
             MultipleEndpointDistributionTransport multipleEndpointdistributionTransport = new MultipleEndpointDistributionTransport(subHandlers, strategy);
-            multipleEndpointdistributionTransport.deliverPackage(resourceResolver, distributionPackage, secret);
+            multipleEndpointdistributionTransport.deliverPackage(resourceResolver, distributionPackage);
         }
     }
 
     @Test
     public void testRetrievePackagesWithSubHandlers() throws Exception {
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
-        DistributionTransportSecret secret = mock(DistributionTransportSecret.class);
         DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
         List<DistributionTransport> subHandlers = new ArrayList<DistributionTransport>();
         DistributionTransport first = mock(DistributionTransport.class);
         Iterable<DistributionPackage> packages = Collections.emptyList();
-        when(first.retrievePackages(resourceResolver, distributionRequest, secret)).thenReturn(packages);
+        when(first.retrievePackages(resourceResolver, distributionRequest)).thenReturn(packages);
         subHandlers.add(first);
         DistributionTransport second = mock(DistributionTransport.class);
-        when(second.retrievePackages(resourceResolver, distributionRequest, secret)).thenReturn(packages);
+        when(second.retrievePackages(resourceResolver, distributionRequest)).thenReturn(packages);
         subHandlers.add(second);
         for (TransportEndpointStrategyType strategy : TransportEndpointStrategyType.values()) {
             MultipleEndpointDistributionTransport multipleEndpointDistributionTransport = new MultipleEndpointDistributionTransport(subHandlers, strategy);
-            List<DistributionPackage> distributionPackages = multipleEndpointDistributionTransport.retrievePackages(resourceResolver, distributionRequest, secret);
+            List<DistributionPackage> distributionPackages = multipleEndpointDistributionTransport.retrievePackages(resourceResolver, distributionRequest);
             assertNotNull(distributionPackages);
             assertTrue(distributionPackages.isEmpty());
         }
@@ -109,18 +105,17 @@ public class MultipleEndpointDistributionTransportTest {
     @Test
     public void testRetrievePackagesWithOneReturningSubHandlerAndAllStrategy() throws Exception {
         DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
-        DistributionTransportSecret secret = mock(DistributionTransportSecret.class);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         List<DistributionTransport> subHandlers = new ArrayList<DistributionTransport>();
         DistributionTransport handler1 = mock(DistributionTransport.class);
         List<DistributionPackage> packages1 = new ArrayList<DistributionPackage>();
         packages1.add(mock(DistributionPackage.class));
         packages1.add(mock(DistributionPackage.class));
-        when(handler1.retrievePackages(resourceResolver, distributionRequest, secret)).thenReturn(packages1);
+        when(handler1.retrievePackages(resourceResolver, distributionRequest)).thenReturn(packages1);
         subHandlers.add(handler1);
         MultipleEndpointDistributionTransport multipleEndpointDistributionTransport = new MultipleEndpointDistributionTransport(
                 subHandlers, TransportEndpointStrategyType.All);
-        List<DistributionPackage> distributionPackages = multipleEndpointDistributionTransport.retrievePackages(resourceResolver, distributionRequest, secret);
+        List<DistributionPackage> distributionPackages = multipleEndpointDistributionTransport.retrievePackages(resourceResolver, distributionRequest);
         assertNotNull(distributionPackages);
         assertFalse(distributionPackages.isEmpty());
         assertEquals(2, distributionPackages.size());
@@ -130,20 +125,19 @@ public class MultipleEndpointDistributionTransportTest {
     public void testRetrievePackagesWithOneEmptyOneReturningSubHandlerAndOneStrategy() throws Exception {
         DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
-        DistributionTransportSecret secret = mock(DistributionTransportSecret.class);
         List<DistributionTransport> subHandlers = new ArrayList<DistributionTransport>();
         DistributionTransport handler = mock(DistributionTransport.class);
-        when(handler.retrievePackages(resourceResolver, distributionRequest, secret)).thenReturn(new ArrayList<DistributionPackage>());
+        when(handler.retrievePackages(resourceResolver, distributionRequest)).thenReturn(new ArrayList<DistributionPackage>());
         subHandlers.add(handler);
         DistributionTransport handler2 = mock(DistributionTransport.class);
         List<DistributionPackage> packages2 = new ArrayList<DistributionPackage>();
         packages2.add(mock(DistributionPackage.class));
         packages2.add(mock(DistributionPackage.class));
-        when(handler2.retrievePackages(resourceResolver, distributionRequest, secret)).thenReturn(packages2);
+        when(handler2.retrievePackages(resourceResolver, distributionRequest)).thenReturn(packages2);
         subHandlers.add(handler2);
         MultipleEndpointDistributionTransport multipleEndpointDistributionTransport = new MultipleEndpointDistributionTransport(
                 subHandlers, TransportEndpointStrategyType.One);
-        List<DistributionPackage> distributionPackages = multipleEndpointDistributionTransport.retrievePackages(resourceResolver, distributionRequest, secret);
+        List<DistributionPackage> distributionPackages = multipleEndpointDistributionTransport.retrievePackages(resourceResolver, distributionRequest);
         assertNotNull(distributionPackages);
         assertTrue(distributionPackages.isEmpty());
     }
@@ -157,8 +151,7 @@ public class MultipleEndpointDistributionTransportTest {
         List<DistributionPackage> packages1 = new ArrayList<DistributionPackage>();
         packages1.add(mock(DistributionPackage.class));
         packages1.add(mock(DistributionPackage.class));
-        DistributionTransportSecret secret = mock(DistributionTransportSecret.class);
-        when(handler1.retrievePackages(resourceResolver, distributionRequest, secret)).thenReturn(packages1);
+        when(handler1.retrievePackages(resourceResolver, distributionRequest)).thenReturn(packages1);
         subHandlers.add(handler1);
 
         DistributionTransport handler2 = mock(DistributionTransport.class);
@@ -166,12 +159,12 @@ public class MultipleEndpointDistributionTransportTest {
         packages2.add(mock(DistributionPackage.class));
         packages2.add(mock(DistributionPackage.class));
         packages2.add(mock(DistributionPackage.class));
-        when(handler2.retrievePackages(resourceResolver, distributionRequest, secret)).thenReturn(packages2);
+        when(handler2.retrievePackages(resourceResolver, distributionRequest)).thenReturn(packages2);
         subHandlers.add(handler2);
 
         MultipleEndpointDistributionTransport multipleEndpointDistributionTransport = new MultipleEndpointDistributionTransport(
                 subHandlers, TransportEndpointStrategyType.All);
-        List<DistributionPackage> distributionPackages = multipleEndpointDistributionTransport.retrievePackages(resourceResolver, distributionRequest, secret);
+        List<DistributionPackage> distributionPackages = multipleEndpointDistributionTransport.retrievePackages(resourceResolver, distributionRequest);
         assertNotNull(distributionPackages);
         assertFalse(distributionPackages.isEmpty());
         assertEquals(5, distributionPackages.size());
@@ -186,8 +179,7 @@ public class MultipleEndpointDistributionTransportTest {
         List<DistributionPackage> packages1 = new ArrayList<DistributionPackage>();
         packages1.add(mock(DistributionPackage.class));
         packages1.add(mock(DistributionPackage.class));
-        DistributionTransportSecret secret = mock(DistributionTransportSecret.class);
-        when(handler1.retrievePackages(resourceResolver, distributionRequest, secret)).thenReturn(packages1);
+        when(handler1.retrievePackages(resourceResolver, distributionRequest)).thenReturn(packages1);
         subHandlers.add(handler1);
 
         DistributionTransport handler2 = mock(DistributionTransport.class);
@@ -195,12 +187,12 @@ public class MultipleEndpointDistributionTransportTest {
         packages2.add(mock(DistributionPackage.class));
         packages2.add(mock(DistributionPackage.class));
         packages2.add(mock(DistributionPackage.class));
-        when(handler2.retrievePackages(resourceResolver, distributionRequest, secret)).thenReturn(packages2);
+        when(handler2.retrievePackages(resourceResolver, distributionRequest)).thenReturn(packages2);
         subHandlers.add(handler2);
 
         MultipleEndpointDistributionTransport multipleEndpointDistributionTransport = new MultipleEndpointDistributionTransport(
                 subHandlers, TransportEndpointStrategyType.One);
-        List<DistributionPackage> distributionPackages = multipleEndpointDistributionTransport.retrievePackages(resourceResolver, distributionRequest, secret);
+        List<DistributionPackage> distributionPackages = multipleEndpointDistributionTransport.retrievePackages(resourceResolver, distributionRequest);
         assertNotNull(distributionPackages);
         assertFalse(distributionPackages.isEmpty());
         assertEquals(2, distributionPackages.size());

@@ -70,7 +70,7 @@ public class RemoteDistributionPackageExporter implements DistributionPackageExp
 
         for (String endpoint : endpoints) {
             if (endpoint != null && endpoint.length() > 0) {
-                transportHandlers.add(new SimpleHttpDistributionTransport(new DistributionEndpoint(endpoint), packageBuilder, pullItems));
+                transportHandlers.add(new SimpleHttpDistributionTransport(new DistributionEndpoint(endpoint), packageBuilder, secretProvider, pullItems));
             }
         }
         transportHandler = new MultipleEndpointDistributionTransport(transportHandlers,
@@ -81,7 +81,7 @@ public class RemoteDistributionPackageExporter implements DistributionPackageExp
     public List<DistributionPackage> exportPackages(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionRequest distributionRequest) throws DistributionPackageExportException {
         try {
             List<DistributionPackage> packages = new ArrayList<DistributionPackage>();
-            for (DistributionPackage distributionPackage : transportHandler.retrievePackages(resourceResolver, distributionRequest, secretProvider.getSecret())) {
+            for (DistributionPackage distributionPackage : transportHandler.retrievePackages(resourceResolver, distributionRequest)) {
                 packages.add(distributionPackage);
             }
             return packages;
