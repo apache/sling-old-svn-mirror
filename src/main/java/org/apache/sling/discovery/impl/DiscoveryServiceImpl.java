@@ -55,6 +55,7 @@ import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.discovery.impl.cluster.ClusterViewService;
 import org.apache.sling.discovery.impl.common.heartbeat.HeartbeatHandler;
+import org.apache.sling.discovery.impl.common.resource.IsolatedInstanceDescription;
 import org.apache.sling.discovery.impl.common.resource.ResourceHelper;
 import org.apache.sling.discovery.impl.topology.TopologyViewImpl;
 import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry;
@@ -96,6 +97,9 @@ public class DiscoveryServiceImpl implements DiscoveryService {
      **/
     private boolean activated = false;
 
+    /** SLING-3750 : set when activate() could not send INIT events due to being in isolated mode **/
+    private boolean initEventDelayed = false;
+    
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
 
@@ -157,10 +161,21 @@ public class DiscoveryServiceImpl implements DiscoveryService {
             doUpdateProperties();
 
             TopologyViewImpl newView = (TopologyViewImpl) getTopology();
-            TopologyEvent event = new TopologyEvent(Type.TOPOLOGY_INIT, null,
-                    newView);
-            for (final TopologyEventListener da : registeredServices) {
-                sendTopologyEvent(da, event);
+            final boolean isIsolatedView = isIsolated(newView);
+            if (config.isDelayInitEventUntilVoted() && isIsolatedView) {
+                // SLING-3750: just issue a log.info about the delaying
+                logger.info("activate: this instance is in isolated mode and must yet finish voting before it can send out TOPOLOGY_INIT.");
+                initEventDelayed = true;
+            } else {
+                if (isIsolatedView) {
+                    // SLING-3750: issue a log.info about not-delaying even though isolated
+                    logger.info("activate: this instance is in isolated mode and likely should delay TOPOLOGY_INIT - but corresponding config ('delayInitEventUntilVoted') is disabled.");
+                }
+                final TopologyEvent event = new TopologyEvent(Type.TOPOLOGY_INIT, null,
+                        newView);
+                for (final TopologyEventListener da : registeredServices) {
+                    sendTopologyEvent(da, event);
+                }
             }
             activated = true;
             oldView = newView;
@@ -182,6 +197,14 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         }
 
         logger.debug("DiscoveryServiceImpl activated.");
+    }
+
+    private boolean isIsolated(TopologyViewImpl view) {
+        final InstanceDescription localInstance = view.getLocalInstance();
+        // 'instanceof' is not so nice here - but anything else requires 
+        // excessive changing (introducing new classes/interfaces)
+        // which is an overkill in and of itself.. thus: 'instanceof'
+        return localInstance instanceof IsolatedInstanceDescription;
     }
 
     private void sendTopologyEvent(final TopologyEventListener da, final TopologyEvent event) {
@@ -220,7 +243,7 @@ public class DiscoveryServiceImpl implements DiscoveryService {
             currentList.add(eventListener);
             this.eventListeners = currentList
                     .toArray(new TopologyEventListener[currentList.size()]);
-            if (activated) {
+            if (activated && !initEventDelayed) {
                 sendTopologyEvent(eventListener, new TopologyEvent(
                         Type.TOPOLOGY_INIT, null, getTopology()));
             }
@@ -462,6 +485,28 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         }
         TopologyViewImpl newView = (TopologyViewImpl) getTopology();
         TopologyViewImpl oldView = this.oldView;
+        
+        if (initEventDelayed) {
+            if (isIsolated(newView)) {
+                // we cannot proceed until we're out of the isolated mode..
+                logger.warn("handlePotentialTopologyChange: still in isolated mode - cannot send TOPOLOGY_INIT yet.");
+                return;
+            }
+            logger.info("handlePotentialTopologyChange: new view is no longer isolated sending delayed TOPOLOGY_INIT now.");
+            final TopologyEvent initEvent = new TopologyEvent(Type.TOPOLOGY_INIT, null,
+                    newView);
+            for (final TopologyEventListener da : eventListeners) {
+                sendTopologyEvent(da, initEvent);
+            }
+            // now after having sent INIT events, we need to set oldView to what we've
+            // just sent out - which is newView. This makes sure that we don't send
+            // out any CHANGING/CHANGED event afterwards based on an 'isolated-oldView'
+            // (which would be wrong). Hence:
+            this.oldView = newView;
+            oldView = newView;
+
+            initEventDelayed = false;
+        }
 
         Type difference = newView.compareTopology(oldView);
         if (difference == null) {
