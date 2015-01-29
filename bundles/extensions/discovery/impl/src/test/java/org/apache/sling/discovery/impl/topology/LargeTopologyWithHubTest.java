@@ -50,7 +50,7 @@ public class LargeTopologyWithHubTest {
     public static void setup() throws Throwable {
         instances = new LinkedList<Instance>();
         hub = TopologyTestHelper.createInstance(instances, "hub");
-        final int defaultHeartbeatTimeout = 300;
+        final int defaultHeartbeatTimeout = 1500;
         final int heartbeatTimeout = TimeoutsProvider.getInstance().getTimeout(defaultHeartbeatTimeout);
         hub.getConfig().setHeartbeatTimeout(heartbeatTimeout);
         
