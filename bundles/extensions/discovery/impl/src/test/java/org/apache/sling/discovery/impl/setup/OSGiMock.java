@@ -27,8 +27,12 @@ import java.util.List;
 import javax.jcr.Session;
 
 import org.apache.sling.commons.testing.jcr.RepositoryProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OSGiMock {
+
+    private static final Logger logger = LoggerFactory.getLogger(OSGiMock.class);
 
     private final List<Object> services = new LinkedList<Object>();
 
@@ -66,9 +70,13 @@ public class OSGiMock {
 		    if (method.getName().equals("activate")) {
 		        method.setAccessible(true);
 		        if ( method.getParameterTypes().length == 0 ) {
+		            logger.info("activate: activating "+aService+"...");
 		            method.invoke(aService, null);
+                    logger.info("activate: activating "+aService+" done.");
 		        } else {
+                    logger.info("activate: activating "+aService+"...");
 		            method.invoke(aService, MockFactory.mockComponentContext());
+                    logger.info("activate: activating "+aService+" done.");
 		        }
 		    }
 		}
