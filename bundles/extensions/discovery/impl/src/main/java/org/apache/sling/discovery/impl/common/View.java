@@ -85,6 +85,12 @@ public class View {
      */
     public String getViewId() {
     	final ValueMap props = getResource().adaptTo(ValueMap.class);
+    	if (props==null) {
+    	    // avoid a NPE below
+    	    logger.warn("getViewId: could not get properties of "+getResource().getPath()+
+    	            ", using resource name instead: "+getResource().getName());
+    	    return getResource().getName();
+    	}
     	final String clusterId = props.get(VIEW_PROPERTY_CLUSTER_ID, String.class);
     	if (clusterId != null && clusterId.length() > 0) {
     		return clusterId;
