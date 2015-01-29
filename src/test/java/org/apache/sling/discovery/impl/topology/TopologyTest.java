@@ -52,7 +52,7 @@ public class TopologyTest {
     public void testTwoNodes() throws Throwable {
         Instance instance1 = TopologyTestHelper.createInstance(instances, "instance1");
         Instance instance2 = TopologyTestHelper.createInstance(instances, "instance2");
-        instance1.getConfig().setHeartbeatTimeout(2);
+        instance1.getConfig().setHeartbeatTimeout(5);
         instance1.getConfig().setHeartbeatInterval(1);
         instance2.getConfig().setHeartbeatTimeout(1);
         instance2.getConfig().setHeartbeatInterval(1);
