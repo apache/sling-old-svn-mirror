@@ -71,7 +71,10 @@ public class SingleInstanceTest {
         final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
         discoveryLogger.setLevel(logLevel);
         logger.info("tearDown: stopping standalone instance");
-        instance.stop();
+        if (instance!=null) {
+            instance.stop();
+            instance = null;
+        }
         logger.info("tearDown: stopping standalone instance done");
     }
 
