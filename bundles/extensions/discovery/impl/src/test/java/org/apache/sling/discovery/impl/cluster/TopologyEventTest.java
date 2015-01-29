@@ -25,6 +25,7 @@ import java.util.UUID;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.impl.cluster.helpers.AssertingTopologyEventListener;
 import org.apache.sling.discovery.impl.setup.Instance;
+import org.junit.After;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,23 @@ public class TopologyEventTest {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    private Instance instance1;
+    private Instance instance2;
+    
+    @After
+    public void tearDown() throws Throwable {
+        if (instance1!=null) {
+            instance1.stopHeartbeats();
+            instance1.stop();
+            instance1 = null;
+        }
+        if (instance2!=null) {
+            instance2.stopHeartbeats();
+            instance2.stop();
+            instance2 = null;
+        }
+    }
+    
     /**
      * Tests the fact that the INIT event is delayed until voting has succeeded
      * @throws Throwable 
@@ -44,8 +62,8 @@ public class TopologyEventTest {
     @Test
     public void testDelayedInitEvent() throws Throwable {
         logger.info("testDelayedInitEvent: start");
-        final Instance instance1 = Instance.newStandaloneInstance("/var/discovery/impl/", 
-                "firstInstance", true, 20 /* heartbeat-timeout */, 3 /*min event delay*/,
+        instance1 = Instance.newStandaloneInstance("/var/discovery/impl/", 
+                "firstInstanceA", true, 20 /* heartbeat-timeout */, 3 /*min event delay*/,
                 UUID.randomUUID().toString(), true /*delayInitEventUntilVoted*/);
         AssertingTopologyEventListener l1 = new AssertingTopologyEventListener("instance1.l1");
         instance1.bindTopologyEventListener(l1);
@@ -76,8 +94,8 @@ public class TopologyEventTest {
         assertEquals(0, l1.getUnexpectedCount());
         
         logger.info("testDelayedInitEvent: creating instance2");
-        final Instance instance2 = Instance.newClusterInstance("/var/discovery/impl/", 
-                "secondInstance", instance1, false, 20, 3, UUID.randomUUID().toString(), true);
+        instance2 = Instance.newClusterInstance("/var/discovery/impl/", 
+                "secondInstanceB", instance1, false, 20, 3, UUID.randomUUID().toString(), true);
         logger.info("testDelayedInitEvent: instance2 created with slingId="+instance2.slingId);
         AssertingTopologyEventListener l2 = new AssertingTopologyEventListener("instance2.l2");
         instance2.bindTopologyEventListener(l2);
@@ -151,8 +169,8 @@ public class TopologyEventTest {
     @Test
     public void testNonDelayedInitEvent() throws Throwable {
         logger.info("testNonDelayedInitEvent: start");
-        final Instance instance1 = Instance.newStandaloneInstance("/var/discovery/impl/", 
-                "firstInstance", true, 20 /* heartbeat-timeout */, 3 /*min event delay*/,
+        instance1 = Instance.newStandaloneInstance("/var/discovery/impl/", 
+                "firstInstanceB", true, 20 /* heartbeat-timeout */, 3 /*min event delay*/,
                 UUID.randomUUID().toString(), false /*delayInitEventUntilVoted*/);
         AssertingTopologyEventListener l1 = new AssertingTopologyEventListener("instance1.l1");
         l1.addExpected(Type.TOPOLOGY_INIT);
@@ -176,8 +194,8 @@ public class TopologyEventTest {
         assertEquals(0, l1.getRemainingExpectedCount());
         assertEquals(0, l1.getUnexpectedCount());
         
-        final Instance instance2 = Instance.newClusterInstance("/var/discovery/impl/", 
-                "secondInstance", instance1, false, 20, 3, UUID.randomUUID().toString(), false);
+        instance2 = Instance.newClusterInstance("/var/discovery/impl/", 
+                "secondInstanceB", instance1, false, 20, 3, UUID.randomUUID().toString(), false);
         AssertingTopologyEventListener l2 = new AssertingTopologyEventListener("instance2.l2");
         l2.addExpected(Type.TOPOLOGY_INIT);
         instance2.bindTopologyEventListener(l2);
