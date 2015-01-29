@@ -30,9 +30,14 @@ import javax.jcr.RepositoryException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionIterator;
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
-import org.apache.felix.scr.annotations.sling.SlingServlet;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -49,7 +54,17 @@ import org.apache.sling.commons.json.jcr.JsonItemWriter;
  *
  * At the moment only JCR nodes are supported.
  */
-@SlingServlet(resourceTypes = "sling/servlet/default", selectors = "V", extensions = "json")
+@Component(immediate=true, metatype=true, name="org.apache.sling.servlets.get.impl.version.VersionInfoServlet", label="%servlet.version.name", description="%servlet.version.description", policy=ConfigurationPolicy.REQUIRE)
+@Service(Servlet.class)
+@Properties({
+    @Property(name="service.description", value="Version info servlet"),
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+
+    @Property(name="sling.servlet.resourceTypes", value="sling/servlet/default", propertyPrivate=true),
+    @Property(name="sling.servlet.selectors", value="V"),
+    @Property(name="sling.servlet.methods", value="GET", propertyPrivate=true),
+    @Property(name="sling.servlet.extensions", value="json", propertyPrivate=true),
+})
 public class VersionInfoServlet extends SlingSafeMethodsServlet {
 
     private static final long serialVersionUID = 1656887064561951302L;
