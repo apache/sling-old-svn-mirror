@@ -42,12 +42,12 @@ public class SlingFilterChainHelper {
     SlingFilterChainHelper() {
     }
 
-    public synchronized Filter addFilter(final Filter filter,
+    public synchronized Filter addFilter(final Filter filter,  String pattern,
             final Long filterId, final int order, final String orderSource) {
         if (filterList == null) {
             filterList = new TreeSet<FilterHandle>();
         }
-        filterList.add(new FilterHandle(filter, filterId, order, orderSource));
+        filterList.add(new FilterHandle(filter, pattern, filterId, order, orderSource));
         filters = getFiltersInternal();
         return filter;
     }
