@@ -65,7 +65,7 @@ public class DistributionAgentLogServlet extends SlingAllMethodsServlet {
             }
         } else {
             response.setStatus(404);
-            writer.append("Agent not found");
+            writer.append("agent not found");
         }
     }
 }

@@ -67,6 +67,13 @@ public class SimpleDistributionAgentFactory extends AbstractDistributionAgentFac
     @Property(label = "Name", description = "The name of the agent.")
     public static final String NAME = DistributionComponentUtils.PN_NAME;
 
+    @Property(label = "Title", description = "The display friendly title of the agent.")
+    public static final String TITLE = "title";
+
+    @Property(label = "Details", description = "The display friendly details of the agent.")
+    public static final String DETAILS = "details";
+
+
     @Property(boolValue = true, label = "Enabled", description = "Whether or not to start the distribution agent.")
     private static final String ENABLED = "enabled";
 
