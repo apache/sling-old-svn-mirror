@@ -157,7 +157,7 @@ public class RemoteEventDistributionTrigger implements DistributionTrigger {
 
                 CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 
-                Map<String, String> credentialsMap = distributionTransportSecretProvider.getSecret().asCredentialsMap();
+                Map<String, String> credentialsMap = distributionTransportSecretProvider.getSecret(endpoint.getUri()).asCredentialsMap();
                 if (credentialsMap != null) {
                     String username = credentialsMap.get("username");
                     String password = credentialsMap.get("password");

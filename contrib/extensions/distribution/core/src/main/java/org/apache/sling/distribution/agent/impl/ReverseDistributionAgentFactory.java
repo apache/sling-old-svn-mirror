@@ -30,6 +30,7 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
@@ -179,10 +180,12 @@ public class ReverseDistributionAgentFactory extends AbstractDistributionAgentFa
         DistributionQueueProvider queueProvider =  new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
 
         DistributionQueueDispatchingStrategy dispatchingStrategy = new SingleQueueDispatchingStrategy();
+        DistributionRequestType[] allowedRequests = new DistributionRequestType[] { DistributionRequestType.PULL };
+
 
         return new SimpleDistributionAgent(agentName, queueProcessingEnabled, serviceName,
                 packageImporter, packageExporter, requestAuthorizationStrategy,
-                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory, distributionLog);
+                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory, distributionLog, allowedRequests);
 
 
     }

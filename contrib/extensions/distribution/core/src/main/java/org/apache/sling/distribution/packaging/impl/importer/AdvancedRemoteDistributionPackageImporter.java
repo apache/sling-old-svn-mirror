@@ -109,7 +109,7 @@ public class AdvancedRemoteDistributionPackageImporter implements DistributionPa
             if (endpoint != null && endpoint.length() > 0) {
                 transportHandlers.add(new AdvancedHttpDistributionTransport(useCustomHeaders, customHeaders,
                         useCustomBody, customBody,
-                        new DistributionEndpoint(endpoint), null, -1));
+                        new DistributionEndpoint(endpoint), null, distributionTransportSecretProvider, -1));
             }
         }
         transportHandler = new MultipleEndpointDistributionTransport(transportHandlers,
@@ -120,7 +120,7 @@ public class AdvancedRemoteDistributionPackageImporter implements DistributionPa
 
     public void importPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) {
         try {
-            transportHandler.deliverPackage(resourceResolver, distributionPackage, distributionTransportSecretProvider.getSecret());
+            transportHandler.deliverPackage(resourceResolver, distributionPackage);
         } catch (Exception e) {
             log.error("failed delivery", e);
         }

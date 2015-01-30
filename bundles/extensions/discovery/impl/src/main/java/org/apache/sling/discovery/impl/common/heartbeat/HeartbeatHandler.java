@@ -193,8 +193,10 @@ public class HeartbeatHandler implements Runnable, StartupListener {
         }
 
         try {
+            final long interval = config.getHeartbeatInterval();
+            logger.info("initialize: starting periodic heartbeat job for "+slingId+" with interval "+interval+" sec.");
             scheduler.addPeriodicJob(NAME, this,
-                    null, config.getHeartbeatInterval(), false);
+                    null, interval, false);
         } catch (Exception e) {
             logger.error("activate: Could not start heartbeat runner: " + e, e);
         }
@@ -271,12 +273,18 @@ public class HeartbeatHandler implements Runnable, StartupListener {
         	logger.debug("issueRemoteHeartbeats: not issuing remote heartbeat yet, startup not yet finished");
         	return;
         }
+        if (logger.isDebugEnabled()) {
+            logger.debug("issueRemoteHeartbeats: pinging outgoing topology connectors (if there is any) for "+slingId);
+        }
         connectorRegistry.pingOutgoingConnectors(forcePing);
         forcePing = false;
     }
 
     /** Issue a cluster local heartbeat (into the repository) **/
     private void issueClusterLocalHeartbeat() {
+        if (logger.isDebugEnabled()) {
+            logger.debug("issueClusterLocalHeartbeat: storing cluster-local heartbeat to repository for "+slingId);
+        }
         ResourceResolver resourceResolver = null;
         final String myClusterNodePath = getLocalClusterNodePath();
         final Calendar currentTime = Calendar.getInstance();

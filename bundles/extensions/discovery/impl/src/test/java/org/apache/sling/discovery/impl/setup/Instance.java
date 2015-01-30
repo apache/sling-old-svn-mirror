@@ -94,6 +94,7 @@ public class Instance {
         long heartbeatInterval;
         int minEventDelay;
         List<String> whitelist;
+        private boolean delayInitEventUntilVoted;
 
         @Override
         public long getHeartbeatInterval() {
@@ -146,7 +147,16 @@ public class Instance {
         public int getBackoffStandbyFactor() {
             return 1;
         }
-
+        
+        @Override
+        public boolean isDelayInitEventUntilVoted() {
+            return this.delayInitEventUntilVoted;
+        }
+        
+        public void setDelayInitEventUntilVoted(boolean delayInitEventUntilVoted) {
+            this.delayInitEventUntilVoted = delayInitEventUntilVoted;
+        }
+        
     }
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -246,12 +256,13 @@ public class Instance {
     private Instance(String debugName,
             ResourceResolverFactory resourceResolverFactory, boolean resetRepo)
             throws Exception {
-    	this("/var/discovery/impl/", debugName, resourceResolverFactory, resetRepo, 20, 1, UUID.randomUUID().toString());
+    	this("/var/discovery/impl/", debugName, resourceResolverFactory, resetRepo, 20, 1, UUID.randomUUID().toString(), false);
     }
 
     private Instance(String discoveryResourcePath, String debugName,
             ResourceResolverFactory resourceResolverFactory, boolean resetRepo,
-            final int heartbeatTimeout, final int minEventDelay, String slingId)
+            final int heartbeatTimeout, final int minEventDelay, String slingId,
+            boolean delayInitEventUntilVoted)
             throws Exception {
     	this.slingId = slingId;
         this.debugName = debugName;
@@ -266,6 +277,7 @@ public class Instance {
         config.setHeartbeatInterval(20);
         config.setMinEventDelay(minEventDelay);
         config.addTopologyConnectorWhitelistEntry("127.0.0.1");
+        config.setDelayInitEventUntilVoted(delayInitEventUntilVoted);
 
         PrivateAccessor.setField(config, "discoveryResourcePath", discoveryResourcePath);
 
@@ -362,17 +374,24 @@ public class Instance {
     }
 
     public static Instance newStandaloneInstance(String discoveryResourcePath, String debugName,
+            boolean resetRepo, int heartbeatTimeout, int minEventDelay, String slingId, boolean delayInitEventUntilVoted) throws Exception {
+        ResourceResolverFactory resourceResolverFactory = MockFactory
+                .mockResourceResolverFactory();
+        return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, minEventDelay, slingId, delayInitEventUntilVoted);
+    }
+    
+    public static Instance newStandaloneInstance(String discoveryResourcePath, String debugName,
             boolean resetRepo, int heartbeatTimeout, int minEventDelay, String slingId) throws Exception {
         ResourceResolverFactory resourceResolverFactory = MockFactory
                 .mockResourceResolverFactory();
-        return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, minEventDelay, slingId);
+        return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, minEventDelay, slingId, false);
     }
 
     public static Instance newStandaloneInstance(String discoveryResourcePath, String debugName,
             boolean resetRepo, int heartbeatTimeout, int minEventDelay) throws Exception {
         ResourceResolverFactory resourceResolverFactory = MockFactory
                 .mockResourceResolverFactory();
-        return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, minEventDelay, UUID.randomUUID().toString());
+        return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, minEventDelay, UUID.randomUUID().toString(), false);
     }
 
     public static Instance newStandaloneInstance(String debugName,
@@ -383,13 +402,18 @@ public class Instance {
     }
 
     public static Instance newClusterInstance(String discoveryResourcePath, String debugName, Instance other,
+            boolean resetRepo, int heartbeatTimeout, int minEventDelay, String slingId, boolean delayInitEventUntilVoted) throws Exception {
+        return new Instance(discoveryResourcePath, debugName, other.resourceResolverFactory, resetRepo, heartbeatTimeout, minEventDelay, slingId, delayInitEventUntilVoted);
+    }
+
+    public static Instance newClusterInstance(String discoveryResourcePath, String debugName, Instance other,
             boolean resetRepo, int heartbeatTimeout, int minEventDelay, String slingId) throws Exception {
-        return new Instance(discoveryResourcePath, debugName, other.resourceResolverFactory, resetRepo, heartbeatTimeout, minEventDelay, slingId);
+        return new Instance(discoveryResourcePath, debugName, other.resourceResolverFactory, resetRepo, heartbeatTimeout, minEventDelay, slingId, false);
     }
 
     public static Instance newClusterInstance(String discoveryResourcePath, String debugName, Instance other,
             boolean resetRepo, int heartbeatTimeout, int minEventDelay) throws Exception {
-        return new Instance(discoveryResourcePath, debugName, other.resourceResolverFactory, resetRepo, heartbeatTimeout, minEventDelay, UUID.randomUUID().toString());
+        return new Instance(discoveryResourcePath, debugName, other.resourceResolverFactory, resetRepo, heartbeatTimeout, minEventDelay, UUID.randomUUID().toString(), false);
     }
 
     public static Instance newClusterInstance(String debugName, Instance other,

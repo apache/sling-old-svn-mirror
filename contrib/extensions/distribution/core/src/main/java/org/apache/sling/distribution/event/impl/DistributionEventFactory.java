@@ -20,6 +20,7 @@ package org.apache.sling.distribution.event.impl;
 
 import javax.annotation.Nonnull;
 
+import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.event.DistributionEventType;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 
@@ -33,6 +34,7 @@ public interface DistributionEventFactory {
      *
      * @param distributionEventType the type of event to be generated
      */
-    void generateAgentPackageEvent(@Nonnull DistributionEventType distributionEventType, @Nonnull String agentName, @Nonnull DistributionPackageInfo info);
+    void generatePackageEvent(@Nonnull DistributionEventType distributionEventType, @Nonnull DistributionComponentKind kind,
+                              @Nonnull String name, @Nonnull DistributionPackageInfo info);
 
 }

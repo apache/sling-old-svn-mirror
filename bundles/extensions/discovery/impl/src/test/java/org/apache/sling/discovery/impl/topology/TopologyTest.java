@@ -31,8 +31,12 @@ import org.apache.sling.discovery.impl.setup.Instance;
 import org.apache.sling.discovery.impl.topology.announcement.Announcement;
 import org.junit.After;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TopologyTest {
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final List<Instance> instances = new LinkedList<Instance>();
     
@@ -48,7 +52,7 @@ public class TopologyTest {
     public void testTwoNodes() throws Throwable {
         Instance instance1 = TopologyTestHelper.createInstance(instances, "instance1");
         Instance instance2 = TopologyTestHelper.createInstance(instances, "instance2");
-        instance1.getConfig().setHeartbeatTimeout(2);
+        instance1.getConfig().setHeartbeatTimeout(5);
         instance1.getConfig().setHeartbeatInterval(1);
         instance2.getConfig().setHeartbeatTimeout(1);
         instance2.getConfig().setHeartbeatInterval(1);
@@ -101,6 +105,10 @@ public class TopologyTest {
         assertEquals(0, instance2LocalAnnouncements.size());
         instance1.getConfig().setHeartbeatTimeout(2);
 
+        logger.info("testTwoNodes: instance1: "+instance1.slingId);
+        instance1.dumpRepo();
+        logger.info("testTwoNodes: instance2: "+instance2.slingId);
+        instance2.dumpRepo();
         TopologyTestHelper.assertTopologyConsistsOf(instance1.getDiscoveryService().getTopology(), instance1.getSlingId(), instance2.getSlingId());
         TopologyTestHelper.assertTopologyConsistsOf(instance2.getDiscoveryService().getTopology(), instance2.getSlingId());
         

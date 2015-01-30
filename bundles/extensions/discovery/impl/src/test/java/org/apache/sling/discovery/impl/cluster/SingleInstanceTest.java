@@ -61,7 +61,8 @@ public class SingleInstanceTest {
         logLevel = discoveryLogger.getLevel();
         discoveryLogger.setLevel(Level.DEBUG);
         logger.info("setup: creating new standalone instance");
-        instance = Instance.newStandaloneInstance("standaloneInstance", true);
+        instance = Instance.newStandaloneInstance("/var/discovery/impl/", "standaloneInstance", true,
+                20, 3, UUID.randomUUID().toString(), true);
         logger.info("setup: creating new standalone instance done.");
     }
 
@@ -70,7 +71,10 @@ public class SingleInstanceTest {
         final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
         discoveryLogger.setLevel(logLevel);
         logger.info("tearDown: stopping standalone instance");
-        instance.stop();
+        if (instance!=null) {
+            instance.stop();
+            instance = null;
+        }
         logger.info("tearDown: stopping standalone instance done");
     }
 
@@ -221,17 +225,12 @@ public class SingleInstanceTest {
                 .getClusterView();
         assertNotNull(initialClusterView);
 
+        // SLING-3750 : with delaying the init event, we now should NOT get any events
+        // before we let the view establish (which happens via heartbeats below)
         AssertingTopologyEventListener ada = new AssertingTopologyEventListener();
-        ada.addExpected(Type.TOPOLOGY_INIT);
         instance.bindTopologyEventListener(ada);
-        assertEquals(1, ada.getEvents().size());
-        TopologyEvent initEvent = ada.getEvents().remove(0);
-        assertNotNull(initEvent);
-
-        assertEquals(initialClusterView.getId(), initEvent.getNewView()
-                .getClusterViews().iterator().next().getId());
-        assertEquals(initialClusterView.getInstances().get(0).getSlingId(),
-                initEvent.getNewView().getLocalInstance().getSlingId());
+        assertEquals(0, ada.getEvents().size());
+        assertEquals(0, ada.getUnexpectedCount());
 
         // hard assumption that the class we get is an
         // IsolatedInstanceDescription
@@ -242,11 +241,21 @@ public class SingleInstanceTest {
         assertEquals(IsolatedInstanceDescription.class, instance
                 .getClusterViewService().getClusterView().getInstances().get(0)
                 .getClass());
+        ada.addExpected(Type.TOPOLOGY_INIT);
         instance.runHeartbeatOnce();
         Thread.sleep(1000);
         instance.runHeartbeatOnce();
         Thread.sleep(1000);
-        assertEquals(0, ada.getEvents().size());
+        instance.dumpRepo();
+        assertEquals(0, ada.getUnexpectedCount());
+        assertEquals(1, ada.getEvents().size());
+        TopologyEvent initEvent = ada.getEvents().remove(0);
+        assertNotNull(initEvent);
+
+        assertEquals(initialClusterView.getId(), initEvent.getNewView()
+                .getClusterViews().iterator().next().getId());
+        assertEquals(initialClusterView.getInstances().get(0).getSlingId(),
+                initEvent.getNewView().getLocalInstance().getSlingId());
 
         // after the view was established though, we expect it to be a normal
         // ResourceInstanceDescription

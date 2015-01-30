@@ -571,7 +571,8 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                         sb.append(", ");
                     }
                     sb.append("on instance "
-                            + newInstanceDescription.getSlingId() + ": " + diff);
+                            + newInstanceDescription.getSlingId() + (newInstanceDescription.isLeader() ? " [isLeader]" : "") 
+                            + ": " + diff);
                 }
             }
 
@@ -586,6 +587,9 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                     details.append(", ");
                 }
                 details.append(newInstance.getSlingId());
+                if (newInstance.isLeader()) {
+                    details.append(" [isLeader]");
+                }
             }
             addEventLog(event.getType(),
                     "view: " + shortViewInfo(event.getNewView()) + ". "
@@ -623,7 +627,20 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                         details.append(oldInstance.getSlingId() + " left");
                     }
                 }
-
+                final InstanceDescription li = event.getNewView().getLocalInstance();
+                if (li!=null) {
+                    ClusterView clusterView = li.getClusterView();
+                    if (clusterView!=null) {
+                        final InstanceDescription leader = clusterView.getLeader();
+                        if (leader!=null) {
+                            if (details.length() !=0) {
+                                details.append(", ");
+                            }
+                            details.append("[isLeader: "+leader.getSlingId()+"]");
+                        }
+                    }
+                }
+    
                 addEventLog(
                         event.getType(),
                         "old view: " + shortViewInfo(event.getOldView())

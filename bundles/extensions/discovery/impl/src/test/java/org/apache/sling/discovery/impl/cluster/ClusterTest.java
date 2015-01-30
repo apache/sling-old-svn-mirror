@@ -225,6 +225,7 @@ public class ClusterTest {
         assertTopology(instance1Restarted, new SimpleClusterView(instance1Restarted, instance2));
         assertTopology(instance3, new SimpleClusterView(instance3));
         assertTopology(instance2, new SimpleClusterView(instance1Restarted, instance2));
+        instance1Restarted.stop();
         logger.info("testStaleAnnouncementsVisibleToClusterPeers4139: end");
     }
     
@@ -270,6 +271,7 @@ public class ClusterTest {
         logger.info("instance3.slingId: "+instance3.slingId);
         instance1Restarted.dumpRepo();
         assertSameTopology(new SimpleClusterView(instance1Restarted, instance2), new SimpleClusterView(instance3));
+        instance1Restarted.stop();
 
         logger.info("testDuplicateInstanceIn2Clusters4139: end");
     }
@@ -405,6 +407,8 @@ public class ClusterTest {
         assertSameTopology(new SimpleClusterView(instance1Restarted, instance2), 
                 new SimpleClusterView(instance3), 
                 new SimpleClusterView(instance5));
+        instance1Restarted.stop();
+
     }
 
     @Test
@@ -448,6 +452,7 @@ public class ClusterTest {
                 new SimpleClusterView(instance5));
         
         // simulate a crash of instance1, resulting in load-balancer to switch the pings
+        instance1.stopHeartbeats();
         boolean success = false;
         for(int i=0; i<25; i++) {
             // loop for max 25 times, min 15 times
@@ -503,6 +508,7 @@ public class ClusterTest {
         assertSameTopology(new SimpleClusterView(instance1Restarted, instance2), 
                 new SimpleClusterView(instance3, instance4), 
                 new SimpleClusterView(instance5));
+        instance1Restarted.stop();
         logger.info("testDuplicateInstance3726: end");
     }
 
@@ -610,6 +616,8 @@ public class ClusterTest {
         assertSameTopology(
                 new SimpleClusterView(instance3),
                 new SimpleClusterView(instance4));
+        instance1Restarted.stop();
+
         logger.info("testStaleInstanceIn3Clusters4139: end");
     }
     

@@ -77,7 +77,7 @@ import org.osgi.service.event.EventAdmin;
     @Reference(name = "ResourceProviderFactory", referenceInterface = ResourceProviderFactory.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
     @Reference(name = "ResourceDecorator", referenceInterface = ResourceDecorator.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
 })
-public class ResourceResolverFactoryActivator {
+public class ResourceResolverFactoryActivator implements Runnable {
 
     private static final class FactoryRegistration {
         /** Registration .*/
@@ -184,7 +184,7 @@ public class ResourceResolverFactoryActivator {
               description = "This flag controls whether all resources with a sling:vanityPath property " +
                             "are processed and added to the mappoing table.")
     private static final String PROP_ENABLE_VANITY_PATH = "resource.resolver.enable.vanitypath";
-    
+
     private static final long DEFAULT_MAX_CACHED_VANITY_PATHS = -1;
     @Property(longValue = DEFAULT_MAX_CACHED_VANITY_PATHS,
               label = "Maximum number of cached vanity path entries",
@@ -198,7 +198,7 @@ public class ResourceResolverFactoryActivator {
               description = "The maximum number of vanity bloom filter bytes. " +
                             "Changing this value is subject to vanity bloom filter rebuild")
     private static final String PROP_VANITY_BLOOM_FILTER_MAX_BYTES = " resource.resolver.vanitypath.bloomfilter.maxBytes";
-    
+
     private static final boolean DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION = true;
     @Property(boolValue = DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION ,
               label = "Optimize alias resolution",
@@ -220,14 +220,14 @@ public class ResourceResolverFactoryActivator {
                     "such a list is configured,vanity paths from resources starting with this prefix " +
                     " are not considered. If the list is empty, all vanity paths are used.")
     private static final String PROP_DENIED_VANITY_PATH_PREFIX = "resource.resolver.vanitypath.blacklist";
-    
+
     private static final boolean DEFAULT_VANITY_PATH_PRECEDENCE = false;
     @Property(boolValue = DEFAULT_VANITY_PATH_PRECEDENCE ,
               label = "Vanity Path Precedence",
               description ="This flag controls whether vanity paths" +
                       " will have precedence over existing /etc/map mapping")
     private static final String PROP_VANITY_PATH_PRECEDENCE = "resource.resolver.vanity.precedence";
- 
+
     /** Tracker for the resource decorators. */
     private final ResourceDecoratorTracker resourceDecoratorTracker = new ResourceDecoratorTracker();
 
@@ -273,13 +273,13 @@ public class ResourceResolverFactoryActivator {
 
     /** alias resource resolution optimization enabled? */
     private boolean enableOptimizeAliasResolution = DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION;
-    
+
     /** max number of cache vanity path entries */
     private long maxCachedVanityPathEntries = DEFAULT_MAX_CACHED_VANITY_PATHS;
-    
+
     /** Maximum number of vanity bloom filter bytes */
     private int vanityBloomFilterMaxBytes = DEFAULT_VANITY_BLOOM_FILTER_MAX_BYTES;
-    
+
     /** vanity paths will have precedence over existing /etc/map mapping? */
     private boolean vanityPathPrecedence = DEFAULT_VANITY_PATH_PRECEDENCE;
 
@@ -294,6 +294,18 @@ public class ResourceResolverFactoryActivator {
 
     /** Factory registration. */
     private volatile FactoryRegistration factoryRegistration;
+
+    /** Background thread coordination. */
+    private final Object coordinator = new Object();
+
+    /** Background thread operation */
+    private enum BG_OP {
+        CHECK,                // check preconditions
+        UNREGISTER_AND_CHECK, // unregister first, then check preconditions
+        STOP                  // stop
+    }
+
+    private final List<BG_OP> operations = new ArrayList<BG_OP>();
 
     /**
      * Get the resource decorator tracker.
@@ -363,22 +375,24 @@ public class ResourceResolverFactoryActivator {
     public String[] getVanityPathBlackList() {
         return this.vanityPathBlackList;
     }
-    
+
     public boolean hasVanityPathPrecedence() {
         return this.vanityPathPrecedence;
     }
-    
+
     public long getMaxCachedVanityPathEntries() {
         return this.maxCachedVanityPathEntries;
     }
-    
+
     public int getVanityBloomFilterMaxBytes() {
         return this.vanityBloomFilterMaxBytes;
     }
 
     // ---------- SCR Integration ---------------------------------------------
 
-    /** Activates this component, called by SCR before registering as a service */
+    /**
+     * Activates this component, called by SCR before registering as a service
+     */
     @Activate
     protected void activate(final ComponentContext componentContext) {
         this.componentContext = componentContext;
@@ -479,15 +493,20 @@ public class ResourceResolverFactoryActivator {
         this.enableOptimizeAliasResolution = PropertiesUtil.toBoolean(properties.get(PROP_ENABLE_OPTIMIZE_ALIAS_RESOLUTION), DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION);
         this.maxCachedVanityPathEntries = PropertiesUtil.toLong(properties.get(PROP_MAX_CACHED_VANITY_PATHS), DEFAULT_MAX_CACHED_VANITY_PATHS);
         this.vanityBloomFilterMaxBytes = PropertiesUtil.toInteger(properties.get(PROP_VANITY_BLOOM_FILTER_MAX_BYTES), DEFAULT_VANITY_BLOOM_FILTER_MAX_BYTES);
-        
+
         this.vanityPathPrecedence = PropertiesUtil.toBoolean(properties.get(PROP_VANITY_PATH_PRECEDENCE), DEFAULT_VANITY_PATH_PRECEDENCE);
-        
+
         final BundleContext bc = componentContext.getBundleContext();
 
         // check for required property
         final String[] required = PropertiesUtil.toStringArray(properties.get(PROP_REQUIRED_PROVIDERS));
         this.preconds.activate(bc, required);
+
         this.checkFactoryPreconditions();
+
+        final Thread t = new Thread(this);
+        t.setDaemon(true);
+        t.start();
     }
 
     /**
@@ -501,10 +520,13 @@ public class ResourceResolverFactoryActivator {
         this.resourceDecoratorTracker.close();
 
         this.unregisterFactory();
+        this.addOperation(BG_OP.STOP);
     }
 
     /**
      * Unregister the factory (if registered)
+     * This method might be called concurrently from deactivate and the
+     * background thread, therefore we need to synchronize.
      */
     private void unregisterFactory() {
         FactoryRegistration local = null;
@@ -535,17 +557,9 @@ public class ResourceResolverFactoryActivator {
      * Try to register the factory.
      */
     private void registerFactory(final ComponentContext localContext) {
-        final FactoryRegistration local;
-        synchronized (this) {
-            if (this.factoryRegistration == null) {
-                this.factoryRegistration = new FactoryRegistration();
-                local = this.factoryRegistration;
-            } else {
-                local = null;
-            }
-        }
+        final FactoryRegistration local = new FactoryRegistration();
 
-        if ( local != null ) {
+        if ( localContext != null ) {
             // activate and register factory
             final Dictionary<String, Object> serviceProps = new Hashtable<String, Object>();
             serviceProps.put(Constants.SERVICE_VENDOR, localContext.getProperties().get(Constants.SERVICE_VENDOR));
@@ -568,16 +582,7 @@ public class ResourceResolverFactoryActivator {
                     }
                 }, serviceProps);
 
-            // check if an unregister happened in between
-            boolean doUnregister = false;
-            synchronized ( this ) {
-                if ( this.factoryRegistration != local ) {
-                    doUnregister = true;
-                }
-            }
-            if ( doUnregister ) {
-                this.unregisterFactory(local);
-            }
+            this.factoryRegistration = local;
         }
     }
 
@@ -588,9 +593,9 @@ public class ResourceResolverFactoryActivator {
         final ComponentContext localContext = this.componentContext;
         if ( localContext != null ) {
             final boolean result = this.preconds.checkPreconditions();
-            if ( result ) {
+            if ( result && this.factoryRegistration == null ) {
                 this.registerFactory(localContext);
-            } else {
+            } else if ( !result && this.factoryRegistration != null ) {
                 this.unregisterFactory();
             }
         }
@@ -602,7 +607,7 @@ public class ResourceResolverFactoryActivator {
     protected void bindResourceProvider(final ResourceProvider provider, final Map<String, Object> props) {
         this.rootProviderEntry.bindResourceProvider(provider, props);
         this.preconds.bindProvider(props);
-        this.checkFactoryPreconditions();
+        this.addOperation(BG_OP.CHECK);
     }
 
     /**
@@ -611,7 +616,7 @@ public class ResourceResolverFactoryActivator {
     protected void unbindResourceProvider(final ResourceProvider provider, final Map<String, Object> props) {
         this.rootProviderEntry.unbindResourceProvider(provider, props);
         this.preconds.unbindProvider(props);
-        this.checkFactoryPreconditions();
+        this.addOperation(BG_OP.UNREGISTER_AND_CHECK);
     }
 
     /**
@@ -620,7 +625,7 @@ public class ResourceResolverFactoryActivator {
     protected void bindResourceProviderFactory(final ResourceProviderFactory provider, final Map<String, Object> props) {
         this.rootProviderEntry.bindResourceProviderFactory(provider, props);
         this.preconds.bindProvider(props);
-        this.checkFactoryPreconditions();
+        this.addOperation(BG_OP.CHECK);
     }
 
     /**
@@ -629,15 +634,7 @@ public class ResourceResolverFactoryActivator {
     protected void unbindResourceProviderFactory(final ResourceProviderFactory provider, final Map<String, Object> props) {
         this.rootProviderEntry.unbindResourceProviderFactory(provider, props);
         this.preconds.unbindProvider(props);
-        this.checkFactoryPreconditions();
-        boolean unregister = false;
-        synchronized ( this ) {
-            unregister = this.factoryRegistration != null;
-        }
-        if (unregister ) {
-            this.unregisterFactory();
-            this.checkFactoryPreconditions();
-        }
+        this.addOperation(BG_OP.UNREGISTER_AND_CHECK);
     }
 
     /**
@@ -652,5 +649,56 @@ public class ResourceResolverFactoryActivator {
      */
     protected void unbindResourceDecorator(final ResourceDecorator decorator, final Map<String, Object> props) {
         this.resourceDecoratorTracker.unbindResourceDecorator(decorator, props);
+    }
+
+    public void run() {
+        boolean isRunning = true;
+        while ( isRunning ) {
+            final List<BG_OP> ops = new ArrayList<BG_OP>();
+            synchronized ( this.coordinator ) {
+                while ( this.operations.isEmpty() ) {
+                    try {
+                        this.coordinator.wait();
+                    } catch ( final InterruptedException ie ) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+                ops.addAll(this.operations);
+                this.operations.clear();
+            }
+            isRunning = !ops.contains(BG_OP.STOP);
+
+            if ( isRunning && ops.lastIndexOf(BG_OP.UNREGISTER_AND_CHECK) != -1 ) {
+                this.unregisterFactory();
+                // we only delay between unregister and check
+                // the delay is not really necessary but it provides
+                // a smoother unregistration/registration cascade
+                // and delaying for 2 secs should not hurt
+                try {
+                    Thread.sleep(2000);
+                } catch ( final InterruptedException ie ) {
+                    Thread.currentThread().interrupt();
+                }
+                // check for new operations and simply ignore them (except for STOP)
+                ops.clear();
+                synchronized ( this.coordinator ) {
+                    ops.addAll(this.operations);
+                    this.operations.clear();
+                }
+                isRunning = !ops.contains(BG_OP.STOP);
+            }
+
+            if ( isRunning ) {
+                this.checkFactoryPreconditions();
+            }
+        }
+        this.unregisterFactory();
+    }
+
+    private void addOperation(final BG_OP op) {
+        synchronized ( this.coordinator ) {
+            this.operations.add(op);
+            this.coordinator.notify();
+        }
     }
 }

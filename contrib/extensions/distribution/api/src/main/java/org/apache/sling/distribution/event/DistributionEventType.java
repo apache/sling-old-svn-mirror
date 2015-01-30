@@ -39,24 +39,35 @@ public enum DistributionEventType {
     AGENT_PACKAGE_DISTRIBUTED,
 
     /**
-     * event for agent created
+     * event for package imported
      */
-    AGENT_CREATED,
-
-    /**
-     * event for agent modified
-     */
-    AGENT_MODIFIED,
-
-    /**
-     * event for agent deleted
-     */
-    AGENT_DELETED;
+    IMPORTER_PACKAGE_IMPORTED;
 
     /**
      * common event topic base for distribution events
      */
     public static final String EVENT_TOPIC_BASE = "org/apache/sling/distribution";
+
+    /**
+     * property containing the name of component generating the event
+     */
+    public static final String PROPERTY_DISTRIBUTION_COMPONENT_NAME = "distribution.component.name";
+
+
+    /**
+     * property containing the kind of the component generating the event
+     */
+    public static final String PROPERTY_DISTRIBUTION_COMPONENT_KIND= "distribution.component.kind";
+
+    /**
+     * property containing the type of the distribution request
+     */
+    public static final String PROPERTY_DISTRIBUTION_TYPE = "distribution.type";
+
+    /**
+     * property containing the type of the distribution paths
+     */
+    public static final String PROPERTY_DISTRIBUTION_PATHS= "distribution.paths";
 
     /**
      * get the event topic for this event type
