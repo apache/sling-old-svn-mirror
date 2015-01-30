@@ -189,6 +189,12 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     @Override
     public <ModelType> ModelType createModel(Object adaptable, Class<ModelType> type) throws MissingElementsException,
             InvalidAdaptableException, InvalidValidationModelException, InvalidResourceException {
+        if (adaptable == null) {
+            throw new IllegalArgumentException("Given adaptable is null!");
+        }
+        if (type == null) {
+            throw new IllegalArgumentException("Given type is null");
+        }
         Result<ModelType> result = internalCreateModel(adaptable, type);
         result.throwException(log);
         return result.getModel();
