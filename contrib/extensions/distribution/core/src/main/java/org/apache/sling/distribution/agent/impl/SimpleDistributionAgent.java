@@ -37,6 +37,7 @@ import org.apache.sling.distribution.agent.DistributionAgentException;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestState;
 import org.apache.sling.distribution.DistributionResponse;
+import org.apache.sling.distribution.agent.DistributionAgentState;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.impl.CompositeDistributionResponse;
 import org.apache.sling.distribution.impl.SimpleDistributionResponse;
@@ -52,6 +53,7 @@ import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.packaging.SharedDistributionPackage;
 import org.apache.sling.distribution.queue.DistributionQueue;
+import org.apache.sling.distribution.queue.DistributionQueueState;
 import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
 import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
@@ -169,7 +171,12 @@ public class SimpleDistributionAgent implements DistributionAgent {
             log.info(silent, "returning response {}", distributionResponse);
 
             return distributionResponse;
-        } catch (Exception e) {
+        } catch (DistributionRequestAuthorizationException e) {
+            return new SimpleDistributionResponse(DistributionRequestState.DROPPED, "Request is not authorized");
+        } catch (LoginException e) {
+            log.error("Error executing distribution request {} {}", distributionRequest, e);
+            throw new DistributionAgentException(e);
+        } catch (DistributionPackageExportException e) {
             log.error("Error executing distribution request {} {}", distributionRequest, e);
             throw new DistributionAgentException(e);
         } finally {
@@ -244,6 +251,39 @@ public class SimpleDistributionAgent implements DistributionAgent {
     @Nonnull
     public DistributionLog getLog() {
         return log;
+    }
+
+    @Nonnull
+    public DistributionAgentState getState() {
+        DistributionAgentState agentState = DistributionAgentState.IDLE;
+
+        // if it is passive and it is not a queueing agent
+        if (isPassive() && distributionPackageImporter != null) {
+            return DistributionAgentState.PAUSED;
+        }
+
+        for (String queueName : getQueueNames()) {
+            DistributionQueue queue = null;
+            try {
+                 queue = getQueue(queueName);
+            } catch (DistributionAgentException e) {
+
+            }
+
+            if (queue != null) {
+                DistributionQueueState state = queue.getState();
+                if (DistributionQueueState.BLOCKED.equals(state)) {
+                    return DistributionAgentState.BLOCKED;
+                }
+
+                if (DistributionQueueState.RUNNING.equals(state)) {
+                    agentState = DistributionAgentState.RUNNING;
+                }
+            }
+        }
+
+        return agentState;
+
     }
 
 
