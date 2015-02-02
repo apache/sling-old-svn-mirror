@@ -228,6 +228,14 @@ public class ResourceResolverFactoryActivator implements Runnable {
                       " will have precedence over existing /etc/map mapping")
     private static final String PROP_VANITY_PATH_PRECEDENCE = "resource.resolver.vanity.precedence";
 
+    private static final boolean DEFAULT_PARANOID_PROVIDER_HANDLING = false;
+    @Property(boolValue = DEFAULT_PARANOID_PROVIDER_HANDLING,
+              label = "Paranoid Provider Handling",
+              description = "If this flag is enabled, an unregistration of a resource provider (not factory), "
+                          + "is causing the resource resolver factory to restart, potentially cleaning up "
+                          + "for memory leaks caused by objects hold from that resource provider.")
+    private static final String PROP_PARANOID_PROVIDER_HANDLING = "resource.resolver.providerhandling.paranoid";
+
     /** Tracker for the resource decorators. */
     private final ResourceDecoratorTracker resourceDecoratorTracker = new ResourceDecoratorTracker();
 
@@ -297,6 +305,9 @@ public class ResourceResolverFactoryActivator implements Runnable {
 
     /** Background thread coordination. */
     private final Object coordinator = new Object();
+
+    /** Paranoid provider handling? */
+    private volatile boolean paranoidProviderHandling;
 
     /** Background thread operation */
     private enum BG_OP {
@@ -502,6 +513,9 @@ public class ResourceResolverFactoryActivator implements Runnable {
         final String[] required = PropertiesUtil.toStringArray(properties.get(PROP_REQUIRED_PROVIDERS));
         this.preconds.activate(bc, required);
 
+        this.paranoidProviderHandling = PropertiesUtil.toBoolean(properties.get(PROP_PARANOID_PROVIDER_HANDLING),
+                DEFAULT_PARANOID_PROVIDER_HANDLING);
+
         this.checkFactoryPreconditions();
 
         final Thread t = new Thread(this);
@@ -616,7 +630,7 @@ public class ResourceResolverFactoryActivator implements Runnable {
     protected void unbindResourceProvider(final ResourceProvider provider, final Map<String, Object> props) {
         this.rootProviderEntry.unbindResourceProvider(provider, props);
         this.preconds.unbindProvider(props);
-        this.addOperation(BG_OP.UNREGISTER_AND_CHECK);
+        this.addOperation(this.paranoidProviderHandling ? BG_OP.UNREGISTER_AND_CHECK : BG_OP.CHECK);
     }
 
     /**
