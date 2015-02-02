@@ -21,6 +21,8 @@ package org.apache.sling.api.resource;
 import java.util.Collections;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 
 import aQute.bnd.annotation.ConsumerType;
@@ -61,7 +63,7 @@ public interface ValueMap extends Map<String, Object> {
      * @return Return named value converted to type T or <code>null</code> if
      *         non existing or can't be converted.
      */
-    <T> T get(String name, Class<T> type);
+    @Nullable <T> T get(String name, Class<T> type);
 
     /**
      * Get a named property and convert it into the given type.
@@ -78,5 +80,5 @@ public interface ValueMap extends Map<String, Object> {
      * @return Return named value converted to type T or the default value if
      *         non existing or can't be converted.
      */
-    <T> T get(String name, T defaultValue);
+    @Nullable <T> T get(String name, @Nullable T defaultValue);
 }

@@ -18,6 +18,8 @@ package org.apache.sling.api.resource;
 
 import java.util.Iterator;
 
+import javax.annotation.Nullable;
+
 import org.apache.sling.api.adapter.Adaptable;
 
 import aQute.bnd.annotation.ProviderType;
@@ -78,7 +80,7 @@ public interface Resource extends Adaptable {
      *
      * @since 2.1.0
      */
-    Resource getParent();
+    @Nullable Resource getParent();
 
     /**
      * Returns an iterator of the direct children of this resource.
@@ -112,7 +114,7 @@ public interface Resource extends Adaptable {
      * @since 2.1.0
      * @see ResourceResolver#getResource(Resource, String)
      */
-    Resource getChild(String relPath);
+    @Nullable Resource getChild(String relPath);
 
     /**
      * The resource type is meant to point to rendering/processing scripts,
@@ -135,7 +137,7 @@ public interface Resource extends Adaptable {
      * If a client is interested in the effective resource super type
      * of a resource, it should call {@link ResourceResolver#getParentResourceType(Resource)}.
      */
-    String getResourceSuperType();
+    @Nullable String getResourceSuperType();
 
     /**
      * Checks if the resource has any child resources.
@@ -156,7 +158,7 @@ public interface Resource extends Adaptable {
      *         <code>null</code>.
      * @since 2.1.0
      */
-    boolean isResourceType(String resourceType);
+    boolean isResourceType(@Nullable String resourceType);
 
     /**
      * Returns the metadata of this resource. The concrete data contained in the

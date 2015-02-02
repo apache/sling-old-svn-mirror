@@ -25,6 +25,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import javax.annotation.Nullable;
+
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 
 /**
@@ -125,7 +127,7 @@ public class ResourceUtil {
      *             {@link #normalize(String)} method.
      * @throws NullPointerException If <code>path</code> is <code>null</code>.
      */
-    public static String getParent(String path) {
+    public static @Nullable String getParent(String path) {
         if ("/".equals(path)) {
             return null;
         }
@@ -208,7 +210,7 @@ public class ResourceUtil {
      * @deprecated since 2.1.0, use {@link Resource#getParent()} instead
      */
     @Deprecated
-    public static Resource getParent(Resource rsrc) {
+    public static @Nullable Resource getParent(Resource rsrc) {
         return rsrc.getParent();
     }
 
@@ -405,7 +407,7 @@ public class ResourceUtil {
      * @deprecated Use {@link ResourceResolver#getParentResourceType(String)}
      */
     @Deprecated
-    public static String getResourceSuperType(
+    public static @Nullable String getResourceSuperType(
             final ResourceResolver resourceResolver, final String resourceType) {
         return resourceResolver.getParentResourceType(resourceType);
     }
@@ -424,7 +426,7 @@ public class ResourceUtil {
      * @deprecated Use {@link ResourceResolver#getParentResourceType(Resource)}
      */
     @Deprecated
-    public static String findResourceSuperType(final Resource resource) {
+    public static @Nullable String findResourceSuperType(final Resource resource) {
         if ( resource == null ) {
             return null;
         }

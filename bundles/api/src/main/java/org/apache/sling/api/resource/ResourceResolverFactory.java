@@ -20,6 +20,8 @@ package org.apache.sling.api.resource;
 
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import aQute.bnd.annotation.ProviderType;
 
 /**
@@ -117,7 +119,7 @@ public interface ResourceResolverFactory {
      *             <code>ResourceResolver</code> with the provided credential
      *             data.
      */
-    ResourceResolver getResourceResolver(Map<String, Object> authenticationInfo) throws LoginException;
+    ResourceResolver getResourceResolver(@Nullable Map<String, Object> authenticationInfo) throws LoginException;
 
     /**
      * Returns a new {@link ResourceResolver} instance with administrative
@@ -154,7 +156,7 @@ public interface ResourceResolverFactory {
      *             the {@link #getServiceResourceResolver(Map)} instead.
      */
     @Deprecated
-    ResourceResolver getAdministrativeResourceResolver(Map<String, Object> authenticationInfo) throws LoginException;
+    ResourceResolver getAdministrativeResourceResolver(@Nullable Map<String, Object> authenticationInfo) throws LoginException;
 
     /**
      * Returns a new {@link ResourceResolver} instance with privileges assigned
@@ -183,7 +185,7 @@ public interface ResourceResolverFactory {
      *      href="http://sling.apache.org/documentation/the-sling-engine/service-authentication.html">Service
      *      Authentication</a>
      */
-    ResourceResolver getServiceResourceResolver(Map<String, Object> authenticationInfo) throws LoginException;
+    ResourceResolver getServiceResourceResolver(@Nullable Map<String, Object> authenticationInfo) throws LoginException;
 
     /**
      * Returns the {@link ResourceResolver} for the current thread.
@@ -197,5 +199,5 @@ public interface ResourceResolverFactory {
      *
      * @since 2.6
      */
-    ResourceResolver getThreadResourceResolver();
+    @Nullable ResourceResolver getThreadResourceResolver();
 }

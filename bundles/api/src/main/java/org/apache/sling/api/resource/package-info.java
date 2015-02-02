@@ -17,8 +17,10 @@
  * under the License.
  */
 
-@Version("2.7.0")
+@Version("2.7.1")
+@ParametersAreNonnullByDefault
 package org.apache.sling.api.resource;
 
 import aQute.bnd.annotation.Version;
+import javax.annotation.ParametersAreNonnullByDefault;
 

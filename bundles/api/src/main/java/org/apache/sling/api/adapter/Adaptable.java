@@ -18,6 +18,8 @@
  */
 package org.apache.sling.api.adapter;
 
+import javax.annotation.Nullable;
+
 import aQute.bnd.annotation.ConsumerType;
 
 /**
@@ -49,6 +51,6 @@ public interface Adaptable {
      * @return The adapter target or <code>null</code> if the resource cannot
      *         adapt to the requested type
      */
-    <AdapterType> AdapterType adaptTo(Class<AdapterType> type);
+    @Nullable <AdapterType> AdapterType adaptTo(Class<AdapterType> type);
 
 }
