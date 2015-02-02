@@ -16,6 +16,8 @@
  */
 package org.apache.sling.api.resource;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
 
 import aQute.bnd.annotation.ConsumerType;
@@ -43,7 +45,7 @@ public interface ResourceDecorator {
      * @param resource The resource to decorate
      * @return The decorated resource, the original resource or null.
      */
-    Resource decorate(Resource resource);
+    @CheckForNull Resource decorate(@Nonnull Resource resource);
 
     /**
      * Decorate a resource.
@@ -59,5 +61,5 @@ public interface ResourceDecorator {
      * @deprecated since 2.3.0 (and JCR Resource 2.1.0), this method will not be invoked.
      */
     @Deprecated
-    Resource decorate(Resource resource, HttpServletRequest request);
+    @CheckForNull Resource decorate(@Nonnull Resource resource, @Nonnull HttpServletRequest request);
 }
