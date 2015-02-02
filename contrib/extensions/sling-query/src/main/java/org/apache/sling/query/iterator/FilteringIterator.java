@@ -22,7 +22,7 @@ package org.apache.sling.query.iterator;
 import java.util.Iterator;
 
 import org.apache.sling.query.api.Predicate;
-import org.apache.sling.query.api.function.Option;
+import org.apache.sling.query.api.internal.Option;
 
 public class FilteringIterator<T> extends AbstractIterator<Option<T>> {
 

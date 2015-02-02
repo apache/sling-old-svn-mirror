@@ -17,11 +17,27 @@
  * under the License.
  */
 
-package org.apache.sling.query.api.function;
+package org.apache.sling.query.util;
 
+import java.util.Arrays;
 import java.util.Iterator;
 
-import org.apache.sling.query.api.Function;
+public final class IteratorUtils {
 
-public interface ElementToIteratorFunction<T> extends Function<T, Iterator<T>> {
+	private IteratorUtils() {
+	}
+
+	public static <T> Iterator<T> arrayIterator(T... elements) {
+		return Arrays.asList(elements).iterator();
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T> Iterator<T> singleElementIterator(T element) {
+		return Arrays.asList(element).iterator();
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T> Iterator<T> emptyIterator() {
+		return Arrays.<T> asList().iterator();
+	}
 }
