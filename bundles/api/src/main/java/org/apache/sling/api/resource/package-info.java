@@ -17,7 +17,7 @@
  * under the License.
  */
 
-@Version("2.7.1")
+@Version("2.7.0")
 @ParametersAreNonnullByDefault
 package org.apache.sling.api.resource;
 
