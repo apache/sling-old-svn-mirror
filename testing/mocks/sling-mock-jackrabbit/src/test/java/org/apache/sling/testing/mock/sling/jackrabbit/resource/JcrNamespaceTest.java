@@ -16,20 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.testing.mock.sling.jcrmock.resource;
+package org.apache.sling.testing.mock.sling.jackrabbit.resource;
 
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
-import org.apache.sling.testing.mock.sling.resource.AbstractJcrResourceResolverTest;
+import org.apache.sling.testing.mock.sling.resource.AbstractJcrNamespaceTest;
+import org.junit.Ignore;
 
-/**
- * Implements simple write and read resource and values test. JCR API is used to
- * create the test data.
- */
-public class JcrResourceResolverTest extends AbstractJcrResourceResolverTest {
+//TEST IS DISABLED currently, it does not work with jackrabbit repository yet
+@Ignore
+public class JcrNamespaceTest extends AbstractJcrNamespaceTest {
 
     @Override
     protected ResourceResolverType getResourceResolverType() {
-        return ResourceResolverType.JCR_MOCK;
+        return ResourceResolverType.JCR_JACKRABBIT;
     }
 
 }

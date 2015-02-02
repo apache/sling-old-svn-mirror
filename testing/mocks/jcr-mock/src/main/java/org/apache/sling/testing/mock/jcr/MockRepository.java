@@ -22,11 +22,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.jcr.Credentials;
+import javax.jcr.NamespaceRegistry;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import javax.jcr.Value;
+import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.observation.ObservationManager;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -40,6 +43,10 @@ class MockRepository implements Repository {
 
     // Use linked hashmap to ensure ordering when adding items is preserved.
     private final Map<String, ItemData> items = new LinkedHashMap<String, ItemData>();
+
+    private final NamespaceRegistry namespaceRegistry = new MockNamespaceRegistry();
+    private final ObservationManager observationManager = new MockObservationManager();
+    private final NodeTypeManager nodeTypeManager = new MockNodeTypeManager();
     
     public MockRepository() {
         this.items.put("/", ItemData.newNode("/", MockNodeTypes.NT_UNSTRUCTURED));
@@ -99,6 +106,18 @@ class MockRepository implements Repository {
     @Override
     public String getDescriptor(final String key) {
         return null;
+    }
+
+    NamespaceRegistry getNamespaceRegistry() {
+        return namespaceRegistry;
+    }
+
+    ObservationManager getObservationManager() {
+        return observationManager;
+    }
+
+    NodeTypeManager getNodeTypeManager() {
+        return nodeTypeManager;
     }
 
 }
