@@ -61,7 +61,7 @@ public class ClusterLoadTest {
 
     @Test
     public void testFramework() throws Exception {
-		Instance firstInstance = Instance.newStandaloneInstance("/var/discovery/impl/ClusterLoadTest/testFramework/", "firstInstance", false, 2, 0);
+		Instance firstInstance = Instance.newStandaloneInstance("/var/discovery/impl/ClusterLoadTest/testFramework/", "firstInstance", false, 3, 0);
 		instances.add(firstInstance);
     	Thread.sleep(2000);
     	// without any heartbeat action, the discovery service reports its local instance
@@ -77,10 +77,11 @@ public class ClusterLoadTest {
                 .getClusterViewService().getClusterView().getInstances().get(0)
                 .getClass());
 
-        Instance secondInstance = Instance.newClusterInstance("/var/discovery/impl/ClusterLoadTest/testFramework/", "secondInstance", firstInstance, false, 2, 0);
+        Instance secondInstance = Instance.newClusterInstance("/var/discovery/impl/ClusterLoadTest/testFramework/", "secondInstance", firstInstance, false, 3, 0);
         instances.add(secondInstance);
         secondInstance.startHeartbeats(1);
         Thread.sleep(4000);
+        firstInstance.dumpRepo();
         assertEquals(firstInstance.getClusterViewService().getClusterView().getInstances().size(), 2);
         assertEquals(secondInstance.getClusterViewService().getClusterView().getInstances().size(), 2);
     }
