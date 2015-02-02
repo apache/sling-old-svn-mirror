@@ -75,6 +75,9 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
     @Override
     public Resource resolve(final HttpServletRequest request, final String absPath) {
         String path = absPath;
+        if (path == null) {
+            path = "/";
+        }
 
         // split off query string or fragment that may be appendend to the URL
         String urlRemainder = null;
