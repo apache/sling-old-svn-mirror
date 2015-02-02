@@ -22,8 +22,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
@@ -246,4 +248,20 @@ public class SlingIntegrationTestClient {
             throw new HttpStatusCodeException(expected, status, "POST", HttpTestBase.getResponseBodyAsStream(post, 0));
         }
     }
+    
+    public int post(String url, Map<String,String> properties) throws HttpException, IOException {
+        final PostMethod post = new PostMethod(url);
+        post.getParams().setContentCharset("UTF-8");
+        for(Entry<String, String> e : properties.entrySet()) {
+            post.addParameter(e.getKey(), e.getValue());
+        }
+        return httpClient.executeMethod(post);
+    }
+
+    public int get(String url) throws HttpException, IOException {
+        final GetMethod get = new GetMethod(url);
+        get.getParams().setContentCharset("UTF-8");
+        return httpClient.executeMethod(get);
+    }
+
 }
