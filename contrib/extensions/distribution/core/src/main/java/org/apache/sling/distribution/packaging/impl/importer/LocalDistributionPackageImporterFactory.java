@@ -86,7 +86,14 @@ public class LocalDistributionPackageImporterFactory implements DistributionPack
     }
 
     public DistributionPackage importStream(@Nonnull ResourceResolver resourceResolver, @Nonnull InputStream stream) throws DistributionPackageImportException {
-        return importer.importStream(resourceResolver, stream);
+        DistributionPackage distributionPackage = importer.importStream(resourceResolver, stream);
+
+
+        if (distributionPackage != null) {
+            eventFactory.generatePackageEvent(DistributionEventType.IMPORTER_PACKAGE_IMPORTED, DistributionComponentKind.IMPORTER, name, distributionPackage.getInfo());
+        }
+
+        return distributionPackage;
     }
 
 }
