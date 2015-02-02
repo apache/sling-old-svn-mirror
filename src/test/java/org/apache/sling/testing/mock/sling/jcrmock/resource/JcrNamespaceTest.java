@@ -19,13 +19,9 @@
 package org.apache.sling.testing.mock.sling.jcrmock.resource;
 
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
-import org.apache.sling.testing.mock.sling.resource.AbstractJcrResourceResolverTest;
+import org.apache.sling.testing.mock.sling.resource.AbstractJcrNamespaceTest;
 
-/**
- * Implements simple write and read resource and values test. JCR API is used to
- * create the test data.
- */
-public class JcrResourceResolverTest extends AbstractJcrResourceResolverTest {
+public class JcrNamespaceTest extends AbstractJcrNamespaceTest {
 
     @Override
     protected ResourceResolverType getResourceResolverType() {
