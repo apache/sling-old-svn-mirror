@@ -33,5 +33,6 @@ public class FiltersTest extends HttpTestBase {
             assertNotNull("Expecting header '" + header + "'", get.getResponseHeader(header));
             assertEquals("Expecting value 1 for header '" + header + "'", "1", get.getResponseHeader(header).getValue());
         }
+        assertNull(get.getResponseHeader("FILTER_COUNTER_SLING_WITH_PATTERN"));
     }
 }
