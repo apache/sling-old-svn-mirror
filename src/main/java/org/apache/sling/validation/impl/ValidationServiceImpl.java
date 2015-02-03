@@ -18,6 +18,7 @@
  */
 package org.apache.sling.validation.impl;
 
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -106,7 +107,11 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
             modelsForResourceType = searchAndStoreValidationModel(validatedResourceType);
             if (modelsForResourceType != null) {
                 model = modelsForResourceType.getElementForLongestMatchingKey(resourcePath).getValue();
+                if (model == null) {
+                    LOG.warn("Although model for resource type {} is available, it is not allowed for path {}", validatedResourceType, resourcePath);
+                }
             }
+            
         }
         return model;
     }
@@ -118,16 +123,20 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
 
     @Override
     public ValidationResult validate(Resource resource, ValidationModel model) {
+        return validate(resource, model, "");
+    }
+    
+    protected ValidationResult validate(Resource resource, ValidationModel model, String relativePath) {
         if (resource == null || model == null) {
             throw new IllegalArgumentException("ValidationService.validate - cannot accept null parameters");
         }
         ValidationResultImpl result = new ValidationResultImpl();
 
         // validate direct properties of the resource
-        validateValueMap(resource.adaptTo(ValueMap.class), "", model.getResourceProperties(), result );
+        validateValueMap(resource.adaptTo(ValueMap.class), relativePath, model.getResourceProperties(), result );
 
         // validate children resources, if any
-        validateChildren(resource, "", model.getChildren(), result);
+        validateChildren(resource, relativePath, model.getChildren(), result);
         return result;
     }
 
@@ -211,6 +220,17 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
         ValidationResultImpl result = new ValidationResultImpl();
         validateValueMap(valueMap,  "", model.getResourceProperties(), result);
         return result;
+    }    
+
+    @Override
+    public ValidationResult validateAllResourceTypesInResource(Resource resource, boolean enforceValidation, Set<String> ignoredResourceTypes)
+            throws IllegalStateException, IllegalArgumentException, SlingValidationException {
+        if (ignoredResourceTypes == null) {
+            ignoredResourceTypes = Collections.emptySet();
+        }
+        ValidationResourceVisitor visitor = new ValidationResourceVisitor(this, resource.getPath(), true, ignoredResourceTypes);
+        visitor.accept(resource);
+        return visitor.getResult();
     }
 
     // EventHandler ########################################################################################################################
