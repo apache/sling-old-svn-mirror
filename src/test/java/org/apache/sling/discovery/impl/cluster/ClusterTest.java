@@ -373,6 +373,7 @@ public class ClusterTest {
                 new SimpleClusterView(instance5));
 
         // restart instance1, crash instance4
+        instance4.stopHeartbeats();
         instance1Restarted = Instance.newClusterInstance("/var/discovery/clusterA/", "instance1", instance2,
                 false, Integer.MAX_VALUE /* no timeout */, 1, instance1.slingId);
         runHeartbeatOnceWith(instance1Restarted, instance2, instance3, instance5);
