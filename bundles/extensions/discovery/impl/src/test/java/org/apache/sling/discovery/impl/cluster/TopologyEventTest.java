@@ -244,10 +244,10 @@ public class TopologyEventTest {
         l2.addExpected(Type.TOPOLOGY_CHANGING);
         instance1.runHeartbeatOnce();
         instance2.runHeartbeatOnce();
-        Thread.sleep(1000);
+        Thread.sleep(1500);
         instance1.runHeartbeatOnce();
         instance2.runHeartbeatOnce();
-        Thread.sleep(1000);
+        Thread.sleep(1500);
         logger.info("testNonDelayedInitEvent: instance1: "+instance1.slingId);
         logger.info("testNonDelayedInitEvent: instance2: "+instance2.slingId);
         instance1.dumpRepo();
