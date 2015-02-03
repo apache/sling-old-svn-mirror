@@ -75,6 +75,9 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
     @Override
     public Resource resolve(final HttpServletRequest request, final String absPath) {
         String path = absPath;
+        if (path == null) {
+            path = "/";
+        }
 
         // split off query string or fragment that may be appendend to the URL
         String urlRemainder = null;
@@ -98,12 +101,6 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
     @Override
     public Resource resolve(final String absPath) {
         return resolve(null, absPath);
-    }
-
-    @Override
-    @Deprecated
-    public Resource resolve(final HttpServletRequest request) {
-        return null;
     }
 
     @Override
@@ -243,25 +240,6 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
     }
 
     @Override
-    public Iterator<Resource> findResources(final String query, final String language) {
-        final List<Resource> emptyList = Collections.emptyList();
-        return emptyList.iterator();
-    }
-
-    @Override
-    public Iterator<Map<String, Object>> queryResources(String query,
-            String language) {
-        final List<Map<String, Object>> emptyList = Collections.emptyList();
-        return emptyList.iterator();
-    }
-
-    @Override
-    public ResourceResolver clone(Map<String, Object> authenticationInfo)
-            throws LoginException {
-        return null;
-    }
-
-    @Override
     public boolean isLive() {
         return true;
     }
@@ -370,16 +348,6 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
     }
 
     @Override
-    public String getParentResourceType(Resource resource) {
-        return null;
-    }
-
-    @Override
-    public String getParentResourceType(String resourceType) {
-        return null;
-    }
-
-    @Override
     public boolean isResourceType(Resource resource, String resourceType) {
         return resource.getResourceType().equals(resourceType);
     }
@@ -397,4 +365,39 @@ public class MockResourceResolver extends SlingAdaptable implements ResourceReso
     public boolean hasChildren(Resource resource) {
         return this.listChildren(resource).hasNext();
     }
+
+
+    // --- unsupported operations ---
+
+    @Override
+    @Deprecated
+    public Resource resolve(final HttpServletRequest request) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String getParentResourceType(Resource resource) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String getParentResourceType(String resourceType) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Iterator<Resource> findResources(final String query, final String language) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Iterator<Map<String, Object>> queryResources(String query, String language) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ResourceResolver clone(Map<String, Object> authenticationInfo) throws LoginException {
+        throw new UnsupportedOperationException();
+    }
+
 }

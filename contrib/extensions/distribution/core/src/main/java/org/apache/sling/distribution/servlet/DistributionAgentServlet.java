@@ -74,14 +74,13 @@ public class DistributionAgentServlet extends SlingAllMethodsServlet {
                 response.getWriter().append(distributionResponse.toString());
 
                 log.debug("distribution response : {}", distributionResponse);
-            } catch (DistributionAgentException e) {
+            } catch (Throwable e) {
                 response.setStatus(503);
-                response.getWriter().append("{\"error\" : \"").append(e.toString()).append("\"}");
+                response.getWriter().append("an error has occured");
             }
         } else {
             response.setStatus(404);
-            response.getWriter().append("{\"error\" : \"agent ").append(request.getServletPath())
-                    .append(" not found\"}");
+            response.getWriter().append("agent not found");
         }
     }
 }

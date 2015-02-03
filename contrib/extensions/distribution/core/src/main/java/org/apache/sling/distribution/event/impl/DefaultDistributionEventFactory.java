@@ -51,12 +51,18 @@ public class DefaultDistributionEventFactory implements DistributionEventFactory
     }
 
     public void generatePackageEvent(@Nonnull DistributionEventType distributionEventType, DistributionComponentKind kind, @Nonnull String name, @Nonnull DistributionPackageInfo info) {
-        Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
-        dictionary.put(DistributionEventType.PROPERTY_DISTRIBUTION_COMPONENT_NAME, name);
-        dictionary.put(DistributionEventType.PROPERTY_DISTRIBUTION_COMPONENT_KIND, kind.name());
-        dictionary.put(DistributionEventType.PROPERTY_DISTRIBUTION_TYPE, info.getRequestType());
-        dictionary.put(DistributionEventType.PROPERTY_DISTRIBUTION_PATHS, info.getPaths());
-        generateEvent(distributionEventType, dictionary);
+        try {
+            Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
+            dictionary.put(DistributionEventType.PROPERTY_DISTRIBUTION_COMPONENT_NAME, name);
+            dictionary.put(DistributionEventType.PROPERTY_DISTRIBUTION_COMPONENT_KIND, kind.name());
+            dictionary.put(DistributionEventType.PROPERTY_DISTRIBUTION_TYPE, info.getRequestType());
+            dictionary.put(DistributionEventType.PROPERTY_DISTRIBUTION_PATHS, info.getPaths());
+            generateEvent(distributionEventType, dictionary);
+
+        } catch (Throwable e) {
+            log.error("Cannot generate package event", e);
+        }
+
     }
 
 }

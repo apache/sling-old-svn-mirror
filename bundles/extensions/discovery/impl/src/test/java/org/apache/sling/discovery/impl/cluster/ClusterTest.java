@@ -31,6 +31,8 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
 import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.TopologyEvent.Type;
@@ -84,9 +86,13 @@ public class ClusterTest {
     Instance instance4;
     Instance instance5;
     Instance instance1Restarted;
+    private Level logLevel;
 
     @Before
     public void setup() throws Exception {
+        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        logLevel = discoveryLogger.getLevel();
+        discoveryLogger.setLevel(Level.DEBUG);
         logger.debug("here we are");
         instance1 = Instance.newStandaloneInstance("firstInstance", true);
         instance2 = Instance.newClusterInstance("secondInstance", instance1,
@@ -122,6 +128,8 @@ public class ClusterTest {
         instance3 = null;
         instance4 = null;
         instance5 = null;
+        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        discoveryLogger.setLevel(logLevel);
     }
     
     /** test leader behaviour with ascending slingIds, SLING-3253 **/
@@ -365,6 +373,7 @@ public class ClusterTest {
                 new SimpleClusterView(instance5));
 
         // restart instance1, crash instance4
+        instance4.stopHeartbeats();
         instance1Restarted = Instance.newClusterInstance("/var/discovery/clusterA/", "instance1", instance2,
                 false, Integer.MAX_VALUE /* no timeout */, 1, instance1.slingId);
         runHeartbeatOnceWith(instance1Restarted, instance2, instance3, instance5);

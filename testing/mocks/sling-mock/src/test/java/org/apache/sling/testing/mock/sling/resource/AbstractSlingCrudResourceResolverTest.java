@@ -229,4 +229,11 @@ public abstract class AbstractSlingCrudResourceResolverTest {
         assertEquals(JcrConstants.NT_UNSTRUCTURED, resource.getResourceType());
     }
 
+    @Test
+    public void testGetRootResourceByNullPath() {
+        Resource rootResource = this.resourceResolver.resolve((String)null);
+        assertNotNull(rootResource);
+        assertEquals("/", rootResource.getPath());
+    }
+
 }

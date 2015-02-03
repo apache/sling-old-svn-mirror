@@ -22,10 +22,13 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.UUID;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.impl.cluster.helpers.AssertingTopologyEventListener;
 import org.apache.sling.discovery.impl.setup.Instance;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +43,15 @@ public class TopologyEventTest {
 
     private Instance instance1;
     private Instance instance2;
+
+    private Level logLevel;
+    
+    @Before
+    public void setup() throws Exception {
+        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        logLevel = discoveryLogger.getLevel();
+        discoveryLogger.setLevel(Level.DEBUG);
+    }
     
     @After
     public void tearDown() throws Throwable {
@@ -53,6 +65,8 @@ public class TopologyEventTest {
             instance2.stop();
             instance2 = null;
         }
+        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        discoveryLogger.setLevel(logLevel);
     }
     
     /**

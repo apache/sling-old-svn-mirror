@@ -16,20 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.testing.mock.sling.jcrmock.resource;
 
-import org.apache.sling.testing.mock.sling.ResourceResolverType;
-import org.apache.sling.testing.mock.sling.resource.AbstractJcrResourceResolverTest;
+package org.apache.sling.distribution.agent;
 
 /**
- * Implements simple write and read resource and values test. JCR API is used to
- * create the test data.
+ * The state of a distribution agent.
  */
-public class JcrResourceResolverTest extends AbstractJcrResourceResolverTest {
+public enum DistributionAgentState {
 
-    @Override
-    protected ResourceResolverType getResourceResolverType() {
-        return ResourceResolverType.JCR_MOCK;
-    }
+    /**
+     * The agent is active but the queue processing is disabled.
+     */
+    PAUSED,
 
+    /**
+     * The agent is active and it does not have items in its queues.
+     */
+    IDLE,
+
+    /**
+     * The agent is active and there are items in its queues.
+     */
+    RUNNING,
+
+    /**
+     * The agent is active and some items in its queues cannot be processed.
+     */
+    BLOCKED
 }

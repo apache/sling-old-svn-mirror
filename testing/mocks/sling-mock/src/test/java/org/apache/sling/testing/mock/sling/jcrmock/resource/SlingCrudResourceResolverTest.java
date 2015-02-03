@@ -27,6 +27,7 @@ import org.apache.sling.testing.mock.sling.resource.AbstractSlingCrudResourceRes
  */
 public class SlingCrudResourceResolverTest extends AbstractSlingCrudResourceResolverTest {
 
+    @Override
     protected ResourceResolverType getResourceResolverType() {
         return ResourceResolverType.JCR_MOCK;
     }
