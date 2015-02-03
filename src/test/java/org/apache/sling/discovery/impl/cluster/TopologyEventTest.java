@@ -184,7 +184,7 @@ public class TopologyEventTest {
     public void testNonDelayedInitEvent() throws Throwable {
         logger.info("testNonDelayedInitEvent: start");
         instance1 = Instance.newStandaloneInstance("/var/discovery/impl/", 
-                "firstInstanceB", true, 20 /* heartbeat-timeout */, 3 /*min event delay*/,
+                "firstInstanceB", true, 20 /* heartbeat-timeout */, 5 /*min event delay*/,
                 UUID.randomUUID().toString(), false /*delayInitEventUntilVoted*/);
         AssertingTopologyEventListener l1 = new AssertingTopologyEventListener("instance1.l1");
         l1.addExpected(Type.TOPOLOGY_INIT);
@@ -209,7 +209,7 @@ public class TopologyEventTest {
         assertEquals(0, l1.getUnexpectedCount());
         
         instance2 = Instance.newClusterInstance("/var/discovery/impl/", 
-                "secondInstanceB", instance1, false, 20, 3, UUID.randomUUID().toString(), false);
+                "secondInstanceB", instance1, false, 20, 5, UUID.randomUUID().toString(), false);
         AssertingTopologyEventListener l2 = new AssertingTopologyEventListener("instance2.l2");
         l2.addExpected(Type.TOPOLOGY_INIT);
         instance2.bindTopologyEventListener(l2);
