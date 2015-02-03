@@ -38,15 +38,18 @@ class FrameworkPerformanceMethod extends FrameworkMethod {
     private Object target;
     private PerformanceSuiteState performanceSuiteState;
     private PerformanceRunner.ReportLevel reportLevel = PerformanceRunner.ReportLevel.ClassLevel;
+    private String referenceMethod = null;
     private String testCaseName = "";
     private String className;
 
     public FrameworkPerformanceMethod(Method method, Object target,
-            PerformanceSuiteState performanceSuiteState, PerformanceRunner.ReportLevel reportLevel) {
+            PerformanceSuiteState performanceSuiteState, PerformanceRunner.ReportLevel reportLevel,
+            String referenceMethod) {
         super(method);
         this.target = target;
         this.performanceSuiteState = performanceSuiteState;
         this.reportLevel = reportLevel;
+        this.referenceMethod = referenceMethod;
         if (target instanceof IdentifiableTestCase) {
             this.testCaseName = ((IdentifiableTestCase) target).testCaseName();
         }
@@ -109,6 +112,7 @@ class FrameworkPerformanceMethod extends FrameworkMethod {
         int runtime = performanceAnnotation.runtime();
         int warmupinvocations = performanceAnnotation.warmupinvocations();
         int runinvocations = performanceAnnotation.runinvocations();
+        double threshold = performanceAnnotation.threshold();
 
         DescriptiveStatistics statistics = new DescriptiveStatistics();
 
@@ -181,8 +185,13 @@ class FrameworkPerformanceMethod extends FrameworkMethod {
         }
 
         if (statistics.getN() > 0) {
-            ReportLogger.writeReport(this.performanceSuiteState.testSuiteName, testCaseName, className, getMethod().getName(),
-                    statistics, ReportLogger.ReportType.TXT, reportLevel);
+            if (referenceMethod == null) {
+                ReportLogger.writeReport(this.performanceSuiteState.testSuiteName, testCaseName, className, getMethod().getName(),
+                        statistics, ReportLogger.ReportType.TXT, reportLevel);
+            } else {
+                ReportLogger reportLogger = ReportLogger.getOrCreate(this.performanceSuiteState.testSuiteName, testCaseName, getMethod().getDeclaringClass().getName(), referenceMethod);
+                reportLogger.recordStatistics(getMethod().getName(), statistics, threshold);
+            }
         }
 
         // In case of a PerformanceSuite we need to run the methods annotated
