@@ -18,6 +18,20 @@
  */
 package org.apache.sling.validation.impl.setup;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -27,20 +41,6 @@ import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 public class MockedResourceResolver implements ResourceResolver {
 
     private static final Logger LOG = LoggerFactory.getLogger(MockedResourceResolver.class);
@@ -49,7 +49,6 @@ public class MockedResourceResolver implements ResourceResolver {
     private static final String[] SEARCH_PATHS = new String[] {"/apps/", "/libs/"};
 
     public final RepositoryProvider repoProvider;
-    private List<MockedResource> resources = new LinkedList<MockedResource>();
 
     private Session session;
 
@@ -112,13 +111,13 @@ public class MockedResourceResolver implements ResourceResolver {
         Session session;
         try {
             session = createSession();
-            session.getNode(path);
+            Node node = session.getNode(path);
+            return new MockedResource(this, node);
         } catch (PathNotFoundException e) {
             return null;
         } catch (RepositoryException e) {
             throw new RuntimeException("RepositoryException: " + e, e);
         }
-        return new MockedResource(this, path, "nt:unstructured");
     }
 
     public Resource getResource(Resource base, String path) {
@@ -147,7 +146,7 @@ public class MockedResourceResolver implements ResourceResolver {
                     Node next = nodes.nextNode();
                     try {
                         return new MockedResource(MockedResourceResolver.this,
-                                next.getPath(), "nt:unstructured");
+                                next);
                     } catch (RepositoryException e) {
                         throw new RuntimeException("RepositoryException: " + e,
                                 e);
@@ -197,21 +196,12 @@ public class MockedResourceResolver implements ResourceResolver {
     }
 
     public void close() {
-        Iterator<MockedResource> it = resources.iterator();
-        while (it.hasNext()) {
-            MockedResource r = it.next();
-            r.close();
-        }
         if (session != null) {
             if (session.isLive()) {
                 session.logout();
             }
             session = null;
         }
-    }
-
-    public void register(MockedResource mockedResource) {
-        resources.add(mockedResource);
     }
 
     public String getUserID() {
@@ -227,9 +217,6 @@ public class MockedResourceResolver implements ResourceResolver {
     }
 
     public void delete(Resource resource) throws PersistenceException {
-        if (resources.contains(resource)) {
-            resources.remove(resource);
-        }
         Node node = resource.adaptTo(Node.class);
         try {
             node.remove();
@@ -289,22 +276,22 @@ public class MockedResourceResolver implements ResourceResolver {
     }
 
     public String getParentResourceType(Resource resource) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     public String getParentResourceType(String resourceType) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     public boolean isResourceType(Resource resource, String resourceType) {
-        // TODO Auto-generated method stub
-        return false;
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     public void refresh() {
-        // TODO Auto-generated method stub
-
+        try {
+            this.session.refresh(true);
+        } catch (RepositoryException e) {
+            LOG.warn("Could not refresh seesion", e);
+        }
     }
 }
