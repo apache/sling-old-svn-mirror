@@ -20,19 +20,19 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 
-public class FiltersTest extends HttpTestBase {
+public class FiltersTest2 extends HttpTestBase {
 
     public void testCounters() throws IOException {
-        HttpMethod get = assertHttpStatus(HTTP_BASE_URL + "/index.html", HttpServletResponse.SC_OK);
+        HttpMethod get = assertHttpStatus(HTTP_BASE_URL + "/system.json", HttpServletResponse.SC_OK);
         final String [] headers = {
             "FILTER_COUNTER_HTTPSERVICE",
             "FILTER_COUNTER_SLING",
-            "FILTER_COUNTER_NOPROP"
+            "FILTER_COUNTER_NOPROP",
+            "FILTER_COUNTER_SLING_WITH_PATTERN"
         };
         for(String header : headers) {
             assertNotNull("Expecting header '" + header + "'", get.getResponseHeader(header));
             assertEquals("Expecting value 1 for header '" + header + "'", "1", get.getResponseHeader(header).getValue());
         }
-        assertNull(get.getResponseHeader("FILTER_COUNTER_SLING_WITH_PATTERN"));
     }
 }
