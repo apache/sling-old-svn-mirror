@@ -228,7 +228,7 @@ public class ValidationServiceImpl implements ValidationService, EventHandler {
         if (ignoredResourceTypes == null) {
             ignoredResourceTypes = Collections.emptySet();
         }
-        ValidationResourceVisitor visitor = new ValidationResourceVisitor(this, resource.getPath(), true, ignoredResourceTypes);
+        ValidationResourceVisitor visitor = new ValidationResourceVisitor(this, resource.getPath(), enforceValidation, ignoredResourceTypes);
         visitor.accept(resource);
         return visitor.getResult();
     }
