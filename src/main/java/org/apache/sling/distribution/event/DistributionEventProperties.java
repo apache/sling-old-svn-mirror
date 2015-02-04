@@ -18,64 +18,30 @@
  */
 package org.apache.sling.distribution.event;
 
+
 /**
- * an enum of the possible types of events related to distribution
+ * an interface containing of the possible properties of events related to distribution
  */
-public enum DistributionEventType {
-
-    /**
-     * event for package created
-     */
-    AGENT_PACKAGE_CREATED,
-
-    /**
-     * event for package queued
-     */
-    AGENT_PACKAGE_QUEUED,
-
-    /**
-     * event for package distributed
-     */
-    AGENT_PACKAGE_DISTRIBUTED,
-
-    /**
-     * event for package imported
-     */
-    IMPORTER_PACKAGE_IMPORTED;
-
-    /**
-     * common event topic base for distribution events
-     */
-    public static final String EVENT_TOPIC_BASE = "org/apache/sling/distribution";
+public interface DistributionEventProperties {
 
     /**
      * property containing the name of component generating the event
      */
-    public static final String PROPERTY_DISTRIBUTION_COMPONENT_NAME = "distribution.component.name";
+    public static final String DISTRIBUTION_COMPONENT_NAME = "distribution.component.name";
 
 
     /**
      * property containing the kind of the component generating the event
      */
-    public static final String PROPERTY_DISTRIBUTION_COMPONENT_KIND= "distribution.component.kind";
+    public static final String DISTRIBUTION_COMPONENT_KIND= "distribution.component.kind";
 
     /**
      * property containing the type of the distribution request
      */
-    public static final String PROPERTY_DISTRIBUTION_TYPE = "distribution.type";
+    public static final String DISTRIBUTION_TYPE = "distribution.type";
 
     /**
      * property containing the type of the distribution paths
      */
-    public static final String PROPERTY_DISTRIBUTION_PATHS= "distribution.paths";
-
-    /**
-     * get the event topic for this event type
-     *
-     * @return the event topic
-     */
-    public String getTopic() {
-        return EVENT_TOPIC_BASE + "/" + name().toLowerCase().replace('_', '/');
-    }
-
+    public static final String DISTRIBUTION_PATHS= "distribution.paths";
 }
