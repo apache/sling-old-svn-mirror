@@ -40,6 +40,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.testing.mock.sling.MockSling;
 import org.apache.sling.testing.mock.sling.ResourceResolverType;
+import org.apache.sling.testing.mock.sling.builder.ContentBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -234,6 +235,22 @@ public abstract class AbstractSlingCrudResourceResolverTest {
         Resource rootResource = this.resourceResolver.resolve((String)null);
         assertNotNull(rootResource);
         assertEquals("/", rootResource.getPath());
+    }
+
+    @Test
+    public void testSearchPath() {
+        ContentBuilder builder = new ContentBuilder(this.resourceResolver);
+        builder.resource("/libs/any/path");
+
+        Resource resource = this.resourceResolver.getResource("any/path");
+        assertNotNull(resource);
+        assertEquals("/libs/any/path", resource.getPath());
+
+        builder.resource("/apps/any/path");
+
+        resource = this.resourceResolver.getResource("any/path");
+        assertNotNull(resource);
+        assertEquals("/apps/any/path", resource.getPath());
     }
 
 }
