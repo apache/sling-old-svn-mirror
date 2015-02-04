@@ -81,7 +81,8 @@ public interface ValidationService {
      * @param resource the root resource which is validated (including all its children resources having a valid resource type)
      * @param enforceValidation if {@code true} will throw an IllegalArgumentException in case a validation model could not be found for a (not-ignored) resource type
      * set on one of the resource's children. 
-     * @param ignoredResourceTypes a set of resource types which should not be validated (e.g. nt:unstructured, the default primary node type in case of underlying an JCR for nodes not having a sling:resourceType property being set)
+     * @param ignoredResourceTypes a set of resource types which should not be validated (e.g. nt:unstructured, the default primary node type in case of underlying an JCR for nodes not having a sling:resourceType property being set).
+     * May be {@code null} to not ignore any resource types.
      * @return the aggregated {@link ValidationResult} over all child resource validations
      * @throws IllegalStateException in case an invalid validation model was found
      * @throws IllegalArgumentException in case resourceType is absolute but outside of the search paths or if no validation model could be found (and enforceValidation is {@code true}).
