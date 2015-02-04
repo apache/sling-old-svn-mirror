@@ -16,24 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.distribution.event.impl;
-
-import javax.annotation.Nonnull;
-
-import org.apache.sling.distribution.component.impl.DistributionComponentKind;
-import org.apache.sling.distribution.packaging.DistributionPackageInfo;
+package org.apache.sling.distribution.event;
 
 /**
- * generate distribution related events
+ * an interface containing of the possible topics of events related to distribution
  */
-public interface DistributionEventFactory {
+public interface DistributionEventTopics {
+
+
+    public static final String EVENT_BASE = "org/apache/sling/distribution";
 
     /**
-     * generate a distribution event
-     *
-     * @param distributionEventType the type of event to be generated
+     * event for package created
      */
-    void generatePackageEvent(@Nonnull String distributionEventType, @Nonnull DistributionComponentKind kind,
-                              @Nonnull String name, @Nonnull DistributionPackageInfo info);
+    public static final String AGENT_PACKAGE_CREATED = EVENT_BASE + "/agent/package/created";
 
+    /**
+     * event for package queued
+     */
+    public static final String AGENT_PACKAGE_QUEUED = EVENT_BASE + "/agent/package/queued";
+
+    /**
+     * event for package distributed
+     */
+    public static final String AGENT_PACKAGE_DISTRIBUTED = EVENT_BASE + "/agent/package/distributed";
+
+
+    /**
+     * event for package imported
+     */
+    public static final String IMPORTER_PACKAGE_IMPORTED = EVENT_BASE + "/importer/package/imported";
 }

@@ -26,7 +26,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
-import org.apache.sling.distribution.event.DistributionEventType;
+import org.apache.sling.distribution.event.DistributionEventProperties;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -45,19 +45,19 @@ public class DefaultDistributionEventFactory implements DistributionEventFactory
     @Reference
     private EventAdmin eventAdmin;
 
-    private void generateEvent(@Nonnull DistributionEventType distributionEventType, @Nonnull Dictionary<?, ?> properties) {
-        eventAdmin.postEvent(new Event(distributionEventType.getTopic(), properties));
-        log.debug("distribution event {} posted", distributionEventType.name());
+    private void generateEvent(@Nonnull String distributionEventTopic, @Nonnull Dictionary<?, ?> properties) {
+        eventAdmin.postEvent(new Event(distributionEventTopic, properties));
+        log.debug("distribution event {} posted", distributionEventTopic);
     }
 
-    public void generatePackageEvent(@Nonnull DistributionEventType distributionEventType, DistributionComponentKind kind, @Nonnull String name, @Nonnull DistributionPackageInfo info) {
+    public void generatePackageEvent(@Nonnull String distributionEventTopic, DistributionComponentKind kind, @Nonnull String name, @Nonnull DistributionPackageInfo info) {
         try {
             Dictionary<String, Object> dictionary = new Hashtable<String, Object>();
-            dictionary.put(DistributionEventType.PROPERTY_DISTRIBUTION_COMPONENT_NAME, name);
-            dictionary.put(DistributionEventType.PROPERTY_DISTRIBUTION_COMPONENT_KIND, kind.name());
-            dictionary.put(DistributionEventType.PROPERTY_DISTRIBUTION_TYPE, info.getRequestType());
-            dictionary.put(DistributionEventType.PROPERTY_DISTRIBUTION_PATHS, info.getPaths());
-            generateEvent(distributionEventType, dictionary);
+            dictionary.put(DistributionEventProperties.DISTRIBUTION_COMPONENT_NAME, name);
+            dictionary.put(DistributionEventProperties.DISTRIBUTION_COMPONENT_KIND, kind.name());
+            dictionary.put(DistributionEventProperties.DISTRIBUTION_TYPE, info.getRequestType());
+            dictionary.put(DistributionEventProperties.DISTRIBUTION_PATHS, info.getPaths());
+            generateEvent(distributionEventTopic, dictionary);
 
         } catch (Throwable e) {
             log.error("Cannot generate package event", e);

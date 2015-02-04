@@ -39,9 +39,9 @@ import org.apache.sling.distribution.DistributionRequestState;
 import org.apache.sling.distribution.DistributionResponse;
 import org.apache.sling.distribution.agent.DistributionAgentState;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
+import org.apache.sling.distribution.event.DistributionEventTopics;
 import org.apache.sling.distribution.impl.CompositeDistributionResponse;
 import org.apache.sling.distribution.impl.SimpleDistributionResponse;
-import org.apache.sling.distribution.event.DistributionEventType;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
 import org.apache.sling.distribution.log.DistributionLog;
 import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
@@ -191,7 +191,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
     private List<DistributionPackage> exportPackages(ResourceResolver agentResourceResolver, DistributionRequest distributionRequest) throws DistributionPackageExportException {
         List<DistributionPackage> distributionPackages = distributionPackageExporter.exportPackages(agentResourceResolver, distributionRequest);
 
-        generatePackageEvent(DistributionEventType.AGENT_PACKAGE_CREATED);
+        generatePackageEvent(DistributionEventTopics.AGENT_PACKAGE_CREATED);
 
         return distributionPackages;
     }
@@ -218,7 +218,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
                 distributionResponses.add(new SimpleDistributionResponse(requestState, state.getItemState().toString()));
             }
 
-            generatePackageEvent(DistributionEventType.AGENT_PACKAGE_QUEUED, distributionPackage);
+            generatePackageEvent(DistributionEventTopics.AGENT_PACKAGE_QUEUED, distributionPackage);
         } catch (Exception e) {
             log.error("an error happened during dispatching items to the queue(s)", e);
             distributionResponses.add(new SimpleDistributionResponse(DistributionRequestState.DROPPED, e.toString()));
@@ -363,7 +363,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
                 DistributionPackageUtils.releaseOrDelete(distributionPackage, queueName);
 
-                generatePackageEvent(DistributionEventType.AGENT_PACKAGE_DISTRIBUTED, distributionPackage);
+                generatePackageEvent(DistributionEventTopics.AGENT_PACKAGE_DISTRIBUTED, distributionPackage);
                 success = true;
                 log.info("distribution package {} was delivered", queueItem.getId());
             } else {
@@ -406,9 +406,9 @@ public class SimpleDistributionAgent implements DistributionAgent {
 
     }
 
-    private void generatePackageEvent(DistributionEventType type, DistributionPackage... distributionPackages) {
+    private void generatePackageEvent(String topic, DistributionPackage... distributionPackages) {
         for (DistributionPackage distributionPackage : distributionPackages) {
-            distributionEventFactory.generatePackageEvent(type, DistributionComponentKind.AGENT, name, distributionPackage.getInfo());
+            distributionEventFactory.generatePackageEvent(topic, DistributionComponentKind.AGENT, name, distributionPackage.getInfo());
         }
     }
 
