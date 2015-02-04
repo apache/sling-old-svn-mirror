@@ -35,7 +35,7 @@ import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.component.impl.DistributionComponentProvider;
-import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
+import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +59,7 @@ public class DistributionServiceResourceProviderFactory implements ResourceProvi
 
 
     @Property
-    public final static String KIND = DistributionComponentUtils.PN_KIND;
+    public final static String KIND = DistributionComponentConstants.PN_KIND;
 
     @Reference
     DistributionComponentProvider componentProvider;

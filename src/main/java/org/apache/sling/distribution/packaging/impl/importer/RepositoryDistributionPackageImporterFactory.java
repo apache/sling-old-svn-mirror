@@ -30,7 +30,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
+import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
@@ -55,7 +55,7 @@ public class RepositoryDistributionPackageImporterFactory implements Distributio
      * name of this component.
      */
     @Property
-    private static final String NAME = DistributionComponentUtils.PN_NAME;
+    private static final String NAME = DistributionComponentConstants.PN_NAME;
 
     @Property(name = "service.name")
     private static String SERVICE_NAME;

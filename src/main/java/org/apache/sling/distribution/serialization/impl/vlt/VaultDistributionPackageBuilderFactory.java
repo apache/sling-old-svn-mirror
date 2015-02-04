@@ -35,7 +35,7 @@ import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.DistributionRequest;
-import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
+import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.serialization.DistributionPackageBuildingException;
@@ -57,7 +57,7 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
      * name of this package builder.
      */
     @Property(label = "Name", description = "The name of the package builder.")
-    public static final String NAME = DistributionComponentUtils.PN_NAME;
+    public static final String NAME = DistributionComponentConstants.PN_NAME;
 
 
 
@@ -72,7 +72,7 @@ public class VaultDistributionPackageBuilderFactory implements DistributionPacka
                     value = "file packages"
             )},
             value = "jcrvlt", label = "type", description = "The type of this package builder")
-    public static final String TYPE = DistributionComponentUtils.PN_TYPE;
+    public static final String TYPE = DistributionComponentConstants.PN_TYPE;
 
 
     /**

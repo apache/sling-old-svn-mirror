@@ -29,7 +29,7 @@ import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.distribution.component.impl.DistributionComponent;
 import org.apache.sling.distribution.component.impl.DistributionComponentKind;
 import org.apache.sling.distribution.component.impl.DistributionComponentProvider;
-import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
+import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.resources.DistributionResourceTypes;
 import org.apache.sling.distribution.resources.impl.common.AbstractReadableResourceProvider;
 import org.apache.sling.distribution.resources.impl.common.SimplePathInfo;
@@ -97,7 +97,7 @@ public class DistributionServiceResourceProvider extends AbstractReadableResourc
         if (component != null) {
             Map<String, Object> properties = new HashMap<String, Object>();
 
-            properties.put(DistributionComponentUtils.PN_NAME, resourceName);
+            properties.put(DistributionComponentConstants.PN_NAME, resourceName);
             properties.put(ADAPTABLE_PROPERTY_NAME, component.getService());
 
             String resourceType = getResourceType(kind);

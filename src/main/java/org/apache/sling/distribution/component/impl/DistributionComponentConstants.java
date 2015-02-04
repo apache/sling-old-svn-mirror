@@ -16,31 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.distribution.component.impl;
 
-import javax.annotation.Nonnull;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.sling.commons.osgi.PropertiesUtil;
+
 /**
- * The component manager can create component trees out of a map description.
- * Already existing services can be wire by name.
+ * Constants relevant for distribution components.
  */
-public interface DistributionComponentManager {
+public class DistributionComponentConstants {
 
     /**
-     * Creates a component of a given type with the specified name. It also creates all the subcomponents defined as
-     * sub-maps in the map of properties.
-     * @param componentKind
-     * @param componentName
-     * @param properties
+     * Property representing component kind.
      */
-    void createComponent(@Nonnull String componentKind, @Nonnull String componentName, @Nonnull Map<String, Object> properties);
+    public static final String PN_KIND = "kind";
 
     /**
-     * Deletes the component and the associated subcomponents.
-     * @param componentKind
-     * @param componentName
+     * Property representing component type.
      */
-    void deleteComponent(@Nonnull String componentKind, String componentName);
+    public static final String PN_TYPE = "type";
+
+    /**
+     * Property representing component name
+     */
+    public static final String PN_NAME = "name";
+
 }
