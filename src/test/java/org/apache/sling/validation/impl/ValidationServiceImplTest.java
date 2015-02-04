@@ -793,6 +793,42 @@ public class ValidationServiceImplTest {
         }
     }
 
+    @Test()
+    public void testValidateAllResourceTypesInResourceWithMissingValidatorAndNoEnforcement() throws Exception {
+        validationService.validators.put("org.apache.sling.validation.impl.validators.RegexValidator",
+                new RegexValidator());
+
+        TestProperty property = new TestProperty("field1");
+        property.addValidator("org.apache.sling.validation.impl.validators.RegexValidator");
+        Resource model1 = null;
+        Resource resource = null;
+        try {
+            model1 = createValidationModelResource(rr, libsValidatorsRoot.getPath(), "testValidationModel1",
+                    "sling/validation/test", new String[] { "/content" }, property);
+            resource = ResourceUtil.getOrCreateResource(rr, "/content/testpage", "sling/validation/test",
+                    JcrConstants.NT_UNSTRUCTURED, true);
+            ModifiableValueMap values = resource.adaptTo(ModifiableValueMap.class);
+            values.put("field2", "somvalue");
+            Resource grandChildResource = ResourceUtil.getOrCreateResource(rr, "/content/testpage/par/testpar",
+                    "sling/validation/test2", JcrConstants.NT_UNSTRUCTURED, true);
+            values = grandChildResource.adaptTo(ModifiableValueMap.class);
+            values.put("field2", "somvalue");
+            ValidationResult vr = validationService.validateAllResourceTypesInResource(resource, false,
+                    Collections.singleton(JcrConstants.NT_UNSTRUCTURED));
+            // should not fail 
+            Map<String, List<String>> expectedFailureMessages = new HashMap<String, List<String>>();
+            expectedFailureMessages.put("field1", Arrays.asList("Missing required property."));
+            Assert.assertThat(vr.getFailureMessages().entrySet(), Matchers.equalTo(expectedFailureMessages.entrySet()));
+        } finally {
+            if (resource != null) {
+                rr.delete(resource);
+            }
+            if (model1 != null) {
+                rr.delete(model1);
+            }
+        }
+    }
+
     @Test
     public void testGetRelativeResourcePath() {
         // return relative paths unmodified
