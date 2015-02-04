@@ -26,7 +26,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
-import org.apache.sling.distribution.event.DistributionEventType;
+import org.apache.sling.distribution.event.DistributionEventProperties;
+import org.apache.sling.distribution.event.DistributionEventTopics;
 import org.apache.sling.distribution.trigger.DistributionRequestHandler;
 import org.apache.sling.distribution.trigger.DistributionTrigger;
 import org.apache.sling.distribution.trigger.DistributionTriggerException;
@@ -39,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * {@link org.apache.sling.distribution.trigger.DistributionTrigger} for chain distribution upon a certain {@link org.apache.sling.distribution.event.DistributionEventType}
+ * {@link org.apache.sling.distribution.trigger.DistributionTrigger} for chain distribution upon a certain {@link org.apache.sling.distribution.event.DistributionEventTopics}
  */
 public class DistributionEventDistributeDistributionTrigger implements DistributionTrigger {
 
@@ -63,7 +64,7 @@ public class DistributionEventDistributeDistributionTrigger implements Distribut
         Dictionary<String, Object> properties = new Hashtable<String, Object>();
 
         // TODO : make it possible to configure the type of event handled here, currently 'package-installed' is hardcoded
-        properties.put(EventConstants.EVENT_TOPIC, DistributionEventType.AGENT_PACKAGE_DISTRIBUTED.getTopic());
+        properties.put(EventConstants.EVENT_TOPIC, DistributionEventTopics.AGENT_PACKAGE_DISTRIBUTED);
         log.info("handler {} will chain distribute on path '{}'", requestHandler, pathPrefix);
 
 //            properties.put(EventConstants.EVENT_FILTER, "(path=" + path + "/*)");
@@ -108,8 +109,8 @@ public class DistributionEventDistributeDistributionTrigger implements Distribut
         }
 
         public void handleEvent(Event event) {
-            Object actionProperty = event.getProperty(DistributionEventType.PROPERTY_DISTRIBUTION_TYPE);
-            Object pathProperty = event.getProperty(DistributionEventType.PROPERTY_DISTRIBUTION_PATHS);
+            Object actionProperty = event.getProperty(DistributionEventProperties.DISTRIBUTION_TYPE);
+            Object pathProperty = event.getProperty(DistributionEventProperties.DISTRIBUTION_PATHS);
             if (actionProperty != null && pathProperty != null) {
                 String[] paths = (String[]) pathProperty;
                 for (String p : paths) {
