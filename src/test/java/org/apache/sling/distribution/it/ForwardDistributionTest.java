@@ -41,6 +41,15 @@ public class ForwardDistributionTest extends DistributionIntegrationTestBase {
     }
 
     @Test
+    public void testTestContent() throws Exception {
+        String nodePath = createRandomNode(authorClient, "/content/forward_test_" + System.nanoTime());
+        assertExists(authorClient, nodePath);
+        distribute(author, "publish", DistributionRequestType.TEST, nodePath);
+        Thread.sleep(10000);
+        assertNotExists(publishClient, nodePath);
+    }
+
+    @Test
     public void testDeleteContent() throws Exception {
         String nodePath = createRandomNode(publishClient, "/content/forward_del_" + System.nanoTime());
         assertExists(publishClient, nodePath);
