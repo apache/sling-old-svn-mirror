@@ -68,7 +68,7 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
             Map<String, Object> properties = OsgiUtils.fromDictionary(propertiesDict);
 
             properties = filterBeforeRead(properties);
-            String name = PropertiesUtil.toString(properties.get(DistributionComponentUtils.PN_NAME), null);
+            String name = PropertiesUtil.toString(properties.get(DistributionComponentConstants.PN_NAME), null);
             result.add(new DistributionConfiguration(kind, name, properties));
 
         }
@@ -92,7 +92,7 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
             String factoryPid = PropertiesUtil.toString(result.get(ConfigurationAdmin.SERVICE_FACTORYPID), null);
             String type = kind.getType(factoryPid);
 
-            result.put(DistributionComponentUtils.PN_TYPE, type);
+            result.put(DistributionComponentConstants.PN_TYPE, type);
             result = filterBeforeRead(result);
             return new DistributionConfiguration(kind, name, result);
         }
@@ -104,7 +104,7 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
         String componentName = config.getName();
         DistributionComponentKind componentKind = config.getKind();
         Map<String, Object> properties = config.getProperties();
-        String componentType = PropertiesUtil.toString(properties.get(DistributionComponentUtils.PN_TYPE), null);
+        String componentType = PropertiesUtil.toString(properties.get(DistributionComponentConstants.PN_TYPE), null);
 
         if (componentKind == null || componentType == null) {
             throw new IllegalArgumentException("kind and type are required");
@@ -112,7 +112,7 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
 
         String factoryPid = componentKind.getFactory(componentType);
         if (factoryPid != null) {
-            properties.put(DistributionComponentUtils.PN_NAME, componentName);
+            properties.put(DistributionComponentConstants.PN_NAME, componentName);
             Configuration configuration = saveOsgiConfig(factoryPid, componentName, properties);
         }
 
@@ -181,7 +181,7 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
         List<Configuration> result = new ArrayList<Configuration>();
 
         try {
-            String filter = OsgiUtils.getFilter(factoryPid, DistributionComponentUtils.PN_NAME, componentName);
+            String filter = OsgiUtils.getFilter(factoryPid, DistributionComponentConstants.PN_NAME, componentName);
 
             Configuration[] configurations = configurationAdmin.listConfigurations(filter);
             if (configurations != null) {
@@ -241,7 +241,7 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
 
         String result = null;
 
-        String namePattern = "\\(" + DistributionComponentUtils.PN_NAME + "=(.*?)\\)";
+        String namePattern = "\\(" + DistributionComponentConstants.PN_NAME + "=(.*?)\\)";
 
         Pattern r = Pattern.compile(namePattern);
         Matcher m = r.matcher(propertyValue);
@@ -254,7 +254,7 @@ public class DefaultDistributionConfigurationManager implements DistributionConf
     }
 
     private String packOsgiFilter(String propertyValue) {
-        return "(" + DistributionComponentUtils.PN_NAME + "=" + OsgiUtils.escape(propertyValue) + ")";
+        return "(" + DistributionComponentConstants.PN_NAME + "=" + OsgiUtils.escape(propertyValue) + ")";
     }
 
 }

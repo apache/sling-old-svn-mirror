@@ -31,7 +31,7 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
+import org.apache.sling.distribution.component.impl.DistributionComponentConstants;
 import org.apache.sling.distribution.component.impl.DistributionConfigurationManager;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -54,7 +54,7 @@ public class DistributionConfigurationResourceProviderFactory implements Resourc
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Property
-    public final static String KIND = DistributionComponentUtils.PN_KIND;
+    public final static String KIND = DistributionComponentConstants.PN_KIND;
 
     @Reference
     DistributionConfigurationManager configurationManager;

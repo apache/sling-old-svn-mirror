@@ -32,7 +32,6 @@ import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.distribution.agent.DistributionAgent;
-import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
 import org.apache.sling.distribution.queue.impl.DistributionQueueDispatchingStrategy;
@@ -58,7 +57,7 @@ import org.slf4j.LoggerFactory;
 @Service(DistributionComponentProvider.class)
 public class DefaultDistributionComponentProvider implements DistributionComponentProvider {
 
-    public static final String NAME = DistributionComponentUtils.PN_NAME;
+    public static final String NAME = DistributionComponentConstants.PN_NAME;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
