@@ -16,20 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.engine;
 
-import aQute.bnd.annotation.ProviderType;
+@Version("1.0.2")
+package org.apache.sling.engine.jmx;
 
-/**
- * The <code>SlingSettingsService</code> provides basic Sling settings.
- * @deprecated Use the {@link org.apache.sling.settings.SlingSettingsService}
- */
-@Deprecated
-@ProviderType
-public interface SlingSettingsService {
+import aQute.bnd.annotation.Version;
 
-    /**
-     * The identifier of the running Sling instance.
-     */
-    String getSlingId();
-}
