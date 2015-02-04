@@ -53,6 +53,7 @@ public class ValidationResourceVisitor extends AbstractResourceVisitor {
                 if (enforceValidation) {
                     throw new IllegalArgumentException("No model for resource type " + resource.getResourceType() + " found.");
                 }
+                return;
             }
             // the relative path must end with a slash and not start with a slash
             final String relativePath;
