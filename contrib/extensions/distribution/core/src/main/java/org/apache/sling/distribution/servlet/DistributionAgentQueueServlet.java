@@ -20,7 +20,6 @@ package org.apache.sling.distribution.servlet;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.util.List;
 
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
@@ -28,12 +27,8 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.apache.sling.distribution.component.impl.DistributionComponent;
-import org.apache.sling.distribution.component.impl.DistributionComponentKind;
-import org.apache.sling.distribution.component.impl.DistributionComponentProvider;
-import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
 import org.apache.sling.distribution.packaging.DistributionPackage;
-import org.apache.sling.distribution.packaging.SharedDistributionPackage;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
 import org.apache.sling.distribution.resources.DistributionResourceTypes;
@@ -111,11 +106,7 @@ public class DistributionAgentQueueServlet extends SlingAllMethodsServlet {
             DistributionPackage distributionPackage = packageBuilder.getPackage(resourceResolver, id);
 
             if (distributionPackage != null) {
-                if (distributionPackage instanceof SharedDistributionPackage) {
-                    ((SharedDistributionPackage) distributionPackage).release(queue.getName());
-                } else {
-                    distributionPackage.delete();
-                }
+                DistributionPackageUtils.releaseOrDelete(distributionPackage, queue.getName());
             }
         }
     }

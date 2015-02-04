@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
+import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageExportException;
 import org.apache.sling.distribution.packaging.DistributionPackageExporter;
@@ -42,18 +43,19 @@ import org.slf4j.LoggerFactory;
  */
 public class RemoteDistributionPackageExporter implements DistributionPackageExporter {
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final DistributionPackageBuilder packageBuilder;
     private final DistributionTransportSecretProvider secretProvider;
+    private final DefaultDistributionLog log;
 
     private DistributionTransport transportHandler;
 
-    public RemoteDistributionPackageExporter(DistributionPackageBuilder packageBuilder,
+    public RemoteDistributionPackageExporter(DefaultDistributionLog log, DistributionPackageBuilder packageBuilder,
                                              DistributionTransportSecretProvider secretProvider,
                                              String[] endpoints,
                                              TransportEndpointStrategyType transportEndpointStrategyType,
                                              int pullItems) {
+        this.log = log;
         if (packageBuilder == null) {
             throw new IllegalArgumentException("packageBuilder is required");
         }
@@ -70,7 +72,7 @@ public class RemoteDistributionPackageExporter implements DistributionPackageExp
 
         for (String endpoint : endpoints) {
             if (endpoint != null && endpoint.length() > 0) {
-                transportHandlers.add(new SimpleHttpDistributionTransport(new DistributionEndpoint(endpoint), packageBuilder, secretProvider, pullItems));
+                transportHandlers.add(new SimpleHttpDistributionTransport(log, new DistributionEndpoint(endpoint), packageBuilder, secretProvider, pullItems));
             }
         }
         transportHandler = new MultipleEndpointDistributionTransport(transportHandlers,

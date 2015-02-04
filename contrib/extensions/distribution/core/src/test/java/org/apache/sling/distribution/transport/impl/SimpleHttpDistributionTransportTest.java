@@ -35,6 +35,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.distribution.DistributionRequest;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.distribution.SimpleDistributionRequest;
+import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageInfo;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
@@ -73,7 +74,7 @@ public class SimpleHttpDistributionTransportTest {
         DistributionEndpoint endpoint = new DistributionEndpoint("http://127.0.0.1:8080/some/resource");
         DistributionPackageBuilder packageBuilder = mock(DistributionPackageBuilder.class);
         int maxNoOfPackages = Integer.MAX_VALUE;
-        SimpleHttpDistributionTransport simpleHttpDistributionTransport = new SimpleHttpDistributionTransport(
+        SimpleHttpDistributionTransport simpleHttpDistributionTransport = new SimpleHttpDistributionTransport(mock(DefaultDistributionLog.class),
                 endpoint, packageBuilder, secretProvider, maxNoOfPackages);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionPackage distributionPackage = mock(DistributionPackage.class);
@@ -104,7 +105,7 @@ public class SimpleHttpDistributionTransportTest {
         DistributionEndpoint endpoint = new DistributionEndpoint("http://127.0.0.1:8080/some/resource");
         DistributionPackageBuilder packageBuilder = mock(DistributionPackageBuilder.class);
         int maxNoOfPackages = 1;
-        SimpleHttpDistributionTransport simpleHttpDistributionTransport = new SimpleHttpDistributionTransport(
+        SimpleHttpDistributionTransport simpleHttpDistributionTransport = new SimpleHttpDistributionTransport(mock(DefaultDistributionLog.class),
                 endpoint, packageBuilder, secretProvider, maxNoOfPackages);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");
@@ -141,7 +142,7 @@ public class SimpleHttpDistributionTransportTest {
         when(distributionPackage.getInfo()).thenReturn(new DistributionPackageInfo());
         when(packageBuilder.readPackage(any(ResourceResolver.class), any(InputStream.class))).thenReturn(distributionPackage);
         int maxNoOfPackages = 1;
-        SimpleHttpDistributionTransport simpleHttpDistributionTransport = new SimpleHttpDistributionTransport(
+        SimpleHttpDistributionTransport simpleHttpDistributionTransport = new SimpleHttpDistributionTransport(mock(DefaultDistributionLog.class),
                 endpoint, packageBuilder, secretProvider, maxNoOfPackages);
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         DistributionRequest distributionRequest = new SimpleDistributionRequest(DistributionRequestType.ADD, "/");

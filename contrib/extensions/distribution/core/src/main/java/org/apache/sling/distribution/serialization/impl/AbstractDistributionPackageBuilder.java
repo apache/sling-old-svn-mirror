@@ -64,6 +64,8 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
             distributionPackage = new SimpleDistributionPackage(request, type);
         } else if (DistributionRequestType.PULL.equals(request.getRequestType())) {
             distributionPackage = new SimpleDistributionPackage(request, type);
+        } else if (DistributionRequestType.TEST.equals(request.getRequestType())) {
+            distributionPackage = new SimpleDistributionPackage(request, type);
         } else {
             throw new DistributionPackageBuildingException("unknown action type "
                     + request.getRequestType());
@@ -96,10 +98,13 @@ public abstract class AbstractDistributionPackageBuilder implements Distribution
     public boolean installPackage(@Nonnull ResourceResolver resourceResolver, @Nonnull DistributionPackage distributionPackage) throws DistributionPackageReadingException {
 
         DistributionRequestType actionType = distributionPackage.getInfo().getRequestType();
-        boolean installed;
+        boolean installed = false;
         if (DistributionRequestType.DELETE.equals(actionType)) {
             installed = installDeletePackage(resourceResolver, distributionPackage);
-        } else {
+        } else if (DistributionRequestType.TEST.equals(actionType)) {
+            // do nothing for test packages
+            installed = true;
+        } else if (DistributionRequestType.ADD.equals(actionType))  {
             installed = installPackageInternal(resourceResolver, distributionPackage);
         }
 
