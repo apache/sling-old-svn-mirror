@@ -92,6 +92,11 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
     public static final String LOG_LEVEL = AbstractDistributionAgentFactory.LOG_LEVEL;
 
 
+
+    @Property(label = "Allowed root", description = "If set the agent will allow only distribution requests under the specified root.")
+    private static final String ALLOWED_ROOT = "allowed.root";
+
+
     @Property(name = "requestAuthorizationStrategy.target", label = "Request Authorization Strategy", description = "The target reference for the DistributionRequestAuthorizationStrategy used to authorize the access to distribution process," +
             "e.g. use target=(name=...) to bind to services by name.")
     @Reference(name = "requestAuthorizationStrategy")
@@ -145,6 +150,7 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
     protected SimpleDistributionAgent createAgent(String agentName, BundleContext context, Map<String, Object> config, DefaultDistributionLog distributionLog) {
 
         String serviceName = PropertiesUtil.toString(config.get(SERVICE_NAME), null);
+        String allowedRoot = PropertiesUtil.toString(config.get(ALLOWED_ROOT), null);
         DistributionQueueProvider queueProvider =  new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
         DistributionQueueDispatchingStrategy dispatchingStrategy = new SingleQueueDispatchingStrategy();
         DistributionPackageExporter packageExporter = new LocalDistributionPackageExporter(packageBuilder);
@@ -153,6 +159,6 @@ public class QueueDistributionAgentFactory extends AbstractDistributionAgentFact
 
         return new SimpleDistributionAgent(agentName, false, serviceName,
                 null, packageExporter, requestAuthorizationStrategy,
-                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory, distributionLog, allowedRequests);
+                queueProvider, dispatchingStrategy, distributionEventFactory, resourceResolverFactory, distributionLog, allowedRequests, allowedRoot);
     }
 }

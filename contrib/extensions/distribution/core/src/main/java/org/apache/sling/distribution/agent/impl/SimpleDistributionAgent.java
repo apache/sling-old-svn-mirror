@@ -89,6 +89,7 @@ public class SimpleDistributionAgent implements DistributionAgent {
     private boolean active = false;
     private final DefaultDistributionLog log;
     private final DistributionRequestType[] allowedRequests;
+    private final String allowedRoot;
 
     public SimpleDistributionAgent(String name,
                                    boolean queueProcessingEnabled,
@@ -101,9 +102,11 @@ public class SimpleDistributionAgent implements DistributionAgent {
                                    DistributionEventFactory distributionEventFactory,
                                    ResourceResolverFactory resourceResolverFactory,
                                    DefaultDistributionLog log,
-                                   DistributionRequestType[] allowedRequests) {
+                                   DistributionRequestType[] allowedRequests,
+                                   String allowedRoot) {
         this.log = log;
         this.allowedRequests = allowedRequests;
+        this.allowedRoot = allowedRoot;
 
         // check configuration is valid
         if (name == null
@@ -151,6 +154,11 @@ public class SimpleDistributionAgent implements DistributionAgent {
             if (!isAcceptedRequestType(distributionRequest)) {
                 log.debug("request type not accepted {}", distributionRequest.getRequestType());
                 return new SimpleDistributionResponse(DistributionRequestState.DROPPED, "Request type not accepted");
+            }
+
+            if (!isAcceptedRequestRoot(distributionRequest)) {
+                log.debug("request paths not accepted {}", Arrays.toString(distributionRequest.getPaths()));
+                return new SimpleDistributionResponse(DistributionRequestState.DROPPED, "Request paths not accepted");
             }
 
             boolean silent = DistributionRequestType.PULL.equals(distributionRequest.getRequestType());
@@ -428,6 +436,24 @@ public class SimpleDistributionAgent implements DistributionAgent {
         }
 
         return false;
+    }
+
+    boolean isAcceptedRequestRoot(DistributionRequest request) {
+        if (allowedRoot == null || !allowedRoot.startsWith("/")) {
+            return true;
+        }
+
+        if (!DistributionRequestType.ADD.equals(request.getRequestType()) && !DistributionRequestType.DELETE.equals(request.getRequestType())) {
+            return true;
+        }
+
+        for (String path : request.getPaths()) {
+            if(!path.startsWith(allowedRoot)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     class PackageQueueProcessor implements DistributionQueueProcessor {
