@@ -21,7 +21,7 @@ package org.apache.sling.api.resource;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.annotation.Nullable;
+import javax.annotation.CheckForNull;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.adapter.Adaptable;
@@ -305,7 +305,7 @@ public interface ResourceResolver extends Adaptable {
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      */
-    @Nullable Resource getResource(String path);
+    @CheckForNull Resource getResource(String path);
 
     /**
      * Returns a {@link Resource} object for data located at the given path.
@@ -335,7 +335,7 @@ public interface ResourceResolver extends Adaptable {
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      */
-    @Nullable Resource getResource(@Nullable Resource base, String path);
+    @CheckForNull Resource getResource(@CheckForNull Resource base, String path);
 
     /**
      * Returns the search path used by the {@link #getResource(String)} method
@@ -629,7 +629,7 @@ public interface ResourceResolver extends Adaptable {
      *         provided resource is <code>null</code>
      * @since 2.3
      */
-    @Nullable String getParentResourceType(final Resource resource);
+    @CheckForNull String getParentResourceType(final Resource resource);
 
     /**
      * Returns the super type of the given resource type. This method converts
@@ -644,7 +644,7 @@ public interface ResourceResolver extends Adaptable {
      *         <code>null</code> if <code>resourceType> is null.
      * @since 2.3
      */
-    public @Nullable String getParentResourceType(final String resourceType);
+    public @CheckForNull String getParentResourceType(final String resourceType);
 
     /**
      * Returns <code>true</code> if the resource type or any of the resource's
@@ -658,7 +658,7 @@ public interface ResourceResolver extends Adaptable {
      *         are <code>null</code>.
      * @since 2.3
      */
-    boolean isResourceType(@Nullable final Resource resource, final String resourceType);
+    boolean isResourceType(@CheckForNull final Resource resource, final String resourceType);
 
     /**
      * The resolver is updated to reflect the latest state.

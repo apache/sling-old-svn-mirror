@@ -20,7 +20,7 @@ package org.apache.sling.api.resource;
 
 import java.util.Iterator;
 
-import javax.annotation.Nullable;
+import javax.annotation.CheckForNull;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingException;
@@ -112,7 +112,7 @@ public interface ResourceProvider {
      * @deprecated since 2.2.0 (and JCR Resource 2.1.0), this method will not be invoked.
      */
     @Deprecated
-    @Nullable Resource getResource(ResourceResolver resourceResolver, HttpServletRequest request, String path);
+    @CheckForNull Resource getResource(ResourceResolver resourceResolver, HttpServletRequest request, String path);
 
     /**
      * Returns a resource from this resource provider or <code>null</code> if
@@ -132,7 +132,7 @@ public interface ResourceProvider {
      * @throws org.apache.sling.api.SlingException
      *             may be thrown in case of any problem creating the <code>Resource</code> instance.
      */
-    @Nullable Resource getResource(ResourceResolver resourceResolver, String path);
+    @CheckForNull Resource getResource(ResourceResolver resourceResolver, String path);
 
     /**
      * Returns an <code>Iterator</code> of {@link Resource} objects loaded from

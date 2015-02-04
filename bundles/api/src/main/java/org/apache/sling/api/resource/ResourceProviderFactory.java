@@ -20,7 +20,7 @@ package org.apache.sling.api.resource;
 
 import java.util.Map;
 
-import javax.annotation.Nullable;
+import javax.annotation.CheckForNull;
 
 import aQute.bnd.annotation.ConsumerType;
 
@@ -101,7 +101,7 @@ public interface ResourceProviderFactory {
      *      href="http://sling.apache.org/documentation/the-sling-engine/service-authentication.html">Service
      *      Authentication</a>
      */
-    ResourceProvider getResourceProvider(@Nullable Map<String, Object> authenticationInfo) throws LoginException;
+    ResourceProvider getResourceProvider(@CheckForNull Map<String, Object> authenticationInfo) throws LoginException;
 
     /**
      * Returns a new {@link ResourceProvider} instance with administrative
@@ -134,5 +134,5 @@ public interface ResourceProviderFactory {
      *             {@link ResourceResolverFactory#SUBSERVICE} properties.
      */
     @Deprecated
-    ResourceProvider getAdministrativeResourceProvider(@Nullable Map<String, Object> authenticationInfo) throws LoginException;
+    ResourceProvider getAdministrativeResourceProvider(@CheckForNull Map<String, Object> authenticationInfo) throws LoginException;
 }
