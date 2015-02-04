@@ -30,7 +30,10 @@ import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.distribution.component.impl.DistributionComponentKind;
+import org.apache.sling.distribution.component.impl.DistributionComponentUtils;
 import org.apache.sling.distribution.event.impl.DistributionEventFactory;
+import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
@@ -52,6 +55,12 @@ public class AdvancedRemoteDistributionPackageImporter implements DistributionPa
 
 
     private final Logger log = LoggerFactory.getLogger(getClass());
+
+    /**
+     * name of this importer.
+     */
+    @Property(label = "Name", description = "The name of the importer.")
+    public static final String NAME = DistributionComponentUtils.PN_NAME;
 
     @Property(name = "transportSecretProvider.target")
     @Reference(name = "transportSecretProvider")
@@ -103,15 +112,23 @@ public class AdvancedRemoteDistributionPackageImporter implements DistributionPa
         String customBody = PropertiesUtil.toString(config.get(CUSTOM_BODY), "");
 
 
+
+
+        String importerName = PropertiesUtil.toString(config.get(NAME), null);
+
+        DefaultDistributionLog distributionLog = new DefaultDistributionLog(DistributionComponentKind.IMPORTER, importerName, RemoteDistributionPackageImporter.class, DefaultDistributionLog.LogLevel.ERROR);
+
+
         List<DistributionTransport> transportHandlers = new ArrayList<DistributionTransport>();
 
         for (String endpoint : endpoints) {
             if (endpoint != null && endpoint.length() > 0) {
-                transportHandlers.add(new AdvancedHttpDistributionTransport(useCustomHeaders, customHeaders,
+                transportHandlers.add(new AdvancedHttpDistributionTransport(distributionLog, useCustomHeaders, customHeaders,
                         useCustomBody, customBody,
                         new DistributionEndpoint(endpoint), null, distributionTransportSecretProvider, -1));
             }
         }
+
         transportHandler = new MultipleEndpointDistributionTransport(transportHandlers,
                 transportEndpointStrategyType);
 

@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.DistributionPackageImportException;
 import org.apache.sling.distribution.packaging.DistributionPackageImporter;
@@ -41,15 +42,16 @@ import org.slf4j.LoggerFactory;
  */
 public class RemoteDistributionPackageImporter implements DistributionPackageImporter {
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private DistributionTransport transportHandler;
+    private final DefaultDistributionLog log;
     private DistributionTransportSecretProvider distributionTransportSecretProvider;
 
 
-    public RemoteDistributionPackageImporter(DistributionTransportSecretProvider distributionTransportSecretProvider,
+    public RemoteDistributionPackageImporter(DefaultDistributionLog log, DistributionTransportSecretProvider distributionTransportSecretProvider,
                                              Map<String, String> endpointsMap,
                                              TransportEndpointStrategyType transportEndpointStrategyType) {
+        this.log = log;
         this.distributionTransportSecretProvider = distributionTransportSecretProvider;
 
         if (distributionTransportSecretProvider == null) {
@@ -63,7 +65,7 @@ public class RemoteDistributionPackageImporter implements DistributionPackageImp
             String endpointKey = entry.getKey();
             String endpoint = entry.getValue();
             if (endpoint != null && endpoint.length() > 0) {
-                transportHandlers.put(endpointKey, new SimpleHttpDistributionTransport(new DistributionEndpoint(endpoint), null, distributionTransportSecretProvider, -1));
+                transportHandlers.put(endpointKey, new SimpleHttpDistributionTransport(log, new DistributionEndpoint(endpoint), null, distributionTransportSecretProvider, -1));
             }
         }
         transportHandler = new MultipleEndpointDistributionTransport(transportHandlers,

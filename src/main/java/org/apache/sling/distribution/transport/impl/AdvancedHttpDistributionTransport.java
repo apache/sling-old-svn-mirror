@@ -33,6 +33,7 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ContentType;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.distribution.log.impl.DefaultDistributionLog;
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.serialization.DistributionPackageBuilder;
 import org.apache.sling.distribution.transport.DistributionTransportSecretProvider;
@@ -49,7 +50,6 @@ public class AdvancedHttpDistributionTransport extends SimpleHttpDistributionTra
 
     private static final String PATH_VARIABLE_NAME = "{path}";
 
-    private static final Logger log = LoggerFactory.getLogger(AdvancedHttpDistributionTransport.class);
 
     private final DistributionEndpoint distributionEndpoint;
 
@@ -61,7 +61,7 @@ public class AdvancedHttpDistributionTransport extends SimpleHttpDistributionTra
 
     private final String customBody;
 
-    public AdvancedHttpDistributionTransport(boolean useCustomHeaders,
+    public AdvancedHttpDistributionTransport(DefaultDistributionLog log, boolean useCustomHeaders,
                                              String[] customHeaders,
                                              boolean useCustomBody,
                                              String customBody,
@@ -71,7 +71,7 @@ public class AdvancedHttpDistributionTransport extends SimpleHttpDistributionTra
                                              int maxNoOfPackages) {
 
 
-        super(distributionEndpoint, packageBuilder, secretProvider, maxNoOfPackages);
+        super(log, distributionEndpoint, packageBuilder, secretProvider, maxNoOfPackages);
         this.useCustomHeaders = useCustomHeaders;
         this.customHeaders = customHeaders;
         this.useCustomBody = useCustomBody;

@@ -180,7 +180,7 @@ public class ReverseDistributionAgentFactory extends AbstractDistributionAgentFa
         int pollItems = PropertiesUtil.toInteger(config.get(PULL_ITEMS), Integer.MAX_VALUE);
 
 
-        DistributionPackageExporter packageExporter = new RemoteDistributionPackageExporter(packageBuilder, transportSecretProvider, exporterEndpoints,
+        DistributionPackageExporter packageExporter = new RemoteDistributionPackageExporter(distributionLog, packageBuilder, transportSecretProvider, exporterEndpoints,
                 TransportEndpointStrategyType.All, pollItems);
         DistributionPackageImporter packageImporter = new LocalDistributionPackageImporter(packageBuilder);
         DistributionQueueProvider queueProvider =  new JobHandlingDistributionQueueProvider(agentName, jobManager, context);
