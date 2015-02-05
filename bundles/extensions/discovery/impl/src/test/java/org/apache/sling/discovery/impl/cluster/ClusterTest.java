@@ -673,6 +673,7 @@ public class ClusterTest {
         logger.info("instance3.slingId="+instance3.slingId);
         final String instance1SlingId = instance1.slingId;
         instance1.stopHeartbeats(); // and have instance3 no longer pinging instance1
+        instance1.stop(); // otherwise it will have itself still registered with the observation manager and fiddle with future events..
         instance1 = null; // set to null to early fail if anyone still assumes (original) instance1 is up form now on
         instance2.getConfig().setHeartbeatTimeout(1); // set instance2's heartbeatTimeout to 1 sec to time out instance1 quickly!
         instance3.getConfig().setHeartbeatTimeout(1); // set instance3's heartbeatTimeout to 1 sec to time out instance1 quickly!
