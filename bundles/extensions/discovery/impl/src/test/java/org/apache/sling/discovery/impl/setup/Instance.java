@@ -256,12 +256,12 @@ public class Instance {
     private Instance(String debugName,
             ResourceResolverFactory resourceResolverFactory, boolean resetRepo)
             throws Exception {
-    	this("/var/discovery/impl/", debugName, resourceResolverFactory, resetRepo, 20, 1, UUID.randomUUID().toString(), false);
+    	this("/var/discovery/impl/", debugName, resourceResolverFactory, resetRepo, 20, 20, 1, UUID.randomUUID().toString(), false);
     }
 
     private Instance(String discoveryResourcePath, String debugName,
             ResourceResolverFactory resourceResolverFactory, boolean resetRepo,
-            final int heartbeatTimeout, final int minEventDelay, String slingId,
+            final int heartbeatTimeout, final int heartbeatInterval, final int minEventDelay, String slingId,
             boolean delayInitEventUntilVoted)
             throws Exception {
     	this.slingId = slingId;
@@ -274,7 +274,7 @@ public class Instance {
 
         this.config = new MyConfig();
         config.setHeartbeatTimeout(heartbeatTimeout);
-        config.setHeartbeatInterval(20);
+        config.setHeartbeatInterval(heartbeatInterval);
         config.setMinEventDelay(minEventDelay);
         config.addTopologyConnectorWhitelistEntry("127.0.0.1");
         config.setDelayInitEventUntilVoted(delayInitEventUntilVoted);
@@ -377,21 +377,28 @@ public class Instance {
             boolean resetRepo, int heartbeatTimeout, int minEventDelay, String slingId, boolean delayInitEventUntilVoted) throws Exception {
         ResourceResolverFactory resourceResolverFactory = MockFactory
                 .mockResourceResolverFactory();
-        return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, minEventDelay, slingId, delayInitEventUntilVoted);
+        return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, 20, minEventDelay, slingId, delayInitEventUntilVoted);
     }
     
     public static Instance newStandaloneInstance(String discoveryResourcePath, String debugName,
             boolean resetRepo, int heartbeatTimeout, int minEventDelay, String slingId) throws Exception {
         ResourceResolverFactory resourceResolverFactory = MockFactory
                 .mockResourceResolverFactory();
-        return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, minEventDelay, slingId, false);
+        return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, 20, minEventDelay, slingId, false);
     }
 
     public static Instance newStandaloneInstance(String discoveryResourcePath, String debugName,
             boolean resetRepo, int heartbeatTimeout, int minEventDelay) throws Exception {
         ResourceResolverFactory resourceResolverFactory = MockFactory
                 .mockResourceResolverFactory();
-        return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, minEventDelay, UUID.randomUUID().toString(), false);
+        return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, 20, minEventDelay, UUID.randomUUID().toString(), false);
+    }
+
+    public static Instance newStandaloneInstance(String discoveryResourcePath, String debugName,
+            boolean resetRepo, int heartbeatTimeout, int heartbeatInterval, int minEventDelay) throws Exception {
+        ResourceResolverFactory resourceResolverFactory = MockFactory
+                .mockResourceResolverFactory();
+        return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, heartbeatInterval, minEventDelay, UUID.randomUUID().toString(), false);
     }
 
     public static Instance newStandaloneInstance(String debugName,
@@ -403,17 +410,22 @@ public class Instance {
 
     public static Instance newClusterInstance(String discoveryResourcePath, String debugName, Instance other,
             boolean resetRepo, int heartbeatTimeout, int minEventDelay, String slingId, boolean delayInitEventUntilVoted) throws Exception {
-        return new Instance(discoveryResourcePath, debugName, other.resourceResolverFactory, resetRepo, heartbeatTimeout, minEventDelay, slingId, delayInitEventUntilVoted);
+        return new Instance(discoveryResourcePath, debugName, other.resourceResolverFactory, resetRepo, heartbeatTimeout, 20, minEventDelay, slingId, delayInitEventUntilVoted);
     }
 
     public static Instance newClusterInstance(String discoveryResourcePath, String debugName, Instance other,
             boolean resetRepo, int heartbeatTimeout, int minEventDelay, String slingId) throws Exception {
-        return new Instance(discoveryResourcePath, debugName, other.resourceResolverFactory, resetRepo, heartbeatTimeout, minEventDelay, slingId, false);
+        return new Instance(discoveryResourcePath, debugName, other.resourceResolverFactory, resetRepo, heartbeatTimeout, 20, minEventDelay, slingId, false);
     }
 
     public static Instance newClusterInstance(String discoveryResourcePath, String debugName, Instance other,
             boolean resetRepo, int heartbeatTimeout, int minEventDelay) throws Exception {
-        return new Instance(discoveryResourcePath, debugName, other.resourceResolverFactory, resetRepo, heartbeatTimeout, minEventDelay, UUID.randomUUID().toString(), false);
+        return new Instance(discoveryResourcePath, debugName, other.resourceResolverFactory, resetRepo, heartbeatTimeout, 20, minEventDelay, UUID.randomUUID().toString(), false);
+    }
+
+    public static Instance newClusterInstance(String discoveryResourcePath, String debugName, Instance other,
+            boolean resetRepo, int heartbeatTimeout, int heartbeatInterval, int minEventDelay) throws Exception {
+        return new Instance(discoveryResourcePath, debugName, other.resourceResolverFactory, resetRepo, heartbeatTimeout, heartbeatInterval, minEventDelay, UUID.randomUUID().toString(), false);
     }
 
     public static Instance newClusterInstance(String debugName, Instance other,
