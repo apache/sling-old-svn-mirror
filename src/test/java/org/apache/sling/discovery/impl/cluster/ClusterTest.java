@@ -300,18 +300,20 @@ public class ClusterTest {
 
         tearDown(); // reset any setup that was done - we start with a different setup than the default one
         
-        instance1 = Instance.newStandaloneInstance("/var/discovery/clusterA/", "instance1", true, 5 /* sec*/, MIN_EVENT_DELAY);
+        instance1 = Instance.newStandaloneInstance("/var/discovery/clusterA/", "instance1", true, 5 /* sec*/, 999, MIN_EVENT_DELAY);
         instance2 = Instance.newClusterInstance("/var/discovery/clusterA/", "instance2", instance1,
-                false, 5 /* sec*/, MIN_EVENT_DELAY);
+                false, 5 /* sec*/, 999, MIN_EVENT_DELAY);
         // now launch the remote instance
-        instance3 = Instance.newStandaloneInstance("/var/discovery/clusterB/", "instance3", false, 5 /* sec*/, MIN_EVENT_DELAY);
+        instance3 = Instance.newStandaloneInstance("/var/discovery/clusterB/", "instance3", false, 5 /* sec*/, 999, MIN_EVENT_DELAY);
         instance4 = Instance.newClusterInstance("/var/discovery/clusterB/", "instance4", instance3,
-                false, 5 /* sec*/, MIN_EVENT_DELAY);
-        instance5 = Instance.newStandaloneInstance("/var/discovery/clusterC/", "instance5", false, 5 /* sec*/, MIN_EVENT_DELAY);
+                false, 5 /* sec*/, 999, MIN_EVENT_DELAY);
+        instance5 = Instance.newStandaloneInstance("/var/discovery/clusterC/", "instance5", false, 5 /* sec*/, 999, MIN_EVENT_DELAY);
 
         // join the instances to form a cluster by sending out heartbeats
         runHeartbeatOnceWith(instance1, instance2, instance3, instance4, instance5);
+        Thread.sleep(250);
         runHeartbeatOnceWith(instance1, instance2, instance3, instance4, instance5);
+        Thread.sleep(250);
 
         assertSameTopology(new SimpleClusterView(instance1, instance2));
         assertSameTopology(new SimpleClusterView(instance3, instance4));
@@ -322,9 +324,11 @@ public class ClusterTest {
         runHeartbeatOnceWith(instance1, instance2, instance3, instance4, instance5);
         pingConnector(instance3, instance1);
         pingConnector(instance5, instance1);
+        Thread.sleep(250);
         runHeartbeatOnceWith(instance1, instance2, instance3, instance4, instance5);
         pingConnector(instance3, instance1);
         pingConnector(instance5, instance1);
+        Thread.sleep(250);
         
         // make asserts on the topology
         logger.info("testConnectorSwitching4139: instance1.slingId="+instance1.slingId);
