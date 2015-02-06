@@ -31,6 +31,7 @@ import org.apache.sling.scripting.sightly.impl.compiler.frontend.ExpressionParse
 import org.apache.sling.scripting.sightly.impl.compiler.frontend.ExpressionWrapper;
 import org.apache.sling.scripting.sightly.impl.compiler.frontend.Fragment;
 import org.apache.sling.scripting.sightly.impl.compiler.frontend.Interpolation;
+import org.apache.sling.scripting.sightly.impl.compiler.ris.command.Patterns;
 import org.apache.sling.scripting.sightly.impl.filter.Filter;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.Expression;
 import org.apache.sling.scripting.sightly.impl.compiler.expression.ExpressionNode;
@@ -94,6 +95,10 @@ public class MarkupHandler {
         ElementContext context = elementStack.peek();
         PluginInvoke invoke = context.pluginInvoke();
         invoke.beforeElement(stream, context.getTagName());
+        boolean slyTag = "sly".equalsIgnoreCase(context.getTagName());
+        if (slyTag) {
+            Patterns.beginStreamIgnore(stream);
+        }
         invoke.beforeTagOpen(stream);
         out(context.getOpenTagStartMarkup());
         invoke.beforeAttributes(stream);
@@ -101,6 +106,9 @@ public class MarkupHandler {
         invoke.afterAttributes(stream);
         out(markup);
         invoke.afterTagOpen(stream);
+        if (slyTag) {
+            Patterns.endStreamIgnore(stream);
+        }
         invoke.beforeChildren(stream);
     }
 
@@ -249,9 +257,16 @@ public class MarkupHandler {
         PluginInvoke invoke = context.pluginInvoke();
         invoke.afterChildren(stream);
         boolean selfClosingTag = StringUtils.isEmpty(markup);
+        boolean slyTag = "sly".equalsIgnoreCase(context.getTagName());
+        if (slyTag) {
+            Patterns.beginStreamIgnore(stream);
+        }
         invoke.beforeTagClose(stream, selfClosingTag);
         out(markup);
         invoke.afterTagClose(stream, selfClosingTag);
+        if (slyTag) {
+            Patterns.endStreamIgnore(stream);
+        }
         invoke.afterElement(stream);
     }
 
