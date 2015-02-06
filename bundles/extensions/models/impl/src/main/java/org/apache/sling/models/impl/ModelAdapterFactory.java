@@ -94,6 +94,7 @@ import org.slf4j.LoggerFactory;
 
 @Component(metatype = true, immediate = true)
 @Service(value = ModelFactory.class)
+@SuppressWarnings("deprecation")
 public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFactory {
 
     private static class DisposalCallbackRegistryImpl implements DisposalCallbackRegistry {
@@ -188,6 +189,12 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
     @Override
     public <ModelType> ModelType createModel(Object adaptable, Class<ModelType> type) throws MissingElementsException,
             InvalidAdaptableException, InvalidValidationModelException, InvalidResourceException {
+        if (adaptable == null) {
+            throw new IllegalArgumentException("Given adaptable is null!");
+        }
+        if (type == null) {
+            throw new IllegalArgumentException("Given type is null");
+        }
         Result<ModelType> result = internalCreateModel(adaptable, type);
         result.throwException(log);
         return result.getModel();
@@ -967,6 +974,14 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable, ModelFacto
 
     InjectAnnotationProcessorFactory[] getInjectAnnotationProcessorFactories() {
         return sortedInjectAnnotationProcessorFactories;
+    }
+
+    InjectAnnotationProcessorFactory2[] getInjectAnnotationProcessorFactories2() {
+        return sortedInjectAnnotationProcessorFactories2;
+    }
+
+    Collection<StaticInjectAnnotationProcessorFactory> getStaticInjectAnnotationProcessorFactories() {
+        return staticInjectAnnotationProcessorFactories.values();
     }
 
     ImplementationPicker[] getImplementationPickers() {

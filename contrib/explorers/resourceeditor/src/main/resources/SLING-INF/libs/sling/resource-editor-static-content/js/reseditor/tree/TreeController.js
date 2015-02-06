@@ -41,22 +41,47 @@ org.apache.sling.reseditor.TreeController = (function() {
 		this.addNodeController = new org.apache.sling.reseditor.AddNodeController(addNodeControllerSettings, mainController);
 		
 		$(document).ready(function() {
-			$("#tree").on("click", "li.jstree-node>a.jstree-anchor>i.open-icon",function(e, data) {
-				thatTreeController.openNodeTarget(e);
+			$("#tree").on("click", "#root",function(e) {
+				var target = $(e.target);
+				if (target.hasClass("open-icon")){
+					thatTreeController.openNodeTarget(e);
+				} else if (target.hasClass("add-icon")){
+					thatTreeController.openAddNodeDialog(target.parents("li"));
+				}else if (target.hasClass("remove-icon")){
+					thatTreeController.deleteSingleNode(target.parents("li"));
+				}
 			});
-			$("#tree").on("click", "li.jstree-node>a.jstree-anchor>i.add-icon",function(e, data) {
-				thatTreeController.openAddNodeDialog($(e.target).parents("li"));
+			$("#tree").on("dblclick", "#root",function(e) {
+				var target = $(e.target);
+				if (target.hasClass("jstree-anchor") || target.hasClass("node-type")){
+					var id = target.parents("li:first").attr("id");
+					thatTreeController.openRenameNodeDialog(id);
+				}
 			});
-			$("#tree").on("click", "li.jstree-node>a.jstree-anchor>i.remove-icon",function(e, data) {
-				thatTreeController.deleteSingleNode($(e.target).parents("li"));
+			$("#tree-info-icon").on("click", function(e, data) {
+				$('#sidebar .info-content-container').slideToggle();
 			});
-	
-			$("#tree").on("dblclick", "li.jstree-node>a.jstree-anchor",function(e, data) {
-				var id = $(e.target).parents("li:first").attr("id");
-				thatTreeController.openRenameNodeDialog(id);
+			$("#sidebar .info-content-container .close").on("click", function(e, data) {
+				$('#sidebar .info-content-container').slideToggle();
 			});
 		});
 	};
+
+	TreeController.prototype.configureKeyListeners = function(e) {
+    	// see http://www.javascripter.net/faq/keycodes.htm
+		var del = 46;
+		var c = 67;
+		switch(e.which) {
+		    case del:
+	    		treeController.deleteNodes();
+		        break;
+		    case c:
+				this.openAddNodeDialog($(e.target).parents("li"));
+		        break;
+		}
+		
+	}
+	
 
 	TreeController.prototype.openNodeTarget = function(e) {
 		var url = $(e.target).parent().attr("href");
@@ -230,7 +255,8 @@ org.apache.sling.reseditor.TreeController = (function() {
 	TreeController.prototype.openAddNodeDialog = function(li) {
 		var thatTreeController = this;
 		var resourcePath = this.getPathFromLi(li);
-		this.addNodeController.openAddNodeDialog(resourcePath);
+		var nodeTypeName = li.attr("nodetype");
+		this.addNodeController.openAddNodeDialog(resourcePath, nodeTypeName);
 	}
 
 	/*

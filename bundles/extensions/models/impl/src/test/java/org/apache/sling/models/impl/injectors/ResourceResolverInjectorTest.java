@@ -27,9 +27,14 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.junit.Test;
 
+/**
+ * This was a unit test for the ResourceResolverInjector which is now removed
+ * because it is obsolete due to the SlingObjectInjector.
+ * Leaving unit test to ensure the same behavior.
+ */
 public class ResourceResolverInjectorTest {
 
-    private ResourceResolverInjector injector = new ResourceResolverInjector();
+    private SlingObjectInjector injector = new SlingObjectInjector();
 
     @Test
     public void testFromResource() {
@@ -37,7 +42,7 @@ public class ResourceResolverInjectorTest {
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         when(resource.getResourceResolver()).thenReturn(resourceResolver);
 
-        Object result = injector.getValue(resource, "resourceResolver", null, null, null);
+        Object result = injector.getValue(resource, "resourceResolver", ResourceResolver.class, null, null);
         assertEquals(resourceResolver, result);
     }
 
@@ -47,7 +52,7 @@ public class ResourceResolverInjectorTest {
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         when(request.getResourceResolver()).thenReturn(resourceResolver);
 
-        Object result = injector.getValue(request, "resourceResolver", null, null, null);
+        Object result = injector.getValue(request, "resourceResolver", ResourceResolver.class, null, null);
         assertEquals(resourceResolver, result);
     }
 
@@ -55,7 +60,7 @@ public class ResourceResolverInjectorTest {
     public void testFromSomethingElse() {
         SlingHttpServletResponse response = mock(SlingHttpServletResponse.class);
 
-        Object result = injector.getValue(response, "resourceResolver", null, null, null);
+        Object result = injector.getValue(response, "resourceResolver", ResourceResolver.class, null, null);
         assertNull(result);
     }
 

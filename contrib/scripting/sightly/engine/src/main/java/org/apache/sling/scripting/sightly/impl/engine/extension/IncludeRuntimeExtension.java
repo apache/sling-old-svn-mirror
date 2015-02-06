@@ -35,9 +35,9 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.api.servlets.ServletResolver;
+import org.apache.sling.scripting.sightly.SightlyException;
 import org.apache.sling.scripting.sightly.extension.RuntimeExtension;
 import org.apache.sling.scripting.sightly.impl.engine.runtime.RenderContextImpl;
-import org.apache.sling.scripting.sightly.impl.engine.runtime.SightlyRenderException;
 import org.apache.sling.scripting.sightly.impl.plugin.IncludePlugin;
 import org.apache.sling.scripting.sightly.render.RenderContext;
 import org.slf4j.Logger;
@@ -68,7 +68,7 @@ public class IncludeRuntimeExtension implements RuntimeExtension {
         Map options = (Map) arguments[1];
         String path = buildPath(originalPath, options);
         if (path == null) {
-            throw new SightlyRenderException("Path for include is empty");
+            throw new SightlyException("Path for data-sly-include is empty");
         }
         StringWriter output = new StringWriter();
         final Bindings bindings = renderContext.getBindings();

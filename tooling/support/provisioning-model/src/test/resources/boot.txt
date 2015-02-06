@@ -2,7 +2,7 @@
 # Only a single artifact is allowed within this feature.
 #
 [feature name=:launchpad]
-    org.apache.sling/org.apache.sling.launchpad.base/4.4.1-2.5.2/jar
+    org.apache.sling/org.apache.sling.launchpad.base/4.6.0-2.5.6/jar
 
 
 # The :boot feature contains all things to bootstrap the installation.

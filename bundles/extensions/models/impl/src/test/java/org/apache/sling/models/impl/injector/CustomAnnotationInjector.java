@@ -25,6 +25,7 @@ import org.apache.sling.models.spi.injectorspecific.AbstractInjectAnnotationProc
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessor;
 import org.apache.sling.models.spi.injectorspecific.InjectAnnotationProcessorFactory;
 
+@SuppressWarnings("deprecation")
 public class CustomAnnotationInjector implements Injector, InjectAnnotationProcessorFactory {
 
     @Override

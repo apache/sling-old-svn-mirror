@@ -20,6 +20,7 @@ package org.apache.sling.distribution.queue.impl;
 
 import org.apache.sling.distribution.packaging.DistributionPackage;
 import org.apache.sling.distribution.packaging.SharedDistributionPackage;
+import org.apache.sling.distribution.packaging.impl.DistributionPackageUtils;
 import org.apache.sling.distribution.queue.DistributionQueue;
 import org.apache.sling.distribution.queue.DistributionQueueException;
 import org.apache.sling.distribution.queue.DistributionQueueItem;
@@ -48,22 +49,24 @@ public class MultipleQueueDispatchingStrategy implements DistributionQueueDispat
     }
 
     public Iterable<DistributionQueueItemStatus> add(@Nonnull DistributionPackage distributionPackage, @Nonnull DistributionQueueProvider queueProvider) throws DistributionQueueException {
+
+
+        if (!(distributionPackage instanceof SharedDistributionPackage) && queueNames.length > 1) {
+            throw new DistributionQueueException("distribution package must be a shared package to be added in multiple queues");
+        }
+
         DistributionQueueItem queueItem = getItem(distributionPackage);
         List<DistributionQueueItemStatus> result = new ArrayList<DistributionQueueItemStatus>();
 
         for (String queueName: queueNames) {
             DistributionQueue queue = queueProvider.getQueue(queueName);
-            if (distributionPackage instanceof SharedDistributionPackage) {
-                ((SharedDistributionPackage) distributionPackage).acquire(queueName);
-            }
+            DistributionPackageUtils.acquire(distributionPackage, queueName);
             DistributionQueueItemStatus status = new DistributionQueueItemStatus(DistributionQueueItemStatus.ItemState.ERROR, queue.getName());
             if (queue.add(queueItem)) {
                  status = queue.getStatus(queueItem);
             }
             else {
-                if (distributionPackage instanceof SharedDistributionPackage) {
-                    ((SharedDistributionPackage) distributionPackage).release(queueName);
-                }
+                DistributionPackageUtils.releaseOrDelete(distributionPackage, queueName);
             }
 
             result.add(status);

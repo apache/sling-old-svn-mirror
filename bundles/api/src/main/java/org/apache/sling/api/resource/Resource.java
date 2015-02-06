@@ -29,6 +29,11 @@ import aQute.bnd.annotation.ProviderType;
  * other types. A JCR based resource might support adapting to the JCR Node on
  * which the resource is based.
  * <p>
+ * A <code>Resource</code> object is valid for as long as the
+ * <code>ResourceResolver</code> that provided this instance is valid. The
+ * same applies in general to all objects returned by this instance,
+ * especially those returned by a call to {@link #adaptTo(Class)}.
+ * <p>
  * All implementations must support returning a value map from
  * {@link #getValueMap()}, even if the map is empty.
  * <p>

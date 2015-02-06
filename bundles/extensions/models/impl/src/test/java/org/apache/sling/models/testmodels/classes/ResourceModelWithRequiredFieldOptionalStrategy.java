@@ -23,7 +23,6 @@ import org.apache.sling.models.annotations.DefaultInjectionStrategy;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.Required;
 import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
-import org.apache.sling.models.annotations.injectorspecific.ResourcePath;
 import org.apache.sling.models.annotations.injectorspecific.ValueMapValue;
 
 @Model(adaptables = Resource.class, defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL)
@@ -34,6 +33,7 @@ public class ResourceModelWithRequiredFieldOptionalStrategy {
     @ValueMapValue(optional=false)
     private String optional5;
     
+    @SuppressWarnings("unused")
     @Inject
     private String optional1;
 

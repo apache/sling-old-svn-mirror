@@ -62,13 +62,15 @@ public abstract class AbstractSlingFilterChain implements FilterChain {
 
                 // continue filtering with the next filter
                 FilterHandle filter = this.filters[this.current];
-                trackFilter(slingRequest, filter);
-                filter.getFilter().doFilter(slingRequest, slingResponse, this);
-
+                
+                if (filter.select(slingRequest)) {
+                    trackFilter(slingRequest, filter);
+                    filter.getFilter().doFilter(slingRequest, slingResponse, this);
+                } else if (this.current == this.filters.length-1) {
+                    this.render(slingRequest, slingResponse);
+                }
             } else {
-
                 this.render(slingRequest, slingResponse);
-
             }
 
         } finally {

@@ -70,7 +70,7 @@ public class MockedResource extends SyntheticResource {
 
     @Override
     protected void finalize() throws Throwable {
-        close();
+//        close();
         super.finalize();
     }
 

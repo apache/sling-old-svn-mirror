@@ -66,6 +66,9 @@ $(document).ready(function() {
 			treeController.openElement($("#tree > ul > li[nodename=''] > ul"), paths);
 		}
 		selectingNodeWhileOpeningTree=false;
+		// position the info-icon
+		$('#tree-info-icon').show();
+		$('#root i:first').before($('#tree-info-icon'));
 	})
 	// call `.jstree` with the options object
 	.jstree({
@@ -98,6 +101,7 @@ $(document).ready(function() {
 		        "check_move"  : function (m) {
 			        // you find the member description here
 			        // http://www.jstree.com/documentation/core.html#_get_move
+		        	// TODO refactor to the new jsTree version
 			        var src_li = m.o;
 			        var src_nt = mainController.getNTFromLi(src_li);
 			        var src_nodename = src_li.attr("nodename");
@@ -131,7 +135,7 @@ $(document).ready(function() {
     	treeController.renameNode(e, data);
     }).bind("move_node.jstree", function (e, data) {
     	// see http://www.jstree.com/documentation/core ._get_move()
-    	// refactor to the new jsTree version
+    	// TODO refactor to the new jsTree version
     	var src_li = data.rslt.o;
     	var src_path = ""+settings.contextPath+src_li.children("a").attr("target");
     	var dest_li = data.rslt.np; // new parent .cr - same as np, but if a root node is created this is -1
@@ -159,11 +163,8 @@ $(document).ready(function() {
       	});
     }).on('hover_node.jstree', function (event, nodeObj) {
         $('#'+nodeObj.node.id+' a:first').focus();
-    }).on('keydown.jstree', '.jstree-anchor', function (e) {
-    	// see http://www.javascripter.net/faq/keycodes.htm
-    	if (46==e.which) {
-    		treeController.deleteNodes();
-    	}
+    }).on('keydown.jstree', 'a.jstree-anchor', function (e) {
+    	treeController.configureKeyListeners(e);
     }).on('select_node.jstree', function (e, data) {
     	;
     });

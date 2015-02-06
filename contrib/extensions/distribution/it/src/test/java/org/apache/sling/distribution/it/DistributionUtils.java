@@ -219,6 +219,10 @@ public class DistributionUtils {
         return agentUrl(agentName) + "/queues";
     }
 
+    public static String logUrl(String agentName) {
+        return agentUrl(agentName) + "/log";
+    }
+
     public static String authorAgentConfigUrl(String agentName) {
         return DISTRIBUTION_ROOT_PATH + "/settings/agents/" + agentName;
     }

@@ -38,17 +38,16 @@ import org.xml.sax.ContentHandler;
  */
 class MockWorkspace implements Workspace {
 
+    private final MockRepository repository;
     private final Session session;
     private final String workspaceName;
-    private final NamespaceRegistry namespaceRegistry = new MockNamespaceRegistry();
-    private final ObservationManager observationManager = new MockObservationManager();
-    private final NodeTypeManager nodeTypeManager = new MockNodeTypeManager();
     private final QueryManager queryManager = new MockQueryManager();
 
     /**
      * @param session JCR session
      */
-    public MockWorkspace(Session session, String workspaceName) {
+    public MockWorkspace(MockRepository repository, Session session, String workspaceName) {
+        this.repository = repository;
         this.session = session;
         this.workspaceName = workspaceName;
     }
@@ -65,17 +64,17 @@ class MockWorkspace implements Workspace {
 
     @Override
     public NamespaceRegistry getNamespaceRegistry() throws RepositoryException {
-        return this.namespaceRegistry;
+        return repository.getNamespaceRegistry();
     }
 
     @Override
     public ObservationManager getObservationManager() throws RepositoryException {
-        return this.observationManager;
+        return repository.getObservationManager();
     }
 
     @Override
     public NodeTypeManager getNodeTypeManager() throws RepositoryException {
-        return this.nodeTypeManager;
+        return repository.getNodeTypeManager();
     }
 
     @Override

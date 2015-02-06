@@ -21,7 +21,7 @@ import java.lang.reflect.AnnotatedElement;
 /**
  * Factory for {@link InjectAnnotationProcessor} that is evaluated once
  * a sling model implementation class is registered.
- * Whenever possible this interface should be favored above {@link InjectAnnotationProcessorFactory}.
+ * Whenever possible this interface should be favored above {@link InjectAnnotationProcessorFactory2}.
  */
 public interface StaticInjectAnnotationProcessorFactory {
 

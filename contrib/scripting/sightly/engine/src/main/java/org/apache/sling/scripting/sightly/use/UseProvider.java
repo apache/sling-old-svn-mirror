@@ -26,8 +26,14 @@ import org.apache.sling.scripting.sightly.render.RenderContext;
 import aQute.bnd.annotation.ConsumerType;
 
 /**
- * Provides instances for the use API. Providers are tried in the order
- * of their priority until one is found which can provide a non-null instance
+ * Provides instances for the use API. Providers are tried in the order of their
+ * service ranking until one is found which can provide a non-null instance
+ * <p>
+ * {@code UseProvider} services are ranked according to the OSGi service
+ * registration propertiy {@code service.ranking} which is an integer value.
+ * {@code UseProvider} servies with lower ranking values are tried before
+ * services with higher ranking values. The default value for the ranking if the
+ * property is missing is zero.
  */
 @ConsumerType
 public interface UseProvider {

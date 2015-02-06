@@ -20,7 +20,6 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -42,7 +41,7 @@ import org.osgi.framework.Constants;
 @Component
 @Service
 @Property(name = Constants.SERVICE_RANKING, intValue = 3000)
-public class ChildResourceInjector implements Injector, InjectAnnotationProcessorFactory2 {
+public class ChildResourceInjector extends AbstractInjector implements Injector, InjectAnnotationProcessorFactory2 {
 
     @Override
     public String getName() {
@@ -91,16 +90,6 @@ public class ChildResourceInjector implements Injector, InjectAnnotationProcesso
        return null;
    }
 
-    private boolean isDeclaredTypeCollection(Type declaredType) {
-       boolean isCollection = false;
-       if (declaredType instanceof ParameterizedType) {
-           ParameterizedType type = (ParameterizedType) declaredType;
-           Class<?> collectionType = (Class<?>) type.getRawType();
-           isCollection = collectionType.equals(Collection.class)
-                   || collectionType.equals(List.class);
-       }
-       return isCollection;
-   }
 
     @Override
     public InjectAnnotationProcessor2 createAnnotationProcessor(Object adaptable, AnnotatedElement element) {
@@ -138,6 +127,7 @@ public class ChildResourceInjector implements Injector, InjectAnnotationProcesso
         }
 
         @Override
+        @SuppressWarnings("deprecation")
         public Boolean isOptional() {
             return annotation.optional();
         }

@@ -46,10 +46,14 @@ public class VotingHelper {
      * <p>
      * 'Not winning' means that a voting still did not receive a vote
      * from everybody
-     * @return the list of matching votings
+     * @return the list of matching votings - never returns null
      */
     public static List<VotingView> listOpenNonWinningVotings(
             final ResourceResolver resourceResolver, final Config config) {
+        if (config==null) {
+            logger.info("listOpenNonWinningVotings: config is null, bundle likely deactivated.");
+            return new ArrayList<VotingView>();
+        }
         final String ongoingVotingsPath = config.getOngoingVotingsPath();
         final Resource ongoingVotingsResource = resourceResolver
                 .getResource(ongoingVotingsPath);

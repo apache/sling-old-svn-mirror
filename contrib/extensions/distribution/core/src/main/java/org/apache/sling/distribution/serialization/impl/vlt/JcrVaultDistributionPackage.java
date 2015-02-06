@@ -31,7 +31,7 @@ public class JcrVaultDistributionPackage extends AbstractDistributionPackage imp
         String[] paths = new String[0];
         try {
             paths = VltUtils.getPaths(jcrPackage.getDefinition().getMetaInf());
-        } catch (Throwable e) {
+        } catch (RepositoryException e) {
             log.error("cannot read paths", e);
         }
         this.getInfo().setPaths(paths);

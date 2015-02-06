@@ -22,6 +22,7 @@ import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
  * Default implementation of {@link InjectAnnotationProcessor2}.
  *
  */
+@SuppressWarnings("deprecation")
 public class AbstractInjectAnnotationProcessor2 extends AbstractInjectAnnotationProcessor implements InjectAnnotationProcessor2 {
 
     public InjectionStrategy getInjectionStrategy() {

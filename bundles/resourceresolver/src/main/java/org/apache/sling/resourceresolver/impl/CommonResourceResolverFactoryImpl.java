@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.collections.BidiMap;
 import org.apache.sling.api.resource.LoginException;
@@ -62,14 +63,23 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      */
     private ThreadLocal<Stack<ResourceResolver>> resolverStackHolder = new ThreadLocal<Stack<ResourceResolver>>();
 
+    private final AtomicBoolean isActive = new AtomicBoolean(true);
+
     public CommonResourceResolverFactoryImpl(final ResourceResolverFactoryActivator activator) {
         this.activator = activator;
     }
 
     // ---------- Resource Resolver Factory ------------------------------------
 
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolverFactory#getAdministrativeResourceResolver(java.util.Map)
+     */
     public ResourceResolver getAdministrativeResourceResolver(final Map<String, Object> passedAuthenticationInfo)
     throws LoginException {
+        if ( !isActive.get() ) {
+            throw new LoginException("ResourceResolverFactory is deactivated.");
+        }
+
         // create a copy of the passed authentication info as we modify the map
         final Map<String, Object> authenticationInfo = new HashMap<String, Object>();
         if ( passedAuthenticationInfo != null ) {
@@ -87,6 +97,10 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      */
     public ResourceResolver getResourceResolver(final Map<String, Object> passedAuthenticationInfo)
     throws LoginException {
+        if ( !isActive.get() ) {
+            throw new LoginException("ResourceResolverFactory is deactivated.");
+        }
+
         // create a copy of the passed authentication info as we modify the map
         final Map<String, Object> authenticationInfo = new HashMap<String, Object>();
         if ( passedAuthenticationInfo != null ) {
@@ -111,6 +125,10 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getThreadResourceResolver()
      */
     public ResourceResolver getThreadResourceResolver() {
+        if ( !isActive.get() ) {
+            return null;
+        }
+
         ResourceResolver result = null;
         final Stack<ResourceResolver> resolverStack = resolverStackHolder.get();
         if ( resolverStack != null && !resolverStack.isEmpty() ) {
@@ -147,6 +165,10 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     public ResourceResolver getResourceResolverInternal(final Map<String, Object> authenticationInfo,
                     final boolean isAdmin)
     throws LoginException {
+        if ( !isActive.get() ) {
+            throw new LoginException("ResourceResolverFactory is deactivated.");
+        }
+
         // create context
         final ResourceResolverContext ctx = new ResourceResolverContext(isAdmin, authenticationInfo, this.activator.getResourceAccessSecurityTracker());
 
@@ -182,6 +204,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      * Deactivates this component
      */
     protected void deactivate() {
+        isActive.set(false);
         if (plugin != null) {
             plugin.dispose();
             plugin = null;
@@ -241,11 +264,11 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     public boolean isVanityPathEnabled() {
         return this.activator.isVanityPathEnabled();
     }
-    
+
     public long getMaxCachedVanityPathEntries() {
         return this.activator.getMaxCachedVanityPathEntries();
     }
-    
+
     public int getVanityBloomFilterMaxBytes() {
         return this.activator.getVanityBloomFilterMaxBytes();
     }
@@ -277,5 +300,9 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         }
         Collections.sort(configs);
         return configs;
+    }
+
+    public boolean isLive() {
+        return this.isActive.get();
     }
 }

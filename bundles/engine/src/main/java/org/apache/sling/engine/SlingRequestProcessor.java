@@ -26,6 +26,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.resource.ResourceResolver;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The <code>SlingRequestProcessor</code> interface defines the service which
  * may be called to handle HTTP requests.
@@ -33,6 +35,7 @@ import org.apache.sling.api.resource.ResourceResolver;
  * This interface is implemented by this bundle and is not intended to be
  * implemented by bundles other than this.
  */
+@ProviderType
 public interface SlingRequestProcessor {
 
     /**

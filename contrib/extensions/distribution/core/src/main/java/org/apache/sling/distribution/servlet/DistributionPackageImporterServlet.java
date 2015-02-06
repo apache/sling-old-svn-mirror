@@ -65,10 +65,10 @@ public class DistributionPackageImporterServlet extends SlingAllMethodsServlet {
                 response.setStatus(400);
                 response.getWriter().print("error: could not import a package from the request stream");
             }
-        } catch (final Exception e) {
+        } catch (final Throwable e) {
             response.setStatus(400);
             response.getWriter().print("error: " + e.toString());
-            log.error("Error during distribution import: {}", e.getMessage(), e);
+            log.error("Error during distribution import", e);
         } finally {
             long end = System.currentTimeMillis();
             log.info("Processed package import request in {} ms", end - start);

@@ -148,6 +148,7 @@ public final class SlingObjectInjector implements Injector, StaticInjectAnnotati
         }
         
         @Override
+        @SuppressWarnings("deprecation")
         public Boolean isOptional() {
             return annotation.optional();
         }

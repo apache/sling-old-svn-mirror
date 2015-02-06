@@ -241,6 +241,7 @@ public class OSGiServiceInjector implements Injector, StaticInjectAnnotationProc
         }
         
         @Override
+        @SuppressWarnings("deprecation")
         public Boolean isOptional() {
             return annotation.optional();
         }

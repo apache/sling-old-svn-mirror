@@ -31,8 +31,12 @@ import org.apache.sling.discovery.impl.setup.Instance;
 import org.apache.sling.discovery.impl.topology.announcement.Announcement;
 import org.junit.After;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TopologyTest {
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final List<Instance> instances = new LinkedList<Instance>();
     
@@ -48,7 +52,7 @@ public class TopologyTest {
     public void testTwoNodes() throws Throwable {
         Instance instance1 = TopologyTestHelper.createInstance(instances, "instance1");
         Instance instance2 = TopologyTestHelper.createInstance(instances, "instance2");
-        instance1.getConfig().setHeartbeatTimeout(2);
+        instance1.getConfig().setHeartbeatTimeout(4);
         instance1.getConfig().setHeartbeatInterval(1);
         instance2.getConfig().setHeartbeatTimeout(1);
         instance2.getConfig().setHeartbeatInterval(1);
@@ -90,8 +94,7 @@ public class TopologyTest {
                 instance2.getAnnouncementRegistry().listLocalAnnouncements();
         assertEquals(1, instance2LocalAnnouncements.size());
 
-        instance1.getConfig().setHeartbeatTimeout(3); // increasing heartbeat timeout from 2 to 3sec
-        Thread.sleep(1500); // heartbeat interval is 1 sec - so 1.5 sec ensures 1 heartbeat is actually being sent out!
+        Thread.sleep(1100); // sleep of 1.1sec ensures instance2's heartbeat timeout (which is 1sec) hits
         
         instance1LocalAnnouncements = 
                 instance1.getAnnouncementRegistry().listLocalAnnouncements();
@@ -99,12 +102,15 @@ public class TopologyTest {
         instance2LocalAnnouncements = 
                 instance2.getAnnouncementRegistry().listLocalAnnouncements();
         assertEquals(0, instance2LocalAnnouncements.size());
-        instance1.getConfig().setHeartbeatTimeout(2);
 
+        logger.info("testTwoNodes: instance1: "+instance1.slingId);
+        instance1.dumpRepo();
+        logger.info("testTwoNodes: instance2: "+instance2.slingId);
+        instance2.dumpRepo();
         TopologyTestHelper.assertTopologyConsistsOf(instance1.getDiscoveryService().getTopology(), instance1.getSlingId(), instance2.getSlingId());
         TopologyTestHelper.assertTopologyConsistsOf(instance2.getDiscoveryService().getTopology(), instance2.getSlingId());
         
-        Thread.sleep(1000);
+        Thread.sleep(3000); // another sleep 3s (1.1+3 = 4.1sec) ensures instance1's heartbeat timeout (which is 4sec) hits as well
         instance1LocalAnnouncements = 
                 instance1.getAnnouncementRegistry().listLocalAnnouncements();
         assertEquals(0, instance1LocalAnnouncements.size());

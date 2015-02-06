@@ -24,31 +24,52 @@ package org.apache.sling.scripting.sightly.use;
  */
 public final class ProviderOutcome {
 
-    private boolean success;
-    private Object result;
+    // whether this is a success or failure
+    private final boolean success;
 
-    private static final ProviderOutcome FAILURE = new ProviderOutcome(false, null);
+    // the result value in case of success (may be null)
+    private final Object result;
+
+    // the reason for failure in case of failure (may be null)
+    private final Throwable cause;
+
+    // a generic failure without a cause returned by #failure()
+    private static final ProviderOutcome GENERIC_FAILURE = new ProviderOutcome(false, null, null);
 
     /**
      * Create a successful outcome
+     *
      * @param result the result
      * @return a successful result
      */
     public static ProviderOutcome success(Object result) {
-        return new ProviderOutcome(true, result);
+        return new ProviderOutcome(true, result, null);
     }
 
     /**
-     * Create a failed outcome
+     * Create a failed outcome without a specific {@link #getCause() cause}
      * @return a failed outcome
      */
     public static ProviderOutcome failure() {
-        return FAILURE;
+        return GENERIC_FAILURE;
     }
 
     /**
-     * If the given obj is not null return a successful outcome, with the given result.
-     * Otherwise, return failure
+     * Create a failed outcome with the given {@link #getCause() cause}
+     *
+     * @param cause The reason for this failure, which may be {@code null}
+     *
+     * @return a failed outcome
+     */
+    public static ProviderOutcome failure(Throwable cause) {
+        return new ProviderOutcome(false, null, cause);
+    }
+
+    /**
+     * If the given obj is not {@code null} return a {@link #success(Object)
+     * successful outcome}, with the given result. Otherwise, return
+     * {@link #failure()}
+     *
      * @param obj the result
      * @return an outcome based on whether the parameter is null or not
      */
@@ -56,13 +77,24 @@ public final class ProviderOutcome {
         return (obj == null) ? failure() : success(obj);
     }
 
-    private ProviderOutcome(boolean success, Object result) {
+    /**
+     * Creates an outcome instance
+     *
+     * @param success {@code true} to indicate success or {@code false} to
+     *            indicate failure
+     * @param result optional result value in case of success, may be
+     *            {@code null}
+     * @param cause optional cause in case of failure, may be {@code null}
+     */
+    private ProviderOutcome(boolean success, Object result, Throwable cause) {
         this.success = success;
         this.result = result;
+        this.cause = cause;
     }
 
     /**
      * Check if the outcome has been successful
+     *
      * @return the outcome success status
      */
     public boolean isSuccess() {
@@ -71,6 +103,7 @@ public final class ProviderOutcome {
 
     /**
      * Check whether the outcome is a failure
+     *
      * @return the outcome failure status
      */
     public boolean isFailure() {
@@ -81,12 +114,23 @@ public final class ProviderOutcome {
      * Get the result in this outcome
      *
      * @return the result of the container
-     * @throws java.lang.UnsupportedOperationException if the outcome is a failure
+     * @throws IllegalStateException if the outcome is a failure
      */
     public Object getResult() {
         if (!success) {
-            throw new UnsupportedOperationException("Outcome has not been successful");
+            throw new IllegalStateException("Outcome has not been successful");
         }
         return result;
+    }
+
+    /**
+     * Returns the cause for this failure outcome or {@code null} if this
+     * outcome is a success or no cause has been defined with the
+     * {@link #failure(Throwable)} method.
+     *
+     * @return the cause for this failure outcome.
+     */
+    public Throwable getCause() {
+        return cause;
     }
 }

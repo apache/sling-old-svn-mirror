@@ -35,6 +35,7 @@ import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.apache.sling.testing.mock.osgi.MockOsgi;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
@@ -43,7 +44,7 @@ import com.google.common.collect.ImmutableMap;
 
 /**
  * Mock {@link ResourceResolver} implementation. Simulates OSGi environment and
- * intatiates real Sling ResourceResolver and JCR implementation, but with a
+ * initiates real Sling ResourceResolver and JCR implementation, but with a
  * mocked JCR repository implementation underneath.
  */
 class MockJcrResourceResolverFactory implements ResourceResolverFactory {
@@ -56,25 +57,25 @@ class MockJcrResourceResolverFactory implements ResourceResolverFactory {
 
     private ResourceResolver getResourceResolverInternal(Map<String, Object> authenticationInfo, boolean isAdmin) throws LoginException {
         // setup mock OSGi environment
-        Dictionary<String, Object> resourceProviderFactoryProps = new Hashtable<String, Object>();
-        resourceProviderFactoryProps.put(Constants.SERVICE_VENDOR, "sling-mock");
-        resourceProviderFactoryProps.put(Constants.SERVICE_DESCRIPTION, "sling-mock");
-        resourceProviderFactoryProps.put("resource.resolver.manglenamespaces", true);
-        ComponentContext componentContext = MockOsgi.newComponentContext(resourceProviderFactoryProps);
+        BundleContext bundleContext = MockOsgi.newBundleContext();
+
+        Dictionary<String, Object> resourceProviderFactoryFactoryProps = new Hashtable<String, Object>();
+        resourceProviderFactoryFactoryProps.put(Constants.SERVICE_VENDOR, "sling-mock");
+        resourceProviderFactoryFactoryProps.put(Constants.SERVICE_DESCRIPTION, "sling-mock");
+        resourceProviderFactoryFactoryProps.put("resource.resolver.manglenamespaces", true);
+        resourceProviderFactoryFactoryProps.put("resource.resolver.searchpath", new String[] { "/apps", "/libs" });
+        ComponentContext resourceProviderComponentContext = MockOsgi.newComponentContext(bundleContext, resourceProviderFactoryFactoryProps);
 
         // setup mocked JCR environment
-        componentContext.getBundleContext()
-                .registerService(SlingRepository.class.getName(), this.slingRepository, null);
-        componentContext.getBundleContext()
-                .registerService(PathMapper.class.getName(), new PathMapper(), null);
+        bundleContext.registerService(SlingRepository.class.getName(), this.slingRepository, null);
+        bundleContext.registerService(PathMapper.class.getName(), new PathMapper(), null);
 
         // setup real sling JCR resource provider implementation for use in
         // mocked context
         JcrResourceProviderFactory jcrResourceProviderFactory = new JcrResourceProviderFactory();
-        MockOsgi.injectServices(jcrResourceProviderFactory, componentContext.getBundleContext());
-        MockOsgi.activate(jcrResourceProviderFactory, componentContext.getBundleContext(),
-                ImmutableMap.<String, Object> of());
-        
+        MockOsgi.injectServices(jcrResourceProviderFactory, bundleContext);
+        MockOsgi.activate(jcrResourceProviderFactory, bundleContext, ImmutableMap.<String, Object> of());
+
         ResourceProvider resourceProvider;
         if (isAdmin) {
             resourceProvider = jcrResourceProviderFactory.getAdministrativeResourceProvider(authenticationInfo);
@@ -82,20 +83,18 @@ class MockJcrResourceResolverFactory implements ResourceResolverFactory {
         else {
             resourceProvider = jcrResourceProviderFactory.getResourceProvider(authenticationInfo);
         }
-        
+
         Dictionary<Object, Object> resourceProviderProps = new Hashtable<Object, Object>();
         resourceProviderProps.put(ResourceProvider.ROOTS, new String[] { "/" });
-        componentContext.getBundleContext().registerService(ResourceProvider.class.getName(), resourceProvider,
-                resourceProviderProps);
-        ServiceReference resourceProviderServiceReference = componentContext.getBundleContext().getServiceReference(
-                ResourceProvider.class.getName());
+        bundleContext.registerService(ResourceProvider.class.getName(), resourceProvider, resourceProviderProps);
+        ServiceReference resourceProviderServiceReference = bundleContext.getServiceReference(ResourceProvider.class.getName());
 
         // setup real sling resource resolver implementation for use in mocked
         // context
         MockResourceResolverFactoryActivator activator = new MockResourceResolverFactoryActivator();
         activator.bindResourceProvider(resourceProvider,
                 getServiceReferenceProperties(resourceProviderServiceReference));
-        activator.activate(componentContext);
+        activator.activate(resourceProviderComponentContext);
         CommonResourceResolverFactoryImpl commonFactoryImpl = new CommonResourceResolverFactoryImpl(activator);
         ResourceResolverContext context = new ResourceResolverContext(true, authenticationInfo, new ResourceAccessSecurityTracker());
         ResourceResolverImpl resourceResolver = new ResourceResolverImpl(commonFactoryImpl, context);
@@ -115,7 +114,7 @@ class MockJcrResourceResolverFactory implements ResourceResolverFactory {
     public ResourceResolver getResourceResolver(final Map<String, Object> authenticationInfo) throws LoginException {
         return getResourceResolverInternal(authenticationInfo, false);
     }
-    
+
     @Override
     public ResourceResolver getAdministrativeResourceResolver(final Map<String, Object> authenticationInfo)
             throws LoginException {
