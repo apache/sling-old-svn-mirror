@@ -68,8 +68,19 @@
         "element": {
             "jcr:primartyType": "nt:unstructured",
             "sling:resourceType": "/sightlytck/scripts/blockstatements/element"
+        },
+        "repeat": {
+            "jcr:primartyType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/blockstatements/repeat"
         }
 
+    },
+    "tags": {
+        "jcr:primaryType": "sling:Folder",
+        "sly": {
+            "jcr:primaryType": "nt:unstructured",
+            "sling:resourceType": "/sightlytck/scripts/tags/sly"
+        }
     },
     "helpers": {
         "jcr:primaryType": "sling:Folder",
