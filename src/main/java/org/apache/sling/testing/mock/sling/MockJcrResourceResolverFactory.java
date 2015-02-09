@@ -29,6 +29,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory;
+import org.apache.sling.jcr.resource.internal.helper.jcr.PathMapper;
 import org.apache.sling.resourceresolver.impl.CommonResourceResolverFactoryImpl;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
@@ -57,7 +58,7 @@ class MockJcrResourceResolverFactory implements ResourceResolverFactory {
     private ResourceResolver getResourceResolverInternal(Map<String, Object> authenticationInfo, boolean isAdmin) throws LoginException {
         // setup mock OSGi environment
         BundleContext bundleContext = MockOsgi.newBundleContext();
-        
+
         Dictionary<String, Object> resourceProviderFactoryFactoryProps = new Hashtable<String, Object>();
         resourceProviderFactoryFactoryProps.put(Constants.SERVICE_VENDOR, "sling-mock");
         resourceProviderFactoryFactoryProps.put(Constants.SERVICE_DESCRIPTION, "sling-mock");
@@ -67,13 +68,14 @@ class MockJcrResourceResolverFactory implements ResourceResolverFactory {
 
         // setup mocked JCR environment
         bundleContext.registerService(SlingRepository.class.getName(), this.slingRepository, null);
+        bundleContext.registerService(PathMapper.class.getName(), new PathMapper(), null);
 
         // setup real sling JCR resource provider implementation for use in
         // mocked context
         JcrResourceProviderFactory jcrResourceProviderFactory = new JcrResourceProviderFactory();
         MockOsgi.injectServices(jcrResourceProviderFactory, bundleContext);
         MockOsgi.activate(jcrResourceProviderFactory, bundleContext, ImmutableMap.<String, Object> of());
-        
+
         ResourceProvider resourceProvider;
         if (isAdmin) {
             resourceProvider = jcrResourceProviderFactory.getAdministrativeResourceProvider(authenticationInfo);
@@ -81,7 +83,7 @@ class MockJcrResourceResolverFactory implements ResourceResolverFactory {
         else {
             resourceProvider = jcrResourceProviderFactory.getResourceProvider(authenticationInfo);
         }
-        
+
         Dictionary<Object, Object> resourceProviderProps = new Hashtable<Object, Object>();
         resourceProviderProps.put(ResourceProvider.ROOTS, new String[] { "/" });
         bundleContext.registerService(ResourceProvider.class.getName(), resourceProvider, resourceProviderProps);
@@ -112,7 +114,7 @@ class MockJcrResourceResolverFactory implements ResourceResolverFactory {
     public ResourceResolver getResourceResolver(final Map<String, Object> authenticationInfo) throws LoginException {
         return getResourceResolverInternal(authenticationInfo, false);
     }
-    
+
     @Override
     public ResourceResolver getAdministrativeResourceResolver(final Map<String, Object> authenticationInfo)
             throws LoginException {
@@ -123,6 +125,11 @@ class MockJcrResourceResolverFactory implements ResourceResolverFactory {
     public ResourceResolver getServiceResourceResolver(final Map<String, Object> authenticationInfo)
             throws LoginException {
         return getResourceResolverInternal(authenticationInfo, true);
+    }
+
+    @Override
+    public ResourceResolver getThreadResourceResolver() {
+        return null;
     }
 
 }
