@@ -20,11 +20,14 @@ package org.apache.sling.jcr.resource.internal.helper.jcr;
 
 import java.security.Principal;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Queue;
 import java.util.Set;
 
 import javax.jcr.Item;
@@ -37,8 +40,12 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
+import javax.jcr.version.VersionHistory;
+import javax.jcr.version.VersionManager;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.UserManager;
@@ -47,6 +54,7 @@ import org.apache.sling.api.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.AttributableResourceProvider;
 import org.apache.sling.api.resource.DynamicResourceProvider;
 import org.apache.sling.api.resource.ModifyingResourceProvider;
+import org.apache.sling.api.resource.ParametrizableResourceProvider;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.QueriableResourceProvider;
 import org.apache.sling.api.resource.QuerySyntaxException;
@@ -77,7 +85,8 @@ public class JcrResourceProvider
                AttributableResourceProvider,
                QueriableResourceProvider,
                RefreshableResourceProvider,
-               ModifyingResourceProvider {
+               ModifyingResourceProvider,
+               ParametrizableResourceProvider {
 
     /** column name for node path */
     private static final String QUERY_COLUMN_PATH = "jcr:path";
@@ -125,7 +134,7 @@ public class JcrResourceProvider
     @SuppressWarnings("javadoc")
     public Resource getResource(ResourceResolver resourceResolver,
             HttpServletRequest request, String path) throws SlingException {
-        return getResource(resourceResolver, path);
+        return getResource(resourceResolver, path, Collections.<String, String> emptyMap());
     }
 
     /**
@@ -133,9 +142,18 @@ public class JcrResourceProvider
      */
     public Resource getResource(ResourceResolver resourceResolver, String path)
     throws SlingException {
+        return getResource(resourceResolver, path, Collections.<String, String> emptyMap());
+    }
+
+    
+    /**
+     * @see org.apache.sling.api.resource.ResourceProvider#getResource(org.apache.sling.api.resource.ResourceResolver, java.lang.String)
+     */
+    public Resource getResource(ResourceResolver resourceResolver, String path, Map<String, String> parameters)
+    throws SlingException {
         this.checkClosed();
         try {
-            return createResource(resourceResolver, path);
+            return createResource(resourceResolver, path, parameters);
         } catch (RepositoryException re) {
             throw new SlingException("Problem retrieving node based resource "
                 + path, re);
@@ -162,7 +180,7 @@ public class JcrResourceProvider
             // children
             try {
                 parentItemResource = createResource(
-                    parent.getResourceResolver(), parent.getPath());
+                    parent.getResourceResolver(), parent.getPath(), Collections.<String, String> emptyMap());
             } catch (RepositoryException re) {
                 parentItemResource = null;
             }
@@ -189,26 +207,84 @@ public class JcrResourceProvider
      *             item in the repository.
      */
     private JcrItemResource createResource(final ResourceResolver resourceResolver,
-            final String resourcePath) throws RepositoryException {
+            final String resourcePath, final Map<String, String> parameters) throws RepositoryException {
         final String jcrPath = pathMapper.mapResourcePathToJCRPath(resourcePath);
         if (jcrPath != null && itemExists(jcrPath)) {
             Item item = session.getItem(jcrPath);
+            final String version;
+            if (parameters != null && parameters.containsKey("v")) {
+                version = parameters.get("v");
+                item = getHistoricItem(item, version);
+            } else {
+                version = null;
+            }
             if (item.isNode()) {
                 log.debug(
                     "createResource: Found JCR Node Resource at path '{}'",
                     resourcePath);
-                return new JcrNodeResource(resourceResolver, resourcePath, (Node) item, dynamicClassLoader, pathMapper);
+                final JcrNodeResource resource = new JcrNodeResource(resourceResolver, resourcePath, version, (Node) item, dynamicClassLoader, pathMapper);
+                resource.getResourceMetadata().setParameterMap(parameters);
+                return resource;
             }
 
             log.debug(
                 "createResource: Found JCR Property Resource at path '{}'",
                 resourcePath);
-            return new JcrPropertyResource(resourceResolver, resourcePath,
+            final JcrPropertyResource resource = new JcrPropertyResource(resourceResolver, resourcePath, version,
                 (Property) item, pathMapper);
+            resource.getResourceMetadata().setParameterMap(parameters);
+            return resource;
         }
 
         log.debug("createResource: No JCR Item exists at path '{}'", jcrPath);
         return null;
+    }
+
+    private Item getHistoricItem(Item item, String versionSpecifier) throws RepositoryException {
+        Item currentItem = item;
+        LinkedList<String> relPath = new LinkedList<String>();
+        Node version = null;
+        while (!"/".equals(currentItem.getPath())) {
+            if (isVersionable(currentItem)) {
+                version = getFrozenNode((Node) currentItem, versionSpecifier);
+                break;
+            } else {
+                relPath.addFirst(currentItem.getName());
+                currentItem = currentItem.getParent();
+            }
+        }
+        if (version != null) {
+            return getSubitem(version, StringUtils.join(relPath.iterator(), '/'));
+        }
+        return null;
+    }
+
+    private static Item getSubitem(Node node, String relPath) throws RepositoryException {
+        if (relPath.length() == 0) { // not using isEmpty() due to 1.5 compatibility
+            return node;
+        } else if (node.hasNode(relPath)) {
+            return node.getNode(relPath);
+        } else if (node.hasProperty(relPath)) {
+            return node.getProperty(relPath);
+        } else {
+            return null;
+        }
+    }
+
+    private Node getFrozenNode(Node node, String versionSpecifier) throws RepositoryException {
+        final VersionManager versionManager = session.getWorkspace().getVersionManager();
+        final VersionHistory history = versionManager.getVersionHistory(node.getPath());
+        if (history.hasVersionLabel(versionSpecifier)) {
+            return history.getVersionByLabel(versionSpecifier).getFrozenNode();
+        } else if (history.hasNode(versionSpecifier)) {
+            return history.getVersion(versionSpecifier).getFrozenNode();
+        } else {
+            return null;
+        }
+    }
+
+    private static boolean isVersionable(Item item) throws RepositoryException {
+        return item.isNode() && ((Node) item).isNodeType(JcrConstants.MIX_VERSIONABLE);
     }
 
     /**
@@ -515,7 +591,7 @@ public class JcrResourceProvider
                 }
             }
 
-            return new JcrNodeResource(resolver, resourcePath, node, this.dynamicClassLoader, pathMapper);
+            return new JcrNodeResource(resolver, resourcePath, null, node, this.dynamicClassLoader, pathMapper);
         } catch (final RepositoryException e) {
             throw new PersistenceException("Unable to create node at " + jcrPath, e, resourcePath, null);
         }

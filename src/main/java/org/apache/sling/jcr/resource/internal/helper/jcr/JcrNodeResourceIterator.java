@@ -23,6 +23,7 @@ import java.util.NoSuchElementException;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -53,6 +54,10 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
 
     private final PathMapper pathMapper;
 
+    private final String parentPath;
+
+    private final String parentVersion;
+
     /**
      * Creates an instance using the given resource manager and the nodes
      * provided as a node iterator.
@@ -61,7 +66,23 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
                                    final NodeIterator nodes,
                                    final ClassLoader dynamicClassLoader,
                                    final PathMapper pathMapper) {
+        this(resourceResolver, null, null, nodes, dynamicClassLoader, pathMapper);
+    }
+
+    /**
+     * Creates an instance using the given resource manager and the nodes
+     * provided as a node iterator. Paths of the iterated resources will be
+     * concatenated from the parent path, node name and the version number.
+     */
+    public JcrNodeResourceIterator(final ResourceResolver resourceResolver,
+                                   final String parentPath,
+                                   final String parentVersion,
+                                   final NodeIterator nodes,
+                                   final ClassLoader dynamicClassLoader,
+                                   final PathMapper pathMapper) {
         this.resourceResolver = resourceResolver;
+        this.parentPath = parentPath;
+        this.parentVersion = parentVersion;
         this.nodes = nodes;
         this.dynamicClassLoader = dynamicClassLoader;
         this.pathMapper = pathMapper;
@@ -94,11 +115,10 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
         while (nodes.hasNext()) {
             try {
                 final Node n = nodes.nextNode();
-                final String path = pathMapper.mapJCRPathToResourcePath(n.getPath());
+                final String path = getPath(n);
                 if ( path != null ) {
                     final Resource resource = new JcrNodeResource(resourceResolver,
-                        path,
-                        n, dynamicClassLoader, pathMapper);
+                        path, parentVersion, n, dynamicClassLoader, pathMapper);
                     LOGGER.debug("seek: Returning Resource {}", resource);
                     return resource;
                 }
@@ -112,5 +132,15 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
         // no more results
         LOGGER.debug("seek: No more nodes, iterator exhausted");
         return null;
+    }
+
+    private String getPath(Node node) throws RepositoryException {
+        final String path;
+        if (parentPath == null) {
+            path = node.getPath();
+        } else {
+            path = String.format("%s/%s", parentPath, node.getName());
+        }
+        return pathMapper.mapJCRPathToResourcePath(path);
     }
 }
