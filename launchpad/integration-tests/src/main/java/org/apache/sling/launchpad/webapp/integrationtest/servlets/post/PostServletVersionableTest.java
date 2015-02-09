@@ -18,6 +18,7 @@ package org.apache.sling.launchpad.webapp.integrationtest.servlets.post;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -242,39 +243,29 @@ public class PostServletVersionableTest extends HttpTestBase {
 
     public void testRestoreVersion() throws IOException {
         final String location = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, params);
-        assertHttpStatus(location + DEFAULT_EXT, HttpServletResponse.SC_OK,
-                "POST must redirect to created resource (" + location + ")");
-        assertTrue("Node (" + location + ") must have generated name",
-                !location.endsWith("/*"));
-        assertTrue("Node (" + location + ") must created be under POST URL (" + postUrl + ")",
-                location.contains(postUrl + "/"));
+        testClient.createNode(location, Collections.singletonMap("key", "valueForVersion1.0"));
+        testClient.createNode(location, Collections.singletonMap(":operation", "checkin"));
+
+        testClient.createNode(location, Collections.singletonMap(":operation", "checkout"));
+        testClient.createNode(location, Collections.singletonMap("key", "valueForVersion1.1"));
+        testClient.createNode(location, Collections.singletonMap(":operation", "checkin"));
+
+        assertTrue(getContent(location + ".txt", CONTENT_TYPE_PLAIN).contains("key: valueForVersion1.1"));
 
         params.clear();
-        params.put("key", "value1");
+        params.put(":operation", "restore");
+        params.put(":version", "1.0");
         testClient.createNode(location, params);
+
+        assertTrue(getContent(location + ".txt", CONTENT_TYPE_PLAIN).contains("key: valueForVersion1.0"));
 
         params.clear();
-        params.put("operation", ":checkin");
+        params.put(":operation", "restore");
+        params.put(":version", "1.1");
         testClient.createNode(location, params);
 
-        params.clear();
-        params.put("operation", ":checkout");
-        testClient.createNode(location, params);
-
-        params.clear();
-        params.put("key", "value2");
-        testClient.createNode(location, params);
-
-        params.clear();
-        params.put("operation", ":checkin");
-        testClient.createNode(location, params);
-
-        String content = getContent(location + ".txt", CONTENT_TYPE_PLAIN);
-        assertTrue("Node (" + location + ") should contain value2.",
-                content.contains("key: value2"));
-
+        assertTrue(getContent(location + ".txt", CONTENT_TYPE_PLAIN).contains("key: valueForVersion1.1"));
     }
-
 
     public void testCheckingOutACheckedInNode() throws IOException {
         params.put(":checkinNewVersionableNodes", "true");
