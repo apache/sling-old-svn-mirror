@@ -1,4 +1,4 @@
-/*-
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,25 +17,8 @@
  * under the License.
  */
 
-package org.apache.sling.query.function;
+@Version("3.0.0")
+package org.apache.sling.query;
 
-import java.util.Iterator;
+import aQute.bnd.annotation.Version;
 
-import org.apache.sling.query.api.internal.IteratorToIteratorFunction;
-import org.apache.sling.query.api.internal.Option;
-import org.apache.sling.query.iterator.ReverseIterator;
-
-public class NotFunction<T> implements IteratorToIteratorFunction<T> {
-
-	private IteratorToIteratorFunction<T> function;
-
-	public NotFunction(IteratorToIteratorFunction<T> function) {
-		this.function = function;
-	}
-
-	@Override
-	public Iterator<Option<T>> apply(Iterator<Option<T>> input) {
-		return new ReverseIterator<T>(function, input);
-	}
-
-}

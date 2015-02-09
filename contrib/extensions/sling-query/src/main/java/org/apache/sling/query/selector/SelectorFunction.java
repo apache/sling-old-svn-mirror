@@ -23,14 +23,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.sling.query.IteratorUtils;
-import org.apache.sling.query.LazyList;
-import org.apache.sling.query.api.Function;
 import org.apache.sling.query.api.Predicate;
 import org.apache.sling.query.api.SearchStrategy;
 import org.apache.sling.query.api.TreeProvider;
-import org.apache.sling.query.api.function.IteratorToIteratorFunction;
-import org.apache.sling.query.api.function.Option;
+import org.apache.sling.query.api.internal.Function;
+import org.apache.sling.query.api.internal.IteratorToIteratorFunction;
+import org.apache.sling.query.api.internal.Option;
 import org.apache.sling.query.function.CompositeFunction;
 import org.apache.sling.query.function.FilterFunction;
 import org.apache.sling.query.iterator.AlternativeIterator;
@@ -40,6 +38,8 @@ import org.apache.sling.query.selector.parser.Modifier;
 import org.apache.sling.query.selector.parser.Selector;
 import org.apache.sling.query.selector.parser.SelectorParser;
 import org.apache.sling.query.selector.parser.SelectorSegment;
+import org.apache.sling.query.util.IteratorUtils;
+import org.apache.sling.query.util.LazyList;
 
 public class SelectorFunction<T> implements IteratorToIteratorFunction<T>, Predicate<T> {
 

@@ -25,6 +25,9 @@ import java.util.List;
 import org.apache.sling.query.selector.parser.Attribute;
 import org.apache.sling.query.selector.parser.SelectorSegment;
 
+import aQute.bnd.annotation.ConsumerType;
+
+@ConsumerType
 public interface TreeProvider<T> {
 	Iterator<T> listChildren(T parent);
 
