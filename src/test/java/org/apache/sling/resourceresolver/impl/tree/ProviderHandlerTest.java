@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -84,6 +85,7 @@ public class ProviderHandlerTest {
 
     @Test public void testServletRegistrationAndSyntheticResources() {
         final String servletpath = "/libs/a/b/GET.servlet";
+        final Map<String, String> emptyParams = Collections.emptyMap();
 
         final Resource servletResource = Mockito.mock(Resource.class);
 
@@ -96,20 +98,20 @@ public class ProviderHandlerTest {
 
         root.bindResourceProvider(leaveProvider, leaveProperties);
 
-        final Resource parent = root.getResource(getResourceResolverContext(), null, ResourceUtil.getParent(servletpath), false);
+        final Resource parent = root.getResource(getResourceResolverContext(), null, ResourceUtil.getParent(servletpath), emptyParams, false);
         assertNotNull("Parent must be available", parent);
         assertTrue("Resource should be synthetic", ResourceUtil.isSyntheticResource(parent));
 
-        final Resource servlet = root.getResource(getResourceResolverContext(), null, servletpath, false);
+        final Resource servlet = root.getResource(getResourceResolverContext(), null, servletpath, emptyParams,false);
         assertNotNull("Servlet resource must not be null", servlet);
         assertEquals(servletResource, servlet);
 
-        assertNotNull(root.getResource(getResourceResolverContext(), null, "/libs", false));
+        assertNotNull(root.getResource(getResourceResolverContext(), null, "/libs", emptyParams, false));
 
         // now check when doing a resolve()
-        assertNull(root.getResource(getResourceResolverContext(), null, "/libs", true));
-        assertNull(root.getResource(getResourceResolverContext(), null, ResourceUtil.getParent(servletpath), true));
-        assertNotNull(root.getResource(getResourceResolverContext(), null, servletpath, true));
+        assertNull(root.getResource(getResourceResolverContext(), null, "/libs", emptyParams, true));
+        assertNull(root.getResource(getResourceResolverContext(), null, ResourceUtil.getParent(servletpath), emptyParams, true));
+        assertNotNull(root.getResource(getResourceResolverContext(), null, servletpath, emptyParams, true));
     }
 
     private ResourceResolverContext getResourceResolverContext() {
@@ -125,7 +127,7 @@ public class ProviderHandlerTest {
         }
 
         @Override
-        public Resource getResource(ResourceResolverContext ctx, ResourceResolver resourceResolver, String path) {
+        public Resource getResource(ResourceResolverContext ctx, ResourceResolver resourceResolver, String path, Map<String, String> parameters) {
             return null;
         }
 

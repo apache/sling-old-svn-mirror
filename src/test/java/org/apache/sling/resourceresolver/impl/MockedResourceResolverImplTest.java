@@ -17,9 +17,12 @@
  */
 package org.apache.sling.resourceresolver.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -593,13 +596,13 @@ public class MockedResourceResolverImplTest {
         }
         Assert.assertEquals(5,i);
     }
-    
+
     @Test
     public void testQueryResources() throws LoginException {
         final int n = 3;
         Mockito.when(queriableResourceProviderA.queryResources(Mockito.any(ResourceResolver.class), Mockito.any(String.class), Mockito.any(String.class)))
         .thenReturn(buildValueMapCollection(n, "A_").iterator());
-        
+
         final ResourceResolver rr = resourceResolverFactory.getResourceResolver(null);
         buildResource("/search/test/withchildren", buildChildResources("/search/test/withchildren"), rr, resourceProvider);
         final Iterator<Map<String, Object>> it = rr.queryResources("/search", FAKE_QUERY_LANGUAGE);
@@ -607,7 +610,7 @@ public class MockedResourceResolverImplTest {
         for(int i=0; i < n; i++) {
             toFind.add("A_" + i);
         }
-        
+
         assertTrue("Expecting non-empty result (" + n + ")", it.hasNext());
         while(it.hasNext()) {
             final Map<String, Object> m = it.next();
@@ -616,4 +619,25 @@ public class MockedResourceResolverImplTest {
         assertTrue("Expecting no leftovers (" + n + ") in" + toFind, toFind.isEmpty());
     }
 
+    @Test public void test_versions() throws LoginException {
+        ResourceResolver resourceResolver = resourceResolverFactory.getResourceResolver(null);
+
+        Resource resource = resourceResolver.resolve("/content/test.html;v=1.0");
+        Map<String, String> parameters = resource.getResourceMetadata().getParameterMap();
+        assertEquals("/content/test.html", resource.getPath());
+        assertEquals("test.html", resource.getName());
+        assertEquals(Collections.singletonMap("v", "1.0"), parameters);
+
+        resource = resourceResolver.resolve("/content/test;v='1.0'.html");
+        parameters = resource.getResourceMetadata().getParameterMap();
+        assertEquals("/content/test.html", resource.getPath());
+        assertEquals("test.html", resource.getName());
+        assertEquals(Collections.singletonMap("v", "1.0"), parameters);
+
+        buildResource("/single/test/withchildren", buildChildResources("/single/test/withchildren"), resourceResolver, resourceProvider);
+        resource = resourceResolver.getResource("/single/test/withchildren;v='1.0'");
+        assertNotNull(resource);
+        assertEquals("/single/test/withchildren", resource.getPath());
+        assertEquals("withchildren", resource.getName());
+    }
 }
